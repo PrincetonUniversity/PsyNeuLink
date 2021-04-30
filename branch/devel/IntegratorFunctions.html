@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorFunctions &mdash; PsyNeuLink 0.8.8.1 documentation</title>
+  <title>IntegratorFunctions &mdash; PsyNeuLink 0.8.8.1+1.g43786f73ae documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1
+                  0.8.8.1+1
                 </div>
               
             
@@ -3050,7 +3050,7 @@ integrated.</p></li>
 for details).</p></li>
 <li><p><strong>rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the rate of integration.  If it is a list or array, it must be the same length as
 <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> for details).</p></li>
-<li><p><strong>noise</strong> (<em>float</em><em>, </em><em>function</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies random value added to integral in each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>;
+<li><p><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em>, </em><em>array</em><em> or </em><em>function : default 0.0</em>) – specifies value added to integral in each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>;
 if it is a list or array, it must be the same length as <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
 (see <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.noise" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> for additional details).</p></li>
 <li><p><strong>time_step_size</strong> (<em>float : default 0.0</em>) – determines the timing precision of the integration process</p></li>
@@ -3092,21 +3092,20 @@ element of <a class="reference internal" href="#psyneulink.core.components.funct
 <dl class="py attribute">
 <dt id="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.noise">
 <code class="sig-name descname">noise</code><a class="headerlink" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.noise" title="Permalink to this definition">¶</a></dt>
-<dd><p>random value added to integral in each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>. If <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is a list or array, and noise is a float or function, it is applied for each
-element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. If noise is a function, it is executed and applied
-separately for each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.  If noise is a list or array, each
-element is applied to each element of the integral corresponding that of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
+<dd><p>value is added to integral in each call to <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>. If noise is a
+float,  it is applied to all elements of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; if it is an array,
+it is applied Hadamard (elementwise) to each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>. If it is a
+function, it is executed separately and applied independently to each element of <a class="reference internal" href="#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
-<p>To generate random noise that varies for every execution, a probability distribution function should be
-used (see <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DistributionFunction" title="psyneulink.core.components.functions.distributionfunctions.DistributionFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distribution</span> <span class="pre">Functions</span></code></a> for details), that generates a new noise value
-from its distribution on each execution. If noise is specified as a float, a function with a fixed
-output, or a list or array of either of these, then noise is simply an offset that remains the same
-across all executions.</p>
+<p>To generate random noise that varies for every execution and across all elements of an array, a
+<a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DistributionFunction" title="psyneulink.core.components.functions.distributionfunctions.DistributionFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistributionFunction</span></code></a> should be used, that generates a new value on each execution. If noise is
+specified as a float, a function with a fixed output, or an array of either of these, then noise
+is simply an offset that is the same across all elements and executions.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float, Function or 1d array</p>
+<dd class="field-odd"><p>float, array or Function</p>
 </dd>
 </dl>
 </dd></dl>

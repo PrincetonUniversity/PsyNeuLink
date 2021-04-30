@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.8.8.1 documentation</title>
+  <title>RecurrentTransferMechanism &mdash; PsyNeuLink 0.8.8.1+1.g43786f73ae documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1
+                  0.8.8.1+1
                 </div>
               
             
@@ -320,9 +320,9 @@ the value of its own <a class="reference internal" href="OutputPort.html#outputp
 <p>Like any <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, the function used to update each element can be specified in the <strong>function</strong> argument
 of its constructor.  This transforms its input (including from the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a>) using the specified function and parameters (see
 <a class="reference internal" href="TransferMechanism.html#transfermechanism-execution"><span class="std std-ref">Execution</span></a>), and returns the results in its OutputPorts.  Also like a TransferMechanism,
-a RecurrentTransferMechanism can be configured to integrate its input, by setting its <code class="xref any docutils literal notranslate"><span class="pre">integration_mode</span></code> to True  (see <a class="reference internal" href="TransferMechanism.html#transfermechanism-integration"><span class="std std-ref">Integration</span></a>), and to do so for a
+a RecurrentTransferMechanism can be configured to integrate its input, by setting its <code class="xref any docutils literal notranslate"><span class="pre">integration_mode</span></code> to True  (see <a class="reference internal" href="TransferMechanism.html#transfermechanism-execution-with-integration"><span class="std std-ref">Execution With Integration</span></a>), and to do so for a
 single step of integration or until it reaches some termination condition each time it is executed (see
-<a class="reference internal" href="TransferMechanism.html#transfermechanism-termination"><span class="std std-ref">Termination</span></a>). Finally, it can be reset using its <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method (see <a class="reference internal" href="TransferMechanism.html#transfermechanism-reinitialization"><span class="std std-ref">Reinitialization</span></a>).</p>
+<a class="reference internal" href="TransferMechanism.html#transfermechanism-execution-integration-termination"><span class="std std-ref">Termination</span></a>). Finally, it can be reset using its <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method (see <code class="xref any docutils literal notranslate"><span class="pre">TransferMechanism_Execution_Integration_Reinitialization</span></code>).</p>
 <section id="learning">
 <span id="recurrenttransfermechanism-execution-learning"></span><h3><em>Learning</em><a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
 <p>If the RecurrentTransferMechanism has been <a class="reference internal" href="#recurrenttransfermechanism-learning"><span class="std std-ref">configured for learning</span></a> and is
@@ -647,51 +647,6 @@ the RecurrentTransferMechanism’s <a class="reference internal" href="#psyneuli
 <dt id="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism._execute">
 <code class="sig-name descname">_execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">runtime_params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism._execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute TransferMechanism function and return transform of input</p>
-<dl class="simple">
-<dt>Execute TransferMechanism function on input, and assign to output_values:</dt><dd><ul class="simple">
-<li><p>Activation value for all units</p></li>
-<li><p>Mean of the activation values across units</p></li>
-<li><p>Variance of the activation values across units</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>value of input transformed by TransferMechanism function in outputPort[TransferOuput.RESULT].value
-mean of items in RESULT outputPort[TransferOuput.MEAN].value
-variance of items in RESULT outputPort[TransferOuput.VARIANCE].value</p>
-</dd>
-</dl>
-<p>Arguments:</p>
-<p># CONFIRM:
-variable (float): set to self.value (= self.input_value)
-- params (dict):  runtime_params passed from Mechanism, used as one-time value for current execution:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>NOISE (float)</p></li>
-<li><p>INTEGRATION_RATE (float)</p></li>
-<li><p>RANGE ([float, float])</p></li>
-</ul>
-</div></blockquote>
-<ul class="simple">
-<li><p>context (str)</p></li>
-</ul>
-<dl class="simple">
-<dt>Returns the following values in self.value (2D np.array) and in</dt><dd><p>the value of the corresponding outputPort in the self.output_ports list:
-- activation value (float)
-- mean activation value (float)
-- standard deviation of activation values (float)</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>self</strong> – </p>
-</dd>
-</dl>
-<p>:param variable (float)
-:param params: (dict)
-:param context: (str)
-:rtype self.outputPort.value: (number)</p>
 </dd></dl>
 
 <dl class="py method">

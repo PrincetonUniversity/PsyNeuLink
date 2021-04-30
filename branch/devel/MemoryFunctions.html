@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.8.1 documentation</title>
+  <title>MemoryFunctions &mdash; PsyNeuLink 0.8.8.1+1.g43786f73ae documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1
+                  0.8.8.1+1
                 </div>
               
             
@@ -771,7 +771,7 @@ entries from <a class="reference internal" href="#id0" title="psyneulink.core.co
 1d arrays (see <a class="reference internal" href="EpisodicMemoryMechanism.html#episodicmemorymechanism-memory-fields"><span class="std std-ref">Memory Fields</span></a>). An entry can have an arbitrary number of fields, and
 each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
 corresponding fields must all have the same length across entries.  Fields can be weighted to determine the
-influence they have on retrieval, using the <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">distance_field_weights</span></code></a> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a>
+influence they have on retrieval, using the <a class="reference internal" href="#id0" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.ContentAddressableMemory.memory"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">distance_field_weights</span></code></a> parameter
 (see <a class="reference internal" href="#contentaddressablememory-retrieval"><span class="std std-ref">retrieval</span></a> below).</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
@@ -930,7 +930,7 @@ arrays.</p>
 <p id="contentaddressablememory-examples-weighting-fields"><em>Weighting fields</em></p>
 <p>The <strong>distance_field_weights</strong> argument can be used to differentially weight memory fields to modify their
 influence on retrieval (see <a class="reference internal" href="#contentaddressablememory-distance-field-weights"><span class="std std-ref">distance_field_weights</span></a>).  For
-example, this can be used to configure the Function as dictionary, using the first field for keys (on which
+example, this can be used to configure the Function as a dictionary, using the first field for keys (on which
 retrieval is based) and the second for values (that are retrieved with a matching key), as follows:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">c</span> <span class="o">=</span> <span class="n">ContentAddressableMemory</span><span class="p">(</span><span class="n">initializer</span><span class="o">=</span><span class="p">[[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]],</span>
 <span class="gp">... </span>                                           <span class="p">[[</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">10</span><span class="p">,</span><span class="mi">11</span><span class="p">]]],</span>

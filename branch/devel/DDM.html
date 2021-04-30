@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0.8.8.1 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.8.8.1+1.g43786f73ae documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1
+                  0.8.8.1+1
                 </div>
               
             
@@ -772,9 +772,8 @@ variable (float): set to self.value (= self.input_value)
 <p>If the mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>, or if the mechanism has and
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
 effectively begins the function’s accumulation over again at the specified value, and updates related
-attributes on the mechanism.  It also clears the
-<code class="xref any docutils literal notranslate"><span class="pre">value</span></code> <code class="xref any docutils literal notranslate"><span class="pre">history</span> <span class="pre">&lt;Parameter.history</span></code>, thus
-effectively setting the previous value to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+attributes on the mechanism.  It also clears the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>,
+thus effectively setting the previous value to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>If the mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method:</p>
 <blockquote>
 <div><ol class="arabic simple">

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.8.1 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+1.g43786f73ae documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1
+                  0.8.8.1+1
                 </div>
               
             
@@ -1420,7 +1420,8 @@ Compilation is supported for most CPUs (including x86, arm64, and powerpc64le). 
 that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
 <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and methods are supported for compilation;  however, Python native functions and methods
 (e.g., used to specify the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a Component) are not supported at present. Users who wish
-to compile custom functions should refer to <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">compiled User Defined Functions</span></a> for more information.  Users are strongly urged to report any other compilation failures to
+to compile custom functions should refer to <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">compiled User Defined Functions</span></a> for more
+information.  Users are strongly urged to report any other compilation failures to
 <a class="reference external" href="mailto:psyneulinkhelp&#37;&#52;&#48;princeton&#46;edu">psyneulinkhelp<span>&#64;</span>princeton<span>&#46;</span>edu</a>, or as an issue <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink/issues">here</a>.
 Known failure conditions are listed <a class="reference external" href="https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2">here</a>.</p>
 <div class="admonition warning">
@@ -2724,7 +2725,7 @@ of the Composition when it is executed using its <a class="reference internal" h
 <dl class="py attribute">
 <dt id="psyneulink.core.compositions.composition.Composition.retain_old_simulation_data">
 <code class="sig-name descname">retain_old_simulation_data</code><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.retain_old_simulation_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>if True, all <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> values generated during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> are saved;
+<dd><p>if True, all <a class="reference internal" href="Parameters.html"><span class="doc">Parameter</span></a> values generated during <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> are saved;
 if False, simulation values are deleted unless otherwise specified by individual Parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -3597,7 +3598,7 @@ Input Node –&gt; Output Node pathway</p>
 allows subclasses of ControlMechanism that can use this (such as <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>) to execute
 <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-execution"><span class="std std-ref">simulations</span></a> of the Composition (that is, executions in an
 <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a> separate from the one used by the <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execution method</span></a> called by the user) to evaluate the influence of parameters on performance.</p>
-<p>It also assigns a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for any <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="ParameterPort.html#parameterport-value-specification"><span class="std std-ref">specified for control</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to its correponding <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
+<p>It also assigns a <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> for any <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> <a class="reference internal" href="ParameterPort.html#parameterport-value-specification"><span class="std std-ref">specified for control</span></a>, and a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to its correponding <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
 <p>The ControlMechanism is assigned the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.CONTROLLER" title="psyneulink.core.compositions.composition.NodeRole.CONTROLLER"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">CONTROLLER</span></code></a>.</p>
 </dd></dl>
 

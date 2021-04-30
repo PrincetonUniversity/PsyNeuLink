@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterPort &mdash; PsyNeuLink 0.8.8.1 documentation</title>
+  <title>ParameterPort &mdash; PsyNeuLink 0.8.8.1+1.g43786f73ae documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1
+                  0.8.8.1+1
                 </div>
               
             
@@ -252,8 +252,8 @@ created for each modulable Parameter of its owner, as well as for each modulable
 Parameters of a Component
 are listed in its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, and have the attribute
 <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulable</span></code></a> set to True.)
-Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
-ParameterPorts for the parameters of a Mechanism or Projection are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_ports</span></code></a> attribute.</p>
+Each ParameterPort is created using the value specified for the corresponding parameter, as described below.
+The ParameterPorts for the parameters of a Mechanism or Projection are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_ports</span></code></a> attribute.</p>
 <section id="specifying-parameters">
 <span id="parameterport-specification"></span><h3><em>Specifying Parameters</em><a class="headerlink" href="#specifying-parameters" title="Permalink to this headline">¶</a></h3>
 <p>Parameters can be specified in one of several places:</p>
@@ -462,8 +462,8 @@ owner as the value of the parameter for which the ParameterPort is responsible.<
 <p id="parameterport-modulable-parameters">All of the modulable parameters of a Component – that is, for which it has ParameterPorts –
 are listed in its <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, and have the attribute
 <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable" title="psyneulink.core.globals.parameters.Parameter.modulable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulable</span></code></a> set to True.  The
-ParameterPorts for a Mechanism or Projection are listed in its <code class="xref std std-keyword docutils literal notranslate"><span class="pre">parameter_ports</span></code> attribute, which is also
-read-only.</p>
+ParameterPorts for a Mechanism or Projection are listed in its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.parameter_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter_ports</span></code></a>
+attribute, which is also read-only.</p>
 <p>An initial value can be assigned to a parameter in the corresponding argument of the constructor for the Component
 (see <a class="reference internal" href="#parameterport-value-specification"><span class="std std-ref">above</span></a>.  Parameter values can also be modified by a assigning a value to
 the corresponding attribute.
