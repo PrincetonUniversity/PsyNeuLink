@@ -2220,8 +2220,8 @@ class Mechanism_Base(Mechanism):
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
         effectively begins the function's accumulation over again at the specified value, and updates related
-        attributes on the mechanism.  It also clears the `value <Mechanism.value>` `history <Parameter.history`, thus
-        effectively setting the previous value to ``None``.
+        attributes on the mechanism.  It also clears the `value <Mechanism_Base.value>` `history <Parameter.history>`,
+        thus effectively setting the previous value to ``None``.
 
         If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reset
         <Mechanism_Base.reset>` method:
