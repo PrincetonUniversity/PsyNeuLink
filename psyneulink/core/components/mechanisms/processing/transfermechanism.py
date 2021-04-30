@@ -45,17 +45,18 @@ Overview
 
 A TransferMechanism is a subclass of `ProcessingMechanism` that adds the ability to integrate its input.
 
-As a ProcessingMechanism, it transforms its input using a simple mathematical function that maintains the form
-(dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
-array), or several independent ones. The function used to carry out the transformation can be a `TransferFunction`
-or a `custom one <UserDefinedFunction>` that can accept any of these forms of input and generate one of similar form.
+As a ProcessingMechanism, it transforms its input using a simple mathematical function that maintains the shape of its
+input.  The input can be a single scalar value, a simple list or array, or a multidimensional one (regular or ragged).
+The function used to carry out the transformation can be a `TransferFunction` or a `custom one <UserDefinedFunction>`
+that can accept any of these forms of input and generate one of similar form.  A TransferMechanism can also add `noise
+<TransferMechanism.noise>` to and/or `clip <TransferMechanism.clip>` the result of its function.
 
 A TransferMechanism has two modes of operation: `without integration
 <TransferMechanism_Execution_Without_Integration>` and `with integration enabled
 <TransferMechanism_Execution_With_Integration>`.
 Integration is disabled by default, so that the Mechanism's `function <Mechanism_Base.function>` executes a full
 ("instantaneous") transformation of its input on each execution (akin to the standard practice in feedforward neural
-networks).  However, if integration is enabled, then it uses its `integrator_function
+networks). However, if integration is enabled, then it uses its `integrator_function
 <TransferMechanism.integrator_function>` to integrate its input on each execution, before passing the result on to
 its `function <Mechanism_Base.function>` for transformation (akin to time-averaging the net input to a unit in a
 neural network before passing that to its activation function). When integration is enabled, using the `integrator_mode
