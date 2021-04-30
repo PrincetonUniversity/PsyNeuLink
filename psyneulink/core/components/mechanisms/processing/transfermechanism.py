@@ -254,7 +254,7 @@ three options for this:
 On each execution of the Mechanism, its `variable <Mechanism_Base.variable>` is passed to the `integrator_function
 <TransferMechanism.integrator_function>`, which integrates this with the function's `previous_value
 <IntegratorFunction.previous_value>`, using the Mechanism's `noise <TransferMechanism.noise>` and
-`integration_rate <TransferMechanism.integration_rate>` parameters.  
+`integration_rate <TransferMechanism.integration_rate>` parameters.
 
     .. note::
        Like the TransferMechanism's `initial_value <TransferMechanism.initial_value>`, its `noise
