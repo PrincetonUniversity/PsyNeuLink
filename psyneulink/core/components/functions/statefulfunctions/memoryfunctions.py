@@ -407,7 +407,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
     each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
     corresponding fields must all have the same length across entries.  Fields can be weighted to determine the
-    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` `Parameter`
+    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` parameter
     (see `retrieval <ContentAddressableMemory_Retrieval>` below).
 
     .. hint::
@@ -617,7 +617,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     The **distance_field_weights** argument can be used to differentially weight memory fields to modify their
     influence on retrieval (see `distance_field_weights <ContentAddressableMemory_Distance_Field_Weights>`).  For
-    example, this can be used to configure the Function as dictionary, using the first field for keys (on which
+    example, this can be used to configure the Function as a dictionary, using the first field for keys (on which
     retrieval is based) and the second for values (that are retrieved with a matching key), as follows:
 
         >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],

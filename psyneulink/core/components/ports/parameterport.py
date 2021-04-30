@@ -69,8 +69,9 @@ created for each modulable Parameter of its owner, as well as for each modulable
 Parameters of a Component
 are listed in its `Parameters` class, and have the attribute
 `modulable <Parameter.modulable>` set to True.)
-Each ParameterPort is created using the value specified for the corresponding parameter, as described below.  The
-ParameterPorts for the parameters of a Mechanism or Projection are listed in its `parameter_ports` attribute.
+Each ParameterPort is created using the value specified for the corresponding parameter, as described below.
+The ParameterPorts for the parameters of a Mechanism or Projection are listed in its `parameter_ports
+<Mechanism_Base.parameter_ports>` attribute.
 
 COMMENT:
     FOR DEVELOPERS: The instantiation of ParameterPorts for all of the `user_params` of a Component can be
@@ -325,8 +326,8 @@ following core attributes:
 All of the modulable parameters of a Component -- that is, for which it has ParameterPorts --
 are listed in its `Parameters` class, and have the attribute
 `modulable <Parameter.modulable>` set to True.  The
-ParameterPorts for a Mechanism or Projection are listed in its :keyword:`parameter_ports` attribute, which is also
-read-only.
+ParameterPorts for a Mechanism or Projection are listed in its `parameter_ports <Mechanism_Base.parameter_ports>`
+attribute, which is also read-only.
 
 An initial value can be assigned to a parameter in the corresponding argument of the constructor for the Component
 (see `above <ParameterPort_Value_Specification>`.  Parameter values can also be modified by a assigning a value to
@@ -362,30 +363,31 @@ Class Reference
 """
 
 import collections
-from copy import deepcopy
 import inspect
 import operator
 import types
 import warnings
+from copy import deepcopy
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, parameter_keywords
 from psyneulink.core.components.functions.function import get_param_value_for_keyword
-from psyneulink.core.components.shellclasses import Mechanism, Projection, Function
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port, port_type_keywords
+from psyneulink.core.components.shellclasses import Mechanism, Projection, Function
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, FUNCTION, FUNCTION_PARAMS, \
-    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORTS, \
-    PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
+    LEARNING_SIGNAL, LEARNING_SIGNALS, MECHANISM, NAME, PARAMETER_PORT, PARAMETER_PORT_PARAMS, PATHWAY_PROJECTION, \
+    PROJECTION, PROJECTIONS, PROJECTION_TYPE, REFERENCE_VALUE, SENDER, VALUE
 from psyneulink.core.globals.parameters import ParameterBase, ParameterAlias, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities \
-    import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible, is_instance_or_subclass, UtilitiesError, gen_friendly_comma_str
+    import ContentAddressableList, ReadOnlyOrderedDict, is_iterable, is_numeric, is_value_spec, iscompatible, \
+    is_instance_or_subclass, UtilitiesError, gen_friendly_comma_str
 
 __all__ = [
     'ParameterPort', 'ParameterPortError', 'port_type_keywords',

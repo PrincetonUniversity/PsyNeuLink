@@ -140,4 +140,4 @@ comp.learn(
     call_after_trial=show_weights
 )
 
-comp.show_graph(show_learning=True, show_controller=pnl.ALL)
+# comp.show_graph(show_learning=True, show_controller=pnl.ALL)
