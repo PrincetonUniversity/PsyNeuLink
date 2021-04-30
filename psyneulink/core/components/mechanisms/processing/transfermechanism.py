@@ -45,7 +45,7 @@ Overview
 
 A TransferMechanism is a subclass of `ProcessingMechanism` that adds the ability to integrate its input.
 
-As a ProcessingMechanism, it transforms its input using a simple mathematical function, that maintains the form
+As a ProcessingMechanism, it transforms its input using a simple mathematical function that maintains the form
 (dimensionality) of its input.  The input can be a single scalar value, a multidimensional array (list or numpy
 array), or several independent ones. The function used to carry out the transformation can be a `TransferFunction`
 or a `custom one <UserDefinedFunction>` that can accept any of these forms of input and generate one of similar form.
