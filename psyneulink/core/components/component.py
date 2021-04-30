@@ -81,8 +81,9 @@ Component Structure
 *Core Structural Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
-user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
+Every Component has the following set of core structural attributes that can be specified in its constructor using the
+arguments listed below. These attributes are not meant to be changed by the user once the component is constructed,
+with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Type:
 
@@ -109,6 +110,12 @@ user once the component is constructed, with the one exception of `prefs <Compon
   attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
   setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
   to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
+
+  .. note::
+     The size attribute serves a role similar to
+     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
+     size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
+     that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
 .. _Component_Function:
 
