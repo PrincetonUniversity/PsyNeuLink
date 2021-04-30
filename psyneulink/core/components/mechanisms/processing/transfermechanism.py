@@ -369,9 +369,8 @@ Examples
     - `Execution <TransferMechanism_Examples_Execution>`
         • `Without Integration <TransferMechanism_Examples_Execution_Without_Integration>`
         • `With Integration <TransferMechanism_Examples_Execution_With_Integration>`
-            - `Initializing, Resetting and Resuming Integration
-              <TransferMechanism_Examples_Initialization_and_Resetting>`
-            - `Terminating Integration <TransferMechanism_Examples_Termination>`
+            - `TransferMechanism_Examples_Initialization_and_Resetting`
+            - `TransferMechanism_Examples_Termination`
 
 .. _TransferMechanism_Examples_Creation:
 
@@ -558,6 +557,7 @@ modulation <ModulatorySignal_Modulation>`, then the modulated value will be the 
 .. _TransferMechanism_Examples_Initialization_and_Resetting:
 
 *Initializing, Resetting and Resuming Integration*
+**************************************************
 
 When `integrator_mode <TransferMechanism.integrator_mode>` is True, the state of integration can be initialized
 by specifying its `initial_value <TransferMechanism.initial_value>` using the **initial_value** argument in the
@@ -651,6 +651,8 @@ last True (in this case, where it left off in the preceding example, ``0.257``).
 .. _TransferMechanism_Examples_Termination:
 
 *Terminating Integration*
+*************************
+
 
 *Termination by value*.  This terminates execution when the Mechanism's `value <Mechanism_Base.value>` reaches the
 the value specified by the **threshold** argument.  This is implemented by specifying **termination_measure** with
