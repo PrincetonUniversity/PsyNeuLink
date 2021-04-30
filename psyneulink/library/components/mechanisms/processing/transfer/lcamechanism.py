@@ -126,7 +126,7 @@ similarly-named attributes.  Rather, they are used to specify the `termination_t
 <TransferMechanism.termination_threshold>`, `termination_measure <TransferMechanism.termination_measure>`,
 and `termination_comparison_op <TransferMechanism.termination_comparison_op>` attributes; these can also be
 specified directly as arguments of the LCAMechanism's constructor in order to implement other termination conditions
-(see `TransferMechanism <TransferMechanism_Termination>` for additional details).
+(see `TransferMechanism <TransferMechanism_Execution_Integration_Termination>` for additional details).
 
 COMMENT:
 The default format of its `variable <LCAMechanism.variable>`, and default values of its `inhibition
@@ -184,16 +184,15 @@ Class Reference
 
 """
 
-import warnings
 import logging
-
+import warnings
 from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
 from psyneulink.core.components.functions.objectivefunctions import Distance, MAX_ABS_DIFF
+from psyneulink.core.components.functions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
 from psyneulink.core.components.functions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
