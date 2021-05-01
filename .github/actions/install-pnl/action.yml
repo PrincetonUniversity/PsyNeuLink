@@ -30,3 +30,15 @@ runs:
         python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
         pip install -e .[${{ inputs.features }}]
 
+    - name: "Cleanup old wheels"
+      shell: bash
+      run: |
+        pip cache info
+        INSTALLED=`pip list | sed 's/-/_/g' | sed 's/  */-/' | tail -n+3`
+        CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
+        for P in $CACHED; do
+          # Remove cached and not installed
+          if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
+            pip cache remove -v $P || true
+          fi
+        done

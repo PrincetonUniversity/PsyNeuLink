@@ -58,9 +58,6 @@ jobs:
       with:
         features: 'doc'
 
-    - name: Cleanup old wheels
-      uses: ./.github/actions/cleanup-pip-cache
-
     - name: Build Documentation
       run: sphinx-build -b html -aE -j auto docs/source pnl-html
 

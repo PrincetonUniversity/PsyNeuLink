@@ -54,9 +54,6 @@ jobs:
       with:
         features: 'dev'
 
-    - name: Cleanup old wheels
-      uses: ./.github/actions/cleanup-pip-cache
-
     - name: Lint with flake8
       shell: bash
       run: |
