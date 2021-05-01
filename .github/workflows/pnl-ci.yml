@@ -61,12 +61,10 @@ jobs:
       run: choco install --no-progress -y graphviz --version=2.38.0.20190211
       if: startsWith(runner.os, 'Windows')
 
-    - name: Shared dependencies
-      shell: bash
-      run: |
-        # explicitly install numpy (https://github.com/pypa/pip/issues/9239)
-        python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
-        pip install -e .[dev]
+    - name: Install local, editable PNL package
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'dev'
 
     - name: Windows pytorch
       shell: bash

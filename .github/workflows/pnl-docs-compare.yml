@@ -38,12 +38,11 @@ jobs:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
 
-    - name: Docs dependencies
-      run: |
-        # Install numpy first
-        python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
-        # We need to install all PNL deps since docs config imports psyneulink module
-        pip install -e .[doc]
+    # We need to install all PNL deps since docs config imports psyneulink module
+    - name: Install local, editable PNL package
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'doc'
 
     - name: Add git tag
       # The generated docs include PNL version,
