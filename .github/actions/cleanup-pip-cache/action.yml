@@ -1,5 +1,5 @@
 name: 'Cleanup pip wheels cache'
-description: 'Purge pip wheels cache, keeping wheels for the installed pacakges'
+description: 'Purge pip wheels cache, keeping wheels for the installed packages'
 
 runs:
   using: "composite"
