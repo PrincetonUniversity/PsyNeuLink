@@ -52,18 +52,6 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2
 
-    - name: MacOS dependencies
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
-      if: startsWith(runner.os, 'macOS')
-
-    - name: Linux dependencies
-      run: sudo apt-get install -y graphviz
-      if: startsWith(runner.os, 'Linux')
-
-    - name: Windows dependencies
-      run: choco install --no-progress -y graphviz --version=2.38.0.20190211
-      if: startsWith(runner.os, 'Windows')
-
     # We need to install all PNL deps since docs config imports psyneulink module
     - name: Install local, editable PNL package
       uses: ./.github/actions/install-pnl

@@ -9,7 +9,21 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Shared dependencies
+    - name: OS dependencies
+      shell: bash
+      env:
+        RUNNER_OS: ${{ runner.os }}
+        HOMEBREW_NO_AUTO_UPDATE: 1
+      # Composited actions can't use step conditionals.
+      run: |
+        case "$RUNNER_OS" in
+          macOS*) brew install graphviz ;;
+          Linux*) sudo apt-get install -y graphviz ;;
+          Windows*) choco install --no-progress -y graphviz --version=2.38.0.20190211 ;;
+          *) echo "Unsupported OS"; exit 1 ;;
+        esac
+
+    - name: Python dependencies
       shell: bash
       run: |
         # explicitly install numpy (https://github.com/pypa/pip/issues/9239)
