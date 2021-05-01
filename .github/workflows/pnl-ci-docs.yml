@@ -58,12 +58,6 @@ jobs:
       with:
         features: 'doc'
 
-    - name: Windows pytorch
-      shell: bash
-      run: |
-        pip install $(grep -o 'torch[0-9<=\.]*' requirements.txt) -f https://download.pytorch.org/whl/cpu/torch_stable.html
-      if: startsWith(runner.os, 'Windows') && matrix.python-architecture != 'x86'
-
     - name: Cleanup old wheels
       uses: ./.github/actions/cleanup-pip-cache
 
