@@ -50,7 +50,7 @@ jobs:
       run: git tag 'v999.999.999.999'
 
     - name: Build docs
-      run: sphinx-build -b html -aE docs/source pnl-html
+      run: sphinx-build -b html -aE -j auto docs/source pnl-html
 
     - name: Upload generated docs
       uses: actions/upload-artifact@v2.2.3
