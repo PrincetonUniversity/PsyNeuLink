@@ -52,36 +52,14 @@ jobs:
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2
 
-    - name: MacOS dependencies
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
-      if: startsWith(runner.os, 'macOS')
-
-    - name: Linux dependencies
-      run: sudo apt-get install -y graphviz
-      if: startsWith(runner.os, 'Linux')
-
-    - name: Windows dependencies
-      run: choco install --no-progress -y graphviz --version=2.38.0.20190211
-      if: startsWith(runner.os, 'Windows')
-
-    - name: Shared dependencies
-      shell: bash
-      run: |
-        # explicitly install numpy (https://github.com/pypa/pip/issues/9239)
-        python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
-        pip install -e .[doc]
-
-    - name: Windows pytorch
-      shell: bash
-      run: |
-        pip install $(grep -o 'torch[0-9<=\.]*' requirements.txt) -f https://download.pytorch.org/whl/cpu/torch_stable.html
-      if: startsWith(runner.os, 'Windows') && matrix.python-architecture != 'x86'
-
-    - name: Cleanup old wheels
-      uses: ./.github/actions/cleanup-pip-cache
+    # We need to install all PNL deps since docs config imports psyneulink module
+    - name: Install local, editable PNL package
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'doc'
 
     - name: Build Documentation
-      run: sphinx-build -b html -aE docs/source pnl-html
+      run: sphinx-build -b html -aE -j auto docs/source pnl-html
 
     - name: Upload Documentation
       uses: actions/upload-artifact@v2.2.3
