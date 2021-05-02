@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingProjection &mdash; PsyNeuLink 0.8.8.1+3.gfee229743d documentation</title>
+  <title>GatingProjection &mdash; PsyNeuLink 0.8.8.1+11.g04b6331470 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+3
+                  0.8.8.1+11
                 </div>
               
             
@@ -234,7 +234,7 @@ specified, its initialization is <a class="reference internal" href="#gatingproj
 <span id="gatingprojection-deferred-initialization"></span><h3><em>Deferred Initialization</em><a class="headerlink" href="#deferred-initialization" title="Permalink to this headline">¶</a></h3>
 <p>When a GatingProjection is created, its full initialization is <a class="reference internal" href="Component.html#component-deferred-init"><span class="std std-ref">deferred</span></a> until its
 <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> have been fully specified.  This allows
-a GatingProjection to be created before its <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
+a GatingProjection to be created before its <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> and/or <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> have been created (e.g., before them in a
 script), by calling its constructor without specifying its <strong>sender</strong> or <strong>receiver</strong> arguments. However, for the
 GatingProjection to be operational, initialization must be completed by calling its <code class="xref any docutils literal notranslate"><span class="pre">deferred_init</span></code> method.  This is
 not necessary if the Port(s) to be gated are specified in the <strong>gate</strong> argument of a <a class="reference internal" href="GatingMechanism.html#gatingmechanism-specifying-gating"><span class="std std-ref">GatingMechanism</span></a>, in which case deferred initialization is completed automatically by the

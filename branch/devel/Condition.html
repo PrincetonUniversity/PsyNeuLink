@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.8.8.1+3.gfee229743d documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.8.8.1+11.g04b6331470 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+3
+                  0.8.8.1+11
                 </div>
               
             
@@ -233,7 +233,7 @@ context and assigned automatically, as in the following example:</p>
 <span class="n">my_scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">EveryNCalls</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>Here, <code class="xref any docutils literal notranslate"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.owner" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">B</span></code>.</p>
+<p>Here, <code class="xref any docutils literal notranslate"><span class="pre">EveryNCalls(A,</span> <span class="pre">2)</span></code> for example, is assigned the <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.owner" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">B</span></code>.</p>
 </section>
 <section id="custom-conditions">
 <span id="condition-custom"></span><h3><em>Custom Conditions</em><a class="headerlink" href="#custom-conditions" title="Permalink to this headline">¶</a></h3>
@@ -289,7 +289,7 @@ evaluates to <code class="xref any docutils literal notranslate"><span class="pr
 <p class="admonition-title">Note</p>
 <p>The optional <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> argument in many <a class="reference internal" href="#"><span class="doc">Conditions</span></a> specifies the unit of time over which the
 Condition operates;  the default value is <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> for all Conditions except those with “Trial”
-in their name, for which it is <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p>
+in their name, for which it is <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p>
 </div>
 <p id="conditions-generic"><strong>Generic Conditions</strong> (used to construct <a class="reference internal" href="#condition-custom"><span class="std std-ref">custom Conditions</span></a>):</p>
 <blockquote>
@@ -354,11 +354,11 @@ satisfied any time after the specified <a class="reference internal" href="Time.
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="psyneulink.core.scheduling.condition.AfterNTrials"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AfterNTrials</span></code></a> (int[, TimeScale])
 satisfied any time after the specified number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>s has occurred.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRun" title="psyneulink.core.scheduling.condition.AtRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtRun</span></code></a> (int)
-satisfied any time during the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p></li>
+satisfied any time during the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterRun" title="psyneulink.core.scheduling.condition.AfterRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AfterRun</span></code></a> (int)
-satisfied any time after the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> occurs.</p></li>
+satisfied any time after the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> occurs.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="psyneulink.core.scheduling.condition.AfterNRuns"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AfterNRuns</span></code></a> (int)
-satisfied any time after the specified number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s has occurred.</p></li>
+satisfied any time after the specified number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s has occurred.</p></li>
 </ul>
 </div></blockquote>
 <p id="conditions-component-based"><strong>Component-Based Conditions</strong> (based on the execution or state of other Components):</p>
@@ -377,17 +377,17 @@ satisfied when or any time after the specified Components have executed the spec
 of times among themselves, in total.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="psyneulink.core.scheduling.condition.EveryNCalls"><code class="xref any py py-class docutils literal notranslate"><span class="pre">EveryNCalls</span></code></a> (Component, int[, TimeScale])
 satisfied when the specified Component has executed the specified number of times since the
-last time <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Concatenate.owner" title="psyneulink.core.components.functions.combinationfunctions.Concatenate.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> has run.</p></li>
+last time <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.owner" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> has run.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.JustRan" title="psyneulink.core.scheduling.condition.JustRan"><code class="xref any py py-class docutils literal notranslate"><span class="pre">JustRan</span></code></a> (Component)
 satisfied if the specified Component was assigned to run in the previous <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="psyneulink.core.scheduling.condition.AllHaveRun"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AllHaveRun</span></code></a> (<a href="#id15"><span class="problematic" id="id16">*</span></a>Components)
 satisfied when all of the specified Components have executed at least once.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinished" title="psyneulink.core.scheduling.condition.WhenFinished"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WhenFinished</span></code></a> (Component)
-satisfied when the specified Component has set its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+satisfied when the specified Component has set its <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAny" title="psyneulink.core.scheduling.condition.WhenFinishedAny"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WhenFinishedAny</span></code></a> (<a href="#id17"><span class="problematic" id="id18">*</span></a>Components)
-satisfied when any of the specified Components has set their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+satisfied when any of the specified Components has set their <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> attribute to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.WhenFinishedAll" title="psyneulink.core.scheduling.condition.WhenFinishedAll"><code class="xref any py py-class docutils literal notranslate"><span class="pre">WhenFinishedAll</span></code></a> (<a href="#id19"><span class="problematic" id="id20">*</span></a>Components)
-satisfied when all of the specified Components have set their <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+satisfied when all of the specified Components have set their <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> attributes to <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p id="conditions-convenience"><strong>Convenience Conditions</strong> (based on other Conditions, condensed for convenience)</p>
@@ -398,9 +398,9 @@ satisfied at the beginning of a <a class="reference internal" href="Time.html#ps
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTrialNStart" title="psyneulink.core.scheduling.condition.AtTrialNStart"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtTrialNStart</span></code></a>
 satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.PASS" title="psyneulink.core.scheduling.time.TimeScale.PASS"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PASS</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> counted using ‘TimeScale`</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRunStart" title="psyneulink.core.scheduling.condition.AtRunStart"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtRunStart</span></code></a>
-satisfied at the beginning of a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
+satisfied at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="psyneulink.core.scheduling.condition.AtRunNStart"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtRunNStart</span></code></a>
-satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
+satisfied on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
 </ul>
 </div></blockquote>
 </section>
@@ -570,13 +570,13 @@ specified by <strong>time_scale</strong>.</p></li>
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtRun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRun" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>exactly n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
+<li><p>exactly n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -586,13 +586,13 @@ specified by <strong>time_scale</strong>.</p></li>
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterRun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterRun" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>at least n+1 <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
+<li><p>at least n+1 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occurred.</p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -603,13 +603,13 @@ specified by <strong>time_scale</strong>.</p></li>
 <dd><p>AfterNTrials</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the number of <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s after which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>at least n <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
+<li><p>at least n <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a>s have occured.</p></li>
 </ul>
 </div></blockquote>
 </dd></dl>
@@ -817,7 +817,7 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 <dd><p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>at the beginning of a <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
+<li><p>at the beginning of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a></p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -831,13 +831,13 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 <em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtRunNStart</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</p>
+<dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
+<li><p>on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> 0 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> counted using ‘TimeScale`</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1282,7 +1282,7 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of the Component specified in <strong>components</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of the Component specified in <strong>components</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1304,7 +1304,7 @@ this Condition) can vary arbitrarily in time.</p></li>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of all Components specified in <strong>components</strong> return <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of all Components specified in <strong>components</strong> return <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1329,7 +1329,7 @@ this Condition) can vary arbitrarily in time.</p></li>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.is_finished" title="psyneulink.core.components.component.Component.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of any Components specified in <strong>components</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> methods of any Components specified in <strong>components</strong> returns <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>

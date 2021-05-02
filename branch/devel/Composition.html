@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.8.1+3.gfee229743d documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+11.g04b6331470 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+3
+                  0.8.8.1+11
                 </div>
               
             
@@ -3752,7 +3752,7 @@ a priori how many times a generator will yield</p></li>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
-<li><p><a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – Function that will be used to yield inputs</p></li>
+<li><p><a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> – Function that will be used to yield inputs</p></li>
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">int</span></code> – Functions must always return 1 trial of input per call, so this always returns 1</p></li>
 </ul>
 </p>
@@ -3939,7 +3939,7 @@ explanation of this argument, see <a class="reference internal" href="#compositi
 <li><p><strong>clamp_input</strong> (<em>enum.Enum</em><em>[</em><em>SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP</em><em>] </em><em>: default SOFT_CLAMP</em>) – specifies how inputs are handled for the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>.</p></li>
 <li><p><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>] </em><em>: default None</em>) – nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
 <a class="reference internal" href="#"><span class="doc">Compositions</span></a> of the Composition; specifies alternate parameter values to be used only
-during this <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.RUN" title="psyneulink.core.globals.log.LogCondition.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> when the specified <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is met (see <a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">Runtime Parameters</span></a> for
+during this <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> when the specified <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is met (see <a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">Runtime Parameters</span></a> for
 additional informaton).</p></li>
 <li><p><strong>call_before_time_step</strong> (<em>callable  : default None</em>) – specifies fuction to call before each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> is executed.</p></li>
 <li><p><strong>call_after_time_step</strong> (<em>callable  : default None</em>) – specifies fuction to call after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> is executed.</p></li>

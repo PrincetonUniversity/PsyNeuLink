@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0.8.8.1+3.gfee229743d documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0.8.8.1+11.g04b6331470 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+3
+                  0.8.8.1+11
                 </div>
               
             
@@ -362,7 +362,7 @@ constructor, as described under <a class="reference internal" href="ParameterPor
 specified by the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute.  Every type of Mechanism has at least one
 (primary) function, and some have additional (auxiliary) ones (for example, <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> and
 <a class="reference internal" href="EVCControlMechanism.html"><span class="doc">EVCControlMechanism</span></a>). Mechanism functions are generally from the PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class.  Most Mechanisms
-allow their function to be specified, using the <a class="reference internal" href="AutoAssociativeLearningMechanism.html#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> argument of the Mechanism’s constructor.  The function can
+allow their function to be specified, using the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> argument of the Mechanism’s constructor.  The function can
 be specified using the name of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> class, or its constructor (including arguments that specify its
 parameters).  For example, the <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>, which is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> by
 default, can be specified to be the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function as follows:</p>
@@ -374,7 +374,7 @@ them in its constructor.  Some Mechanisms support only a single function.  In th
 argument is not available in the Mechanism’s constructor, but it does include arguments for the function’s
 parameters.  For example, the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> of a <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> is always the <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> function,
 so the Mechanisms’ constructor does not have a <code class="xref std std-keyword docutils literal notranslate"><span class="pre">function</span></code> argument.  However, it does have a
-<strong>comparison_operation</strong> argument, that is used to set the LinearCombination function’s <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.CombineMeans.operation" title="psyneulink.core.components.functions.combinationfunctions.CombineMeans.operation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">operation</span></code></a> parameter.</p>
+<strong>comparison_operation</strong> argument, that is used to set the LinearCombination function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator.operation" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DualAdaptiveIntegrator.operation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">operation</span></code></a> parameter.</p>
 <p>The parameters for a Mechanism’s primary function can also be specified as entries in a <em>FUNCTION_PARAMS</em> entry of a
 <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter specification dictionary</span></a> in the <strong>params</strong> argument of the Mechanism’s
 constructor.  For example, the parameters of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function in the example above can
