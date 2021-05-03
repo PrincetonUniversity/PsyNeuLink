@@ -1,6 +1,8 @@
 NonStatefulFunctions
 ====================
 
+Functions that do *not* depend on a previous value.
+
 **Subtypes**:
 
 .. toctree::
