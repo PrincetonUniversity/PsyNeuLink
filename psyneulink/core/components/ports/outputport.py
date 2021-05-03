@@ -623,22 +623,19 @@ import warnings
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.functions.transferfunctions import CostFunctions
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import CostFunctions
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
-    MAPPING_PROJECTION, MAX_ABS_INDICATOR, MAX_ABS_VAL, MAX_INDICATOR, MAX_VAL, MEAN, MECHANISM_VALUE, MEDIAN, \
-    NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
-    OWNER_VALUE, PARAMS, PARAMS_DICT, PROB, PROJECTION, PROJECTIONS, PROJECTION_TYPE, \
-    RECEIVER, REFERENCE_VALUE, RESULT, STANDARD_DEVIATION, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, VARIANCE, \
+    MAPPING_PROJECTION, MECHANISM_VALUE, NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
+    OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, ContentAddressableList
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',

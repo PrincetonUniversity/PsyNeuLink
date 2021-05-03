@@ -78,10 +78,8 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-import gym_forager
-
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
-from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BayesGLM
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 

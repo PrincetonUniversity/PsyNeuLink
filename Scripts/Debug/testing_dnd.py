@@ -1,5 +1,5 @@
 import psyneulink as pnl
-from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
 import numpy as np
 
 print(pnl.__version__)

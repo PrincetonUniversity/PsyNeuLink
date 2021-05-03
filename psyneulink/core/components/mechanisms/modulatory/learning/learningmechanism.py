@@ -535,7 +535,7 @@ import warnings
 from enum import Enum
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
@@ -544,9 +544,9 @@ from psyneulink.core.components.ports.modulatorysignals.learningsignal import Le
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, AFTER, ASSERT, CONTEXT, CONTROL_PROJECTIONS, ENABLED, INPUT_PORTS, \
+    ADDITIVE, AFTER, ASSERT, ENABLED, INPUT_PORTS, \
     LEARNED_PARAM, LEARNING, LEARNING_MECHANISM, LEARNING_PROJECTION, LEARNING_SIGNAL, LEARNING_SIGNALS, \
-    MATRIX, NAME, ONLINE, OUTPUT_PORT, OUTPUT_PORTS, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
+    MATRIX, NAME, ONLINE, OUTPUT_PORT, OWNER_VALUE, PARAMS, PROJECTIONS, SAMPLE, PORT_TYPE, VARIABLE
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1209,7 +1209,6 @@ class LearningMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.globals.registry import register_category
         from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
         from psyneulink.core.components.ports.port import Port_Base, _instantiate_port
-        from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 
         # Create registry for LearningSignals (to manage names)
         register_category(entry=LearningSignal,

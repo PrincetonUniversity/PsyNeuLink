@@ -3519,7 +3519,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
         from psyneulink.core.components.ports.parameterport import ParameterPortError
-        from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import LinearMatrix
 
         def parse_parameter_value(value):
             if isinstance(value, (list, tuple)):

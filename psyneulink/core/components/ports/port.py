@@ -778,9 +778,9 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -796,7 +796,7 @@ from psyneulink.core.globals.keywords import \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
     VALUE, VARIABLE, WEIGHT
-from psyneulink.core.globals.parameters import Parameter, ParameterAlias
+from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category
@@ -2760,12 +2760,10 @@ def _parse_port_spec(port_type=None,
     Return either Port object or Port specification dictionary
     """
     from psyneulink.core.components.projections.projection \
-        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple, ProjectionError
+        import _is_projection_spec, _parse_projection_spec, _parse_connection_specs, ProjectionTuple
     from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
     from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
     from psyneulink.core.components.projections.projection import _get_projection_value_shape
-    from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-
 
     # Get all of the standard arguments passed from _instantiate_port (i.e., those other than port_spec) into a dict
     standard_args = get_args(inspect.currentframe())

@@ -1,7 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
 
 
 def my_linear_fct(x,
@@ -38,20 +38,20 @@ def my_sinusoidal_fct(input,
 Input_Layer = pnl.TransferMechanism(
     name='Input_Layer',
     default_variable=np.zeros((2,)),
-    function=psyneulink.core.components.functions.transferfunctions.Logistic
+    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic
 )
 
 Output_Layer = pnl.TransferMechanism(
         name='Output_Layer',
         default_variable=[0, 0, 0],
-        function=psyneulink.core.components.functions.transferfunctions.Linear,
+        function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
         # function=pnl.Logistic,
         # output_ports={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_ports={pnl.NAME: 'RESULTS USING UDF',
                        # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-                       pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(slope=pnl.GATING)
+                       pnl.FUNCTION: psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear(slope=pnl.GATING)
                        # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
                        # pnl.FUNCTION: my_linear_fct
                        # pnl.FUNCTION: my_exp_fct

@@ -430,9 +430,9 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.optimizationfunctions import \
+from psyneulink.core.components.functions.nonstatefulfunctions.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
-from psyneulink.core.components.functions.transferfunctions import CostFunctions
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs

@@ -168,10 +168,10 @@ from typing import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.combinationfunctions import PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.globals.keywords import INITIALIZING, OUTCOME, PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
+from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel, PREFERENCE_SET_NAME

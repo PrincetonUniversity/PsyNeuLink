@@ -3,9 +3,9 @@ import psyneulink.core.llvm as pnlvm
 
 import numpy as np
 import psyneulink.core.components.functions.function as Function
-import psyneulink.core.components.functions.objectivefunctions as Functions
+import psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions as Functions
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition

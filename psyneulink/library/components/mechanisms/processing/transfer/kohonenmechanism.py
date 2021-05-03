@@ -78,18 +78,18 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.learningfunctions import Kohonen
-from psyneulink.core.components.functions.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Kohonen
+from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
-    DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, INITIALIZING, KOHONEN_MECHANISM, \
-    LEARNED_PROJECTIONS, LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
+    DEFAULT_MATRIX, FUNCTION, GAUSSIAN, IDENTITY_MATRIX, KOHONEN_MECHANISM, \
+    LEARNING_SIGNAL, MATRIX, MAX_INDICATOR, NAME, OWNER_VALUE, OWNER_VARIABLE, RESULT, VARIABLE
 from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import is_numeric_or_none, parameter_spec

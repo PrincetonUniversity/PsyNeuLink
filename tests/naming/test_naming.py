@@ -1,7 +1,7 @@
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.components.functions.distributionfunctions
+import psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
 
 
@@ -161,13 +161,13 @@ class TestNaming:
 
         # ControlSignal with one ControlProjection
         C1 = pnl.ControlMechanism(control_signals=[D1.parameter_ports[
-                                                       psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE]])
+                                                       psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DRIFT_RATE]])
         assert C1.control_signals[0].name == 'D1[drift_rate] ControlSignal'
         assert C1.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
         C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
-                                                                         psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
+                                                                         psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DRIFT_RATE],
                                                                      D1.parameter_ports[
                                                                          psyneulink.core.globals.keywords.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
@@ -176,9 +176,9 @@ class TestNaming:
 
         # ControlSignal with two ControlProjection to two parameters of different Mechanisms
         C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
-                                                                         psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE],
+                                                                         psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DRIFT_RATE],
                                                                      D2.parameter_ports[
-                                                                         psyneulink.core.components.functions.distributionfunctions.DRIFT_RATE]]}])
+                                                                         psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DRIFT_RATE]]}])
         assert C3.control_signals[0].name == 'ControlSignal-0 divergent ControlSignal'
         assert C3.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C3.control_signals[0].efferents[1].name == 'ControlProjection for D2[drift_rate]'

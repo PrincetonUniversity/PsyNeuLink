@@ -5,17 +5,16 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.combinationfunctions import Reduce
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.function import FunctionError, get_matrix
-from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX, RESULT
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.core.globals.utilities import UtilitiesError
 from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -1009,7 +1008,6 @@ class TestRecurrentTransferMechanismReset:
         #       num_trials=2,
         #       initialize=True,
         #       initial_values={R: 0.0})
-        from psyneulink.core.scheduling.condition import AtTrialStart, AtRunStart
         C.run(inputs={R: 1.0},
               num_trials=2,
               initialize_cycle_values={R: [0.0]}

@@ -6,9 +6,8 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.transferfunctions import Angle
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Angle
 from psyneulink.core.globals.parameters import ParameterError
-from psyneulink.core.globals.keywords import LEAK, RATE
 
 np.random.seed(0)
 SIZE=10

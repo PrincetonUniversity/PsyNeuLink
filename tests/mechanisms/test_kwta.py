@@ -3,7 +3,7 @@ import pytest
 import numpy as np
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF

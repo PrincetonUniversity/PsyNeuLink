@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.optimizationfunctions import GridSearch, MINIMIZE
-from psyneulink.core.components.functions.transferfunctions import GaussianDistort
+from psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstatefulfunctions.optimizationfunctions import GridSearch, MINIMIZE
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import GaussianDistort
 from psyneulink.core.components.mechanisms.modulatory.control import OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

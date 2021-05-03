@@ -3,7 +3,7 @@ import pytest
 
 import psyneulink.core.llvm as pnlvm
 
-from psyneulink.core.components.functions.transferfunctions import Identity, Linear
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Identity, Linear
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
@@ -13,7 +13,7 @@ from psyneulink.core.components.ports.modulatorysignals.controlsignal import Con
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
+from psyneulink.core.compositions.composition import Composition, CompositionError
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.utilities import convert_all_elements_to_np_array
 from psyneulink.core.globals.keywords import INTERCEPT, NOISE, SLOPE

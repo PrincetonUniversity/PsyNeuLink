@@ -4,15 +4,9 @@ Function
 .. toctree::
    :maxdepth: 1
 
-   UserDefinedFunction
-   TransferFunctions
-   CombinationFunctions
-   SelectionFunctions
-   DistributionFunctions
+   NonStatefulFunctions
    StatefulFunctions
-   ObjectiveFunctions
-   OptimizationFunctions
-   LearningFunctions
+   UserDefinedFunction
 
 .. toctree::
    :maxdepth: 3

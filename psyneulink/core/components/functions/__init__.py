@@ -1,24 +1,19 @@
 from . import function
 from . import userdefinedfunction
-from . import combinationfunctions
-from . import transferfunctions
-from . import selectionfunctions
+from .nonstatefulfunctions import selectionfunctions, objectivefunctions, optimizationfunctions, combinationfunctions, \
+    learningfunctions, transferfunctions, distributionfunctions
 from . import statefulfunctions
-from . import distributionfunctions
-from . import objectivefunctions
-from . import optimizationfunctions
-from . import learningfunctions
 
 from .function import *
-from .userdefinedfunction import *
-from .combinationfunctions import *
-from .transferfunctions import *
-from .selectionfunctions import *
 from .statefulfunctions import *
-from .distributionfunctions import *
-from .objectivefunctions import *
-from .optimizationfunctions import *
-from .learningfunctions import *
+from .userdefinedfunction import *
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import *
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import *
+from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import *
+from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import *
+from psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions import *
+from psyneulink.core.components.functions.nonstatefulfunctions.optimizationfunctions import *
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import *
 
 __all__ = list(function.__all__)
 __all__.extend(userdefinedfunction.__all__)

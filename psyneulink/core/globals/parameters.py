@@ -224,8 +224,8 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |based on execution context                  |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    modulable     |     False     |if True, the parameter can be modulated     |Currently this does not determine what   |
-|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterPort, but in the future |
-|                  |               | it is assigned a `ParameterPort`)         |it should                                |
+|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterPort, but in the future  |
+|                  |               | it is assigned a `ParameterPort`)          |it should                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    read_only     |     False     |whether the user should be able to set the  |Can be manually set, but will trigger a  |
 |                  |               |value or not (e.g. variable and value are   |warning unless override=True             |
@@ -244,7 +244,7 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |context will be passed in if your        |
-|                  |               |(e.g. _output_port_variable_getter)        |method uses them. self - the Parameter   |
+|                  |               |(e.g. _output_port_variable_getter)        |method uses them. self - the Parameter    |
 |                  |               |                                            |calling the setter; owning_component -   |
 |                  |               |                                            |the Component to which the Parameter     |
 |                  |               |                                            |belongs; context - the context           |

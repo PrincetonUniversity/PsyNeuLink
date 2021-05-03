@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import psyneulink.core.components.functions.selectionfunctions as Functions
+import psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import psyneulink.core.llvm as pnlvm
 

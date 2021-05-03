@@ -32,7 +32,7 @@
                         "args": [
                             {
                                 "args": [
-                                    "TransferMechanism-1",
+                                    "TransferMechanism-0",
                                     1
                                 ],
                                 "function": null,
@@ -50,7 +50,7 @@
                             },
                             {
                                 "args": [
-                                    "TransferMechanism-0",
+                                    "TransferMechanism-1",
                                     1
                                 ],
                                 "function": null,
@@ -66,7 +66,7 @@
                         "args": [
                             {
                                 "args": [
-                                    "TransferMechanism-1",
+                                    "TransferMechanism-2",
                                     1
                                 ],
                                 "function": null,
@@ -75,7 +75,7 @@
                             },
                             {
                                 "args": [
-                                    "TransferMechanism-2",
+                                    "TransferMechanism-1",
                                     1
                                 ],
                                 "function": null,
@@ -2690,7 +2690,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-3",
+                                    "name": "Linear Function-0",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -2742,7 +2742,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-0",
+                                    "name": "Linear Function-2",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -2794,7 +2794,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-1",
+                                    "name": "Linear Function-4",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -2846,7 +2846,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-2",
+                                    "name": "Linear Function-3",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -2898,7 +2898,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-4",
+                                    "name": "Linear Function-1",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3013,7 +3013,7 @@
                         "noise": 0.0,
                         "num_executions": "Time(life=0, pass_=0, run=0, time_step=0, trial=0)",
                         "num_executions_before_finished": 0,
-                        "on_resume_integrator_mode": "instantaneous_mode_value",
+                        "on_resume_integrator_mode": "current_value",
                         "output_ports": [
                             "RESULTS"
                         ],
@@ -3182,7 +3182,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-12",
+                                    "name": "Linear Function-9",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3234,7 +3234,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-9",
+                                    "name": "Linear Function-11",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3286,7 +3286,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-10",
+                                    "name": "Linear Function-13",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3338,7 +3338,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-11",
+                                    "name": "Linear Function-12",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3390,7 +3390,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-13",
+                                    "name": "Linear Function-10",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3505,7 +3505,7 @@
                         "noise": 0.0,
                         "num_executions": "Time(life=0, pass_=0, run=0, time_step=0, trial=0)",
                         "num_executions_before_finished": 0,
-                        "on_resume_integrator_mode": "instantaneous_mode_value",
+                        "on_resume_integrator_mode": "current_value",
                         "output_ports": [
                             "RESULTS"
                         ],
@@ -3674,7 +3674,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-21",
+                                    "name": "Linear Function-18",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3726,7 +3726,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-18",
+                                    "name": "Linear Function-20",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3778,7 +3778,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-19",
+                                    "name": "Linear Function-22",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3830,7 +3830,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-20",
+                                    "name": "Linear Function-21",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3882,7 +3882,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-22",
+                                    "name": "Linear Function-19",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -3997,7 +3997,7 @@
                         "noise": 0.0,
                         "num_executions": "Time(life=0, pass_=0, run=0, time_step=0, trial=0)",
                         "num_executions_before_finished": 0,
-                        "on_resume_integrator_mode": "instantaneous_mode_value",
+                        "on_resume_integrator_mode": "current_value",
                         "output_ports": [
                             "RESULTS"
                         ],

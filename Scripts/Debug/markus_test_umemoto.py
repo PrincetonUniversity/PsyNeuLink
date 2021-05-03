@@ -6,8 +6,7 @@ import psyneulink as pnl
 #in v2 we add control signals and a EVC mechanism to the model
 
 # EVC params for Umemoto et al
-import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
 
 w_t = 0.065
 w_d = 0.065
@@ -34,16 +33,15 @@ signalSearchRange = np.arange(0.0, 4.1, 0.2) #like in MATLAB Umemoto[0.0:0.2:4.0
 print(signalSearchRange)
 
 # Stimulus Mechanisms
-Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=psyneulink.core.components.functions
-                                    .transferfunctions.Linear)
+Target_Stim = pnl.TransferMechanism(name='Target Stimulus', function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear)
 Target_Stim.set_log_conditions('value') # Log Target_Rep
 
-Distractor_Stim = pnl.TransferMechanism(name='Distractor Stimulus', function=psyneulink.core.components.functions.transferfunctions.Linear)
+Distractor_Stim = pnl.TransferMechanism(name='Distractor Stimulus', function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear)
 Distractor_Stim.set_log_conditions('value') # Log Target_Rep
 
 # Processing Mechanisms (Control)
 Target_Rep = pnl.TransferMechanism(name='Target Representation',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(
+                                   function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear(
                                         slope=(1.0)))#, pnl.ControlProjection(
                                            # control_signal_params={
                                            #    pnl.ALLOCATION_SAMPLES: signalSearchRange}))))
@@ -51,7 +49,7 @@ Target_Rep.set_log_conditions('value') # Log Target_Rep
 Target_Rep.loggable_items
 
 Distractor_Rep = pnl.TransferMechanism(name='Distractor Representation',
-                                    function=psyneulink.core.components.functions.transferfunctions.Linear(
+                                    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear(
                                          slope=(1.0)))#, pnl.ControlProjection(
                                             # control_signal_params={
                                             #    pnl.ALLOCATION_SAMPLES: signalSearchRange}))))
@@ -59,20 +57,20 @@ Distractor_Rep = pnl.TransferMechanism(name='Distractor Representation',
 Distractor_Rep.set_log_conditions('value') # Log Flanker_Rep
 Distractor_Rep.loggable_items
 # Processing Mechanism (Automatic)
-Automatic_Component_Target = pnl.TransferMechanism(name='Automatic Component Target', function=psyneulink.core.components.functions.transferfunctions.Linear)
+Automatic_Component_Target = pnl.TransferMechanism(name='Automatic Component Target', function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear)
 Automatic_Component_Target.loggable_items
 Automatic_Component_Target.set_log_conditions('value')
 
 # Markus october 25 2018: I think we need 2 automatic components
 
-Automatic_Component_Flanker = pnl.TransferMechanism(name='Automatic Component Flanker', function=psyneulink.core.components.functions.transferfunctions.Linear)
+Automatic_Component_Flanker = pnl.TransferMechanism(name='Automatic Component Flanker', function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear)
 Automatic_Component_Flanker.loggable_items
 Automatic_Component_Flanker.set_log_conditions('value')
 #
 
 
 # Decision Mechanisms
-Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+Decision = pnl.DDM(function=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DriftDiffusionAnalytical(
        # drift_rate=(0.3),
         threshold=(thresh),
         noise=(c),
@@ -86,7 +84,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.distributionfun
         {
             pnl.NAME: 'OFFSET RT',
             pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
-            pnl.FUNCTION: psyneulink.core.components.functions.transferfunctions.Linear(0, slope=1.0, intercept=1)
+            pnl.FUNCTION: psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear(0, slope=1.0, intercept=1)
         }
     ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
 
@@ -144,7 +142,7 @@ mySystem = pnl.System(processes=[TargetControlProcess,
                               control_signals=pnl.ControlSignal(modulates=[(pnl.SLOPE, Target_Rep),
                                                                            (pnl.SLOPE, Distractor_Rep)
                                                                            ],
-                                                                function=psyneulink.core.components.functions.transferfunctions.Logistic,
+                                                                function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic,
                                                                 cost_options=[pnl.CostFunctions.INTENSITY,
                                                                                pnl.CostFunctions.ADJUSTMENT],
                                                                 allocation_samples=signalSearchRange

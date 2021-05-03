@@ -1,4 +1,4 @@
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.library.compositions.pytorchllvmhelper import *
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core import llvm as pnlvm

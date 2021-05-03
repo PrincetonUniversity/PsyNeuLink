@@ -827,14 +827,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination, SUM
-from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination, SUM
+from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import Function, is_function_type
-from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.selectionfunctions import SelectionFunction
+from psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import SelectionFunction
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, TransferFunction
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Logistic, TransferFunction
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, MechanismError
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec

@@ -402,7 +402,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
@@ -1907,7 +1907,7 @@ def _validate_connection_request(
 
 def _get_projection_value_shape(sender, matrix):
     """Return shape of a Projection's value given its sender and matrix"""
-    from psyneulink.core.components.functions.transferfunctions import get_matrix
+    from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import get_matrix
     matrix = get_matrix(matrix)
     return np.zeros(matrix.shape[np.atleast_1d(sender.value).ndim :])
 

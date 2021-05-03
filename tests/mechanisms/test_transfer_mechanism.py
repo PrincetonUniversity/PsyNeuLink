@@ -3,12 +3,12 @@ import pytest
 
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Reinforcement
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
-from psyneulink.core.components.functions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.functions.distributionfunctions import NormalDist, UniformToNormalDist, \
+from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import NormalDist, UniformToNormalDist, \
     ExponentialDist, \
     UniformDist, GammaDist, WaldDist
 from psyneulink.core.components.functions.function import FunctionError
@@ -19,8 +19,7 @@ from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism i
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import \
-    CURRENT_VALUE, LAST_INTEGRATED_VALUE, RESET, COMBINE, RESULT, GREATER_THAN
-from psyneulink.core.globals.utilities import UtilitiesError, set_global_seed
+    CURRENT_VALUE, LAST_INTEGRATED_VALUE, RESET, COMBINE, GREATER_THAN
 from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import TimeScale

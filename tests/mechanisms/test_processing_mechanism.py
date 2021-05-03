@@ -3,15 +3,15 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
-from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
-from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Hebbian, Reinforcement, TDLearning
+from psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import NormalDist, ExponentialDist, \
     UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, \
     AccumulatorIntegrator, DualAdaptiveIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
-from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
+from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.keywords import \
     MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, \

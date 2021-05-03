@@ -7,8 +7,8 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.components.functions.transferfunctions import Logistic
-from psyneulink.core.components.functions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET
@@ -2401,11 +2401,11 @@ class TestNested:
 
         xor_hid = pnl.TransferMechanism(name='xor_hid',
                                         default_variable=np.zeros(10),
-                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+                                        function=Logistic())
 
         xor_out = pnl.TransferMechanism(name='xor_out',
                                         default_variable=np.zeros(1),
-                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+                                        function=Logistic())
 
         hid_map = pnl.MappingProjection(name='input_to_hidden',
                                         matrix=np.random.randn(2, 10) * 0.1,
@@ -2471,11 +2471,11 @@ class TestNested:
 
         xor_hid = pnl.TransferMechanism(name='xor_hid',
                                         default_variable=np.zeros(10),
-                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+                                        function=Logistic())
 
         xor_out = pnl.TransferMechanism(name='xor_out',
                                         default_variable=np.zeros(1),
-                                        function=pnl.core.components.functions.transferfunctions.Logistic())
+                                        function=Logistic())
 
         hid_map = pnl.MappingProjection(name='input_to_hidden',
                                         matrix=np.random.randn(2, 10) * 0.1,

@@ -1,13 +1,11 @@
 import copy
 import numpy as np
-import pytest
 import random
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.globals.keywords import LEARNING
 from psyneulink.library.components.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, run_leabra_network, train_leabra_network
 
 class TestLeabraMechInit:

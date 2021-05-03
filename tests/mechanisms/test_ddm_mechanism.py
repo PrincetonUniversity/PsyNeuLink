@@ -6,7 +6,7 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NormalDist
+from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
