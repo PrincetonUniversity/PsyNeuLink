@@ -403,6 +403,8 @@ class AutodiffComposition(Composition):
         self.parameters.tracked_loss_count._set(0, context=context, skip_history=True, skip_log=True)
         optimizer.step()
         self.parameters.pytorch_representation._get(context=context).detach_all()
+
+    def _writeback_parameters(self, context):
         self.parameters.pytorch_representation._get(context).copy_weights_to_psyneulink(context)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):

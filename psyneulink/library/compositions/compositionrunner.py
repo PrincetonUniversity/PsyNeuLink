@@ -228,6 +228,10 @@ class CompositionRunner():
         # return results from last epoch
         results = self._composition.parameters.results.get(context)[-1 * num_epoch_results:]
 
+        # FIXME: This currently does not work for pnlvm.ExecutionMode.Auto, since we have no way of knowing what mode was taken
+        if hasattr(self._composition, "_writeback_parameters") and (execution_mode == pnlvm.ExecutionMode.Python):
+            self._composition._writeback_parameters(context)
+
         return results
 
 class EarlyStopping(object):
