@@ -1431,7 +1431,7 @@ class Reinforcement(LearningFunction):  # --------------------------------------
 
     .. _Reinforcement_Note:
 
-    .. note::
+    .. technical_note::
        To preserve compatibility with other LearningFunctions:
 
        * the **variable** argument of both the constructor and calls to `function <Reinforcement.function>`

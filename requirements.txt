@@ -10,7 +10,7 @@ networkx<2.6
 numpy<1.20.3
 pillow<8.1.0
 toposort<1.7
-torch<1.8.0; sys_platform != 'win32' and platform_machine == 'x86_64' and platform_python_implementation == 'CPython'
+torch>=1.8.0, <1.9.0; (platform_machine == 'AMD64' or platform_machine == 'x86_64') and platform_python_implementation == 'CPython' and implementation_name == 'cpython'
 typecheck-decorator<=1.2
 leabra-psyneulink<=0.3.2
 rich>=10.1, <10.2

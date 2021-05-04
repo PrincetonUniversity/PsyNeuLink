@@ -107,8 +107,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         specifies the rate of integration.  If it is a list or array, it must be the same length as
         `variable <IntegratorFunction.variable>` (see `rate <IntegratorFunction.rate>` for details).
 
-    noise : float, function, list or 1d array : default 0.0
-        specifies random value added to integral in each call to `function <IntegratorFunction._function>`;
+    noise : float, list, array or function : default 0.0
+        specifies value added to integral in each call to `function <IntegratorFunction._function>`;
         if it is a list or array, it must be the same length as `variable <IntegratorFunction.variable>`
         (see `noise <IntegratorFunction.noise>` for additional details).
 
@@ -142,20 +142,18 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         (depending on the subclass);  if it has more than one element, each element is applied to the corresponding
         element of `variable <IntegratorFunction.variable>` and/or `previous_value <IntegratorFunction.previous_value>`.
 
-    noise : float, Function or 1d array
-        random value added to integral in each call to `function <IntegratorFunction._function>`. If `variable
-        <IntegratorFunction.variable>` is a list or array, and noise is a float or function, it is applied for each
-        element of `variable <IntegratorFunction.variable>`. If noise is a function, it is executed and applied
-        separately for each element of `variable <IntegratorFunction.variable>`.  If noise is a list or array, each
-        element is applied to each element of the integral corresponding that of `variable
+    noise : float, array or Function
+        value is added to integral in each call to `function <IntegratorFunction._function>`. If noise is a
+        float,  it is applied to all elements of `variable <IntegratorFunction.variable>`; if it is an array,
+        it is applied Hadamard (elementwise) to each element of `variable <IntegratorFunction.variable>`. If it is a
+        function, it is executed separately and applied independently to each element of `variable
         <IntegratorFunction.variable>`.
 
         .. hint::
-            To generate random noise that varies for every execution, a probability distribution function should be
-            used (see `Distribution Functions <DistributionFunction>` for details), that generates a new noise value
-            from its distribution on each execution. If noise is specified as a float, a function with a fixed
-            output, or a list or array of either of these, then noise is simply an offset that remains the same
-            across all executions.
+            To generate random noise that varies for every execution and across all elements of an array, a
+            `DistributionFunction` should be used, that generates a new value on each execution. If noise is
+            specified as a float, a function with a fixed output, or an array of either of these, then noise
+            is simply an offset that is the same across all elements and executions.
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
