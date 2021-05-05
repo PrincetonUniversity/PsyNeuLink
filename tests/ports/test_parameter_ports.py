@@ -3,7 +3,7 @@ import psyneulink as pnl
 import pytest
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
 

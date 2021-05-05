@@ -1,6 +1,6 @@
 import numpy as np
 import psyneulink.core.llvm as pnlvm
-import psyneulink.core.components.functions.transferfunctions as Functions
+import psyneulink.core.components.functions.nonstateful.transferfunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import pytest
 

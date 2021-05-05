@@ -30,7 +30,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import Function_Base, FunctionError, is_function_type
-from psyneulink.core.components.functions.transferfunctions import Logistic, SoftMax
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     CONTRASTIVE_HEBBIAN_FUNCTION, TDLEARNING_FUNCTION, LEARNING_FUNCTION_TYPE, LEARNING_RATE, \

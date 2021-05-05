@@ -1,7 +1,7 @@
 import numpy as np
 
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

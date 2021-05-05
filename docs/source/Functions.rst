@@ -4,15 +4,9 @@ Functions
 .. toctree::
    :maxdepth: 1
 
-   UserDefinedFunction
-   TransferFunctions
-   CombinationFunctions
-   SelectionFunctions
-   DistributionFunctions
+   NonStatefulFunctions
    StatefulFunctions
-   ObjectiveFunctions
-   OptimizationFunctions
-   LearningFunctions
+   UserDefinedFunction
 
 .. automodule:: psyneulink.core.components.functions.function
    :members: Function_Base, ArgumentTherapy,

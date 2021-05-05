@@ -3,9 +3,6 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 import pytest
 
-import psyneulink.core.components.functions.combinationfunctions
-import psyneulink.core.components.functions.transferfunctions
-
 
 class TestOutputPorts:
 

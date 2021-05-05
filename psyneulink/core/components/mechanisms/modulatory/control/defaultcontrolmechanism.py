@@ -87,8 +87,6 @@ class DefaultControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    from psyneulink.core.components.functions.transferfunctions import Linear
-
     @tc.typecheck
     def __init__(self,
                  objective_mechanism:tc.optional(tc.any(ObjectiveMechanism, list))=None,

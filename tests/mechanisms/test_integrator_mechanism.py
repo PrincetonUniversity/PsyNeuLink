@@ -6,11 +6,11 @@ import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
     SimpleIntegrator, AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, \
     FitzHughNagumoIntegrator, AccumulatorIntegrator, LeakyCompetingIntegrator, DualAdaptiveIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.integratormechanism import \
     IntegratorMechanism, IntegratorMechanismError

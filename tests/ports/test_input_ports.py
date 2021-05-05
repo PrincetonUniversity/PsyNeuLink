@@ -2,8 +2,8 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-import psyneulink.core.components.functions.combinationfunctions
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.combinationfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 
 class TestInputPorts:
@@ -25,7 +25,7 @@ class TestInputPorts:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.combinationfunctions
+                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions
                                            .LinearCombination,
                                            combine=pnl.PRODUCT))
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
@@ -38,8 +38,8 @@ class TestInputPorts:
         t2 = pnl.TransferMechanism(size=2)
         t3 = pnl.TransferMechanism(
                 size=2,
-                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
-                                           combine=pnl.PRODUCT))
+                input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination(operation=pnl.PRODUCT),
+                                          combine=pnl.PRODUCT))
         c = pnl.Composition(pathways=[[t1, t3],[t2, t3]])
         input_dict = {t1:[1,2],t2:[3,4]}
         val = c.run(inputs=input_dict)
@@ -47,21 +47,20 @@ class TestInputPorts:
 
     def test_combine_param_conflicting_fct_operation_spec(self):
         with pytest.raises(pnl.InputPortError) as error_text:
-            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.combinationfunctions.LinearCombination(operation=pnl.SUM),
-                                                                 combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination(operation=pnl.SUM),
+                                                                combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with specification of 'operation' (SUM) " \
                "for LinearCombination in 'function' argument for InputPort" in str(error_text.value)
 
     def test_combine_param_conflicting_function_spec(self):
         with pytest.raises(pnl.InputPortError) as error_text:
-            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions
-                                                                 .transferfunctions.Linear(), combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(), combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear Function" in str(error_text.value)
 
     def test_combine_param_conflicting_fct_class_spec(self):
         with pytest.raises(pnl.InputPortError) as error_text:
-            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.transferfunctions.Linear, combine=pnl.PRODUCT))
+            t = pnl.TransferMechanism(input_ports=pnl.InputPort(function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear, combine=pnl.PRODUCT))
         assert "Specification of 'combine' argument (PRODUCT) conflicts with Function specified " \
                "in 'function' argument (Linear) for InputPort" in str(error_text.value)
 

@@ -52,12 +52,12 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
     Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
 )
-from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
 from psyneulink.core.components.shellclasses import Projection
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \

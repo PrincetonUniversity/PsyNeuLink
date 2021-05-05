@@ -1451,7 +1451,7 @@ COMMENT
 
 .. _Composition_Reset:
 
-*Resetting Parameters of StatefulFunctions*
+*Resetting Parameters of stateful*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
@@ -1475,7 +1475,7 @@ COMMENT:
 
 COMMENT
 
-`StatefulFunctions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
+`stateful <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
 `MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
 a record of the Function's `values <Parameter.values>` for each `execution context <Composition_Execution_Context>` in
 which it is executed, within and between calls to the Composition's `execute methods <Composition_Execution_Methods>`.
@@ -1504,9 +1504,9 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      <Component.reset_stateful_function_when>` of all Nodes are restored to their prior values upon completion.
 
      - **reset_stateful_functions_when** -- this specifies the `Condition(s) <Condition>` under which the `reset
-       <Component.reset>` method will be called for Nodes with `StatefulFunctions <StatefulFunctions>`. If a single
+       <Component.reset>` method will be called for Nodes with `stateful <stateful>`. If a single
        `Condition` is specified, it is applied to all of the Composition's `Nodes <Composition_Nodes>` that have
-       `StatefulFunctions <StatefulFunctions>`; a dictionary can also be specified, in which the key for each entry
+       `stateful <stateful>`; a dictionary can also be specified, in which the key for each entry
        is a Node, its value is a `Condition` under which that Node's `reset <Component.reset>` method should be called.
 
        .. note::
@@ -2368,11 +2368,11 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.learningfunctions import \
+from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.transferfunctions import Identity
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
@@ -8077,7 +8077,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
             Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
             beginning of the run, using the provided values. For a more in depth explanation of this argument, see
-            `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
+            `Resetting Parameters of stateful <Composition_Reset>`.
 
         reset_stateful_functions_when :  Dict { Node: Condition } | Condition : default Never()
             if type is dict, sets the reset_stateful_function_when attribute for each key Node to its corresponding value
@@ -8085,7 +8085,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Composition that currently have their reset_stateful_function_when conditions set to `Never <Never>`.
             in either case, the specified Conditions persist only for the duration of the run, after which the nodes'
             reset_stateful_functions_when attributes are returned to their previous Conditions. For a more in depth
-            explanation of this argument, see `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
+            explanation of this argument, see `Resetting Parameters of stateful <Composition_Reset>`.
 
         skip_initialization : bool : default False
 

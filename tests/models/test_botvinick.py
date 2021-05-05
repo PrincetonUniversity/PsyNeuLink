@@ -14,8 +14,8 @@ import psyneulink as pnl
 # Note that this script implements a slightly different Figure than in the original Figure in the paper.
 # However, this implementation is identical with a plot we created with an old MATLAB code which was used for the
 # conflict monitoring simulations.
-import psyneulink.core.components.functions.objectivefunctions
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.objectivefunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 
 @pytest.mark.model
