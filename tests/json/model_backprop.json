@@ -7,7 +7,7 @@
                         "args": [
                             {
                                 "args": [
-                                    "TransferMechanism-2",
+                                    "Target",
                                     1
                                 ],
                                 "function": null,
@@ -16,7 +16,7 @@
                             },
                             {
                                 "args": [
-                                    "Target",
+                                    "TransferMechanism-2",
                                     1
                                 ],
                                 "function": null,
@@ -75,7 +75,7 @@
                             },
                             {
                                 "args": [
-                                    "TransferMechanism-1",
+                                    "Comparator",
                                     1
                                 ],
                                 "function": null,
@@ -84,7 +84,7 @@
                             },
                             {
                                 "args": [
-                                    "Comparator",
+                                    "TransferMechanism-1",
                                     1
                                 ],
                                 "function": null,
@@ -1135,7 +1135,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-43",
+                                    "name": "Linear Function-42",
                                     "type": {
                                         "generic": "Linear"
                                     }
@@ -1187,7 +1187,7 @@
                                         "num_executions_before_finished": 0,
                                         "slope": 1.0
                                     },
-                                    "name": "Linear Function-42",
+                                    "name": "Linear Function-43",
                                     "type": {
                                         "generic": "Linear"
                                     }
