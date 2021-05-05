@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0.8.8.1+20.gb6fa55d96f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+19
+                  0.8.8.1+20
                 </div>
               
             
@@ -438,7 +438,7 @@ determined by the projections between them (and shown in the <a class="reference
 which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
 both the probability of crossing a specified <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>), and the mean
 crossing time.  However, it is also possible to simulate the dynamics of the integration process.  This can be done by
-assigning <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code></a> as the Mechanism’s <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and, in the call to the Composition’s
+assigning <code class="xref any docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code> as the Mechanism’s <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and, in the call to the Composition’s
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, specifying that a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a> terminates only when the <code class="docutils literal notranslate"><span class="pre">decision</span></code>
 Mechanism has completed its execution, as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of decision Mechanism:</span>
@@ -454,7 +454,7 @@ Mechanism has completed its execution, as follows:</p>
 <span class="o">&gt;&gt;</span> <span class="p">[[</span><span class="n">array</span><span class="p">([[</span><span class="mf">20.</span><span class="p">]]),</span> <span class="n">array</span><span class="p">([[</span><span class="mf">126.</span><span class="p">]])]]</span>
 </pre></div>
 </div>
-<p>The output is now the result of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.DriftDiffusionIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code></a>, which is the value of the decision variable when it
+<p>The output is now the result of the <code class="xref any docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code>, which is the value of the decision variable when it
 crosses threshold (which is, by definition, equal to either the postive or negative value of the <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a> attribute), and the number of executions it took to do so.  Since the <code class="docutils literal notranslate"><span class="pre">decision</span></code>
 Mechanism is the last (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a>) Mechanism of the Composition, it is also its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Mechanism.  Therefore, its
 output is recorded in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> attribute of the Stroop model, as shown above (note: because
@@ -1114,7 +1114,7 @@ PsyNeuLink model.</p>
 <section id="conclusion">
 <h3>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h3>
 <p>The examples above are intended to provide a sample of PsyNeuLink’s capabilities, and how they can be used.  The
-<a class="reference internal" href="index_logo_with_text.html#tutorial"><span class="std std-ref">Tutorial</span></a> provides a more thorough, interactive introduction to its use, and the <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides
+<a class="reference internal" href="index.html#tutorial"><span class="std std-ref">Tutorial</span></a> provides a more thorough, interactive introduction to its use, and the <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides
 a more detailed description of PsyNeuLink’s organization and capabilities.</p>
 </section>
 </section>

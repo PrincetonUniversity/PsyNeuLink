@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Learning Mechanism &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
+  <title>Learning Mechanism &mdash; PsyNeuLink 0.8.8.1+20.gb6fa55d96f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+19
+                  0.8.8.1+20
                 </div>
               
             
@@ -596,8 +596,8 @@ LearningProjections.  That value is used, in turn, to modify the <a class="refer
 <p>Each ParameterPort uses the value it receives from the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> that projects to it to modify the
 parameter of its <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, in a manner specified by the <code class="xref any docutils literal notranslate"><span class="pre">modulation</span></code> attribute of the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> from which it receives the LearningProjection (see
 <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a description of how modulation operates). By default, the
-<code class="xref any docutils literal notranslate"><span class="pre">modulation</span></code> attribute of a LearningSignal is <code class="xref any docutils literal notranslate"><span class="pre">ADDITIVE</span></code>, the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <em>MATRIX</em> ParameterPort for a MappingProjection is <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code></a>,
-and the parameter it uses for additive modulation is its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a> parameter.
+<code class="xref any docutils literal notranslate"><span class="pre">modulation</span></code> attribute of a LearningSignal is <code class="xref any docutils literal notranslate"><span class="pre">ADDITIVE</span></code>, the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <em>MATRIX</em> ParameterPort for a MappingProjection is <code class="xref any docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code>,
+and the parameter it uses for additive modulation is its <code class="xref any docutils literal notranslate"><span class="pre">increment</span></code> parameter.
 These assignments cause the value of the LearningProjection to be added to the previous value of the <em>MATRIX</em>
 ParameterPort, thus incrementing the weights by an amount specified by the LearningMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>. Note, that the changes to the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter itself do not take effect until the next time the
 <a class="reference internal" href="KohonenMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection" title="psyneulink.library.components.mechanisms.processing.transfer.kohonenmechanism.KohonenMechanism.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> is executed (see <a class="reference internal" href="Component.html#component-lazy-updating"><span class="std std-ref">Lazy Evaluation</span></a> for an explanation of

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0.8.8.1+20.gb6fa55d96f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+19
+                  0.8.8.1+20
                 </div>
               
             
@@ -355,10 +355,10 @@ shared via getter and  with those of their target <a class="reference internal" 
 guarantee that their target will exist, given a specific
 Component. For example, it is acceptable that
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TransferMechanism.integration_rate</span></code></a> is a <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionParameter</span></code></a>
-for the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter of its
+for the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.rate" title="psyneulink.core.components.functions.transferfunctions.Exponential.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter of its
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>,
 because all <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>s have an integrator
-function, and all integrator functions have a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter.
+function, and all integrator functions have a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.rate" title="psyneulink.core.components.functions.transferfunctions.Exponential.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter.
 It is also acceptable that
 <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ControlSignal.intensity_cost_function</span></code></a> is a <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionParameter</span></code></a>
 corresponding to its function’s
@@ -401,6 +401,141 @@ must be avoided at risk of causing computation errors. You may use standard attr
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Run</span></code></a>.</p>
 <p>You should avoid using <a class="reference internal" href="#parameter-dot-notation"><span class="std std-ref">dot notation</span></a> in internal code, as it is ambiguous and can potentially break statefulness.</p>
 <p id="parameter-attributes-table"><a class="reference internal" href="#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> <strong>attributes</strong>:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 15%" />
+<col style="width: 13%" />
+<col style="width: 37%" />
+<col style="width: 35%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>Attribute Name</p></td>
+<td><p>Default value</p></td>
+<td><p>Description</p></td>
+<td><p>Dev notes</p></td>
+</tr>
+<tr class="row-even"><td><p>default_value</p></td>
+<td><p>None</p></td>
+<td><p>the default value of the Parameter</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>name</p></td>
+<td><p>None</p></td>
+<td><p>the name of the Parameter</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>stateful</p></td>
+<td><p>True</p></td>
+<td><p>whether the parameter has different values
+based on execution context</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>modulable</p></td>
+<td><p>False</p></td>
+<td><p>if True, the parameter can be modulated
+(if it belongs to a Mechanism or Projection</p>
+<blockquote>
+<div><p>it is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>)</p>
+</div></blockquote>
+</td>
+<td><p>Currently this does not determine what
+gets a ParameterPort, but in the future
+it should</p></td>
+</tr>
+<tr class="row-even"><td><p>read_only</p></td>
+<td><p>False</p></td>
+<td><p>whether the user should be able to set the
+value or not (e.g. variable and value are
+just for informational purposes).</p></td>
+<td><p>Can be manually set, but will trigger a
+warning unless override=True</p></td>
+</tr>
+<tr class="row-odd"><td><p>aliases</p></td>
+<td><p>None</p></td>
+<td><p>other names by which the parameter goes
+(e.g. allocation is the same as variable for
+ControlSignal).</p></td>
+<td><p>specify as a list of strings</p></td>
+</tr>
+<tr class="row-even"><td><p>user</p></td>
+<td><p>True</p></td>
+<td><p>whether the parameter is something the user
+will care about (e.g. NOT context)</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>values</p></td>
+<td><p>None</p></td>
+<td><p>stores the parameter’s values under
+different execution contexts</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>getter</p></td>
+<td><p>None</p></td>
+<td colspan="2"><p>hook that allows overriding the retrieval of|kwargs self, owning_component, and
+values based on a supplied method           <a href="#id3"><span class="problematic" id="id4">|</span></a>context will be passed in if your
+(e.g. _output_port_variable_getter)        <a href="#id5"><span class="problematic" id="id6">|</span></a>method uses them. self - the Parameter</p>
+<blockquote>
+<div><p><a href="#id7"><span class="problematic" id="id8">|</span></a>calling the setter; owning_component -
+<a href="#id9"><span class="problematic" id="id10">|</span></a>the Component to which the Parameter
+<a href="#id11"><span class="problematic" id="id12">|</span></a>belongs; context - the context
+<a href="#id13"><span class="problematic" id="id14">|</span></a>the setter is called with; should return
+<a href="#id15"><span class="problematic" id="id16">|</span></a>the value</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-odd"><td><p>setter</p></td>
+<td><p>None</p></td>
+<td><p>hook that allows overriding the setting of
+values based on a supplied method (e.g.
+_recurrent_transfer_mechanism_matrix_setter)</p></td>
+<td><p>should take a positional argument; kwargs
+self, owning_component, and context
+will be passed in if your method uses
+them. self - the Parameter calling the
+setter; owning_component - the Component
+to which the Parameter belongs;
+context - the context the
+setter is called with; should return the
+value to be set</p></td>
+</tr>
+<tr class="row-even"><td><p>loggable</p></td>
+<td><p>True</p></td>
+<td><p>whether the parameter can be logged</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>log</p></td>
+<td><p>None</p></td>
+<td><p>stores the log of the parameter if
+applicable</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>log_condition</p></td>
+<td><p><a class="reference internal" href="Report.html#psyneulink.core.compositions.report.ReportOutput.OFF" title="psyneulink.core.compositions.report.ReportOutput.OFF"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OFF</span></code></a></p></td>
+<td><p>the <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition" title="psyneulink.core.globals.log.LogCondition"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LogCondition</span></code></a> for which the parameter
+should be logged</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>history</p></td>
+<td><p>None</p></td>
+<td><p>stores the history of the parameter
+(previous values)</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p>history_max_length</p></td>
+<td><p>1</p></td>
+<td><p>the maximum length of the stored history</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p>fallback_default</p></td>
+<td><p>False</p></td>
+<td><p>if False, the Parameter will return None if
+a requested value is not present for a given
+execution context; if True, the Parameter’s
+default_value will be returned instead</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
 </section>
 </section>
 <section id="class-reference">
@@ -791,7 +926,7 @@ instantiated before that of this Parameter</p>
 <dt id="psyneulink.core.globals.parameters.Parameter.initializer">
 <code class="sig-name descname">initializer</code><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>the name of another Parameter that serves as this
-Parameter’s <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a></p>
+Parameter’s <code class="xref any docutils literal notranslate"><span class="pre">initializer</span></code></p>
 <dl class="field-list simple">
 <dt class="field-odd">Default</dt>
 <dd class="field-odd"><p>None</p>

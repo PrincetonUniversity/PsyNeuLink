@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0.8.8.1+20.gb6fa55d96f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+19
+                  0.8.8.1+20
                 </div>
               
             
@@ -249,9 +249,9 @@
 <span id="lccontrolmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An LCControlMechanism is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that multiplicatively modulates the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> (usually <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanisms</span></a>).
 It implements an abstract model of the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/12371518">locus coeruleus (LC)</a> that
-uses an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a> Function to generate its output.  This is modulated by a <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> parameter that regulates its function between <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">&quot;tonic&quot; and &quot;phasic&quot; modes of
+uses an <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> Function to generate its output.  This is modulated by a <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> parameter that regulates its function between <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">&quot;tonic&quot; and &quot;phasic&quot; modes of
 operation</span></a>.  The Mechanisms modulated by an LCControlMechanism can be listed
-using its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show</span></code></a> method.  When used with an <a class="reference internal" href="AGTControlMechanism.html"><span class="doc">AGTControlMechanism</span></a> to regulate the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> parameter of its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a> Function, it implements a form of the
+using its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show</span></code></a> method.  When used with an <a class="reference internal" href="AGTControlMechanism.html"><span class="doc">AGTControlMechanism</span></a> to regulate the <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> parameter of its <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> Function, it implements a form of the
 <a class="reference external" href="http://www.annualreviews.org/doi/abs/10.1146/annurev.neuro.28.061604.135709">Adaptive Gain Theory</a> of the locus
 coeruleus-norepinephrine (LC-NE) system.</p>
 </section>
@@ -333,22 +333,22 @@ displayed using the LCControlMechanism’s <a class="reference internal" href="#
 </section>
 <section id="function">
 <span id="lccontrolmechanism-function"></span><h3><em>Function</em><a class="headerlink" href="#function" title="Permalink to this headline">¶</a></h3>
-<p>An LCControlMechanism uses the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a> as its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; this
+<p>An LCControlMechanism uses the <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> as its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; this
 implements a <a class="reference external" href="https://en.wikipedia.org/wiki/FitzHugh–Nagumo_model">FitzHugh-Nagumo model</a> often used to describe
-the spiking of a neuron, but in this case the population activity of the LC (see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub">Gilzenrat et al., 2002</a>). The <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a>
-Function of an LCControlMechanism takes a scalar as its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.variable" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, received from
+the spiking of a neuron, but in this case the population activity of the LC (see <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S0893608002000552?via%3Dihub">Gilzenrat et al., 2002</a>). The <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code>
+Function of an LCControlMechanism takes a scalar as its <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code>, received from
 the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> to the LCControlMechanism, and the result serves as the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> for the LCControlMechanism. All of the parameters of the
-<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a> function are accessible as attributes of the LCControlMechanism.</p>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function are accessible as attributes of the LCControlMechanism.</p>
 <section id="lc-modes-of-operation">
 <span id="lccontrolmechanism-modes-of-operation"></span><h4>LC Modes of Operation<a class="headerlink" href="#lc-modes-of-operation" title="Permalink to this headline">¶</a></h4>
-<p>The <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> parameter of the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a> Function
+<p>The <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> parameter of the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> Function
 regulates its operation between <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/8027789">“tonic” and “phasic” modes</a>:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>in the <em>tonic mode</em> (low value of <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>), the output of the LCControlMechanism is
+<li><p>in the <em>tonic mode</em> (low value of <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code>), the output of the LCControlMechanism is
 moderately low and constant; that is, it is relatively unaffected by its <code class="xref any docutils literal notranslate"><span class="pre">input</span> <span class="pre">&lt;LCControlMechanism_Input</span></code>.
 This blunts the response of the Mechanisms that the LCControlMechanism controls to their inputs.</p></li>
-<li><p>in the <em>phasic mode</em> (high value of <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a>), when the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input to the
+<li><p>in the <em>phasic mode</em> (high value of <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code>), when the <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input to the
 LCControlMechanism</span></a> is low, its <a class="reference internal" href="#lccontrolmechanism-output"><span class="std std-ref">output</span></a> is even lower
 than when it is in the tonic regime, and thus the response of the Mechanisms it controls to their outputs is even
 more blunted.  However, when the LCControlMechanism’s input rises above a certain value (determined by the
@@ -373,7 +373,7 @@ in its <a class="reference internal" href="#psyneulink.library.components.mechan
 is the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, after all of the other Mechanisms in the Composition
 have <a class="reference internal" href="Composition.html#composition-execution"><span class="std std-ref">executed</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>. It’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>
 takes the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LCControlMechanism’s <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> as its input,
-and generates a response – under the influence of its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> parameter – that is
+and generates a response – under the influence of its <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> parameter – that is
 assigned as the <code class="xref any docutils literal notranslate"><span class="pre">allocation</span></code> of its <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a>.  The latter are
 used by its <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to modulate the response – in the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>
 of execution – of the Mechanisms the LCControlMechanism controls.</p>
@@ -424,29 +424,29 @@ See <a class="reference internal" href="ControlMechanism.html#controlmechanism-c
 <li><p><strong>modulated_mechanisms</strong> (List[<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>] or <em>ALL</em>) – specifies the Mechanisms to be modulated by the LCControlMechanism. If it is a list, every item must be a
 Mechanism with a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> that implements a <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a>;  alternatively the keyword <em>ALL</em> can be used to specify all of the
 <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a> in the Composition(s) to which the LCControlMechanism  belongs.</p></li>
-<li><p><strong>initial_w_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>initial_v_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>time_step_size_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">time_step_size</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>t_0_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">t_0</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>a_v_FitzHughNagumo</strong> (<em>float : default -1/3</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">a_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>b_v_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">b_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>c_v_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">c_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>d_v_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">d_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>e_v_FitzHughNagumo</strong> (<em>float : default -1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">e_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>f_v_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">f_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>threshold_FitzHughNagumo</strong> (<em>float : default -1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
+<li><p><strong>initial_w_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>initial_v_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>time_step_size_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">time_step_size</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>t_0_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">t_0</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>a_v_FitzHughNagumo</strong> (<em>float : default -1/3</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">a_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>b_v_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">b_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>c_v_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">c_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>d_v_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">d_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>e_v_FitzHughNagumo</strong> (<em>float : default -1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">e_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>f_v_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">f_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>threshold_FitzHughNagumo</strong> (<em>float : default -1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
 <li><p><strong>time_constant_v_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>a_w_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">a_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>b_w_FitzHughNagumo</strong> (<em>float : default -0.8</em><em>,</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">b_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>c_w_FitzHughNagumo</strong> (<em>float : default 0.7</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">c_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
-<li><p><strong>mode_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>a_w_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">a_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>b_w_FitzHughNagumo</strong> (<em>float : default -0.8</em><em>,</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">b_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>c_w_FitzHughNagumo</strong> (<em>float : default 0.7</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">c_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
+<li><p><strong>mode_FitzHughNagumo</strong> (<em>float : default 1.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
 <li><p><strong>uncorrelated_activity_FitzHughNagumo</strong> (<em>float : default 0.0</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">uncorrelated_activity</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
 <li><p><strong>time_constant_w_FitzHughNagumo</strong> (<em>float : default  12.5</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
 <li><p><strong>integration_method</strong> (<em>float : default &quot;RK4&quot;</em>) – sets <code class="xref any docutils literal notranslate"><span class="pre">integration_method</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p></li>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p></li>
 <li><p><strong>base_level_gain</strong> (<em>float : default 0.5</em>) – <p>sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
 to each of the mechanisms it modulates</p>
 <div class="math notranslate nohighlight">
@@ -493,11 +493,11 @@ it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#obj
 <code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>takes the LCControlMechanism’s <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> and generates its response
 &lt;LCControlMechanism_Output&gt;` under
-the influence of the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code></a> Function’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mode</span></code></a> attribute
+the influence of the <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> Function’s <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> attribute
 (see <a class="reference internal" href="#lccontrolmechanism-function"><span class="std std-ref">Function</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.FitzHughNagumoIntegrator">FitzHughNagumoIntegrator</a></p>
+<dd class="field-odd"><p>FitzHughNagumoIntegrator</p>
 </dd>
 </dl>
 </dd></dl>
@@ -547,7 +547,7 @@ which projects to the <a class="reference internal" href="ParameterPort.html"><s
 <code class="sig-name descname">modulated_mechanisms</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> modulated by the LCControlMechanism.</p>
 <p>initial_w_FitzHughNagumo : float : default 0.0
-sets <code class="xref any docutils literal notranslate"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+sets <code class="xref any docutils literal notranslate"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>List[Mechanism]</p>
@@ -558,7 +558,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo">
 <code class="sig-name descname">initial_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>
@@ -570,7 +570,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FitzHughNagumo">
 <code class="sig-name descname">time_step_size_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">time_step_size</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>
@@ -581,7 +581,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo">
 <code class="sig-name descname">t_0_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">t_0</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">t_0</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>
@@ -592,7 +592,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_v_FitzHughNagumo">
 <code class="sig-name descname">a_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">a_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">a_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default -1/3</p>
@@ -603,7 +603,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_v_FitzHughNagumo">
 <code class="sig-name descname">b_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">b_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">b_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>
@@ -614,7 +614,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_v_FitzHughNagumo">
 <code class="sig-name descname">c_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">c_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">c_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 1.0</p>
@@ -625,7 +625,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo">
 <code class="sig-name descname">d_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">d_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">d_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>
@@ -636,7 +636,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.e_v_FitzHughNagumo">
 <code class="sig-name descname">e_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.e_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">e_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">e_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default -1.0</p>
@@ -647,7 +647,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.f_v_FitzHughNagumo">
 <code class="sig-name descname">f_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.f_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">f_v</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">f_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 1.0</p>
@@ -658,7 +658,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.threshold_FitzHughNagumo">
 <code class="sig-name descname">threshold_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.threshold_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default -1.0</p>
@@ -670,7 +670,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo">
 <code class="sig-name descname">time_constant_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 1.0</p>
@@ -681,7 +681,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo">
 <code class="sig-name descname">a_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">a_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">a_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 1.0</p>
@@ -692,7 +692,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_w_FitzHughNagumo">
 <code class="sig-name descname">b_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">b_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">b_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default -0.8,</p>
@@ -703,7 +703,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_w_FitzHughNagumo">
 <code class="sig-name descname">c_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">c_w</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">c_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.7</p>
@@ -714,7 +714,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dl class="py attribute">
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo">
 <code class="sig-name descname">mode_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
-<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> on the LCControlMechanism’s <a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 1.0</p>
@@ -726,7 +726,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FitzHughNagumo">
 <code class="sig-name descname">uncorrelated_activity_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">uncorrelated_activity</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default 0.0</p>
@@ -738,7 +738,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FitzHughNagumo">
 <code class="sig-name descname">time_constant_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default  12.5</p>
@@ -750,7 +750,7 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 <dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.integration_method">
 <code class="sig-name descname">integration_method</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.integration_method" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">integration_method</span></code> on the LCControlMechanism’s
-<a class="reference internal" href="IntegratorFunctions.html#fitzhughnagumointegrator"><span class="std std-ref">FitzHughNagumoIntegrator</span></a> function</p>
+<code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>float : default “RK4”</p>

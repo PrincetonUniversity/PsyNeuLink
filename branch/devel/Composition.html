@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+20.gb6fa55d96f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+19
+                  0.8.8.1+20
                 </div>
               
             
@@ -308,7 +308,7 @@
 </dl>
 </li>
 <li><p><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></p></li>
-<li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of StatefulFunctions</span></a></p></li>
+<li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of stateful</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></p></li>
 </ul>
 </dd>
@@ -927,7 +927,7 @@ other Components in the Composition (e.g., as a source of information or for mod
 <li><p><a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">Runtime Parameters</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-cycles-and-feedback"><span class="std std-ref">Cycles and Feedback</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-execution-context"><span class="std std-ref">Execution Contexts</span></a></p></li>
-<li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of StatefulFunctions</span></a></p></li>
+<li><p><a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of stateful</span></a></p></li>
 <li><p><a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a></p></li>
 </ul>
 </div></blockquote>
@@ -1347,13 +1347,13 @@ value.</p>
 </div></blockquote>
 <p>See <a class="reference internal" href="#composition-examples-execution-context"><span class="std std-ref">Execution Contexts</span></a> for examples.</p>
 </section>
-<section id="resetting-parameters-of-statefulfunctions">
-<span id="composition-reset"></span><h3><em>Resetting Parameters of StatefulFunctions</em><a class="headerlink" href="#resetting-parameters-of-statefulfunctions" title="Permalink to this headline">¶</a></h3>
-<p><a class="reference internal" href="StatefulFunction.html"><span class="doc">StatefulFunctions</span></a> (such as <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunctions</span></code></a> and “non-parametric”
-<a class="reference internal" href="MemoryFunctions.html#psyneulink.core.components.functions.statefulfunctions.memoryfunctions.MemoryFunction" title="psyneulink.core.components.functions.statefulfunctions.memoryfunctions.MemoryFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MemoryFunctions</span></code></a>) have a <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> attribute that maintains
+<section id="resetting-parameters-of-stateful">
+<span id="composition-reset"></span><h3><em>Resetting Parameters of stateful</em><a class="headerlink" href="#resetting-parameters-of-stateful" title="Permalink to this headline">¶</a></h3>
+<p><a class="reference internal" href="StatefulFunction.html"><span class="doc">stateful</span></a> (such as <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunctions</span></code> and “non-parametric”
+<code class="xref any docutils literal notranslate"><span class="pre">MemoryFunctions</span></code>) have a <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code> attribute that maintains
 a record of the Function’s <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.values" title="psyneulink.core.globals.parameters.Parameter.values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> for each <a class="reference internal" href="#composition-execution-context"><span class="std std-ref">execution context</span></a> in
 which it is executed, within and between calls to the Composition’s <a class="reference internal" href="#composition-execution-methods"><span class="std std-ref">execute methods</span></a>.
-This record can be cleared and <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> reset to either the Function’s
+This record can be cleared and <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code> reset to either the Function’s
 <a class="reference internal" href="Parameters.html#parameter-defaults"><span class="std std-ref">default value</span></a> or another one, using either the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.reset" title="psyneulink.core.compositions.composition.Composition.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method
 or in arguments to its <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> and <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods, as described below (see
 <a class="reference internal" href="#composition-examples-reset"><span class="std std-ref">Reset Paramters of Stateful Functions</span></a> for examples):</p>
@@ -1369,9 +1369,9 @@ below).</p></li>
 <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>  and <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> methods, that can be used to specify the <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> under which the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method of all or a particular subset of Nodes are called
 during that run, and optionally the values they are assigned when reset.  As with <a class="reference internal" href="#composition-runtime-params"><span class="std std-ref">runtime_params</span></a>, these specifications apply only for the duration of the call to <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a>, and the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> of all Nodes are restored to their prior values upon completion.</p>
 <ul>
-<li><p><strong>reset_stateful_functions_when</strong> – this specifies the <a class="reference internal" href="Condition.html"><span class="doc">Condition(s)</span></a> under which the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method will be called for Nodes with <a class="reference internal" href="StatefulFunctions.html"><span class="doc">StatefulFunctions</span></a>. If a single
+<li><p><strong>reset_stateful_functions_when</strong> – this specifies the <a class="reference internal" href="Condition.html"><span class="doc">Condition(s)</span></a> under which the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method will be called for Nodes with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a>. If a single
 <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is specified, it is applied to all of the Composition’s <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a> that have
-<a class="reference internal" href="StatefulFunctions.html"><span class="doc">StatefulFunctions</span></a>; a dictionary can also be specified, in which the key for each entry
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a>; a dictionary can also be specified, in which the key for each entry
 is a Node, its value is a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> under which that Node’s <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method should be called.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -1391,8 +1391,8 @@ Any Nodes <em>not</em> specified in the dictionary are reset using their <a clas
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method of most Nodes with a <a class="reference internal" href="StatefulFunction.html"><span class="doc">StatefulFunction</span></a> takes only a single value, that
-is used to reset the <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value" title="psyneulink.core.components.functions.statefulfunctions.statefulfunction.StatefulFunction.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a> attribute of the Function.  However
-some (such as those that use <a class="reference internal" href="IntegratorFunctions.html#dualadaptiveintegrator"><span class="std std-ref">DualAdaptiveIntegrator</span></a>) take more than one value.
+is used to reset the <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code> attribute of the Function.  However
+some (such as those that use <code class="xref any docutils literal notranslate"><span class="pre">DualAdaptiveIntegrator</span></code>) take more than one value.
 For such Nodes, a list of values must be specified as the value of their dicitonary entry in
 <strong>reset_stateful_functions_to</strong>.</p>
 </div>
@@ -3401,7 +3401,7 @@ argument of add_linear_processing_pathway is specified.</p></li>
 
 <dl class="py method">
 <dt id="psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway">
-<code class="sig-name descname">add_linear_learning_pathway</code><span class="sig-paren">(</span><em class="sig-param">pathway</em>, <em class="sig-param">learning_function</em>, <em class="sig-param">loss_function=None</em>, <em class="sig-param">learning_rate=0.05</em>, <em class="sig-param">error_function=&lt;class 'psyneulink.core.components.functions.combinationfunctions.LinearCombination'&gt;</em>, <em class="sig-param">learning_update='after'</em>, <em class="sig-param">name=None</em>, <em class="sig-param">context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add_linear_learning_pathway</code><span class="sig-paren">(</span><em class="sig-param">pathway</em>, <em class="sig-param">learning_function</em>, <em class="sig-param">loss_function=None</em>, <em class="sig-param">learning_rate=0.05</em>, <em class="sig-param">error_function=&lt;class 'psyneulink.core.components.functions.nonstateful.combinationfunctions.LinearCombination'&gt;</em>, <em class="sig-param">learning_update='after'</em>, <em class="sig-param">name=None</em>, <em class="sig-param">context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.add_linear_learning_pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement learning pathway (including necessary <a class="reference internal" href="#composition-learning-components"><span class="std std-ref">learning components</span></a>.</p>
 <p>Generic method for implementing a learning pathway.  Calls <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> to implement
 the processing components including, if necessary, the MappingProjections between Mechanisms.  All of the
@@ -3928,13 +3928,13 @@ respective reset_stateful_function_when conditions are met. These are used to se
 of Mechanisms that have stateful functions. If a node’s reset_stateful_function_when condition is set to
 Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
 beginning of the run, using the provided values. For a more in depth explanation of this argument, see
-<a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of StatefulFunctions</span></a>.</p></li>
+<a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of stateful</span></a>.</p></li>
 <li><p><strong>reset_stateful_functions_when</strong> (<em>Dict { Node: Condition } | Condition : default Never</em><em>(</em><em>)</em>) – if type is dict, sets the reset_stateful_function_when attribute for each key Node to its corresponding value
 Condition. if type is Condition, sets the reset_stateful_function_when attribute for all nodes in the
 Composition that currently have their reset_stateful_function_when conditions set to <a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Never" title="psyneulink.core.scheduling.condition.Never"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Never</span></code></a>.
 in either case, the specified Conditions persist only for the duration of the run, after which the nodes’
 reset_stateful_functions_when attributes are returned to their previous Conditions. For a more in depth
-explanation of this argument, see <a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of StatefulFunctions</span></a>.</p></li>
+explanation of this argument, see <a class="reference internal" href="#composition-reset"><span class="std std-ref">Resetting Parameters of stateful</span></a>.</p></li>
 <li><p><strong>skip_initialization</strong> (<em>bool : default False</em>) – </p></li>
 <li><p><strong>clamp_input</strong> (<em>enum.Enum</em><em>[</em><em>SOFT_CLAMP|HARD_CLAMP|PULSE_CLAMP|NO_CLAMP</em><em>] </em><em>: default SOFT_CLAMP</em>) – specifies how inputs are handled for the Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Nodes</span></a>.</p></li>
 <li><p><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>] </em><em>: default None</em>) – nested dictionary of (value, <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a>) tuples for parameters of Nodes (<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> or
@@ -4141,7 +4141,7 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 <dl class="py method">
 <dt id="psyneulink.core.compositions.composition.Composition.reset">
 <code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">values</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_unspecified_nodes</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">NotImplemented</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.statefulfunctions.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> Function, this method
+<dd><p>If the component’s execute method involves execution of an <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
 value based on its default_variable.</p>
@@ -4514,7 +4514,7 @@ This role cannot be modified programmatically.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#execution-contexts"><em>Execution Contexts</em></a></li>
-<li><a class="reference internal" href="#resetting-parameters-of-statefulfunctions"><em>Resetting Parameters of StatefulFunctions</em></a></li>
+<li><a class="reference internal" href="#resetting-parameters-of-stateful"><em>Resetting Parameters of stateful</em></a></li>
 <li><a class="reference internal" href="#compilation"><em>Compilation</em></a></li>
 </ul>
 </li>
