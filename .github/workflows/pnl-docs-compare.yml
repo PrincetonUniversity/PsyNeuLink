@@ -38,12 +38,28 @@ jobs:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
 
-    - name: Docs dependencies
+    - name: Get pip cache location
+      shell: bash
+      id: pip_cache
       run: |
-        # Install numpy first
-        python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
-        # We need to install all PNL deps since docs config imports psyneulink module
-        pip install -e .[doc]
+        python -m pip install -U pip
+        python -m pip --version
+        echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
+
+    - name: Wheels cache
+      uses: actions/cache@v2.1.5
+      with:
+        path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
+        key: ${{ runner.os }}-python-${{ matrix.python-version }}-x64-pip-wheels-doc-compare-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-python-${{ matrix.python-version }}-x64-pip-wheels-doc-compare
+          ${{ runner.os }}-python-${{ matrix.python-version }}-x64-pip-wheels-v2
+
+    # We need to install all PNL deps since docs config imports psyneulink module
+    - name: Install local, editable PNL package
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'doc'
 
     - name: Add git tag
       # The generated docs include PNL version,
@@ -51,7 +67,7 @@ jobs:
       run: git tag 'v999.999.999.999'
 
     - name: Build docs
-      run: sphinx-build -b html -aE docs/source pnl-html
+      run: sphinx-build -b html -aE -j auto docs/source pnl-html
 
     - name: Upload generated docs
       uses: actions/upload-artifact@v2.2.3
