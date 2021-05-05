@@ -23,7 +23,7 @@ import psyneulink.core.components.functions.nonstateful.transferfunctions
     ]
 )
 def test_output_type_conversion(output_type, variable, expected_output):
-    f = psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear()
+    f = psyneulink.core.components.functions.nonstateful.transferfunctions.Linear()
     f.output_type = output_type
     f.enable_output_type_conversion = True
 
@@ -41,5 +41,5 @@ def test_output_type_conversion(output_type, variable, expected_output):
 )
 def test_output_type_conversion_failure(output_type, variable):
     with pytest.raises(pnl.FunctionError):
-        f = psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear()
+        f = psyneulink.core.components.functions.nonstateful.transferfunctions.Linear()
         f.convert_output_type(variable, output_type=output_type)

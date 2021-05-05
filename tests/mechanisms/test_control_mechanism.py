@@ -17,15 +17,15 @@ class TestLCControlMechanism:
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
-        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
+        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=user_specified_gain), name='B')
         C = pnl.Composition()
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
             base_level_gain=G,
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
-                function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+                function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                 monitor=[B],
                 name='LC ObjectiveMechanism'
             )

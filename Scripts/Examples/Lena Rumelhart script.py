@@ -80,32 +80,32 @@ rels_in = pnl.TransferMechanism(name="rels_input",
 
 h1 = pnl.TransferMechanism(name="hidden_nouns",
                            size=9,
-                           function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic()
+                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
                             )
 
 h2 = pnl.TransferMechanism(name="hidden_mixed",
                            size=16,
-                           function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic()
+                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
                                )
 
 out_sig_I = pnl.TransferMechanism(name="sig_outs_I",
                                   size=len(nouns),
-                                  function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic()
+                                  function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
                                   )
 
 out_sig_is = pnl.TransferMechanism(name="sig_outs_is",
                                    size=len(is_list),
-                                   function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic()
+                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
  )
 
 out_sig_has = pnl.TransferMechanism(name="sig_outs_has",
                                     size=len(has_list),
-                                    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic()
+                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
                                     )
 
 out_sig_can = pnl.TransferMechanism(name="sig_outs_can",
                                     size=len(can_list),
-                                    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic()
+                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
                                     )
 
 ###################### THIS IS THE PART WHERE I PUT IN THE FORCED RANDOM MATRICES #########################

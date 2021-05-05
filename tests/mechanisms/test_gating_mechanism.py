@@ -117,13 +117,13 @@ def test_gating_with_UDF_with_composition():
     Input_Layer = pnl.TransferMechanism(
         name='Input_Layer',
         default_variable=np.zeros((2,)),
-        function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic
+        function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic
     )
 
     Output_Layer = pnl.TransferMechanism(
         name='Output_Layer',
         default_variable=[0, 0, 0],
-        function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+        function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
         # function=pnl.Logistic,
         # output_ports={pnl.NAME: 'RESULTS USING UDF',
         #                pnl.VARIABLE: [(pnl.OWNER_VALUE,0), pnl.TIME_STEP],
@@ -131,7 +131,7 @@ def test_gating_with_UDF_with_composition():
         output_ports={
             pnl.NAME: 'RESULTS USING UDF',
             # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-            pnl.FUNCTION: psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear(slope=pnl.GATING)
+            pnl.FUNCTION: psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=pnl.GATING)
         }
     )
 

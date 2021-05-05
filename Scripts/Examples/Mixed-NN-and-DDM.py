@@ -4,19 +4,19 @@ import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 myInputLayer = pnl.TransferMechanism(
     name='Input Layer',
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear(),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(),
     default_variable=[0, 0]
 )
 
 myHiddenLayer = pnl.TransferMechanism(
     name='Hidden Layer 1',
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic(gain=1.0, x_0=0),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=0),
     default_variable=np.zeros((5,))
 )
 
 myDDM = pnl.DDM(
     name='My_DDM',
-    function=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DriftDiffusionAnalytical(
+    function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=0.5,
         threshold=1,
         starting_point=0.0

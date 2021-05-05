@@ -62,8 +62,8 @@ L = pnl.LeabraMechanism(
 )
 
 
-T1 = pnl.TransferMechanism(name='T1', size=input_size, function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear)
-T2 = pnl.TransferMechanism(name='T2', size=output_size, function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear)
+T1 = pnl.TransferMechanism(name='T1', size=input_size, function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear)
+T2 = pnl.TransferMechanism(name='T2', size=output_size, function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear)
 
 proj = pnl.MappingProjection(sender=T2, receiver=L.input_ports[1])
 comp = pnl.Composition(pathways=[[T1, L], [T2, proj, L]])

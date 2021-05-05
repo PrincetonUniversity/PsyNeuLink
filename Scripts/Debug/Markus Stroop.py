@@ -8,16 +8,16 @@ import psyneulink.core.components.functions.stateful.integratorfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 colors_input_layer = pnl.TransferMechanism(size=2,
-                                           function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+                                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                            name='COLORS_INPUT')
 
 words_input_layer = pnl.TransferMechanism(size=2,
-                                          function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+                                          function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                           name='WORDS_INPUT')
 
 #   Task layer, tasks: ('name the color', 'read the word')
 task_layer = pnl.TransferMechanism(size=2,
-                                   function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                    name='TASK')
 
 #   HIDDEN LAYER UNITS
@@ -27,16 +27,16 @@ task_layer = pnl.TransferMechanism(size=2,
 #   time averaging = integration_rate = 0.1
 unit_noise = 0.001
 colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                            function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
+                                            function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=4.0),  #should be able to get same result with offset = -4.0
                                             integrator_mode=True,
-                                            noise=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                            noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                             integration_rate=0.1,
                                             name='COLORS HIDDEN')
 #    words_hidden: ('RED','GREEN')
 words_hidden_layer = pnl.TransferMechanism(size=2,
-                                           function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic(gain=1.0, x_0=4.0),
+                                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=4.0),
                                            integrator_mode=True,
-                                           noise=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                           noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                            integration_rate=0.1,
                                            name='WORDS HIDDEN')
 
@@ -44,9 +44,9 @@ words_hidden_layer = pnl.TransferMechanism(size=2,
 
 #   Response layer, provide input to accumulator, responses: ('red', 'green')
 response_layer = pnl.TransferMechanism(size=2,
-                                       function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic,
+                                       function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
                                        integrator_mode=True,
-                                       noise=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                       noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                        integration_rate=0.1,
                                        name='RESPONSE')
 #   Respond red accumulator
@@ -55,15 +55,15 @@ response_layer = pnl.TransferMechanism(size=2,
 #   noise will be: squareroot(time_step_size * noise) * a random sample from a normal distribution
 accumulator_noise = 0.01 #0.03
 respond_red_accumulator = pnl.IntegratorMechanism(
-                                   function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator(
-                                                   noise=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions
+                                   function=psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator(
+                                                   noise=psyneulink.core.components.functions.nonstateful.distributionfunctions
                                                        .NormalDist(mean=0, standard_deviation=accumulator_noise).function,
                                                    rate=0.1),
                                    name='respond_red_accumulator')
 #   Respond green accumulator
 respond_green_accumulator = pnl.IntegratorMechanism(
-                                   function=psyneulink.core.components.functions.statefulfunctions.integratorfunctions.SimpleIntegrator(
-                                                   noise=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=accumulator_noise).function,
+                                   function=psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator(
+                                                   noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=accumulator_noise).function,
                                                    rate=0.1),
                                    name='respond_green_accumulator')
 
@@ -247,9 +247,9 @@ def testtrialtype(test_trial_input, initialize_trial_input, ntrials, condition):
         colors_hidden_layer.integrator_mode = True
         words_hidden_layer.integrator_mode = True
         response_layer.integrator_mode = True
-        colors_hidden_layer.noise = psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function
-        words_hidden_layer.noise = psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function
-        response_layer.noise = psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function
+        colors_hidden_layer.noise = psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function
+        words_hidden_layer.noise = psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function
+        response_layer.noise = psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function
 
         # run system with test pattern
         my_Stroop.run(inputs=test_trial_input, termination_processing=terminate_trial)

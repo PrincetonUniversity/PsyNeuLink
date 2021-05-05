@@ -18,31 +18,31 @@ comp_prefs = {
 
 colors = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
     name="Colors"
 )
 
 words = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
     name="Words"
 )
 
 hidden = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic,
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
     name="Hidden"
 )
 
 response = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic(),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(),
     name="Response"
 )
 
 output = pnl.TransferMechanism(
     default_variable=[0, 0],
-    function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Logistic,
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
     name="Output"
 )
 

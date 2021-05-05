@@ -25,7 +25,7 @@ input_layer = pnl.TransferMechanism(
 #      response in the same format as the ARRAY input_format/.
 action_selection = pnl.DDM(
         input_format=pnl.ARRAY,
-        function=psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions.DriftDiffusionAnalytical(
+        function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=pnl.CONTROL,
                 threshold=pnl.CONTROL,
                 starting_point=pnl.CONTROL,
