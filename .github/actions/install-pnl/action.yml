@@ -1,0 +1,54 @@
+name: 'Install local pnl package'
+description: 'Install PsyNeulink dependencies and editable PNL package'
+inputs:
+  features:  # id of input
+    description: 'PsyNeuLink features to install'
+    required: true
+    default: ''
+
+runs:
+  using: "composite"
+  steps:
+    - name: OS dependencies
+      shell: bash
+      env:
+        RUNNER_OS: ${{ runner.os }}
+        HOMEBREW_NO_AUTO_UPDATE: 1
+      # Composited actions can't use step conditionals.
+      run: |
+        case "$RUNNER_OS" in
+          macOS*) brew install graphviz ;;
+          Linux*) sudo apt-get install -y graphviz ;;
+          Windows*) choco install --no-progress -y graphviz --version=2.38.0.20190211 ;;
+          *) echo "Unsupported OS"; exit 1 ;;
+        esac
+
+    - name: Drop pytorch on x86
+      shell: bash
+      run: |
+        if [ $(python -c 'import struct; print(struct.calcsize("P") * 8)') == 32 ]; then
+          sed -i /torch/d requirements.txt
+          # pywinpty is a transitive dependency and v1.0+ removed support
+          # for x86 wheels
+          [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1"
+        fi
+
+    - name: Python dependencies
+      shell: bash
+      run: |
+        # explicitly install numpy (https://github.com/pypa/pip/issues/9239)
+        python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
+        pip install -e .[${{ inputs.features }}]
+
+    - name: "Cleanup old wheels"
+      shell: bash
+      run: |
+        pip cache info
+        INSTALLED=`pip list | sed 's/-/_/g' | sed 's/  */-/' | tail -n+3`
+        CACHED=`pip cache list | cut -f 2,3 -d- | tail -n+3`
+        for P in $CACHED; do
+          # Remove cached and not installed
+          if [ `echo $INSTALLED | grep -o $P | wc -l` == "0" ] ; then
+            pip cache remove -v $P || true
+          fi
+        done
