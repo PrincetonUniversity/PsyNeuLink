@@ -4,7 +4,7 @@ import pytest
 
 from collections import OrderedDict
 
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestLog:

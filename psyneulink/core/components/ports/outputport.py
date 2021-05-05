@@ -623,7 +623,7 @@ import warnings
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import CostFunctions
+from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \

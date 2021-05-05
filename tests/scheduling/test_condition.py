@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition

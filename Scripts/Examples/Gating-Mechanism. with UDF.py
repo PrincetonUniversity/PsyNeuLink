@@ -1,7 +1,7 @@
 import functools
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 
 def my_linear_fct(x,

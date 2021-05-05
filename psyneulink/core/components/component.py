@@ -3018,7 +3018,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             values on the component, depending on the component type.  Otherwise, it simply reassigns the Component's
             value based on its default_variable.
         """
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
             new_value = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
@@ -3519,7 +3519,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
         from psyneulink.core.components.ports.parameterport import ParameterPortError
-        from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 
         def parse_parameter_value(value):
             if isinstance(value, (list, tuple)):

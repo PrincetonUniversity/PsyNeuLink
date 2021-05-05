@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink.core.llvm as pnlvm
-import psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions as Functions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions as Functions
 
 np.random.seed(0)
 test_var = np.random.rand()

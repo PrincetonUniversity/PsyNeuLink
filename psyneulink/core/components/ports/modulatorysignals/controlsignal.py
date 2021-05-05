@@ -403,10 +403,10 @@ import typecheck as tc
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
+from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
@@ -427,7 +427,7 @@ from psyneulink.core.globals.utilities import \
 
 __all__ = ['ControlSignal', 'ControlSignalError', 'COST_OPTIONS']
 
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import \
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     ENABLED_COST_FUNCTIONS, \
     INTENSITY_COST_FUNCTION, ADJUSTMENT_COST_FUNCTION, \
     DURATION_COST_FUNCTION, COMBINED_COSTS, COMBINE_COSTS_FUNCTION
@@ -958,7 +958,7 @@ class ControlSignal(ModulatorySignal):
 
     def _instantiate_function(self, function, function_params=None, context=None):
 
-        from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import \
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import \
             TRANSFER_FCT, INTENSITY_COST_FCT, ADJUSTMENT_COST_FCT, DURATION_COST_FCT, COMBINE_COSTS_FCT
 
         fcts = {

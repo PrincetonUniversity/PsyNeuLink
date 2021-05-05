@@ -8,7 +8,7 @@ import psyneulink as pnl
 # np.random.seed(seed)
 
 # CONSTRUCTION:
-import psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions
+import psyneulink.core.components.functions.nonstateful.learningfunctions
 
 input_layer = pnl.TransferMechanism(
     size=2,

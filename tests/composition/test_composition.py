@@ -6,12 +6,12 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Reinforcement, BackPropagation
-from psyneulink.core.components.functions.nonstatefulfunctions.optimizationfunctions import GridSearch
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
     AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import \
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism

@@ -7,7 +7,7 @@ import pytest
 
 from psyneulink.core.compositions.composition import Composition, CompositionError, RunError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 
 
 class TestTargetSpecs:

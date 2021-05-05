@@ -6,7 +6,7 @@ import psyneulink as pnl
 #in v2 we add control signals and a EVC mechanism to the model
 
 # EVC params for Umemoto et al
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 w_t = 0.065
 w_d = 0.065

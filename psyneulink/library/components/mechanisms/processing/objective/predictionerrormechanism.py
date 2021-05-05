@@ -168,7 +168,7 @@ from typing import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import PredictionErrorDeltaFunction
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import PREDICTION_ERROR_MECHANISM, SAMPLE, TARGET

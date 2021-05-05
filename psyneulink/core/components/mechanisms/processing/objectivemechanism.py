@@ -369,7 +369,7 @@ import typecheck as tc
 from collections.abc import Iterable
 from collections import namedtuple
 
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT

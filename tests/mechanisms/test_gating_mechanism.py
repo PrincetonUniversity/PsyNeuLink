@@ -1,9 +1,9 @@
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection

@@ -112,7 +112,7 @@ import inspect
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords

@@ -3,7 +3,7 @@ from itertools import combinations
 import numpy as np
 import pytest
 
-import psyneulink.core.components.functions.statefulfunctions.memoryfunctions as Functions
+import psyneulink.core.components.functions.stateful.memoryfunctions as Functions
 import psyneulink.core.llvm as pnlvm
 from psyneulink import *
 

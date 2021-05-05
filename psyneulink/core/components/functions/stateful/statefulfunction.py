@@ -26,7 +26,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
-from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE

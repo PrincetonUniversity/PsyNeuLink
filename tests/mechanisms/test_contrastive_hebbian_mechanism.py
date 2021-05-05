@@ -2,8 +2,8 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-import psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.learningfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 
 class TestContrastiveHebbian:

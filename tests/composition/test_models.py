@@ -1,9 +1,9 @@
 import numpy as np
 import psyneulink as pnl
 
-import psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 import psyneulink.core.globals.utilities
 
 class TestModels:

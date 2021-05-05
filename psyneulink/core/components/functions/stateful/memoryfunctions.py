@@ -36,9 +36,9 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import \
     FunctionError, is_function_type, EPSILON
-from psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions import Distance
-from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import OneHot
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \

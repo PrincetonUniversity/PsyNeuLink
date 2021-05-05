@@ -571,7 +571,7 @@ import warnings
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.ports.port import Port, _parse_port_spec

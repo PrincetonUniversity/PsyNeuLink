@@ -3,7 +3,7 @@ import pytest
 
 import psyneulink.core.llvm as pnlvm
 
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Identity, Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity, Linear
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism

@@ -79,7 +79,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.library.compositions.regressioncfa import RegressionCFA
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.globals.keywords import DEFAULT_VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 

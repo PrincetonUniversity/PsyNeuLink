@@ -185,10 +185,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation, Reinforcement
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation, Reinforcement
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal

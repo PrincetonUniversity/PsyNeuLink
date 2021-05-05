@@ -4,7 +4,7 @@ import psyneulink as pnl
 
 # NOTE:  This implements the two stimulus processing pathways (color naming and word reading)
 #        but not an "attention" mechanism that selects between them... stay tuned!
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 pathway_prefs = {
     pnl.REPORT_OUTPUT_PREF: True,

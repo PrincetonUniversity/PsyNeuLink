@@ -4,9 +4,9 @@ import pytest
 
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
+import psyneulink.core.components.functions.stateful.integratorfunctions as Functions
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Angle
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Angle
 from psyneulink.core.globals.parameters import ParameterError
 
 np.random.seed(0)

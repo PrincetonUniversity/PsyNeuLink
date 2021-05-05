@@ -778,9 +778,9 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \

@@ -103,7 +103,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.function import FunctionOutputType
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords

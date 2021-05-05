@@ -191,10 +191,10 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.nonstatefulfunctions.objectivefunctions import Distance, MAX_ABS_DIFF
-from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import LeakyCompetingIntegrator
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance, MAX_ABS_DIFF
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_avg, max_vs_next, MAX_VS_NEXT, MAX_VS_AVG
+from psyneulink.core.components.functions.stateful.integratorfunctions import LeakyCompetingIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.components.mechanisms.processing.transfermechanism import _integrator_mode_setter
 from psyneulink.core.globals.keywords import \
     CONVERGENCE, FUNCTION, GREATER_THAN_OR_EQUAL, LCA_MECHANISM, LESS_THAN_OR_EQUAL, MATRIX, NAME, \

@@ -535,7 +535,7 @@ import warnings
 from enum import Enum
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

@@ -1,6 +1,6 @@
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 myInputLayer = pnl.TransferMechanism(
     name='Input Layer',

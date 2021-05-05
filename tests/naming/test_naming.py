@@ -1,8 +1,8 @@
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
 
 
 class TestNaming:

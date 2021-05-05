@@ -410,7 +410,7 @@ from typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import \
+from psyneulink.core.components.functions.stateful.memoryfunctions import \
     DictionaryMemory, ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort

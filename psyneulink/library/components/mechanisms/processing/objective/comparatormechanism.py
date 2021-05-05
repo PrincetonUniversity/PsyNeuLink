@@ -144,7 +144,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism

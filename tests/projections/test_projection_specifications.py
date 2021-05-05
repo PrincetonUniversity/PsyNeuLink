@@ -2,9 +2,9 @@ import psyneulink as pnl
 import numpy as np
 import pytest
 
-import psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 class TestProjectionSpecificationFormats:
 

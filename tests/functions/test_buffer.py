@@ -3,8 +3,8 @@ import pytest
 from collections import deque
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import NormalDist
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.stateful.memoryfunctions import Buffer
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.scheduling.condition import Never
 

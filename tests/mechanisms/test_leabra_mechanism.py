@@ -3,7 +3,7 @@ import numpy as np
 import random
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.library.components.mechanisms.processing.leabramechanism import LeabraMechanism, build_leabra_network, run_leabra_network, train_leabra_network

@@ -78,8 +78,8 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Kohonen
-from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Kohonen
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, ACTIVATION_OUTPUT, LearningMechanism
 from psyneulink.core.components.mechanisms.mechanism import Mechanism

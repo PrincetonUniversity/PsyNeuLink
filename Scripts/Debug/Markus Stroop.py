@@ -3,9 +3,9 @@ import psyneulink as pnl
 
 #  INPUT UNITS
 #  colors: ('red', 'green'), words: ('RED','GREEN')
-import psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 colors_input_layer = pnl.TransferMechanism(size=2,
                                            function=psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions.Linear,

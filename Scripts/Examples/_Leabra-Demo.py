@@ -23,7 +23,7 @@ import time
 import warnings
 
 # suppress warning as described above
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 warnings.filterwarnings("ignore", message=r".*numpy.dtype size changed.*")
 

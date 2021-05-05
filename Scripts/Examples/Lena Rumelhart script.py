@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 #matplotlib inline
 import psyneulink as pnl
-import psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
+import psyneulink.core.components.functions.nonstateful.transferfunctions
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 
 nouns = ['oak', 'pine', 'rose', 'daisy', 'canary', 'robin', 'salmon', 'sunfish']
 relations = ['is', 'has', 'can']

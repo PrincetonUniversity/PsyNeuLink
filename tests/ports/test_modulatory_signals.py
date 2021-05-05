@@ -1,5 +1,5 @@
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Exponential
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism

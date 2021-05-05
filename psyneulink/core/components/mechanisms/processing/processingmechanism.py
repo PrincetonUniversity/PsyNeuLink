@@ -91,8 +91,8 @@ from collections.abc import Iterable
 import typecheck as tc
 import numpy as np
 
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import SoftMax
-from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import OneHot
+from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.globals.keywords import \
     FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \

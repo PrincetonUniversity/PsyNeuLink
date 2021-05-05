@@ -3,12 +3,12 @@ import pytest
 
 import psyneulink.core.llvm as pnlvm
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import Reinforcement
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator, AdaptiveIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, ReLU, SoftMax
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-from psyneulink.core.components.functions.nonstatefulfunctions.distributionfunctions import NormalDist, UniformToNormalDist, \
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist, UniformToNormalDist, \
     ExponentialDist, \
     UniformDist, GammaDist, WaldDist
 from psyneulink.core.components.functions.function import FunctionError

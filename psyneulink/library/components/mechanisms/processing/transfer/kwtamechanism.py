@@ -185,7 +185,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
 from psyneulink.core.globals.keywords import KWTA_MECHANISM, K_VALUE, RATIO, RESULT, THRESHOLD
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set

@@ -1,7 +1,7 @@
 import numpy as np
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import FitzHughNagumoIntegrator
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
+from psyneulink.core.components.functions.stateful.integratorfunctions import FitzHughNagumoIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import LCAMechanism

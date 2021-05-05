@@ -1,10 +1,10 @@
 import numpy as np
 
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import \
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.stateful.memoryfunctions import \
     STORAGE_PROB
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import DictionaryMemory
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+from psyneulink.core.components.functions.stateful.memoryfunctions import DictionaryMemory
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism

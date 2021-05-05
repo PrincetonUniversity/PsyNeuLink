@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Linear
-from psyneulink.core.components.functions.nonstatefulfunctions.selectionfunctions import max_vs_next
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_next
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism

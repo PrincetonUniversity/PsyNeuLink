@@ -7,8 +7,8 @@ import pytest
 
 import psyneulink as pnl
 
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Logistic
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals import Context
 from psyneulink.core.globals.keywords import TRAINING_SET

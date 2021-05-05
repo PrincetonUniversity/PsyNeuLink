@@ -2368,11 +2368,11 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.nonstatefulfunctions.learningfunctions import \
+from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.nonstatefulfunctions.transferfunctions import Identity
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \

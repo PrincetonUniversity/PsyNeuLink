@@ -502,7 +502,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.nonstatefulfunctions.combinationfunctions import CombinationFunction, LinearCombination
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
