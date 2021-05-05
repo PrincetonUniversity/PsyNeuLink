@@ -190,9 +190,9 @@ import warnings
 from enum import Enum
 import typecheck as tc
 
-from psyneulink.core.components.functions.learningfunctions import LearningFunction
-from psyneulink.core.components.shellclasses import Mechanism, Projection
-from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.components.functions.nonstateful.learningfunctions import LearningFunction
+from psyneulink.core.components.shellclasses import Mechanism
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM

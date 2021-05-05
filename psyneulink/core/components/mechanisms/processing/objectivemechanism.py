@@ -369,15 +369,14 @@ import typecheck as tc
 from collections.abc import Iterable
 from collections import namedtuple
 
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    CONTROL, EXPONENT, EXPONENTS, FUNCTION, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
+    CONTROL, EXPONENT, EXPONENTS, LEARNING, MATRIX, NAME, OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, \
     PARAMS, PREFERENCE_SET_NAME, PROJECTION, PROJECTIONS, PORT_TYPE, VARIABLE, WEIGHT, WEIGHTS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF

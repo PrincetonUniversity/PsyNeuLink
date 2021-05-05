@@ -1084,7 +1084,7 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -2261,8 +2261,8 @@ class Mechanism_Base(Mechanism):
                 functions for details on their `stateful_attributes <IntegratorFunction.stateful_attributes>`,
                 as well as other reinitialization steps that the reset method may carry out.
         """
-        from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports

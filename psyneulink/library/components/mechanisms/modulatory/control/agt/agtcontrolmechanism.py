@@ -162,7 +162,7 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
+from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
 from psyneulink.core.components.shellclasses import Mechanism, System_Base

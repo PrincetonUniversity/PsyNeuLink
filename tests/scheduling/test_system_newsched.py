@@ -1,13 +1,13 @@
 import numpy
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
-from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan, Never
+from psyneulink.core.scheduling.condition import AfterNCalls, All, Any, AtNCalls, AtPass, EveryNCalls, JustRan
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM

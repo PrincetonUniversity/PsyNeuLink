@@ -1,30 +1,30 @@
 import functools
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
     default_variable=np.zeros((2,)),
-    function=psyneulink.core.components.functions.transferfunctions.Logistic
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic
 )
 
 Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
     default_variable=np.zeros((5,)),
-    function=psyneulink.core.components.functions.transferfunctions.Logistic()
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
 )
 
 Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
     default_variable=[0, 0, 0, 0],
-    function=psyneulink.core.components.functions.transferfunctions.Logistic()
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic()
 )
 
 Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
     default_variable=[0, 0, 0],
-    function=psyneulink.core.components.functions.transferfunctions.Logistic
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic
 )
 
 Gating_Mechanism = pnl.GatingMechanism(
@@ -62,7 +62,7 @@ Middle_Weights = pnl.MappingProjection(
     receiver=Hidden_Layer_2,
     matrix={
         pnl.VALUE: Middle_Weights_matrix,
-        pnl.FUNCTION: psyneulink.core.components.functions.statefulfunctions.integratorfunctions.AccumulatorIntegrator,
+        pnl.FUNCTION: psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator,
         pnl.FUNCTION_PARAMS: {
             pnl.INITIALIZER: Middle_Weights_matrix,
             pnl.RATE: Middle_Weights_matrix

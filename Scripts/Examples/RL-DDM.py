@@ -8,8 +8,7 @@ import psyneulink as pnl
 # np.random.seed(seed)
 
 # CONSTRUCTION:
-import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.learningfunctions
+import psyneulink.core.components.functions.nonstateful.learningfunctions
 
 input_layer = pnl.TransferMechanism(
     size=2,
@@ -26,7 +25,7 @@ input_layer = pnl.TransferMechanism(
 #      response in the same format as the ARRAY input_format/.
 action_selection = pnl.DDM(
         input_format=pnl.ARRAY,
-        function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+        function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=pnl.CONTROL,
                 threshold=pnl.CONTROL,
                 starting_point=pnl.CONTROL,

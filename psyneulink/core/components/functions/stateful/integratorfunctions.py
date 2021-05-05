@@ -33,9 +33,9 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
+from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
@@ -2983,7 +2983,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         initializers.remove('initializer')
         self._instantiate_stateful_attributes(self.stateful_attributes, initializers, context)
 
-        from psyneulink.core.components.functions.transferfunctions import Angle
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import Angle
         angle_function = self.parameters.angle_function.default_value or Angle
         dimension = self.parameters.dimension.default_value
 

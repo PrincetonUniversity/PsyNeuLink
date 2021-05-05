@@ -2,13 +2,12 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.selectionfunctions import max_vs_next
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import max_vs_next
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
-from psyneulink.core.scheduling.condition import Never, WhenFinished, AtRunStart, AtTrialStart
+from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.library.components.mechanisms.processing.transfer.lcamechanism import \
     LCAMechanism, MAX_VS_AVG, MAX_VS_NEXT, CONVERGENCE
 
