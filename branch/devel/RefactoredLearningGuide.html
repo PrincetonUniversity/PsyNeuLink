@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.8.8.1+12.g639d8dd910 documentation</title>
+  <title>Migrating Learning Compositions from before PsyNeuLink 0.7.4 &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+12
+                  0.8.8.1+19
                 </div>
               
             
@@ -291,7 +291,7 @@ its constructor to be runtime parameters of its <a class="reference internal" hr
 <span class="gp">... </span>                        <span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span>
 <span class="gp">... </span>                        <span class="n">receiver</span><span class="o">=</span><span class="n">my_mech_2</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="c1"># Create AutodiffComposition</span>
-<span class="gp">... </span>    <span class="n">my_autodiff</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AutodiffComposition</span><span class="p">(</span><span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=.</span><span class="mi">0001</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">my_autodiff</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">AutodiffComposition</span><span class="p">(</span><span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mf">.0001</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">my_mech_1</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">my_mech_2</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">add_projection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">my_mech_1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="n">my_projection</span><span class="p">,</span> <span class="n">receiver</span><span class="o">=</span><span class="n">my_mech_2</span><span class="p">)</span>
@@ -324,7 +324,7 @@ its constructor to be runtime parameters of its <a class="reference internal" hr
 <span class="gp">... </span>    <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="n">my_inputs</span><span class="p">,</span> <span class="s2">&quot;targets&quot;</span><span class="p">:</span> <span class="n">my_targets</span><span class="p">,</span> <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">}</span>
 <span class="gp">...</span>
 <span class="gp">... </span>    <span class="c1"># Run Composition with learning enabled</span>
-<span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=.</span><span class="mi">0001</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">,</span> <span class="n">patience</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">min_delta</span><span class="o">=</span><span class="mf">.0001</span><span class="p">)</span>
 <span class="gp">...</span>
 <span class="gp">... </span>    <span class="c1"># Run Composition with learning disabled</span>
 <span class="gp">... </span>    <span class="n">my_autodiff</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">])</span>

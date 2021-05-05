@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0.8.8.1+12.g639d8dd910 documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0.8.8.1+19.g4b5684f033 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+12
+                  0.8.8.1+19
                 </div>
               
             
@@ -561,7 +561,7 @@ the value is simply added to the result, as shown in the example below, that use
 the result is the same as the input, plus the value specified for <strong>noise</strong>.  A list can also be used to specify
 <strong>noise</strong> (it must be the same length as the Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>), in which case each
 element is applied Hadamard (elementwise) to the result, as shown here:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="o">.</span><span class="mi">9</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">noise</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span><span class="mf">1.2</span><span class="p">,</span><span class="mf">.9</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="go">array([[2. , 2.2, 1.9]])</span>
 </pre></div>
@@ -596,7 +596,7 @@ when used in a list, functions must be instances, as shown below:</p>
 after the TransferMechanism has been constructed must be done to its base value (see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a>
 for additional information).</p>
 <p>Finally, <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.clip"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">clipping</span></code></a> can also be used to cap the result to within specified bounds:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="p">(</span><span class="o">.</span><span class="mi">5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">clip</span> <span class="o">=</span> <span class="p">(</span><span class="mf">.5</span><span class="p">,</span> <span class="mf">1.2</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
 <span class="go">array([[1.2, 1.2, 1.2]])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">my_linear_tm</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
@@ -811,7 +811,7 @@ Mechanism to continue to integrate the instruction and impact stimulus processin
 <span class="gp">... </span>                                 <span class="n">termination_comparison_op</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">GREATER_THAN</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">instruction_input</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">slope</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">attention</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">LCAMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Attention&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Logistic</span><span class="p">,</span>
-<span class="gp">... </span>                             <span class="n">leak</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">competition</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">self_excitation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">time_step_size</span><span class="o">=.</span><span class="mi">1</span><span class="p">,</span>
+<span class="gp">... </span>                             <span class="n">leak</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">competition</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">self_excitation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">time_step_size</span><span class="o">=</span><span class="mf">.1</span><span class="p">,</span>
 <span class="gp">... </span>                             <span class="n">termination_threshold</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
 <span class="gp">... </span>                             <span class="n">termination_measure</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">response</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Response&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
