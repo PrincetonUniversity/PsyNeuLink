@@ -1910,7 +1910,7 @@ class AtTrialNStart(All):
 
     """
     def __init__(self, n, time_scale=TimeScale.RUN):
-        return super.__init__(AtPass(0), AtTrial(n, time_scale))
+        return super().__init__(AtPass(0), AtTrial(n, time_scale))
 
 
 class AtRunStart(AtTrial):
@@ -1948,4 +1948,4 @@ class AtRunNStart(All):
 
     """
     def __init__(self, n):
-        return super.__init__(AtTrial(0), AtRun(n))
+        return super().__init__(AtTrial(0), AtRun(n))
