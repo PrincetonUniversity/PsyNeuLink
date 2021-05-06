@@ -455,7 +455,7 @@ def _generate_component_string(
     # pnl objects only have one function unless specified in another way
     # than just "function"
     try:
-        parameters['function'] = component_dict['functions'][0]
+        parameters['function'] = component_dict['functions'][list(component_dict['functions'])[0]]
     except KeyError:
         pass
 
@@ -643,7 +643,7 @@ def _generate_condition_string(condition_dict, component_identifiers):
     return f'psyneulink.{condition_dict[MODEL_SPEC_ID_TYPE]}({arguments_str})'
 
 
-def _generate_composition_string(composition_list, component_identifiers):
+def _generate_composition_string(graphs_dict, component_identifiers):
     # used if no generic types are specified
     default_composition_type = psyneulink.Composition
     default_node_type = psyneulink.ProcessingMechanism
@@ -661,13 +661,17 @@ def _generate_composition_string(composition_list, component_identifiers):
     output = []
 
     # may be given multiple compositions
-    for composition_dict in composition_list:
+    for comp_name, composition_dict in graphs_dict.items():
         try:
             comp_type = _parse_component_type(composition_dict)
         except KeyError:
             comp_type = default_composition_type
 
-        comp_name = composition_dict['name']
+        try:
+            assert comp_name == composition_dict['name']
+        except KeyError:
+            pass
+
         comp_identifer = parse_valid_identifier(comp_name)
 
         # get order in which nodes were added
@@ -952,11 +956,16 @@ def generate_script_from_json(model_input):
 
     """
 
-    def get_declared_identifiers(composition_list):
+    def get_declared_identifiers(graphs_dict):
         names = set()
 
-        for composition_dict in composition_list:
-            names.add(parse_valid_identifier(composition_dict['name']))
+        for comp_name, composition_dict in graphs_dict.items():
+            try:
+                assert comp_name == composition_dict['name']
+            except KeyError:
+                pass
+
+            names.add(parse_valid_identifier(comp_name))
             for name, node in composition_dict[MODEL_SPEC_ID_NODES].items():
                 if MODEL_SPEC_ID_COMPOSITION in node:
                     names.update(
@@ -1075,7 +1084,7 @@ def write_json_file(compositions, filename:str, path:str=None):
     merged_dict_summary = {}
     for c in compositions:
         try:
-            merged_dict_summary[MODEL_SPEC_ID_COMPOSITION].extend(
+            merged_dict_summary[MODEL_SPEC_ID_COMPOSITION].update(
                 c._dict_summary[MODEL_SPEC_ID_COMPOSITION]
             )
         except KeyError:

@@ -11477,15 +11477,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del projections_dict[MODEL_SPEC_ID_PSYNEULINK]
 
         return {
-            MODEL_SPEC_ID_COMPOSITION: [{
-                **super_summary,
-                **self.scheduler._dict_summary,
-                **{
-                    MODEL_SPEC_ID_NODES: nodes_dict,
-                    MODEL_SPEC_ID_PROJECTIONS: projections_dict,
-                    'controller': self.controller,
+            MODEL_SPEC_ID_COMPOSITION: {
+                self.name: {
+                    **super_summary,
+                    **self.scheduler._dict_summary,
+                    **{
+                        MODEL_SPEC_ID_NODES: nodes_dict,
+                        MODEL_SPEC_ID_PROJECTIONS: projections_dict,
+                        'controller': self.controller,
+                    }
                 }
-            }]
+            }
         }
 
     # endregion LLVM

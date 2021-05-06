@@ -4104,7 +4104,7 @@ class Mechanism_Base(Mechanism):
             ]
         }
         inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
-            [s._dict_summary for s in self.parameter_ports]
+            {s.name: s._dict_summary for s in self.parameter_ports}
         )
 
         outputs_dict = {
