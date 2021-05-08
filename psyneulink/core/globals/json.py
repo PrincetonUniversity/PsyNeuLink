@@ -594,18 +594,15 @@ def _generate_scheduler_string(
 
 def _generate_condition_string(condition_dict, component_identifiers):
     def _parse_condition_arg_value(value):
-        pnl_str = parse_string_to_psyneulink_object_string(value)
         try:
             identifier = parse_valid_identifier(value)
         except TypeError:
-            identifier = None
-
-        if identifier in component_identifiers:
-            return identifier
-        elif pnl_str is not None:
-            return f'psyneulink.{pnl_str}'
+            pass
         else:
-            return str(value)
+            if identifier in component_identifiers:
+                return str(identifier)
+
+        return str(_parse_parameter_value(value, component_identifiers))
 
     args_str = ''
 
