@@ -1,0 +1,73 @@
+name: Prepare PNL release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout sources
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 1
+
+    - name: Check if on master
+      id: on_master
+      shell: bash
+      run: |
+        git fetch origin master --depth=100
+        git describe --always --tags
+        export ON_MASTER=$(git branch -a --contains ${{ github.ref }} | grep -q '^  remotes/origin/master$' && echo "master" || echo "")
+        echo "Found out: ${ON_MASTER}"
+        echo ::set-output name=on_master::$ON_MASTER
+
+    - name: Check for existing release with the reference tag
+      uses: actions/github-script@v4
+      id: exist_check
+      with:
+        script: |
+          tag = context.ref.split('/').pop()
+          console.log('running on:' + context.ref);
+          console.log('Looking for release for tag:' + tag);
+          try {
+            release_if_exists = await github.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag
+            });
+            console.log('Release found at: ' + release_if_exists.data.html_url);
+            core.setOutput('exists', 'yes')
+          } catch (err) {
+            if (err.status == 404) {
+              console.log('Release not found.');
+              core.setOutput('exists', 'no')
+            } else {
+              throw err;
+            }
+          }
+
+    - name: Create Release
+      uses: actions/github-script@v4
+      if: steps.on_master.outputs.on_master == 'master' && steps.exist_check.outputs.exists == 'no'
+      with:
+        # We need custom token since the default one doesn't trigger actions
+        github-token: ${{ secrets.CREATE_RELEASE_TOKEN }}
+        script: |
+          if (core.getInput('github-token') == 'no-token') {
+            core.warning('No token to create a release!');
+            return 0;
+          }
+
+          tag = context.ref.split('/').pop()
+          return await github.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: tag,
+              prerelease: true,
+              name: 'Release ' + tag,
+              body: 'New features and fixed bugs'
+          });
