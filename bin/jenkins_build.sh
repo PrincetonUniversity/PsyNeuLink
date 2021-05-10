@@ -16,9 +16,6 @@ if [ -z $env_name ]; then
 	exit 1
 fi
 
-# setting the path
-PYTHONPATH=$PYTHONPATH:$WORKSPACE
-
 PNL_DIR=$WORKSPACE
 PYTEST_TEST_DIR=tests/
 
