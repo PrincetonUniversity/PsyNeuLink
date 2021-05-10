@@ -17,7 +17,6 @@ if [ -z $env_name ]; then
 fi
 
 PNL_DIR=$WORKSPACE
-PYTEST_TEST_DIR=tests/
 
 JUNIT_DIR=$PNL_DIR'/jenkins/junit-reports'
 JUNIT_BACKUP_DIR=~/jenkins/junit-reports/$JOB_BASE_NAME
@@ -79,9 +78,9 @@ if [ $? -eq 1 ]; then
     exit 1
 fi
 
-echo 'Running pytest on '$PYTEST_TEST_DIR
-#gtimeout --foreground -k 6 10m python -m pytest --junit-xml=$JUNIT_DIR/$BRANCH-$BUILD.xml $PYTEST_TEST_DIR
-python -m pytest -p no:logging --junit-xml=$JUNIT_DIR/$BRANCH-$BUILD.xml $PYTEST_TEST_DIR
+echo 'Running pytest...'
+#gtimeout --foreground -k 6 10m python -m pytest --junit-xml=$JUNIT_DIR/$BRANCH-$BUILD.xml
+python -m pytest -p no:logging --junit-xml=$JUNIT_DIR/$BRANCH-$BUILD.xml
 
 PYTEST_EXIT_CODE=$?
 
