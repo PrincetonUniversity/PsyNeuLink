@@ -7,6 +7,8 @@ on:
     paths-ignore:
       - 'docs/**'
       - 'doc_requirements.txt'
+    tags-ignore:
+      - 'v**'
   pull_request:
     paths-ignore:
       - 'docs/**'
@@ -77,18 +79,17 @@ jobs:
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: tests_out.xml
+        retention-days: 5
       if: success() || failure()
 
-    # Actions below build bdist wheel. Run only for tags.
     - name: Build dist
       run: |
         pip install setuptools wheel
         python setup.py sdist bdist_wheel
-      if: contains(github.ref, 'tags')
 
     - name: Upload dist packages
       uses: actions/upload-artifact@v2.2.3
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/
-      if: contains(github.ref, 'tags')
+        retention-days: 2
