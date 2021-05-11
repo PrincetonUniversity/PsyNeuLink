@@ -203,7 +203,7 @@ from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_
 
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
-    'generate_script_from_json',
+    'generate_json', 'generate_script_from_json',
     'write_json_file'
 ]
 
@@ -1045,6 +1045,43 @@ def generate_script_from_json(model_input):
     return model_output
 
 
+def generate_json(*compositions):
+    """
+        Generate the `general JSON format <JSON_Model_Specification>`
+        for one or more `Compositions <Composition>` and associated
+        objects.
+        .. _JSON_Write_Multiple_Compositions_Note:
+
+        .. note::
+           At present, if more than one Composition is specified, all
+           must be fully disjoint;  that is, they must not share any
+           `Components <Component>` (e.g., `Mechanism`, `Projections`
+           etc.). This limitation will be addressed in a future update.
+
+        Arguments:
+            *compositions : Composition
+                specifies `Composition` or iterable of ones to be output
+                in JSON
+    """
+    from psyneulink.core.compositions.composition import Composition
+
+    merged_dict_summary = {}
+    for c in compositions:
+        if not isinstance(c, Composition):
+            raise PNLJSONError(
+                f'Item in compositions arg of {__name__}() is not a Composition: {c}.'
+            )
+
+        try:
+            merged_dict_summary[MODEL_SPEC_ID_COMPOSITION].update(
+                c._dict_summary[MODEL_SPEC_ID_COMPOSITION]
+            )
+        except KeyError:
+            merged_dict_summary.update(c._dict_summary)
+
+    return _dump_pnl_json_from_dict(merged_dict_summary)
+
+
 def write_json_file(compositions, filename:str, path:str=None):
     """
         Write one or more `Compositions <Composition>` and associated objects to file in the `general JSON format
@@ -1072,23 +1109,6 @@ def write_json_file(compositions, filename:str, path:str=None):
     """
 
     compositions = convert_to_list(compositions)
-    for c in compositions:
-        from psyneulink.core.compositions.composition import Composition
-        if not isinstance(c, Composition):
-            raise PNLJSONError(f'Item in compositions arg of write_to_json_file() is not a Composition: {c}.')
-    if path:
-        if path[-1] != '/':
-            path += '/'
-        filename = path + filename
-
-    merged_dict_summary = {}
-    for c in compositions:
-        try:
-            merged_dict_summary[MODEL_SPEC_ID_COMPOSITION].update(
-                c._dict_summary[MODEL_SPEC_ID_COMPOSITION]
-            )
-        except KeyError:
-            merged_dict_summary.update(c._dict_summary)
 
     with open(filename, 'w') as json_file:
-        json_file.write(_dump_pnl_json_from_dict(merged_dict_summary))
+        json_file.write(generate_json(*compositions))
