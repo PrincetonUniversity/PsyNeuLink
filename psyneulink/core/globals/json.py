@@ -423,6 +423,7 @@ def _parse_parameter_value(value, component_identifiers=None):
 def _generate_component_string(
     component_dict,
     component_identifiers,
+    component_name=None,
     assignment=False,
     default_type=None   # used if no PNL or generic types are specified
 ):
@@ -438,8 +439,18 @@ def _generate_component_string(
                 'default_type is specified'
             ) from e
 
-    name = component_dict['name']
-    parameters = dict(component_dict[component_type._model_spec_id_parameters])
+    if component_name is None:
+        name = component_dict['name']
+    else:
+        name = component_name
+        try:
+            assert component_name == component_dict['name']
+        except KeyError:
+            pass
+    try:
+        parameters = dict(component_dict[component_type._model_spec_id_parameters])
+    except KeyError:
+        parameters = {}
 
     # If there is a parameter that is the psyneulink identifier string
     # (as of this comment, 'pnl'), then expand these parameters as
@@ -557,37 +568,47 @@ def _generate_scheduler_string(
     blacklist=[]
 ):
     output = []
-    for node, condition in scheduler_dict['node_specific'].items():
-        if node not in blacklist:
-            output.append(
-                '{0}.add_condition({1}, {2})'.format(
-                    scheduler_id,
-                    parse_valid_identifier(node),
-                    _generate_condition_string(
-                        condition,
-                        component_identifiers
+    try:
+        node_specific_conds = scheduler_dict['node_specific']
+    except KeyError:
+        pass
+    else:
+        for node, condition in node_specific_conds.items():
+            if node not in blacklist:
+                output.append(
+                    '{0}.add_condition({1}, {2})'.format(
+                        scheduler_id,
+                        parse_valid_identifier(node),
+                        _generate_condition_string(
+                            condition,
+                            component_identifiers
+                        )
                     )
+                )
+
+        output.append('')
+
+    termination_str = []
+    try:
+        termination_conds = scheduler_dict['termination']
+    except KeyError:
+        pass
+    else:
+        for scale, cond in termination_conds.items():
+            termination_str.insert(
+                1,
+                'psyneulink.{0}: {1}'.format(
+                    f'TimeScale.{str.upper(scale)}',
+                    _generate_condition_string(cond, component_identifiers)
                 )
             )
 
-    output.append('')
-
-    termination_str = []
-    for scale, cond in scheduler_dict['termination'].items():
-        termination_str.insert(
-            1,
-            'psyneulink.{0}: {1}'.format(
-                f'TimeScale.{str.upper(scale)}',
-                _generate_condition_string(cond, component_identifiers)
+        output.append(
+            '{0}.termination_conds = {{{1}}}'.format(
+                scheduler_id,
+                ', '.join(termination_str)
             )
         )
-
-    output.append(
-        '{0}.termination_conds = {{{1}}}'.format(
-            scheduler_id,
-            ', '.join(termination_str)
-        )
-    )
 
     return '\n'.join(output)
 
@@ -758,16 +779,17 @@ def _generate_composition_string(graphs_dict, component_identifiers):
                 _generate_component_string(
                     composition_dict,
                     component_identifiers,
+                    component_name=comp_name,
                     default_type=default_composition_type
                 )
             )
         )
         component_identifiers[comp_identifer] = True
 
-        mechanisms = []
-        compositions = []
-        control_mechanisms = []
-        implicit_mechanisms = []
+        mechanisms = {}
+        compositions = {}
+        control_mechanisms = {}
+        implicit_mechanisms = {}
 
         # add nested compositions and mechanisms in order they were added
         # to this composition
@@ -776,7 +798,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
             key=lambda item: node_order[parse_valid_identifier(item[0])]
         ):
             if MODEL_SPEC_ID_COMPOSITION in node:
-                compositions.append(node[MODEL_SPEC_ID_COMPOSITION])
+                compositions[name] = node[MODEL_SPEC_ID_COMPOSITION]
             else:
                 try:
                     component_type = _parse_component_type(node)
@@ -784,24 +806,25 @@ def _generate_composition_string(graphs_dict, component_identifiers):
                     component_type = default_node_type
                 identifier = parse_valid_identifier(name)
                 if issubclass(component_type, control_mechanism_types):
-                    control_mechanisms.append(node)
+                    control_mechanisms[name] = node
                     component_identifiers[identifier] = True
                 elif issubclass(component_type, implicit_types):
-                    implicit_mechanisms.append(node)
+                    implicit_mechanisms[name] = node
                 else:
-                    mechanisms.append(node)
+                    mechanisms[name] = node
                     component_identifiers[identifier] = True
 
         implicit_names = [
-            x['name']
-            for x in implicit_mechanisms + control_mechanisms
+            x
+            for x in [*implicit_mechanisms.keys(), *control_mechanisms.keys()]
         ]
 
-        for mech in mechanisms:
+        for name, mech in mechanisms.items():
             output.append(
                 _generate_component_string(
                     mech,
                     component_identifiers,
+                    component_name=name,
                     assignment=True,
                     default_type=default_node_type
                 )
@@ -809,11 +832,12 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         if len(mechanisms) > 0:
             output.append('')
 
-        for mech in control_mechanisms:
+        for name, mech in control_mechanisms.items():
             output.append(
                 _generate_component_string(
                     mech,
                     component_identifiers,
+                    component_name=name,
                     assignment=True,
                     default_type=default_node_type
                 )
@@ -823,7 +847,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
             output.append('')
 
         # recursively generate string for inner Compositions
-        for comp in compositions:
+        for name, comp in compositions.items():
             output.append(
                 _generate_composition_string(
                     comp,
@@ -893,6 +917,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
                         _generate_component_string(
                             projection_dict,
                             component_identifiers,
+                            component_name=name,
                             default_type=default_edge_type
                         ),
                         parse_valid_identifier(
@@ -916,11 +941,16 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         # add schedulers
         # blacklist automatically generated nodes because they will
         # not exist in the script namespace
+        try:
+            conditions = composition_dict['conditions']
+        except KeyError:
+            conditions = {}
+
         output.append('')
         output.append(
             _generate_scheduler_string(
                 f'{comp_identifer}.scheduler',
-                composition_dict['conditions'],
+                conditions,
                 component_identifiers,
                 blacklist=implicit_names
             )
