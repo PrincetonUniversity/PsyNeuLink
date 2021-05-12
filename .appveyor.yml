@@ -1,0 +1,54 @@
+version: '{build}'
+branches:
+  except:
+  - gh-pages
+skip_tags: true
+skip_branch_with_pr: true
+clone_depth: 15
+image: Ubuntu2004
+environment:
+  PIP_PROGRESS_BAR: off
+  APPVEYOR_CONSOLE_DISABLE_PTY: true
+  OMP_NUM_THREADS: 1
+  OPENBLAS_NUM_THREADS: 1
+  matrix:
+  - PYTHON: python3.8
+
+init:
+- ps: |
+    sudo apt-get update
+    sudo apt-get install -y --no-install-recommends build-essential graphviz git curl $Env:PYTHON-dev $Env:PYTHON-distutils $Env:PYTHON-venv
+    sudo update-alternatives --install /usr/bin/python python /usr/bin/$Env:PYTHON 10
+    sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/$Env:PYTHON 10
+    sudo update-alternatives --set python /usr/bin/$Env:PYTHON
+    sudo update-alternatives --set python3 /usr/bin/$Env:PYTHON
+
+install:
+- ps: |
+    python -m venv venv
+    venv/bin/Activate.ps1
+    echo "#!/bin/sh" > venv/bin/xdg-open
+    chmod +x venv/bin/xdg-open
+
+    pip --version
+    pip install -U pip wheel cython
+    pip install -U coveralls
+    pip install -U -e .[dev]
+
+build: off
+
+test_script:
+- ps: |
+    if (Test-Path Env:\COVERALLS_REPO_TOKEN ) {
+      $Env:COV="--cov=psyneulink"
+    }
+    python -m pytest --junit-xml=tests_out.xml $Env:COV --verbosity=0 --capture=sys -o console_output_style=count
+
+on_success:
+- ps: |
+    if (Test-Path Env:\COVERALLS_REPO_TOKEN ) {
+      coveralls
+    }
+
+on_finish:
+- ps: curl -X POST -F "file=@tests_out.xml" https://ci.appveyor.com/api/testresults/junit/$Env:APPVEYOR_JOB_ID
