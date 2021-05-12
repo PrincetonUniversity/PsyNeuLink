@@ -187,6 +187,7 @@ import binascii
 import dill
 import enum
 import json
+import math
 import numpy
 import pickle
 import psyneulink
@@ -282,6 +283,20 @@ def _dump_pnl_json_from_dict(dict_summary):
 def _parse_component_type(component_dict):
     type_dict = component_dict[MODEL_SPEC_ID_TYPE]
 
+    def get_pnl_component_type(s):
+        from psyneulink.core.components.component import ComponentsMeta
+
+        try:
+            return getattr(psyneulink, s)
+        except AttributeError:
+            for o in dir(psyneulink):
+                if s.lower() == o.lower():
+                    o = getattr(psyneulink, o)
+                    if isinstance(o, ComponentsMeta):
+                        return o
+            # if matching component not found, raise original exception
+            raise
+
     try:
         type_str = type_dict[MODEL_SPEC_ID_PSYNEULINK]
     except KeyError:
@@ -290,13 +305,22 @@ def _parse_component_type(component_dict):
 
     try:
         # gets the actual psyneulink type (Component, etc..) from the module
-        return getattr(psyneulink, type_str)
-    except AttributeError as e:
-        raise PNLJSONError(
-            'Invalid PsyNeuLink type specified for JSON object: {0}'.format(
-                component_dict
-            )
-        ) from e
+        return get_pnl_component_type(type_str)
+    except (AttributeError, TypeError):
+        pass
+
+    try:
+        getattr(math, type_str)
+    except (AttributeError, TypeError):
+        pass
+    else:
+        return f'math.{type_str}'
+
+    raise PNLJSONError(
+        'Invalid type specified for JSON object: {0}'.format(
+            component_dict
+        )
+    )
 
 
 def _parse_parameter_value(value, component_identifiers=None):
@@ -427,6 +451,8 @@ def _generate_component_string(
     assignment=False,
     default_type=None   # used if no PNL or generic types are specified
 ):
+    from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+
     try:
         component_type = _parse_component_type(component_dict)
     except KeyError as e:
@@ -447,8 +473,21 @@ def _generate_component_string(
             assert component_name == component_dict['name']
         except KeyError:
             pass
+
     try:
         parameters = dict(component_dict[component_type._model_spec_id_parameters])
+    except AttributeError:
+        custom_func = component_type
+        component_type = UserDefinedFunction
+        try:
+            parameters = dict(component_dict[component_type._model_spec_id_parameters])
+        except KeyError:
+            pass
+        parameters['custom_function'] = f'{custom_func}'
+        try:
+            del parameters[MODEL_SPEC_ID_PSYNEULINK]['custom_function']
+        except KeyError:
+            pass
     except KeyError:
         parameters = {}
 
@@ -549,6 +588,12 @@ def _generate_component_string(
                     or dill.dumps(eval(val)) != dill.dumps(default_val)
                 ):
                     additional_arguments.append(f'{constructor_arg}={val}')
+        elif component_type is UserDefinedFunction:
+            val = _parse_parameter_value(
+                val, component_identifiers,
+            )
+
+            additional_arguments.append(f'{constructor_arg}={val}')
 
     output = '{0}psyneulink.{1}{2}{3}{4}'.format(
         assignment_str,
