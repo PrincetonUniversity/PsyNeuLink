@@ -332,14 +332,14 @@ def _parse_component_type(component_dict):
     )
 
 
-def _parse_parameter_value(value, component_identifiers=None):
+def _parse_parameter_value(value, component_identifiers=None, name=None):
     if component_identifiers is None:
         component_identifiers = {}
 
     exec('import numpy')
 
     if isinstance(value, list):
-        value = [_parse_parameter_value(x, component_identifiers) for x in value]
+        value = [_parse_parameter_value(x, component_identifiers, name) for x in value]
         value = f"[{', '.join([str(x) for x in value])}]"
     elif isinstance(value, dict):
         if (
@@ -358,7 +358,8 @@ def _parse_parameter_value(value, component_identifiers=None):
 
             value = _parse_parameter_value(
                 value[MODEL_SPEC_ID_PARAMETER_VALUE],
-                component_identifiers
+                component_identifiers,
+                name,
             )
 
             # handle tuples and numpy arrays, which both are dumped
@@ -374,7 +375,29 @@ def _parse_parameter_value(value, component_identifiers=None):
             # it is either a Component spec or just a plain dict
             try:
                 # try handling as a Component spec
-                identifier = parse_valid_identifier(value['name'])
+                try:
+                    comp_name = value['name']
+                except KeyError:
+                    comp_name = name
+
+                if comp_name is not None:
+                    identifier = parse_valid_identifier(comp_name)
+                    if len(value) == 1:
+                        try:
+                            value = value[comp_name]
+                        except KeyError:
+                            pass
+                else:
+                    if len(value) == 1:
+                        comp_name = list(value.keys())[0]
+                        identifier = parse_valid_identifier(comp_name)
+                        if isinstance(value[comp_name], dict):
+                            value = value[comp_name]
+                    else:
+                        raise PNLJSONError(
+                            f'Component without name could reference multiple objects: {value}',
+                        )
+
                 if (
                     identifier in component_identifiers
                     and component_identifiers[identifier]
@@ -385,15 +408,16 @@ def _parse_parameter_value(value, component_identifiers=None):
                 else:
                     value = _generate_component_string(
                         value,
-                        component_identifiers
+                        component_identifiers,
+                        component_name=comp_name,
                     )
-            except (PNLJSONError, KeyError):
+            except (PNLJSONError, KeyError, TypeError):
                 # standard dict handling
                 value = '{{{0}}}'.format(
                     ', '.join([
                         '{0}: {1}'.format(
-                            str(_parse_parameter_value(k, component_identifiers)),
-                            str(_parse_parameter_value(v, component_identifiers))
+                            str(_parse_parameter_value(k, component_identifiers, name)),
+                            str(_parse_parameter_value(v, component_identifiers, name))
                         )
                         for k, v in value.items()
                     ])
@@ -500,6 +524,8 @@ def _generate_component_string(
     except KeyError:
         parameters = {}
 
+    parameter_names = {}
+
     # If there is a parameter that is the psyneulink identifier string
     # (as of this comment, 'pnl'), then expand these parameters as
     # normal ones. We don't check and expand for other
@@ -514,7 +540,8 @@ def _generate_component_string(
     # pnl objects only have one function unless specified in another way
     # than just "function"
     try:
-        parameters['function'] = component_dict['functions'][list(component_dict['functions'])[0]]
+        parameter_names['function'] = list(component_dict['functions'])[0]
+        parameters['function'] = component_dict['functions'][parameter_names['function']]
     except KeyError:
         pass
 
@@ -550,7 +577,14 @@ def _generate_component_string(
             constructor_arg = arg
 
         if constructor_arg in constructor_arguments:
-            val = _parse_parameter_value(val, component_identifiers)
+            try:
+                val = _parse_parameter_value(
+                    val, component_identifiers,
+                    name=parameter_names[arg]
+                )
+            except KeyError:
+                val = _parse_parameter_value(val, component_identifiers)
+
             default_val = getattr(component_type.defaults, arg)
 
             evaled_val = NotImplemented
