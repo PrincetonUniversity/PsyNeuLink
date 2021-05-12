@@ -281,8 +281,6 @@ def _dump_pnl_json_from_dict(dict_summary):
 
 
 def _parse_component_type(component_dict):
-    type_dict = component_dict[MODEL_SPEC_ID_TYPE]
-
     def get_pnl_component_type(s):
         from psyneulink.core.components.component import ComponentsMeta
 
@@ -298,10 +296,16 @@ def _parse_component_type(component_dict):
             raise
 
     try:
-        type_str = type_dict[MODEL_SPEC_ID_PSYNEULINK]
+        type_dict = component_dict[MODEL_SPEC_ID_TYPE]
     except KeyError:
-        # catch error outside of this function if necessary
-        type_str = type_dict[MODEL_SPEC_ID_GENERIC]
+        # specifically for functions the keyword is not 'type'
+        type_str = component_dict['function']
+    else:
+        try:
+            type_str = type_dict[MODEL_SPEC_ID_PSYNEULINK]
+        except KeyError:
+            # catch error outside of this function if necessary
+            type_str = type_dict[MODEL_SPEC_ID_GENERIC]
 
     try:
         # gets the actual psyneulink type (Component, etc..) from the module
