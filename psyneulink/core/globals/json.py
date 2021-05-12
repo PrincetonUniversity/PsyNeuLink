@@ -196,7 +196,7 @@ import types
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
     parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals
@@ -985,6 +985,9 @@ def generate_script_from_json(model_input):
         pass
     model_input = json.loads(model_input)
 
+    assert len(model_input.keys()) == 1
+    model_input = model_input[list(model_input.keys())[0]]
+
     imports_str = ''
     if MODEL_SPEC_ID_COMPOSITION in model_input:
         # maps declared names to whether they are accessible in the script
@@ -1065,7 +1068,9 @@ def generate_json(*compositions):
     """
     from psyneulink.core.compositions.composition import Composition
 
-    merged_dict_summary = {}
+    model_name = "_".join([c.name for c in compositions])
+
+    merged_graphs_dict_summary = {}
     for c in compositions:
         if not isinstance(c, Composition):
             raise PNLJSONError(
@@ -1073,13 +1078,19 @@ def generate_json(*compositions):
             )
 
         try:
-            merged_dict_summary[MODEL_SPEC_ID_COMPOSITION].update(
+            merged_graphs_dict_summary[MODEL_SPEC_ID_COMPOSITION].update(
                 c._dict_summary[MODEL_SPEC_ID_COMPOSITION]
             )
         except KeyError:
-            merged_dict_summary.update(c._dict_summary)
+            merged_graphs_dict_summary.update(c._dict_summary)
 
-    return _dump_pnl_json_from_dict(merged_dict_summary)
+    return _dump_pnl_json_from_dict({
+        model_name: {
+            MODEL_SPEC_ID_FORMAT: MODEL_SPEC_ID_VERSION,
+            MODEL_SPEC_ID_GENERATING_APP: f'psyneulink v{psyneulink.__version__}',
+            **merged_graphs_dict_summary
+        }
+    })
 
 
 def write_json_file(compositions, filename:str, path:str=None):

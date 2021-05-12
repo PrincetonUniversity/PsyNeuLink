@@ -54,7 +54,7 @@ def test_json_results_equivalence(
     pnl.core.globals.utilities.set_global_seed(0)
 
     # Generate python script from JSON summary of composition and execute
-    json_summary = eval(f'{composition_name}.json_summary')
+    json_summary = pnl.generate_json(eval(f'{composition_name}'))
     exec(pnl.generate_script_from_json(json_summary))
     exec(f'{composition_name}.run(inputs={input_dict_str})')
     new_results = eval(f'{composition_name}.results')
