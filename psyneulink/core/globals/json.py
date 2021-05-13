@@ -184,6 +184,7 @@ nodes that serves as the Composition's \
 import abc
 import base64
 import binascii
+import copy
 import dill
 import enum
 import json
@@ -757,6 +758,30 @@ def _generate_condition_string(condition_dict, component_identifiers):
 
 
 def _generate_composition_string(graphs_dict, component_identifiers):
+    def _replace_function_node_with_mech_node(function_dict, name, typ=None):
+        if typ is None:
+            typ = _parse_component_type(function_dict)
+        else:
+            typ = typ.__name__
+
+        mech_func_dict = {
+            'functions': {
+                name: {
+                    MODEL_SPEC_ID_TYPE: {MODEL_SPEC_ID_PSYNEULINK: typ},
+                    psyneulink.Function_Base._model_spec_id_parameters: function_dict[psyneulink.Component._model_spec_id_parameters]
+                },
+            }
+        }
+
+        try:
+            del function_dict[MODEL_SPEC_ID_TYPE]
+        except KeyError:
+            pass
+
+        function_dict['name'] = f"{name}_wrapped_mech"
+
+        return {**function_dict, **mech_func_dict}
+
     # used if no generic types are specified
     default_composition_type = psyneulink.Composition
     default_node_type = psyneulink.ProcessingMechanism
@@ -911,7 +936,32 @@ def _generate_composition_string(graphs_dict, component_identifiers):
             for x in [*implicit_mechanisms.keys(), *control_mechanisms.keys()]
         ]
 
-        for name, mech in mechanisms.items():
+        for name, mech in copy.copy(mechanisms).items():
+            try:
+                mech_type = _parse_component_type(mech)
+            except KeyError:
+                mech_type = None
+
+            if (
+                isinstance(mech_type, type)
+                and issubclass(mech_type, psyneulink.Function)
+            ):
+                mech = _replace_function_node_with_mech_node(mech, name, mech_type)
+
+                component_identifiers[mech['name']] = component_identifiers[name]
+                del component_identifiers[name]
+
+                node_order[mech['name']] = node_order[name]
+                del node_order[name]
+
+                mechanisms[mech['name']] = mechanisms[name]
+                del mechanisms[name]
+
+                composition_dict['nodes'][mech['name']] = composition_dict['nodes'][name]
+                del composition_dict['nodes'][name]
+
+                name = mech['name']
+
             output.append(
                 _generate_component_string(
                     mech,
