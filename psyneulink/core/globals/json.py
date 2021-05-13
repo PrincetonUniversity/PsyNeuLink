@@ -1147,11 +1147,12 @@ def generate_script_from_json(model_input):
         *re.findall(r'([A-Za-z_\.]+?)\.', comp_str)
     ])
     for module in potential_module_names:
-        try:
-            exec(f'import {module}')
-            module_names.add(module)
-        except (ImportError, ModuleNotFoundError, SyntaxError):
-            pass
+        if module not in component_identifiers:
+            try:
+                exec(f'import {module}')
+                module_names.add(module)
+            except (ImportError, ModuleNotFoundError, SyntaxError):
+                pass
 
     for module in module_names.copy():
         try:
