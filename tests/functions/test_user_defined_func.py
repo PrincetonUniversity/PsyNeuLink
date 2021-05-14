@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import pytest
 
@@ -578,6 +580,21 @@ def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
     val = benchmark(e, variable)
     assert np.allclose(val, expected)
 
+
+@pytest.mark.parametrize(
+    "func, args, expected",
+    [
+        (math.fsum, ([1, 2, 3], ), 6),
+        (math.sin, (math.pi / 2, ), 1),
+    ]
+)
+@pytest.mark.benchmark(group="Function UDF")
+# incompatible with compilation currently
+def test_user_def_func_builtin_direct(func, args, expected, benchmark):
+    func = UserDefinedFunction(func)
+
+    val = benchmark(func, *args)
+    assert np.allclose(val, expected)
 
 @pytest.mark.benchmark(group="UDF as Composition Origin")
 def test_udf_composition_origin(comp_mode, benchmark):
