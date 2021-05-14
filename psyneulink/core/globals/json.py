@@ -337,14 +337,14 @@ def _parse_component_type(component_dict):
     )
 
 
-def _parse_parameter_value(value, component_identifiers=None, name=None):
+def _parse_parameter_value(value, component_identifiers=None, name=None, parent_parameters=None):
     if component_identifiers is None:
         component_identifiers = {}
 
     exec('import numpy')
 
     if isinstance(value, list):
-        value = [_parse_parameter_value(x, component_identifiers, name) for x in value]
+        value = [_parse_parameter_value(x, component_identifiers, name, parent_parameters) for x in value]
         value = f"[{', '.join([str(x) for x in value])}]"
     elif isinstance(value, dict):
         if (
@@ -365,6 +365,7 @@ def _parse_parameter_value(value, component_identifiers=None, name=None):
                 value[MODEL_SPEC_ID_PARAMETER_VALUE],
                 component_identifiers,
                 name,
+                parent_parameters,
             )
 
             # handle tuples and numpy arrays, which both are dumped
@@ -415,6 +416,7 @@ def _parse_parameter_value(value, component_identifiers=None, name=None):
                         value,
                         component_identifiers,
                         component_name=comp_name,
+                        parent_parameters=parent_parameters
                     )
             except (PNLJSONError, KeyError, TypeError):
                 # standard dict handling
@@ -429,6 +431,13 @@ def _parse_parameter_value(value, component_identifiers=None, name=None):
                 )
 
     elif isinstance(value, str):
+        # handle pointer to parent's parameter value
+        try:
+            return _parse_parameter_value(parent_parameters[value])
+        except (KeyError, TypeError):
+            pass
+
+        # handle reference to psyneulink object
         obj_string = parse_string_to_psyneulink_object_string(value)
         if obj_string is not None:
             return f'psyneulink.{obj_string}'
@@ -486,6 +495,7 @@ def _generate_component_string(
     component_dict,
     component_identifiers,
     component_name=None,
+    parent_parameters=None,
     assignment=False,
     default_type=None   # used if no PNL or generic types are specified
 ):
@@ -564,6 +574,9 @@ def _generate_component_string(
     if 'name' in constructor_arguments:
         additional_arguments.append(f"name='{name}'")
 
+    if parent_parameters is None:
+        parent_parameters = parameters
+
     # sort on arg name
     for arg, val in sorted(parameters.items(), key=lambda p: p[0]):
         try:
@@ -585,10 +598,11 @@ def _generate_component_string(
             try:
                 val = _parse_parameter_value(
                     val, component_identifiers,
-                    name=parameter_names[arg]
+                    name=parameter_names[arg],
+                    parent_parameters=parent_parameters,
                 )
             except KeyError:
-                val = _parse_parameter_value(val, component_identifiers)
+                val = _parse_parameter_value(val, component_identifiers, parent_parameters=parent_parameters)
 
             default_val = getattr(component_type.defaults, arg)
 
@@ -638,7 +652,7 @@ def _generate_component_string(
                     additional_arguments.append(f'{constructor_arg}={val}')
         elif component_type is UserDefinedFunction:
             val = _parse_parameter_value(
-                val, component_identifiers,
+                val, component_identifiers, parent_parameters=parent_parameters
             )
 
             additional_arguments.append(f'{constructor_arg}={val}')
