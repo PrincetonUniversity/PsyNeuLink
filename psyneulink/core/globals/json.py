@@ -198,7 +198,7 @@ import types
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
     parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals
@@ -651,11 +651,12 @@ def _generate_component_string(
                 ):
                     additional_arguments.append(f'{constructor_arg}={val}')
         elif component_type is UserDefinedFunction:
-            val = _parse_parameter_value(
-                val, component_identifiers, parent_parameters=parent_parameters
-            )
+            if arg != MODEL_SPEC_ID_MDF_VARIABLE:
+                val = _parse_parameter_value(
+                    val, component_identifiers, parent_parameters=parent_parameters
+                )
 
-            additional_arguments.append(f'{constructor_arg}={val}')
+                additional_arguments.append(f'{constructor_arg}={val}')
 
     output = '{0}psyneulink.{1}{2}{3}{4}'.format(
         assignment_str,
