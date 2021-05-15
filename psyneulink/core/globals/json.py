@@ -182,6 +182,7 @@ nodes that serves as the Composition's \
 """
 
 import abc
+import ast
 import base64
 import binascii
 import copy
@@ -198,10 +199,10 @@ import types
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
-    parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals
+    parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals, convert_to_np_array
 
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
@@ -499,6 +500,7 @@ def _generate_component_string(
     assignment=False,
     default_type=None   # used if no PNL or generic types are specified
 ):
+    from psyneulink.core.components.functions.function import Function_Base
     from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 
     try:
@@ -576,6 +578,21 @@ def _generate_component_string(
 
     if parent_parameters is None:
         parent_parameters = parameters
+
+    if 'variable' not in parameters:
+        try:
+            ip = parameters['function'][Function_Base._model_spec_id_parameters][MODEL_SPEC_ID_MDF_VARIABLE]
+            var = convert_to_np_array(
+                numpy.zeros(
+                    ast.literal_eval(
+                        component_dict[MODEL_SPEC_ID_INPUT_PORTS][ip][MODEL_SPEC_ID_SHAPE]
+                    )
+                ),
+                dimension=2
+            ).tolist()
+            parameters['variable'] = var
+        except KeyError:
+            pass
 
     # sort on arg name
     for arg, val in sorted(parameters.items(), key=lambda p: p[0]):
