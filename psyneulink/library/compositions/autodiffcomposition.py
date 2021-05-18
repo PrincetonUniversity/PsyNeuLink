@@ -128,6 +128,7 @@ Class Reference
 
 """
 import logging
+from typing import Union
 
 import numpy as np
 
@@ -248,7 +249,7 @@ class AutodiffComposition(Composition):
         self.optimizer_type = optimizer_type
         self.loss_spec = loss_spec
         self.refresh_losses = refresh_losses
-        self._built_pathways = False
+        self._built_backprop_pathway = False
         self.weight_decay = weight_decay
         self.force_no_retain_graph = force_no_retain_graph
         self.loss = None
@@ -270,13 +271,14 @@ class AutodiffComposition(Composition):
 
     # CLEANUP: move some of what's done in the methods below to a "validate_params" type of method
     @handle_external_context()
-    def _build_pytorch_representation(self, context=None):
+    def _build_pytorch_representation(self, context=None, scheduler=None):
         if self.scheduler is None:
             self.scheduler = Scheduler(graph=self.graph_processing)
         if self.parameters.pytorch_representation._get(context=context) is None:
             model = PytorchModelCreator(composition=self,
                                         device=self.device,
-                                        context=context)
+                                        context=context,
+                                        passed_scheduler=scheduler)
 
             self.parameters.pytorch_representation._set(model, context, skip_history=True, skip_log=True)
 
@@ -355,10 +357,14 @@ class AutodiffComposition(Composition):
         curr_tensor_inputs = {}
         curr_tensor_targets = {}
         for component in inputs.keys():
-            input = inputs[component][0]
+            input = inputs[component]
+            while len(input.shape)>1 and input.shape[0] == 1:
+                input = input[0]
             curr_tensor_inputs[component] = torch.tensor(input, device=self.device).double()
         for component in targets.keys():
-            target = targets[component][0]
+            target = targets[component]
+            while len(target.shape)>1 and target.shape[0] == 1:
+                target = target[0]
             curr_tensor_targets[component] = torch.tensor(target, device=self.device).double()
 
         # do forward computation on current inputs
@@ -416,7 +422,7 @@ class AutodiffComposition(Composition):
     def _get_total_loss(self, num_trials: int=1, context:Context=None):
         return sum(self.parameters.trial_losses._get(context)[-num_trials:]) /num_trials
 
-    def _infer_output_nodes(self, nodes: dict):
+    def _infer_output_nodes(self, inputs: dict):
         """
         Maps targets onto target mechanisms (as needed by learning)
 
@@ -424,41 +430,55 @@ class AutodiffComposition(Composition):
         ---------
         A dict mapping TargetMechanisms -> target values
         """
-        ret = {}
-        for node, values in nodes.items():
-            if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node):
-                node_efferent_mechanisms = [x.receiver.owner for x in node.efferents]
-                comparators = [x for x in node_efferent_mechanisms if (isinstance(x, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(x))]
-                comparator_afferent_mechanisms = [x.sender.owner for c in comparators for x in c.afferents]
-                output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
+        def _retrieve_output_from_target(target):
+            if NodeRole.OUTPUT in self.get_roles_by_node(target):
+                return target
+            target_efferent_mechanisms = (projection.receiver.owner for projection in target.efferents)
+            comparators = (mechanism for mechanism in target_efferent_mechanisms if isinstance(mechanism, ComparatorMechanism) and NodeRole.LEARNING in self.get_roles_by_node(mechanism))
+            comparator_afferent_mechanisms = (projection.sender.owner for comparator in comparators for projection in comparator.afferents)
+            output_nodes = [t for t in comparator_afferent_mechanisms if (NodeRole.OUTPUT in self.get_roles_by_node(t) and NodeRole.LEARNING not in self.get_roles_by_node(t))]
 
-                if len(output_nodes) != 1:
-                    # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
-                    raise Exception(f"Unable to infer learning target node from output node {node}!")
+            if len(output_nodes) != 1:
+                # Invalid specification! Either we have no valid target nodes, or there is ambiguity in which target node to choose
+                raise Exception(f"Unable to infer learning target node from output node {target}!")
+            return output_nodes[0]
 
-                ret[output_nodes[0]] = values
-            elif NodeRole.OUTPUT in self.get_roles_by_node(node):
-                ret[node] = values
+        target_nodes = (node for node in self.nodes if NodeRole.TARGET in self.get_roles_by_node(node) and NodeRole.LEARNING in self.get_roles_by_node(node))
+        if isinstance(inputs, dict):
+            ret = {_retrieve_output_from_target(target):inputs[target] for target in target_nodes}
+        else:
+            input_cim_efferent_nodes = [projection.receiver.owner for projection in self.input_CIM.efferents]
+            ret = {_retrieve_output_from_target(target):inputs[input_cim_efferent_nodes.index(target)] for target in target_nodes}
         return ret
 
-    def _infer_input_nodes(self, nodes: dict):
+    def _infer_input_nodes(self, inputs: Union[dict,list]):
         """
-        Maps targets onto target mechanisms (as needed by learning)
+        Extracts inputs to be passed to input nodes.
 
         Returns
         ---------
-        A dict mapping TargetMechanisms -> target values
+        A dict mapping InputNodes -> inputs
         """
-        ret = {}
-        for node, values in nodes.items():
-            if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node):
-                ret[node] = values
+
+        input_nodes = (node for node in self.nodes if NodeRole.INPUT in self.get_roles_by_node(node) and NodeRole.TARGET not in self.get_roles_by_node(node))
+        if isinstance(inputs, dict):
+            ret = {node:inputs[node] for node in input_nodes}
+        else:
+            input_cim_efferent_nodes = [projection.receiver.owner for projection in self.input_CIM.efferents]
+            ret = {node:inputs[input_cim_efferent_nodes.index(node)] for node in input_nodes}
         return ret
+
+    def _parse_learning_spec(self, inputs, targets):
+        # If we didn't build backprop pathways here, then then target nodes wouldn't exist
+        if self._built_backprop_pathway is False:
+            self.infer_backpropagation_learning_pathways()
+            self._built_backprop_pathway = True
+        return super()._parse_learning_spec(inputs, targets)
 
     def learn(self, *args, **kwargs):
-        if self._built_pathways is False:
+        if self._built_backprop_pathway is False:
             self.infer_backpropagation_learning_pathways()
-            self._built_pathways = True
+            self._built_backprop_pathway = True
         return super().learn(*args, **kwargs)
 
     @handle_external_context()
@@ -503,19 +523,25 @@ class AutodiffComposition(Composition):
             # TBI: can we call _build_pytorch_representation in _analyze_graph so that pytorch
             # model may be modified between runs?
 
+            if inputs is None:
+                # In the nested case, we may extract the inputs from the input CIM
+                nested = len(self.input_CIM.path_afferents) > 0
+                assert nested, f"{self} unable to determine inputs"
+                inputs = self.input_CIM._update_input_ports(context=context)
 
             autodiff_inputs = self._infer_input_nodes(inputs)
             autodiff_targets = self._infer_output_nodes(inputs)
 
-            report(self,
-                   LEARN_REPORT,
-                   # EXECUTE_REPORT,
-                   report_num=report_num,
-                   scheduler=scheduler,
-                   content='trial_start',
-                   context=context)
+            if report is not None:
+                report(self,
+                    LEARN_REPORT,
+                    # EXECUTE_REPORT,
+                    report_num=report_num,
+                    scheduler=scheduler,
+                    content='trial_start',
+                    context=context)
 
-            self._build_pytorch_representation(context)
+            self._build_pytorch_representation(context, scheduler=scheduler)
             output = self.autodiff_training(autodiff_inputs,
                                             autodiff_targets,
                                             context,
@@ -530,16 +556,20 @@ class AutodiffComposition(Composition):
             # FIX 5/28/20:
             context.execution_phase = execution_phase
 
-            report(self,
-                   # [LEARN_REPORT],
-                   [EXECUTE_REPORT, PROGRESS_REPORT],
-                   report_num=report_num,
-                   scheduler=scheduler,
-                   content='trial_end',
-                   context=context)
+            if report is not None:
+                report(self,
+                    # [LEARN_REPORT],
+                    [EXECUTE_REPORT, PROGRESS_REPORT],
+                    report_num=report_num,
+                    scheduler=scheduler,
+                    content='trial_end',
+                    context=context)
 
-            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-
+            # FIXME: In nested autodiff, the scheduler is unable to correctly update the timescale
+            try:
+                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
+            except KeyError as e:
+                pass
             return output
 
         return super(AutodiffComposition, self).execute(inputs=inputs,

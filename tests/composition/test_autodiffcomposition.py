@@ -2449,6 +2449,67 @@ class TestNested:
 
         assert np.allclose(result2, [[0]], atol=0.1)
 
+
+    @pytest.mark.parametrize(
+        'num_epochs, learning_rate, patience, min_delta', [
+            (400, 4, 10, .00001),
+        ]
+    )
+    def test_xor_nested_equivalence(self, num_epochs, learning_rate, patience, min_delta, autodiff_mode):
+        def make_autodiff():
+            xor_in = pnl.TransferMechanism(name='xor_in',
+                                           default_variable=np.zeros(2))
+
+            xor_hid = pnl.TransferMechanism(name='xor_hid',
+                                            default_variable=np.zeros(10),
+                                            function=Logistic())
+
+            xor_out = pnl.TransferMechanism(name='xor_out',
+                                            default_variable=np.zeros(1),
+                                            function=Logistic())
+
+            hid_map = pnl.MappingProjection(name='input_to_hidden',
+                                            matrix=np.ones((2, 10)),
+                                            sender=xor_in,
+                                            receiver=xor_hid)
+
+            out_map = pnl.MappingProjection(name='hidden_to_output',
+                                            matrix=np.ones((10, 1)),
+                                            sender=xor_hid,
+                                            receiver=xor_out)
+
+            xor_autodiff = AutodiffComposition(
+                learning_rate=learning_rate,
+            )
+
+            xor_autodiff.add_node(xor_in)
+            xor_autodiff.add_node(xor_hid)
+            xor_autodiff.add_node(xor_out)
+
+            xor_autodiff.add_projection(sender=xor_in, projection=hid_map, receiver=xor_hid)
+            xor_autodiff.add_projection(sender=xor_hid, projection=out_map, receiver=xor_out)
+            return xor_autodiff, xor_in, xor_out
+
+        xor_inputs = np.array([[0, 0], [0, 1], [1, 0], [1, 1]])
+        xor_targets = np.array([[0], [1], [1], [0]])
+
+        xor_autodiff_outer, xor_autodiff_outer_input, xor_autodiff_outer_output = make_autodiff()
+        input_dict = {'inputs': {xor_autodiff_outer_input: xor_inputs }, 'targets': {xor_autodiff_outer_output: xor_targets}, 'epochs': num_epochs}
+        result1 = xor_autodiff_outer.learn(inputs=input_dict, execution_mode=autodiff_mode, epochs=num_epochs, patience=patience, min_delta=min_delta)
+
+        parentComposition = pnl.Composition()
+        xor_autodiff_inner, xor_autodiff_inner_input, xor_autodiff_inner_output = make_autodiff()
+        parentComposition.add_node(xor_autodiff_inner)
+        input_dict = {'inputs': {xor_autodiff_inner_input: xor_inputs }, 'targets': {xor_autodiff_inner_output: xor_targets}}
+        parent_input_dict = {
+            xor_autodiff_inner: input_dict,
+        }
+        result2 = parentComposition.learn(inputs=parent_input_dict, execution_mode=autodiff_mode, epochs=num_epochs, patience=patience, min_delta=min_delta)
+
+
+        result1 = np.array(result1).flatten()
+        assert np.allclose(np.array(result1).flatten(), np.array(result2).flatten())
+
     @pytest.mark.parametrize(
         'num_epochs, learning_rate, patience, min_delta', [
             (400, 4, 10, .00001),
