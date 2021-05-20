@@ -442,6 +442,9 @@ class Condition(JSONDumpable):
 
         self._owner = None
 
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
+
     def __str__(self):
         return '{0}({1}{2})'.format(
             self.__class__.__name__,
