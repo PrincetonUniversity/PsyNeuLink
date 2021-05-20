@@ -114,10 +114,13 @@ class Clock:
     ----------
         history : `TimeHistoryTree`
             a root `TimeHistoryTree` associated with this Clock
+
+        simple_time : `SimpleTime`
+            the current time in simple format
     """
     def __init__(self):
         self.history = TimeHistoryTree()
-        self._simple_time = SimpleTime()
+        self.simple_time = SimpleTime(self.time)
 
     def __repr__(self):
         return 'Clock({0})'.format(self.time.__repr__())
@@ -176,16 +179,6 @@ class Clock:
         the current time : `Time`
         """
         return self.history.current_time
-
-    @property
-    def simple_time(self):
-        """
-        the current time in simple format : `SimpleTime`
-        """
-        self._simple_time.run = self.time.run
-        self._simple_time.trial = self.time.trial
-        self._simple_time.time_step = self.time.time_step
-        return self._simple_time
 
     @property
     def previous_time(self):
@@ -273,18 +266,30 @@ class Time(types.SimpleNamespace):
             self._set_by_time_scale(relative_time_scale, 0)
 
 
-class SimpleTime(types.SimpleNamespace):
+class SimpleTime:
     """
     A subset class of `Time`, used to provide simple access to only
     `run <Time.run>`, `trial <Time.trial>`, and `time_step <Time.time_step>`
     """
-    def __init__(self, run=0, trial=0, time_step=0):
-        super().__init__(run=0, trial=0, time_step=0)
+    def __init__(self, time_ref):
+        self._time_ref = time_ref
 
     # override __repr__ because this class is used only for cosmetic simplicity
     # based on a Time object
     def __repr__(self):
         return 'Time(run: {0}, trial: {1}, time_step: {2})'.format(self.run, self.trial, self.time_step)
+
+    @property
+    def run(self):
+        return self._time_ref.run
+
+    @property
+    def trial(self):
+        return self._time_ref.trial
+
+    @property
+    def time_step(self):
+        return self._time_ref.time_step
 
 
 class TimeHistoryTree:
