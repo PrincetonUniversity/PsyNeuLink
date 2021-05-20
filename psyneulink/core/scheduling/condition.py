@@ -629,6 +629,7 @@ class Never(Condition):
 class CompositeCondition(Condition):
     @Condition.owner.setter
     def owner(self, value):
+        super(CompositeCondition, CompositeCondition).owner.__set__(self, value)
         for cond in self.args:
             logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
             if cond.owner is None:
@@ -726,6 +727,7 @@ class Not(Condition):
 
     @Condition.owner.setter
     def owner(self, value):
+        super(Not, Not).owner.__set__(self, value)
         self.condition.owner = value
 
 
@@ -751,6 +753,7 @@ class NWhen(Condition):
 
     @Condition.owner.setter
     def owner(self, value):
+        super(NWhen, NWhen).owner.__set__(self, value)
         self.condition.owner = value
 
     def satis(self, condition, n, *args, scheduler=None, execution_id=None, **kwargs):
