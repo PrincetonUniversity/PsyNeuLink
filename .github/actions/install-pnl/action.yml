@@ -28,9 +28,9 @@ runs:
       run: |
         if [ $(python -c 'import struct; print(struct.calcsize("P") * 8)') == 32 ]; then
           sed -i /torch/d requirements.txt
-          # pywinpty is a transitive dependency and v1.0+ removed support
-          # for x86 wheels
-          [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1"
+          # pywinpty is a transitive dependency and v1.0+ removed support for x86 wheels
+          # terminado >= 0.10.0 pulls in pywinpty >= 1.1.0
+          [[ ${{ runner.os }} = Windows* ]] && pip install "pywinpty<1" "terminado<0.10"
         fi
 
     - name: Python dependencies
