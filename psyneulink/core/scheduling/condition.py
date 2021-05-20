@@ -625,12 +625,17 @@ class Never(Condition):
 #   - based on other Conditions
 ######################################################################
 
-# TODO: create this class to subclass All and Any from
-# class CompositeCondition(Condition):
-    # def
+
+class CompositeCondition(Condition):
+    @Condition.owner.setter
+    def owner(self, value):
+        for cond in self.args:
+            logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
+            if cond.owner is None:
+                cond.owner = value
 
 
-class All(Condition):
+class All(CompositeCondition):
     """All
 
     Parameters:
@@ -656,13 +661,6 @@ class All(Condition):
         args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
 
-    @Condition.owner.setter
-    def owner(self, value):
-        for cond in self.args:
-            logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
-            if cond.owner is None:
-                cond.owner = value
-
     def satis(self, *conds, **kwargs):
         for cond in conds:
             if not cond.is_satisfied(**kwargs):
@@ -670,7 +668,7 @@ class All(Condition):
         return True
 
 
-class Any(Condition):
+class Any(CompositeCondition):
     """Any
 
     Parameters:
@@ -695,13 +693,6 @@ class Any(Condition):
     def __init__(self, *args, **dependencies):
         args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
-
-    @Condition.owner.setter
-    def owner(self, value):
-        for cond in self.args:
-            logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
-            if cond.owner is None:
-                cond.owner = value
 
     def satis(self, *conds, **kwargs):
         for cond in conds:
