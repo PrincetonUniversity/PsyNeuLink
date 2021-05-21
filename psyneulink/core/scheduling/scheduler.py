@@ -338,7 +338,8 @@ class Scheduler(JSONDumpable):
 
     termination_conds : Dict[TimeScale: Condition]
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
-        of the specified `TimeScale`.
+        of the specified `TimeScale`. On set, update only for the
+        `TimeScale`\\ s specified in the argument.
 
     times : Dict[TimeScale: Dict[TimeScale: int]]
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
@@ -504,7 +505,7 @@ class Scheduler(JSONDumpable):
             node: {n: 0 for n in self.nodes} for node in self.nodes
         }
 
-    def update_termination_conditions(self, termination_conds):
+    def _combine_termination_conditions(self, termination_conds):
         termination_conds = Scheduler._parse_termination_conditions(termination_conds)
         new_conds = self.termination_conds.copy()
         new_conds.update(termination_conds)
@@ -628,7 +629,7 @@ class Scheduler(JSONDumpable):
         if termination_conds is None:
             termination_conds = self.termination_conds
         else:
-            termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
+            termination_conds = self._combine_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
 
         self._init_counts(context.execution_id, base_context.execution_id)
         self._reset_counts_useable(context.execution_id)
@@ -745,7 +746,20 @@ class Scheduler(JSONDumpable):
 
     @termination_conds.setter
     def termination_conds(self, termination_conds):
+        """Updates this Scheduler's base `termination conditions
+        <Scheduler.termination_conds>`_ to be used on future `run
+        <Scheduler.run>`\\ s for which termination conditions are not
+        specified.
+
+        Arguments:
+            termination_conds : dict[[TimeScale, str]: Condition]
+                the dictionary of termination Conditions to overwrite
+                the current base
+                `termination conditions <Scheduler.termination_conds>`
+        """
         if termination_conds is None:
             self._termination_conds = self.default_termination_conds.copy()
         else:
-            self._termination_conds.update(termination_conds)
+            self._termination_conds = self._combine_termination_conditions(
+                termination_conds
+            )
