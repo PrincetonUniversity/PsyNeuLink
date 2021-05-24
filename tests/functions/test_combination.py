@@ -213,15 +213,7 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
             pytest.xfail("vector offset is not supported")
         raise e from None
 
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
-
+    EX = pytest.helpers.get_func_execution(f, func_mode)
     res = benchmark(EX, variable)
 
     scale = 1.0 if scale is None else scale
@@ -259,15 +251,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
                               weights=weights,
                               scale=scale,
                               offset=offset)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
-
+    EX = pytest.helpers.get_func_execution(f, func_mode)
     res = benchmark(EX, variable)
 
     scale = 1.0 if scale is None else scale

@@ -110,6 +110,17 @@ def cuda_param(val):
     return pytest.param(val, marks=[pytest.mark.llvm, pytest.mark.cuda])
 
 @pytest.helpers.register
+def get_func_execution(func, func_mode):
+    if func_mode == 'LLVM':
+        return pnlvm.execution.FuncExecution(func).execute
+    elif func_mode == 'PTX':
+        return pnlvm.execution.FuncExecution(func).cuda_execute
+    elif func_mode == 'Python':
+        return func.function
+    else:
+        assert False, "Unknown function mode: {}".format(mode)
+
+@pytest.helpers.register
 def expand_np_ndarray(arr):
     # this will fail on an input containing a float (not np.ndarray)
     try:

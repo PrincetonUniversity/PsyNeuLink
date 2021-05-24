@@ -97,16 +97,10 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     if func is Functions.ContentAddressableMemory and func_mode != 'Python':
         pytest.skip("Not implemented")
 
-    f = func(default_variable=variable, **params)
     benchmark.group = func.componentName
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
+    f = func(default_variable=variable, **params)
+    EX = pytest.helpers.get_func_execution(f, func_mode)
+
     EX(variable)
     res = EX(variable)
     assert np.allclose(res[0], expected[0])

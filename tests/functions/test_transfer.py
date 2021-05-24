@@ -100,15 +100,11 @@ derivative_names = [
 @pytest.mark.parametrize("func, variable, params, fail, expected", test_data, ids=names)
 def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
     if 'Angle' in func.componentName and func_mode != 'Python':
-        pytest.skip('Angle not yet supported by LLV or PTX')
-    f = func(default_variable=variable, **params)
+        pytest.skip('Angle not yet supported by LLVM or PTX')
     benchmark.group = "TransferFunction " + func.componentName
-    if func_mode == 'Python':
-        ex = f
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    f = func(default_variable=variable, **params)
+    ex = pytest.helpers.get_func_execution(f, func_mode)
+
     res = ex(variable)
     assert np.allclose(res, expected)
     if benchmark.enabled:
