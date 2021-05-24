@@ -212,6 +212,10 @@ def convert_type(builder, val, t):
     if val.type == t:
         return val
 
+    if is_boolean(val) and is_floating_point(t):
+        # float(True) == 1.0, float(False) == 0.0
+        return builder.select(val, t(1.0), t(0.0))
+
     if is_integer(val) and is_integer(t):
         if val.type.width > t.width:
             return builder.trunc(val, t)
@@ -220,6 +224,10 @@ def convert_type(builder, val, t):
             return builder.sext(val, t)
         else:
             assert False, "Unknown integer conversion: {} -> {}".format(val.type, t)
+
+    if is_integer(val) and is_floating_point(t):
+        # Python integers are signed
+        return builder.sitofp(val, t)
 
     if is_floating_point(val) and is_integer(t):
         # Python integers are signed

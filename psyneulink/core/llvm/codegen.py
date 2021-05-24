@@ -398,14 +398,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 def _convert(ctx, builder, x):
                     if helpers.is_pointer(x):
                         x = builder.load(x)
-                    if helpers.is_integer(x) and ty is ctx.float_ty:
-                        if helpers.is_boolean(x):
-                            return builder.uitofp(x, ty)
-                        return builder.sitofp(x, ty)
-                    elif helpers.is_floating_point(x) and ty is self.register["int"]:
-                        return builder.fptosi(x, ty)
-                    elif (helpers.is_floating_point(x) and ty is ctx.float_ty):
-                        return x
+                    return helpers.convert_type(builder, x, ty)
                 if helpers.is_scalar(val):
                     return _convert(self.ctx, self.builder, val)
                 else:
