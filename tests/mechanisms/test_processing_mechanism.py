@@ -42,12 +42,8 @@ class TestProcessingMechanismFunctions:
                              ])
     def test_processing_mechanism_default_function(self, mech_mode, variable, benchmark):
         PM = ProcessingMechanism(default_variable=[0, 0, 0, 0])
-        if mech_mode == "Python":
-            ex = PM.execute
-        elif mech_mode == "LLVM":
-            ex = pnlvm.MechExecution(PM).execute
-        elif mech_mode == "PTX":
-            ex = pnlvm.MechExecution(PM).cuda_execute
+        ex = pytest.helpers.get_mech_execution(PM, mech_mode)
+
         res = benchmark(ex, variable)
         assert np.allclose(res, [[1., 2., 3., 4.]])
 
@@ -256,14 +252,9 @@ class TestProcessingMechanismStandardOutputPorts:
         benchmark.group = "Output Port Op: {}".format(op)
         PM1 = ProcessingMechanism(default_variable=[0, 0, 0], output_ports=[op])
         var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
-        if mech_mode == "Python":
-            ex = PM1.execute
-        elif mech_mode == "LLVM":
-            ex = pnlvm.MechExecution(PM1).execute
-        elif mech_mode == "PTX":
-            ex = pnlvm.MechExecution(PM1).cuda_execute
+        ex = pytest.helpers.get_mech_execution(PM1, mech_mode)
+
         res = benchmark(ex, var)
-        res = PM1.output_ports[0].value if mech_mode == "Python" else res
         assert np.allclose(res, expected)
 
     # FIXME: These variants don't compile (use UDFs)

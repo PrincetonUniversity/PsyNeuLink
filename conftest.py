@@ -121,6 +121,20 @@ def get_func_execution(func, func_mode):
         assert False, "Unknown function mode: {}".format(mode)
 
 @pytest.helpers.register
+def get_mech_execution(mech, mech_mode):
+    if mech_mode == 'LLVM':
+        return pnlvm.execution.MechExecution(mech).execute
+    elif mech_mode == 'PTX':
+        return pnlvm.execution.MechExecution(mech).cuda_execute
+    elif mech_mode == 'Python':
+        def mech_wrapper(x):
+            mech.execute(x)
+            return mech.output_values
+        return mech_wrapper
+    else:
+        assert False, "Unknown mechanism mode: {}".format(mode)
+
+@pytest.helpers.register
 def expand_np_ndarray(arr):
     # this will fail on an input containing a float (not np.ndarray)
     try:

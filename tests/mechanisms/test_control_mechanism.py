@@ -81,16 +81,7 @@ class TestLCControlMechanism:
             scaling_factor_gain=0.5,
             default_variable = 10.0
         )
-        if mech_mode == 'Python':
-            def EX(variable):
-                LC.execute(variable)
-                return LC.output_values
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(LC)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(LC)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(LC, mech_mode)
 
         val = EX([10.0])
         # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value

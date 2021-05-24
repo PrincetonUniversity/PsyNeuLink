@@ -104,14 +104,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R',
             default_variable=[0, 0, 0, 0]
         )
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val1 = EX([10, 12, 0, -1])
         val2 = EX([1, 2, 3, 0])
@@ -131,14 +124,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R',
             size=4
         )
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
@@ -153,14 +139,7 @@ class TestRecurrentTransferMechanismInputs:
                                        integrator_mode=True,
                                        integration_rate=0.01,
                                        output_ports = [RESULT])
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
@@ -184,14 +163,7 @@ class TestRecurrentTransferMechanismInputs:
                                        integrator_mode=True,
                                        integrator_function=LCI,
                                        output_ports = [RESULT])
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
@@ -226,14 +198,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R'
         )
         np.testing.assert_allclose(R.defaults.variable, [[0]])
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val = EX([10])
         np.testing.assert_allclose(val, [[10.]])

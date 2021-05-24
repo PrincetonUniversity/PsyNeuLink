@@ -49,14 +49,7 @@ names = [
 def test_with_dictionary_memory(variable, func, params, expected, benchmark, mech_mode):
     f = func(seed=0, **params)
     m = EpisodicMemoryMechanism(content_size=len(variable[0]), assoc_size=len(variable[1]), function=f)
-    if mech_mode == 'Python':
-        def EX(variable):
-            m.execute(variable)
-            return m.output_values
-    elif mech_mode == 'LLVM':
-        EX = pnlvm.execution.MechExecution(m).execute
-    elif mech_mode == 'PTX':
-        EX = pnlvm.execution.MechExecution(m).cuda_execute
+    EX = pytest.helpers.get_mech_execution(m, mech_mode)
 
     EX(variable)
     res = EX(variable)

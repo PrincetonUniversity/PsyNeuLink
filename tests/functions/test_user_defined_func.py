@@ -391,12 +391,8 @@ class TestUserDefFunc:
         myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
         # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
         # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        if mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(myMech).execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(myMech).cuda_execute
-        else:
-            e = myMech.execute
+        e = pytest.helpers.get_mech_execution(myMech, mech_mode)
+
         val = benchmark(e, [-1, 2, 3, 4])
         assert np.allclose(val, [[10]])
 
