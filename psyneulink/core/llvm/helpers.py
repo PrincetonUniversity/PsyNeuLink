@@ -207,6 +207,35 @@ def create_allocation(builder, allocation, search_space, idx):
         builder.store(val, slot_ptr)
 
 
+def convert_type(builder, val, t):
+    assert isinstance(t, ir.Type)
+    if val.type == t:
+        return val
+
+    if is_boolean(val) and is_floating_point(t):
+        # float(True) == 1.0, float(False) == 0.0
+        return builder.select(val, t(1.0), t(0.0))
+
+    if is_integer(val) and is_integer(t):
+        if val.type.width > t.width:
+            return builder.trunc(val, t)
+        elif val.type.width < t.width:
+            # Python integers are signed
+            return builder.sext(val, t)
+        else:
+            assert False, "Unknown integer conversion: {} -> {}".format(val.type, t)
+
+    if is_integer(val) and is_floating_point(t):
+        # Python integers are signed
+        return builder.sitofp(val, t)
+
+    if is_floating_point(val) and is_integer(t):
+        # Python integers are signed
+        return builder.fptosi(val, t)
+
+    assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
+
+
 def is_pointer(x):
     type_t = getattr(x, "type", x)
     return isinstance(type_t, ir.PointerType)

@@ -398,14 +398,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 def _convert(ctx, builder, x):
                     if helpers.is_pointer(x):
                         x = builder.load(x)
-                    if helpers.is_integer(x) and ty is ctx.float_ty:
-                        if helpers.is_boolean(x):
-                            return builder.uitofp(x, ty)
-                        return builder.sitofp(x, ty)
-                    elif helpers.is_floating_point(x) and ty is self.register["int"]:
-                        return builder.fptosi(x, ty)
-                    elif (helpers.is_floating_point(x) and ty is ctx.float_ty):
-                        return x
+                    return helpers.convert_type(builder, x, ty)
                 if helpers.is_scalar(val):
                     return _convert(self.ctx, self.builder, val)
                 else:
@@ -611,11 +604,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_Subscript(self, node):
         node_val = self.visit(node.value)
-        node_slice_val = self.visit(node.slice)
+        node_slice_val = helpers.convert_type(self.builder, self.visit(node.slice), self.ctx.int32_ty)
         return self.builder.gep(node_val, [self.ctx.int32_ty(0), node_slice_val])
 
     def visit_Index(self, node):
-        return self.builder.fptoui(self.visit(node.value), self.ctx.int32_ty)
+        """
+        Returns the wrapped value.
+
+        Deprecated in python 3.9+.
+        """
+        return self.visit(node.value)
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     assert "node_wrapper" in tags
