@@ -566,10 +566,7 @@ class AutodiffComposition(Composition):
                     context=context)
 
             # FIXME: In nested autodiff, the scheduler is unable to correctly update the timescale
-            try:
-                scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
-            except KeyError as e:
-                pass
+            scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
             return output
 
         return super(AutodiffComposition, self).execute(inputs=inputs,
