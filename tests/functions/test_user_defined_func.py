@@ -9,6 +9,13 @@ from psyneulink.core.compositions.composition import Composition
 
 import psyneulink.core.llvm as pnlvm
 
+
+# default val is same shape as expected output
+def binAdd(_, param1, param2):
+    # we only use param1 and param2 to avoid automatic shape changes of the variable
+    return param1 + param2
+
+
 @pytest.mark.parametrize("param1, param2", [
                     (1, 2),
                     (np.ones(2), 2),
@@ -18,18 +25,15 @@ import psyneulink.core.llvm as pnlvm
                     (np.ones(2), np.array([1, 2])),
                     (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
                     ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
+@pytest.mark.parametrize("func", [binAdd])
 @pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_add(param1, param2, func_mode, benchmark):
-    # default val is same shape as expected output
-    def myFunction(_, param1, param2):
-        # we only use param1 and param2 to avoid automatic shape changes of the variable
-        return param1 + param2
+def test_user_def_func_add(param1, param2, func, func_mode, benchmark):
 
-    U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
+    U = UserDefinedFunction(custom_function=func, param1=param1, param2=param2)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, 0)
-    assert np.allclose(val, param1 + param2)
+    assert np.allclose(val, func(0, param1=param1, param2=param2))
 
 @pytest.mark.parametrize("param1, param2", [
                     (1, 2),
