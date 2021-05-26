@@ -52,4 +52,4 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mo
 
     assert np.allclose(res, expected)
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(ex, variable)
