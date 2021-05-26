@@ -203,236 +203,248 @@ def test_user_def_func_cmpop_numpy(op, var1, var2, expected, func_mode, benchmar
     val = benchmark(e, [0])
     assert np.allclose(expected, val)
 
-class TestUserDefFunc:
 
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func(self, func_mode, benchmark):
-        def myFunction(variable, param1, param2):
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func(func_mode, benchmark):
+    def myFunction(variable, param1, param2):
+        return variable * 2 + param2
+
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
+    e = pytest.helpers.get_func_execution(U, func_mode)
+
+    val = benchmark(e, [1, 3])
+    assert np.allclose(val, [[5, 9]])
+
+
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_branching(func_mode, benchmark):
+    def myFunction(variable, param1, param2):
+        if variable[0][0] > 0 and variable[0][1] > 0:
             return variable * 2 + param2
+        else:
+            return variable * -2 + param2
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, [1, 3])
-        assert np.allclose(val, [[5, 9]])
+    val = benchmark(e, [[1, 3]])
+    assert np.allclose(val, [[5, 9]])
+    val2 = e([[-1, 3]])
+    assert np.allclose(val2, [[5, -3]])
 
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_branching(self, func_mode, benchmark):
-        def myFunction(variable, param1, param2):
-            if variable[0][0] > 0 and variable[0][1] > 0:
-                return variable * 2 + param2
-            else:
-                return variable * -2 + param2
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_variable_index(func_mode, benchmark):
+    def myFunction(variable):
+        variable[0][0] = variable[0][0] + 5
+        variable[0][1] = variable[0][1] + 7
+        return variable
 
-        val = benchmark(e, [[1, 3]])
-        assert np.allclose(val, [[5, 9]])
-        val2 = e([[-1, 3]])
-        assert np.allclose(val2, [[5, -3]])
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]])
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_variable_index(self, func_mode, benchmark):
+    val = benchmark(e, [[1, 3]])
+    assert np.allclose(val, [[6, 10]])
+
+
+@pytest.mark.parametrize("variable", [
+                    (1),
+                    (np.ones((2))),
+                    (np.ones((2, 2)))
+                    ], ids=["scalar", "vec-2d", "mat"])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_usub(variable, func_mode, benchmark):
+    def myFunction(variable, param):
+        return -param
+
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
+    e = pytest.helpers.get_func_execution(U, func_mode)
+
+    val = benchmark(e, variable)
+    assert np.allclose(val, -variable)
+
+
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_reward_func(func_mode, benchmark):
+    variable = [[1,2,3,4]]
+    def myFunction(x,t0=0.48):
+        return (x[0][0]>0).astype(float) * (x[0][2]>0).astype(float) / (np.max([x[0][1],x[0][3]]) + t0)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
+    e = pytest.helpers.get_func_execution(U, func_mode)
+
+    val = benchmark(e, variable)
+    assert np.allclose(val, 0.2232142857142857)
+
+
+@pytest.mark.parametrize("dtype, expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                    ("SCALAR", 1.0),
+                    ("VECTOR", [1,2]),
+                    ("MATRIX", [[1,2],[3,4]]),
+                    ("BOOL", 1.0),
+                    ("TUPLE", (1, 2, 3, 4))
+                    ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_assign(dtype, expected, func_mode, benchmark):
+    if dtype == "SCALAR":
         def myFunction(variable):
-            variable[0][0] = variable[0][0] + 5
-            variable[0][1] = variable[0][1] + 7
-            return variable
+            var = 1.0
+            return var
+    elif dtype == "VECTOR":
+        def myFunction(variable):
+            var = [1,2]
+            return var
+    elif dtype == "MATRIX":
+        def myFunction(variable):
+            var = [[1,2],[3,4]]
+            return var
+    elif dtype == "BOOL":
+        def myFunction(variable):
+            var = True
+            return 1.0
+    elif dtype == "TUPLE":
+        def myFunction(variable):
+            var = (1, 2, 3, 4)
+            return var
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]])
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=0)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, [[1, 3]])
-        assert np.allclose(val, [[6, 10]])
+    val = benchmark(e, 0)
+    assert np.allclose(val, expected)
 
-    @pytest.mark.parametrize("variable", [
-                        (1),
-                        (np.ones((2))),
-                        (np.ones((2, 2)))
-                        ], ids=["scalar", "vec-2d", "mat"])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_usub(self, variable, func_mode, benchmark):
-        def myFunction(variable, param):
-            return -param
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+@pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                ("TANH", [[1, 3]], [0.76159416, 0.99505475]),
+                ("EXP", [[1, 3]], [2.71828183, 20.08553692]),
+                ("SHAPE", [1, 2], [2]),
+                ("SHAPE", [[1, 3]], [1, 2]),
+                ("ASTYPE_FLOAT", [1], [1.0]),
+                ("ASTYPE_INT", [-1.5], [-1.0]),
+                ("NP_MAX", [0.0, 0.0], 0),
+                ("NP_MAX", [1.0, 2.0], 2),
+                ("NP_MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
+                ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
+                ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_numpy(op, variable, expected, func_mode, benchmark):
+    if op == "TANH":
+        def myFunction(variable):
+            return np.tanh(variable)
+    elif op == "EXP":
+        def myFunction(variable):
+            return np.exp(variable)
+    elif op == "SHAPE":
+        def myFunction(variable):
+            return variable.shape
+    elif op == "ASTYPE_FLOAT":
+        def myFunction(variable):
+            return variable.astype(float)
+    elif op == "ASTYPE_INT":
+        # return types cannot be integers, so we cast back to float and check for truncation
+        def myFunction(variable):
+            return variable.astype(int).astype(float)
+    elif op == "NP_MAX":
+        def myFunction(variable):
+            return np.max(variable)
+    elif op == "FLATTEN":
+        def myFunction(variable):
+            return variable.flatten()
 
-        val = benchmark(e, variable)
-        assert np.allclose(val, -variable)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_reward_func(self, func_mode, benchmark):
-        variable = [[1,2,3,4]]
-        def myFunction(x,t0=0.48):
-            return (x[0][0]>0).astype(float) * (x[0][2]>0).astype(float) / (np.max([x[0][1],x[0][3]]) + t0)
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    val = benchmark(e, variable)
+    assert np.allclose(val, expected)
 
-        val = benchmark(e, variable)
-        assert np.allclose(val, 0.2232142857142857)
 
-    @pytest.mark.parametrize("dtype, expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                        ("SCALAR", 1.0),
-                        ("VECTOR", [1,2]),
-                        ("MATRIX", [[1,2],[3,4]]),
-                        ("BOOL", 1.0),
-                        ("TUPLE", (1, 2, 3, 4))
-                        ])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_assign(self, dtype, expected, func_mode, benchmark):
-        if dtype == "SCALAR":
-            def myFunction(variable):
-                var = 1.0
-                return var
-        elif dtype == "VECTOR":
-            def myFunction(variable):
-                var = [1,2]
-                return var
-        elif dtype == "MATRIX":
-            def myFunction(variable):
-                var = [[1,2],[3,4]]
-                return var
-        elif dtype == "BOOL":
-            def myFunction(variable):
-                var = True
-                return 1.0
-        elif dtype == "TUPLE":
-            def myFunction(variable):
-                var = (1, 2, 3, 4)
-                return var
+@pytest.mark.benchmark(group="UDF in Mechanism")
+def test_udf_in_mechanism(mech_mode, benchmark):
+    def myFunction(variable, param1, param2):
+        return sum(variable[0]) + 2
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=0)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
+    # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
+    # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
+    e = pytest.helpers.get_mech_execution(myMech, mech_mode)
 
-        val = benchmark(e, 0)
-        assert np.allclose(val, expected)
+    val = benchmark(e, [-1, 2, 3, 4])
+    assert np.allclose(val, [[10]])
 
-    @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                    ("TANH", [[1, 3]], [0.76159416, 0.99505475]),
-                    ("EXP", [[1, 3]], [2.71828183, 20.08553692]),
-                    ("SHAPE", [1, 2], [2]),
-                    ("SHAPE", [[1, 3]], [1, 2]),
-                    ("ASTYPE_FLOAT", [1], [1.0]),
-                    ("ASTYPE_INT", [-1.5], [-1.0]),
-                    ("NP_MAX", [0.0, 0.0], 0),
-                    ("NP_MAX", [1.0, 2.0], 2),
-                    ("NP_MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
-                    ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
-                    ])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_numpy(self, op, variable, expected, func_mode, benchmark):
-        if op == "TANH":
-            def myFunction(variable):
-                return np.tanh(variable)
-        elif op == "EXP":
-            def myFunction(variable):
-                return np.exp(variable)
-        elif op == "SHAPE":
-            def myFunction(variable):
-                return variable.shape
-        elif op == "ASTYPE_FLOAT":
-            def myFunction(variable):
-                return variable.astype(float)
-        elif op == "ASTYPE_INT":
-            # return types cannot be integers, so we cast back to float and check for truncation
-            def myFunction(variable):
-                return variable.astype(int).astype(float)
-        elif op == "NP_MAX":
-            def myFunction(variable):
-                return np.max(variable)
-        elif op == "FLATTEN":
-            def myFunction(variable):
-                return variable.flatten()
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+@pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                ("SUM", [1.0, 3.0], 4),
+                ("SUM", [[1.0], [3.0]], [4.0]),
+                ("LEN", [1.0, 3.0], 2),
+                ("LEN", [[1.0], [3.0]], 2),
+                ("LEN_TUPLE", [0, 0], 2),
+                ("MAX_MULTI", [1,], 6),
+                ("MAX", [1.0, 3.0, 2.0], 3.0),
+                ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
+    if op == "SUM":
+        def myFunction(variable):
+            return sum(variable)
+    elif op == "LEN":
+        def myFunction(variable):
+            return len(variable)
+    elif op == "LEN_TUPLE":
+        def myFunction(variable):
+            return len((1,2))
+    elif op == "MAX":
+        def myFunction(variable):
+            return max(variable)
+    elif op == "MAX_MULTI":
+        # special cased, since passing in multiple variables without a closure is hard
+        def myFunction(_):
+            return max(1, 2, 3, 4, 5, 6, -1, -2)
 
-        val = benchmark(e, variable)
-        assert np.allclose(val, expected)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-    @pytest.mark.benchmark(group="UDF in Mechanism")
-    def test_udf_in_mechanism(self, mech_mode, benchmark):
-        def myFunction(variable, param1, param2):
-            return sum(variable[0]) + 2
+    val = benchmark(e, variable)
+    assert np.allclose(val, expected)
 
-        myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
-        # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        e = pytest.helpers.get_mech_execution(myMech, mech_mode)
 
-        val = benchmark(e, [-1, 2, 3, 4])
-        assert np.allclose(val, [[10]])
+@pytest.mark.benchmark(group="UDF as Composition Origin")
+def test_udf_composition_origin(comp_mode, benchmark):
+    def myFunction(variable, context):
+        return [variable[0][1], variable[0][0]]
 
-    @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                    ("SUM", [1.0, 3.0], 4),
-                    ("SUM", [[1.0], [3.0]], [4.0]),
-                    ("LEN", [1.0, 3.0], 2),
-                    ("LEN", [[1.0], [3.0]], 2),
-                    ("LEN_TUPLE", [0, 0], 2),
-                    ("MAX_MULTI", [1,], 6),
-                    ("MAX", [1.0, 3.0, 2.0], 3.0),
-                    ])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_builtin(self, op, variable, expected, func_mode, benchmark):
-        if op == "SUM":
-            def myFunction(variable):
-                return sum(variable)
-        elif op == "LEN":
-            def myFunction(variable):
-                return len(variable)
-        elif op == "LEN_TUPLE":
-            def myFunction(variable):
-                return len((1,2))
-        elif op == "MAX":
-            def myFunction(variable):
-                return max(variable)
-        elif op == "MAX_MULTI":
-            # special cased, since passing in multiple variables without a closure is hard
-            def myFunction(_):
-                return max(1, 2, 3, 4, 5, 6, -1, -2)
+    myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
+    T = TransferMechanism(size=2, function=Linear)
+    c = Composition(pathways=[myMech, T])
+    benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, execution_mode=comp_mode)
+    assert np.allclose(c.results[0][0], [3, 1])
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
-        e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, variable)
-        assert np.allclose(val, expected)
+@pytest.mark.benchmark(group="UDF as Composition Terminal")
+def test_udf_composition_terminal(comp_mode, benchmark):
+    def myFunction(variable, context):
+        return [variable[0][2], variable[0][0]]
 
-    @pytest.mark.benchmark(group="UDF as Composition Origin")
-    def test_udf_composition_origin(self, comp_mode, benchmark):
-        def myFunction(variable, context):
-            return [variable[0][1], variable[0][0]]
+    myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
+    T2 = TransferMechanism(size=3, function=Linear)
+    c2 = Composition(pathways=[[T2, myMech]])
+    benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=comp_mode)
+    assert(np.allclose(c2.results[0][0], [3, 1]))
 
-        myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
-        T = TransferMechanism(size=2, function=Linear)
-        c = Composition(pathways=[myMech, T])
-        benchmark(c.run, inputs={myMech: [[1, 3, 5]]}, execution_mode=comp_mode)
-        assert np.allclose(c.results[0][0], [3, 1])
 
-    @pytest.mark.benchmark(group="UDF as Composition Terminal")
-    def test_udf_composition_terminal(self, comp_mode, benchmark):
-        def myFunction(variable, context):
-            return [variable[0][2], variable[0][0]]
+def test_udf_with_pnl_func():
+    L = Logistic(gain=2)
 
-        myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
-        T2 = TransferMechanism(size=3, function=Linear)
-        c2 = Composition(pathways=[[T2, myMech]])
-        benchmark(c2.run, inputs={T2: [[1, 2, 3]]}, execution_mode=comp_mode)
-        assert(np.allclose(c2.results[0][0], [3, 1]))
+    def myFunction(variable, context):
+        return L(variable) + 2
 
-    def test_udf_with_pnl_func(self):
-        L = Logistic(gain=2)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0, 0]])
+    myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
+    val1 = myMech.execute(input=[1, 2, 3])
+    val2 = U.execute(variable=[[1, 2, 3]])
+    assert np.allclose(val1, val2)
+    assert np.allclose(val1, L([1, 2, 3]) + 2)
 
-        def myFunction(variable, context):
-            return L(variable) + 2
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0, 0]])
-        myMech = ProcessingMechanism(function=myFunction, size=3, name='myMech')
-        val1 = myMech.execute(input=[1, 2, 3])
-        val2 = U.execute(variable=[[1, 2, 3]])
-        assert np.allclose(val1, val2)
-        assert np.allclose(val1, L([1, 2, 3]) + 2)
-
+class TestUserDefFunc:
     def test_udf_creates_parameter_ports(self):
         def func(input=[[0], [0]], p=0, q=1):
             return (p + q) * input
