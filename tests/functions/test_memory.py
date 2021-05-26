@@ -106,7 +106,7 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
     assert np.allclose(res[0], expected[0])
     assert np.allclose(res[1], expected[1])
     if benchmark.enabled:
-        benchmark(f, variable)
+        benchmark(EX, variable)
 
 #endregion
 
