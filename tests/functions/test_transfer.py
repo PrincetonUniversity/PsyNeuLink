@@ -124,10 +124,9 @@ def test_execute_derivative(func, variable, params, expected, benchmark, func_mo
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).execute
     elif func_mode == 'PTX':
         ex = pnlvm.execution.FuncExecution(f, tags=frozenset({"derivative"})).cuda_execute
-    res = ex(variable)
+
+    res = benchmark(ex, variable)
     assert np.allclose(res, expected)
-    if benchmark.enabled:
-        benchmark(ex, variable)
 
 
 def test_transfer_with_costs_function():
