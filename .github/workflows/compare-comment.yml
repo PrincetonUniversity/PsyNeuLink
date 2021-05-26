@@ -50,7 +50,7 @@ jobs:
 
             // basic input checks
             console.assert(['ubuntu-latest', 'windows-latest', 'macos-latest'].includes(os), 'Unexpected os: %s', os);
-            console.assert(['3.6', '3.7', '3.8', '3.9'].includes(python), 'Unexpected python: %s', python);
+            console.assert(['3.7', '3.8', '3.9'].includes(python), 'Unexpected python: %s', python);
             console.assert(!text.includes('```'), 'Invalid diff!');
 
             console.log('Posting diff to PR:' + issue_number)
