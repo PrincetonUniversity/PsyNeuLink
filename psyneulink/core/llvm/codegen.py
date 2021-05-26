@@ -455,11 +455,34 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_BoolOp(self, node):
         operator = self.visit(node.op)
-        values = [self.visit(value) for value in node.values]
-        ret_val = values[0]
-        for value in values[1:]:
-            ret_val = operator(ret_val, value)
+        values = (self.visit(value) for value in node.values)
+        ret_val = next(values)
+        if helpers.is_pointer(ret_val):
+            ret_val = self.builder.load(ret_val)
+        for value in values:
+            if helpers.is_pointer(value):
+                value = self.builder.load(value)
+            assert ret_val.type == value.type, "Don't know how to mix types in boolean expressions!"
+            ret_val = operator(self.builder, ret_val, value)
         return ret_val
+
+    def visit_And(self, node):
+        def _and(builder, x, y):
+            # Python's 'and' takes the boolean value of the first operand and returns
+            # RHS if bool(LHS) else LHS
+            cond = helpers.convert_type(builder, x, self.ctx.bool_ty)
+            return builder.select(cond, y, x)
+
+        return _and
+
+    def visit_Or(self, node):
+        def _or(builder, x, y):
+            # Python's 'and' takes the boolean value of the first operand and returns
+            # LHS if bool(LHS) else RHS
+            cond = helpers.convert_type(builder, x, self.ctx.bool_ty)
+            return builder.select(cond, x, y)
+
+        return _or
 
     def visit_UnaryOp(self, node):
         operator = self.visit(node.op)
@@ -480,22 +503,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         for idx, element in enumerate(elements):
             self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
         return ret_list
-
-    def visit_And(self, node):
-        def _and(x, y):
-            assert helpers.is_boolean(x), f"{x} is not a Boolean!"
-            assert helpers.is_boolean(y), f"{y} is not a Boolean!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.and_(x, y))
-
-        return _and
-
-    def visit_Or(self, node):
-        def _or(x, y):
-            assert helpers.is_boolean(x), f"{x} is not a Boolean!"
-            assert helpers.is_boolean(y), f"{y} is not a Boolean!"
-            return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.or_(x, y))
-
-        return _or
 
     def _generate_fcmp_handler(self, ctx, builder, cmp):
         def _cmp_array(ctx, builder, u, v):

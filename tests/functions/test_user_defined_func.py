@@ -95,15 +95,36 @@ def multiAndOr(variable):
         return 0.0
 
 
-@pytest.mark.parametrize("op", [binAnd, binOr, triAnd, triOr, multiAndOr])
-@pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_boolop(op, func_mode, benchmark):
+def varAnd(var):
+    return var[0] and var[1]
 
-    U = UserDefinedFunction(custom_function=op, default_variable=[0])
+
+def varOr(var):
+    return var[0] or var[1]
+
+
+@pytest.mark.parametrize("op,var, expected", [
+    (binAnd, 0, 1.0),
+    (binOr, 0, 1.0),
+    (triAnd, 0, 1.0),
+    (triOr, 0, 1.0),
+    (multiAndOr, 0, 1.0),
+    (varAnd, [0.0, 0.0], 0.0),
+    (varAnd, [5.0, -0.0], -0.0),
+    (varAnd, [0.0, -2.0], 0.0),
+    (varAnd, [5.0, -2.0], -2.0),
+    (varOr, [-0.0, 0.0], 0.0),
+    (varOr, [3.0, 0.0], 3.0),
+    (varOr, [0.0, -3.0], -3.0),
+    (varOr, [1.5, -1.0], 1.5),
+    ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_boolop(op, var, expected, func_mode, benchmark):
+    U = UserDefinedFunction(custom_function=op, default_variable=var)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
-    val = benchmark(e, [0])
-    assert val == 1.0
+    val = benchmark(e, var)
+    assert val == expected
 
 
 @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
