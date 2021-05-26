@@ -569,7 +569,11 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return comp_val
 
     def visit_If(self, node):
-        predicate = self.visit(node.test)
+        cond_val = self.visit(node.test)
+        if helpers.is_pointer(cond_val):
+            cond_val = self.builder.load(cond_val)
+
+        predicate = helpers.convert_type(self.builder, cond_val, self.ctx.bool_ty)
         with self.builder.if_else(predicate) as (then, otherwise):
             with then:
                 for child in node.body:

@@ -212,6 +212,11 @@ def convert_type(builder, val, t):
     if val.type == t:
         return val
 
+    if is_floating_point(val) and is_boolean(t):
+        # convert any scalar to bool by comparing to 0
+        # Python converts both 0.0 and -0.0 to False
+        return builder.fcmp_unordered("!=", val, val.type(0.0))
+
     if is_boolean(val) and is_floating_point(t):
         # float(True) == 1.0, float(False) == 0.0
         return builder.select(val, t(1.0), t(0.0))

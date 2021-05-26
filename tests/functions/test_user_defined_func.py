@@ -223,14 +223,29 @@ def branchOnVarCmp(variable, param1, param2):
         return variable * -2 + param2
 
 
+def branchOnVarFloat(variable, param1, param2):
+    if variable[0]:
+        return 1.0
+    else:
+        return 0.0
+
+
 @pytest.mark.parametrize("func,var,expected", [
     (branchOnVarCmp, [[1, 3]], [[5, 9]]),
     (branchOnVarCmp, [[-1, 3]], [[5, -3]]),
+    (branchOnVarFloat, [0.0], [0.0]),
+    (branchOnVarFloat, [-0.0], [0.0]),
+    (branchOnVarFloat, [-1.5], [1.0]),
+    (branchOnVarFloat, [1.5], [1.0]),
+    (branchOnVarFloat, [float("Inf")], [1.0]),
+    (branchOnVarFloat, [float("-Inf")], [1.0]),
+    (branchOnVarFloat, [float("NaN")], [1.0]),
+    (branchOnVarFloat, [float("-NaN")], [1.0]),
 ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_branching(func, var, expected, func_mode, benchmark):
 
-    U = UserDefinedFunction(custom_function=func, default_variable=[[0, 0]], param2=3)
+    U = UserDefinedFunction(custom_function=func, default_variable=var, param2=3)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, var)
