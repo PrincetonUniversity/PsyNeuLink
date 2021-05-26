@@ -364,19 +364,6 @@ class TestReset:
 
 VECTOR_SIZE=4
 
-def _get_mechanism_execution(mech, mech_mode):
-    if mech_mode == 'Python':
-        def ex(variable):
-            mech.execute(variable)
-            return mech.output_values
-        return ex
-    elif mech_mode == 'LLVM':
-        return pnlvm.execution.MechExecution(mech).execute
-    elif mech_mode == 'PTX':
-        return pnlvm.execution.MechExecution(mech).cuda_execute
-    else:
-        assert False, "Unknown execution mode: {}".format(mech_mode)
-
 class TestIntegratorFunctions:
 
     @pytest.mark.mechanism
@@ -403,7 +390,7 @@ class TestIntegratorFunctions:
             default_variable=[[1], [2]],
             input_ports=['a', 'b'],
         )
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = ex([[1], [2]])
         assert np.allclose(val, [[3]])
@@ -419,7 +406,7 @@ class TestIntegratorFunctions:
             default_variable=[5],
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}, 'c'],
         )
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = ex([5])
         assert np.allclose(val, [[2.5], [2.5]])
@@ -438,7 +425,7 @@ class TestIntegratorFunctions:
             output_ports=[{pnl.VARIABLE: (pnl.OWNER_VALUE, 1)},
                           {pnl.VARIABLE: (pnl.OWNER_VALUE, 0)}],
         )
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = ex([[1], [2]])
         assert np.allclose(val, [[5], [3]])
@@ -453,7 +440,7 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism(name="I",
                                 default_variable=[var],
                                 function=FitzHughNagumoIntegrator())
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = ex(var)
         assert np.allclose(val[0], [0.05127053])
@@ -468,7 +455,7 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism(name="I",
                                 default_variable=var,
                                 function=FitzHughNagumoIntegrator)
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = ex(var)
         assert np.allclose(val[0], [0.05127053, 0.15379818])
@@ -482,7 +469,7 @@ class TestIntegratorFunctions:
         I = IntegratorMechanism(
             default_variable=[0 for i in range(VECTOR_SIZE)],
             function=Linear(slope=5.0))
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = benchmark(ex, [1.0 for i in range(VECTOR_SIZE)])
         assert np.allclose(val, [[5.0 for i in range(VECTOR_SIZE)]])
@@ -613,7 +600,7 @@ class TestIntegratorFunctions:
     @pytest.mark.benchmark(group="IntegratorMechanism")
     def test_integrator_no_function(self, benchmark, mech_mode):
         I = IntegratorMechanism()
-        ex = _get_mechanism_execution(I, mech_mode)
+        ex = pytest.helpers.get_mech_execution(I, mech_mode)
 
         val = ex([10])
         assert np.allclose(val, [[5.0]])

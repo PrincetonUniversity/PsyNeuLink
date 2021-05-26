@@ -52,14 +52,7 @@ names = [
 @pytest.mark.parametrize("func, variable, integration_method, params, expected", test_data, ids=names)
 def test_basic(func, variable, integration_method, params, expected, benchmark, func_mode):
     f = func(default_variable=variable, integration_method=integration_method, params=params)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = EX(variable)
     res = EX(variable)
@@ -70,4 +63,4 @@ def test_basic(func, variable, integration_method, params, expected, benchmark, 
     assert np.allclose(res[2], expected[2])
 
     if benchmark.enabled:
-        benchmark(f, variable)
+        benchmark(EX, variable)

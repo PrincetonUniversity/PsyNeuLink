@@ -27,12 +27,8 @@ class TestBinaryOperations:
             return param1 + param2
 
         U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, 0)
         assert np.allclose(val, param1 + param2)
 
@@ -54,12 +50,8 @@ class TestBinaryOperations:
             return param1 * param2
 
         U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, 0)
         assert np.allclose(val, param1 * param2)
 
@@ -81,12 +73,8 @@ class TestBinaryOperations:
             return param1 / param2
 
         U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, 0)
         assert np.allclose(val, np.divide(param1, param2))
 
@@ -116,12 +104,8 @@ class TestBinaryOperations:
                     return 0.0
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[0])
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, [0])
         assert val == 1.0
 
@@ -174,12 +158,8 @@ class TestBinaryOperations:
                     return 0.0
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, [0])
         assert np.allclose(expected, val)
 
@@ -250,12 +230,8 @@ class TestBinaryOperations:
                 return np.greater_equal(var1, var2).astype(float)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, [0])
         assert np.allclose(expected, val)
 
@@ -267,12 +243,8 @@ class TestUserDefFunc:
             return variable * 2 + param2
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, [1, 3])
         assert np.allclose(val, [[5, 9]])
 
@@ -285,12 +257,8 @@ class TestUserDefFunc:
                 return variable * -2 + param2
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, [[1, 3]])
         assert np.allclose(val, [[5, 9]])
         val2 = e([[-1, 3]])
@@ -304,12 +272,8 @@ class TestUserDefFunc:
             return variable
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]])
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, [[1, 3]])
         assert np.allclose(val, [[6, 10]])
 
@@ -324,12 +288,8 @@ class TestUserDefFunc:
             return -param
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, variable)
         assert np.allclose(val, -variable)
 
@@ -339,12 +299,8 @@ class TestUserDefFunc:
         def myFunction(x,t0=0.48):
             return (x[0][0]>0).astype(float) * (x[0][2]>0).astype(float) / (np.max([x[0][1],x[0][3]]) + t0)
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, variable)
         assert np.allclose(val, 0.2232142857142857)
 
@@ -379,12 +335,8 @@ class TestUserDefFunc:
                 return var
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=0)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, 0)
         assert np.allclose(val, expected)
 
@@ -424,13 +376,10 @@ class TestUserDefFunc:
         elif op == "FLATTEN":
             def myFunction(variable):
                 return variable.flatten()
+
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, variable)
         assert np.allclose(val, expected)
 
@@ -442,12 +391,8 @@ class TestUserDefFunc:
         myMech = ProcessingMechanism(function=myFunction, size=4, name='myMech')
         # assert 'param1' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
         # assert 'param2' in myMech.parameter_ports.names # <- FIX reinstate when problem with function params is fixed
-        if mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(myMech).execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(myMech).cuda_execute
-        else:
-            e = myMech.execute
+        e = pytest.helpers.get_mech_execution(myMech, mech_mode)
+
         val = benchmark(e, [-1, 2, 3, 4])
         assert np.allclose(val, [[10]])
 
@@ -480,12 +425,8 @@ class TestUserDefFunc:
                 return max(1, 2, 3, 4, 5, 6, -1, -2)
 
         U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
-        if func_mode == 'LLVM':
-            e = pnlvm.execution.FuncExecution(U).execute
-        elif func_mode == 'PTX':
-            e = pnlvm.execution.FuncExecution(U).cuda_execute
-        else:
-            e = U
+        e = pytest.helpers.get_func_execution(U, func_mode)
+
         val = benchmark(e, variable)
         assert np.allclose(val, expected)
 
