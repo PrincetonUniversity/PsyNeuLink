@@ -216,21 +216,25 @@ def test_user_def_func(func_mode, benchmark):
     assert np.allclose(val, [[5, 9]])
 
 
-@pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_branching(func_mode, benchmark):
-    def myFunction(variable, param1, param2):
-        if variable[0][0] > 0 and variable[0][1] > 0:
-            return variable * 2 + param2
-        else:
-            return variable * -2 + param2
+def branchOnVarCmp(variable, param1, param2):
+    if variable[0][0] > 0 and variable[0][1] > 0:
+        return variable * 2 + param2
+    else:
+        return variable * -2 + param2
 
-    U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
+
+@pytest.mark.parametrize("func,var,expected", [
+    (branchOnVarCmp, [[1, 3]], [[5, 9]]),
+    (branchOnVarCmp, [[-1, 3]], [[5, -3]]),
+])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_branching(func, var, expected, func_mode, benchmark):
+
+    U = UserDefinedFunction(custom_function=func, default_variable=[[0, 0]], param2=3)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
-    val = benchmark(e, [[1, 3]])
-    assert np.allclose(val, [[5, 9]])
-    val2 = e([[-1, 3]])
-    assert np.allclose(val2, [[5, -3]])
+    val = benchmark(e, var)
+    assert np.allclose(val, expected)
 
 
 @pytest.mark.benchmark(group="Function UDF")
