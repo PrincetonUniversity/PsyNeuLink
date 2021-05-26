@@ -243,6 +243,7 @@ def convert_type(builder, val, t):
 
 def is_pointer(x):
     type_t = getattr(x, "type", x)
+    assert isinstance(type_t, ir.Type)
     return isinstance(type_t, ir.PointerType)
 
 def is_floating_point(x):
