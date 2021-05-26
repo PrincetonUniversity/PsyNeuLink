@@ -9,53 +9,29 @@ from psyneulink.core.compositions.composition import Composition
 
 import psyneulink.core.llvm as pnlvm
 
-class TestBinaryOperations:
-    @pytest.mark.parametrize("param1, param2", [
-                        (1, 2),
-                        (np.ones(2), 2),
-                        (2, np.ones(2)),
-                        (np.ones((2, 2)), 2),
-                        (2, np.ones((2, 2))),
-                        (np.ones(2), np.array([1, 2])),
-                        (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
-                        ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_add(self, param1, param2, func_mode, benchmark):
-        # default val is same shape as expected output
-        def myFunction(_, param1, param2):
-            # we only use param1 and param2 to avoid automatic shape changes of the variable
-            return param1 + param2
+@pytest.mark.parametrize("param1, param2", [
+                    (1, 2),
+                    (np.ones(2), 2),
+                    (2, np.ones(2)),
+                    (np.ones((2, 2)), 2),
+                    (2, np.ones((2, 2))),
+                    (np.ones(2), np.array([1, 2])),
+                    (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
+                    ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_add(param1, param2, func_mode, benchmark):
+    # default val is same shape as expected output
+    def myFunction(_, param1, param2):
+        # we only use param1 and param2 to avoid automatic shape changes of the variable
+        return param1 + param2
 
-        U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, 0)
-        assert np.allclose(val, param1 + param2)
+    val = benchmark(e, 0)
+    assert np.allclose(val, param1 + param2)
 
-    @pytest.mark.parametrize("param1, param2", [
-                        (1, 2),
-                        (np.ones(2), 2),
-                        (2, np.ones(2)),
-                        (np.ones((2, 2)), 2),
-                        (2, np.ones((2, 2))),
-                        (np.ones(2), np.array([1, 2])),
-                        (np.ones(2), np.array([2.])),
-                        (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
-                        ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_mul(self, param1, param2, func_mode, benchmark):
-        # default val is same shape as expected output
-        def myFunction(_, param1, param2):
-            # we only use param1 and param2 to avoid automatic shape changes of the variable
-            return param1 * param2
-
-        U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        e = pytest.helpers.get_func_execution(U, func_mode)
-
-        val = benchmark(e, 0)
-        assert np.allclose(val, param1 * param2)
-
-    @pytest.mark.parametrize("param1, param2", [
+@pytest.mark.parametrize("param1, param2", [
                     (1, 2),
                     (np.ones(2), 2),
                     (2, np.ones(2)),
@@ -65,175 +41,198 @@ class TestBinaryOperations:
                     (np.ones(2), np.array([2.])),
                     (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
                     ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_div(self, param1, param2, func_mode, benchmark):
-        # default val is same shape as expected output
-        def myFunction(_, param1, param2):
-            # we only use param1 and param2 to avoid automatic shape changes of the variable
-            return param1 / param2
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_mul(param1, param2, func_mode, benchmark):
+    # default val is same shape as expected output
+    def myFunction(_, param1, param2):
+        # we only use param1 and param2 to avoid automatic shape changes of the variable
+        return param1 * param2
 
-        U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, 0)
-        assert np.allclose(val, np.divide(param1, param2))
+    val = benchmark(e, 0)
+    assert np.allclose(val, param1 * param2)
 
-    @pytest.mark.parametrize("op", [ # parameter is string since compiled udf doesn't support closures as of present
-                        "AND",
-                        "OR",
-                        ])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_boolop(self, op, func_mode, benchmark):
-        if op == "AND":
-            def myFunction(variable):
-                var1 = True
-                var2 = False
-                # compiled UDFs don't support python bool type outputs
-                if var1 and var2:
-                    return 0.0
-                else:
-                    return 1.0
-        elif op == "OR":
-            def myFunction(variable):
-                var1 = True
-                var2 = False
-                # compiled UDFs don't support python bool type outputs
-                if var1 or var2:
-                    return 1.0
-                else:
-                    return 0.0
+@pytest.mark.parametrize("param1, param2", [
+                (1, 2),
+                (np.ones(2), 2),
+                (2, np.ones(2)),
+                (np.ones((2, 2)), 2),
+                (2, np.ones((2, 2))),
+                (np.ones(2), np.array([1, 2])),
+                (np.ones(2), np.array([2.])),
+                (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
+                ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "vec-vec-differing", "mat-mat"])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_div(param1, param2, func_mode, benchmark):
+    # default val is same shape as expected output
+    def myFunction(_, param1, param2):
+        # we only use param1 and param2 to avoid automatic shape changes of the variable
+        return param1 / param2
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[0])
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, param1=param1, param2=param2)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, [0])
-        assert val == 1.0
+    val = benchmark(e, 0)
+    assert np.allclose(val, np.divide(param1, param2))
 
-    @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                        ("Eq", 1.0, 2.0, 0.0),
-                        ("NotEq", 1.0, 2.0, 1.0),
-                        ("Lt", 1.0, 2.0, 1.0),
-                        ("LtE", 1.0, 2.0, 1.0),
-                        ("Gt", 1.0, 2.0, 0.0),
-                        ("GtE", 1.0, 2.0, 0.0),
-                        ])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_cmpop(self, op, var1, var2, expected, func_mode, benchmark):
-        # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
-        if op == "Eq":
-            def myFunction(variable, var1, var2):
-                if var1 == var2:
-                    return 1.0
-                else:
-                    return 0.0
-        elif op == "NotEq":
-            def myFunction(variable, var1, var2):
-                if var1 != var2:
-                    return 1.0
-                else:
-                    return 0.0
-        elif op == "Lt":
-            def myFunction(variable, var1, var2):
-                if var1 < var2:
-                    return 1.0
-                else:
-                    return 0.0
-        elif op == "LtE":
-            def myFunction(variable, var1, var2):
-                if var1 <= var2:
-                    return 1.0
-                else:
-                    return 0.0
-        elif op == "Gt":
-            def myFunction(variable, var1, var2):
-                if var1 > var2:
-                    return 1.0
-                else:
-                    return 0.0
-        elif op == "GtE":
-            def myFunction(variable, var1, var2):
-                if var1 >= var2:
-                    return 1.0
-                else:
-                    return 0.0
+@pytest.mark.parametrize("op", [ # parameter is string since compiled udf doesn't support closures as of present
+                    "AND",
+                    "OR",
+                    ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_boolop(op, func_mode, benchmark):
+    if op == "AND":
+        def myFunction(variable):
+            var1 = True
+            var2 = False
+            # compiled UDFs don't support python bool type outputs
+            if var1 and var2:
+                return 0.0
+            else:
+                return 1.0
+    elif op == "OR":
+        def myFunction(variable):
+            var1 = True
+            var2 = False
+            # compiled UDFs don't support python bool type outputs
+            if var1 or var2:
+                return 1.0
+            else:
+                return 0.0
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[0])
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, [0])
-        assert np.allclose(expected, val)
+    val = benchmark(e, [0])
+    assert val == 1.0
 
-    @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                        ("Eq", 1.0, 2.0, 0.0),
-                        ("Eq", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
-                        ("Eq", 1.0, [1.0, 2.0], [1.0, 0.0]),
-                        ("Eq", [2.0, 1.0], 1.0, [0.0, 1.0]),
-                        ("Eq", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 0.0], [0.0, 0.0]]),
-                        ("Eq", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
-                        ("Eq", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
-                        ("NotEq", 1.0, 2.0, 1.0),
-                        ("NotEq", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
-                        ("NotEq", 1.0, [1.0, 2.0], [0.0, 1.0]),
-                        ("NotEq", [2.0, 1.0], 1.0, [1.0, 0.0]),
-                        ("NotEq", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 1.0], [1.0, 1.0]]),
-                        ("NotEq", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 1.0], [1.0, 1.0]]),
-                        ("NotEq", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
-                        ("Lt", 1.0, 2.0, 1.0),
-                        ("Lt", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
-                        ("Lt", 1.0, [1.0, 2.0], [0.0, 1.0]),
-                        ("Lt", [2.0, 1.0], 1.0, [0.0, 0.0]),
-                        ("Lt", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 0.0], [0.0, 0.0]]),
-                        ("Lt", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 1.0], [1.0, 1.0]]),
-                        ("Lt", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
-                        ("LtE", 1.0, 2.0, 1.0),
-                        ("LtE", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
-                        ("LtE", 1.0, [1.0, 2.0], [1.0, 1.0]),
-                        ("LtE", [2.0, 1.0], 1.0, [0.0, 1.0]),
-                        ("LtE", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 0.0], [0.0, 0.0]]),
-                        ("LtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
-                        ("LtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
-                        ("Gt", 1.0, 2.0, 0.0),
-                        ("Gt", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
-                        ("Gt", 1.0, [1.0, 2.0], [0.0, 0.0]),
-                        ("Gt", [2.0, 1.0], 1.0, [1.0, 0.0]),
-                        ("Gt", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 1.0], [1.0, 1.0]]),
-                        ("Gt", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
-                        ("Gt", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
-                        ("GtE", 1.0, 2.0, 0.0),
-                        ("GtE", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
-                        ("GtE", 1.0, [1.0, 2.0], [1.0, 0.0]),
-                        ("GtE", [2.0, 1.0], 1.0, [1.0, 1.0]),
-                        ("GtE", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 1.0], [1.0, 1.0]]),
-                        ("GtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
-                        ("GtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
-                        ])
-    @pytest.mark.benchmark(group="Function UDF")
-    def test_user_def_func_cmpop_numpy(self, op, var1, var2, expected, func_mode, benchmark):
-        # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
-        if op == "Eq":
-            def myFunction(variable, var1, var2):
-                return np.equal(var1, var2).astype(float)
-        elif op == "NotEq":
-            def myFunction(variable, var1, var2):
-                return np.not_equal(var1, var2).astype(float)
-        elif op == "Lt":
-            def myFunction(variable, var1, var2):
-                return np.less(var1, var2).astype(float)
-        elif op == "LtE":
-            def myFunction(variable, var1, var2):
-                return np.less_equal(var1, var2).astype(float)
-        elif op == "Gt":
-            def myFunction(variable, var1, var2):
-                return np.greater(var1, var2).astype(float)
-        elif op == "GtE":
-            def myFunction(variable, var1, var2):
-                return np.greater_equal(var1, var2).astype(float)
+@pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                    ("Eq", 1.0, 2.0, 0.0),
+                    ("NotEq", 1.0, 2.0, 1.0),
+                    ("Lt", 1.0, 2.0, 1.0),
+                    ("LtE", 1.0, 2.0, 1.0),
+                    ("Gt", 1.0, 2.0, 0.0),
+                    ("GtE", 1.0, 2.0, 0.0),
+                    ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_cmpop(op, var1, var2, expected, func_mode, benchmark):
+    # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
+    if op == "Eq":
+        def myFunction(variable, var1, var2):
+            if var1 == var2:
+                return 1.0
+            else:
+                return 0.0
+    elif op == "NotEq":
+        def myFunction(variable, var1, var2):
+            if var1 != var2:
+                return 1.0
+            else:
+                return 0.0
+    elif op == "Lt":
+        def myFunction(variable, var1, var2):
+            if var1 < var2:
+                return 1.0
+            else:
+                return 0.0
+    elif op == "LtE":
+        def myFunction(variable, var1, var2):
+            if var1 <= var2:
+                return 1.0
+            else:
+                return 0.0
+    elif op == "Gt":
+        def myFunction(variable, var1, var2):
+            if var1 > var2:
+                return 1.0
+            else:
+                return 0.0
+    elif op == "GtE":
+        def myFunction(variable, var1, var2):
+            if var1 >= var2:
+                return 1.0
+            else:
+                return 0.0
 
-        U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
-        e = pytest.helpers.get_func_execution(U, func_mode)
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
+    e = pytest.helpers.get_func_execution(U, func_mode)
 
-        val = benchmark(e, [0])
-        assert np.allclose(expected, val)
+    val = benchmark(e, [0])
+    assert np.allclose(expected, val)
+
+@pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
+                    ("Eq", 1.0, 2.0, 0.0),
+                    ("Eq", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
+                    ("Eq", 1.0, [1.0, 2.0], [1.0, 0.0]),
+                    ("Eq", [2.0, 1.0], 1.0, [0.0, 1.0]),
+                    ("Eq", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 0.0], [0.0, 0.0]]),
+                    ("Eq", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
+                    ("Eq", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                    ("NotEq", 1.0, 2.0, 1.0),
+                    ("NotEq", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
+                    ("NotEq", 1.0, [1.0, 2.0], [0.0, 1.0]),
+                    ("NotEq", [2.0, 1.0], 1.0, [1.0, 0.0]),
+                    ("NotEq", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 1.0], [1.0, 1.0]]),
+                    ("NotEq", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 1.0], [1.0, 1.0]]),
+                    ("NotEq", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                    ("Lt", 1.0, 2.0, 1.0),
+                    ("Lt", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
+                    ("Lt", 1.0, [1.0, 2.0], [0.0, 1.0]),
+                    ("Lt", [2.0, 1.0], 1.0, [0.0, 0.0]),
+                    ("Lt", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 0.0], [0.0, 0.0]]),
+                    ("Lt", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 1.0], [1.0, 1.0]]),
+                    ("Lt", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                    ("LtE", 1.0, 2.0, 1.0),
+                    ("LtE", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
+                    ("LtE", 1.0, [1.0, 2.0], [1.0, 1.0]),
+                    ("LtE", [2.0, 1.0], 1.0, [0.0, 1.0]),
+                    ("LtE", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 0.0], [0.0, 0.0]]),
+                    ("LtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                    ("LtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                    ("Gt", 1.0, 2.0, 0.0),
+                    ("Gt", [1.0, 2.0], [1.0, 2.0], [0.0, 0.0]),
+                    ("Gt", 1.0, [1.0, 2.0], [0.0, 0.0]),
+                    ("Gt", [2.0, 1.0], 1.0, [1.0, 0.0]),
+                    ("Gt", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[0.0, 1.0], [1.0, 1.0]]),
+                    ("Gt", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                    ("Gt", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[0.0, 0.0], [0.0, 0.0]]),
+                    ("GtE", 1.0, 2.0, 0.0),
+                    ("GtE", [1.0, 2.0], [1.0, 2.0], [1.0, 1.0]),
+                    ("GtE", 1.0, [1.0, 2.0], [1.0, 0.0]),
+                    ("GtE", [2.0, 1.0], 1.0, [1.0, 1.0]),
+                    ("GtE", [[1.0, 2.0], [3.0, 4.0]], 1.0, [[1.0, 1.0], [1.0, 1.0]]),
+                    ("GtE", 1.0, [[1.0, 2.0], [3.0, 4.0]], [[1.0, 0.0], [0.0, 0.0]]),
+                    ("GtE", [[1.0, 2.0], [3.0, 4.0]], [[1.0, 2.0], [3.0, 4.0]], [[1.0, 1.0], [1.0, 1.0]]),
+                    ])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_cmpop_numpy(op, var1, var2, expected, func_mode, benchmark):
+    # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
+    if op == "Eq":
+        def myFunction(variable, var1, var2):
+            return np.equal(var1, var2).astype(float)
+    elif op == "NotEq":
+        def myFunction(variable, var1, var2):
+            return np.not_equal(var1, var2).astype(float)
+    elif op == "Lt":
+        def myFunction(variable, var1, var2):
+            return np.less(var1, var2).astype(float)
+    elif op == "LtE":
+        def myFunction(variable, var1, var2):
+            return np.less_equal(var1, var2).astype(float)
+    elif op == "Gt":
+        def myFunction(variable, var1, var2):
+            return np.greater(var1, var2).astype(float)
+    elif op == "GtE":
+        def myFunction(variable, var1, var2):
+            return np.greater_equal(var1, var2).astype(float)
+
+    U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
+    e = pytest.helpers.get_func_execution(U, func_mode)
+
+    val = benchmark(e, [0])
+    assert np.allclose(expected, val)
 
 class TestUserDefFunc:
 
