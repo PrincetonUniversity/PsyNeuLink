@@ -63,4 +63,4 @@ def test_basic(func, variable, integration_method, params, expected, benchmark, 
     assert np.allclose(res[2], expected[2])
 
     if benchmark.enabled:
-        benchmark(f, variable)
+        benchmark(EX, variable)
