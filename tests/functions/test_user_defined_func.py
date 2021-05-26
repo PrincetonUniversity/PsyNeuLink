@@ -46,36 +46,36 @@ def test_user_def_bin_arith(param1, param2, func, func_mode, benchmark):
     assert np.allclose(val, func(0, param1=param1, param2=param2))
 
 
-@pytest.mark.parametrize("op", [ # parameter is string since compiled udf doesn't support closures as of present
-                    "AND",
-                    "OR",
-                    ])
+def binAnd(variable):
+    var1 = True
+    var2 = False
+    # compiled UDFs don't support python bool type outputs
+    if var1 and var2:
+        return 0.0
+    else:
+        return 1.0
+
+
+def binOr(variable):
+    var1 = True
+    var2 = False
+    # compiled UDFs don't support python bool type outputs
+    if var1 or var2:
+        return 1.0
+    else:
+        return 0.0
+
+
+@pytest.mark.parametrize("op", [binAnd, binOr])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_boolop(op, func_mode, benchmark):
-    if op == "AND":
-        def myFunction(variable):
-            var1 = True
-            var2 = False
-            # compiled UDFs don't support python bool type outputs
-            if var1 and var2:
-                return 0.0
-            else:
-                return 1.0
-    elif op == "OR":
-        def myFunction(variable):
-            var1 = True
-            var2 = False
-            # compiled UDFs don't support python bool type outputs
-            if var1 or var2:
-                return 1.0
-            else:
-                return 0.0
 
-    U = UserDefinedFunction(custom_function=myFunction, default_variable=[0])
+    U = UserDefinedFunction(custom_function=op, default_variable=[0])
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, [0])
     assert val == 1.0
+
 
 @pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
                     ("Eq", 1.0, 2.0, 0.0),
