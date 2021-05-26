@@ -108,7 +108,7 @@ def test_execute(func, variable, params, fail, expected, benchmark, func_mode):
     res = ex(variable)
     assert np.allclose(res, expected)
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(ex, variable)
 
 
 @pytest.mark.function
