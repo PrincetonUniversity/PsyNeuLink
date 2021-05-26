@@ -91,4 +91,4 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
         assert np.allclose(res[3], result[3])
 
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(EX, variable)
