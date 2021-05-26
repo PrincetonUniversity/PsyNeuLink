@@ -55,6 +55,15 @@ def binAnd(variable):
     else:
         return 1.0
 
+def triAnd(variable):
+    var1 = True
+    var2 = False
+    # compiled UDFs don't support python bool type outputs
+    if var1 and var2 and False:
+        return 0.0
+    else:
+        return 1.0
+
 
 def binOr(variable):
     var1 = True
@@ -66,7 +75,27 @@ def binOr(variable):
         return 0.0
 
 
-@pytest.mark.parametrize("op", [binAnd, binOr])
+def triOr(variable):
+    var1 = True
+    var2 = False
+    # compiled UDFs don't support python bool type outputs
+    if var1 or var2 or True:
+        return 1.0
+    else:
+        return 0.0
+
+
+def multiAndOr(variable):
+    var1 = True
+    var2 = False
+    # compiled UDFs don't support python bool type outputs
+    if var1 or var2 and True or True and var1:
+        return 1.0
+    else:
+        return 0.0
+
+
+@pytest.mark.parametrize("op", [binAnd, binOr, triAnd, triOr, multiAndOr])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_boolop(op, func_mode, benchmark):
 
