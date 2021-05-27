@@ -50,11 +50,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 x_ty = x_ty.pointee
             return ctx.float_ty(len(x_ty))
 
-        def _exp(builder, x):
-            output_ptr = builder.alloca(x.type.pointee)
-            helpers.call_elementwise_operation(self.ctx, builder, x, helpers.exp, output_ptr)
-            return output_ptr
-
         # numpy's max function differs greatly from that of python's buiiltin max
         # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
         def _max_numpy(builder, x):
@@ -113,7 +108,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # setup numpy
         numpy_handlers = {
             'tanh': self.call_builtin_np_tanh,
-            'exp': _exp,
+            'exp': self.call_builtin_np_exp,
             'equal': get_np_cmp("=="),
             'not_equal': get_np_cmp("!="),
             'less': get_np_cmp("<"),
@@ -513,6 +508,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         if helpers.is_pointer(x):
             x = builder.load(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.tanh(self.ctx, builder, x))
+
+    def call_builtin_np_exp(self, builder, x):
+        if helpers.is_pointer(x):
+            x = builder.load(x)
+        return self._do_unary_op(builder, x, lambda builder, x: helpers.exp(self.ctx, builder, x))
+
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     assert "node_wrapper" in tags
