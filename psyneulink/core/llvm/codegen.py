@@ -213,6 +213,15 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return _uadd
 
+    def visit_Not(self, node):
+        def _not(builder, x):
+            assert helpers.is_scalar(x)
+            # The result of 'not' is always bool even if the input is not
+            x_b = helpers.convert_type(builder, x, self.ctx.bool_ty)
+            return builder.not_(x_b)
+
+        return _not
+
     def visit_Name(self, node):
         return self.register[node.id]
 

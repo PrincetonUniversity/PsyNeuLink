@@ -45,6 +45,15 @@ def test_user_def_bin_arith(param1, param2, func, func_mode, benchmark):
     assert np.allclose(val, func(0, param1=param1, param2=param2))
 
 
+def unNot(variable):
+    var1 = False
+    # compiled UDFs don't support python bool type outputs
+    if not var1:
+        return 0.0
+    else:
+        return 1.0
+
+
 def binAnd(variable):
     var1 = True
     var2 = False
@@ -102,7 +111,16 @@ def varOr(var):
     return var[0] or var[1]
 
 
+def varNot(var):
+    # compiled UDFs don't support python bool type outputs
+    if not var[0]:
+        return 0.0
+    else:
+        return 1.0
+
+
 @pytest.mark.parametrize("op,var, expected", [
+    (unNot, 0, 0.0),
     (binAnd, 0, 1.0),
     (binOr, 0, 1.0),
     (triAnd, 0, 1.0),
@@ -116,6 +134,8 @@ def varOr(var):
     (varOr, [3.0, 0.0], 3.0),
     (varOr, [0.0, -3.0], -3.0),
     (varOr, [1.5, -1.0], 1.5),
+    (varNot, [1.5], 1.0),
+    (varNot, [0.0], 0.0),
     ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_boolop(op, var, expected, func_mode, benchmark):
