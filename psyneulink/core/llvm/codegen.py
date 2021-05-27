@@ -206,6 +206,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return _usub
 
+    def visit_UAdd(self, node):
+        def _uadd(builder, x):
+            assert helpers.is_floating_point(x)
+            return x
+
+        return _uadd
+
     def visit_Name(self, node):
         return self.register[node.id]
 

@@ -326,13 +326,21 @@ def unarySubParam(variable, param):
     return -param
 
 
+def unaryAddVar(variable, param):
+    return +variable
+
+
+def unaryAddParam(variable, param):
+    return +param
+
+
 @pytest.mark.parametrize("variable", [
                     1,
                     np.ones(2),
                     np.ones((2)),
                     np.ones((2, 2))
                     ], ids=["scalar", "vec", "vec-2d", "mat"])
-@pytest.mark.parametrize("func", [unarySubVar, unarySubParam])
+@pytest.mark.parametrize("func", [unarySubVar, unarySubParam, unaryAddVar, unaryAddParam])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_unary(func, variable, func_mode, benchmark):
     U = UserDefinedFunction(custom_function=func, default_variable=variable, param=variable)
