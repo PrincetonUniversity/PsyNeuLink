@@ -50,19 +50,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 x_ty = x_ty.pointee
             return ctx.float_ty(len(x_ty))
 
-        # numpy's max function differs greatly from that of python's buiiltin max
-        # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
-        def _max_numpy(builder, x):
-            assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
-            curr = builder.alloca(ctx.float_ty)
-            builder.store(ctx.float_ty('NaN'), curr)
-            for (element_ptr,) in helpers.recursive_iterate_arrays(ctx, builder, x):
-                element = builder.load(element_ptr)
-                greater = builder.fcmp_unordered('>', element, builder.load(curr))
-                with builder.if_then(greater):
-                    builder.store(element, curr)
-            return curr
-
         # see: https://docs.python.org/3/library/functions.html#max
         def _max(builder, *args):
             if len(args) == 1 and helpers.is_vector(args[0]):
@@ -115,7 +102,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             'less_equal': get_np_cmp("<="),
             'greater': get_np_cmp(">"),
             'greater_equal': get_np_cmp(">="),
-            "max": _max_numpy,
+            "max": self.call_builtin_np_max,
         }
 
         for k, v in func_globals.items():
@@ -513,6 +500,21 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         if helpers.is_pointer(x):
             x = builder.load(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.exp(self.ctx, builder, x))
+
+    def call_builtin_np_max(self, builder, x):
+        # numpy's max function differs greatly from that of python's buiiltin max
+        # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
+        assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
+        # TODO: Remove alloca
+        curr = builder.alloca(self.ctx.float_ty)
+        builder.store(self.ctx.float_ty('NaN'), curr)
+        for (element_ptr,) in helpers.recursive_iterate_arrays(self.ctx, builder, x):
+            element = builder.load(element_ptr)
+            greater = builder.fcmp_unordered('>', element, builder.load(curr))
+            with builder.if_then(greater):
+                builder.store(element, curr)
+        return curr
+
 
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
