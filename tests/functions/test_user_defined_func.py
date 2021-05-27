@@ -318,21 +318,28 @@ def test_user_def_func_variable_index(func_mode, benchmark):
     assert np.allclose(val, [[6, 10]])
 
 
-@pytest.mark.parametrize("variable", [
-                    (1),
-                    (np.ones((2))),
-                    (np.ones((2, 2)))
-                    ], ids=["scalar", "vec-2d", "mat"])
-@pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_usub(variable, func_mode, benchmark):
-    def myFunction(variable, param):
-        return -param
+def unarySubVar(variable, param):
+    return -variable
 
-    U = UserDefinedFunction(custom_function=myFunction, default_variable=variable, param=variable)
+
+def unarySubParam(variable, param):
+    return -param
+
+
+@pytest.mark.parametrize("variable", [
+                    1,
+                    np.ones(2),
+                    np.ones((2)),
+                    np.ones((2, 2))
+                    ], ids=["scalar", "vec", "vec-2d", "mat"])
+@pytest.mark.parametrize("func", [unarySubVar, unarySubParam])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func_unary(func, variable, func_mode, benchmark):
+    U = UserDefinedFunction(custom_function=func, default_variable=variable, param=variable)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
-    assert np.allclose(val, -variable)
+    assert np.allclose(val, func(variable, param=variable))
 
 
 @pytest.mark.benchmark(group="Function UDF")
