@@ -184,6 +184,15 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return _div
 
+    def visit_Pow(self, node):
+        def _div(builder, x, y):
+            assert helpers.is_floating_point(x)
+            assert helpers.is_floating_point(y)
+            pow_f = ctx.get_builtin("pow", [x.type, y.type])
+            return builder.call(pow_f, [x, y])
+
+        return _div
+
     def _generate_unop(self, x, callback):
         if helpers.is_floating_point(x) and helpers.is_pointer(x):
             x = self.builder.load(x)
