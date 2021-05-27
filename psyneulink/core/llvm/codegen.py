@@ -31,12 +31,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.arg_out = arg_out
 
         #setup default functions
-        def _len(builder, x):
-            x_ty = x.type
-            if helpers.is_pointer(x):
-                x_ty = x_ty.pointee
-            return ctx.float_ty(len(x_ty))
-
         # see: https://docs.python.org/3/library/functions.html#max
         def _max(builder, *args):
             if len(args) == 1 and helpers.is_vector(args[0]):
@@ -61,7 +55,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             assert False, "Attempted to call max with invalid arguments!"
         self.register = {
             "sum": self.call_builtin_horizontal_sum,
-            "len": _len,
+            "len": self.call_builtin_len,
             "float": ctx.float_ty,
             "int": ctx.int32_ty,
             "max": _max,
@@ -490,6 +484,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             tmp = self._do_bin_op(b, b.load(total_sum), b.load(curr_val), add_func)
             b.store(tmp, total_sum)
         return total_sum
+
+    def call_builtin_len(self, builder, x):
+        x_ty = x.type
+        if helpers.is_pointer(x):
+            x_ty = x_ty.pointee
+        return self.ctx.float_ty(len(x_ty))
 
     def call_builtin_np_tanh(self, builder, x):
         if helpers.is_pointer(x):
