@@ -200,17 +200,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return callback(self.ctx, self.builder, x)
 
     def visit_USub(self, node):
-        def _usub_vec_mat(ctx, builder, x):
-            output = builder.alloca(x.type.pointee)
-
-            helpers.call_elementwise_operation(ctx, builder, x, lambda ctx, builder, x: helpers.fneg(builder, x), output)
-            return output
-
-        def _usub(x):
-            if helpers.is_floating_point(x):
-                return self._generate_unop(x, lambda ctx, builder, x: helpers.fneg(builder, x))
-            elif helpers.is_vector(x) or helpers.is_2d_matrix(x):
-                return self._generate_unop(x, _usub_vec_mat)
+        def _usub(builder, x):
+            assert helpers.is_floating_point(x)
+            return helpers.fneg(builder, x)
 
         return _usub
 
@@ -297,6 +289,30 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return ret_list
 
+    def _do_unary_op(self, builder, x, scalar_op):
+        assert not helpers.is_pointer(x)
+
+        # scalar is the base case
+        if helpers.is_scalar(x):
+            return scalar_op(self.builder, x)
+        operands = (builder.extract_value(x, i) for i in range(len(x.type)))
+        results = [self._do_unary_op(builder, opx, scalar_op) for opx in operands]
+
+        result = ir.ArrayType(results[0].type, len(results))(ir.Undefined)
+        for i, res in enumerate(results):
+            result = builder.insert_value(result, res, i)
+
+        return result
+
+    def visit_UnaryOp(self, node):
+        operator = self.visit(node.op)
+
+        operand = self.visit(node.operand)
+        if helpers.is_pointer(operand):
+            operand = self.builder.load(operand)
+
+        return self._do_unary_op(self.builder, operand, operator)
+
     def _do_bin_op(self, builder, x, y, scalar_op):
         assert not helpers.is_pointer(x)
         assert not helpers.is_pointer(y)
@@ -366,10 +382,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             return builder.select(cond, x, y)
 
         return _or
-
-    def visit_UnaryOp(self, node):
-        operator = self.visit(node.op)
-        return operator(self.visit(node.operand))
 
     def visit_List(self, node):
         elements = [self.visit(element) for element in node.elts]
