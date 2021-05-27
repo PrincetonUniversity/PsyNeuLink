@@ -103,16 +103,28 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             "max": _max,
         }
 
+        # Numpy function calls
+        def get_np_cmp(cmp_op):
+            def np_cmp(builder, x, y):
+                op = self._generate_fcmp_handler(None, None, cmp_op)
+                if helpers.is_pointer(x):
+                    x = builder.load(x)
+                if helpers.is_pointer(y):
+                    y = builder.load(y)
+                return self._do_bin_op(builder, x, y, op)
+
+            return np_cmp
+
         # setup numpy
         numpy_handlers = {
             'tanh': _tanh,
             'exp': _exp,
-            'equal': self._generate_fcmp_handler(self.ctx, self.builder, "=="),
-            'not_equal': self._generate_fcmp_handler(self.ctx, self.builder, "!="),
-            'less': self._generate_fcmp_handler(self.ctx, self.builder, "<"),
-            'less_equal': self._generate_fcmp_handler(self.ctx, self.builder, "<="),
-            'greater': self._generate_fcmp_handler(self.ctx, self.builder, ">"),
-            'greater_equal': self._generate_fcmp_handler(self.ctx, self.builder, ">="),
+            'equal': get_np_cmp("=="),
+            'not_equal': get_np_cmp("!="),
+            'less': get_np_cmp("<"),
+            'less_equal': get_np_cmp("<="),
+            'greater': get_np_cmp(">"),
+            'greater_equal': get_np_cmp(">="),
             "max": _max_numpy,
         }
 
@@ -409,50 +421,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
         return ret_list
 
-    def _generate_fcmp_handler(self, ctx, builder, cmp):
-        def _cmp_array(ctx, builder, u, v):
-            assert u.type == v.type
-            shape = helpers.get_array_shape(u)
-            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
+    def _generate_fcmp_handler(self, ctx, builder, cmp_op):
+        def _fcmp(builder, x, y):
+            # If at least one operand if float, we cast the other one to float as well
+            assert helpers.is_floating_point(x) or helpers.is_floating_point(y)
+            float_ty = x.type if helpers.is_floating_point(x) else y.type
+            x = helpers.convert_type(builder, x, float_ty)
+            y = helpers.convert_type(builder, y, float_ty)
+            return builder.fcmp_ordered(cmp_op, x, y)
 
-            for (u_ptr, v_ptr, out_ptr) in helpers.recursive_iterate_arrays(ctx, builder, u, v, output_ptr):
-                u_val = builder.load(u_ptr)
-                v_val = builder.load(v_ptr)
-                builder.store(builder.fcmp_ordered(cmp, u_val, v_val), out_ptr)
-
-            return output_ptr
-
-        def _cmp_array_scalar(ctx, builder, array, s):
-            shape = helpers.get_array_shape(array)
-            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
-            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fcmp_ordered(cmp, x, s), output_ptr)
-
-            return output_ptr
-
-        def _cmp_scalar_array(ctx, builder, s, array):
-            shape = helpers.get_array_shape(array)
-            output_ptr = builder.alloca(helpers.array_from_shape(shape, ctx.bool_ty))
-            helpers.call_elementwise_operation(ctx, builder, array, lambda ctx, builder, x:  builder.fcmp_ordered(cmp, s, x), output_ptr)
-
-            return output_ptr
-
-        def _cmp(builder, x, y):
-            if helpers.is_floating_point(x) and helpers.is_floating_point(y):
-                return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered(cmp, x, y))
-            elif helpers.is_vector(x) and helpers.is_floating_point(y):
-                return self._generate_binop(x, y, _cmp_array_scalar)
-            elif helpers.is_floating_point(x) and helpers.is_vector(y):
-                return self._generate_binop(x, y, _cmp_scalar_array)
-            elif helpers.is_2d_matrix(x) and helpers.is_floating_point(y):
-                return self._generate_binop(x, y, _cmp_array_scalar)
-            elif helpers.is_floating_point(x) and helpers.is_2d_matrix(y):
-                return self._generate_binop(x, y, _cmp_scalar_array)
-            elif helpers.is_vector(x) and helpers.is_vector(y):
-                return self._generate_binop(x, y, _cmp_array)
-            elif helpers.is_2d_matrix(x) and helpers.is_2d_matrix(y):
-                return self._generate_binop(x, y, _cmp_array)
-
-        return _cmp
+        return _fcmp
 
     def visit_Eq(self, node):
         return self._generate_fcmp_handler(self.ctx, self.builder, "==")
@@ -473,12 +451,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return self._generate_fcmp_handler(self.ctx, self.builder, ">=")
 
     def visit_Compare(self, node):
-        comp_val = self.visit(node.left)
-        comparators = [self.visit(comparator) for comparator in node.comparators]
-        ops = [self.visit(op) for op in node.ops]
-        for comparator, op in zip(comparators, ops):
-            comp_val = op(self.builder, comp_val, comparator)
-        return comp_val
+        result = self.visit(node.left)
+        if helpers.is_pointer(result):
+            result = self.builder.load(result)
+
+        comparators = (self.visit(comparator) for comparator in node.comparators)
+        values = (self.builder.load(val) if helpers.is_pointer(val) else val for val in comparators)
+        ops = (self.visit(op) for op in node.ops)
+        for val, op in zip(values, ops):
+            result = self._do_bin_op(self.builder, result, val, op)
+        return result
 
     def visit_If(self, node):
         cond_val = self.visit(node.test)
