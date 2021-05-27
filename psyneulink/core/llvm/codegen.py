@@ -31,34 +31,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.arg_out = arg_out
 
         #setup default functions
-        # see: https://docs.python.org/3/library/functions.html#max
-        def _max(builder, *args):
-            if len(args) == 1 and helpers.is_vector(args[0]):
-                curr = builder.alloca(ctx.float_ty)
-                builder.store(ctx.float_ty('NaN'), curr)
-                for (element_ptr,) in helpers.recursive_iterate_arrays(ctx, builder, args[0]):
-                    element = builder.load(element_ptr)
-                    greater = builder.fcmp_unordered('>', element, builder.load(curr))
-                    with builder.if_then(greater):
-                        builder.store(element, curr)
-                return curr
-            elif len(args) > 1 and all(a.type == args[0].type for a in args):
-                curr = builder.alloca(ctx.float_ty)
-                builder.store(ctx.float_ty('NaN'), curr)
-                for element in args:
-                    if helpers.is_pointer(element):
-                        element = builder.load(element)
-                    greater = builder.fcmp_unordered('>', element, builder.load(curr))
-                    with builder.if_then(greater):
-                        builder.store(element, curr)
-                return curr
-            assert False, "Attempted to call max with invalid arguments!"
         self.register = {
             "sum": self.call_builtin_horizontal_sum,
             "len": self.call_builtin_len,
             "float": ctx.float_ty,
             "int": ctx.int32_ty,
-            "max": _max,
+            "max": self.call_builtin_max,
         }
 
         # Numpy function calls
@@ -472,6 +450,8 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         return call_func(self.builder, *node_args)
 
+    # Python builtins
+
     def call_builtin_horizontal_sum(self, builder, x):
         # HACK: Get scalar version of add
         add_func = self.visit_Add(None)
@@ -490,6 +470,31 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         if helpers.is_pointer(x):
             x_ty = x_ty.pointee
         return self.ctx.float_ty(len(x_ty))
+
+    def call_builtin_max(self, builder, *args):
+        # see: https://docs.python.org/3/library/functions.html#max
+        if len(args) == 1 and helpers.is_vector(args[0]):
+            curr = builder.alloca(self.ctx.float_ty)
+            builder.store(self.ctx.float_ty('NaN'), curr)
+            for (element_ptr,) in helpers.recursive_iterate_arrays(self.ctx, builder, args[0]):
+                element = builder.load(element_ptr)
+                greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                with builder.if_then(greater):
+                    builder.store(element, curr)
+            return curr
+        elif len(args) > 1 and all(a.type == args[0].type for a in args):
+            curr = builder.alloca(self.ctx.float_ty)
+            builder.store(self.ctx.float_ty('NaN'), curr)
+            for element in args:
+                if helpers.is_pointer(element):
+                    element = builder.load(element)
+                greater = builder.fcmp_unordered('>', element, builder.load(curr))
+                with builder.if_then(greater):
+                    builder.store(element, curr)
+            return curr
+        assert False, "Attempted to call max with invalid arguments!"
+
+    #  Numpy builtins
 
     def call_builtin_np_tanh(self, builder, x):
         if helpers.is_pointer(x):
