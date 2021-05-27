@@ -234,18 +234,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 return flattened_array
             return flatten
         elif node.attr == "astype":
+            if helpers.is_pointer(val):
+                val = self.builder.load(val)
             def astype(builder, ty):
-                def _convert(ctx, builder, x):
-                    if helpers.is_pointer(x):
-                        x = builder.load(x)
+                def _convert(builder, x):
                     return helpers.convert_type(builder, x, ty)
-                if helpers.is_scalar(val):
-                    return _convert(self.ctx, builder, val)
-                else:
-                    output_ptr = builder.alloca(helpers.array_from_shape(helpers.get_array_shape(val), ty))
-                    helpers.call_elementwise_operation(self.ctx, builder, val, _convert, output_ptr)
-                    return output_ptr
-            # we only support float types
+                return self._do_unary_op(builder, val, _convert)
             return astype
 
         return val[node.attr]
