@@ -50,11 +50,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 x_ty = x_ty.pointee
             return ctx.float_ty(len(x_ty))
 
-        def _tanh(builder, x):
-            output_ptr = builder.alloca(x.type.pointee)
-            helpers.call_elementwise_operation(self.ctx, builder, x, helpers.tanh, output_ptr)
-            return output_ptr
-
         def _exp(builder, x):
             output_ptr = builder.alloca(x.type.pointee)
             helpers.call_elementwise_operation(self.ctx, builder, x, helpers.exp, output_ptr)
@@ -117,7 +112,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         # setup numpy
         numpy_handlers = {
-            'tanh': _tanh,
+            'tanh': self.call_builtin_np_tanh,
             'exp': _exp,
             'equal': get_np_cmp("=="),
             'not_equal': get_np_cmp("!="),
@@ -493,13 +488,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         self.builder.store(ret_val, arg_out)
 
-    def visit_Call(self, node):
-        call_func = self.visit(node.func)
-        assert callable(call_func), f"Uncallable function {node.func}!"
-        node_args = [self.visit(arg) for arg in node.args]
-
-        return call_func(self.builder, *node_args)
-
     def visit_Subscript(self, node):
         node_val = self.visit(node.value)
         node_slice_val = helpers.convert_type(self.builder, self.visit(node.slice), self.ctx.int32_ty)
@@ -512,6 +500,19 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         Deprecated in python 3.9+.
         """
         return self.visit(node.value)
+
+    def visit_Call(self, node):
+        node_args = [self.visit(arg) for arg in node.args]
+
+        call_func = self.visit(node.func)
+        assert callable(call_func), f"Uncallable function {node.func}!"
+
+        return call_func(self.builder, *node_args)
+
+    def call_builtin_np_tanh(self, builder, x):
+        if helpers.is_pointer(x):
+            x = builder.load(x)
+        return self._do_unary_op(builder, x, lambda builder, x: helpers.tanh(self.ctx, builder, x))
 
 def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
     assert "node_wrapper" in tags
