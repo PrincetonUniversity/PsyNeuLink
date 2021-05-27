@@ -11,24 +11,26 @@ import psyneulink.core.llvm as pnlvm
 
 
 # default val is same shape as expected output
+# we only use param1 and param2 to avoid automatic shape changes of the variable
 def binAdd(_, param1, param2):
-    # we only use param1 and param2 to avoid automatic shape changes of the variable
     return param1 + param2
 
 
+def binSub(_, param1, param2):
+    return param1 - param2
+
+
 def binMul(_, param1, param2):
-    # we only use param1 and param2 to avoid automatic shape changes of the variable
     return param1 * param2
 
 
 def binDiv(_, param1, param2):
-    # we only use param1 and param2 to avoid automatic shape changes of the variable
     return param1 / param2
 
 
 @pytest.mark.parametrize("param1", [1, np.ones(2), np.ones((2, 2))], ids=['scalar', 'vector', 'matrix'])
 @pytest.mark.parametrize("param2", [2, np.ones(2) * 2, np.ones((2, 2)) * 2], ids=['scalar', 'vector', 'matrix'])
-@pytest.mark.parametrize("func", [binAdd, binMul, binDiv])
+@pytest.mark.parametrize("func", [binAdd, binSub, binMul, binDiv])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_bin_arith(param1, param2, func, func_mode, benchmark):
 
