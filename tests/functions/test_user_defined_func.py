@@ -126,55 +126,58 @@ def test_user_def_func_boolop(op, var, expected, func_mode, benchmark):
     assert val == expected
 
 
-@pytest.mark.parametrize("op,var1,var2,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                    ("Eq", 1.0, 2.0, 0.0),
-                    ("NotEq", 1.0, 2.0, 1.0),
-                    ("Lt", 1.0, 2.0, 1.0),
-                    ("LtE", 1.0, 2.0, 1.0),
-                    ("Gt", 1.0, 2.0, 0.0),
-                    ("GtE", 1.0, 2.0, 0.0),
+def binEQ(variable, var1, var2):
+    if var1 == var2:
+        return 1.0
+    else:
+        return 0.0
+
+
+def binNE(variable, var1, var2):
+    if var1 != var2:
+        return 1.0
+    else:
+        return 0.0
+
+
+def binLT(variable, var1, var2):
+    if var1 < var2:
+        return 1.0
+    else:
+        return 0.0
+
+
+def binLE(variable, var1, var2):
+    if var1 <= var2:
+        return 1.0
+    else:
+        return 0.0
+
+
+def binGT(variable, var1, var2):
+    if var1 > var2:
+        return 1.0
+    else:
+        return 0.0
+
+
+def binGE(variable, var1, var2):
+    if var1 >= var2:
+        return 1.0
+    else:
+        return 0.0
+
+@pytest.mark.parametrize("func,var1,var2,expected", [
+                    (binEQ, 1.0, 2.0, 0.0),
+                    (binNE, 1.0, 2.0, 1.0),
+                    (binLT, 1.0, 2.0, 1.0),
+                    (binLE, 1.0, 2.0, 1.0),
+                    (binGT, 1.0, 2.0, 0.0),
+                    (binGE, 1.0, 2.0, 0.0),
                     ])
 @pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_cmpop(op, var1, var2, expected, func_mode, benchmark):
-    # we explicitly use np here to ensure that the result is castable to float in the scalar-scalar case
-    if op == "Eq":
-        def myFunction(variable, var1, var2):
-            if var1 == var2:
-                return 1.0
-            else:
-                return 0.0
-    elif op == "NotEq":
-        def myFunction(variable, var1, var2):
-            if var1 != var2:
-                return 1.0
-            else:
-                return 0.0
-    elif op == "Lt":
-        def myFunction(variable, var1, var2):
-            if var1 < var2:
-                return 1.0
-            else:
-                return 0.0
-    elif op == "LtE":
-        def myFunction(variable, var1, var2):
-            if var1 <= var2:
-                return 1.0
-            else:
-                return 0.0
-    elif op == "Gt":
-        def myFunction(variable, var1, var2):
-            if var1 > var2:
-                return 1.0
-            else:
-                return 0.0
-    elif op == "GtE":
-        def myFunction(variable, var1, var2):
-            if var1 >= var2:
-                return 1.0
-            else:
-                return 0.0
-
-    U = UserDefinedFunction(custom_function=myFunction, default_variable=[0], var1=var1, var2=var2)
+def test_user_def_func_cmpop(func, var1, var2, expected, func_mode, benchmark):
+    U = UserDefinedFunction(custom_function=func, default_variable=[0], var1=var1, var2=var2)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, [0])
