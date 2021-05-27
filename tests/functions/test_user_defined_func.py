@@ -26,15 +26,8 @@ def binDiv(_, param1, param2):
     return param1 / param2
 
 
-@pytest.mark.parametrize("param1, param2", [
-                    (1, 2),
-                    (np.ones(2), 2),
-                    (2, np.ones(2)),
-                    (np.ones((2, 2)), 2),
-                    (2, np.ones((2, 2))),
-                    (np.ones(2), np.array([1, 2])),
-                    (np.ones((2, 2)), np.array([[1, 2], [3, 4]])),
-                    ], ids=["scalar-scalar", "vec-scalar", "scalar-vec", "mat-scalar", "scalar-mat", "vec-vec", "mat-mat"])
+@pytest.mark.parametrize("param1", [1, np.ones(2), np.ones((2, 2))], ids=['scalar', 'vector', 'matrix'])
+@pytest.mark.parametrize("param2", [2, np.ones(2) * 2, np.ones((2, 2)) * 2], ids=['scalar', 'vector', 'matrix'])
 @pytest.mark.parametrize("func", [binAdd, binMul, binDiv])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_bin_arith(param1, param2, func, func_mode, benchmark):
