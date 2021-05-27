@@ -31,19 +31,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.arg_out = arg_out
 
         #setup default functions
-        def _list_sum(builder, x):
-            # HACK: Obtain polymorphic addition function by visiting the add node
-            # this should ideally be moved to an explicit helper
-            add_func = self.visit_Add(None)
-
-            total_sum = builder.alloca(x.type.pointee.element)
-            builder.store(total_sum.type.pointee(None), total_sum)
-            with helpers.array_ptr_loop(builder, x, "list_sum") as (b, idx):
-                curr_val = b.gep(x, [ctx.int32_ty(0), idx])
-                tmp = self._do_bin_op(b, b.load(total_sum), b.load(curr_val), add_func)
-                b.store(tmp, total_sum)
-            return total_sum
-
         def _len(builder, x):
             x_ty = x.type
             if helpers.is_pointer(x):
@@ -73,7 +60,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 return curr
             assert False, "Attempted to call max with invalid arguments!"
         self.register = {
-            "sum": _list_sum,
+            "sum": self.call_builtin_horizontal_sum,
             "len": _len,
             "float": ctx.float_ty,
             "int": ctx.int32_ty,
@@ -490,6 +477,19 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         assert callable(call_func), f"Uncallable function {node.func}!"
 
         return call_func(self.builder, *node_args)
+
+    def call_builtin_horizontal_sum(self, builder, x):
+        # HACK: Get scalar version of add
+        add_func = self.visit_Add(None)
+
+        #TODO: Remove alloca
+        total_sum = builder.alloca(x.type.pointee.element)
+        builder.store(total_sum.type.pointee(None), total_sum)
+        with helpers.array_ptr_loop(builder, x, "list_sum") as (b, idx):
+            curr_val = b.gep(x, [self.ctx.int32_ty(0), idx])
+            tmp = self._do_bin_op(b, b.load(total_sum), b.load(curr_val), add_func)
+            b.store(tmp, total_sum)
+        return total_sum
 
     def call_builtin_np_tanh(self, builder, x):
         if helpers.is_pointer(x):
