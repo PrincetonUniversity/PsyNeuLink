@@ -31,7 +31,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.arg_out = arg_out
 
         #setup default functions
-        def _list_sum(x):
+        def _list_sum(builder, x):
             # HACK: Obtain polymorphic addition function by visiting the add node
             # this should ideally be moved to an explicit helper
             add_func = self.visit_Add(None)
@@ -44,25 +44,25 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 b.store(tmp, total_sum)
             return total_sum
 
-        def _len(x):
+        def _len(builder, x):
             x_ty = x.type
             if helpers.is_pointer(x):
                 x_ty = x_ty.pointee
             return ctx.float_ty(len(x_ty))
 
-        def _tanh(x):
+        def _tanh(builder, x):
             output_ptr = builder.alloca(x.type.pointee)
-            helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.tanh, output_ptr)
+            helpers.call_elementwise_operation(self.ctx, builder, x, helpers.tanh, output_ptr)
             return output_ptr
 
-        def _exp(x):
+        def _exp(builder, x):
             output_ptr = builder.alloca(x.type.pointee)
-            helpers.call_elementwise_operation(self.ctx, self.builder, x, helpers.exp, output_ptr)
+            helpers.call_elementwise_operation(self.ctx, builder, x, helpers.exp, output_ptr)
             return output_ptr
 
         # numpy's max function differs greatly from that of python's buiiltin max
         # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
-        def _max_numpy(x):
+        def _max_numpy(builder, x):
             assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
             curr = builder.alloca(ctx.float_ty)
             builder.store(ctx.float_ty('NaN'), curr)
@@ -74,7 +74,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             return curr
 
         # see: https://docs.python.org/3/library/functions.html#max
-        def _max(*args):
+        def _max(builder, *args):
             if len(args) == 1 and helpers.is_vector(args[0]):
                 curr = builder.alloca(ctx.float_ty)
                 builder.store(ctx.float_ty('NaN'), curr)
@@ -225,33 +225,33 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             shape = helpers.get_array_shape(val)
             return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
         elif node.attr == "flatten":
-            def flatten():
+            def flatten(builder):
                 shape = helpers.get_array_shape(val)
                 flattened_size = reduce(lambda x, y: x * y, shape)
                 flattened_ty = ir.ArrayType(self.ctx.float_ty, flattened_size)
-                flattened_array = self.builder.alloca(flattened_ty)
-                index_var = self.builder.alloca(self.ctx.int32_ty, name="flattened_index_var_loc")
-                self.builder.store(self.ctx.int32_ty(0), index_var)
-                for (array_ptr,) in helpers.recursive_iterate_arrays(self.ctx, self.builder, val):
-                    index = self.builder.load(index_var, name="flattened_index_var")
-                    flattened_array_ptr = self.builder.gep(flattened_array, [self.ctx.int32_ty(0), index])
-                    array_val = self.builder.load(array_ptr)
-                    self.builder.store(array_val, flattened_array_ptr)
-                    index = self.builder.add(index, self.ctx.int32_ty(1), name="flattened_index_var_inc")
-                    self.builder.store(index, index_var)
+                flattened_array = builder.alloca(flattened_ty)
+                index_var = builder.alloca(self.ctx.int32_ty, name="flattened_index_var_loc")
+                builder.store(self.ctx.int32_ty(0), index_var)
+                for (array_ptr,) in helpers.recursive_iterate_arrays(self.ctx, builder, val):
+                    index = builder.load(index_var, name="flattened_index_var")
+                    flattened_array_ptr = builder.gep(flattened_array, [self.ctx.int32_ty(0), index])
+                    array_val = builder.load(array_ptr)
+                    builder.store(array_val, flattened_array_ptr)
+                    index = builder.add(index, self.ctx.int32_ty(1), name="flattened_index_var_inc")
+                    builder.store(index, index_var)
                 return flattened_array
             return flatten
         elif node.attr == "astype":
-            def astype(ty):
+            def astype(builder, ty):
                 def _convert(ctx, builder, x):
                     if helpers.is_pointer(x):
                         x = builder.load(x)
                     return helpers.convert_type(builder, x, ty)
                 if helpers.is_scalar(val):
-                    return _convert(self.ctx, self.builder, val)
+                    return _convert(self.ctx, builder, val)
                 else:
-                    output_ptr = self.builder.alloca(helpers.array_from_shape(helpers.get_array_shape(val), ty))
-                    helpers.call_elementwise_operation(self.ctx, self.builder, val, _convert, output_ptr)
+                    output_ptr = builder.alloca(helpers.array_from_shape(helpers.get_array_shape(val), ty))
+                    helpers.call_elementwise_operation(self.ctx, builder, val, _convert, output_ptr)
                     return output_ptr
             # we only support float types
             return astype
@@ -414,7 +414,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
             return output_ptr
 
-        def _cmp(x, y):
+        def _cmp(builder, x, y):
             if helpers.is_floating_point(x) and helpers.is_floating_point(y):
                 return self._generate_binop(x, y, lambda ctx, builder, x, y: builder.fcmp_ordered(cmp, x, y))
             elif helpers.is_vector(x) and helpers.is_floating_point(y):
@@ -455,7 +455,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         comparators = [self.visit(comparator) for comparator in node.comparators]
         ops = [self.visit(op) for op in node.ops]
         for comparator, op in zip(comparators, ops):
-            comp_val = op(comp_val, comparator)
+            comp_val = op(self.builder, comp_val, comparator)
         return comp_val
 
     def visit_If(self, node):
@@ -494,7 +494,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         assert callable(call_func), f"Uncallable function {node.func}!"
         node_args = [self.visit(arg) for arg in node.args]
 
-        return call_func(*node_args)
+        return call_func(self.builder, *node_args)
 
     def visit_Subscript(self, node):
         node_val = self.visit(node.value)
