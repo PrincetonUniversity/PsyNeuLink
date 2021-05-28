@@ -23,9 +23,10 @@ from . import helpers
 from .debug import debug_env
 
 class UserDefinedFunctionVisitor(ast.NodeVisitor):
-    def __init__(self, ctx, builder, func_globals, func_params, arg_in, arg_out):
+    def __init__(self, ctx, var_builder, builder, func_globals, func_params, arg_in, arg_out):
         self.ctx = ctx
         self.builder = builder
+        self.var_builder = var_builder
         self.func_params = func_params
         self.arg_in = arg_in
         self.arg_out = arg_out
@@ -171,7 +172,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return _not
 
     def visit_Name(self, node):
-        return self.register[node.id]
+        return self.register.get(node.id, None)
 
     def visit_Attribute(self, node):
         val = self.visit(node.value)
@@ -213,18 +214,15 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_Assign(self, node):
         value = self.visit(node.value)
-        def _assign_target(target, value):
-            if isinstance(target, ast.Name):
-                id = target.id
-                self.register[id] = value
-            else:
-                to_store = value
+        if helpers.is_pointer(value):
+            value = self.builder.load(value)
 
-                target = self.visit(target)
-                self.builder.store(to_store, target)
-
-        for target in node.targets:
-            _assign_target(target, value)
+        for t in node.targets:
+            target = self.visit(t)
+            if target is None: # Allocate space for new variable
+                target = self.var_builder.alloca(value.type)
+                self.register[t.id] = target
+            self.builder.store(value, target)
 
     def visit_NameConstant(self, node):
         val = self.name_constants[node.value]
