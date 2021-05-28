@@ -337,20 +337,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return _or
 
     def visit_List(self, node):
-        elements = [self.visit(element) for element in node.elts]
-        element_ty = elements[0].type
-        assert all(element.type == element_ty for element in elements), f"Unable to convert {node} into a list! (Elements differ in type!)"
+        elements = (self.visit(element) for element in node.elts)
+        element_values = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
+        element_types = [element.type for element in element_values]
+        assert all(element.type == element_types[0] for element in elements), f"Unable to convert {node} into a list! (Elements differ in type!)"
+        result = ir.ArrayType(element_types[0], len(element_types))(ir.Undefined)
 
-        # dereference pointers
-        if helpers.is_pointer(element_ty):
-            elements = [self.builder.load(element) for element in elements]
-            element_ty = elements[0].type
+        for i, val in enumerate(element_values):
+            result = self.builder.insert_value(result, val, i)
 
-        ret_list = self.builder.alloca(ir.ArrayType(element_ty, len(elements)))
-
-        for idx, element in enumerate(elements):
-            self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
-        return ret_list
+        return result
 
     def _generate_fcmp_handler(self, ctx, builder, cmp_op):
         def _fcmp(builder, x, y):
