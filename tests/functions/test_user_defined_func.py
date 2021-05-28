@@ -531,9 +531,8 @@ def test_udf_in_mechanism(mech_mode, benchmark):
                 ("SUM", [1.0, 3.0], 12),
                 ("SUM", [[1.0], [3.0]], [12.0]),
                 ("SUM", [[1.0, 2.0], [3.0, 4.0]], [12.0, 18.0]),
-                ("LEN", [1.0, 3.0], 2),
-                ("LEN", [[1.0], [3.0]], 2),
-                ("LEN_TUPLE", [0, 0], 2),
+                ("LEN", [1.0, 3.0], 8),
+                ("LEN", [[1.0], [3.0]], 8),
                 ("MAX_MULTI", [1.0, 3.0, 2.0], 6),
                 ("MAX_TUPLE", [1.0, 3.0, 2.0], 6),
                 ("MAX", [1.0, 3.0, 2.0], 3.0),
@@ -547,11 +546,8 @@ def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
         def myFunction(var):
             return sum(var) + sum((var[0], var[1])) + sum([var[0], var[1]])
     elif op == "LEN":
-        def myFunction(variable):
-            return len(variable)
-    elif op == "LEN_TUPLE":
-        def myFunction(variable):
-            return len((1,2))
+        def myFunction(var):
+            return len(var) + len((var[0], var[1])) + len([var[0], var[1]]) + len((1.0, (1,2)))
     elif op == "MAX":
         def myFunction(variable):
             return max(variable)
