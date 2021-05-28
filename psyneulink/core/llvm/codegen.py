@@ -92,15 +92,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             else:
                 self.register[param.arg] = self.func_params[param.arg]
 
-    def _generate_binop(self, x, y, callback):
-        # unpack scalars from pointers
-        if helpers.is_floating_point(x) and helpers.is_pointer(x):
-            x = self.builder.load(x)
-        if helpers.is_floating_point(y) and helpers.is_pointer(y):
-            y = self.builder.load(y)
-
-        return callback(self.ctx, self.builder, x, y)
-
     def visit_Add(self, node):
         def _add(builder, x, y):
             assert helpers.is_floating_point(x)
@@ -141,12 +132,6 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             return builder.call(pow_f, [x, y])
 
         return _div
-
-    def _generate_unop(self, x, callback):
-        if helpers.is_floating_point(x) and helpers.is_pointer(x):
-            x = self.builder.load(x)
-
-        return callback(self.ctx, self.builder, x)
 
     def visit_USub(self, node):
         def _usub(builder, x):
