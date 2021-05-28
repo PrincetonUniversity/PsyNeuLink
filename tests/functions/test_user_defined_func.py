@@ -276,16 +276,21 @@ def test_user_def_func_cmpop_numpy(op, var1, var2, expected, func_mode, benchmar
     assert np.allclose(expected, val)
 
 
-@pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func(func_mode, benchmark):
-    def myFunction(variable, param1, param2):
-        return variable * 2 + param2
+def simpleFun(variable, param1, param2):
+    return variable * 2 + param2
 
-    U = UserDefinedFunction(custom_function=myFunction, default_variable=[[0, 0]], param2=3)
+
+@pytest.mark.parametrize("func,var,params,expected", [
+    (simpleFun, [1, 3], {"param1":None, "param2":3}, [5, 9]),
+])
+@pytest.mark.benchmark(group="Function UDF")
+def test_user_def_func(func, var, params, expected, func_mode, benchmark):
+
+    U = UserDefinedFunction(custom_function=func, default_variable=var, **params)
     e = pytest.helpers.get_func_execution(U, func_mode)
 
-    val = benchmark(e, [1, 3])
-    assert np.allclose(val, [[5, 9]])
+    val = benchmark(e, var)
+    assert np.allclose(val, expected)
 
 
 def branchOnVarCmp(variable, param1, param2):
