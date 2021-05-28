@@ -76,6 +76,14 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.name_constants = name_constants
         super().__init__()
 
+    def get_rval(self, val):
+        if helpers.is_pointer(val):
+            return self.builder.load(val)
+        return val
+
+    def is_lval(self, val):
+        return helpers.is_pointer(val)
+
     def visit_arguments(self, node):
         args = node.args
         variable = args[0]
@@ -167,8 +175,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             shape = helpers.get_array_shape(val)
             return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
         elif node.attr == "flatten":
-            if helpers.is_pointer(val):
-                val = self.builder.load(val)
+            val = self.get_rval(val)
             def flatten(builder):
                 res = []
                 def collect(builder, x):
@@ -183,8 +190,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
                 return flat
             return flatten
         elif node.attr == "astype":
-            if helpers.is_pointer(val):
-                val = self.builder.load(val)
+            val = self.get_rval(val)
             def astype(builder, ty):
                 def _convert(builder, x):
                     return helpers.convert_type(builder, x, ty)
@@ -197,15 +203,14 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return self.ctx.float_ty(node.n)
 
     def visit_Assign(self, node):
-        value = self.visit(node.value)
-        if helpers.is_pointer(value):
-            value = self.builder.load(value)
+        value = self.get_rval(self.visit(node.value))
 
         for t in node.targets:
             target = self.visit(t)
             if target is None: # Allocate space for new variable
                 target = self.var_builder.alloca(value.type)
                 self.register[t.id] = target
+            assert self.is_lval(target)
             self.builder.store(value, target)
 
     def visit_NameConstant(self, node):
@@ -244,11 +249,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_UnaryOp(self, node):
         operator = self.visit(node.op)
-
-        operand = self.visit(node.operand)
-        if helpers.is_pointer(operand):
-            operand = self.builder.load(operand)
-
+        operand = self.get_rval(self.visit(node.operand))
         return self._do_unary_op(self.builder, operand, operator)
 
     def _do_bin_op(self, builder, x, y, scalar_op):
@@ -279,26 +280,15 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_BinOp(self, node):
         operator = self.visit(node.op)
-
-        lhs = self.visit(node.left)
-        if helpers.is_pointer(lhs):
-            lhs = self.builder.load(lhs)
-
-        rhs = self.visit(node.right)
-        if helpers.is_pointer(rhs):
-            rhs = self.builder.load(rhs)
-
+        lhs = self.get_rval(self.visit(node.left))
+        rhs = self.get_rval(self.visit(node.right))
         return self._do_bin_op(self.builder, lhs, rhs, operator)
 
     def visit_BoolOp(self, node):
         operator = self.visit(node.op)
-        values = (self.visit(value) for value in node.values)
+        values = (self.get_rval(self.visit(value)) for value in node.values)
         ret_val = next(values)
-        if helpers.is_pointer(ret_val):
-            ret_val = self.builder.load(ret_val)
         for value in values:
-            if helpers.is_pointer(value):
-                value = self.builder.load(value)
             assert ret_val.type == value.type, "Don't know how to mix types in boolean expressions!"
             ret_val = operator(self.builder, ret_val, value)
         return ret_val
@@ -322,10 +312,9 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return _or
 
     def visit_List(self, node):
-        elements = (self.visit(element) for element in node.elts)
-        element_values = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
+        element_values = [self.get_rval(self.visit(element)) for element in node.elts]
         element_types = [element.type for element in element_values]
-        assert all(element.type == element_types[0] for element in elements), f"Unable to convert {node} into a list! (Elements differ in type!)"
+        assert all(e_type == element_types[0] for e_type in element_types), f"Unable to convert {node} into a list! (Elements differ in type!)"
         result = ir.ArrayType(element_types[0], len(element_types))(ir.Undefined)
 
         for i, val in enumerate(element_values):
@@ -363,9 +352,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return self._generate_fcmp_handler(self.ctx, self.builder, ">=")
 
     def visit_Compare(self, node):
-        result = self.visit(node.left)
-        if helpers.is_pointer(result):
-            result = self.builder.load(result)
+        result = self.get_rval(self.visit(node.left))
 
         comparators = (self.visit(comparator) for comparator in node.comparators)
         values = (self.builder.load(val) if helpers.is_pointer(val) else val for val in comparators)
@@ -375,9 +362,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return result
 
     def visit_If(self, node):
-        cond_val = self.visit(node.test)
-        if helpers.is_pointer(cond_val):
-            cond_val = self.builder.load(cond_val)
+        cond_val = self.get_rval(self.visit(node.test))
 
         predicate = helpers.convert_type(self.builder, cond_val, self.ctx.bool_ty)
         with self.builder.if_else(predicate) as (then, otherwise):
@@ -471,13 +456,11 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
     #  Numpy builtins
 
     def call_builtin_np_tanh(self, builder, x):
-        if helpers.is_pointer(x):
-            x = builder.load(x)
+        x = self.get_rval(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.tanh(self.ctx, builder, x))
 
     def call_builtin_np_exp(self, builder, x):
-        if helpers.is_pointer(x):
-            x = builder.load(x)
+        x = self.get_rval(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.exp(self.ctx, builder, x))
 
     def call_builtin_np_max(self, builder, x):
@@ -485,8 +468,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # Only the default behaviour is supported atm
         # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
 
-        if helpers.is_pointer(x):
-            x = builder.load(x)
+        x = self.get_rval(x)
         if helpers.is_scalar(x):
             return x
         res = self.ctx.float_ty("-Inf")
