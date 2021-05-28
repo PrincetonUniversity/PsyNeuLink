@@ -406,34 +406,50 @@ def test_user_def_reward_func(func_mode, benchmark):
 
 
 @pytest.mark.parametrize("dtype, expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                    ("SCALAR", 1.0),
-                    ("VECTOR", [1,2]),
-                    ("MATRIX", [[1,2],[3,4]]),
-                    ("BOOL", 1.0),
-                    ("TUPLE", (1, 2, 3, 4))
+                    ("SCALAR_VAR", 1.0),
+                    ("VECTOR_VAR", [1,2]),
+                    ("MATRIX_VAR", [[1,2],[3,4]]),
+                    ("BOOL_VAR", 1.0),
+                    ("TUPLE_VAR", (1, 2, 3, 4)),
+                    ("SCALAR_LIT", 1.0),
+                    ("VECTOR_LIT", [1,2]),
+                    ("MATRIX_LIT", [[1,2],[3,4]]),
+                    ("TUPLE_LIT", (1, 2, 3, 4)),
                     ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_assign(dtype, expected, func_mode, benchmark):
-    if dtype == "SCALAR":
+    if dtype == "SCALAR_VAR":
         def myFunction(variable):
             var = 1.0
             return var
-    elif dtype == "VECTOR":
+    elif dtype == "VECTOR_VAR":
         def myFunction(variable):
             var = [1,2]
             return var
-    elif dtype == "MATRIX":
+    elif dtype == "MATRIX_VAR":
         def myFunction(variable):
             var = [[1,2],[3,4]]
             return var
-    elif dtype == "BOOL":
+    elif dtype == "BOOL_VAR":
         def myFunction(variable):
             var = True
             return 1.0
-    elif dtype == "TUPLE":
+    elif dtype == "TUPLE_VAR":
         def myFunction(variable):
             var = (1, 2, 3, 4)
             return var
+    elif dtype == "SCALAR_LIT":
+        def myFunction(variable):
+            return 1.0
+    elif dtype == "VECTOR_LIT":
+        def myFunction(variable):
+            return [1,2]
+    elif dtype == "MATRIX_LIT":
+        def myFunction(variable):
+            return [[1,2],[3,4]]
+    elif dtype == "TUPLE_LIT":
+        def myFunction(variable):
+            return (1, 2, 3, 4)
 
     U = UserDefinedFunction(custom_function=myFunction, default_variable=0)
     e = pytest.helpers.get_func_execution(U, func_mode)
