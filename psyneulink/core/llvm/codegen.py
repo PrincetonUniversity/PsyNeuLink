@@ -504,18 +504,26 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return self._do_unary_op(builder, x, lambda builder, x: helpers.exp(self.ctx, builder, x))
 
     def call_builtin_np_max(self, builder, x):
-        # numpy's max function differs greatly from that of python's buiiltin max
+        # numpy max searches for the largest scalar and propagates NaNs be default.
+        # Only the default behaviour is supported atm
         # see: https://numpy.org/doc/stable/reference/generated/numpy.amax.html#numpy.amax
-        assert helpers.is_vector(x) or helpers.is_2d_matrix(x), "Attempted to call max on invalid variable! Only 1-d and 2-d lists are supported!"
-        # TODO: Remove alloca
-        curr = builder.alloca(self.ctx.float_ty)
-        builder.store(self.ctx.float_ty('NaN'), curr)
-        for (element_ptr,) in helpers.recursive_iterate_arrays(self.ctx, builder, x):
-            element = builder.load(element_ptr)
-            greater = builder.fcmp_unordered('>', element, builder.load(curr))
-            with builder.if_then(greater):
-                builder.store(element, curr)
-        return curr
+
+        if helpers.is_pointer(x):
+            x = builder.load(x)
+        if helpers.is_scalar(x):
+            return x
+        res = self.ctx.float_ty("-Inf")
+        def find_max(builder, x):
+            nonlocal res
+            # to propagate NaNs we use unordered >,
+            # but only update if the current result is not NaN
+            not_nan = builder.fcmp_ordered('ord', res, res)
+            greater = builder.fcmp_unordered('>', x, res)
+            cond = builder.and_(not_nan, greater)
+            res = builder.select(cond, x, res)
+            return res
+        self._do_unary_op(builder, x, find_max)
+        return res
 
 
 

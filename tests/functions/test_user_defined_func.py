@@ -465,9 +465,20 @@ def test_user_def_func_assign(dtype, expected, func_mode, benchmark):
                 ("SHAPE", [[1, 3]], [1, 2]),
                 ("ASTYPE_FLOAT", [1], [1.0]),
                 ("ASTYPE_INT", [-1.5], [-1.0]),
+                ("NP_MAX", 5.0, 5.0),
                 ("NP_MAX", [0.0, 0.0], 0),
                 ("NP_MAX", [1.0, 2.0], 2),
+                ("NP_MAX", [1.0, 2.0, float("-Inf"), float("Inf"), float("NaN")], float("NaN")),
                 ("NP_MAX", [[2.0, 1.0], [6.0, 2.0]], 6),
+                ("NP_MAX", [[[-2.0, -1.0], [-6.0, -2.0]],[[2.0, 1.0], [6.0, 2.0]]], 6),
+                ("NP_MAX", [[float('-Inf'), 1.0], [6.0, 2.0]], 6),
+                ("NP_MAX", [[float('Inf'), 1.0], [6.0, 2.0]], float('Inf')),
+                ("NP_MAX", [[float('NaN'), 1.0], [6.0, 2.0]], float('NaN')),
+                ("NP_MAX", [[float('-NaN'), 1.0], [6.0, 2.0]], float('-NaN')),
+                ("NP_MAX", [[5.0, float('-Inf'), 1.0], [3.0, 6.0, 2.0]], 6),
+                ("NP_MAX", [[5.0, float('Inf'), 1.0], [3.0, 6.0, 2.0]], float('Inf')),
+                ("NP_MAX", [[5.0, float('NaN'), 1.0], [3.0, 6.0, 2.0]], float('NaN')),
+                ("NP_MAX", [[5.0, float('NaN'), 1.0], [3.0, 6.0, 2.0]], float('-NaN')),
                 ("FLATTEN", [[1.0, 2.0], [3.0, 4.0]], [1.0, 2.0, 3.0, 4.0])
                 ])
 @pytest.mark.benchmark(group="Function UDF")
@@ -499,7 +510,7 @@ def test_user_def_func_numpy(op, variable, expected, func_mode, benchmark):
     e = pytest.helpers.get_func_execution(U, func_mode)
 
     val = benchmark(e, variable)
-    assert np.allclose(val, expected)
+    assert np.allclose(val, expected, equal_nan=True)
 
 
 @pytest.mark.benchmark(group="UDF in Mechanism")
