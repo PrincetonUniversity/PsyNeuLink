@@ -8121,11 +8121,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
         termination_processing : Condition  : default None
-            specifies `Condition` under which execution of the run will occur.
-
-            COMMENT:
-               BETTER DESCRIPTION NEEDED
-            COMMENT
+            specifies
+            `termination Conditions <Scheduler_Termination_Conditions>`
+            to be used for the current `RUN <TimeScale.RUN>`. To change
+            these conditions for all future runs, use
+            `Composition.termination_processing` (or
+            `Scheduler.termination_conds`)
 
         skip_analyze_graph : bool : default False
             setting to True suppresses call to _analyze_graph()
@@ -8264,13 +8265,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if scheduler is None:
             scheduler = self.scheduler
-
-        if termination_processing is None:
-            termination_processing = self.termination_processing
-        else:
-            new_conds = self.termination_processing.copy()
-            new_conds.update(termination_processing)
-            termination_processing = new_conds
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8458,7 +8452,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_before_trial:
                     call_with_pruned_args(call_before_trial, context=context)
 
-                if termination_processing[TimeScale.RUN].is_satisfied(
+                try:
+                    run_term_cond = termination_processing[TimeScale.RUN]
+                except (TypeError, KeyError):
+                    run_term_cond = self.termination_processing[TimeScale.RUN]
+
+                if run_term_cond.is_satisfied(
                     scheduler=scheduler,
                     context=context
                 ):
@@ -8947,9 +8946,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.composition = self
 
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-
-            if termination_processing is None:
-                termination_processing = self.termination_processing
 
             # if execute was called from command line and no inputs were specified, assign default inputs to highest level
             # composition (i.e. not on any nested Compositions)
