@@ -280,8 +280,16 @@ def simpleFun(variable, param1, param2):
     return variable * 2 + param2
 
 
+def condReturn(variable, param1, param2):
+    if variable[0]:
+        return param1 + 0.5
+    return param2 + 0.3
+
+
 @pytest.mark.parametrize("func,var,params,expected", [
     (simpleFun, [1, 3], {"param1":None, "param2":3}, [5, 9]),
+    (condReturn, [0], {"param1":1, "param2":2}, [2.3]),
+    (condReturn, [1], {"param1":1, "param2":2}, [1.5]),
 ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func(func, var, params, expected, func_mode, benchmark):

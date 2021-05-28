@@ -428,6 +428,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
 
         self.builder.store(ret_val, arg_out)
+        self.builder.ret_void()
 
     def visit_Subscript(self, node):
         node_val = self.visit(node.value)
