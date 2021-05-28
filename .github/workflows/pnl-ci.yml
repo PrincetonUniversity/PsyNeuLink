@@ -50,7 +50,7 @@ jobs:
         echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
 
     - name: Wheels cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v2.1.6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
