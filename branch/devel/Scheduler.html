@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.8.8.1+52.g055552ed7a documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.8.8.1+55.gc36ed74f02 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+52
+                  0.8.8.1+55
                 </div>
               
             
@@ -483,7 +483,8 @@ or, a <code class="xref any docutils literal notranslate"><span class="pre">Grap
 <dt id="psyneulink.core.scheduling.scheduler.Scheduler.termination_conds">
 <code class="sig-name descname">termination_conds</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.termination_conds" title="Permalink to this definition">¶</a></dt>
 <dd><p>a mapping from <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
-of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>.</p>
+of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>. On set, update only for the
+<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s specified in the argument.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>Dict[TimeScale: Condition]</p>
