@@ -393,7 +393,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_Subscript(self, node):
         node_val = self.visit(node.value)
-        node_slice_val = helpers.convert_type(self.builder, self.visit(node.slice), self.ctx.int32_ty)
+        index = self.visit(node.slice)
+        node_slice_val = helpers.convert_type(self.builder, index, self.ctx.int32_ty)
+        if not self.is_lval(node_val):
+            temp_node_val = self.builder.alloca(node_val.type)
+            self.builder.store(node_val, temp_node_val)
+            node_val = temp_node_val
+
         return self.builder.gep(node_val, [self.ctx.int32_ty(0), node_slice_val])
 
     def visit_Index(self, node):

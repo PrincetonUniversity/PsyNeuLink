@@ -325,6 +325,17 @@ def branchOnVarFloat(variable, param1, param2):
         return 0.0
 
 
+def swap(variable, param1, param2):
+    val = variable[0]
+    variable[0] = variable[1]
+    variable[1] = val
+    return variable
+
+
+def indexLit(variable, param1, param2):
+    return [1,2,3,4][variable[0] + 2]
+
+
 @pytest.mark.parametrize("func,var,expected", [
     (branchOnVarCmp, [[1, 3]], [[5, 9]]),
     (branchOnVarCmp, [[-1, 3]], [[5, -3]]),
@@ -336,6 +347,8 @@ def branchOnVarFloat(variable, param1, param2):
     (branchOnVarFloat, [float("-Inf")], [1.0]),
     (branchOnVarFloat, [float("NaN")], [1.0]),
     (branchOnVarFloat, [float("-NaN")], [1.0]),
+    (swap, [-1, 3], [3, -1]),
+    (indexLit, [0], [3]),
 ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_branching(func, var, expected, func_mode, benchmark):
