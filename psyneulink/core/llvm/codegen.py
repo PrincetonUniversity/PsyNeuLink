@@ -230,20 +230,18 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return val
 
     def visit_Tuple(self, node):
-        elements = [self.visit(element) for element in node.elts]
-
-        elements = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
-
-        element_types = [element.type for element in elements]
+        elements = (self.visit(element) for element in node.elts)
+        element_values = [self.builder.load(element) if helpers.is_pointer(element) else element for element in elements]
+        element_types = [element.type for element in element_values]
         if len(element_types) > 0 and all(x == element_types[0] for x in element_types):
-            ret_list = self.builder.alloca(ir.ArrayType(element_types[0], len(element_types)))
+            result = ir.ArrayType(element_types[0], len(element_types))(ir.Undefined)
         else:
-            ret_list = self.builder.alloca(ir.LiteralStructType(element_types))
+            result = ir.LiteralStructType(element_types)(ir.Undefined)
 
-        for idx, element in enumerate(elements):
-            self.builder.store(element, self.builder.gep(ret_list, [self.ctx.int32_ty(0), self.ctx.int32_ty(idx)]))
+        for i, val in enumerate(element_values):
+            result = self.builder.insert_value(result, val, i)
 
-        return ret_list
+        return result
 
     def _do_unary_op(self, builder, x, scalar_op):
         assert not helpers.is_pointer(x)
