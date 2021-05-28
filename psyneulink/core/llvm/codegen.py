@@ -182,21 +182,20 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
             shape = helpers.get_array_shape(val)
             return ir.ArrayType(self.ctx.float_ty, len(shape))(shape)
         elif node.attr == "flatten":
+            if helpers.is_pointer(val):
+                val = self.builder.load(val)
             def flatten(builder):
-                shape = helpers.get_array_shape(val)
-                flattened_size = reduce(lambda x, y: x * y, shape)
-                flattened_ty = ir.ArrayType(self.ctx.float_ty, flattened_size)
-                flattened_array = builder.alloca(flattened_ty)
-                index_var = builder.alloca(self.ctx.int32_ty, name="flattened_index_var_loc")
-                builder.store(self.ctx.int32_ty(0), index_var)
-                for (array_ptr,) in helpers.recursive_iterate_arrays(self.ctx, builder, val):
-                    index = builder.load(index_var, name="flattened_index_var")
-                    flattened_array_ptr = builder.gep(flattened_array, [self.ctx.int32_ty(0), index])
-                    array_val = builder.load(array_ptr)
-                    builder.store(array_val, flattened_array_ptr)
-                    index = builder.add(index, self.ctx.int32_ty(1), name="flattened_index_var_inc")
-                    builder.store(index, index_var)
-                return flattened_array
+                res = []
+                def collect(builder, x):
+                    res.append(x)
+                    return x
+                self._do_unary_op(builder, val, collect)
+
+                assert len(res) > 0
+                flat = ir.ArrayType(res[0].type, len(res))(ir.Undefined)
+                for i, v in enumerate(res):
+                    flat = self.builder.insert_value(flat, v, i)
+                return flat
             return flatten
         elif node.attr == "astype":
             if helpers.is_pointer(val):
