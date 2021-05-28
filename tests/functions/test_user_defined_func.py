@@ -533,8 +533,12 @@ def test_udf_in_mechanism(mech_mode, benchmark):
                 ("LEN", [1.0, 3.0], 2),
                 ("LEN", [[1.0], [3.0]], 2),
                 ("LEN_TUPLE", [0, 0], 2),
-                ("MAX_MULTI", [1,], 6),
+                ("MAX_MULTI", [1.0, 3.0, 2.0], 6),
+                ("MAX_TUPLE", [1.0, 3.0, 2.0], 6),
                 ("MAX", [1.0, 3.0, 2.0], 3.0),
+                ("MAX", [1.0, float("Inf"), 2.0], float("Inf")),
+                ("MAX", [1.0, float("NaN"), 2.0], 2.0),
+                ("MAX", [1.0, float("-Inf"), 2.0], 2.0),
                 ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
@@ -552,8 +556,11 @@ def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
             return max(variable)
     elif op == "MAX_MULTI":
         # special cased, since passing in multiple variables without a closure is hard
-        def myFunction(_):
-            return max(1, 2, 3, 4, 5, 6, -1, -2)
+        def myFunction(variable):
+            return max(variable[0], variable[1], variable[2], -5, 6)
+    elif op == "MAX_TUPLE":
+        def myFunction(variable):
+            return max((variable[0], variable[1], variable[2], -5, 6))
 
     U = UserDefinedFunction(custom_function=myFunction, default_variable=variable)
     e = pytest.helpers.get_func_execution(U, func_mode)

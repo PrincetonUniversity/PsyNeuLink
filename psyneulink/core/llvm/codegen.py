@@ -469,27 +469,24 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return self.ctx.float_ty(len(x_ty))
 
     def call_builtin_max(self, builder, *args):
+        # Python max takes 1 iterable (array in our case),
+        # or a set of multiple arguments.
+        # Unlike numpy is searches only in the first dimension
         # see: https://docs.python.org/3/library/functions.html#max
-        if len(args) == 1 and helpers.is_vector(args[0]):
-            curr = builder.alloca(self.ctx.float_ty)
-            builder.store(self.ctx.float_ty('NaN'), curr)
-            for (element_ptr,) in helpers.recursive_iterate_arrays(self.ctx, builder, args[0]):
-                element = builder.load(element_ptr)
-                greater = builder.fcmp_unordered('>', element, builder.load(curr))
-                with builder.if_then(greater):
-                    builder.store(element, curr)
-            return curr
-        elif len(args) > 1 and all(a.type == args[0].type for a in args):
-            curr = builder.alloca(self.ctx.float_ty)
-            builder.store(self.ctx.float_ty('NaN'), curr)
-            for element in args:
-                if helpers.is_pointer(element):
-                    element = builder.load(element)
-                greater = builder.fcmp_unordered('>', element, builder.load(curr))
-                with builder.if_then(greater):
-                    builder.store(element, curr)
-            return curr
-        assert False, "Attempted to call max with invalid arguments!"
+
+        assert len(args) > 0, "Empty argument list for 'max'!"
+        if len(args) == 1:
+            assert helpers.is_vector(args[0]), "Only 1D vectors supported!"
+            arg = builder.load(args[0]) if helpers.is_pointer(args[0]) else args[0]
+            values = (builder.extract_value(arg, i) for i in range(len(arg.type)))
+        else:
+            values = (builder.load(arg) if helpers.is_pointer(arg) else arg for arg in args)
+
+        res = next(values)
+        for val in values:
+            greater = builder.fcmp_ordered('>', val, res)
+            res = builder.select(greater, val, res)
+        return res
 
     #  Numpy builtins
 
