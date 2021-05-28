@@ -452,13 +452,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         # HACK: Get scalar version of add
         add_func = self.visit_Add(None)
 
-        #TODO: Remove alloca
-        total_sum = builder.alloca(x.type.pointee.element)
-        builder.store(total_sum.type.pointee(None), total_sum)
-        with helpers.array_ptr_loop(builder, x, "list_sum") as (b, idx):
-            curr_val = b.gep(x, [self.ctx.int32_ty(0), idx])
-            tmp = self._do_bin_op(b, b.load(total_sum), b.load(curr_val), add_func)
-            b.store(tmp, total_sum)
+        if helpers.is_pointer(x):
+            x = builder.load(x)
+        vals = (builder.extract_value(x, i) for i in range(len(x.type)))
+
+        total_sum = next(vals)
+        for val in vals:
+            total_sum = self._do_bin_op(builder, total_sum, val, add_func)
         return total_sum
 
     def call_builtin_len(self, builder, x):

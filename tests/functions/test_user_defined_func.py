@@ -528,8 +528,9 @@ def test_udf_in_mechanism(mech_mode, benchmark):
 
 
 @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
-                ("SUM", [1.0, 3.0], 4),
-                ("SUM", [[1.0], [3.0]], [4.0]),
+                ("SUM", [1.0, 3.0], 12),
+                ("SUM", [[1.0], [3.0]], [12.0]),
+                ("SUM", [[1.0, 2.0], [3.0, 4.0]], [12.0, 18.0]),
                 ("LEN", [1.0, 3.0], 2),
                 ("LEN", [[1.0], [3.0]], 2),
                 ("LEN_TUPLE", [0, 0], 2),
@@ -543,8 +544,8 @@ def test_udf_in_mechanism(mech_mode, benchmark):
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func_builtin(op, variable, expected, func_mode, benchmark):
     if op == "SUM":
-        def myFunction(variable):
-            return sum(variable)
+        def myFunction(var):
+            return sum(var) + sum((var[0], var[1])) + sum([var[0], var[1]])
     elif op == "LEN":
         def myFunction(variable):
             return len(variable)
