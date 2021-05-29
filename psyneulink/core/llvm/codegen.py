@@ -383,9 +383,11 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
         # get position in arg_out if types differ
         if (helpers.is_scalar(ret_val) or helpers.is_vector(ret_val)) and helpers.is_2d_matrix(arg_out):
+            assert len(arg_out.type.pointee) == 1
             arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
 
         if helpers.is_scalar(ret_val) and helpers.is_vector(arg_out):
+            assert len(arg_out.type.pointee) == 1
             arg_out = self.builder.gep(arg_out, [self.ctx.int32_ty(0), self.ctx.int32_ty(0)])
 
         self.builder.store(ret_val, arg_out)
