@@ -108,12 +108,12 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return _add
 
     def visit_Sub(self, node):
-        def _add(builder, x, y):
+        def _sub(builder, x, y):
             assert helpers.is_floating_point(x)
             assert helpers.is_floating_point(y)
             return builder.fsub(x, y)
 
-        return _add
+        return _sub
 
     def visit_Mult(self, node):
         def _mul(builder, x, y):
