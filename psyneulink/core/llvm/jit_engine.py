@@ -102,10 +102,8 @@ def _ptx_jit_constructor():
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
-    __pass_manager_builder.loop_vectorize = True
-    __pass_manager_builder.slp_vectorize = True
-    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+    __pass_manager_builder.opt_level = 1  # Basic optimizations
+    __pass_manager_builder.size_level = 1  # asic size optimizations
 
     # Use default device
     # TODO: Add support for multiple devices
@@ -113,11 +111,11 @@ def _ptx_jit_constructor():
     __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
     # Create compilation target, use 64bit triple
     __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
-    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=3, codemodel='small')
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm)
 
     __ptx_pass_manager = binding.ModulePassManager()
     __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
-#    __pass_manager_builder.populate(__ptx_pass_manager)
+    __pass_manager_builder.populate(__ptx_pass_manager)
 
     return __ptx_pass_manager, __ptx_target_machine
 
