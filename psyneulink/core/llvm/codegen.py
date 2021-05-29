@@ -303,7 +303,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
 
     def visit_Or(self, node):
         def _or(builder, x, y):
-            # Python's 'and' takes the boolean value of the first operand and returns
+            # Python's 'or' takes the boolean value of the first operand and returns
             # LHS if bool(LHS) else RHS
             cond = helpers.convert_type(builder, x, self.ctx.bool_ty)
             return builder.select(cond, x, y)
