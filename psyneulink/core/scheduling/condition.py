@@ -165,8 +165,15 @@ six types:
 
 .. _Conditions_Time_Based:
 
-**Time-Based Conditions** (based on the count of units of time at a specified `TimeScale`):
+**Time-Based Conditions** (based on the count of units of time at a
+specified `TimeScale` or `Time <Scheduler_Absolute_Time>`):
 
+    * `TimeInterval` ([`pint.Quantity`, `pint.Quantity`, `pint.Quantity`])
+      satisfied every time an optional amount of absolute time has
+      passed in between an optional specified range
+
+    * `TimeTermination` (`pint.Quantity`)
+      satisfied after the given absolute time
 
     * `BeforeTimeStep` (int[, TimeScale])
       satisfied any time before the specified `TIME_STEP` occurs.
@@ -295,8 +302,13 @@ Class Reference
 import collections
 import dill
 import inspect
+import itertools
 import logging
+import typing
 import warnings
+
+import pint
+import psyneulink as pnl
 
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE
@@ -310,10 +322,42 @@ __all__ = [
     'AtNCalls','AtPass', 'AtRunStart', 'AtRunNStart', 'AtTimeStep', 'AtTrial',
     'AtTrialStart', 'AtTrialNStart', 'BeforeNCalls', 'BeforePass', 'BeforeTimeStep', 'BeforeTrial',
     'Condition','ConditionError', 'ConditionSet', 'EveryNCalls', 'EveryNPasses',
-    'JustRan', 'Never', 'Not', 'NWhen', 'Or', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot'
+    'JustRan', 'Never', 'Not', 'NWhen', 'Or', 'WhenFinished', 'WhenFinishedAll', 'WhenFinishedAny', 'While', 'WhileNot', 'TimeInterval', 'TimeTermination'
 ]
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_absolute_unit(n, unit=None):
+    if isinstance(n, pnl._unit_registry.Quantity):
+        return n
+
+    try:
+        # handle string representation of a unit
+        unit = getattr(pnl._unit_registry, unit)
+    except TypeError:
+        pass
+
+    if isinstance(n, str):
+        try:
+            full_quantity = pnl._unit_registry.Quantity(n)
+        except pint.errors.UndefinedUnitError:
+            pass
+        else:
+            # n is an actual full quantity (e.g. '1ms') not just a number ('1')
+            if full_quantity.u != pnl._unit_registry.Unit('dimensionless'):
+                return full_quantity
+            else:
+                try:
+                    n = int(n)
+                except ValueError:
+                    n = float(n)
+
+    assert unit is not None
+    if n is not None:
+        n = n * unit
+
+    return n
 
 
 class ConditionError(Exception):
@@ -442,6 +486,9 @@ class Condition(JSONDumpable):
 
         self._owner = None
 
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
+
     def __str__(self):
         return '{0}({1}{2})'.format(
             self.__class__.__name__,
@@ -522,6 +569,32 @@ class Condition(JSONDumpable):
             'args': args_list,
             'kwargs': self.kwargs,
         }
+
+    @property
+    def absolute_intervals(self):
+        """
+        In absolute time, repeated intervals for satisfaction or
+        unsatisfaction of this Condition or those it contains
+        """
+        return []
+
+    @property
+    def absolute_fixed_points(self):
+        """
+        In absolute time, specific time points for satisfaction or
+        unsatisfaction of this Condition or those it contains
+        """
+        return []
+
+    @property
+    def is_absolute(self):
+        return False
+
+
+class AbsoluteCondition(Condition):
+    @property
+    def is_absolute(self):
+        return True
 
 
 class _DependencyValidation:
@@ -622,12 +695,36 @@ class Never(Condition):
 #   - based on other Conditions
 ######################################################################
 
-# TODO: create this class to subclass All and Any from
-# class CompositeCondition(Condition):
-    # def
+
+class CompositeCondition(Condition):
+    @Condition.owner.setter
+    def owner(self, value):
+        super(CompositeCondition, CompositeCondition).owner.__set__(self, value)
+        for cond in self.args:
+            logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
+            if cond.owner is None:
+                cond.owner = value
+
+    @property
+    def absolute_intervals(self):
+        return list(itertools.chain.from_iterable([
+            c.absolute_intervals
+            for c in filter(lambda a: a.is_absolute, self.args)
+        ]))
+
+    @property
+    def absolute_fixed_points(self):
+        return list(itertools.chain.from_iterable([
+            c.absolute_fixed_points
+            for c in filter(lambda a: a.is_absolute, self.args)
+        ]))
+
+    @property
+    def is_absolute(self):
+        return any(a.is_absolute for a in self.args)
 
 
-class All(Condition):
+class All(CompositeCondition):
     """All
 
     Parameters:
@@ -653,13 +750,6 @@ class All(Condition):
         args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
 
-    @Condition.owner.setter
-    def owner(self, value):
-        for cond in self.args:
-            logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
-            if cond.owner is None:
-                cond.owner = value
-
     def satis(self, *conds, **kwargs):
         for cond in conds:
             if not cond.is_satisfied(**kwargs):
@@ -667,7 +757,7 @@ class All(Condition):
         return True
 
 
-class Any(Condition):
+class Any(CompositeCondition):
     """Any
 
     Parameters:
@@ -692,13 +782,6 @@ class Any(Condition):
     def __init__(self, *args, **dependencies):
         args += tuple(*[v for k, v in dependencies.items()])
         super().__init__(self.satis, *args)
-
-    @Condition.owner.setter
-    def owner(self, value):
-        for cond in self.args:
-            logger.debug('owner setter: Setting owner of {0} to ({1})'.format(cond, value))
-            if cond.owner is None:
-                cond.owner = value
 
     def satis(self, *conds, **kwargs):
         for cond in conds:
@@ -732,6 +815,7 @@ class Not(Condition):
 
     @Condition.owner.setter
     def owner(self, value):
+        super(Not, Not).owner.__set__(self, value)
         self.condition.owner = value
 
 
@@ -757,6 +841,7 @@ class NWhen(Condition):
 
     @Condition.owner.setter
     def owner(self, value):
+        super(NWhen, NWhen).owner.__set__(self, value)
         self.condition.owner = value
 
     def satis(self, condition, n, *args, scheduler=None, execution_id=None, **kwargs):
@@ -778,8 +863,177 @@ class NWhen(Condition):
 
 ######################################################################
 # Time-based Conditions
-#   - satisfied based only on TimeScales
+#   - satisfied based only on time
 ######################################################################
+
+class TimeInterval(AbsoluteCondition):
+    """TimeInterval
+
+    Attributes:
+
+        repeat
+            the interval between *unit*s where this condition can be
+            satisfied
+
+        start
+            the time at/after which this condition can be
+            satisfied
+
+        end
+            the time at/fter which this condition can be
+            satisfied
+
+        unit
+            the `pint.Unit` to use for scalar values of *repeat*,
+            *start*, and *end*
+
+        start_inclusive
+            if True, *start* allows satisfaction exactly at the time
+            corresponding to *start*. if False, satisfaction can occur
+            only after *start*
+
+        end_inclusive
+            if True, *end* allows satisfaction exactly until the time
+            corresponding to *end*. if False, satisfaction can occur
+            only before *end*
+
+
+    Satisfied when:
+
+        Every *repeat* units of time at/after *start* and before/through
+        *end*
+
+    Notes:
+
+        Using a `TimeInterval` as a
+        `termination Condition <Scheduler_Termination_Conditions>` may
+        result in unexpected behavior. The user may be inclined to
+        create **TimeInterval(end=x)** to terminate at time **x**, but
+        this will do the opposite and be true only and always until time
+        **x**, terminating at any time before **x**. If in doubt, use
+        `TimeTermination` instead.
+
+        If the scheduler is not set to `exact_time_mode = True`,
+        *start_inclusive* and *end_inclusive* may not behave as
+        expected. See `Scheduler_Exact_Time` for more info.
+    """
+    def __init__(
+        self,
+        repeat: typing.Union[int, str, pint.Quantity] = None,
+        start: typing.Union[int, str, pint.Quantity] = None,
+        end: typing.Union[int, str, pint.Quantity] = None,
+        unit: typing.Union[str, pint.Unit] = pnl._unit_registry.ms,
+        start_inclusive: bool = True,
+        end_inclusive: bool = True
+    ):
+        if repeat is start is end is None:
+            raise ConditionError(
+                'At least one of "repeat", "start", "end" must be specified'
+            )
+
+        if start is not None and end is not None and start > end:
+            raise ConditionError(f'Start ({start}) is later than {end}')
+
+        repeat = _parse_absolute_unit(repeat, unit)
+        start = _parse_absolute_unit(start, unit)
+        end = _parse_absolute_unit(end, unit)
+
+        def func(scheduler, execution_id):
+            satisfied = True
+            clock = scheduler.get_clock(execution_id)
+
+            if scheduler._in_exact_time_mode and start is not None:
+                offset = start
+            else:
+                for i, cs in enumerate(scheduler.consideration_queue):
+                    if self.owner in cs:
+                        offset = i * clock.time.absolute_interval
+
+            if repeat is not None:
+                satisfied &= (clock.time.absolute - offset) % repeat == 0
+
+            if start is not None:
+                if start_inclusive:
+                    satisfied &= clock.time.absolute >= start
+                else:
+                    satisfied &= clock.time.absolute > start
+
+            if end is not None:
+                if end_inclusive:
+                    satisfied &= clock.time.absolute <= end
+                else:
+                    satisfied &= clock.time.absolute < end
+
+            return satisfied
+
+        super().__init__(
+            func,
+            repeat=repeat,
+            start=start,
+            end=end,
+            unit=unit,
+            start_inclusive=start_inclusive,
+            end_inclusive=end_inclusive
+        )
+
+    @property
+    def absolute_intervals(self):
+        return [self.repeat] if self.repeat is not None else []
+
+    @property
+    def absolute_fixed_points(self):
+        fp = []
+        if self.start_inclusive and self.start is not None:
+            fp.append(self.start)
+        if self.end_inclusive and self.end is not None:
+            fp.append(self.end)
+
+        return fp
+
+
+class TimeTermination(AbsoluteCondition):
+    """TimeTermination
+
+    Attributes:
+
+        t
+            the time at/after which this condition is satisfied
+
+        unit
+            the `pint.Unit` to use for scalar values of *t*, *start*,
+            and *end*
+
+        start_inclusive
+            if True, the condition is satisfied exactly at the time
+            corresponding to *t*. if False, satisfaction can occur
+            only after *t*
+
+    Satisfied when:
+
+        At/After time *t*
+    """
+    def __init__(
+        self,
+        t: typing.Union[int, str, pint.Quantity],
+        inclusive: bool = True,
+        unit: typing.Union[str, pint.Unit] = pnl._unit_registry.ms,
+    ):
+        t = _parse_absolute_unit(t, unit)
+
+        def func(scheduler, execution_id):
+            clock = scheduler.get_clock(execution_id)
+
+            if inclusive:
+                return clock.time.absolute >= t
+            else:
+                return clock.time.absolute > t
+
+        super().__init__(func, t=t, inclusive=inclusive)
+
+    @property
+    def absolute_fixed_points(self):
+        return [self.t] if self.inclusive else []
+
 
 class BeforeTimeStep(Condition):
     """BeforeTimeStep
@@ -1221,8 +1475,6 @@ class AfterNRuns(Condition):
                 raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
 
         super().__init__(func, n)
-
-
 
 ######################################################################
 # Component-based Conditions

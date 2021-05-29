@@ -22,18 +22,25 @@ please contact psyneulinkhelp@princeton.edu.
 import logging as _logging
 
 import numpy as _numpy
+import pint as _pint
+
+# pint requires a package-specific unit registry, and to use it as
+# needed in psyneulink, it has to come before imports. This is the
+# reason for skipping E402 below
+_unit_registry = _pint.get_application_registry()
+_pint.set_application_registry(_unit_registry)
 
 # starred imports to allow user imports from top level
-from . import core
-from . import library
+from . import core  # noqa: E402
+from . import library  # noqa: E402
 
-from ._version import get_versions
-from .core import *
-from .library import *
+from ._version import get_versions  # noqa: E402
+from .core import *  # noqa: E402
+from .library import *  # noqa: E402
 
 
 _pnl_global_names = [
-    'primary_registries', 'System', 'Process'
+    'primary_registries', 'System', 'Process', '_unit_registry',
 ]
 # flag when run from pytest (see conftest.py)
 _called_from_pytest = False
