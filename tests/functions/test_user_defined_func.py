@@ -430,7 +430,7 @@ def test_user_def_reward_func(func_mode, benchmark):
                     ("TUPLE_LIT", (1, 2, 3, 4)),
                     ])
 @pytest.mark.benchmark(group="Function UDF")
-def test_user_def_func_assign(dtype, expected, func_mode, benchmark):
+def test_user_def_func_return(dtype, expected, func_mode, benchmark):
     if dtype == "SCALAR_VAR":
         def myFunction(variable):
             var = 1.0
