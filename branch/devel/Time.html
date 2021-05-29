@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Time &mdash; PsyNeuLink 0.8.8.1+55.gc36ed74f02 documentation</title>
+  <title>Time &mdash; PsyNeuLink 0.8.8.1+63.g50e646e43f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+55
+                  0.8.8.1+63
                 </div>
               
             
@@ -215,6 +215,17 @@
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.time.Clock.simple_time">
+<code class="sig-name descname">simple_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.simple_time" title="Permalink to this definition">¶</a></dt>
+<dd><p>the current time in simple format</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.SimpleTime" title="psyneulink.core.scheduling.time.SimpleTime"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SimpleTime</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt id="psyneulink.core.scheduling.time.Clock._increment_time">
 <code class="sig-name descname">_increment_time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock._increment_time" title="Permalink to this definition">¶</a></dt>
@@ -267,17 +278,6 @@ should be returned</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>the current time</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="psyneulink.core.scheduling.time.Clock.simple_time">
-<em class="property">property </em><code class="sig-name descname">simple_time</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Clock.simple_time" title="Permalink to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#psyneulink.core.scheduling.time.SimpleTime" title="psyneulink.core.scheduling.time.SimpleTime"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SimpleTime</span></code></a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>the current time in simple format</p>
 </dd>
 </dl>
 </dd></dl>
@@ -366,7 +366,7 @@ consisting of one or more <a class="reference internal" href="#psyneulink.core.s
 
 <dl class="py class">
 <dt id="psyneulink.core.scheduling.time.Time">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">Time</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_step</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">pass_</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">trial</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">run</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">life</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">Time</code><span class="sig-paren">(</span><em class="sig-param">time_step=0</em>, <em class="sig-param">pass_=0</em>, <em class="sig-param">trial=0</em>, <em class="sig-param">run=0</em>, <em class="sig-param">life=0</em>, <em class="sig-param">absolute=&lt;Quantity(0</em>, <em class="sig-param">'millisecond')&gt;</em>, <em class="sig-param">absolute_interval=&lt;Quantity(1</em>, <em class="sig-param">'millisecond')&gt;</em>, <em class="sig-param">absolute_time_unit_scale=&lt;TimeScale.TIME_STEP: 0&gt;</em>, <em class="sig-param">absolute_enabled=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time" title="Permalink to this definition">¶</a></dt>
 <dd><p>Represents an instance of time, having values for each <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a></p>
 <dl class="py attribute">
 <dt id="psyneulink.core.scheduling.time.Time.life">
@@ -423,6 +423,50 @@ consisting of one or more <a class="reference internal" href="#psyneulink.core.s
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.time.Time.absolute">
+<code class="sig-name descname">absolute</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.absolute" title="Permalink to this definition">¶</a></dt>
+<dd><p>the absolute time value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">pint.Quantity</span></code> : 0ms</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.time.Time.absolute_interval">
+<code class="sig-name descname">absolute_interval</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.absolute_interval" title="Permalink to this definition">¶</a></dt>
+<dd><p>the interval between units of absolute time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">pint.Quantity</span></code> : 1ms</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.time.Time.absolute_time_unit_scale">
+<code class="sig-name descname">absolute_time_unit_scale</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.absolute_time_unit_scale" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> that corresponds to an interval of absolute time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> : TimeScale.TIME_STEP</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.time.Time.absolute_enabled">
+<code class="sig-name descname">absolute_enabled</code><a class="headerlink" href="#psyneulink.core.scheduling.time.Time.absolute_enabled" title="Permalink to this definition">¶</a></dt>
+<dd><p>whether absolute time is used for this Time object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool : False</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt id="psyneulink.core.scheduling.time.Time._get_by_time_scale">
 <code class="sig-name descname">_get_by_time_scale</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_scale</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.Time._get_by_time_scale" title="Permalink to this definition">¶</a></dt>
@@ -469,7 +513,7 @@ TimeScale.PASS and TimeScale.TIME_STEP to 0</p>
 
 <dl class="py class">
 <dt id="psyneulink.core.scheduling.time.SimpleTime">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">SimpleTime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">run</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">trial</span><span class="o">=</span><span class="default_value">0</span></em>, <em class="sig-param"><span class="n">time_step</span><span class="o">=</span><span class="default_value">0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.SimpleTime" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.time.</code><code class="sig-name descname">SimpleTime</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">time_ref</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.time.SimpleTime" title="Permalink to this definition">¶</a></dt>
 <dd><p>A subset class of <a class="reference internal" href="#"><span class="doc">Time</span></a>, used to provide simple access to only
 <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.run" title="psyneulink.core.scheduling.time.Time.run"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">run</span></code></a>, <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.trial" title="psyneulink.core.scheduling.time.Time.trial"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>, and <a class="reference internal" href="#psyneulink.core.scheduling.time.Time.time_step" title="psyneulink.core.scheduling.time.Time.time_step"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_step</span></code></a></p>
 </dd></dl>

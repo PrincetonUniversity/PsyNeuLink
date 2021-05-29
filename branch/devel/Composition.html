@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.8.1+55.gc36ed74f02 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+63.g50e646e43f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+55
+                  0.8.8.1+63
                 </div>
               
             
@@ -3906,7 +3906,7 @@ to the input</p>
 
 <dl class="py method">
 <dt id="psyneulink.core.compositions.composition.Composition.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">num_trials=None</em>, <em class="sig-param">initialize_cycle_values=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">reset_stateful_functions_when=&lt;psyneulink.core.scheduling.condition.Never object&gt;</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">call_before_trial=None</em>, <em class="sig-param">call_after_trial=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">skip_analyze_graph=False</em>, <em class="sig-param">report_output=&lt;ReportOutput.OFF: 0&gt;</em>, <em class="sig-param">report_params=&lt;ReportParams.OFF: 0&gt;</em>, <em class="sig-param">report_progress=&lt;ReportProgress.OFF: 0&gt;</em>, <em class="sig-param">report_simulations=&lt;ReportSimulations.OFF: 0&gt;</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">animate=False</em>, <em class="sig-param">log=False</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">num_trials=None</em>, <em class="sig-param">initialize_cycle_values=None</em>, <em class="sig-param">reset_stateful_functions_to=None</em>, <em class="sig-param">reset_stateful_functions_when=&lt;psyneulink.core.scheduling.condition.Never object&gt;</em>, <em class="sig-param">skip_initialization=False</em>, <em class="sig-param">clamp_input='soft_clamp'</em>, <em class="sig-param">runtime_params=None</em>, <em class="sig-param">call_before_time_step=None</em>, <em class="sig-param">call_after_time_step=None</em>, <em class="sig-param">call_before_pass=None</em>, <em class="sig-param">call_after_pass=None</em>, <em class="sig-param">call_before_trial=None</em>, <em class="sig-param">call_after_trial=None</em>, <em class="sig-param">termination_processing=None</em>, <em class="sig-param">skip_analyze_graph=False</em>, <em class="sig-param">report_output=&lt;ReportOutput.OFF: 0&gt;</em>, <em class="sig-param">report_params=&lt;ReportParams.OFF: 0&gt;</em>, <em class="sig-param">report_progress=&lt;ReportProgress.OFF: 0&gt;</em>, <em class="sig-param">report_simulations=&lt;ReportSimulations.OFF: 0&gt;</em>, <em class="sig-param">report_to_devices=None</em>, <em class="sig-param">animate=False</em>, <em class="sig-param">log=False</em>, <em class="sig-param">scheduler=None</em>, <em class="sig-param">scheduling_mode=None</em>, <em class="sig-param">execution_mode=&lt;ExecutionMode.Python: 0&gt;</em>, <em class="sig-param">default_absolute_time_unit=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
 conditions are met.</p>
 <p>See <a class="reference internal" href="#composition-execution"><span class="std std-ref">Executing a Composition</span></a> for details of formatting input specifications.
@@ -4005,11 +4005,17 @@ correspond to the <a class="reference internal" href="Log.html#psyneulink.core.g
 </p></li>
 <li><p><strong>scheduler</strong> (<em>Scheduler : default None</em>) – the scheduler object that owns the conditions that will instruct the execution of the Composition.
 If not specified, the Composition will use its automatically generated scheduler.</p></li>
+<li><p><strong>scheduling_mode</strong> (<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode" title="psyneulink.core.scheduling.scheduler.SchedulingMode"><em>SchedulingMode</em></a><em>[</em><em>STANDARD|EXACT_TIME</em><em>] </em><em>: default None</em>) – if specified, sets the <a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode" title="psyneulink.core.scheduling.scheduler.SchedulingMode"><code class="xref any py py-class docutils literal notranslate"><span class="pre">scheduling</span> <span class="pre">mode</span></code></a>
+for the current and all future runs of the Composition. See
+<a class="reference internal" href="Scheduler.html#scheduler-execution"><span class="std std-ref">Execution</span></a></p></li>
 <li><p><strong>execution_mode</strong> (<em>enum.Enum</em><em>[</em><em>Auto|LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun</em><em>] </em><em>: default Python</em>) – specifies whether to run using the Python interpreter or a <a class="reference internal" href="#composition-compilation"><span class="std std-ref">compiled mode</span></a>.
 False is the same as <code class="docutils literal notranslate"><span class="pre">Python</span></code>;  True tries LLVM compilation modes, in order of power, progressively
 reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
 mode succeeds (see <a class="reference internal" href="#composition-compilation"><span class="std std-ref">Compilation</span></a> for explanation of modes). PTX modes are used for
 CUDA compilation.</p></li>
+<li><p><strong>default_absolute_time_unit</strong> (<code class="docutils literal notranslate"><span class="pre">pint.Quantity</span></code> : <code class="docutils literal notranslate"><span class="pre">1ms</span></code>) – if not otherwise determined by any absolute <strong>conditions</strong>,
+specifies the absolute duration of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>. See
+<a class="reference internal" href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit" title="psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Scheduler.default_absolute_time_unit</span></code></a></p></li>
 <li><p><strong>context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> : default <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.default_execution_id" title="psyneulink.core.compositions.composition.Composition.default_execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_execution_id</span></code></a>) – context in which the <a class="reference internal" href="#"><span class="doc">Composition</span></a> will be executed;  set to self.default_execution_id ifunspecified.</p></li>
 <li><p><strong>base_context</strong> (<a class="reference internal" href="Context.html#psyneulink.core.globals.context.Context.execution_id" title="psyneulink.core.globals.context.Context.execution_id"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execution_id</span></code></a> : Context(execution_id=None)) – the context corresponding to the execution context from which this execution will be initialized,
 if values currently do not exist for <strong>context</strong></p></li>

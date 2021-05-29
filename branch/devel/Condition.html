@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0.8.8.1+55.gc36ed74f02 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.8.8.1+63.g50e646e43f documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+55
+                  0.8.8.1+63
                 </div>
               
             
@@ -324,9 +324,15 @@ satisfied whenever the specified Condition is not satisfied.</p></li>
 satisfied the first specified number of times the specified Condition is satisfied.</p></li>
 </ul>
 </div></blockquote>
-<p id="conditions-time-based"><strong>Time-Based Conditions</strong> (based on the count of units of time at a specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>):</p>
+<p id="conditions-time-based"><strong>Time-Based Conditions</strong> (based on the count of units of time at a
+specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> or <a class="reference internal" href="Scheduler.html#scheduler-absolute-time"><span class="std std-ref">Time</span></a>):</p>
 <blockquote>
 <div><ul class="simple">
+<li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.TimeInterval" title="psyneulink.core.scheduling.condition.TimeInterval"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeInterval</span></code></a> ([<code class="xref any docutils literal notranslate"><span class="pre">pint.Quantity</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">pint.Quantity</span></code>, <code class="xref any docutils literal notranslate"><span class="pre">pint.Quantity</span></code>])
+satisfied every time an optional amount of absolute time has
+passed in between an optional specified range</p></li>
+<li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.TimeTermination" title="psyneulink.core.scheduling.condition.TimeTermination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeTermination</span></code></a> (<code class="xref any docutils literal notranslate"><span class="pre">pint.Quantity</span></code>)
+satisfied after the given absolute time</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.BeforeTimeStep" title="psyneulink.core.scheduling.condition.BeforeTimeStep"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BeforeTimeStep</span></code></a> (int[, TimeScale])
 satisfied any time before the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> occurs.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.scheduling.condition.AtTimeStep" title="psyneulink.core.scheduling.condition.AtTimeStep"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AtTimeStep</span></code></a> (int[, TimeScale])
@@ -1077,6 +1083,20 @@ these are added to the <strong>kwargs</strong> specified at instantiation of thi
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.condition.Condition.absolute_intervals">
+<em class="property">property </em><code class="sig-name descname">absolute_intervals</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.absolute_intervals" title="Permalink to this definition">¶</a></dt>
+<dd><p>In absolute time, repeated intervals for satisfaction or
+unsatisfaction of this Condition or those it contains</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.condition.Condition.absolute_fixed_points">
+<em class="property">property </em><code class="sig-name descname">absolute_fixed_points</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>In absolute time, specific time points for satisfaction or
+unsatisfaction of this Condition or those it contains</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py exception">
@@ -1370,6 +1390,122 @@ specifies keyword arguments to pass to <code class="xref any docutils literal no
 <li><p><strong>func</strong> is False</p></li>
 </ul>
 </div></blockquote>
+</dd></dl>
+
+<dl class="py class">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval">
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">TimeInterval</code><span class="sig-paren">(</span><em class="sig-param">repeat=None</em>, <em class="sig-param">start=None</em>, <em class="sig-param">end=None</em>, <em class="sig-param">unit=&lt;Unit('millisecond')&gt;</em>, <em class="sig-param">start_inclusive=True</em>, <em class="sig-param">end_inclusive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.repeat">
+<code class="sig-name descname">repeat</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.repeat" title="Permalink to this definition">¶</a></dt>
+<dd><p>the interval between <a href="#id33"><span class="problematic" id="id34">*</span></a>unit*s where this condition can be
+satisfied</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.start">
+<code class="sig-name descname">start</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.start" title="Permalink to this definition">¶</a></dt>
+<dd><p>the time at/after which this condition can be
+satisfied</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.end">
+<code class="sig-name descname">end</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>the time at/fter which this condition can be
+satisfied</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.unit">
+<code class="sig-name descname">unit</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">pint.Unit</span></code> to use for scalar values of <em>repeat</em>,
+<em>start</em>, and <em>end</em></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.start_inclusive">
+<code class="sig-name descname">start_inclusive</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.start_inclusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>if True, <em>start</em> allows satisfaction exactly at the time
+corresponding to <em>start</em>. if False, satisfaction can occur
+only after <em>start</em></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.end_inclusive">
+<code class="sig-name descname">end_inclusive</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.end_inclusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>if True, <em>end</em> allows satisfaction exactly until the time
+corresponding to <em>end</em>. if False, satisfaction can occur
+only before <em>end</em></p>
+</dd></dl>
+
+<p>Satisfied when:</p>
+<blockquote>
+<div><p>Every <em>repeat</em> units of time at/after <em>start</em> and before/through
+<em>end</em></p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>Using a <a class="reference internal" href="#psyneulink.core.scheduling.condition.TimeInterval" title="psyneulink.core.scheduling.condition.TimeInterval"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeInterval</span></code></a> as a
+<a class="reference internal" href="Scheduler.html#scheduler-termination-conditions"><span class="std std-ref">termination Condition</span></a> may
+result in unexpected behavior. The user may be inclined to
+create <strong>TimeInterval(end=x)</strong> to terminate at time <strong>x</strong>, but
+this will do the opposite and be true only and always until time
+<strong>x</strong>, terminating at any time before <strong>x</strong>. If in doubt, use
+<a class="reference internal" href="#psyneulink.core.scheduling.condition.TimeTermination" title="psyneulink.core.scheduling.condition.TimeTermination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeTermination</span></code></a> instead.</p>
+<p>If the scheduler is not set to <code class="xref any docutils literal notranslate"><span class="pre">exact_time_mode</span> <span class="pre">=</span> <span class="pre">True</span></code>,
+<em>start_inclusive</em> and <em>end_inclusive</em> may not behave as
+expected. See <a class="reference internal" href="Scheduler.html#scheduler-exact-time"><span class="std std-ref">Exact Time Mode</span></a> for more info.</p>
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals">
+<em class="property">property </em><code class="sig-name descname">absolute_intervals</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals" title="Permalink to this definition">¶</a></dt>
+<dd><p>In absolute time, repeated intervals for satisfaction or
+unsatisfaction of this Condition or those it contains</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points">
+<em class="property">property </em><code class="sig-name descname">absolute_fixed_points</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>In absolute time, specific time points for satisfaction or
+unsatisfaction of this Condition or those it contains</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="psyneulink.core.scheduling.condition.TimeTermination">
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">TimeTermination</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">inclusive=True</em>, <em class="sig-param">unit=&lt;Unit('millisecond')&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeTermination.t">
+<code class="sig-name descname">t</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.t" title="Permalink to this definition">¶</a></dt>
+<dd><p>the time at/after which this condition is satisfied</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeTermination.unit">
+<code class="sig-name descname">unit</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.unit" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">pint.Unit</span></code> to use for scalar values of <em>t</em>, <em>start</em>,
+and <em>end</em></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="psyneulink.core.scheduling.condition.TimeTermination.start_inclusive">
+<code class="sig-name descname">start_inclusive</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.start_inclusive" title="Permalink to this definition">¶</a></dt>
+<dd><p>if True, the condition is satisfied exactly at the time
+corresponding to <em>t</em>. if False, satisfaction can occur
+only after <em>t</em></p>
+</dd></dl>
+
+<p>Satisfied when:</p>
+<blockquote>
+<div><p>At/After time <em>t</em></p>
+</div></blockquote>
+<dl class="py method">
+<dt id="psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points">
+<em class="property">property </em><code class="sig-name descname">absolute_fixed_points</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>In absolute time, specific time points for satisfaction or
+unsatisfaction of this Condition or those it contains</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>

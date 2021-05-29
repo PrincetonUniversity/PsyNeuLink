@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0.8.8.1+55.gc36ed74f02 documentation</title>
+  <title>Index &mdash; PsyNeuLink 0.8.8.1+63.g50e646e43f documentation</title>
   
 
   
@@ -96,7 +96,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+55
+                  0.8.8.1+63
                 </div>
               
             
@@ -419,6 +419,8 @@
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_sample">_gaussian_process_sample() (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess method)</a>
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_satisfied">_gaussian_process_satisfied() (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess method)</a>
+</li>
+      <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler._get_absolute_time_step_unit">_get_absolute_time_step_unit() (psyneulink.core.scheduling.scheduler.Scheduler method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_back_prop_error_sources">_get_back_prop_error_sources() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -1008,6 +1010,28 @@
 </li>
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo">a_w_FitzHughNagumo (psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
+      <li><a href="Time.html#psyneulink.core.scheduling.time.Time.absolute">absolute (psyneulink.core.scheduling.time.Time attribute)</a>
+</li>
+      <li><a href="Time.html#psyneulink.core.scheduling.time.Time.absolute_enabled">absolute_enabled (psyneulink.core.scheduling.time.Time attribute)</a>
+</li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.Condition.absolute_fixed_points">absolute_fixed_points() (psyneulink.core.scheduling.condition.Condition property)</a>
+
+      <ul>
+        <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points">(psyneulink.core.scheduling.condition.TimeInterval property)</a>
+</li>
+        <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points">(psyneulink.core.scheduling.condition.TimeTermination property)</a>
+</li>
+      </ul></li>
+      <li><a href="Time.html#psyneulink.core.scheduling.time.Time.absolute_interval">absolute_interval (psyneulink.core.scheduling.time.Time attribute)</a>
+</li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.Condition.absolute_intervals">absolute_intervals() (psyneulink.core.scheduling.condition.Condition property)</a>
+
+      <ul>
+        <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals">(psyneulink.core.scheduling.condition.TimeInterval property)</a>
+</li>
+      </ul></li>
+      <li><a href="Time.html#psyneulink.core.scheduling.time.Time.absolute_time_unit_scale">absolute_time_unit_scale (psyneulink.core.scheduling.time.Time attribute)</a>
+</li>
       <li><a href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct">activation_derivative_fct (psyneulink.core.components.functions.learningfunctions.BackPropagation attribute)</a>
 </li>
       <li><a href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input">activation_input (psyneulink.core.components.functions.learningfunctions.BackPropagation attribute)</a>
@@ -1104,6 +1128,8 @@
         <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.afferents">(psyneulink.core.compositions.composition.Composition attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Mechanism.html#id14">afferents() (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base property)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterCall">AfterCall (class in psyneulink.core.scheduling.condition)</a>
@@ -1114,8 +1140,6 @@
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNPasses">AfterNPasses (class in psyneulink.core.scheduling.condition)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNRuns">AfterNRuns (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.AfterNTimeSteps">AfterNTimeSteps (class in psyneulink.core.scheduling.condition)</a>
@@ -1518,6 +1542,8 @@
 </li>
       <li><a href="json.html#psyneulink.core.globals.json.PNLJSONEncoder.default">default() (psyneulink.core.globals.json.PNLJSONEncoder method)</a>
 </li>
+      <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit">default_absolute_time_unit (psyneulink.core.scheduling.scheduler.Scheduler attribute)</a>
+</li>
       <li><a href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.default_allocation">default_allocation (psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism attribute)</a>
 
       <ul>
@@ -1676,6 +1702,10 @@
 </li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.enabled_cost_functions">enabled_cost_functions (psyneulink.core.components.functions.transferfunctions.TransferWithCosts attribute)</a>
 </li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.end">end (psyneulink.core.scheduling.condition.TimeInterval attribute)</a>
+</li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.end_inclusive">end_inclusive (psyneulink.core.scheduling.condition.TimeInterval attribute)</a>
+</li>
       <li><a href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Energy">Energy (class in psyneulink.core.components.functions.objectivefunctions)</a>
 </li>
       <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.ENERGY">ENERGY (psyneulink.core.globals.keywords.DistanceMetrics attribute)</a>
@@ -1723,6 +1753,8 @@
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.EveryNCalls">EveryNCalls (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.EveryNPasses">EveryNPasses (class in psyneulink.core.scheduling.condition)</a>
+</li>
+      <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME">EXACT_TIME (psyneulink.core.scheduling.scheduler.SchedulingMode attribute)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.exclude_node_roles">exclude_node_roles() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -2591,6 +2623,8 @@
       <li><a href="SelectionFunctions.html#psyneulink.core.components.functions.selectionfunctions.OneHot.mode">mode (psyneulink.core.components.functions.selectionfunctions.OneHot attribute)</a>
 
       <ul>
+        <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.mode">(psyneulink.core.scheduling.scheduler.Scheduler attribute)</a>
+</li>
         <li><a href="ContrastiveHebbianMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism.mode">(psyneulink.library.components.mechanisms.processing.transfer.contrastivehebbianmechanism.ContrastiveHebbianMechanism attribute)</a>
 </li>
       </ul></li>
@@ -4092,6 +4126,8 @@
         <li><a href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.remove_ports">(psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism method)</a>
 </li>
       </ul></li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.repeat">repeat (psyneulink.core.scheduling.condition.TimeInterval attribute)</a>
+</li>
       <li><a href="Report.html#psyneulink.core.compositions.report.ReportDevices">ReportDevices (class in psyneulink.core.compositions.report)</a>
 </li>
       <li><a href="Report.html#psyneulink.core.compositions.report.ReportLearning">ReportLearning (class in psyneulink.core.compositions.report)</a>
@@ -4242,6 +4278,8 @@
 </li>
       <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulerError">SchedulerError</a>
 </li>
+      <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode">SchedulingMode (class in psyneulink.core.scheduling.scheduler)</a>
+</li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_function">search_function (psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction attribute)</a>
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess.search_space">search_space (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess attribute)</a>
@@ -4322,7 +4360,7 @@
 </li>
       <li><a href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0">sigma_0 (psyneulink.core.components.functions.learningfunctions.BayesGLM attribute)</a>
 </li>
-      <li><a href="Time.html#psyneulink.core.scheduling.time.Clock.simple_time">simple_time() (psyneulink.core.scheduling.time.Clock property)</a>
+      <li><a href="Time.html#psyneulink.core.scheduling.time.Clock.simple_time">simple_time (psyneulink.core.scheduling.time.Clock attribute)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.SimpleTime">SimpleTime (class in psyneulink.core.scheduling.time)</a>
 </li>
@@ -4355,6 +4393,8 @@
       <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector.specified_terms">specified_terms (psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector attribute)</a>
 </li>
       <li><a href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Stability">Stability (class in psyneulink.core.components.functions.objectivefunctions)</a>
+</li>
+      <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD">STANDARD (psyneulink.core.scheduling.scheduler.SchedulingMode attribute)</a>
 </li>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.NormalDist.standard_deviation">standard_deviation (psyneulink.core.components.functions.distributionfunctions.NormalDist attribute)</a>
 
@@ -4392,6 +4432,14 @@
 </li>
       <li><a href="OutputPort.html#psyneulink.core.components.ports.outputport.StandardOutputPortsError">StandardOutputPortsError</a>
 </li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.start">start (psyneulink.core.scheduling.condition.TimeInterval attribute)</a>
+</li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.start_inclusive">start_inclusive (psyneulink.core.scheduling.condition.TimeInterval attribute)</a>
+
+      <ul>
+        <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.start_inclusive">(psyneulink.core.scheduling.condition.TimeTermination attribute)</a>
+</li>
+      </ul></li>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point">starting_point (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values">state_feature_values (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism attribute)</a>
@@ -4418,6 +4466,8 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.t">t (psyneulink.core.scheduling.condition.TimeTermination attribute)</a>
+</li>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.t0">t0 (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo">t_0_FitzHughNagumo (psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
@@ -4490,11 +4540,15 @@
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeHistoryTree">TimeHistoryTree (class in psyneulink.core.scheduling.time)</a>
 </li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval">TimeInterval (class in psyneulink.core.scheduling.condition)</a>
+</li>
       <li><a href="Scheduler.html#psyneulink.core.scheduling.scheduler.Scheduler.times">times (psyneulink.core.scheduling.scheduler.Scheduler attribute)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeScale">TimeScale (class in psyneulink.core.scheduling.time)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.TimeScaleError">TimeScaleError</a>
+</li>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination">TimeTermination (class in psyneulink.core.scheduling.condition)</a>
 </li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferWithCosts.toggle_cost">toggle_cost() (psyneulink.core.components.functions.transferfunctions.TransferWithCosts method)</a>
 </li>
@@ -4540,10 +4594,16 @@
 </li>
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags.UNINITIALIZED">UNINITIALIZED (psyneulink.core.globals.context.ContextFlags attribute)</a>
 </li>
-      <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector.update_vector">update_vector() (psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector method)</a>
+      <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeInterval.unit">unit (psyneulink.core.scheduling.condition.TimeInterval attribute)</a>
+
+      <ul>
+        <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.unit">(psyneulink.core.scheduling.condition.TimeTermination attribute)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector.update_vector">update_vector() (psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector method)</a>
+</li>
       <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.update_weights">update_weights (psyneulink.library.compositions.regressioncfa.RegressionCFA attribute)</a>
 
       <ul>
