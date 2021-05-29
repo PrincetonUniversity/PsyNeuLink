@@ -10,7 +10,6 @@
 import ast
 import warnings
 import numpy as np
-from functools import reduce
 
 from llvmlite import ir
 from contextlib import contextmanager
