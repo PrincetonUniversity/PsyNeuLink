@@ -9,32 +9,32 @@
 # ********************************************* LLVM bindings **************************************************************
 
 from llvmlite import binding
+import warnings
 
 from .builder_context import LLVMBuilderContext, _find_llvm_function, _gen_cuda_kernel_wrapper_module
 from .builtins import _generate_cpu_builtins_module
 from .debug import debug_env
 
 try:
-    if "cuda" in debug_env:
-        import pycuda
-        # Do not continue if the version is too old
-        if pycuda.VERSION[0] >= 2018:
-            import pycuda.driver
-            # pyCUDA needs to be built against 5.5+ to enable Linker
-            if pycuda.driver.get_version()[0] > 5:
-                from pycuda import autoinit as pycuda_default
-                import pycuda.compiler
-                assert pycuda_default.context is not None
-                pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
-                ptx_enabled = True
-            else:
-                raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
-        else:
-            raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
-    else:
-        ptx_enabled = False
+    import pycuda
+    # Do not continue if the version is too old
+    if pycuda.VERSION[0] < 2018:
+        raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+    import pycuda.driver
+    # pyCUDA needs to be built against 6+ to enable Linker
+    if pycuda.driver.get_version()[0] < 6:
+        raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+
+    from pycuda import autoinit as pycuda_default
+    import pycuda.compiler
+    assert pycuda_default.context is not None
+    pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+    ptx_enabled = True
+    if "cuda-check" in debug_env:
+        print("PsyNeuLink: CUDA backend enabled!")
 except Exception as e:
-    print("WARNING: Failed to enable CUDA/PTX:", e)
+    if "cuda-check" in debug_env:
+        warnings.warn("Failed to enable CUDA/PTX: {}".format(e))
     ptx_enabled = False
 
 
