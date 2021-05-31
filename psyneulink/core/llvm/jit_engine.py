@@ -149,6 +149,8 @@ class jit_engine:
         # instances of jit_engine
         self.__debug_env = debug_env
 
+        self.staged_modules = set()
+
         # Track few statistics:
         self.__optimized_modules = 0
         self.__linked_modules = 0
@@ -214,13 +216,17 @@ class jit_engine:
 
         return self._jit_pass_manager
 
+    def stage_compilation(self, modules):
+        self.staged_modules |= modules
+
     # Unfortunately, this needs to be done for every jit_engine.
     # Liking step in opt_and_add_bin_module invalidates 'mod_bundle',
     # so it can't be linked mutliple times (in multiple engines).
-    def compile_modules(self, modules, compiled_modules):
+    def compile_staged(self, compiled_modules):
         # Parse generated modules and link them
         mod_bundle = binding.parse_assembly("")
-        for m in modules:
+        while self.staged_modules:
+            m = self.staged_modules.pop()
             new_mod = _try_parse_module(m)
             self.__parsed_modules += 1
             if new_mod is not None:
@@ -314,7 +320,8 @@ class ptx_jit_engine(jit_engine):
         if kernel is None:
             function = _find_llvm_function(name)
             wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
-            self.compile_modules([wrapper_mod], set())
+            self.stage_compilation({wrapper_mod})
+            self.compile_staged(set())
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
         kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
         return kernel
