@@ -323,5 +323,6 @@ class ptx_jit_engine(jit_engine):
             self.stage_compilation({wrapper_mod})
             self.compile_staged(set())
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
-        kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+
         return kernel
