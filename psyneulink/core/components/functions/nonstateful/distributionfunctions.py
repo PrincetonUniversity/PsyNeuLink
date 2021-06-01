@@ -148,7 +148,7 @@ class NormalDist(DistributionFunction):
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None)
+        random_state = Parameter(None, loggable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -464,7 +464,7 @@ class ExponentialDist(DistributionFunction):
                     :type: ``numpy.random.RandomState``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None)
+        random_state = Parameter(None, loggable=False)
 
     @tc.typecheck
     def __init__(self,
