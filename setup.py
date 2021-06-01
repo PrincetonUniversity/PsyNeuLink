@@ -79,6 +79,7 @@ setup(
     install_requires=get_requirements(),
 
     extras_require={
+        'cuda': get_requirements('cuda'),
         'dev': get_requirements('dev'),
         'doc': get_requirements('doc'),
         'tutorial': get_requirements('tutorial'),

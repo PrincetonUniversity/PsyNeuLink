@@ -13,7 +13,7 @@ Interface to PNL_LLVM_DEBUG environment variable.
 
 The currently recognized values are:
 Features:
- * "cuda" -- enable execution on CUDA devices if available
+ * "cuda-check" -- print the result of initializing pycuda
 
 Increased debug output:
  * "compile" -- prints information messages when modules are compiled
