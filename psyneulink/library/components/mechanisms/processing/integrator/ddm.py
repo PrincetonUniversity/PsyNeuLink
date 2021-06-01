@@ -365,6 +365,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
+from psyneulink.core.components.functions.function import DEFAULT_SEED, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import STARTING_POINT, \
@@ -381,7 +382,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value
 
 from psyneulink.core import llvm as pnlvm
 
@@ -716,7 +717,8 @@ class DDM(ProcessingMechanism):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
@@ -756,9 +758,6 @@ class DDM(ProcessingMechanism):
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
         #    in order to use SEQUENTIAL indices
         self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=SEQUENTIAL)
-
-        if seed is None:
-            seed = get_global_seed()
 
         if input_format is not None and input_ports is not None:
             raise DDMError(
@@ -818,9 +817,6 @@ class DDM(ProcessingMechanism):
         if isinstance(output_ports, (str, tuple)):
             output_ports = list(output_ports)
 
-        # Instantiate RandomState
-        random_state = np.random.RandomState([seed])
-
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
@@ -839,7 +835,7 @@ class DDM(ProcessingMechanism):
         self.parameters.execute_until_finished.default_value = False
 
         super(DDM, self).__init__(default_variable=default_variable,
-                                  random_state=random_state,
+                                  seed=seed,
                                   input_ports=input_ports,
                                   output_ports=output_ports,
                                   function=function,

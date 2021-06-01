@@ -34,7 +34,7 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.function import FunctionError
+from psyneulink.core.components.functions.function import DEFAULT_SEED, FunctionError, _seed_setter
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, all_within_range, get_global_seed, \
+from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
     convert_all_elements_to_np_array
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
@@ -2362,8 +2362,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
-        seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2393,11 +2393,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
@@ -2408,7 +2403,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             threshold=threshold,
             noise=noise,
             offset=offset,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2859,8 +2854,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         dimension = Parameter(2, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
-        seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2913,11 +2908,6 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
@@ -2930,7 +2920,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             noise=noise,
             offset=offset,
             dimension=dimension,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -3396,7 +3386,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3420,11 +3411,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -3437,7 +3423,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             previous_value=initializer,
             previous_time=starting_point,
             params=params,
-            random_state=random_state,
+            seed=seed,
             owner=owner,
             prefs=prefs,
         )

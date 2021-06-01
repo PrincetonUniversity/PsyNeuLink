@@ -172,6 +172,8 @@ __all__ = [
 ]
 
 EPSILON = np.finfo(float).eps
+# numeric to allow modulation, invalid to identify unseeded state
+DEFAULT_SEED = -1
 
 FunctionRegistry = {}
 
@@ -323,6 +325,20 @@ def _output_type_setter(value, owning_component):
             )
     except (AttributeError, ImportError):
         pass
+
+    return value
+
+
+def _seed_setter(value, owning_component, context):
+    if value in {None, DEFAULT_SEED}:
+        value = get_global_seed()
+
+    value = int(value)
+
+    owning_component.parameters.random_state._set(
+        np.random.RandomState([value]),
+        context
+    )
 
     return value
 

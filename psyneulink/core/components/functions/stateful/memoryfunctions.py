@@ -34,8 +34,9 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import \
-    FunctionError, is_function_type, EPSILON
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, FunctionError, _seed_setter, is_function_type, EPSILON,
+)
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
@@ -47,7 +48,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import \
-    all_within_range, convert_to_np_array, get_global_seed, convert_to_list, convert_all_elements_to_np_array
+    all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
 
 __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
@@ -1092,7 +1093,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
@@ -1177,10 +1179,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  owner=None,
                  prefs:tc.optional(is_pref_set)=None):
 
-        if seed is None:
-            seed = get_global_seed()
-        random_state = np.random.RandomState([seed])
-
         self._memory = []
 
         super().__init__(
@@ -1196,7 +1194,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             rate=rate,
             noise=noise,
             max_entries=max_entries,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2155,7 +2153,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
@@ -2182,10 +2181,6 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         if initializer is None:
             initializer = []
 
-        if seed is None:
-            seed = get_global_seed()
-        random_state = np.random.RandomState([seed])
-
         self._memory = []
 
         super().__init__(
@@ -2198,7 +2193,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             rate=rate,
             noise=noise,
             max_entries=max_entries,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,

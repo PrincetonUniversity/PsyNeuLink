@@ -39,7 +39,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink.core.components.functions.function import DEFAULT_SEED, Function_Base, _seed_setter, is_function_type
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
+from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess', 'ParamEstimationFunction',
            'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION',
@@ -1271,7 +1271,8 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
@@ -1305,10 +1306,6 @@ class GridSearch(OptimizationFunction):
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         # self.tolerance = tolerance
 
-        if seed is None:
-            seed = get_global_seed()
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             objective_function=objective_function,
@@ -1318,7 +1315,7 @@ class GridSearch(OptimizationFunction):
             select_randomly_from_optimal_values=select_randomly_from_optimal_values,
             save_samples=True,
             save_values=save_values,
-            random_state=random_state,
+            seed=seed,
             direction=direction,
             params=params,
             owner=owner,
@@ -2240,7 +2237,8 @@ class ParamEstimationFunction(OptimizationFunction):
                     :type: ``bool``
         """
         variable = Parameter([[0], [0]], read_only=True)
-        random_state = Parameter(None, loggable=False)
+        random_state = Parameter(None, loggable=False, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         save_samples = True
         save_values = True
 
@@ -2279,17 +2277,6 @@ class ParamEstimationFunction(OptimizationFunction):
                               'n_sim': self._n_sim,
                               'bar': False}
 
-        # If no seed is specified, generate a different random one for
-        # each instance
-        if seed is None:
-            self._seed = get_global_seed()
-        else:
-            self._seed = seed
-
-        # Setup a RNG for our stuff, we will also pass the seed to ELFI for
-        # its crap.
-        random_state = np.random.RandomState([seed])
-
         # Our instance of elfi model
         self._elfi_model = None
 
@@ -2305,7 +2292,7 @@ class ParamEstimationFunction(OptimizationFunction):
             search_termination_function=None,
             save_samples=True,
             save_values=True,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2448,7 +2435,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # Create the discrepancy node.
             d = elfi.Distance('euclidean', *summary_nodes)
 
-            self._sampler = elfi.Rejection(d, batch_size=1, seed=self._seed)
+            self._sampler = elfi.Rejection(d, batch_size=1, seed=self.parameters.seed._get(context))
 
             # Store our new model
             self._elfi_model = my_elfi_model
