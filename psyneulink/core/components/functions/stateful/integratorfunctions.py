@@ -2363,7 +2363,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2860,7 +2860,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3396,7 +3396,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,

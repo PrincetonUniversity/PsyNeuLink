@@ -185,7 +185,7 @@ class OneHot(SelectionFunction):
                     :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,

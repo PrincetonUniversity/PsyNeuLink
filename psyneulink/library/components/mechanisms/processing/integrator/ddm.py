@@ -716,7 +716,7 @@ class DDM(ProcessingMechanism):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],

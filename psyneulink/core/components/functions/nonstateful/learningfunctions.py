@@ -415,7 +415,7 @@ class BayesGLM(LearningFunction):
                     :default value: 1
                     :type: ``int``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,

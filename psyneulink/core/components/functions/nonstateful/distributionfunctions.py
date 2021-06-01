@@ -148,7 +148,7 @@ class NormalDist(DistributionFunction):
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None, stateful=True)
+        random_state = Parameter(None)
 
     @tc.typecheck
     def __init__(self,
@@ -331,7 +331,7 @@ class UniformToNormalDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -464,7 +464,7 @@ class ExponentialDist(DistributionFunction):
                     :type: ``numpy.random.RandomState``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None, stateful=True)
+        random_state = Parameter(None)
 
     @tc.typecheck
     def __init__(self,
@@ -593,7 +593,7 @@ class UniformDist(DistributionFunction):
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
 
     @tc.typecheck
     def __init__(self,
@@ -730,7 +730,7 @@ class GammaDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -866,7 +866,7 @@ class WaldDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 

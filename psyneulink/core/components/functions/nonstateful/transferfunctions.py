@@ -2205,7 +2205,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False)
         bounds = (None, None)
 
     @tc.typecheck
