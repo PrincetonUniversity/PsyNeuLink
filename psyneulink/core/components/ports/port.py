@@ -2244,6 +2244,14 @@ class Port_Base(Port):
     def _assign_default_port_Name(self):
         return False
 
+    @handle_external_context()
+    def is_modulated(self, context):
+        for ma in self.mod_afferents:
+            if self.afferents_info[ma].is_active_in_composition(context.composition):
+                return True
+
+        return False
+
     def _get_input_struct_type(self, ctx):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
