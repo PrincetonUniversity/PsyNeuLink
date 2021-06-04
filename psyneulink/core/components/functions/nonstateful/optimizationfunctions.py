@@ -39,7 +39,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import DEFAULT_SEED, Function_Base, _seed_setter, is_function_type
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, Function_Base, _random_state_getter,
+    _seed_setter, is_function_type,
+)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
@@ -1271,7 +1274,7 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
@@ -2237,7 +2240,7 @@ class ParamEstimationFunction(OptimizationFunction):
                     :type: ``bool``
         """
         variable = Parameter([[0], [0]], read_only=True)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         save_samples = True
         save_values = True

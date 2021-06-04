@@ -34,7 +34,10 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.function import DEFAULT_SEED, FunctionError, _seed_setter
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, FunctionError, _random_state_getter,
+    _seed_setter,
+)
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -2362,7 +2365,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
@@ -2854,7 +2857,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         dimension = Parameter(2, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
@@ -3386,7 +3389,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         time_step_size = Parameter(1.0, modulable=True)
         starting_point = 0.0
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,

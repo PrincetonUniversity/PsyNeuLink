@@ -31,7 +31,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, Function, Function_Base, FunctionError,
-    _seed_setter,
+    _random_state_getter, _seed_setter,
 )
 from psyneulink.core.globals.keywords import \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
@@ -187,7 +187,7 @@ class OneHot(SelectionFunction):
                     :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         def _validate_mode(self, mode):

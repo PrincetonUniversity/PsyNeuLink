@@ -365,7 +365,7 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.function import DEFAULT_SEED, _seed_setter
+from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import STARTING_POINT, \
@@ -717,7 +717,7 @@ class DDM(ProcessingMechanism):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         output_ports = Parameter(

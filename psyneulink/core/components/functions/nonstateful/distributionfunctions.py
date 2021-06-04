@@ -28,7 +28,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import DEFAULT_SEED, Function_Base, FunctionError, _seed_setter
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, Function_Base, FunctionError,
+    _random_state_getter, _seed_setter,
+)
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
@@ -148,7 +151,7 @@ class NormalDist(DistributionFunction):
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
     @tc.typecheck
@@ -327,7 +330,7 @@ class UniformToNormalDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -366,7 +369,7 @@ class UniformToNormalDist(DistributionFunction):
 
         mean = self._get_current_parameter_value(DIST_MEAN, context)
         standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
-        random_state = self._get_current_parameter_value('random_state', context)
+        random_state = self.parameters.random_state._get(context)
 
         sample = random_state.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
@@ -456,7 +459,7 @@ class ExponentialDist(DistributionFunction):
                     :type: ``numpy.random.RandomState``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
     @tc.typecheck
@@ -581,7 +584,7 @@ class UniformDist(DistributionFunction):
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
     @tc.typecheck
@@ -714,7 +717,7 @@ class GammaDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
@@ -848,7 +851,7 @@ class WaldDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])

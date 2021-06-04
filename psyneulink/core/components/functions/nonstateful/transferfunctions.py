@@ -54,7 +54,8 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, Function, Function_Base, FunctionError, _seed_setter, function_keywords, get_matrix, is_function_type,
+    DEFAULT_SEED, Function, Function_Base, FunctionError, _random_state_getter, _seed_setter, function_keywords,
+    get_matrix, is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
@@ -2205,7 +2206,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         bounds = (None, None)
 

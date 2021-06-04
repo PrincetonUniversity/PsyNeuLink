@@ -30,7 +30,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, Function_Base, FunctionError, _seed_setter,
+    DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
     is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
@@ -418,7 +418,7 @@ class BayesGLM(LearningFunction):
                     :default value: 1
                     :type: ``int``
         """
-        random_state = Parameter(None, loggable=False, dependencies='seed')
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
