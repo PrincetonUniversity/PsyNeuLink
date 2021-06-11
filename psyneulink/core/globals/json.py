@@ -541,6 +541,11 @@ def _generate_component_string(
     except KeyError:
         parameters = {}
 
+    try:
+        parameters.update(component_dict[component_type._model_spec_id_stateful_parameters])
+    except KeyError:
+        pass
+
     parameter_names = {}
 
     # If there is a parameter that is the psyneulink identifier string

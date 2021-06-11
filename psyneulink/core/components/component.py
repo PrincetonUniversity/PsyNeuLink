@@ -910,6 +910,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     # helper attributes for JSON model spec
     _model_spec_id_parameters = 'parameters'
+    _model_spec_id_stateful_parameters = 'stateful_parameters'
 
     _model_spec_generic_type_name = NotImplemented
     """
@@ -3800,7 +3801,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return {
             **{attr: getattr(self, attr) for attr in basic_attributes},
-            **{self._model_spec_id_parameters: parameters_dict},
+            **{self._model_spec_id_parameters: {k: v for k, v in parameters_dict.items() if 'previous' not in k}},
+            **{self._model_spec_id_stateful_parameters: {k: v for k, v in parameters_dict.items() if 'previous' in k}},
             **function_dict,
             **{MODEL_SPEC_ID_TYPE: type_dict}
         }
