@@ -1048,7 +1048,12 @@ def generate_script_from_json(model_input):
     }
 
     module_names = set()
-    potential_module_names = set(re.findall(r'([A-Za-z]+?)\.', comp_str))
+
+    # greedy and non-greedy
+    potential_module_names = set([
+        *re.findall(r'([A-Za-z_\.]+)\.', comp_str),
+        *re.findall(r'([A-Za-z_\.]+?)\.', comp_str)
+    ])
     for module in potential_module_names:
         try:
             exec(f'import {module}')
@@ -1056,18 +1061,32 @@ def generate_script_from_json(model_input):
         except (ImportError, ModuleNotFoundError, SyntaxError):
             pass
 
-    for module in module_names:
+    for module in module_names.copy():
         try:
             friendly_name = module_friendly_name_mapping[module]
             comp_str = re.sub(f'{module}\\.', f'{friendly_name}.', comp_str)
         except KeyError:
             friendly_name = module
 
-        if f'{friendly_name}.' in comp_str:
-            imports_str += 'import {0}{1}\n'.format(
-                module,
-                f' as {friendly_name}' if friendly_name != module else ''
-            )
+        if not re.findall(rf'[^\.]{friendly_name}\.', comp_str):
+            module_names.remove(module)
+
+    for m in module_names.copy():
+        for n in module_names.copy():
+            # remove potential modules that are substrings of another
+            if m is not n and m in n:
+                module_names.remove(m)
+
+    for module in sorted(module_names):
+        try:
+            friendly_name = module_friendly_name_mapping[module]
+        except KeyError:
+            friendly_name = module
+
+        imports_str += 'import {0}{1}\n'.format(
+            module,
+            f' as {friendly_name}' if friendly_name != module else ''
+        )
 
     model_output = '{0}{1}{2}'.format(
         imports_str,
