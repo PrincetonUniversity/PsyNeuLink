@@ -54,7 +54,8 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import parameter_keywords
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import (
-    Function, Function_Base, FunctionError, function_keywords, get_matrix, is_function_type,
+    DEFAULT_SEED, Function, Function_Base, FunctionError, _random_state_getter, _seed_setter, function_keywords,
+    get_matrix, is_function_type,
 )
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
@@ -72,7 +73,7 @@ from psyneulink.core.globals.parameters import \
     FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, get_global_seed, safe_len
+from psyneulink.core.globals.utilities import parameter_spec, safe_len
 
 __all__ = ['Angle', 'Exponential', 'Gaussian', 'GaussianDistort', 'Identity', 'Linear', 'LinearMatrix',
            'Logistic', 'ReLU', 'SoftMax', 'Tanh', 'TransferFunction', 'TransferWithCosts'
@@ -2205,7 +2206,8 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         bias = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         bounds = (None, None)
 
     @tc.typecheck
@@ -2220,18 +2222,13 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             variance=variance,
             bias=bias,
             scale=scale,
             offset=offset,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,

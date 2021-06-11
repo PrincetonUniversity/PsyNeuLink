@@ -172,6 +172,8 @@ __all__ = [
 ]
 
 EPSILON = np.finfo(float).eps
+# numeric to allow modulation, invalid to identify unseeded state
+DEFAULT_SEED = -1
 
 FunctionRegistry = {}
 
@@ -325,6 +327,55 @@ def _output_type_setter(value, owning_component):
         pass
 
     return value
+
+
+def _seed_setter(value, owning_component, context):
+    if value in {None, DEFAULT_SEED}:
+        value = get_global_seed()
+
+    value = int(value)
+
+    owning_component.parameters.random_state._set(
+        np.random.RandomState([value]),
+        context
+    )
+
+    return value
+
+
+def _random_state_getter(self, owning_component, context):
+    seed_param = owning_component.parameters.seed
+
+    try:
+        is_modulated = seed_param._port.is_modulated(context)
+    except AttributeError:
+        # no ParameterPort
+        pass
+    else:
+        if is_modulated:
+            # can manage reset_for_context only in getter because we
+            # don't want to store any copied values from other contexts
+            # (from _initialize_from_context)
+            try:
+                reset_for_context = self._reset_for_context[context.execution_id]
+            except AttributeError:
+                self._reset_for_context = {}
+                reset_for_context = False
+            except KeyError:
+                reset_for_context = False
+
+            if not reset_for_context:
+                self._reset_for_context[context.execution_id] = True
+                return np.random.RandomState([
+                    int(
+                        owning_component._get_current_parameter_value(
+                            seed_param,
+                            context
+                        )
+                    )
+                ])
+
+    return self.values[context.execution_id]
 
 
 class Function_Base(Function):
