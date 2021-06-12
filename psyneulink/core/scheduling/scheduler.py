@@ -223,6 +223,15 @@ be solveable in some cases, it is not a simple problem. So,
 `Exact Time Mode <Scheduler_Exact_Time>` exists as an alternative
 option for these cases, though it comes with its own drawbacks.
 
+.. note::
+    Due to issues with floating-point precision, absolute time values in
+    conditions and `Time` are limited to 8 decimal points. If more
+    precision is needed, use
+    `fractions <https://docs.python.org/3/library/fractions.html>`_,
+    where possible, or smaller units (e.g. microseconds instead of
+    milliseconds).
+
+
 .. _Scheduler_Exact_Time:
 
 Exact Time Mode
@@ -352,7 +361,7 @@ from toposort import toposort
 
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never, _parse_absolute_unit
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never, _parse_absolute_unit, _quantity_as_integer
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
@@ -768,6 +777,7 @@ class Scheduler(JSONDumpable):
 
         in_absolute_time_mode = len(self.get_absolute_conditions(termination_conds)) > 0
         if in_absolute_time_mode:
+            current_time.absolute_interval = self._get_absolute_time_step_unit(termination_conds)
             # advance absolute clock time to first necessary time
             current_time.absolute = max(
                 current_time.absolute,
@@ -777,7 +787,15 @@ class Scheduler(JSONDumpable):
                     for c in self.get_absolute_conditions(termination_conds).values()
                 ])
             )
-            current_time.absolute_interval = self._get_absolute_time_step_unit(termination_conds)
+            # convert to interval time unit to avoid pint floating point issues
+            current_time.absolute = current_time.absolute.to(current_time.absolute_interval.u)
+
+            # .to auto converts to float even if magnitude is an int, undo
+            try:
+                current_time.absolute = _quantity_as_integer(current_time.absolute)
+            except ValueError:
+                pass
+
         current_time.absolute_enabled = in_absolute_time_mode
 
         self._init_counts(context.execution_id, base_context.execution_id)
@@ -885,30 +903,16 @@ class Scheduler(JSONDumpable):
         if len(intervals) == 0:
             return self.default_absolute_time_unit
         else:
-            adjusted_intervals = []
-
-            for interval in intervals:
-                # change quantity to largest unit representable by integer
-                # (1000ms -> 1s)
-                adj = interval.to_compact()
-
-                if np.allclose(adj.m, int(adj.m)):
-                    adj = int(adj.m) * adj.u
-                else:
-                    adj = interval
-
-                adjusted_intervals.append(adj)
-
-            min_time_unit = min(adjusted_intervals, key=lambda x: x.u).u
+            min_time_unit = min(intervals, key=lambda x: x.u).u
 
             # convert all intervals into the same unit
-            for i, a in enumerate(adjusted_intervals):
+            for i, a in enumerate(intervals):
                 unit_conversion = round(np.log10((1 * a.u).to(min_time_unit).m))
-                adjusted_intervals[i] = (int(a.m) * 10 ** unit_conversion) * min_time_unit
+                intervals[i] = (int(a.m) * 10 ** unit_conversion) * min_time_unit
 
             # numerator is the largest possible length of a pass
             # denominator evenly divides this length by number of time steps
-            numerator = np.gcd.reduce([interval.m for interval in adjusted_intervals])
+            numerator = np.gcd.reduce([interval.m for interval in intervals])
             if self.mode == SchedulingMode.STANDARD:
                 denominator = len(self.consideration_queue)
             elif self.mode == SchedulingMode.EXACT_TIME:
