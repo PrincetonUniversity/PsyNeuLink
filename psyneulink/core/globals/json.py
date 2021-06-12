@@ -192,6 +192,7 @@ import json
 import math
 import numpy
 import pickle
+import pint
 import psyneulink
 import re
 import types
@@ -469,6 +470,20 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
         identifier = parse_valid_identifier(value)
         if identifier in component_identifiers:
             value = identifier
+
+        try:
+            psyneulink._unit_registry.Unit(value)
+        except (AttributeError, TypeError, ValueError, pint.errors.DefinitionSyntaxError):
+            pass
+        else:
+            value = f"'{value}'"
+
+        try:
+            psyneulink._unit_registry.Quantity(value)
+        except (AttributeError, TypeError, ValueError, pint.errors.DefinitionSyntaxError):
+            pass
+        else:
+            value = f"'{value}'"
 
         evaluates = False
         try:
