@@ -1,16 +1,39 @@
 name: PsyNeuLink Docs CI
 
-on: push
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+    tags:
+      - 'v*'
+  pull_request:
 
 jobs:
   docs-build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      # Matrix setup is a hacky way to include 'base' build in pull requests
+      # The entire matrix is set up and 'base' builds are pruned based
+      # on event name and final configuration (ubuntu, python3.7).
       matrix:
         python-version: [3.7, 3.8, 3.9]
         python-architecture: ['x64']
         os: [ubuntu-latest, macos-latest, windows-latest]
+        event:
+          - ${{ github.event_name }}
+        pnl-version: ['head', 'base']
+        exclude:
+          - event: 'push'
+            pnl-version: 'base'
+          - os: macos-latest
+            pnl-version: 'base'
+          - os: windows-latest
+            pnl-version: 'base'
+          - python-version: 3.8
+            pnl-version: 'base'
+          - python-version: 3.9
+            pnl-version: 'base'
 
     outputs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
@@ -18,10 +41,20 @@ jobs:
     steps:
     - name: Checkout sources
       uses: actions/checkout@v2.3.4
+      if: ${{ matrix.pnl-version == 'head' }}
       with:
-        fetch-depth: 0
+        fetch-depth: 10
+        ref: ${{ github.ref }}
+
+    - name: Checkout pull base
+      uses: actions/checkout@v2.3.4
+      if: ${{ matrix.pnl-version == 'base' }}
+      with:
+        fetch-depth: 10
+        ref: ${{ github.base_ref }}
 
     - name: Check if on master
+      if: ${{ github.event_name == 'push' }}
       id: on_master
       uses: ./.github/actions/on-branch
       with:
@@ -54,13 +87,19 @@ jobs:
       with:
         features: 'doc'
 
+    - name: Add git tag
+      # The generated docs include PNL version,
+      # set it to a fixed value to prevent polluting the diff
+      if: ${{ github.event_name == 'pull_request' }}
+      run: git tag 'v999.999.999.999'
+
     - name: Build Documentation
       run: sphinx-build -b html -aE -j auto docs/source pnl-html
 
     - name: Upload Documentation
       uses: actions/upload-artifact@v2.2.3
       with:
-        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
         path: pnl-html
 
@@ -73,7 +112,12 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     needs: [docs-build]
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs' || (contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master'))
+    if: github.event_name == 'push' &&
+        (github.ref == 'refs/heads/master' ||
+         github.ref == 'refs/heads/devel' ||
+         github.ref == 'refs/heads/docs' ||
+         (contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master'))
+        )
 
     steps:
     - name: Checkout docs
@@ -84,7 +128,7 @@ jobs:
     - name: Download branch docs
       uses: actions/download-artifact@v2
       with:
-        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         path: _built_docs/${{ github.ref }}
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
 
@@ -101,7 +145,7 @@ jobs:
     - name: Download main docs
       uses: actions/download-artifact@v2
       with:
-        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         # This overwrites files in current directory
       if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
 
