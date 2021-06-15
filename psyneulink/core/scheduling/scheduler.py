@@ -764,19 +764,21 @@ class Scheduler(JSONDumpable):
         else:
             termination_conds = self._combine_termination_conditions(termination_conds)
 
+        current_time = self.get_clock(context).time
+
         in_absolute_time_mode = len(self.get_absolute_conditions(termination_conds)) > 0
         if in_absolute_time_mode:
             # advance absolute clock time to first necessary time
-            self.get_clock(context).time.absolute = max(
-                self.get_clock(context).time.absolute,
+            current_time.absolute = max(
+                current_time.absolute,
                 min([
                     min(c.absolute_fixed_points)
                     if len(c.absolute_fixed_points) > 0 else 0
                     for c in self.get_absolute_conditions(termination_conds).values()
                 ])
             )
-            self.get_clock(context).time.absolute_interval = self._get_absolute_time_step_unit(termination_conds)
-        self.get_clock(context).time.absolute_enabled = in_absolute_time_mode
+            current_time.absolute_interval = self._get_absolute_time_step_unit(termination_conds)
+        current_time.absolute_enabled = in_absolute_time_mode
 
         self._init_counts(context.execution_id, base_context.execution_id)
         self._reset_counts_useable(context.execution_id)
@@ -839,7 +841,7 @@ class Scheduler(JSONDumpable):
                     self.execution_list[context.execution_id].append(cur_time_step_exec)
                     if in_absolute_time_mode:
                         self.execution_timestamps[context.execution_id].append(
-                            copy.copy(self.get_clock(context).time)
+                            copy.copy(current_time)
                         )
                     yield self.execution_list[context.execution_id][-1]
 
