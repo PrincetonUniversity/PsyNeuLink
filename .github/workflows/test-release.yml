@@ -45,7 +45,7 @@ jobs:
         echo ::set-output name=wheel::$(ls *.whl)
 
     - name: Upload Python dist files
-      uses: actions/upload-artifact@v2.2.3
+      uses: actions/upload-artifact@v2.2.4
       with:
         name: Python-dist-files
         retention-days: 1
@@ -139,7 +139,7 @@ jobs:
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2 tests
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2.2.3
+      uses: actions/upload-artifact@v2.2.4
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: ${{ steps.get_release.outputs.release_dir }}/tests_out.xml

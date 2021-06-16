@@ -70,7 +70,7 @@ jobs:
       run: sphinx-build -b html -aE -j auto docs/source pnl-html
 
     - name: Upload generated docs
-      uses: actions/upload-artifact@v2.2.3
+      uses: actions/upload-artifact@v2.2.4
       with:
         name: docs-${{ matrix.pnl-version }}-${{ matrix.os }}-${{ matrix.python-version }}
         path: pnl-html
@@ -113,7 +113,7 @@ jobs:
         echo ${{ matrix.python-version }} > ./compare/PR_PYTHON_VERSION
 
     - name: Upload comparison results
-      uses: actions/upload-artifact@v2.2.3
+      uses: actions/upload-artifact@v2.2.4
       with:
         name: compare-${{ matrix.os }}-${{ matrix.python-version }}
         path: compare
