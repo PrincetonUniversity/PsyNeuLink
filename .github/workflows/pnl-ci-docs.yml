@@ -13,7 +13,7 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     outputs:
-      on_master: ${{ steps.on_master.outputs.on_master }}
+      on_master: ${{ steps.on_master.outputs.on-branch }}
 
     steps:
     - name: Checkout sources
@@ -23,13 +23,9 @@ jobs:
 
     - name: Check if on master
       id: on_master
-      shell: bash
-      run: |
-        git branch -a --contains $GITHUB_REF
-        git describe --always --tags
-        export ON_MASTER=$(git branch -a --contains $GITHUB_REF | grep -q '^  remotes/origin/master$' && echo "master" || echo "")
-        echo "Found out: ${ON_MASTER}"
-        echo ::set-output name=on_master::$ON_MASTER
+      uses: ./.github/actions/on-branch
+      with:
+        branch: master
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2.2.2

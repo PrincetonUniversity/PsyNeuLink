@@ -1,0 +1,28 @@
+name: 'Check commit in branch'
+description: 'Check if the current commit is included in the last n commits of the given branch'
+inputs:
+  branch:
+    description: 'Branch name to check against. Default: "master".'
+    required: true
+    default: 'master'
+  depth:
+    description: 'Check the last $depth commits. Default: 5.'
+    required: true
+    default: 5
+outputs:
+  on-branch:
+    description: 'Returns the branch name if the current commit is included in the branch, "" otherwise'
+    value: ${{ steps.on_branch.outputs.on_branch }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Check if on ${{ inputs.branch }}
+      id: on_branch
+      shell: bash
+      run: |
+        git fetch origin ${{ inputs.branch }} --depth=${{ inputs.depth }}
+        git describe --always --tags
+        export ON_BRANCH=$(git branch -a --contains ${{ github.ref }} | grep -q '^  remotes/origin/${{ inputs.branch }}$' && echo "${{ inputs.branch }}" || echo "")
+        echo "Found out: ${ON_BRANCH}"
+        echo "::set-output name=on_branch::$ON_BRANCH"

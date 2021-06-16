@@ -17,13 +17,9 @@ jobs:
 
     - name: Check if on master
       id: on_master
-      shell: bash
-      run: |
-        git fetch origin master --depth=100
-        git describe --always --tags
-        export ON_MASTER=$(git branch -a --contains ${{ github.ref }} | grep -q '^  remotes/origin/master$' && echo "master" || echo "")
-        echo "Found out: ${ON_MASTER}"
-        echo ::set-output name=on_master::$ON_MASTER
+      uses: ./.github/actions/on-branch
+      with:
+        branch: master
 
     - name: Check for existing release with the reference tag
       uses: actions/github-script@v4
@@ -52,7 +48,7 @@ jobs:
 
     - name: Create Release
       uses: actions/github-script@v4
-      if: steps.on_master.outputs.on_master == 'master' && steps.exist_check.outputs.exists == 'no'
+      if: steps.on_master.outputs.on-branch == 'master' && steps.exist_check.outputs.exists == 'no'
       with:
         # We need custom token since the default one doesn't trigger actions
         github-token: ${{ secrets.CREATE_RELEASE_TOKEN }}
