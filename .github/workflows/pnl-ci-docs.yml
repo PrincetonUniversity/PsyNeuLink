@@ -116,7 +116,7 @@ jobs:
         (github.ref == 'refs/heads/master' ||
          github.ref == 'refs/heads/devel' ||
          github.ref == 'refs/heads/docs' ||
-         (contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master'))
+         (startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master'))
         )
 
     steps:
@@ -147,14 +147,14 @@ jobs:
       with:
         name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         # This overwrites files in current directory
-      if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+      if: startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master')
 
     - name: Update main docs
       shell: bash
       run: |
         # Remove '.doctrees'
         rm -rf ".doctrees"
-      if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+      if: startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master')
 
     - name: Commit docs changes
       shell: bash
