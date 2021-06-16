@@ -29,6 +29,7 @@ import pint as _pint
 # reason for skipping E402 below
 _unit_registry = _pint.get_application_registry()
 _pint.set_application_registry(_unit_registry)
+_unit_registry.precision = 8  # TODO: remove when floating point issues resolved
 
 # starred imports to allow user imports from top level
 from . import core  # noqa: E402

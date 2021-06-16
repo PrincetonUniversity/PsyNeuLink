@@ -907,6 +907,15 @@ class TestAbsolute:
                 {A: TimeInterval(repeat=1200), B: TimeInterval(repeat=1000)},
                 {TimeScale.TRIAL: AfterNCalls(A, 3)},
             ),
+            (
+                {A: TimeInterval(repeat=0.33333), B: TimeInterval(repeat=0.66666)},
+                {TimeScale.TRIAL: AfterNCalls(B, 3)},
+            ),
+            # smaller than default units cause floating point issue without mitigation
+            (
+                {A: TimeInterval(repeat=2 * _unit_registry.us), B: TimeInterval(repeat=4 * _unit_registry.us)},
+                {TimeScale.TRIAL: AfterNCalls(B, 3)},
+            ),
         ]
     )
     def test_TimeInterval_linear_everynms(self, conditions, termination_conds):

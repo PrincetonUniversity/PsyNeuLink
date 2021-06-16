@@ -328,36 +328,70 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-def _parse_absolute_unit(n, unit=None):
-    if isinstance(n, pnl._unit_registry.Quantity):
-        return n
+_pint_all_time_units = sorted(
+    set([
+        getattr(pnl._unit_registry, f'{x}s')
+        for x in pnl._unit_registry._prefixes.keys()
+    ]),
+    reverse=True
+)
 
-    try:
-        # handle string representation of a unit
-        unit = getattr(pnl._unit_registry, unit)
-    except TypeError:
-        pass
 
-    if isinstance(n, str):
+def _quantity_as_integer(q):
+    rounded = round(q.m, pnl._unit_registry.precision)
+    if rounded == int(rounded):
+        return int(rounded) * q.u
+    else:
+        raise ValueError(f'{q} cannot be safely converted to integer magnitude')
+
+
+def _reduce_quantity_to_integer(q):
+    # find the largest time unit for which q can be expressed as an integer
+    for u in filter(lambda u: u <= q.u, _pint_all_time_units):
         try:
-            full_quantity = pnl._unit_registry.Quantity(n)
-        except pint.errors.UndefinedUnitError:
+            return _quantity_as_integer(q.to(u))
+        except ValueError:
             pass
-        else:
-            # n is an actual full quantity (e.g. '1ms') not just a number ('1')
-            if full_quantity.u != pnl._unit_registry.Unit('dimensionless'):
-                return full_quantity
-            else:
-                try:
-                    n = int(n)
-                except ValueError:
-                    n = float(n)
 
-    assert unit is not None
-    if n is not None:
+    return q
+
+
+def _parse_absolute_unit(n, unit=None):
+    def _get_quantity(n, unit):
+        if isinstance(n, pnl._unit_registry.Quantity):
+            return n
+
+        if isinstance(n, str):
+            try:
+                full_quantity = pnl._unit_registry.Quantity(n)
+            except pint.errors.UndefinedUnitError:
+                pass
+            else:
+                # n is an actual full quantity (e.g. '1ms') not just a number ('1')
+                if full_quantity.u != pnl._unit_registry.Unit('dimensionless'):
+                    return full_quantity
+                else:
+                    try:
+                        n = int(n)
+                    except ValueError:
+                        n = float(n)
+
+        try:
+            # handle string representation of a unit
+            unit = getattr(pnl._unit_registry, unit)
+        except TypeError:
+            pass
+
+        assert isinstance(unit, pnl._unit_registry.Unit)
         n = n * unit
 
-    return n
+        return n
+
+    if n is None:
+        return n
+
+    # store as the base integer quantity
+    return _reduce_quantity_to_integer(_get_quantity(n, unit))
 
 
 class ConditionError(Exception):
@@ -950,7 +984,10 @@ class TimeInterval(AbsoluteCondition):
                         offset = i * clock.time.absolute_interval
 
             if repeat is not None:
-                satisfied &= (clock.time.absolute - offset) % repeat == 0
+                satisfied &= round(
+                    (clock.time.absolute - offset) % repeat,
+                    pnl._unit_registry.precision
+                ) == 0
 
             if start is not None:
                 if start_inclusive:
