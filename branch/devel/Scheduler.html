@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0.8.8.1+136.g2504a9894b documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0.8.8.1+139.g1087415ff8 documentation</title>
   
 
   
@@ -97,7 +97,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+136
+                  0.8.8.1+139
                 </div>
               
             
@@ -380,6 +380,15 @@ consideration after. There are many of these examples, and while it may
 be solveable in some cases, it is not a simple problem. So,
 <a class="reference internal" href="#scheduler-exact-time"><span class="std std-ref">Exact Time Mode</span></a> exists as an alternative
 option for these cases, though it comes with its own drawbacks.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Due to issues with floating-point precision, absolute time values in
+conditions and <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> are limited to 8 decimal points. If more
+precision is needed, use
+<a class="reference external" href="https://docs.python.org/3/library/fractions.html">fractions</a>,
+where possible, or smaller units (e.g. microseconds instead of
+milliseconds).</p>
+</div>
 <section id="exact-time-mode">
 <span id="scheduler-exact-time"></span><h3>Exact Time Mode<a class="headerlink" href="#exact-time-mode" title="Permalink to this headline">¶</a></h3>
 <p>When <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.Scheduler.mode" title="psyneulink.core.scheduling.scheduler.Scheduler.mode"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Scheduler.mode</span></code></a> is <a class="reference internal" href="#psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME" title="psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SchedulingMode.EXACT_TIME</span></code></a>, the scheduler is
