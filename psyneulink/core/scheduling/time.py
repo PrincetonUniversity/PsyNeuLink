@@ -296,6 +296,14 @@ class Time(types.SimpleNamespace):
             and time_scale is self.absolute_time_unit_scale
         ):
             self.absolute += self.absolute_interval
+            if (
+                self.absolute_interval < 1 * self.absolute.u
+                and isinstance(self.absolute.m, float)
+            ):
+                # only round for floating point interval increases,
+                # until pint fixes precision errors
+                # see https://github.com/hgrecco/pint/issues/1263
+                self.absolute = round(self.absolute, pnl._unit_registry.precision)
 
     def _reset_by_time_scale(self, time_scale):
         """
