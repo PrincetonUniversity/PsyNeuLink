@@ -1,0 +1,1287 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Basics and Primer &mdash; PsyNeuLink 0+untagged.19.g5eb2ead documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quick Reference" href="QuickReference.html" />
+    <link rel="prev" title="Welcome to PsyNeuLink" href="index.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0+untagged.19.g5eb2ead
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>Basics and Primer</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="basics-and-primer">
+<h1>Basics and Primer<a class="headerlink" href="#basics-and-primer" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="#basicsandprimer-basics"><span class="std std-ref">Basics</span></a></p></li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="#basicsandprimer-primer"><span class="std std-ref">Primer</span></a></dt><dd><ul>
+<li><p><a class="reference internal" href="#basicsandprimer-simple-configurations"><span class="std std-ref">Simple Configurations</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-elaborate-configurations"><span class="std std-ref">More Elaborate Configurations</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-dynamics-of-execution"><span class="std std-ref">Dynamics of Execution</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-control"><span class="std std-ref">Control</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-parameters"><span class="std std-ref">Parameters</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-monitoring-values"><span class="std std-ref">Displaying and Logging Values</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-learning"><span class="std std-ref">Learning</span></a></p></li>
+<li><p><a class="reference internal" href="#basicsandprimer-customization"><span class="std std-ref">Customization</span></a></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<section id="basics">
+<span id="basicsandprimer-basics"></span><h2>Basics<a class="headerlink" href="#basics" title="Permalink to this headline">¶</a></h2>
+<p><strong>Overview</strong></p>
+<p>PsyNeuLink models are made up of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> and <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a>:
+Components are objects that perform a specific function, and Compositions are used to combine Components into a model.
+There are two primary kinds of Components:  <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>. For those
+familiar with block modeling systems, Mechanisms are the “blocks” in PsyNeuLink, and Projections are the
+“links”.  Mechanisms take inputs, use a function to process them in some way, and generate outputs that can be sent to
+other Mechanisms.  Projections allow the output of one Mechanism to be transmitted to another.  <a class="reference internal" href="Compositions.html"><span class="doc">Compositions</span></a> combine
+these Components into pathways that constitute a <a class="reference external" href="https://en.wikipedia.org/wiki/Graph_(abstract_data_type)">computational graph</a>, in which the Mechanisms are nodes and Projections are directed edges. Compositions can also be
+nodes, so that one Composition can be nested inside another to create more complex, hierarchical models (e.g., of
+circuits or pathways within a larger system-level model). A <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> coordinates the execution of all of the
+Components in a model.  By default, it executes them in the order determined by the Projections among the Mechanisms
+and/or nested Compositions.  However, individual Components can be assigned one or more pre-specified or customized
+<a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> to handle more complex structures, such as feedback pathways, and/or the execution
+of Components at different time scales (e.g., a recurrent network that needs time to settle before passing
+information to a decision layer).</p>
+<p><strong>Mechanisms and Projections</strong></p>
+<p>Mechanisms and Projections fall into two broad categories:  <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanisms</span></a>
+<em>directly transmit</em> and possibly <em>transform</em> information, and are linked by <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> that transmit the information between them. <em>ModulatoryMechanisms &lt;ModulatoryMechanism&gt;`
+*modify</em> or <em>modulate</em> the transmission and transformation of information, by way of <code class="xref any docutils literal notranslate"><span class="pre">ModulatoryProjections</span></code> to the Components they modulate.  PsyNeuLink provides a library of Components of
+each type.  For example, there is a variety of ProcessingMechanisms that can be used to transform, integrate, and
+evaluate information in various ways (e.g., to implement layers of a feedforward or recurrent neural network, or a
+drift diffusion decision process); and there are <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanisms</span></a>, including
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>  that can be used modulate the functioning of ProcessingMechanisms, and
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanisms</span></a> that can be used to modify Projections, respectively.  The <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a Mechanism defines the operation it carries out. PsyNeuLink provides a rich <a class="reference internal" href="Functions.html"><span class="doc">library</span></a> of mathematical, statistical and matrix manipulation functions. However, a Mechanism can also be
+assigned any Python function that is consistent with that Mechanism’s type (see <a class="reference internal" href="#basicsandprimer-customization"><span class="std std-ref">Customization</span></a>).
+Since Mechanisms can implement virtually any function, Projections ensure that they can “communicate” with each other
+seamlessly.</p>
+<p>Together, these elements allow PsyNeuLink to implement and integrate processes of different types, levels of analysis,
+and/or time scales of operation, composing them into a coherent system.  This affords modelers the flexibility to
+commit each part of their model to a form of processing and/or level of analysis that is appropriate for that part,
+while providing the opportunity to test and explore how they interact with one another at the level of the entire
+system.  The figure below provides an example of the kinds of elements available in PsyNeuLink, and some that are
+planned for future inclusion.  The <a class="reference internal" href="QuickReference.html"><span class="doc">Quick Reference</span></a> provides a more detailed overview of PsyNeuLink objects and its
+other facilities.  In the sections that follow, the Primer provides some examples of how these are used to construct
+models in PsyNeuLink.</p>
+<figure class="align-default" id="id2">
+<span id="basicsandprimer-grandview-figure"></span><img alt="_static/BasicsAndPrimer_GrandView_fig.svg" src="_static/BasicsAndPrimer_GrandView_fig.svg" /><figcaption>
+<p><span class="caption-text"><strong>PsyNeuLink Environment.</strong>  Full-colored items are examples of currently implemented elements; dimmed
+items are examples of elements planned for future implementation.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="primer">
+<span id="basicsandprimer-primer"></span><h2>Primer<a class="headerlink" href="#primer" title="Permalink to this headline">¶</a></h2>
+<p>The examples below are intended to provide quick illustrations of some of PsyNeuLink’s basic and more advanced
+capabilities.  They assume some experience with computational modeling and/or relevant background knowledge.  The
+<code class="xref any docutils literal notranslate"><span class="pre">tutorial</span></code> provides additional introductory material for those who are newer to computational modeling, as well as a
+more detailed and comprehensive introduction to the use of PsyNeuLink.</p>
+<section id="simple-configurations">
+<span id="basicsandprimer-simple-configurations"></span><h3>Simple Configurations<a class="headerlink" href="#simple-configurations" title="Permalink to this headline">¶</a></h3>
+<p>Mechanisms can be executed on their own (to gain familiarity with their operation, or for use in other Python
+applications), or linked together and run in a Composition to implement part of, or an entire model. Linking
+Mechanisms for execution can be as simple as creating them and then assiging them to a Composition in a list –
+PsyNeuLink provides the necessary Projections that connect each to the next one in the list, making reasonable
+assumptions about their connectivity.  The following example creates a 3-layered 5-2-5 neural network
+encoder network, the first layer of which takes an an array of length 5 as its input, and uses a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function
+(the default for a <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>), and the other two of which take 1d arrays of the specified sizes and use a
+<a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct the Mechanisms:</span>
+<span class="n">input_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">)</span>
+<span class="n">hidden_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;hidden&#39;</span><span class="p">)</span>
+<span class="n">output_layer</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">)</span>
+
+<span class="c1"># Construct the Composition:</span>
+<span class="n">my_encoder</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">]])</span>
+</pre></div>
+</div>
+<p>Each of the Mechanisms can be executed individually, by simply calling its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method
+with an appropriately-sized input array, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">output_layer</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mf">2.5</span><span class="p">,</span> <span class="mf">10.9</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">7.6</span><span class="p">])</span>
+<span class="o">&gt;&gt;</span> <span class="n">array</span><span class="p">([[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.92414182</span><span class="p">,</span> <span class="mf">0.99998154</span><span class="p">,</span> <span class="mf">0.88079708</span><span class="p">,</span> <span class="mf">0.9994998</span> <span class="p">]])</span>
+</pre></div>
+</div>
+<p>The Composition connects the Mechanisms into a pathway that form a graph, which can be shown using its <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method:</p>
+<figure class="align-default" id="id3">
+<span id="basicsandprimer-simple-pathway-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_SimplePathway_fig.svg"><img alt="_images/BasicsAndPrimer_SimplePathway_fig.svg" src="_images/BasicsAndPrimer_SimplePathway_fig.svg" width="30%" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>Composition Graph.</strong>  Representation of the graph of the simple Composition in the example above.  Note that the
+Input Mechanism for the Composition is colored green (to designate it is an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> node), and its output
+Mechanism is colored Red (to designate it at a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> node).</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>As the name of the <code class="docutils literal notranslate"><span class="pre">show_graph()</span></code> method suggests, Compositions are represented in PsyNeuLink as graphs, using a
+standard dependency dictionary format, so that they can also be submitted to other graph theoretic packages for
+display and/or analysis (such as <a class="reference external" href="https://networkx.github.io">NetworkX</a> and <a class="reference external" href="http://igraph.org/redirect.html">igraph</a>).  They can also be exported as a JSON file, in a format that is currently being developed for the exchange
+of computational models in neuroscience and psychology (see <a class="reference internal" href="json.html"><span class="doc">JSON</span></a>)</p>
+<p>The Composition can be run by calling its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, with an input array appropriately sized for
+the first Mechanism in the pathway (in this case, the input_layer):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mf">4.7</span><span class="p">,</span> <span class="mf">3.2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+<span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">,</span> <span class="mf">0.88079707</span><span class="p">])]</span>
+</pre></div>
+</div>
+<p>The order in which Mechanisms appear in the list of the <strong>pathways</strong> argument of the Composition’s constructor
+determines their order in the pathway.  More complicated arrangements can be created by using one of the Compositions
+<a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a>, by adding nodes individually using a
+Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_nodes" title="psyneulink.core.compositions.composition.Composition.add_nodes"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_nodes</span></code></a> method, and/or by creating intersecting pathways, as shown in some
+of the examples further below.</p>
+<p>PsyNeuLink picks sensible defaults when necessary Components are not specified.  In the example above no <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> were actually specified, so PsyNeuLink automatically created the appropriate types (in this case,
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>), and sized them appropriately to connect each pair of Mechanisms. Each
+Projection has a <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter that weights the connections between the elements of the output
+of its <code class="xref any docutils literal notranslate"><span class="pre">sender</span></code> and those of the input to its <code class="xref any docutils literal notranslate"><span class="pre">receiver</span></code>.  Here, the
+default is to use a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.FULL_CONNECTIVITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY_MATRIX</span></code></a>, that connects every element of the sender’s array to every element of
+the receiver’s array with a weight of 1. However, it is easy to specify a Projection explicitly, including its
+matrix, simply by inserting them in between the Mechanisms in the pathway:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="p">(</span><span class="mf">.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">-</span> <span class="mf">.1</span><span class="p">))</span>
+<span class="n">my_encoder</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">()</span>
+<span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">my_projection</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The first line above creates a Projection with a 2x5 matrix of random weights constrained to be between -.1 and +.1,
+which is then inserted in the pathway between the <code class="docutils literal notranslate"><span class="pre">input_layer</span></code> and <code class="docutils literal notranslate"><span class="pre">hiddeen_layer</span></code>.  Note that here, one of the
+Composition’s <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a> is used to create the pathway, as an
+alternative to specifying it in the <strong>pathways</strong> argument of the constructor (as shown in the initial example). The
+Projection’s matrix itself could also have been inserted directly, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="p">(</span><span class="mf">.2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span> <span class="o">-</span> <span class="mf">.1</span><span class="p">)),</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>PsyNeuLink knows to create a MappingProjection using the matrix.  PsyNeuLink is also flexible.  For example,
+a recurrent Projection from the <code class="docutils literal notranslate"><span class="pre">output_layer</span></code> back to the <code class="docutils literal notranslate"><span class="pre">hidden_layer</span></code> can be added simply by adding another
+entry to the pathway:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This tells PsyNeuLink to create a Projection from the output_layer back to the hidden_layer.  The same could have also
+been accomplished by explicitly creating the recurrent connection:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_encoder</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">([</span><span class="n">input_layer</span><span class="p">,</span> <span class="n">hidden_layer</span><span class="p">,</span> <span class="n">output_layer</span><span class="p">])</span>
+<span class="n">recurent_projection</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">sender</span><span class="o">=</span><span class="n">output_layer</span><span class="p">,</span>
+                  <span class="n">receiver</span><span class="o">=</span><span class="n">hidden_layer</span><span class="p">)</span>
+<span class="n">my_encoder</span><span class="o">.</span><span class="n">add_projection</span><span class="p">(</span><span class="n">recurent_projection</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="more-elaborate-configurations">
+<span id="basicsandprimer-elaborate-configurations"></span><h3>More Elaborate Configurations<a class="headerlink" href="#more-elaborate-configurations" title="Permalink to this headline">¶</a></h3>
+<p>Configuring more complex models is also straightforward.  For example, the script below implements a model of the
+<a class="reference external" href="https://en.wikipedia.org/wiki/Stroop_effect">Stroop task</a> by creating two feedforward neural network pathways
+– one for color naming and another for word reading – as well as a corresponding pair of pathways that determine which
+of those to perform based on a task instruction. These all converge on a common output mechanism that projects to a
+drift diffusion (DDM) decision mechanism responsible for determining the response:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct the color naming pathway:</span>
+<span class="n">color_input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLOR INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span> <span class="c1"># note: default function is Linear</span>
+<span class="n">color_input_to_hidden_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="n">color_hidden</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;COLOR HIDDEN&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">color_hidden_to_output_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">]])</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;OUTPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span> <span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">)</span>
+<span class="n">color_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">color_input</span><span class="p">,</span> <span class="n">color_input_to_hidden_wts</span><span class="p">,</span> <span class="n">color_hidden</span><span class="p">,</span> <span class="n">color_hidden_to_output_wts</span><span class="p">,</span> <span class="n">output</span><span class="p">]</span>
+
+<span class="c1"># Construct the word reading pathway (using the same output_layer)</span>
+<span class="n">word_input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORD INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">word_input_to_hidden_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="n">word_hidden</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;WORD HIDDEN&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">(</span><span class="n">bias</span><span class="o">=-</span><span class="mi">4</span><span class="p">))</span>
+<span class="n">word_hidden_to_output_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">]])</span>
+<span class="n">word_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">word_input</span><span class="p">,</span> <span class="n">word_input_to_hidden_wts</span><span class="p">,</span> <span class="n">word_hidden</span><span class="p">,</span> <span class="n">word_hidden_to_output_wts</span><span class="p">,</span> <span class="n">output</span><span class="p">]</span>
+
+<span class="c1"># Construct the task specification pathways</span>
+<span class="n">task_input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;TASK INPUT&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">task_color_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">],[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">]])</span>
+<span class="n">task_word_wts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">],[</span><span class="mi">4</span><span class="p">,</span><span class="mi">4</span><span class="p">]])</span>
+<span class="n">task_color_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">task_input</span><span class="p">,</span> <span class="n">task_color_wts</span><span class="p">,</span> <span class="n">color_hidden</span><span class="p">]</span>
+<span class="n">task_word_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">task_input</span><span class="p">,</span> <span class="n">task_word_wts</span><span class="p">,</span> <span class="n">word_hidden</span><span class="p">]</span>
+
+<span class="c1"># Construct the decision pathway:</span>
+<span class="n">decision</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION&#39;</span><span class="p">,</span> <span class="n">input_format</span><span class="o">=</span><span class="n">ARRAY</span><span class="p">)</span>
+<span class="n">decision_pathway</span> <span class="o">=</span> <span class="p">[</span><span class="n">output</span><span class="p">,</span> <span class="n">decision</span><span class="p">]</span>
+
+<span class="c1"># Construct the Composition:</span>
+<span class="n">Stroop_model</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Stroop Model&#39;</span><span class="p">)</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">color_pathway</span><span class="p">)</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">word_pathway</span><span class="p">)</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">task_color_pathway</span><span class="p">)</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">task_word_pathway</span><span class="p">)</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">add_linear_processing_pathway</span><span class="p">(</span><span class="n">decision_pathway</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is a simplified version the model described in <a class="reference external" href="https://www.researchgate.net/publication/20956134_Cohen_JD_McClelland_JL_Dunbar_K_On_the_control_of_automatic_processes_a_parallel_distributed_processing_account_of_the_Stroop_effect_Psychol_Rev_97_332-361">Cohen et al. (1990)</a>
+.</p>
+<p>The figure belows shows the model using the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method.</p>
+<figure class="align-default" id="id4">
+<span id="basicsandprimer-simple-stroop-example-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model.svg" src="_images/BasicsAndPrimer_Stroop_Model.svg" width="100%" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>Stroop Model.</strong> Representation of the Composition in the example above.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Running the model is as simple as generating some inputs and then providing them to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>
+method.  Inputs are specified in a dictionary, with one entry for each of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
+Mechanisms;  each entry contains a list of the inputs for the specified Mechanism, one for each trial to be run.
+The following defines two stimuli to use as the color and word inputs (<code class="docutils literal notranslate"><span class="pre">red</span></code> and <code class="docutils literal notranslate"><span class="pre">green</span></code>), and two for use as the
+task input (<code class="docutils literal notranslate"><span class="pre">color</span></code> and <code class="docutils literal notranslate"><span class="pre">word</span></code>), and then uses them to run the model for a color naming congruent trial, followed
+by a color naming incongruent trial:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">red</span> <span class="o">=</span>   <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">green</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">word</span> <span class="o">=</span>  <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">color</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span>
+                                   <span class="c1"># Trial 1  Trial 2</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:[</span><span class="n">red</span><span class="p">,</span>     <span class="n">red</span>   <span class="p">],</span>
+                         <span class="n">word_input</span><span class="p">:</span> <span class="p">[</span><span class="n">red</span><span class="p">,</span>     <span class="n">green</span> <span class="p">],</span>
+                         <span class="n">task_input</span><span class="p">:</span> <span class="p">[</span><span class="n">color</span><span class="p">,</span>   <span class="n">color</span> <span class="p">]})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">Stroop_model</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">[[</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">]),</span> <span class="n">array</span><span class="p">([</span><span class="mf">2.80488344</span><span class="p">])],</span> <span class="p">[</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">]),</span> <span class="n">array</span><span class="p">([</span><span class="mf">3.94471513</span><span class="p">])]]</span>
+</pre></div>
+</div>
+<p>When a Composition is run, its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> attribute stores the values of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Mechanisms
+at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>. In this case, the <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a> Mechanism is the only <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Mechanism, and it
+has two output values by default: the outcome of the decision (1 or -1, in this case corresponding to <code class="docutils literal notranslate"><span class="pre">red</span></code> or
+<code class="docutils literal notranslate"><span class="pre">green</span></code>), and the estimated mean decision time for the decision (in seconds).  So, the value returned by the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> attribute is a 3d array containing two 2d arrays, each of which has the two outputs of the DDM
+for each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a> (notice that the estimated response time for the second, incongruent trial was
+significantly longer than for the first, congruent trial;  note also that, on some executions it might return -1 as
+the response in the second trials since, by default, the <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> used for the decision process has
+a non-zero <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> term).</p>
+</section>
+<section id="dynamics-of-execution">
+<span id="basicsandprimer-dynamics-of-execution"></span><h3>Dynamics of Execution<a class="headerlink" href="#dynamics-of-execution" title="Permalink to this headline">¶</a></h3>
+<p>One of the most powerful features of PsyNeuLink is its ability to simulate models with Components that execute at
+different time scales.  By default, each Mechanism executes once per pass through the Composition, in the order
+determined by the projections between them (and shown in the <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method.  In the
+<code class="docutils literal notranslate"><span class="pre">Stroop_model</span></code> above, the <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanism executes once per pass, just after the <code class="docutils literal notranslate"><span class="pre">ouput</span></code> Mechanism.  The
+<code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanism is a <a class="reference internal" href="DDM.html"><span class="doc">DDM</span></a>.  This uses <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DriftDiffusionAnalytical</span></code></a> as its default <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>,
+which computes an analytic solution to the distribution of responses using the DDM integration process, and returns
+both the probability of crossing a specified <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>), and the mean
+crossing time.  However, it is also possible to simulate the dynamics of the integration process.  This can be done by
+assigning <code class="xref any docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code> as the Mechanism’s <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and, in the call to the Composition’s
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, specifying that a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a> terminates only when the <code class="docutils literal notranslate"><span class="pre">decision</span></code>
+Mechanism has completed its execution, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of decision Mechanism:</span>
+<span class="n">decision</span> <span class="o">=</span> <span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;DECISION&#39;</span><span class="p">,</span>
+               <span class="n">input_format</span><span class="o">=</span><span class="n">ARRAY</span><span class="p">,</span>
+               <span class="n">reset_stateful_function_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">(),</span>
+               <span class="n">function</span><span class="o">=</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span><span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
+               <span class="p">)</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:</span><span class="n">red</span><span class="p">,</span> <span class="n">word_input</span><span class="p">:</span><span class="n">green</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span><span class="n">color</span><span class="p">},</span>
+                 <span class="n">termination_processing</span><span class="o">=</span><span class="p">{</span><span class="n">TimeScale</span><span class="o">.</span><span class="n">TRIAL</span><span class="p">:</span> <span class="n">WhenFinished</span><span class="p">(</span><span class="n">decision</span><span class="p">)}</span>
+                 <span class="p">)</span>
+<span class="nb">print</span> <span class="p">(</span><span class="n">Stroop_model</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">[[</span><span class="n">array</span><span class="p">([[</span><span class="mf">20.</span><span class="p">]]),</span> <span class="n">array</span><span class="p">([[</span><span class="mf">126.</span><span class="p">]])]]</span>
+</pre></div>
+</div>
+<p>The output is now the result of the <code class="xref any docutils literal notranslate"><span class="pre">DriftDiffusionIntegrator</span></code>, which is the value of the decision variable when it
+crosses threshold (which is, by definition, equal to either the postive or negative value of the <a class="reference internal" href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a> attribute), and the number of executions it took to do so.  Since the <code class="docutils literal notranslate"><span class="pre">decision</span></code>
+Mechanism is the last (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a>) Mechanism of the Composition, it is also its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Mechanism.  Therefore, its
+output is recorded in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> attribute of the Stroop model, as shown above (note: because
+there is noise in the integration process, running the model several times produces varying response times).</p>
+<p>This version of the model includes Mechanisms that execute over different time-scales. The ProcessingMechanisms
+completed their computations in a single execution, whereas the DDM took many executions to complete its computation.
+In this case, the coordination of time scales was straightforward, since the DDM was the last Mechanism in the
+Composition:  the ProcessingMechanisms in each pathway executed in sequence, ending in the DDM which executed until
+it was complete.  PsyNeuLink’s <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> can be used to implement more complicated dependencies among Mechanisms, by
+creating one or more <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> for execution of those Mechanisms and assigning those to the Composition’s
+<a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a>. Conditions can specify the behavior of a Mechanism on its own (e.g., how many times it should be executed
+in each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>), its behavior relative to one or more other Components (e.g., how many times it
+should wait for another Mechanism to execute before it does so), or even arbitrary functions (e.g., a convergence
+criterion for the settling of a recurrent network). For example, the following implements a version of the model above
+that uses a <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/11488378">leaky competing accumulator</a> (<a class="reference internal" href="LCAMechanism.html"><span class="doc">LCAMechanism</span></a>) for the
+<code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism.  The latter settles for a specified number of executions before the color and word hidden layers
+execute, simulating a situation in which the task instruction is processed before processing the color or word stimuli:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Modify consruction of task Mechanism:</span>
+<span class="n">task</span> <span class="o">=</span> <span class="n">LCAMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;TASK&#39;</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="c1"># Assign conditions to scheduler:</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">color_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">scheduler</span><span class="o">.</span><span class="n">add_condition</span><span class="p">(</span><span class="n">word_hidden</span><span class="p">,</span> <span class="n">EveryNExecutions</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+
+<span class="c1"># Run with scheduler:</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">color_input</span><span class="p">:</span><span class="n">red</span><span class="p">,</span> <span class="n">word_input</span><span class="p">:</span><span class="n">green</span><span class="p">,</span> <span class="n">task_input</span><span class="p">:</span><span class="n">color</span><span class="p">})</span>
+<span class="nb">print</span> <span class="p">(</span><span class="n">Stroop_model</span><span class="o">.</span><span class="n">results</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span><span class="p">[[</span><span class="n">array</span><span class="p">([[</span><span class="mf">20.</span><span class="p">]]),</span> <span class="n">array</span><span class="p">([[</span><span class="mf">42.</span><span class="p">]])]]</span>
+</pre></div>
+</div>
+<p>In the example above, the <code class="docutils literal notranslate"><span class="pre">color_hidden</span></code> and <code class="docutils literal notranslate"><span class="pre">word_hidden</span></code> Mechanisms both wait to execute until the <code class="docutils literal notranslate"><span class="pre">task</span></code>
+Mechanism has executed 100 times.  They could also each have been made to wait different numbers of times;  in that
+case, since the <code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism depends on both them, it would have waited until they had both executed before
+doing so itself.  This example also imposes a fixed “setting time” (100 executions) on the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism. However,
+it could also be allowed to settle until it reaches some criterion.  For example, the <code class="docutils literal notranslate"><span class="pre">color_hidden</span></code> and
+<code class="docutils literal notranslate"><span class="pre">word_hidden</span></code> can be configured to wait until the value of the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism “converges”, by changing the
+conditions for execution of the <code class="docutils literal notranslate"><span class="pre">color_hidden</span></code> and <code class="docutils literal notranslate"><span class="pre">task_hidden</span></code> Mechanism’s to depend on a function, as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span># Define a function that detects when the a Mechanism&#39;s value has converged, such that the change in all of the
+elements of its value attribute from the last execution (given by its delta attribute) falls below ``epsilon``
+
+def converge(mech, thresh):
+    return all(abs(v) &lt;= thresh for v in mech.delta)
+
+# Add Conditions to the ``color_hidden`` and ``word_hidden`` Mechanisms that depend on the converge function:
+epsilon = 0.01
+Stroop_model.scheduler.add_condition(color_hidden, When(converge, task, epsilon)))
+Stroop_model.scheduler.add_condition(word_hidden, When(converge, task, epsilon)))
+</pre></div>
+</div>
+<p>PsyNeuLink provides a rich set of <a class="reference internal" href="Condition.html#condition-pre-specified-list"><span class="std std-ref">pre-defined Conditions</span></a> (such as <code class="docutils literal notranslate"><span class="pre">When</span></code> in the
+examples above), but Conditions can also be constructed using any Python function.  Together, these can be combined to
+construct virtually any schedule of execution that is logically possible.</p>
+</section>
+<section id="control">
+<span id="basicsandprimer-control"></span><h3>Control<a class="headerlink" href="#control" title="Permalink to this headline">¶</a></h3>
+<p>Another distinctive feature of PsyNeuLink is the ability to easily create models that include control;  that is,
+Mechanisms that can evaluate the output of other Mechanisms (or nested Compositions), and use this to regulate the
+processing of those Mechanisms.  For example, modifications of the <code class="docutils literal notranslate"><span class="pre">Stroop_model</span></code> shown below allow it to monitor
+conflict in the <code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism on each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>, and use that to regulate the gain of the
+<code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct control mechanism</span>
+<span class="n">control</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;CONTROL&#39;</span><span class="p">,</span>
+                           <span class="n">objective_mechanism</span><span class="o">=</span><span class="n">ObjectiveMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Conflict Monitor&#39;</span><span class="p">,</span>
+                                                                  <span class="n">monitor</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+                                                                  <span class="n">function</span><span class="o">=</span><span class="n">Energy</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                                                                  <span class="n">matrix</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mf">2.5</span><span class="p">],[</span><span class="o">-</span><span class="mf">2.5</span><span class="p">,</span><span class="mi">0</span><span class="p">]])),</span>
+                           <span class="n">default_allocation</span><span class="o">=</span><span class="p">[</span><span class="mf">0.5</span><span class="p">],</span>
+                           <span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="n">GAIN</span><span class="p">,</span> <span class="n">task</span><span class="p">)])</span>
+
+<span class="c1"># Construct the Composition using the control Mechanism as its controller:</span>
+<span class="n">Stroop_model</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Stroop Model&#39;</span><span class="p">,</span> <span class="n">controller</span><span class="o">=</span><span class="n">control</span><span class="p">)</span>
+
+<span class="c1"># Print statement called by run method (below), that show state of Components after each trial</span>
+<span class="n">np</span><span class="o">.</span><span class="n">set_printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="k">global</span> <span class="n">t</span>
+<span class="n">t</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="k">def</span> <span class="nf">print_after</span><span class="p">():</span>
+    <span class="k">global</span> <span class="n">t</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">End of trial </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s1">:&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">color  word&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task:</span><span class="se">\t\t</span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">task gain:</span><span class="se">\t</span><span class="s1">   </span><span class="si">{</span><span class="n">task</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">GAIN</span><span class="p">]</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t\t\t\t</span><span class="s1">red   green&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">output:</span><span class="se">\t\t</span><span class="si">{</span><span class="n">output</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">decision:</span><span class="se">\t</span><span class="si">{</span><span class="n">decision</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}{</span><span class="n">decision</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">conflict:</span><span class="se">\t</span><span class="s1">  </span><span class="si">{</span><span class="n">control</span><span class="o">.</span><span class="n">objective_mechanism</span><span class="o">.</span><span class="n">value</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">t</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<span class="c1"># Set up run and then execute it</span>
+<span class="n">task</span><span class="o">.</span><span class="n">initial_value</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.5</span><span class="p">,</span><span class="mf">0.5</span><span class="p">]</span>         <span class="c1"># Assign &quot;neutral&quot; starting point for task units on each trial</span>
+<span class="n">task</span><span class="o">.</span><span class="n">reset_stateful_function_when</span><span class="o">=</span><span class="n">AtTrialStart</span><span class="p">()</span>  <span class="c1"># Reset task units at beginning of each trial</span>
+<span class="n">num_trials</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">stimuli</span> <span class="o">=</span> <span class="p">{</span><span class="n">color_input</span><span class="p">:[</span><span class="n">red</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">,</span>
+           <span class="n">word_input</span><span class="p">:[</span><span class="n">green</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">,</span>
+           <span class="n">task_input</span><span class="p">:[</span><span class="n">color</span><span class="p">]</span><span class="o">*</span><span class="n">num_trials</span><span class="p">}</span>
+<span class="n">Stroop_model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">stimuli</span><span class="p">,</span> <span class="n">call_after_trial</span><span class="o">=</span><span class="n">print_after</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This example takes advantage of several additional features of PsyNeuLink, including its ability to automate certain
+forms of construction, and perform specified operations at various points during execution (e.g., reset variables
+and call user-defined functions).  For example, the constructor for the ControlMechanism can be used to specify how
+control should be configured, and automates the process of implementing it:  the <strong>objective_mechanism</strong> argument
+specifies the construction of an ObjectiveMechanism for the ControlMechanism that provides its input, and
+the <strong>control_signals</strong> argument specifies the parameters of the Mechanisms it should regulate and constructs the
+<a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> that implement this.  Furthermore, the constructor for the
+<a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> used in the <strong>objective_mechanism</strong> argument specifies that it should monitor the value of the
+<code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism, and use the <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Energy" title="psyneulink.core.components.functions.objectivefunctions.Energy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Energy</span></code></a> Function to evaluate it.  PsyNeuLink automatically constructs the
+MappingProjections from <code class="docutils literal notranslate"><span class="pre">output</span></code> to the ObjectiveMechanism, and from the latter to the ControlMechanism.  The latter
+is then added to the <code class="docutils literal notranslate"><span class="pre">Stroop_model</span></code> as its <code class="xref any docutils literal notranslate"><span class="pre">controller</span></code> in its constructor.
+The result is shown in the figure below, using the <strong>show_controller</strong> option of the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> method:</p>
+<figure class="align-default" id="id5">
+<span id="basicsandprimer-stroop-example-with-control-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_Control.svg"><img alt="_images/BasicsAndPrimer_Stroop_Model_Control.svg" src="_images/BasicsAndPrimer_Stroop_Model_Control.svg" width="50%" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>Stroop Model with Controller.</strong> Representation of the Composition with the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism added, generated
+by a call to <code class="docutils literal notranslate"><span class="pre">Stroop_model.show_graph(show_controller)</span></code>.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>The <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism is configured to reset at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>, and the
+<strong>call_after_trial</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method is used to print Mechanism values
+at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a> (see <code class="xref any docutils literal notranslate"><span class="pre">below</span></code>).</p>
+<p>When the Composition executes, the Objective Mechanism receives the output of the <code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism, and uses the
+<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.Energy" title="psyneulink.core.components.functions.objectivefunctions.Energy"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Energy</span></code></a> function assigned to it to compute conflict in the <code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism (i.e., the degree of co-activity of
+the <code class="docutils literal notranslate"><span class="pre">red</span></code> and <code class="docutils literal notranslate"><span class="pre">green</span></code> values).  The result passed to the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism, which uses it to set the <code class="xref any docutils literal notranslate"><span class="pre">gain</span></code> of the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function.  The <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism is configured to
+reset at the beginning of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>; and,since the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism was assigned as
+the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>, it executes at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>
+after all of the other Mechanisms in the Composition have executed, which has its effects on the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism
+the next time it executes (i.e., on the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>;  a Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> can also be configured to execute at the start of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>). Finally, the
+<strong>call_after_trial</strong> argument of the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method is used to print Mechanism values
+at the end of each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trial</span></code></a>.  The <strong>animate</strong> argument of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method can be
+used to generate an animation of the Composition’s execution, as shown below:</p>
+<figure class="align-default" id="id6">
+<span id="basicsandprimer-stroop-example-animation-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Stroop_Model_movie.gif"><img alt="_images/BasicsAndPrimer_Stroop_Model_movie.gif" src="_images/BasicsAndPrimer_Stroop_Model_movie.gif" style="width: 75%;" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>Animation of Stroop Model with Controller.</strong> Generated by a call to <code class="docutils literal notranslate"><span class="pre">Stroop_model.show_graph(show_controller)</span>
+<span class="pre">with</span> <span class="pre">``animate={&quot;show_controller&quot;:True}</span></code> in call to the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a>.</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Running it for four <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">trials</span></code></a> produces the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">_Stroop_model_output</span><span class="p">:</span>
+
+<span class="n">End</span> <span class="n">of</span> <span class="n">trial</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">color</span>  <span class="n">word</span>
+    <span class="n">task</span><span class="p">:</span>           <span class="p">[</span> <span class="mf">0.67</span>  <span class="mf">0.51</span><span class="p">]</span>
+    <span class="n">task</span> <span class="n">gain</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.5</span><span class="p">]</span>
+                <span class="n">red</span>   <span class="n">green</span>
+    <span class="n">output</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.28</span>  <span class="mf">0.72</span><span class="p">]</span>
+    <span class="n">decision</span><span class="p">:</span>       <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">][</span> <span class="mf">2.36</span><span class="p">]</span>
+    <span class="n">conflict</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.51</span><span class="p">]</span>
+
+<span class="n">End</span> <span class="n">of</span> <span class="n">trial</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">color</span>  <span class="n">word</span>
+    <span class="n">task</span><span class="p">:</span>           <span class="p">[</span> <span class="mf">0.81</span>  <span class="mf">0.4</span> <span class="p">]</span>
+    <span class="n">task</span> <span class="n">gain</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.51</span><span class="p">]</span>
+                <span class="n">red</span>   <span class="n">green</span>
+    <span class="n">output</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.38</span>  <span class="mf">0.62</span><span class="p">]</span>
+    <span class="n">decision</span><span class="p">:</span>       <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">][</span> <span class="mf">3.33</span><span class="p">]</span>
+    <span class="n">conflict</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.59</span><span class="p">]</span>
+
+<span class="n">End</span> <span class="n">of</span> <span class="n">trial</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">color</span>  <span class="n">word</span>
+    <span class="n">task</span><span class="p">:</span>           <span class="p">[</span> <span class="mf">0.97</span>  <span class="mf">0.19</span><span class="p">]</span>
+    <span class="n">task</span> <span class="n">gain</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.59</span><span class="p">]</span>
+                <span class="n">red</span>   <span class="n">green</span>
+    <span class="n">output</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.55</span>  <span class="mf">0.45</span><span class="p">]</span>
+    <span class="n">decision</span><span class="p">:</span>       <span class="p">[</span> <span class="mf">1.</span><span class="p">][</span> <span class="mf">3.97</span><span class="p">]</span>
+    <span class="n">conflict</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.62</span><span class="p">]</span>
+
+<span class="n">End</span> <span class="n">of</span> <span class="n">trial</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">color</span>  <span class="n">word</span>
+    <span class="n">task</span><span class="p">:</span>           <span class="p">[</span> <span class="mf">1.</span>    <span class="mf">0.04</span><span class="p">]</span>
+    <span class="n">task</span> <span class="n">gain</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.62</span><span class="p">]</span>
+                <span class="n">red</span>   <span class="n">green</span>
+    <span class="n">output</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.65</span>  <span class="mf">0.35</span><span class="p">]</span>
+    <span class="n">decision</span><span class="p">:</span>       <span class="p">[</span> <span class="mf">1.</span><span class="p">][</span> <span class="mf">2.95</span><span class="p">]</span>
+    <span class="n">conflict</span><span class="p">:</span>         <span class="p">[</span> <span class="mf">0.57</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Notice that initially, because control starts out relatively low (<code class="docutils literal notranslate"><span class="pre">default_allocation=[0.5]</span></code>), the representation of
+the instruction in the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism (color = <code class="docutils literal notranslate"><span class="pre">[1,0]</span></code>) is relatively weak (<code class="docutils literal notranslate"><span class="pre">[0.67,</span> <span class="pre">0.51]</span></code>).  As a result,
+the model generates the incorrect response to the incongrent stimulus([-1] = green, rather than [1] = red), due to
+the stronger weights of the Projections in the <code class="docutils literal notranslate"><span class="pre">word_pathway</span></code>.  However, beacuse this is associated with a moderate
+amount of conflict (<code class="docutils literal notranslate"><span class="pre">[0.51]</span></code>), control is increased on the next trial, which in turn increases the gain of the
+<code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism, stengthening its representation of the instruction so that it eventually fully activates the
+color task and generates the correct response. A more elaborate example of this model can be found at
+<a class="reference internal" href="BotvinickConflictMonitoringModel.html"><span class="doc">Conflict Monitoring and Cognitive Control (Botvinick et al., 2001)</span></a>. More complicated forms of control are also possible, for example, ones that run
+internal simulations to optimize the amount of control to optimize some criterion (e.g,. maximize the
+<a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">expected value of control</a> (see XXX EVC
+script), or to implement <a class="reference external" href="https://royalsocietypublishing.org/doi/full/10.1098/rstb.2013.0478">model-based learning</a>
+(see XXX LVOC script).
+.. FIX: ADD LINKS TO SCRIPTS ABOVE</p>
+</section>
+<section id="parameters">
+<span id="basicsandprimer-parameters"></span><h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<p>Every Component has a set of parameters that determine how the Component operates, or that contain information about
+the state of its operation.  For example, every Component has a <a class="reference internal" href="Component.html#component-value"><span class="std std-ref">value</span></a> parameter that stores the
+result of the Component’s <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> after it has executed. (Note here the difference in the
+generic use of the term “value” to designate the quantity assigned to a parameter, and its use as the name of a
+<em>particular</em> parameter of a Component.)  Although parameters are attributes of a Component, and can be accessed like
+any other Python attribute (as described below), they are actually instances of a special <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class that
+supports a number of important features. These include the ability to simultaneously have different values in
+different contexts (often referred to as <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">&quot;statefulness&quot;</span></a>), the ability to keep a record of
+previous values, and the ability to be <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulated</span></a> by other Components in PsyNeuLink.
+These features are supported by methods on the Parameter class, as described below.</p>
+<section id="accessing-parameter-values">
+<span id="basicsandprimer-accessing-parameters"></span><h4>Accessing Parameter Values<a class="headerlink" href="#accessing-parameter-values" title="Permalink to this headline">¶</a></h4>
+<p>The most recently assigned value of a parameter can be accessed like any other attrribute in Python,
+by using “dot notation” – that is, <code class="docutils literal notranslate"><span class="pre">&lt;Component&gt;.&lt;parameter&gt;</span></code>. For instance, the print statements in the
+<code class="docutils literal notranslate"><span class="pre">print_after</span></code> function of the example above use <code class="docutils literal notranslate"><span class="pre">output.value</span></code> and <code class="docutils literal notranslate"><span class="pre">decision.value</span></code> to access the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> parameter of the <code class="docutils literal notranslate"><span class="pre">output</span></code> and <code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms, respectively (more specifically, they
+access the first element of the output Mechanism’s value, <code class="docutils literal notranslate"><span class="pre">output.value[0]</span></code>, and the first and second elements of the
+decison Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>).  This returns their most recently assigned values. However, as an
+instance of the <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> class, a parameter can be <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a>, which means it can have more
+than one value associated with it. For example, PsyNeuLink has the capacity to execute the same Component in
+different <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">contexts</span></a>, either as part of different Compositions or, within the same
+Composition, as part of <a class="reference internal" href="OptimizationControlMechanism.html#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based simulations</span></a> executed by the
+Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a>.  The value of a parameter in a particular context can be
+accessed by using the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get" title="psyneulink.core.globals.parameters.Parameter.get"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get</span></code></a> method for the parameter and providing the context, for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;Stroop Model - Conflict Monitoring&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">[ 0.65  0.35]</span>
+</pre></div>
+</div>
+<p>Notice that, here, the name of the Composition in which the Mechanism was executed is used as the context; see
+<code class="xref any docutils literal notranslate"><span class="pre">Composition_Scope_of_Execution</span></code> for additional information about how to specify contexts.  If no context is specified,
+then the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get" title="psyneulink.core.globals.parameters.Parameter.get"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get</span></code></a> method returns the most recently assigned value of the parameter, just like dot
+notation.</p>
+<p>If a parameter is <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a>, then its previous value can also be accessed, using the
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get_previous" title="psyneulink.core.globals.parameters.Parameter.get_previous"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_previous</span></code></a> method; for example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get_previous</span><span class="p">(</span><span class="s1">&#39;Stroop Model - Conflict Monitoring&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">[ 0.55  0.45]</span>
+</pre></div>
+</div>
+<p>Notice that the value returned is the one from Trial 2 in the example above, immediately prior to the last one run
+(Trial 3).  By default, stateful parameters preserve only one previous value.  However, a parameter can be
+specified to have a longer <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.history" title="psyneulink.core.globals.parameters.Parameter.history"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">history</span></code></a>, in which case <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.get_previous" title="psyneulink.core.globals.parameters.Parameter.get_previous"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_previous</span></code></a> can
+be used to access earlier values.  For example, the following sets output Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
+parameter to store up to three previous values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">history_max_length</span> <span class="o">=</span> <span class="mi">3</span>
+</pre></div>
+</div>
+<p>If included in the script above, then the following would return the <code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> from two trials before the last one run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">get_previous</span><span class="p">(</span><span class="s1">&#39;Stroop Model - Conflict Monitoring&#39;</span><span class="p">,</span> <span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="go">[ 0.38 0.62]</span>
+</pre></div>
+</div>
+<p>Notice that this is the value from Trial 1 in the example above.</p>
+</section>
+<section id="setting-parameter-values">
+<span id="basicsandprimer-setting-parameters"></span><h4>Setting Parameter Values<a class="headerlink" href="#setting-parameter-values" title="Permalink to this headline">¶</a></h4>
+<p>There are two different ways to set parameter values in PsyNeuLink, that correspond to the two ways of accessing
+their values discussed in the preceding section:</p>
+<ul class="simple">
+<li><p>“dot notation” – that is, <code class="docutils literal notranslate"><span class="pre">&lt;Component&gt;.&lt;parameter&gt;</span> <span class="pre">=</span> <span class="pre">some_new_value</span></code></p></li>
+<li><p>the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set</span></code></a> method of the Parameter class; that is
+<code class="docutils literal notranslate"><span class="pre">&lt;Component&gt;.parameters.&lt;parameter&gt;.set(&lt;value&gt;,</span> <span class="pre">&lt;context&gt;)</span></code>).</p></li>
+</ul>
+<p>In the case of <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">non-stateful parameters</span></a>, these two approaches behave equivalently, in which
+case it is easier and clearer to use dot notation.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In most cases, non-stateful parameters are intended to be configured automatically for a component upon
+instantiation by PsyNeuLink. Oftentimes, there are additional steps of validation and setup beyond simply
+assigning a value to some attribute of the component instance. Be cautious if you decide to manually set a
+non-stateful parameter.</p>
+</div>
+<p>In the case of <a class="reference internal" href="Parameters.html#parameter-statefulness"><span class="std std-ref">stateful parameters</span></a> (the most common type), assigning a value using dot
+notation and the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set</span></code></a> method can behave differently under some circumstances.</p>
+<p>Dot notation is simpler, but assumes that the <a class="reference internal" href="Context.html"><span class="doc">context</span></a> for which the specified value should apply is the
+most recent context in which the Parameter’s owner Component has executed.  If the value should apply to a different
+context, then the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set</span></code></a> method must be used, which allows explicit specification of the context.
+See below for examples of appropriate use cases for each, as well as explanations of contexts when executing
+<a class="reference internal" href="Mechanism.html#mechanism-execution-composition"><span class="std std-ref">Mechanisms</span></a> and <a class="reference internal" href="Composition.html#composition-execution-context"><span class="std std-ref">Compositions</span></a>, respectively.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If a given component has not yet been executed, or has only been executed standalone without a user-provided context,
+then dot notation will set the Parameter’s value in the baseline context. Analogously, calling the <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.set" title="psyneulink.core.globals.parameters.Parameter.set"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">set</span></code></a> method without providing a context will also set the Parameter’s value in the baseline
+context. In either of these cases, any new context in which the Component executes after that will use the
+newly-provided value as the Parameter’s baseline.</p>
+</div>
+<section id="example-use-cases-for-dot-notation">
+<h5>Example use-cases for dot notation<a class="headerlink" href="#example-use-cases-for-dot-notation" title="Permalink to this headline">¶</a></h5>
+<ul>
+<li><p>Run a Composition, then change the value of a component’s parameter, then run the Composition again with the new
+parameter value:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate the mechanism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># create a Composition containing the Mechanism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp1&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># set slope of m1&#39;s function to 2 for the most recent context (which is now comp1)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># note that changing the slope of m&#39;s function produced a different result</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp2&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># because slope is a stateful parameter,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># executing the Mechanism in a different context is unaffected by the change</span>
+</pre></div>
+</div>
+</li>
+<li><p>Cautionary example: using dot notation before a component has been executed in a non-default context will change
+its value in the default context, which will in turn propagate to new contexts in which it is executed:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate the mechanism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># create two Compositions, each containing m</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp1&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp2&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># executing m outside of a Composition uses its default context</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">base</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">execute</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">m</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># the change of the slope of m&#39;s function propagated to the new Contexts in which it executes</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="example-use-cases-for-parameter-set-method">
+<h5>Example use-cases for Parameter set method<a class="headerlink" href="#example-use-cases-for-parameter-set-method" title="Permalink to this headline">¶</a></h5>
+<ul>
+<li><p>Change the value of a parameter for a context that was not the last context in which the parameter’s owner executed:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate the mechanism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># create two Compositions, each containing m</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp1&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp2&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># the last context in which m was executed was comp2,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># so using dot notation to change a parameter of m would apply only for the comp2 context;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># changing the parameter value for the comp1 context requires use of the set method</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function_parameters</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">comp1</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+</pre></div>
+</div>
+</li>
+<li><p>Cautionary example: calling the set method of a parameter without a context specified changes its value in the
+default context which, in turn, will propagate to new contexts in which it is executed:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># instantiate the mechanism</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># create two Compositions, each containing m</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp1&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp2&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># calling the set method without specifying a context will change the default value for new contexts</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="o">.</span><span class="n">function_parameters</span><span class="o">.</span><span class="n">slope</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp1</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># no change because the context had already been set up before the call to set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp2</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([1.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># no change because the context had already been set up before the call to set</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># set up a new context</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp3</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;comp3&#39;</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">m</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">comp3</span><span class="o">.</span><span class="n">run</span><span class="p">({</span><span class="n">m</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">]})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># returns: [array([2.])]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># 2 is now the default value for the slope of m&#39;s function, so it now produces a different result</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+<section id="function-parameters">
+<h4>Function Parameters<a class="headerlink" href="#function-parameters" title="Permalink to this headline">¶</a></h4>
+<p>The <a class="reference internal" href="Component.html#component-parameters"><span class="std std-ref">parameters</span></a> attribute of a Component contains a list of all of its parameters. It is
+important here to recognize the difference between the parameters of a Component and those of its <a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a>.  In the examples above, <a class="reference internal" href="Component.html#component-value"><span class="std std-ref">value</span></a> is a parameter of the <code class="docutils literal notranslate"><span class="pre">output</span></code> and
+<code class="docutils literal notranslate"><span class="pre">decision</span></code> Mechanisms themselves.  However, each of those Mechanisms also has a <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>; and, since those are PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Functions</span></a> which are also Compoments, those too have
+parameters.  For example, the <code class="docutils literal notranslate"><span class="pre">output</span></code> Mechanism was assigned the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, which has a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> and a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> parameter (as well as others).  The parameters of a Component’s
+<a class="reference internal" href="Component.html#component-function"><span class="std std-ref">function</span></a> can also be accessed using dot notation, by referencing the function in the
+specification.  For example, the current value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter of the <code class="docutils literal notranslate"><span class="pre">output</span></code>'s Logistic
+Function can be accessed in either of the following ways:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">base</span>
+<span class="go">1.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+</section>
+<section id="modulable-parameters">
+<h4>Modulable Parameters<a class="headerlink" href="#modulable-parameters" title="Permalink to this headline">¶</a></h4>
+<p>Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
+a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> belonging to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>).  If the parameter
+of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is modulable, it is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> – this is a
+Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
+another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
+a Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, any of its
+secondary functions, and similarly for Projections.  These determine the value
+of the parameter that is actually used when the Component is executed, which may be different than the base value
+returned by accessing the parameter directly (as in the examples above); see <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">Modulation</span></a> for a more
+complete description of modulation.  The current <em>modulated</em> value of a parameter can be accessed from the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding ParameterPort.  For instance, the print statement in the example above
+used <code class="docutils literal notranslate"><span class="pre">task.parameter_ports[GAIN].value</span></code> to report the modulated value of the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a> parameter of
+the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Logistic" title="psyneulink.core.components.functions.transferfunctions.Logistic"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Logistic</span></code></a> function when the simulation was run.  For convenience, it is also possible to
+access the value of a modulable parameter via dot notation. Dot notation for modulable parameters is slightly different
+than for non-modulable parameters to provide easy access to both base and modulated values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span>
+<span class="go">(Logistic Logistic Function-5):</span>
+<span class="go">    gain.base: 1.0</span>
+<span class="go">    gain.modulated: [0.55]</span>
+</pre></div>
+</div>
+<p>Instead of just returning a value, the dot notation returns an object with <code class="xref any docutils literal notranslate"><span class="pre">base</span></code> and <code class="xref any docutils literal notranslate"><span class="pre">modulated</span></code> attributes.
+<code class="xref any docutils literal notranslate"><span class="pre">modulated</span></code> refers to the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.value" title="psyneulink.core.components.ports.parameterport.ParameterPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the ParameterPort for the parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">GAIN</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>
+<span class="go">[0.62]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">modulated</span>
+<span class="go">[0.62]</span>
+</pre></div>
+</div>
+<p>This works for any modulable parameters of the Mechanism, its
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, or secondary functions.  Note that,
+here, neither the <code class="docutils literal notranslate"><span class="pre">parameters</span></code> nor the <code class="docutils literal notranslate"><span class="pre">function</span></code> attributes of the Mechanism need to be included in the reference.
+Note also that, as explained above, the value returned is different from the base value of the function’s gain
+parameter:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">task</span><span class="o">.</span><span class="n">function</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">base</span>
+<span class="go">1.0</span>
+</pre></div>
+</div>
+<p>This is because when the Compoistion was run, the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism modulated the value of the gain parameter.</p>
+</section>
+</section>
+<section id="displaying-and-logging-values">
+<span id="basicsandprimer-monitoring-values"></span><h3>Displaying and Logging Values<a class="headerlink" href="#displaying-and-logging-values" title="Permalink to this headline">¶</a></h3>
+<p><em>Displaying values</em> The console output in the example above was generated using the <strong>call_after_trial</strong> argument in
+the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method, that calls the <code class="docutils literal notranslate"><span class="pre">print_after</span></code> function defined in Python.  There
+are other similar “hooks” in the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method that can be used not only to monitor values, but also
+to carry out custom operations at various points during execution (before and/or after each <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">run</span></code></a>,
+<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">run</span></code></a> or execution of the Components in a trial).</p>
+<p><em>Logging values</em>. PsyNeuLink also has powerful logging capabilities that can be used to track and report any
+parameter of a model.  For example, including the following lines in the script for <code class="docutils literal notranslate"><span class="pre">Stroop_model</span></code>,  after the
+<code class="docutils literal notranslate"><span class="pre">task</span></code> and <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanisms are constructed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">task</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VALUE</span><span class="p">)</span>
+<span class="n">control</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VARIABLE</span><span class="p">)</span>
+<span class="n">control</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">set_log_conditions</span><span class="p">(</span><span class="n">VALUE</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>logs the value of the <code class="docutils literal notranslate"><span class="pre">control</span></code> and <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanisms each time they are executed.  Information in the log can be
+printed to the console using its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.print_entries" title="psyneulink.core.globals.log.Log.print_entries"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">print_entries</span></code></a> method, and specifying the desired information
+in its <strong>display</strong> argument.  For example, calling the following after <code class="docutils literal notranslate"><span class="pre">Stroop_model.run</span></code> has been called:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Stroop_model</span><span class="o">.</span><span class="n">log</span><span class="o">.</span><span class="n">print_entries</span><span class="p">(</span><span class="n">display</span><span class="o">=</span><span class="p">[</span><span class="n">TIME</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>generates the following report of the time at which the <code class="docutils literal notranslate"><span class="pre">control</span></code> and <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanisms were executed and their
+value for each execution (only the first two trials worth of the output are reproduced here):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Log</span> <span class="k">for</span> <span class="n">Stroop</span> <span class="n">Model</span><span class="p">:</span>
+
+<span class="n">Logged</span> <span class="n">Item</span><span class="p">:</span>   <span class="n">Time</span>          <span class="n">Value</span>
+
+<span class="s1">&#39;CONTROL&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">:</span><span class="mi">0</span>     <span class="p">[[</span><span class="mf">0.51</span><span class="p">]]</span>
+<span class="s1">&#39;CONTROL&#39;</span>      <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">10</span><span class="p">:</span><span class="mi">0</span>     <span class="p">[[</span><span class="mf">0.59</span><span class="p">]]</span>
+<span class="o">...</span>
+
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.57</span> <span class="mf">0.56</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.58</span> <span class="mf">0.55</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.59</span> <span class="mf">0.55</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.6</span>  <span class="mf">0.54</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.61</span> <span class="mf">0.54</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.62</span> <span class="mf">0.53</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">6</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.63</span> <span class="mf">0.53</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">7</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.64</span> <span class="mf">0.52</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.65</span> <span class="mf">0.51</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">9</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.67</span> <span class="mf">0.51</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">0</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.68</span> <span class="mf">0.5</span> <span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.69</span> <span class="mf">0.49</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.71</span> <span class="mf">0.48</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.72</span> <span class="mf">0.47</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.74</span> <span class="mf">0.46</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">5</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.75</span> <span class="mf">0.45</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">6</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.77</span> <span class="mf">0.44</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">7</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.78</span> <span class="mf">0.42</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">8</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.8</span>  <span class="mf">0.41</span><span class="p">]]</span>
+<span class="s1">&#39;TASK&#39;</span>         <span class="mi">0</span><span class="p">:</span><span class="mi">1</span><span class="p">:</span><span class="mi">9</span><span class="p">:</span><span class="mi">1</span>      <span class="p">[[</span><span class="mf">0.81</span> <span class="mf">0.4</span> <span class="p">]]</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>The time is reported as run:trial:pass:time_step.  Note that there is only one entry for the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism
+per trial, since it is executed only once per trial; but there are ten entries for the <code class="docutils literal notranslate"><span class="pre">task</span></code> Mechanism for each
+trial since it executed ten times, as specified in the Conditions described above.</p>
+<p>The output of a <a class="reference internal" href="Log.html"><span class="doc">Log</span></a> can also be reported in various other formats, including as a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.array.html">numpy</a> array (using its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.nparray" title="psyneulink.core.globals.log.Log.nparray"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray</span></code></a> method, as a
+dictionary of values for each entry (using its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.nparray_dictionary" title="psyneulink.core.globals.log.Log.nparray_dictionary"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">nparray_dictionary</span></code></a> method), and in <a class="reference external" href="https://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> format (using its <a class="reference internal" href="Log.html#psyneulink.core.globals.log.Log.csv" title="psyneulink.core.globals.log.Log.csv"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">csv</span></code></a> method.</p>
+</section>
+<section id="learning">
+<span id="basicsandprimer-learning"></span><h3>Learning<a class="headerlink" href="#learning" title="Permalink to this headline">¶</a></h3>
+<p>Needless to say, no framework for modeling brain and/or cognitive function is complete without implementing learning
+mechanisms.  PsyNeuLink does so in two ways: in a native form, and by integrating tools available from other
+Python-based environments.  Currently, PsyNeuLink has builtin intregration with <a class="reference external" href="https://pytorch.org">PyTorch</a>,
+however other envirnoments can be accessed using <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunctions</span></a>.  Since such
+environments are becoming increasingly accessible and powerful, the native implementation of learning in PsyNeuLink
+is designed with a complementary set of goals: modularity and exposition, rather than efficiency of computation.
+That is, it is better suited for “story-boarding” a model that includes learning components, and for illustrating
+process flow during learning, than it is for large scale simulations involving learning.  However, the specification
+of the learning components of a model in PsyNeuLink can easily be translated into a Pytorch description, which can
+then be integrated into the PsyNeuLink model with all the benefits of Pytorch execution.  Each of the two ways of
+specifying learning components is described below.</p>
+<section id="learningmechanisms">
+<h4>LearningMechanisms<a class="headerlink" href="#learningmechanisms" title="Permalink to this headline">¶</a></h4>
+<p>PsyNeuLink has a native class – <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> – that can be used to implement various forms of learning,
+including unsupervised forms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Hebbian" title="psyneulink.core.components.functions.learningfunctions.Hebbian"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Hebbian</span></code></a>) and supervised forms (such as reinforcement learning and
+backpropagation). LearningMechanisms take as their input a target and/or an error signal, provided by a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the source of the error signal (either a ComparatorMechanism or another LearningMechanism).
+LearningMechanisms use <code class="xref any docutils literal notranslate"><span class="pre">LearningSignals</span></code> (a type of <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>) to send a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> that is being learned.  The type of learning implemented by a LearningMechanism is determined by
+the class of <a class="reference internal" href="LearningFunctions.html"><span class="doc">LearningFunction</span></a> assigned as its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  In some
+cases (such as multilayered backpropagation networks), configuration of the LearningMechanisms and corresponding
+Projections can become complex; PsyNeuLink provides methods for implementing these automatically, which also serves
+to illustrate the flow of signals and errors implemented by the algorithm.  The example below implements learning in
+a simple three-layered neural network that learns to compute the X-OR operation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct Processing Mechanisms and Projections:</span>
+<span class="nb">input</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">hidden</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Hidden&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">10</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output&#39;</span><span class="p">,</span> <span class="n">default_variable</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">())</span>
+<span class="n">input_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Input Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="mi">10</span><span class="p">))</span>
+<span class="n">output_weights</span> <span class="o">=</span> <span class="n">MappingProjection</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Output Weights&#39;</span><span class="p">,</span> <span class="n">matrix</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+<span class="n">xor_comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="s1">&#39;XOR Composition&#39;</span><span class="p">)</span>
+<span class="n">learning_components</span> <span class="o">=</span> <span class="n">xor_comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span>
+                                                <span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="nb">input</span><span class="p">,</span> <span class="n">input_weights</span><span class="p">,</span> <span class="n">hidden</span><span class="p">,</span> <span class="n">output_weights</span><span class="p">,</span> <span class="n">output</span><span class="p">])</span>
+<span class="n">target</span> <span class="o">=</span> <span class="n">learning_components</span><span class="p">[</span><span class="n">TARGET_MECHANISM</span><span class="p">]</span>
+
+<span class="c1"># Create inputs:            Trial 1  Trial 2  Trial 3  Trial 4</span>
+<span class="n">xor_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;stimuli&#39;</span><span class="p">:[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>  <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>  <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span>
+              <span class="s1">&#39;targets&#39;</span><span class="p">:[</span>  <span class="p">[</span><span class="mi">0</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">]}</span>
+<span class="n">xor_comp</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="nb">input</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;stimuli&#39;</span><span class="p">],</span>
+                     <span class="n">target</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]})</span>
+</pre></div>
+</div>
+<p>Calling the Composition’s <a class="reference internal" href="Visualization.html#psyneulink.core.compositions.showgraph.ShowGraph.show_graph" title="psyneulink.core.compositions.showgraph.ShowGraph.show_graph"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">show_graph</span></code></a> with <code class="docutils literal notranslate"><span class="pre">show_learning=True</span></code> shows the network along with
+all of the learning components created by the call to <code class="docutils literal notranslate"><span class="pre">add_backpropagation_pathway</span></code>:</p>
+<figure class="align-default" id="id7">
+<span id="basicsandprimer-xor-model-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_XOR_Model_fig.svg"><img alt="_images/BasicsAndPrimer_XOR_Model_fig.svg" src="_images/BasicsAndPrimer_XOR_Model_fig.svg" width="100%" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>XOR Model.</strong>  Items in orange are learning components implemented by the call to <code class="docutils literal notranslate"><span class="pre">add_backpropagation_pathway</span></code>;
+diamonds represent MappingProjections, shown as nodes so that the <a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Training the model requires specifying a set of inputs and targets to use as training stimuli, and identifying the
+target Mechanism (that receives the input specifying the target responses):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct 4 trials worth of stimuli and responses (for the four conditions of the XOR operation):</span>
+<span class="n">xor_inputs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+<span class="n">xor_targets</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span> <span class="p">[</span><span class="mi">0</span><span class="p">],</span>   <span class="p">[</span><span class="mi">1</span><span class="p">],</span>     <span class="p">[</span><span class="mi">1</span><span class="p">],</span>    <span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+
+<span class="c1"># Identify target Mechanism returned by add_backpropation_pathway called above</span>
+<span class="n">target_mech</span> <span class="o">=</span> <span class="n">learning_components</span><span class="p">[</span><span class="n">TARGET_MECHANISM</span><span class="p">]</span>
+
+<span class="c1"># Run the model:</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">xor_model</span><span class="o">.</span><span class="n">learn</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="p">{</span><span class="n">input_mech</span><span class="p">:</span><span class="n">xor_inputs</span><span class="p">,</span>
+                               <span class="n">target_mech</span><span class="p">:</span><span class="n">xor_targets</span><span class="p">},</span>
+                       <span class="n">num_trials</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>It can also be run without learning by calling the run method with <code class="docutils literal notranslate"><span class="pre">enable_learning=False</span></code>.</p>
+<p id="basicsandprimer-rumelhart-model">The model shown above implements learning for a simple linear path.  However, virtually any model can be created
+using calls to a Composition’s <a class="reference internal" href="Composition.html#composition-learning-methods"><span class="std std-ref">learning methods</span></a> to build up more complex pathways.
+For example, the following implements a network for learning semantic representations described in
+<a class="reference external" href="https://psycnet.apa.org/record/1993-97600-001">Rumelhart &amp; Todd, 1993</a> (<a class="reference external" href="https://web.stanford.edu/class/psych209a/ReadingsByDate/02_08/RumelhartTodd93.pdf">pdf</a>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#  Represention  Property  Quality  Action</span>
+<span class="c1">#           \________\_______/_______/</span>
+<span class="c1">#                        |</span>
+<span class="c1">#                 Relations_Hidden</span>
+<span class="c1">#                   _____|_____</span>
+<span class="c1">#                  /           \</span>
+<span class="c1">#   Representation_Hidden  Relations_Input</span>
+<span class="c1">#               /</span>
+<span class="c1">#   Representation_Input</span>
+
+<span class="c1"># Construct Mechanisms</span>
+<span class="n">rep_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_IN&#39;</span><span class="p">)</span>
+<span class="n">rel_in</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">11</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_IN&#39;</span><span class="p">)</span>
+<span class="n">rep_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_HIDDEN&#39;</span><span class="p">)</span>
+<span class="n">rel_hidden</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REL_HIDDEN&#39;</span><span class="p">)</span>
+<span class="n">rep_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;REP_OUT&#39;</span><span class="p">)</span>
+<span class="n">prop_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;PROP_OUT&#39;</span><span class="p">)</span>
+<span class="n">qual_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">13</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;QUAL_OUT&#39;</span><span class="p">)</span>
+<span class="n">act_out</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">14</span><span class="p">,</span> <span class="n">function</span><span class="o">=</span><span class="n">Logistic</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;ACT_OUT&#39;</span><span class="p">)</span>
+
+<span class="c1"># Construct Composition</span>
+<span class="n">comp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Rumelhart Semantic Network&#39;</span><span class="p">)</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_in</span><span class="p">,</span> <span class="n">rel_hidden</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">rep_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">prop_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">qual_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rel_hidden</span><span class="p">,</span> <span class="n">act_out</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">add_backpropagation_learning_pathway</span><span class="p">(</span><span class="n">pathway</span><span class="o">=</span><span class="p">[</span><span class="n">rep_in</span><span class="p">,</span> <span class="n">rep_hidden</span><span class="p">,</span> <span class="n">rel_hidden</span><span class="p">])</span>
+<span class="n">comp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_learning</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The figure below shows this network with all of its <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">learning components</span></a>:</p>
+<figure class="align-default" id="id8">
+<span id="basicsandprimer-rumelhart-network-figure"></span><a class="reference internal image-reference" href="_images/BasicsAndPrimer_Rumelhart_Network.svg"><img alt="_images/BasicsAndPrimer_Rumelhart_Network.svg" src="_images/BasicsAndPrimer_Rumelhart_Network.svg" width="75%" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>Rumelhart Semantic Network.</strong>  Items in orange are learning components implemented by the calls to
+<code class="docutils literal notranslate"><span class="pre">add_backpropagation_pathway</span></code>; diamonds represent MappingProjections, shown as nodes so that the
+<a class="reference internal" href="LearningProjections.html"><span class="doc">Learning Projections</span></a> to them can be shown.</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+<p>Given the number of learning components, training the model above using standard PsyNeuLink components can take a
+considerable amount of time.  However, the same Composition can be implemented using the <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a>, by
+replacing the relevant line in the example above with <code class="docutils literal notranslate"><span class="pre">comp</span> <span class="pre">=</span> <span class="pre">AutoComposition(name='Rumelhart</span> <span class="pre">Semantic</span> <span class="pre">Network')</span></code>).
+The AutodiffComposition uses <a class="reference external" href="https://pytorch.org">PyTorch</a> to execute learning, which runs considerably (as much as
+three orders of magnitude) faster (see <a class="reference internal" href="Composition.html#composition-learning"><span class="std std-ref">Learning in a Composition</span></a>, as well as <a class="reference internal" href="Composition.html#composition-learning-autodiffcomposition"><span class="std std-ref">Learning Using AutodiffCompositon</span></a>
+for comparisons of the advantages and disadvantages of using a standard <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> vs. <a class="reference internal" href="AutodiffComposition.html"><span class="doc">AutodiffComposition</span></a> for
+learning).</p>
+</section>
+</section>
+<section id="customization">
+<span id="basicsandprimer-customization"></span><h3>Customization<a class="headerlink" href="#customization" title="Permalink to this headline">¶</a></h3>
+<p>The Mechanisms in the examples above all use PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Functions</span></a>.  However, as noted earlier, a Mechanism can be
+assigned any Python function, so long as it is compatible with the Mechanism’s type.  More specifically, its
+first argument must accept a variable that has the same shape as the Mechanism’s variable.  For most Mechanism types
+this can be specified in the <strong>default_variable</strong> argument of their constructors, so in practice this places little
+constraint on the type of functions that can be assigned.  For example, the script below defines a function that
+returns the amplitude of a sinusoid with a specified frequency at a specified time, and then assigns this to a
+<a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">my_sinusoidal_fct</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<span class="gp">... </span>                      <span class="n">phase</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="gp">... </span>                      <span class="n">amplitude</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="gp">... </span>   <span class="n">frequency</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="n">time</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="gp">... </span>   <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">frequency</span> <span class="o">*</span> <span class="n">time</span> <span class="o">+</span> <span class="n">phase</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_wave_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">default_variable</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">],[</span><span class="mi">0</span><span class="p">]],</span>
+<span class="gp">... </span>                                       <span class="n">function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the first argument is specified as a 2d variable that contains the frequency and time values as its elements
+– this matches the definition of the ProcessingMechanism’s <strong>default_variable</strong>, which the Mechanism will expect to
+receive as input from any other Mechanisms that project to it.  When a Python function is specified as the
+<a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of Mechanism (or any other Component in PsyNeuLink), it is automatically
+“wrapped” as a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>, a special class of PsyNeuLink <a class="reference internal" href="Functions.html"><span class="doc">Function</span></a> that integrates it with
+PsyNeuLink:  in addition to making its first argument available as the input to the Component to which it is assigned,
+it also makes its parameters available for modulation by <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanisms</span></a>.  For example,
+notice that <code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> has two other arguments, in addition to its <code class="docutils literal notranslate"><span class="pre">input</span></code>: <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code>.
+As a result, the phase and amplitude of <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code> can be modulated in by referencing them in the constructor of a
+<a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">control</span> <span class="o">=</span> <span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;phase&#39;</span><span class="p">,</span> <span class="n">my_wave_mech</span><span class="p">),</span>
+<span class="go">                                                 &#39;amplitude&#39;, my_wave_mech])</span>
+</pre></div>
+</div>
+<p>This facility not only makes PsyNeuLink flexible, but can be used to extend it in powerful ways.  For example, as
+mentioned under <a class="reference internal" href="#basicsandprimer-learning"><span class="std std-ref">Learning</span></a>, functions from other environments that implement complex learning models
+can be assigned as the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a Mechanism, and in that way integrated into a
+PsyNeuLink model.</p>
+</section>
+<section id="conclusion">
+<h3>Conclusion<a class="headerlink" href="#conclusion" title="Permalink to this headline">¶</a></h3>
+<p>The examples above are intended to provide a sample of PsyNeuLink’s capabilities, and how they can be used.  The
+<a class="reference internal" href="index.html#tutorial"><span class="std std-ref">Tutorial</span></a> provides a more thorough, interactive introduction to its use, and the <a class="reference internal" href="UserGuide.html"><span class="doc">User's Guide</span></a> provides
+a more detailed description of PsyNeuLink’s organization and capabilities.</p>
+</section>
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="QuickReference.html" class="btn btn-neutral float-right" title="Quick Reference" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Welcome to PsyNeuLink" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">Basics and Primer</a><ul>
+<li><a class="reference internal" href="#basics">Basics</a></li>
+<li><a class="reference internal" href="#primer">Primer</a><ul>
+<li><a class="reference internal" href="#simple-configurations">Simple Configurations</a></li>
+<li><a class="reference internal" href="#more-elaborate-configurations">More Elaborate Configurations</a></li>
+<li><a class="reference internal" href="#dynamics-of-execution">Dynamics of Execution</a></li>
+<li><a class="reference internal" href="#control">Control</a></li>
+<li><a class="reference internal" href="#parameters">Parameters</a><ul>
+<li><a class="reference internal" href="#accessing-parameter-values">Accessing Parameter Values</a></li>
+<li><a class="reference internal" href="#setting-parameter-values">Setting Parameter Values</a><ul>
+<li><a class="reference internal" href="#example-use-cases-for-dot-notation">Example use-cases for dot notation</a></li>
+<li><a class="reference internal" href="#example-use-cases-for-parameter-set-method">Example use-cases for Parameter set method</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#function-parameters">Function Parameters</a></li>
+<li><a class="reference internal" href="#modulable-parameters">Modulable Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#displaying-and-logging-values">Displaying and Logging Values</a></li>
+<li><a class="reference internal" href="#learning">Learning</a><ul>
+<li><a class="reference internal" href="#learningmechanisms">LearningMechanisms</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#customization">Customization</a></li>
+<li><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

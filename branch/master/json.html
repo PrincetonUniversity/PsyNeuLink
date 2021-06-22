@@ -1,0 +1,551 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>JSON &mdash; PsyNeuLink 0+untagged.19.g5eb2ead documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0+untagged.19.g5eb2ead
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+      <li>JSON</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="module-psyneulink.core.globals.json">
+<span id="json"></span><h1>JSON<a class="headerlink" href="#module-psyneulink.core.globals.json" title="Permalink to this headline">¶</a></h1>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#json-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#json-examples"><span class="std std-ref">Model Examples</span></a></p></li>
+<li><p><a class="reference internal" href="#json-model-specification"><span class="std std-ref">JSON Model Specification</span></a></p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="overview">
+<span id="json-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The developers of PsyNeuLink are collaborating with the scientific community, as part of the <a class="reference external" href="https://openneuro.org">OpenNeuro effort</a>, to create a standard, JSON-based format for the description and exchange of computational
+models of brain and psychological function across different simulation environments. As part of this effort,
+PsyNeuLink includes the ability to export models into, and import valid Python scripts that express a PsyNeuLink
+model from this JSON format.</p>
+<p>Any PsyNeuLink <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> can be exported to the JSON format using its <code class="xref any docutils literal notranslate"><span class="pre">json_summary</span></code> method, that
+uses its <code class="xref any docutils literal notranslate"><span class="pre">_dict_summary</span></code>.  This generates a string that, passed into the
+<a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> function, produces a valid Python script replicating the original PsyNeuLink model.
+<a class="reference internal" href="#psyneulink.core.globals.json.write_json_file" title="psyneulink.core.globals.json.write_json_file"><code class="xref any py py-func docutils literal notranslate"><span class="pre">write_json_file</span></code></a> can be used to write the json_summary for one or more Compositions into a specified file (though
+see <a class="reference internal" href="#json-write-multiple-compositions-note"><span class="std std-ref">note</span></a>).  <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> can accept either the string returned
+by <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> or the name of a file containing one.
+Calling <code class="docutils literal notranslate"><span class="pre">exec(generate_script_from_json(&lt;input&gt;))</span></code> will load into the current namespace all of the PsyNeuLink
+objects specified in the <code class="docutils literal notranslate"><span class="pre">input</span></code>; and <code class="xref any docutils literal notranslate"><span class="pre">get_compositions</span></code> can be used to retrieve a list of all of the Compositions
+in that namespace, including any generated by execution of <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a>.</p>
+<div class="admonition warning" id="json-security-warning">
+<p class="admonition-title">Warning</p>
+<p>Use of <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> to generate a Python script from a file without taking proper precautions can
+introduce a security risk to the system on which the Python interpreter is running.  This is because it calls
+exec, which has the potential to execute non-PsyNeuLink-related code embedded in the file.  Therefore,
+<a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> should be used to read only files of known and secure origin.</p>
+</div>
+</section>
+<section id="model-examples">
+<span id="json-examples"></span><h2>Model Examples<a class="headerlink" href="#model-examples" title="Permalink to this headline">¶</a></h2>
+<p>Below is an example of a script that implements a PsyNeuLink model of the Stroop model with conflict monitoring,
+and its output in JSON. Running <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> on the output will produce another PsyNeuLink script
+that will give the same results when run on the same input as the original.</p>
+<p><a class="reference download internal" download="" href="_downloads/e7e2e60cae3569827e0d524112cca318/stroop_conflict_monitoring.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">stroop_conflict_monitoring.py</span></code></a></p>
+<p><a class="reference download internal" download="" href="_downloads/7d77f154d0721bc7fa4f6f4c61499b62/stroop_conflict_monitoring.json"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">stroop_conflict_monitoring.json</span></code></a></p>
+</section>
+<section id="json-model-specification">
+<span id="id1"></span><h2>JSON Model Specification<a class="headerlink" href="#json-model-specification" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The JSON format is in early development, and is subject to change.</p>
+</div>
+<p>The outermost level of a JSON model is a dictionary with entry <code class="docutils literal notranslate"><span class="pre">graphs</span></code>, a list of Composition objects.</p>
+<p>Each Component’s JSON object contains multiple entries. Those that are common to all are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">name</span></code> : a label for the Component</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">parameters</span></code> (non-<a class="reference internal" href="Function.html"><span class="doc">Function</span></a>s) / <code class="docutils literal notranslate"><span class="pre">args</span></code> (<a class="reference internal" href="Function.html"><span class="doc">Function</span></a>s) : a dictionary where each entry is either a
+<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> name and value, or a subdictionary of modeling-environment specific parameters. For PsyNeuLink,
+this is indicated by <code class="xref any docutils literal notranslate"><span class="pre">PNL</span></code>:</p></li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;args&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;PNL&quot;</span><span class="o">:</span> <span class="p">{</span>
+        <span class="s2">&quot;execution_count&quot;</span><span class="o">:</span> <span class="mf">0</span><span class="p">,</span>
+        <span class="s2">&quot;has_initializers&quot;</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+        <span class="s2">&quot;variable&quot;</span><span class="o">:</span> <span class="p">[</span>
+            <span class="mf">0.01</span>
+        <span class="p">]</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;bounds&quot;</span><span class="o">:</span> <span class="kc">null</span><span class="p">,</span>
+    <span class="s2">&quot;intercept&quot;</span><span class="o">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;slope&quot;</span><span class="o">:</span> <span class="mf">1.0</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the value of a parameter may be a long-form dictionary when it corresponds to a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.
+In this case, it will indicate the ParameterPort in a <code class="xref any docutils literal notranslate"><span class="pre">source</span></code> field:</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;intercept&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;A.input_ports.intercept&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="mf">2.0</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">type</span></code> : a dictionary with entries based on modeling environment to describe the type of the object.
+The <code class="xref any docutils literal notranslate"><span class="pre">generic</span></code> entry is populated if the object has a universal name (such as a linear function).
+Modeling-environment-specific entries are populated when relevant.</p></li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="p">{</span>
+    <span class="s2">&quot;PNL&quot;</span><span class="o">:</span> <span class="s2">&quot;Composition&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;generic&quot;</span><span class="o">:</span> <span class="s2">&quot;graph&quot;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>Mechanisms</strong>, <strong>Projections</strong>, and <strong>Ports</strong> each have:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">functions</span></code> : a list of primary <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> JSON objects. In PsyNeuLink, only one primary function is allowed.</p></li>
+</ul>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;functions&quot;</span><span class="o">:</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;args&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;intercept&quot;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;A.input_ports.intercept&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="mf">2.0</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;slope&quot;</span><span class="o">:</span> <span class="p">{</span>
+                <span class="s2">&quot;source&quot;</span><span class="o">:</span> <span class="s2">&quot;A.input_ports.slope&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="s2">&quot;float&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;value&quot;</span><span class="o">:</span> <span class="mf">5.0</span>
+            <span class="p">}</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;name&quot;</span><span class="o">:</span> <span class="s2">&quot;Linear Function-1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;type&quot;</span><span class="o">:</span> <span class="p">{</span>
+            <span class="s2">&quot;generic&quot;</span><span class="o">:</span> <span class="s2">&quot;Linear&quot;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p><strong>Mechanisms</strong> have:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input_ports</span></code> : a list of InputPort and ParameterPort JSON objects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_ports</span></code> : a list of OutputPort JSON objects</p></li>
+</ul>
+<p><strong>Projections</strong> have:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">sender</span></code> : the name of the Component it projects from</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sender_port</span></code> : the name of the port on the <code class="docutils literal notranslate"><span class="pre">sender</span></code> to which it connects</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">receiver</span></code> : the name of the Component it projects to</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">receiver_port</span></code> : the name of the port on the <code class="docutils literal notranslate"><span class="pre">receiver</span></code> to which it connects</p></li>
+</ul>
+<p><strong>Ports</strong> have:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> : the type of accepted input/output for the Port. This corresponds to <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.dtype.html">numpy.dtype</a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shape</span></code> : the shape of the accepted input/output. This corresponds to numpy ndarray shapes. (<code class="xref any docutils literal notranslate"><span class="pre">numpy.zeros(&lt;shape&gt;)</span></code> would produce an array with the correct shape)</p></li>
+</ul>
+<p><strong>Compositions</strong> have:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">nodes</span></code> : a dictionary of Mechanisms or Compositions keyed on their names that are part of the Composition</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">edges</span></code> : a dictionary of Projections keyed on their names that connect nodes of the Composition</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">controller</span></code> : the name of the Mechanism in the Composition’s nodes that serves as the Composition’s <a class="reference internal" href="Composition.html#composition-controller"><span class="std std-ref">controller</span></a>, if it exists</p></li>
+</ul>
+<dl class="py class">
+<dt id="psyneulink.core.globals.json.PNLJSONEncoder">
+<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.globals.json.</code><code class="sig-name descname">PNLJSONEncoder</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span></em>, <em class="sig-param"><span class="n">skipkeys</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">ensure_ascii</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">check_circular</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">allow_nan</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">sort_keys</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">indent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">separators</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">default</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.json.PNLJSONEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference external" href="https://docs.python.org/3/library/json.html#json.JSONEncoder">JSONEncoder</a>
+that parses <code class="xref any docutils literal notranslate"><span class="pre">_dict_summary</span></code> output
+into a more JSON-friendly format.</p>
+<dl class="py method">
+<dt id="psyneulink.core.globals.json.PNLJSONEncoder.default">
+<code class="sig-name descname">default</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">o</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.json.PNLJSONEncoder.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement this method in a subclass such that it returns
+a serializable object for <code class="docutils literal notranslate"><span class="pre">o</span></code>, or calls the base implementation
+(to raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="c1"># Let the base class default method raise the TypeError</span>
+    <span class="k">return</span> <span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt id="psyneulink.core.globals.json.generate_script_from_json">
+<code class="sig-prename descclassname">psyneulink.core.globals.json.</code><code class="sig-name descname">generate_script_from_json</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_input</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.json.generate_script_from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a Python script from JSON <strong>model_input</strong> in the
+<a class="reference internal" href="#json-model-specification"><span class="std std-ref">general JSON format</span></a></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Use of <a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> to generate a Python script from a file without taking proper precautions
+can introduce a security risk to the system on which the Python interpreter is running.  This is because it
+calls exec, which has the potential to execute non-PsyNeuLink-related code embedded in the file.  Therefore,
+<a class="reference internal" href="#psyneulink.core.globals.json.generate_script_from_json" title="psyneulink.core.globals.json.generate_script_from_json"><code class="xref any py py-func docutils literal notranslate"><span class="pre">generate_script_from_json</span></code></a> should be used to read only files of known and secure origin.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model_input</strong> (<em>str</em>) – a JSON string in the proper format, or a filename
+containing such</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>Text of Python script</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="psyneulink.core.globals.json.write_json_file">
+<code class="sig-prename descclassname">psyneulink.core.globals.json.</code><code class="sig-name descname">write_json_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">compositions</span></em>, <em class="sig-param"><span class="n">filename</span></em>, <em class="sig-param"><span class="n">path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.globals.json.write_json_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write one or more <a class="reference internal" href="Composition.html"><span class="doc">Compositions</span></a> and associated objects to file in the <a class="reference internal" href="#json-model-specification"><span class="std std-ref">general JSON format</span></a></p>
+<div class="admonition note" id="json-write-multiple-compositions-note">
+<p class="admonition-title">Note</p>
+<p>At present, if more than one Composition is specified, all must be fully disjoint;  that is, they must not
+share  any <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> (e.g., <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Projections.html"><span class="doc">Projections</span></a> etc.).  This limitation will be
+addressed in a future update.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>compositions</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a><em> or </em><em>list˚</em>) – specifies <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or list of ones to be written to <strong>filename</strong></p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – specifies name of file in which to write JSON specification of <a class="reference internal" href="Composition.html"><span class="doc">Composition(s)</span></a>
+and associated objects.</p></li>
+<li><p><strong>path</strong> (<em>str : default None</em>) – specifies path of file for JSON specification;  if it is not specified then the current directory is used.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">JSON</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#model-examples">Model Examples</a></li>
+<li><a class="reference internal" href="#json-model-specification">JSON Model Specification</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+         <script src="_static/language_data.js"></script>
+         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
