@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+
+<!-- Page 1 -->
+<svg x="0" y="0" width="909" height="1286" viewBox="0 0 909 1286" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+style="display: block;margin-left: auto;margin-right: auto;">
+<defs>
+
+<style type="text/css"><![CDATA[
+
+.g0_1{
+fill: none;
+stroke: #00FF00;
+stroke-width: 5.777704;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g1_1{
+fill: none;
+stroke: #000000;
+stroke-width: 1.9259013;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g2_1{
+stroke: #000000;
+stroke-width: 1.9259013;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+.g3_1{
+fill: none;
+stroke: #FF0000;
+stroke-width: 5.777704;
+stroke-linecap: butt;
+stroke-linejoin: round;
+stroke-miterlimit: 1;
+}
+
+.s1_1{
+font-size: 23.11px;
+font-family: ArialMT_8;
+fill: #000000;
+}
+
+]]></style>
+
+</defs>
+<path d="M0,0
+L0,1286
+L909,1286
+L909,0 Z " 
+fill="#FFFFFF" stroke="none" />
+<path d="M783.7,1050.7c0,-37.1,-66.6,-67.2,-148.6,-67.2c-82.1,0,-148.6,30.1,-148.6,67.2c0,37,66.5,67.1,148.6,67.1c82,0,148.6,-30.1,148.6,-67.1Z" class="g0_1" />
+<text x="601" y="1029" class="s1_1">out (3)</text>
+<text x="545" y="1055" class="s1_1">COLORS_INPUT</text>
+<text x="608" y="1082" class="s1_1">in (3)</text>
+<path d="M797.4,846.8c0,-37.1,-72.7,-67.1,-162.3,-67.1c-89.7,0,-162.3,30,-162.3,67.1c0,37.1,72.6,67.1,162.3,67.1c89.6,0,162.3,-30,162.3,-67.1Z" class="g1_1" />
+<text x="601" y="825" class="s1_1">out (3)</text>
+<text x="535" y="851" class="s1_1">COLORS_HIDDEN</text>
+<text x="608" y="878" class="s1_1">in (3)</text>
+<path d="M635.1,983.2c0,-15.7,0,-32.7,0,-49.1" class="g1_1" />
+<path d="M628.3,933.6l6.8,-19.2l6.7,19.2Z" class="g2_1" />
+<path d="M770.6,884c35.2,-2.3,61.7,-14.7,61.7,-37.2c0,-18.1,-17.2,-29.7,-42.2,-34.7" class="g1_1" />
+<path d="M788.8,818.8l-18.2,-9.2l19.9,-4.2Z" class="g2_1" />
+<path d="M326,642.9c0,-37.1,-55.6,-67.1,-124.2,-67.1c-68.7,0,-124.3,30,-124.3,67.1c0,37.1,55.6,67.2,124.3,67.2C270.4,710.1,326,680,326,642.9Z" class="g1_1" />
+<text x="168" y="621" class="s1_1">out (2)</text>
+<text x="128" y="648" dx="0,-1.7,0,0,0,0,0,-1.7,0,0" class="s1_1">TASK_LAYER</text>
+<text x="175" y="674" class="s1_1">in (2)</text>
+<path d="M522.3,798C456.1,768.4,373,730.1,307.9,699.3" class="g1_1" />
+<path d="M304.6,705.1L290.1,690.8l20.3,2.2Z" class="g2_1" />
+<path d="M734.1,235.2C734.1,198.1,683.8,168,621.6,168c-62.1,0,-112.5,30.1,-112.5,67.2c0,37.1,50.4,67.1,112.5,67.1c62.2,0,112.5,-30,112.5,-67.1Z" class="g3_1" />
+<text x="578" y="213" class="s1_1">out (2,1)</text>
+<text x="557" y="240" class="s1_1">RESPONSE</text>
+<text x="595" y="266" class="s1_1">in (2)</text>
+<path d="M656.4,779.8C666,758.4,676,733.9,681.3,710.2c32.9,-146.8,38.6,-193.1,0,-338.4C676.4,353.4,668.4,335,659.7,317.9" class="g1_1" />
+<path d="M653.6,320.7l-3.2,-20.1l15.1,13.8Z" class="g2_1" />
+<path d="M299.7,685.1c64.6,28.6,149.3,67.5,217.5,99.8" class="g1_1" />
+<path d="M520.5,779L535,793.4l-20.3,-2.2Z" class="g2_1" />
+<path d="M306,680.4c31,-1.1,55.1,-13.6,55.1,-37.5c0,-18.6,-14.7,-30.3,-35.9,-35.1" class="g1_1" />
+<path d="M324.3,614.5L306,605.4l19.9,-4.3Z" class="g2_1" />
+<path d="M647,439c0,-37,-70,-67.1,-156.4,-67.1C404.3,371.9,334.3,402,334.3,439c0,37.1,70,67.2,156.3,67.2C577,506.2,647,476.1,647,439Z" class="g1_1" />
+<text x="457" y="417" class="s1_1">out (3)</text>
+<text x="395" y="444" class="s1_1">WORDS_HIDDEN</text>
+<text x="464" y="470" class="s1_1">in (3)</text>
+<path d="M269.7,585.8c34.5,-24.9,77,-54.4,115.6,-80.3" class="g1_1" />
+<path d="M381.8,499.7l19.7,-5.1l-12.2,16.3Z" class="g2_1" />
+<path d="M678.9,293.9c15.5,23,29.8,50.5,37.1,77.9c38.6,145.3,32.9,191.6,0,338.4c-4.1,18.3,-11,37.1,-19.2,54.6" class="g1_1" />
+<path d="M702.5,768.4l-14.6,14.1l2.6,-20.2Z" class="g2_1" />
+<path d="M715.1,272.7c30,-.4,53.8,-12.9,53.8,-37.5c0,-19.1,-14.3,-30.9,-34.6,-35.4" class="g1_1" />
+<path d="M733.5,206.5l-18.4,-8.9L735,193.1Z" class="g2_1" />
+<path d="M592.4,300.3C581,319,567.6,339.8,554.3,359.4" class="g1_1" />
+<path d="M559.6,363.5l-16.5,12l5.4,-19.7Z" class="g2_1" />
+<path d="M418.8,499C382.9,524.8,339,555.2,300.1,581.2" class="g1_1" />
+<path d="M303.6,587l-19.8,5.1l12.3,-16.3Z" class="g2_1" />
+<path d="M520.6,372.7c11.7,-19.2,25.5,-40.5,39.2,-60.4" class="g1_1" />
+<path d="M554.6,307.9L571.1,296l-5.5,19.6Z" class="g2_1" />
+<path d="M620.9,476.3c34.5,-2.2,60.6,-14.6,60.6,-37.3c0,-18.2,-16.9,-29.8,-41.5,-34.8" class="g1_1" />
+<path d="M639.1,410.9l-18.2,-9.1l19.9,-4.2Z" class="g2_1" />
+<path d="M681.4,642.9c0,-37.1,-63.9,-67.1,-142.6,-67.1c-78.7,0,-142.6,30,-142.6,67.1c0,37.1,63.9,67.2,142.6,67.2c78.7,0,142.6,-30.1,142.6,-67.2Z" class="g0_1" />
+<text x="505" y="621" class="s1_1">out (3)</text>
+<text x="453" y="648" class="s1_1">WORDS_INPUT</text>
+<text x="512" y="674" class="s1_1">in (3)</text>
+<path d="M523.2,576.1c-4,-16.3,-8.2,-33.9,-12.3,-51" class="g1_1" />
+<path d="M504.3,526.6l2.1,-20.3l11,17.1Z" class="g2_1" />
+<path d="M323.2,846.8c0,-37.1,-54.4,-67.1,-121.4,-67.1c-67.1,0,-121.5,30,-121.5,67.1c0,37.1,54.4,67.1,121.5,67.1c67,0,121.4,-30,121.4,-67.1Z" class="g0_1" />
+<text x="168" y="825" class="s1_1">out (2)</text>
+<text x="131" y="851" dx="0,-1.7,0,0,0,0,0,0,0,0" class="s1_1">TASK_INPUT</text>
+<text x="175" y="878" class="s1_1">in (2)</text>
+<path d="M201.8,779.4c0,-15.7,0,-32.8,0,-49.2" class="g1_1" />
+<path d="M195,729.7l6.8,-19.2l6.7,19.2Z" class="g2_1" />
+
+
+<!-- Any embedded fonts defined here -->
+<style type="text/css" ><![CDATA[
+
+@font-face {
+	font-family: ArialMT_8;
+	src: url("fonts/ArialMT_8.woff") format("woff");
+}
+
+]]></style>
+
+</svg>
