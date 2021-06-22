@@ -34,11 +34,12 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import \
-    FunctionError, is_function_type, EPSILON
-from psyneulink.core.components.functions.objectivefunctions import Distance
-from psyneulink.core.components.functions.selectionfunctions import OneHot
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import StatefulFunction
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, is_function_type, EPSILON,
+)
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
+from psyneulink.core.components.functions.stateful.integratorfunctions import StatefulFunction
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
@@ -47,7 +48,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import \
-    all_within_range, convert_to_np_array, get_global_seed, convert_to_list, convert_all_elements_to_np_array
+    all_within_range, convert_to_np_array, convert_to_list, convert_all_elements_to_np_array
 
 __all__ = ['MemoryFunction', 'Buffer', 'DictionaryMemory', 'ContentAddressableMemory', 'RETRIEVAL_PROB', 'STORAGE_PROB']
 
@@ -407,7 +408,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
     1d arrays (see `EpisodicMemoryMechanism_Memory_Fields`). An entry can have an arbitrary number of fields, and
     each field can have an arbitrary length.  However, all entries must have the same number of fields, and the
     corresponding fields must all have the same length across entries.  Fields can be weighted to determine the
-    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` `Parameter`
+    influence they have on retrieval, using the `distance_field_weights <ContentAddressableMemory.memory>` parameter
     (see `retrieval <ContentAddressableMemory_Retrieval>` below).
 
     .. hint::
@@ -617,7 +618,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
     The **distance_field_weights** argument can be used to differentially weight memory fields to modify their
     influence on retrieval (see `distance_field_weights <ContentAddressableMemory_Distance_Field_Weights>`).  For
-    example, this can be used to configure the Function as dictionary, using the first field for keys (on which
+    example, this can be used to configure the Function as a dictionary, using the first field for keys (on which
     retrieval is based) and the second for values (that are retrieved with a matching key), as follows:
 
         >>> c = ContentAddressableMemory(initializer=[[[1,2],[3,4]],
@@ -1092,7 +1093,8 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
@@ -1177,10 +1179,6 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
                  owner=None,
                  prefs:tc.optional(is_pref_set)=None):
 
-        if seed is None:
-            seed = get_global_seed()
-        random_state = np.random.RandomState([seed])
-
         self._memory = []
 
         super().__init__(
@@ -1196,7 +1194,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             rate=rate,
             noise=noise,
             max_entries=max_entries,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2155,7 +2153,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         rate = Parameter(1.0, modulable=True)
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
@@ -2182,10 +2181,6 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         if initializer is None:
             initializer = []
 
-        if seed is None:
-            seed = get_global_seed()
-        random_state = np.random.RandomState([seed])
-
         self._memory = []
 
         super().__init__(
@@ -2198,7 +2193,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             rate=rate,
             noise=noise,
             max_entries=max_entries,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,

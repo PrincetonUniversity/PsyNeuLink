@@ -1,6 +1,5 @@
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.compositions.composition import NodeRole
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic, ReLU
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core import llvm as pnlvm
 from psyneulink.library.compositions.compiledoptimizer import AdamOptimizer, SGDOptimizer

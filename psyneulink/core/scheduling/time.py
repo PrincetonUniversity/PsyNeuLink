@@ -26,6 +26,8 @@ import enum
 import functools
 import types
 
+import psyneulink as pnl
+
 __all__ = [
     'Clock', 'TimeScale', 'Time', 'SimpleTime', 'TimeHistoryTree', 'TimeScaleError'
 ]
@@ -114,10 +116,13 @@ class Clock:
     ----------
         history : `TimeHistoryTree`
             a root `TimeHistoryTree` associated with this Clock
+
+        simple_time : `SimpleTime`
+            the current time in simple format
     """
     def __init__(self):
         self.history = TimeHistoryTree()
-        self._simple_time = SimpleTime()
+        self.simple_time = SimpleTime(self.time)
 
     def __repr__(self):
         return 'Clock({0})'.format(self.time.__repr__())
@@ -178,16 +183,6 @@ class Clock:
         return self.history.current_time
 
     @property
-    def simple_time(self):
-        """
-        the current time in simple format : `SimpleTime`
-        """
-        self._simple_time.run = self.time.run
-        self._simple_time.trial = self.time.trial
-        self._simple_time.time_step = self.time.time_step
-        return self._simple_time
-
-    @property
     def previous_time(self):
         """
         the time that has occurred last : `Time`
@@ -216,6 +211,18 @@ class Time(types.SimpleNamespace):
         time_step : int : 0
             the `TimeScale.TIME_STEP` value
 
+        absolute : ``pint.Quantity`` : 0ms
+            the absolute time value
+
+        absolute_interval : ``pint.Quantity`` : 1ms
+            the interval between units of absolute time
+
+        absolute_time_unit_scale : `TimeScale` : TimeScale.TIME_STEP
+            the `TimeScale` that corresponds to an interval of absolute time
+
+        absolute_enabled : bool : False
+            whether absolute time is used for this Time object
+
     """
     _time_scale_attr_map = {
         TimeScale.TIME_STEP: 'time_step',
@@ -225,8 +232,33 @@ class Time(types.SimpleNamespace):
         TimeScale.LIFE: 'life'
     }
 
-    def __init__(self, time_step=0, pass_=0, trial=0, run=0, life=0):
-        super().__init__(time_step=time_step, pass_=pass_, trial=trial, run=run, life=life)
+    def __init__(
+        self,
+        time_step=0,
+        pass_=0,
+        trial=0,
+        run=0,
+        life=0,
+        absolute=0 * pnl._unit_registry.ms,
+        absolute_interval=1 * pnl._unit_registry.ms,
+        absolute_time_unit_scale=TimeScale.TIME_STEP,
+        absolute_enabled=False,
+    ):
+        super().__init__(
+            time_step=time_step,
+            pass_=pass_,
+            trial=trial,
+            run=run,
+            life=life,
+            absolute=0 * pnl._unit_registry.ms,
+            absolute_interval=1 * pnl._unit_registry.ms,
+            absolute_time_unit_scale=TimeScale.TIME_STEP,
+            absolute_enabled=False,
+        )
+
+    def __repr__(self):
+        abs_str = f'{self.absolute}, ' if self.absolute_enabled else ''
+        return f'Time({abs_str}run: {self.run}, trial: {self.trial}, pass: {self.pass_}, time_step: {self.time_step})'
 
     def _get_by_time_scale(self, time_scale):
         """
@@ -259,13 +291,27 @@ class Time(types.SimpleNamespace):
         self._set_by_time_scale(time_scale, self._get_by_time_scale(time_scale) + 1)
         self._reset_by_time_scale(time_scale)
 
+        if (
+            self.absolute_enabled
+            and time_scale is self.absolute_time_unit_scale
+        ):
+            self.absolute += self.absolute_interval
+            if (
+                self.absolute_interval < 1 * self.absolute.u
+                and isinstance(self.absolute.m, float)
+            ):
+                # only round for floating point interval increases,
+                # until pint fixes precision errors
+                # see https://github.com/hgrecco/pint/issues/1263
+                self.absolute = round(self.absolute, pnl._unit_registry.precision)
+
     def _reset_by_time_scale(self, time_scale):
         """
         Resets all the times for the time scale scope up to **time_scale**
         e.g. _reset_by_time_scale(TimeScale.TRIAL) will set the values for
         TimeScale.PASS and TimeScale.TIME_STEP to 0
         """
-        for relative_time_scale in TimeScale:
+        for relative_time_scale in sorted(self._time_scale_attr_map):
             # this works because the enum is set so that higher granularities of time have lower values
             if relative_time_scale >= time_scale:
                 continue
@@ -273,18 +319,35 @@ class Time(types.SimpleNamespace):
             self._set_by_time_scale(relative_time_scale, 0)
 
 
-class SimpleTime(types.SimpleNamespace):
+class SimpleTime:
     """
     A subset class of `Time`, used to provide simple access to only
     `run <Time.run>`, `trial <Time.trial>`, and `time_step <Time.time_step>`
     """
-    def __init__(self, run=0, trial=0, time_step=0):
-        super().__init__(run=0, trial=0, time_step=0)
+    def __init__(self, time_ref):
+        self._time_ref = time_ref
 
     # override __repr__ because this class is used only for cosmetic simplicity
     # based on a Time object
     def __repr__(self):
-        return 'Time(run: {0}, trial: {1}, time_step: {2})'.format(self.run, self.trial, self.time_step)
+        abs_str = f'{self.absolute}, ' if self._time_ref.absolute_enabled else ''
+        return f'Time({abs_str}run: {self.run}, trial: {self.trial}, time_step: {self.time_step})'
+
+    @property
+    def absolute(self):
+        return self._time_ref.absolute
+
+    @property
+    def run(self):
+        return self._time_ref.run
+
+    @property
+    def trial(self):
+        return self._time_ref.trial
+
+    @property
+    def time_step(self):
+        return self._time_ref.time_step
 
 
 class TimeHistoryTree:

@@ -1,0 +1,213 @@
+name: Test PNL pre-release
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  create-python-dist:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Python version in matrix for easier reference
+        python-version: [3.8]
+    if: ${{ github.event.release.prerelease == true }}
+    outputs:
+      sdist: ${{ steps.create_dist.outputs.sdist }}
+      wheel: ${{ steps.create_dist.outputs.wheel }}
+    steps:
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2.2.2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Get release tarball
+      id: get_release
+      shell: bash
+      run: |
+        wget ${{ github.event.release.tarball_url }} -O psyneulink.tar.gz
+        export RELEASE_DIR=$(tar -tzf psyneulink.tar.gz | head -n1)
+        echo ::set-output name=release_dir::$RELEASE_DIR
+        tar -xzvf psyneulink.tar.gz
+
+
+    - name: Create Python Dist files
+      id: create_dist
+      shell: bash
+      run: |
+        cd ${{ steps.get_release.outputs.release_dir }}
+        # We don't care about the python version used.
+        pip install setuptools wheel
+        python setup.py sdist
+        python setup.py bdist_wheel
+        cd dist
+        echo ::set-output name=sdist::$(ls *.tar.gz)
+        echo ::set-output name=wheel::$(ls *.whl)
+
+    - name: Upload Python dist files
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        name: Python-dist-files
+        retention-days: 1
+        path: ${{ steps.get_release.outputs.release_dir }}/dist
+
+    - name: Upload dist files to test PyPI
+      shell: bash
+      run: |
+        # Include implicit dependency on setuptools{,-rust} and preinstall wheel
+        pip install setuptools setuptools-rust wheel
+        pip install twine
+        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
+        # environment variables
+        # It's not possibel to condition steps on env or secrets,
+        # We need an explicit check here
+        if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
+          twine upload dist/*
+        else
+          echo "::warning::Not uploading to test PyPI, no credentials available!"
+        fi
+      env:
+        TWINE_USERNAME: ${{ secrets.TWINE_TEST_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_TEST_PASSWORD }}
+        TWINE_REPOSITORY: ${{ secrets.TWINE_TEST_REPOSITORY }}
+
+
+  test-release:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        dist: [wheel, sdist]
+
+    runs-on: ${{ matrix.os }}
+    needs: [create-python-dist]
+    if: ${{ github.event.release.prerelease == true }}
+
+    steps:
+
+    - name: Get release tarball
+      id: get_release
+      shell: bash
+      run: |
+        curl -L --retry 5 ${{ github.event.release.tarball_url }} --output psyneulink.tar.gz
+        export RELEASE_DIR=$(tar -tzf psyneulink.tar.gz | head -n1)
+        echo ::set-output name=release_dir::$RELEASE_DIR
+        tar -xzvf psyneulink.tar.gz
+
+    - name: Download dist files
+      uses: actions/download-artifact@v2
+      with:
+        name: Python-dist-files
+        path: dist/
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2.2.2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    # The installation _could_ reuse the 'install-pnl' action,
+    # but we intentionally avoid workarounds in there.
+    - name: MacOS dependencies
+      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
+      if: startsWith(runner.os, 'macOS')
+
+    - name: Linux dependencies
+      run: sudo apt-get install -y graphviz
+      if: startsWith(runner.os, 'Linux')
+
+    - name: Windows dependencies
+      run: choco install --no-progress -y graphviz --version=2.38.0.20190211
+      if: startsWith(runner.os, 'Windows')
+
+    - name: Install wheel
+      shell: bash
+      if: matrix.dist == 'wheel'
+      run: pip install dist/${{ needs.create-python-dist.outputs.wheel }}[dev]
+
+    - name: Install sdist
+      shell: bash
+      if: matrix.dist == 'sdist'
+      run: pip install dist/${{ needs.create-python-dist.outputs.sdist }}[dev]
+
+    - name: Run tests
+      # run only tests/. We don't care about codestyle/docstyle at this point
+      timeout-minutes: 80
+      run: |
+        # Enter the PNL directory otherwise docstyle won't pick up the configuration
+        cd ${{ steps.get_release.outputs.release_dir }}
+        pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2 tests
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v2.2.4
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: ${{ steps.get_release.outputs.release_dir }}/tests_out.xml
+        retention-days: 30
+      if: success() || failure()
+
+
+  publish-release:
+    runs-on: ubuntu-latest
+    needs: [create-python-dist, test-release]
+    if: ${{ github.event.release.prerelease == true }}
+
+    steps:
+    - name: Download dist files
+      uses: actions/download-artifact@v2
+      with:
+        name: Python-dist-files
+        path: dist/
+
+    - name: Upload dist files to PyPI
+      shell: bash
+      run: |
+        # Include implicit dependency on setuptools{,-rust} and preinstall wheel
+        pip3 install --user setuptools setuptools-rust wheel
+        pip3 install --user twine
+        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
+        # environment variables
+        # It's not possibel to condition steps on env or secrets,
+        # We need an explicit check here
+        if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
+          twine upload dist/*
+        else
+          echo "::warning::Not uploading to PyPI, no credentials available!"
+        fi
+      env:
+        TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+
+    - name: Upload dist files to release
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const fs = require('fs')
+
+          // Determine content-length for header to upload asset
+          for (asset of ['${{ needs.create-python-dist.outputs.wheel }}', '${{ needs.create-python-dist.outputs.sdist }}']) {
+            const file_path = 'dist/' + asset;
+            const file_size = file_path => fs.statSync(file_path).size;
+            console.log('Uploading: ' + file_path);
+
+            // Setup headers for API call, see Octokit Documentation:
+            // https://octokit.github.io/rest.js/#octokit-routes-repos-upload-release-asset for more information
+            const headers = { 'content-type': 'application/zip', 'content-length': file_size(file_path) };
+
+            // Upload a release asset
+            const uploadAssetResponse = await github.repos.uploadReleaseAsset({
+              url: '${{ github.event.release.upload_url }}',
+              headers,
+              name: asset,
+              file: fs.readFileSync(file_path)
+            });
+          }
+
+          // Bump to full release
+          const uploadAssetResponse = await github.repos.updateRelease({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ github.event.release.id }},
+            prerelease: false
+          });

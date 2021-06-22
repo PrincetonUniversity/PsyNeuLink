@@ -1,6 +1,6 @@
-import pytest
 import doctest
 
+import pytest
 
 import psyneulink as pnl
 
@@ -19,8 +19,7 @@ import psyneulink as pnl
                                  pnl.core.components.mechanisms.modulatory.control.controlmechanism,
                                  # Functions
                                  pnl.core.components.functions.function,
-                                 pnl.core.components.functions.statefulfunctions.memoryfunctions
-
+                                 pnl.core.components.functions.stateful.memoryfunctions
                                 ])
 def test_core_docs(mod, capsys):
     fail, total = doctest.testmod(mod)

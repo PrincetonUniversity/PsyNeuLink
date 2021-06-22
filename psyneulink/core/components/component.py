@@ -81,8 +81,9 @@ Component Structure
 *Core Structural Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
-user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
+Every Component has the following set of core structural attributes that can be specified in its constructor using the
+arguments listed below. These attributes are not meant to be changed by the user once the component is constructed,
+with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Type:
 
@@ -96,7 +97,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
   used when the Component is executed and no input is provided), and takes precedence over the specification of `size
   <Component_Size>`.
 
-  .. note::
+  .. technical_note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
     The attribute is maintained as a way for the user to monitor variable along the execution chain.
     During parallelization however, the attribute may not accurately represent the most current value of variable
@@ -109,6 +110,12 @@ user once the component is constructed, with the one exception of `prefs <Compon
   attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
   setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
   to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
+
+  .. note::
+     The size attribute serves a role similar to
+     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
+     size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
+     that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
 .. _Component_Function:
 
@@ -486,7 +493,6 @@ COMMENT
 import base64
 import collections
 import copy
-import dill
 import functools
 import inspect
 import itertools
@@ -494,11 +500,11 @@ import logging
 import numbers
 import types
 import warnings
-
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
 
+import dill
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
@@ -514,19 +520,19 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
-    PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
+    PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
     get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len
 from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.time import Time, TimeScale
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -3012,7 +3018,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             values on the component, depending on the component type.  Otherwise, it simply reassigns the Component's
             value based on its default_variable.
         """
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
             new_value = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
@@ -3115,6 +3121,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     self.parameter_ports.parameter_mapping[param_port.source] = param_port
                 except TypeError:
                     pass
+                param_port.source._port = param_port
 
     def _get_current_parameter_value(self, parameter, context=None):
         from psyneulink.core.components.ports.parameterport import ParameterPortError
@@ -3277,7 +3284,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # MODIFIED 9/22/19 END
 
     def _get_current_execution_time(self, context):
-        from psyneulink.core.globals.context import _get_context
         return _get_time(self, context=context)
 
     def _update_current_execution_time(self, context):
@@ -3514,7 +3520,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
         from psyneulink.core.components.ports.parameterport import ParameterPortError
-        from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 
         def parse_parameter_value(value):
             if isinstance(value, (list, tuple)):

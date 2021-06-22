@@ -1,3 +1,4 @@
+import psyneulink as pnl
 import pytest
 
 
@@ -21,3 +22,15 @@ def setify_expected_output(expected_output):
             except TypeError:
                 expected_output[i] = set([expected_output[i]])
     return expected_output
+
+
+@pytest.fixture
+def three_node_linear_composition():
+    A = pnl.TransferMechanism(name='A')
+    B = pnl.TransferMechanism(name='B')
+    C = pnl.TransferMechanism(name='C')
+
+    comp = pnl.Composition()
+    comp.add_linear_processing_pathway([A, B, C])
+
+    return comp.nodes, comp

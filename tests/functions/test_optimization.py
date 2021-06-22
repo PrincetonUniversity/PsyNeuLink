@@ -1,8 +1,8 @@
 import numpy as np
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.function as Function
-import psyneulink.core.components.functions.objectivefunctions as Functions
-import psyneulink.core.components.functions.optimizationfunctions as OPTFunctions
+import psyneulink.core.components.functions.nonstateful.objectivefunctions as Functions
+import psyneulink.core.components.functions.nonstateful.optimizationfunctions as OPTFunctions
 import psyneulink.core.globals.keywords as kw
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 import pytest
@@ -80,14 +80,7 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
                                 search_space=search_space, direction=direction,
                                 select_randomly_from_optimal_values=(selection=='RANDOM'),
                                 seed=0)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = EX(variable)
 
@@ -98,4 +91,4 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
         assert np.allclose(res[3], result[3])
 
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(EX, variable)

@@ -3,15 +3,15 @@ import pytest
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.learningfunctions import Hebbian, Reinforcement, TDLearning
-from psyneulink.core.components.functions.objectivefunctions import Stability, Distance
-from psyneulink.core.components.functions.distributionfunctions import NormalDist, ExponentialDist, \
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian, Reinforcement, TDLearning
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist, ExponentialDist, \
     UniformDist, GammaDist, WaldDist, DriftDiffusionAnalytical
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import SimpleIntegrator, \
+from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator, \
     AdaptiveIntegrator, DriftDiffusionIntegrator, OrnsteinUhlenbeckIntegrator, FitzHughNagumoIntegrator, \
     AccumulatorIntegrator, DualAdaptiveIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
-from psyneulink.core.components.functions.combinationfunctions import Reduce, LinearCombination, CombineMeans
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Exponential, Logistic, SoftMax, LinearMatrix
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce, LinearCombination, CombineMeans
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.globals.keywords import \
     MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, \
@@ -42,12 +42,8 @@ class TestProcessingMechanismFunctions:
                              ])
     def test_processing_mechanism_default_function(self, mech_mode, variable, benchmark):
         PM = ProcessingMechanism(default_variable=[0, 0, 0, 0])
-        if mech_mode == "Python":
-            ex = PM.execute
-        elif mech_mode == "LLVM":
-            ex = pnlvm.MechExecution(PM).execute
-        elif mech_mode == "PTX":
-            ex = pnlvm.MechExecution(PM).cuda_execute
+        ex = pytest.helpers.get_mech_execution(PM, mech_mode)
+
         res = benchmark(ex, variable)
         assert np.allclose(res, [[1., 2., 3., 4.]])
 
@@ -256,14 +252,9 @@ class TestProcessingMechanismStandardOutputPorts:
         benchmark.group = "Output Port Op: {}".format(op)
         PM1 = ProcessingMechanism(default_variable=[0, 0, 0], output_ports=[op])
         var = [1, 2, 4] if op in {MEAN, MEDIAN, STANDARD_DEVIATION, VARIANCE} else [1, 2, -4]
-        if mech_mode == "Python":
-            ex = PM1.execute
-        elif mech_mode == "LLVM":
-            ex = pnlvm.MechExecution(PM1).execute
-        elif mech_mode == "PTX":
-            ex = pnlvm.MechExecution(PM1).cuda_execute
+        ex = pytest.helpers.get_mech_execution(PM1, mech_mode)
+
         res = benchmark(ex, var)
-        res = PM1.output_ports[0].value if mech_mode == "Python" else res
         assert np.allclose(res, expected)
 
     # FIXME: These variants don't compile (use UDFs)

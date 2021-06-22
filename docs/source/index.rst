@@ -68,7 +68,10 @@ It is:
 
  ..
 
- - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+ - *integrative* -- it provides a standard and accessible environment suitable for model comparison, sharing, and
+   documentation, as well the integration into "system-level" models of components responsible for disparate forms
+   of computation (for example, a neural network capable of learning with components that rely on integration and/or
+   settling dynamics for decision making).
 
  ..
 
@@ -117,7 +120,7 @@ characteristics that are often (at least in the initial stages of development) i
 interpreted vs. compiled).
 
 That said, priorities for ongoing development of PsyNeuLink are:
-    i) acceleration, using just-in-time compilation methods and parallelization;
+    i) acceleration, using just-in-time compilation methods and parallelization (see `Compilation`);
     ii) enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
         environment (examples currently exist for Pytorch and Emergent);
     iii) integration of tools for parameter estimation, model comparison and data fitting; and

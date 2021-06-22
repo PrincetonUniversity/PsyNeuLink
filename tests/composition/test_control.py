@@ -1048,6 +1048,49 @@ class TestControlMechanisms:
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(comp.results, [[[0.375]]])
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_modulation_of_random_state(self):
+        src = pnl.ProcessingMechanism()
+        mech = pnl.ProcessingMechanism(function=pnl.UniformDist())
+
+        comp = pnl.Composition(retain_old_simulation_data=True)
+        comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(src)
+
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                monitor_for_control=src,
+                control_signals=pnl.ControlSignal(
+                    modulates=('seed', mech),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=pnl.SampleSpec(start=0, stop=5, step=1),
+                )
+            )
+        )
+
+        def seed_check(context):
+            latest_sim = comp.controller.parameters.simulation_ids._get(context)[-1]
+
+            seed = mech.get_mod_seed(latest_sim)
+            rs = mech.function.parameters.random_state.get(latest_sim)
+
+            # mech (and so its function and random_state) should be called
+            # exactly twice in one trial given the specified condition,
+            # and the random_state should be reset before the first execution
+            new_rs = np.random.RandomState([int(seed)])
+
+            for i in range(2):
+                new_rs.uniform(0, 1)
+
+            assert rs.uniform(0, 1) == new_rs.uniform(0, 1)
+
+        comp.termination_processing = {pnl.TimeScale.TRIAL: pnl.AfterNCalls(mech, 2)}
+        comp.run(
+            inputs={src: [1], mech: [1]},
+            call_after_trial=seed_check
+        )
+
 
 class TestModelBasedOptimizationControlMechanisms:
     def test_ocm_default_function(self):

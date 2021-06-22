@@ -288,20 +288,20 @@ import copy
 import numpy as np
 
 from psyneulink.core.components.component import parameter_keywords
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-from psyneulink.core.components.projections.projection import ProjectionError, Projection_Base, projection_keywords
+from psyneulink.core.components.projections.projection import ProjectionError, projection_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, CONTEXT, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, FUNCTION, FUNCTION_PARAMS, \
-    HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, LEARNING, LEARNING_PROJECTION, MAPPING_PROJECTION, MATRIX, \
-    OUTPUT_PORT, PROJECTION_SENDER, VALUE
+    AUTO_ASSIGN_MATRIX, DEFAULT_MATRIX, FULL_CONNECTIVITY_MATRIX, HOLLOW_MATRIX, IDENTITY_MATRIX, INPUT_PORT, \
+    MAPPING_PROJECTION, MATRIX, \
+    OUTPUT_PORT, VALUE
 from psyneulink.core.globals.log import ContextFlags
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
     'MappingError', 'MappingProjection',

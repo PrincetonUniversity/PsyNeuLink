@@ -1084,7 +1084,7 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -2220,9 +2220,8 @@ class Mechanism_Base(Mechanism):
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
         effectively begins the function's accumulation over again at the specified value, and updates related
-        attributes on the mechanism.  It also clears the
-        `value <Mechanism.value>` `history <Parameter.history`, thus
-        effectively setting the previous value to ``None``.
+        attributes on the mechanism.  It also clears the `value <Mechanism_Base.value>` `history <Parameter.history>`,
+        thus effectively setting the previous value to ``None``.
 
         If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reset
         <Mechanism_Base.reset>` method:
@@ -2262,8 +2261,8 @@ class Mechanism_Base(Mechanism):
                 functions for details on their `stateful_attributes <IntegratorFunction.stateful_attributes>`,
                 as well as other reinitialization steps that the reset method may carry out.
         """
-        from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports
@@ -2272,6 +2271,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
+        # FIX: SHOULD MOVE ALL OF THIS TO TransferMechanism SINCE NO OTHER MECH TYPES HAVE integrator_funtions/modes
         # If the mechanism has an auxiliary integrator function:
         # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
@@ -2293,9 +2293,12 @@ class Mechanism_Base(Mechanism):
                 self._update_output_ports(context=context)
 
             elif hasattr(self, "integrator_mode"):
-                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reset. "
-                                         f"If it should be stateful, try setting the integrator_mode argument to True.")
+                # raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                #                      f"is not stateful; it does not have an integrator to reset. "
+                #                      f"If it should be stateful, try setting the integrator_mode argument to True.")
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because its `integrator_mode` parameter "
+                                    f"is currently set to 'False'; try setting it to 'True'.")
+
             else:
                 raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
                                      f"is not stateful; it does not have an integrator to reset.")

@@ -112,6 +112,12 @@ Pseudocode::
 Execution
 ---------
 
+.. note::
+    This section covers normal scheduler execution
+    (`Scheduler.mode = SchedulingMode.STANDARD`). See
+    `Scheduler_Exact_Time` below for a description of
+    `exact time mode <SchedulingMode.EXACT_TIME>`.
+
 When a Scheduler is run, it provides a set of Components that should be run next, based on their dependencies in the
 Composition or graph specification dictionary, and any `Conditions <Condition>`, specified in the Scheduler's
 constructor. For each call to the `run <Scheduler.run>` method, the Scheduler sequentially evaluates its
@@ -180,6 +186,74 @@ running a Composition, by passing a dictionary mapping `TimeScales <TimeScale>` 
         ...,
         termination_processing={TimeScale.TRIAL: WhenFinished(ddm)}
         )
+
+
+.. _Scheduler_Absolute_Time:
+
+Absolute Time
+-------------
+
+The scheduler supports scheduling of models of real-time systems in
+modes, both of which involve mapping real-time values to psyneulink
+`Time`. The default mode is is most compatible with standard PsyNeuLink
+scheduling, but can cause some unexpected behavior in certain cases
+because it is inexact. The consideration queue remains intact, but as a
+result, actions specified by fixed times of absolute-time-based
+conditions (`start <TimeInterval.start>` and `end <TimeInterval.end>` of
+`TimeInterval`, and `t` of `TimeTermination`) may not occur at exactly
+the time specified. The simplest example of this situation involves a
+linear composition with two nodes::
+
+    >>> import psyneulink as pnl
+
+    >>> A = pnl.TransferMechanism()
+    >>> B = pnl.TransferMechanism()
+
+    >>> comp = pnl.Composition()
+    >>> pway = comp.add_linear_processing_pathway([A, B])
+
+    >>> comp.scheduler.add_condition(A, pnl.TimeInterval(start=10))
+    >>> comp.scheduler.add_condition(B, pnl.TimeInterval(start=10))
+
+In standard mode, **A** and **B** are in different consideration sets,
+and so can never execute at the same time. At most one of **A** and
+**B** will start exactly at t=10ms, with the other starting at its next
+consideration after. There are many of these examples, and while it may
+be solveable in some cases, it is not a simple problem. So,
+`Exact Time Mode <Scheduler_Exact_Time>` exists as an alternative
+option for these cases, though it comes with its own drawbacks.
+
+.. note::
+    Due to issues with floating-point precision, absolute time values in
+    conditions and `Time` are limited to 8 decimal points. If more
+    precision is needed, use
+    `fractions <https://docs.python.org/3/library/fractions.html>`_,
+    where possible, or smaller units (e.g. microseconds instead of
+    milliseconds).
+
+
+.. _Scheduler_Exact_Time:
+
+Exact Time Mode
+~~~~~~~~~~~~~~~
+
+When `Scheduler.mode` is `SchedulingMode.EXACT_TIME`, the scheduler is
+capable of handling examples like the one
+`above <Scheduler_Absolute_Time>`. In this mode, all nodes in the
+scheduler's graph become members of the same consideration set, and may
+be executed at the same time for every time step, subject to the
+conditions specified. As a result, the guarantees in
+`standard scheduling <Scheduler_Execution>` may not apply - that is,
+that all parent nodes get a chance to execute before their children, and
+that there exist no data dependencies (Projections) between nodes in the
+same execution set. In exact time mode, all nodes will be in one
+[unordered] execution set. An ordering may be inferred by the original
+graph, however, using the `indices in the original consideration queue
+<Scheduler.consideration_queue_indices>`_. `Composition`\\ s will
+execute nodes in this order, however independent usages of the scheduler
+may not.  The user should be aware of this and set up defaults and
+inputs to nodes accordingly. Additionally, non-absolute conditions like
+`EveryNCalls` may behave unexpectedly in some cases.
 
 Examples
 --------
@@ -274,17 +348,24 @@ Class Reference
 
 import copy
 import datetime
+import enum
+import fractions
 import logging
+import typing
+
+import numpy as np
+import pint
+import psyneulink as pnl
 
 from toposort import toposort
 
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never, _parse_absolute_unit, _quantity_as_integer
 from psyneulink.core.scheduling.time import Clock, TimeScale
 
 __all__ = [
-    'Scheduler', 'SchedulerError',
+    'Scheduler', 'SchedulerError', 'SchedulingMode',
 ]
 
 logger = logging.getLogger(__name__)
@@ -293,6 +374,19 @@ default_termination_conds = {
     TimeScale.RUN: Never(),
     TimeScale.TRIAL: AllHaveRun(),
 }
+
+
+class SchedulingMode(enum.Enum):
+    """
+        Attributes:
+            STANDARD
+                `Standard Mode <Scheduler_Execution>`
+
+            EXACT_TIME
+                `Exact time Mode <Scheduler_Exact_Time>`
+    """
+    STANDARD = enum.auto()
+    EXACT_TIME = enum.auto()
 
 
 class SchedulerError(Exception):
@@ -324,6 +418,14 @@ class Scheduler(JSONDumpable):
         and the value of each entry must be a set of zero or more objects that project directly to the key.
         or, a `Graph`
 
+    mode : SchedulingMode[STANDARD|EXACT_TIME] : SchedulingMode.STANDARD
+        sets the mode of scheduling: `standard <Scheduler_Execution>` or
+        `exact time <Scheduler_Exact_Time>`
+
+    default_absolute_time_unit : ``pint.Quantity`` : ``1ms``
+        if not otherwise determined by any absolute **conditions**,
+        specifies the absolute duration of a `TIME_STEP`
+
     Attributes
     ----------
 
@@ -338,7 +440,22 @@ class Scheduler(JSONDumpable):
 
     termination_conds : Dict[TimeScale: Condition]
         a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
-        of the specified `TimeScale`.
+        of the specified `TimeScale`. On set, update only for the
+        `TimeScale`\\ s specified in the argument.
+
+    mode
+        sets the mode of scheduling: `standard <Scheduler_Execution>` or
+        `exact time <Scheduler_Exact_Time>`
+
+        :type: SchedulingMode
+        :default: `SchedulingMode.STANDARD`
+
+    default_absolute_time_unit
+        if not otherwise determined by any absolute **conditions**,
+        specifies the absolute duration of a `TIME_STEP`
+
+        :type: ``pint.Quantity``
+        :default: ``1ms``
 
     times : Dict[TimeScale: Dict[TimeScale: int]]
         a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
@@ -356,6 +473,8 @@ class Scheduler(JSONDumpable):
         conditions=None,
         termination_conds=default_termination_conds,
         default_execution_id=None,
+        mode: SchedulingMode = SchedulingMode.STANDARD,
+        default_absolute_time_unit: typing.Union[str, pint.Quantity] = 1 * pnl._unit_registry.ms,
         **kwargs
     ):
         """
@@ -372,6 +491,8 @@ class Scheduler(JSONDumpable):
         self._termination_conds = self.default_termination_conds.copy()
 
         self.cycle_nodes = set()
+        self.mode = mode
+        self.default_absolute_time_unit = _parse_absolute_unit(default_absolute_time_unit)
 
         if composition is not None:
             self.nodes = [vert.component for vert in composition.graph_processing.vertices]
@@ -393,8 +514,11 @@ class Scheduler(JSONDumpable):
             raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
                                  'or a graph dependency dict (kwarg graph)')
 
+        self._generate_consideration_queue_indices()
+
         self.default_execution_id = default_execution_id
         self.execution_list = {self.default_execution_id: []}
+        self.execution_timestamps = {self.default_execution_id: []}
         self.clocks = {self.default_execution_id: Clock()}
         self.counts_total = {}
         self.counts_useable = {}
@@ -407,6 +531,13 @@ class Scheduler(JSONDumpable):
     def _init_consideration_queue_from_graph(self, graph):
         self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
         self.consideration_queue = list(toposort(self.dependency_dict))
+
+    def _generate_consideration_queue_indices(self):
+        self.consideration_queue_indices = {}
+        for i, cs in enumerate(self.consideration_queue):
+            self.consideration_queue_indices.update({
+                n: i for n in cs
+            })
 
     def _init_counts(self, execution_id=None, base_execution_id=None):
         """
@@ -504,7 +635,7 @@ class Scheduler(JSONDumpable):
             node: {n: 0 for n in self.nodes} for node in self.nodes
         }
 
-    def update_termination_conditions(self, termination_conds):
+    def _combine_termination_conditions(self, termination_conds):
         termination_conds = Scheduler._parse_termination_conditions(termination_conds)
         new_conds = self.termination_conds.copy()
         new_conds.update(termination_conds)
@@ -616,7 +747,13 @@ class Scheduler(JSONDumpable):
     # Run methods
     ################################################################################
     @handle_external_context(fallback_default=True)
-    def run(self, termination_conds=None, context=None, base_context=Context(execution_id=None), skip_trial_time_increment=False):
+    def run(
+        self,
+        termination_conds=None,
+        context=None,
+        base_context=Context(execution_id=None),
+        skip_trial_time_increment=False,
+    ):
         """
         run is a python generator, that when iterated over provides the next `TIME_STEP` of
         executions at each iteration
@@ -625,10 +762,41 @@ class Scheduler(JSONDumpable):
                terminate the execution of the specified `TimeScale`
         """
         self._validate_run_state()
+
+        if self.mode is SchedulingMode.EXACT_TIME:
+            effective_consideration_queue = [set(self.nodes)]
+        else:
+            effective_consideration_queue = self.consideration_queue
+
         if termination_conds is None:
             termination_conds = self.termination_conds
         else:
-            termination_conds = self.update_termination_conditions(Scheduler._parse_termination_conditions(termination_conds))
+            termination_conds = self._combine_termination_conditions(termination_conds)
+
+        current_time = self.get_clock(context).time
+
+        in_absolute_time_mode = len(self.get_absolute_conditions(termination_conds)) > 0
+        if in_absolute_time_mode:
+            current_time.absolute_interval = self._get_absolute_time_step_unit(termination_conds)
+            # advance absolute clock time to first necessary time
+            current_time.absolute = max(
+                current_time.absolute,
+                min([
+                    min(c.absolute_fixed_points)
+                    if len(c.absolute_fixed_points) > 0 else 0
+                    for c in self.get_absolute_conditions(termination_conds).values()
+                ])
+            )
+            # convert to interval time unit to avoid pint floating point issues
+            current_time.absolute = current_time.absolute.to(current_time.absolute_interval.u)
+
+            # .to auto converts to float even if magnitude is an int, undo
+            try:
+                current_time.absolute = _quantity_as_integer(current_time.absolute)
+            except ValueError:
+                pass
+
+        current_time.absolute_enabled = in_absolute_time_mode
 
         self._init_counts(context.execution_id, base_context.execution_id)
         self._reset_counts_useable(context.execution_id)
@@ -644,14 +812,15 @@ class Scheduler(JSONDumpable):
             cur_index_consideration_queue = 0
 
             while (
-                cur_index_consideration_queue < len(self.consideration_queue)
+                cur_index_consideration_queue < len(effective_consideration_queue)
                 and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
                 and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
             ):
                 # all nodes to be added during this time step
                 cur_time_step_exec = set()
                 # the current "layer/group" of nodes that MIGHT be added during this time step
-                cur_consideration_set = self.consideration_queue[cur_index_consideration_queue]
+                cur_consideration_set = effective_consideration_queue[cur_index_consideration_queue]
+
                 try:
                     iter(cur_consideration_set)
                 except TypeError as e:
@@ -686,8 +855,12 @@ class Scheduler(JSONDumpable):
                         break
 
                 # add a new time step at each step in a pass, if the time step would not be empty
-                if len(cur_time_step_exec) >= 1:
+                if len(cur_time_step_exec) >= 1 or in_absolute_time_mode:
                     self.execution_list[context.execution_id].append(cur_time_step_exec)
+                    if in_absolute_time_mode:
+                        self.execution_timestamps[context.execution_id].append(
+                            copy.copy(current_time)
+                        )
                     yield self.execution_list[context.execution_id][-1]
 
                     self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
@@ -695,7 +868,7 @@ class Scheduler(JSONDumpable):
                 cur_index_consideration_queue += 1
 
             # if an entire pass occurs with nothing running, add an empty time step
-            if not execution_list_has_changed:
+            if not execution_list_has_changed and not in_absolute_time_mode:
                 self.execution_list[context.execution_id].append(set())
                 yield self.execution_list[context.execution_id][-1]
 
@@ -710,6 +883,57 @@ class Scheduler(JSONDumpable):
             self.date_last_run_end = datetime.datetime.now()
 
         return self.execution_list[context.execution_id]
+
+    def _increment_time(self, time_scale, context):
+        self.get_clock(context)._increment_time(time_scale)
+
+    def _get_absolute_time_step_unit(self, termination_conds=None):
+        """Computes the time length of the gap between two time steps
+        """
+        if termination_conds is None:
+            termination_conds = self.termination_conds
+
+        # all of the units of time that must occur on a time step
+        intervals = []
+        for c in self.get_absolute_conditions(termination_conds).values():
+            intervals.extend(c.absolute_intervals)
+            if self.mode is SchedulingMode.EXACT_TIME:
+                intervals.extend(c.absolute_fixed_points)
+
+        if len(intervals) == 0:
+            return self.default_absolute_time_unit
+        else:
+            min_time_unit = min(intervals, key=lambda x: x.u).u
+
+            # convert all intervals into the same unit
+            for i, a in enumerate(intervals):
+                unit_conversion = round(np.log10((1 * a.u).to(min_time_unit).m))
+                intervals[i] = (int(a.m) * 10 ** unit_conversion) * min_time_unit
+
+            # numerator is the largest possible length of a pass
+            # denominator evenly divides this length by number of time steps
+            numerator = np.gcd.reduce([interval.m for interval in intervals])
+            if self.mode == SchedulingMode.STANDARD:
+                denominator = len(self.consideration_queue)
+            elif self.mode == SchedulingMode.EXACT_TIME:
+                denominator = 1
+
+            if denominator == 1:
+                res = numerator
+            else:
+                res = fractions.Fraction(numerator=numerator, denominator=denominator)
+            return res * min_time_unit
+
+    def get_absolute_conditions(self, termination_conds=None):
+        if termination_conds is None:
+            termination_conds = self.termination_conds
+
+        return {
+            owner: cond
+            for owner, cond
+            in [*self.conditions.conditions.items(), *termination_conds.items()]
+            if cond.is_absolute
+        }
 
     @property
     def _dict_summary(self):
@@ -735,6 +959,9 @@ class Scheduler(JSONDumpable):
             try:
                 return self.clocks[context.execution_id]
             except AttributeError:
+                if context not in self.clocks:
+                    self._init_clock(context)
+
                 return self.clocks[context]
         except KeyError:
             raise
@@ -745,7 +972,24 @@ class Scheduler(JSONDumpable):
 
     @termination_conds.setter
     def termination_conds(self, termination_conds):
+        """Updates this Scheduler's base `termination conditions
+        <Scheduler.termination_conds>`_ to be used on future `run
+        <Scheduler.run>`\\ s for which termination conditions are not
+        specified.
+
+        Arguments:
+            termination_conds : dict[[TimeScale, str]: Condition]
+                the dictionary of termination Conditions to overwrite
+                the current base
+                `termination conditions <Scheduler.termination_conds>`
+        """
         if termination_conds is None:
             self._termination_conds = self.default_termination_conds.copy()
         else:
-            self._termination_conds.update(termination_conds)
+            self._termination_conds = self._combine_termination_conditions(
+                termination_conds
+            )
+
+    @property
+    def _in_exact_time_mode(self):
+        return self.mode is SchedulingMode.EXACT_TIME or len(self.consideration_queue) == 1

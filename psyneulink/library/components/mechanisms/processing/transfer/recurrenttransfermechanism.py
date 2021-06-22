@@ -157,10 +157,10 @@ of its constructor.  This transforms its input (including from the `recurrent_pr
 <RecurrentTransferMechanism.recurrent_projection>`) using the specified function and parameters (see
 `TransferMechanism_Execution`), and returns the results in its OutputPorts.  Also like a TransferMechanism,
 a RecurrentTransferMechanism can be configured to integrate its input, by setting its `integration_mode
-<TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Integration`), and to do so for a
+<TransferMechanism.integration_mode>` to True  (see `TransferMechanism_Execution_With_Integration`), and to do so for a
 single step of integration or until it reaches some termination condition each time it is executed (see
-`TransferMechanism_Termination`). Finally, it can be reset using its `reset
-<TransferMechanism.reset>` method (see `TransferMechanism_Reinitialization`).
+`TransferMechanism_Execution_Integration_Termination`). Finally, it can be reset using its `reset
+<TransferMechanism.reset>` method (see `TransferMechanism_Execution_Integration_Reinitialization`).
 
 .. _RecurrentTransferMechanism_Execution_Learning:
 
@@ -183,30 +183,30 @@ Class Reference
 import copy
 import itertools
 import numbers
-import numpy as np
-import typecheck as tc
 import types
 import warnings
-
 from collections.abc import Iterable
+
+import numpy as np
+import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import _get_parametervalue_attr
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import Function, get_matrix, is_function_type
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AdaptiveIntegrator
-from psyneulink.core.components.functions.learningfunctions import Hebbian
-from psyneulink.core.components.functions.objectivefunctions import Stability
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Hebbian
+from psyneulink.core.components.functions.nonstateful.objectivefunctions import Stability
+from psyneulink.core.components.functions.stateful.integratorfunctions import AdaptiveIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     ACTIVATION_INPUT, LEARNING_SIGNAL, LearningMechanism
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
-from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import _instantiate_port
+from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     AUTO, ENERGY, ENTROPY, HETERO, HOLLOW_MATRIX, INPUT_PORT, MATRIX, NAME, RECURRENT_TRANSFER_MECHANISM, RESULT

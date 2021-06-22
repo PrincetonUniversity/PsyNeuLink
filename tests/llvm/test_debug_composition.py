@@ -4,7 +4,7 @@ import pytest
 from itertools import combinations
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition

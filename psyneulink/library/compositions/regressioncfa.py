@@ -77,7 +77,7 @@ import typecheck as tc
 from enum import Enum
 from itertools import product
 
-from psyneulink.core.components.functions.learningfunctions import BayesGLM
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BayesGLM
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator

@@ -1,35 +1,64 @@
 name: PsyNeuLink Docs CI
 
-on: push
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+    tags:
+      - 'v*'
+  pull_request:
 
 jobs:
   docs-build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
+      # Matrix setup is a hacky way to include 'base' build in pull requests
+      # The entire matrix is set up and 'base' builds are pruned based
+      # on event name and final configuration (ubuntu, python3.7).
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
         python-architecture: ['x64']
         os: [ubuntu-latest, macos-latest, windows-latest]
+        event:
+          - ${{ github.event_name }}
+        pnl-version: ['head', 'base']
+        exclude:
+          - event: 'push'
+            pnl-version: 'base'
+          - os: macos-latest
+            pnl-version: 'base'
+          - os: windows-latest
+            pnl-version: 'base'
+          - python-version: 3.8
+            pnl-version: 'base'
+          - python-version: 3.9
+            pnl-version: 'base'
 
     outputs:
-      on_master: ${{ steps.on_master.outputs.on_master }}
+      on_master: ${{ steps.on_master.outputs.on-branch }}
 
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.4
+      if: ${{ matrix.pnl-version == 'head' }}
       with:
-        fetch-depth: 0
+        fetch-depth: 10
+        ref: ${{ github.ref }}
+
+    - name: Checkout pull base
+      uses: actions/checkout@v2.3.4
+      if: ${{ matrix.pnl-version == 'base' }}
+      with:
+        fetch-depth: 10
+        ref: ${{ github.base_ref }}
 
     - name: Check if on master
+      if: ${{ github.event_name == 'push' }}
       id: on_master
-      shell: bash
-      run: |
-        git branch -a --contains $GITHUB_REF
-        git describe --always --tags
-        export ON_MASTER=$(git branch -a --contains $GITHUB_REF | grep -q '^  remotes/origin/master$' && echo "master" || echo "")
-        echo "Found out: ${ON_MASTER}"
-        echo ::set-output name=on_master::$ON_MASTER
+      uses: ./.github/actions/on-branch
+      with:
+        branch: master
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2.2.2
@@ -46,47 +75,31 @@ jobs:
         echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
 
     - name: Wheels cache
-      uses: actions/cache@v2.1.5
+      uses: actions/cache@v2.1.6
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
         restore-keys: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2
 
-    - name: MacOS dependencies
-      run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
-      if: startsWith(runner.os, 'macOS')
+    # We need to install all PNL deps since docs config imports psyneulink module
+    - name: Install local, editable PNL package
+      uses: ./.github/actions/install-pnl
+      with:
+        features: 'doc'
 
-    - name: Linux dependencies
-      run: sudo apt-get install -y graphviz
-      if: startsWith(runner.os, 'Linux')
-
-    - name: Windows dependencies
-      run: choco install --no-progress -y graphviz --version=2.38.0.20190211
-      if: startsWith(runner.os, 'Windows')
-
-    - name: Shared dependencies
-      shell: bash
-      run: |
-        # explicitly install numpy (https://github.com/pypa/pip/issues/9239)
-        python -m pip install --upgrade pip wheel $(grep numpy requirements.txt)
-        pip install -e .[doc]
-
-    - name: Windows pytorch
-      shell: bash
-      run: |
-        pip install $(grep -o 'torch[0-9<=\.]*' requirements.txt) -f https://download.pytorch.org/whl/cpu/torch_stable.html
-      if: startsWith(runner.os, 'Windows') && matrix.python-architecture != 'x86'
-
-    - name: Cleanup old wheels
-      uses: ./.github/actions/cleanup-pip-cache
+    - name: Add git tag
+      # The generated docs include PNL version,
+      # set it to a fixed value to prevent polluting the diff
+      if: ${{ github.event_name == 'pull_request' }}
+      run: git tag 'v999.999.999.999'
 
     - name: Build Documentation
-      run: sphinx-build -b html -aE docs/source pnl-html
+      run: sphinx-build -b html -aE -j auto docs/source pnl-html
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v2.2.3
+      uses: actions/upload-artifact@v2.2.4
       with:
-        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
         path: pnl-html
 
@@ -99,18 +112,23 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     needs: [docs-build]
-    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs' || (contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master'))
+    if: github.event_name == 'push' &&
+        (github.ref == 'refs/heads/master' ||
+         github.ref == 'refs/heads/devel' ||
+         github.ref == 'refs/heads/docs' ||
+         (startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master'))
+        )
 
     steps:
     - name: Checkout docs
-      uses: actions/checkout@v2
+      uses: actions/checkout@v2.3.4
       with:
         ref: gh-pages
 
     - name: Download branch docs
       uses: actions/download-artifact@v2
       with:
-        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         path: _built_docs/${{ github.ref }}
       if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/devel' || github.ref == 'refs/heads/docs'
 
@@ -127,16 +145,16 @@ jobs:
     - name: Download main docs
       uses: actions/download-artifact@v2
       with:
-        name: Documentation-${{ matrix.os }}-${{ matrix.python-version }}-x64
+        name: Documentation-head-${{ matrix.os }}-${{ matrix.python-version }}-x64
         # This overwrites files in current directory
-      if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+      if: startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master')
 
     - name: Update main docs
       shell: bash
       run: |
         # Remove '.doctrees'
         rm -rf ".doctrees"
-      if: contains(github.ref, 'tags') && contains(needs.*.outputs.on_master, 'master')
+      if: startsWith(github.ref, 'refs/tags/') && contains(needs.*.outputs.on_master, 'master')
 
     - name: Commit docs changes
       shell: bash

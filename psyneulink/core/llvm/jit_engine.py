@@ -9,32 +9,32 @@
 # ********************************************* LLVM bindings **************************************************************
 
 from llvmlite import binding
+import warnings
 
 from .builder_context import LLVMBuilderContext, _find_llvm_function, _gen_cuda_kernel_wrapper_module
 from .builtins import _generate_cpu_builtins_module
 from .debug import debug_env
 
 try:
-    if "cuda" in debug_env:
-        import pycuda
-        # Do not continue if the version is too old
-        if pycuda.VERSION[0] >= 2018:
-            import pycuda.driver
-            # pyCUDA needs to be built against 5.5+ to enable Linker
-            if pycuda.driver.get_version()[0] > 5:
-                from pycuda import autoinit as pycuda_default
-                import pycuda.compiler
-                assert pycuda_default.context is not None
-                pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
-                ptx_enabled = True
-            else:
-                raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
-        else:
-            raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
-    else:
-        ptx_enabled = False
+    import pycuda
+    # Do not continue if the version is too old
+    if pycuda.VERSION[0] < 2018:
+        raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+    import pycuda.driver
+    # pyCUDA needs to be built against 6+ to enable Linker
+    if pycuda.driver.get_version()[0] < 6:
+        raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+
+    from pycuda import autoinit as pycuda_default
+    import pycuda.compiler
+    assert pycuda_default.context is not None
+    pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+    ptx_enabled = True
+    if "cuda-check" in debug_env:
+        print("PsyNeuLink: CUDA backend enabled!")
 except Exception as e:
-    print("WARNING: Failed to enable CUDA/PTX:", e)
+    if "cuda-check" in debug_env:
+        warnings.warn("Failed to enable CUDA/PTX: {}".format(e))
     ptx_enabled = False
 
 
@@ -102,10 +102,8 @@ def _ptx_jit_constructor():
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
-    __pass_manager_builder.loop_vectorize = True
-    __pass_manager_builder.slp_vectorize = True
-    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+    __pass_manager_builder.opt_level = 1  # Basic optimizations
+    __pass_manager_builder.size_level = 1  # asic size optimizations
 
     # Use default device
     # TODO: Add support for multiple devices
@@ -113,11 +111,11 @@ def _ptx_jit_constructor():
     __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
     # Create compilation target, use 64bit triple
     __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
-    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=3, codemodel='small')
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm)
 
     __ptx_pass_manager = binding.ModulePassManager()
     __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
-#    __pass_manager_builder.populate(__ptx_pass_manager)
+    __pass_manager_builder.populate(__ptx_pass_manager)
 
     return __ptx_pass_manager, __ptx_target_machine
 
@@ -150,6 +148,9 @@ class jit_engine:
         # Add an extra reference to make sure it's not destroyed before
         # instances of jit_engine
         self.__debug_env = debug_env
+
+        self.staged_modules = set()
+        self.compiled_modules = set()
 
         # Track few statistics:
         self.__optimized_modules = 0
@@ -216,19 +217,23 @@ class jit_engine:
 
         return self._jit_pass_manager
 
+    def stage_compilation(self, modules):
+        self.staged_modules |= modules
+
     # Unfortunately, this needs to be done for every jit_engine.
     # Liking step in opt_and_add_bin_module invalidates 'mod_bundle',
     # so it can't be linked mutliple times (in multiple engines).
-    def compile_modules(self, modules, compiled_modules):
+    def compile_staged(self):
         # Parse generated modules and link them
         mod_bundle = binding.parse_assembly("")
-        for m in modules:
+        while self.staged_modules:
+            m = self.staged_modules.pop()
             new_mod = _try_parse_module(m)
             self.__parsed_modules += 1
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
                 mod_bundle.name = m.name  # Set the name of the last module
-                compiled_modules.add(m)
+                self.compiled_modules.add(m)
 
         self.opt_and_append_bin_module(mod_bundle)
 
@@ -316,7 +321,9 @@ class ptx_jit_engine(jit_engine):
         if kernel is None:
             function = _find_llvm_function(name)
             wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
-            self.compile_modules([wrapper_mod], set())
+            self.stage_compilation({wrapper_mod})
+            self.compile_staged()
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
-        kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+
         return kernel

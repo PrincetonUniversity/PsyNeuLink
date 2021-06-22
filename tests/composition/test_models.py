@@ -1,16 +1,16 @@
 import numpy as np
 import psyneulink as pnl
 
-import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 import psyneulink.core.globals.utilities
 
 class TestModels:
 
     def test_DDM(self):
         myMechanism = pnl.DDM(
-            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(10.0),
                 starting_point=0.0,
@@ -19,14 +19,14 @@ class TestModels:
         )
 
         myMechanism_2 = pnl.DDM(
-            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=2.0,
                 threshold=20.0),
             name='My_DDM_2'
         )
 
         myMechanism_3 = pnl.DDM(
-            function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+            function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=3.0,
                 threshold=30.0
             ),
@@ -65,16 +65,16 @@ class TestModels:
 
         #  colors: ('red', 'green'), words: ('RED','GREEN')
         colors_input_layer = pnl.TransferMechanism(size=2,
-                                                   function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                                    name='COLORS_INPUT')
 
         words_input_layer = pnl.TransferMechanism(size=2,
-                                                  function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                                  function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                                   name='WORDS_INPUT')
 
         #   Task layer, tasks: ('name the color', 'read the word')
         task_layer = pnl.TransferMechanism(size=2,
-                                           function=psyneulink.core.components.functions.transferfunctions.Linear,
+                                           function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                                            name='TASK')
 
         #   HIDDEN LAYER UNITS
@@ -85,11 +85,11 @@ class TestModels:
         #   time averaging = integration_rate = 0.1
         unit_noise = 0.005
         colors_hidden_layer = pnl.TransferMechanism(size=2,
-                                                    function=psyneulink.core.components.functions.transferfunctions
+                                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions
                                                     .Logistic(gain=1.0, x_0=4.0),
                                                     # should be able to get same result with offset = -4.0
                                                     integrator_mode=True,
-                                                    noise=psyneulink.core.components.functions.distributionfunctions
+                                                    noise=psyneulink.core.components.functions.nonstateful.distributionfunctions
                                                     .NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                     integration_rate=0.1,
                                                     name='COLORS HIDDEN')
@@ -108,10 +108,10 @@ class TestModels:
         #   time averaging = tau = 0.1
         #   randomly distributed noise to the net input
         response_layer = pnl.TransferMechanism(size=2,
-                                               function=psyneulink.core.components.functions.transferfunctions.Logistic,
+                                               function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
                                                name='RESPONSE',
                                                integrator_mode=True,
-                                               noise=psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
+                                               noise=psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function,
                                                integration_rate=0.1)
         #   Respond red accumulator
         #   alpha = rate of evidence accumlation = 0.1
@@ -270,7 +270,7 @@ class TestModels:
             # Turn on accumulation
             switch_integrator_mode(mechanisms, True)
             # Turn on noise
-            switch_noise(mechanisms, psyneulink.core.components.functions.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
+            switch_noise(mechanisms, psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
             my_Stroop.termination_processing = {
                 pnl.TimeScale.TRIAL: pnl.While(

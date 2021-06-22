@@ -3,7 +3,7 @@ import psyneulink as pnl
 import pytest
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 
 
@@ -160,6 +160,23 @@ class TestParameterPortList:
             match='Did you want offset-function or offset-integrator_function'
         ):
             transfer_mech.parameter_ports['offset']
+
+    def test_duplicate_from_owner_class(self):
+        # no current example of duplicate modulable parameter exists on
+        # a mechanism and function, but they will
+        class NewMech(TransferMechanism):
+            class Parameters(TransferMechanism.Parameters):
+                offset = pnl.Parameter(0, modulable=True)
+
+        mech = NewMech()
+        assert mech.parameter_ports['offset-self'].source is mech.parameters.offset
+        assert mech.parameter_ports['offset-integrator_function'].source is mech.integrator_function.parameters.offset
+
+        with pytest.raises(
+            pnl.ParameterPortError,
+            match='Did you want offset-integrator_function or offset-self'
+        ):
+            mech.parameter_ports['offset']
 
     def test_duplicate_sources(self, transfer_mech):
         assert transfer_mech.parameter_ports['offset-function'].source is transfer_mech.function.parameters.offset

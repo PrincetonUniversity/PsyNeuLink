@@ -5,17 +5,16 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.components.functions.combinationfunctions import Reduce
-from psyneulink.core.components.functions.distributionfunctions import NormalDist
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import NormalDist
 from psyneulink.core.components.functions.function import FunctionError, get_matrix
-from psyneulink.core.components.functions.learningfunctions import Reinforcement
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import AccumulatorIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear, Logistic
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear, Logistic
 from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferError, TransferMechanism
 from psyneulink.core.globals.keywords import MATRIX_KEYWORD_VALUES, RANDOM_CONNECTIVITY_MATRIX, RESULT
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, VERBOSE_PREF
-from psyneulink.core.globals.utilities import UtilitiesError
 from psyneulink.core.globals.parameters import ParameterError
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -105,14 +104,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R',
             default_variable=[0, 0, 0, 0]
         )
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val1 = EX([10, 12, 0, -1])
         val2 = EX([1, 2, 3, 0])
@@ -132,14 +124,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R',
             size=4
         )
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val = benchmark(EX, [10.0, 10.0, 10.0, 10.0])
         np.testing.assert_allclose(val, [[10.0, 10.0, 10.0, 10.0]])
@@ -154,14 +139,7 @@ class TestRecurrentTransferMechanismInputs:
                                        integrator_mode=True,
                                        integration_rate=0.01,
                                        output_ports = [RESULT])
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
@@ -185,14 +163,7 @@ class TestRecurrentTransferMechanismInputs:
                                        integrator_mode=True,
                                        integrator_function=LCI,
                                        output_ports = [RESULT])
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val1 = EX([[1.0, 2.0]])
         val2 = EX([[1.0, 2.0]])
@@ -227,14 +198,7 @@ class TestRecurrentTransferMechanismInputs:
             name='R'
         )
         np.testing.assert_allclose(R.defaults.variable, [[0]])
-        if mech_mode == 'Python':
-            EX = R.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(R)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(R, mech_mode)
 
         val = EX([10])
         np.testing.assert_allclose(val, [[10.]])
@@ -1009,7 +973,6 @@ class TestRecurrentTransferMechanismReset:
         #       num_trials=2,
         #       initialize=True,
         #       initial_values={R: 0.0})
-        from psyneulink.core.scheduling.condition import AtTrialStart, AtRunStart
         C.run(inputs={R: 1.0},
               num_trials=2,
               initialize_cycle_values={R: [0.0]}

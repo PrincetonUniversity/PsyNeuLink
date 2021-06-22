@@ -29,14 +29,16 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.function import Function, Function_Base, FunctionError
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, Function, Function_Base, FunctionError,
+    _random_state_getter, _seed_setter,
+)
 from psyneulink.core.globals.keywords import \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
     MODE, ONE_HOT_FUNCTION, PARAMETER_PORT_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
-from psyneulink.core.globals.utilities import get_global_seed
 
 
 MAX_VS_NEXT = 'max_vs_next'
@@ -185,7 +187,8 @@ class OneHot(SelectionFunction):
                     :type: ``numpy.random.RandomState``
         """
         mode = Parameter(MAX_VAL, stateful=False)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -209,11 +212,6 @@ class OneHot(SelectionFunction):
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         reset_variable_shape_flexibility = False
         if mode in {PROB, PROB_INDICATOR} and default_variable is None:
             default_variable = [[0], [0]]
@@ -222,7 +220,7 @@ class OneHot(SelectionFunction):
         super().__init__(
             default_variable=default_variable,
             mode=mode,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,

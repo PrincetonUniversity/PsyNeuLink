@@ -29,7 +29,7 @@ comp2.add_projection(pnl.MappingProjection(), A, B)
 
 comp2.scheduler.add_condition_set({
     A: pnl.EveryNPasses(1),
-    B: pnl.EveryNAalls(A, 4),
+    B: pnl.EveryNCalls(A, 4),
 })
 
 comp2.termination_processing = {

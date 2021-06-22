@@ -46,9 +46,9 @@ field of a memory to be stored and used for retrieval.  By default, each `Output
 of the last retrieved memory although, as with any Mechanism, OutputPorts can be `configured in other ways
 <OutputPort_Customization>`. The full set of stored memories can be accessed from the Mechanism's `memory
 <EpisodicMemoryMechanism.memory>` attribute, which references its `function's <EpisodicMemoryMechanism.function>`
-memory `Parameter`. Other Parameters of its function (e.g., that regulate the probability of storage and/or retrieval
--- see `ContentAddressableMemory`) can be accessed and/or `modulated <ModulatorySignal_Modulation>` in the standard way
-for a Mechanism's `function <EpisodicMemoryMechanism.function>`.
+memory `Parameter <Parameters>`. Other Parameters of its function (e.g., that regulate the probability of storage
+and/or retrieval -- see `ContentAddressableMemory`) can be accessed and/or `modulated <ModulatorySignal_Modulation>`
+in the standard way for a Mechanism's `function <EpisodicMemoryMechanism.function>`.
 
 At present, EpisodicMemoryMechanism supports the following two MemoryFunctions:
 
@@ -142,7 +142,8 @@ and fields can be of arbitrary length.  However, all entries must have the same 
 of corresponding fields across entries). One InputPort of the EpisodicMemoryMechanism is assigned to each field. Thus,
 fields can be used to store different types of information in each field, and to retrieve entries from memory based on
 all fields, or a weighted combination of them (as determined by the `MemoryFunction` assigned to `function
-<EpisodicMemoryMechanism.function>`).
+<EpisodicMemoryMechanism.function>`;  for example, this can be used to configure the default function,
+`ContentAddressableMemory`, as a form of `key-value dictionary <ContentAddressableMemory_Examples_Weighting_Fields>`).
 
 .. _EpisodicMemoryMechanism_Shape:
 
@@ -179,9 +180,10 @@ fields are ignored.
 ~~~~~~~~~~
 
 The default function is `ContentAddressableMemory` that can store entries with an arbitrary number of fields and
-shapes, and retrieve them based on a weighted similarity to any combination of those fields.  A `DictionaryMemory`
-can also be be assigned, that implements a more specific form of memory in which entries are made of up key-value
-pairs, and retrieved based on similarity only to the key.  A custom function can also be specified, so long as it
+shapes, and retrieve them based on a weighted similarity to any combination of those fields.  This can be configured
+as a `key-value dictionary <ContentAddressableMemory_Examples_Weighting_Fields>`, or a more specific function dedicated
+to that purpose -- `DictionaryMemory` -- can be assigned, in which entries are restricted to be key-value pairs,
+and retrieved based on similarity only to the key.  A custom function can also be specified, so long as it
 meets the following requirements:
 
     * it must accept a list or array as its first argument, the items of which are lists or arrays;
@@ -408,7 +410,7 @@ from typing import Optional, Union
 import numpy as np
 
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import \
+from psyneulink.core.components.functions.stateful.memoryfunctions import \
     DictionaryMemory, ContentAddressableMemory
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort

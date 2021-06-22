@@ -4,11 +4,10 @@ import pytest
 
 import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
+import psyneulink.core.components.functions.stateful.integratorfunctions as Functions
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.transferfunctions import Angle
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Angle
 from psyneulink.core.globals.parameters import ParameterError
-from psyneulink.core.globals.keywords import LEAK, RATE
 
 np.random.seed(0)
 SIZE=10
@@ -172,13 +171,8 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
             params.pop('dimension')
 
     f = func[0](default_variable=variable, noise=noise, **params)
+    ex = pytest.helpers.get_func_execution(f, func_mode)
 
-    if func_mode == 'Python':
-        ex = f
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f).cuda_execute
     ex(variable)
     ex(variable)
     res = ex(variable)

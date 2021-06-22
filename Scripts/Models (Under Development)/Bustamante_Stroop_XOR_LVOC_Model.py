@@ -17,19 +17,12 @@ Implements a model of the `Stroop XOR task
 using a version of the `Learned Value of Control Model
 <https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1006043&rev=2>`_
 """
-import importlib
 
 import numpy as np
 import psyneulink as pnl
-import timeit
-
-import psyneulink.core.components.functions.learningfunctions
-import psyneulink.core.components.functions.optimizationfunctions
-import psyneulink.core.components.functions.transferfunctions
 
 # from build_input import xor_dict
 from build_stimuli_VZ import xor_dict
-import csv
 
 np.random.seed(0)
 

@@ -6,12 +6,12 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
-from psyneulink.core.components.functions.optimizationfunctions import GridSearch
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
     AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import \
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -32,9 +32,9 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
     LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
-from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never
+from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
-from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -2259,6 +2259,23 @@ class TestExecutionOrder:
 
         assert np.allclose(comp1.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
+    @pytest.mark.composition
+    def test_exact_time(self):
+        A = ProcessingMechanism(name="A")
+        B = ProcessingMechanism(name="B")
+
+        comp = Composition(name="comp")
+        comp.add_linear_processing_pathway([A, B])
+
+        # these cannot run at same execution set unless in EXACT_TIME
+        comp.scheduler.add_condition(A, TimeInterval(start=1))
+        comp.scheduler.add_condition(B, TimeInterval(start=1))
+
+        comp.run(inputs={A: [1.0]}, scheduling_mode=SchedulingMode.EXACT_TIME)
+
+        assert comp.scheduler.mode == SchedulingMode.EXACT_TIME
+        assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
+        assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
 class TestGetMechanismsByRole:
 

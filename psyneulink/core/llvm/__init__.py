@@ -42,8 +42,19 @@ class ExecutionMode(enum.Flag):
     PTXExec = PTX | _Exec
 
 
-_compiled_modules: Set[ir.Module] = set()
 _binary_generation = 0
+
+
+def _compiled_modules() -> Set[ir.Module]:
+    if ptx_enabled:
+        return _cpu_engine.compiled_modules | _ptx_engine.compiled_modules
+    return _cpu_engine.compiled_modules
+
+
+def _staged_modules() -> Set[ir.Module]:
+    if ptx_enabled:
+        return _cpu_engine.staged_modules | _ptx_engine.staged_modules
+    return _cpu_engine.staged_modules
 
 
 def _llvm_build(target_generation=_binary_generation + 1):
@@ -54,11 +65,11 @@ def _llvm_build(target_generation=_binary_generation + 1):
         return
 
     if "compile" in debug_env:
-        print("COMPILING GENERATION: {} -> {}".format(_binary_generation, target_generation))
+        print("STAGING GENERATION: {} -> {}".format(_binary_generation, target_generation))
 
-    _cpu_engine.compile_modules(_modules, _compiled_modules)
+    _cpu_engine.stage_compilation(_modules)
     if ptx_enabled:
-        _ptx_engine.compile_modules(_modules, set())
+        _ptx_engine.stage_compilation(_modules)
     _modules.clear()
 
     # update binary generation
@@ -73,7 +84,9 @@ class LLVMBinaryFunction:
         self.__cuda_kernel = None
 
         # Function signature
-        f = _find_llvm_function(self.name, _compiled_modules)
+        # We could skip compilation if the function is in _compiled_models,
+        # but that happens rarely
+        f = _find_llvm_function(self.name, _compiled_modules() | _staged_modules())
 
         # Create ctype function instance
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
@@ -85,6 +98,7 @@ class LLVMBinaryFunction:
     @property
     def c_func(self):
         if self.__c_func is None:
+            _cpu_engine.compile_staged()
             ptr = _cpu_engine._engine.get_function_address(self.name)
             self.__c_func = self.__c_func_type(ptr)
         return self.__c_func
@@ -100,6 +114,7 @@ class LLVMBinaryFunction:
     @property
     def _cuda_kernel(self):
         if self.__cuda_kernel is None:
+            _ptx_engine.compile_staged()
             self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
         return self.__cuda_kernel
 
@@ -170,11 +185,14 @@ def init_builtins():
 
 def cleanup():
     _cpu_engine.clean_module()
+    _cpu_engine.staged_modules.clear()
+    _cpu_engine.compiled_modules.clear()
     if ptx_enabled:
         _ptx_engine.clean_module()
+        _ptx_engine.staged_modules.clear()
+        _ptx_engine.compiled_modules.clear()
 
     _modules.clear()
-    _compiled_modules.clear()
     _all_modules.clear()
 
     LLVMBinaryFunction.get.cache_clear()

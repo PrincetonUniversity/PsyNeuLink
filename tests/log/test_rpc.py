@@ -3,10 +3,7 @@ import psyneulink as pnl
 import pytest
 
 from queue import Queue
-from collections import OrderedDict
 
-import psyneulink.core.components.functions.transferfunctions
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestRPC:
 

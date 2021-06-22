@@ -3,9 +3,6 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 import pytest
 
-import psyneulink.core.components.functions.combinationfunctions
-import psyneulink.core.components.functions.transferfunctions
-
 
 class TestOutputPorts:
 
@@ -25,20 +22,12 @@ class TestOutputPorts:
         expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [0]]
         for i, e in zip(mech.output_values, expected):
             assert np.array_equal(i, e)
-        if mech_mode == 'Python':
-            EX = mech.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(mech)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(mech)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(mech, mech_mode)
+
         EX([[1.],[2.],[3.]])
         EX([[1.],[2.],[3.]])
         EX([[1.],[2.],[3.]])
         res = EX([[1.],[2.],[3.]])
-        if mech_mode == 'Python':
-            res = mech.output_values
         expected = [[3.],[2.],[1.],[[1.],[2.],[3.]], [4]]
         for i, e in zip(res, expected):
             assert np.array_equal(i, e)

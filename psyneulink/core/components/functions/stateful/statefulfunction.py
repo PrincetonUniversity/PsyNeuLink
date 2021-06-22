@@ -18,21 +18,21 @@
 
 import abc
 import collections
-import typecheck as tc
-import warnings
 import numbers
+import warnings
 
 import numpy as np
+import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import Function_Base, FunctionError
-from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
+from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
-from psyneulink.core.globals.utilities import parameter_spec, iscompatible, convert_to_np_array, contains_type
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.utilities import iscompatible, convert_to_np_array, contains_type
 
 __all__ = ['StatefulFunction']
 
@@ -254,36 +254,22 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     # If the variable was not specified, then reformat it to match rate specification
                     #    and assign class_defaults.variable accordingly
                     # Note: this situation can arise when the rate is parametrized (e.g., as an array) in the
-                    #       StatefulFunction's constructor, where that is used as a specification for a function parameter
+                    #       StatefulFunction's constructor, where that is used as specification for a function parameter
                     #       (e.g., for an IntegratorMechanism), whereas the input is specified as part of the
                     #       object to which the function parameter belongs (e.g., the IntegratorMechanism); in that
-                    #       case, the StatefulFunction gets instantiated using its class_defaults.variable ([[0]]) before
-                    #       the object itself, thus does not see the array specification for the input.
+                    #       case, the StatefulFunction gets instantiated using its class_defaults.variable ([[0]])
+                    #       before the object itself, thus does not see the array specification for the input.
                     if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self._instantiate_defaults(variable=np.zeros_like(np.array(rate)), context=context)
                         if self.verbosePref:
-                            warnings.warn(
-                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".format(
-                                    len(rate),
-                                    rate,
-                                    self.name,
-                                    np.array(self.defaults.variable).size
-                                ),
-                                self.defaults.variable,
-                            )
+                            warnings.warn(f"The length ({len(rate)}) of the array specified for "
+                                          f"the rate parameter ({rate}) of {self.name} must match the length "
+                                          f"({np.array(self.defaults.variable).size}) of the default input "
+                                          f"({self.defaults.variable}); the default input has been updated to match.")
                     else:
-                        raise FunctionError(
-                            "The length of the array specified for the rate parameter of {} ({}) "
-                            "must match the length of the default input ({}).".format(
-                                self.name,
-                                # rate,
-                                len(rate),
-                                np.array(self.defaults.variable).size,
-                                # self.defaults.variable,
-                            )
-                        )
+                        raise FunctionError(f"The length of the array specified for the rate parameter of {self.name}"
+                                            f"({len(rate)}) must match the length of the default input "
+                                            f"({np.array(self.defaults.variable).size}).")
 
         super()._validate_params(request_set=request_set,
                                  target_set=target_set,
@@ -305,11 +291,11 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                 if len(initial_value) != 1:
                     # np.atleast_2d may not be necessary here?
                     if np.shape(np.atleast_2d(initial_value)) != np.shape(np.atleast_2d(default_variable)):
-                        raise FunctionError("{}'s {} ({}) is incompatible with its default_variable ({}) ."
-                                            .format(self.name, initial_value_name, initial_value, default_variable))
+                        raise FunctionError(f"{self.name}'s {initial_value_name} ({initial_value}) is incompatible "
+                                            f"with its default_variable ({default_variable}).")
             elif not isinstance(initial_value, (float, int)):
-                raise FunctionError("{}'s {} ({}) must be a number or a list/array of numbers."
-                                    .format(self.name, initial_value_name, initial_value))
+                raise FunctionError(f"{self.name}'s {initial_value_name} ({initial_value}) "
+                                    f"must be a number or a list/array of numbers.")
 
     def _validate_rate(self, rate):
         # FIX: CAN WE JUST GET RID OF THIS?
@@ -335,57 +321,45 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     if self._variable_shape_flexibility is DefaultsFlexibility.FLEXIBLE:
                         self.defaults.variable = np.zeros_like(np.array(rate))
                         if self.verbosePref:
-                            warnings.warn(
-                                "The length ({}) of the array specified for the rate parameter ({}) of {} "
-                                "must match the length ({}) of the default input ({});  "
-                                "the default input has been updated to match".format(
-                                    len(rate),
-                                    rate,
-                                    self.name,
-                                    np.array(self.defaults.variable).size
-                                ),
-                                self.defaults.variable,
-                            )
+                            warnings.warn(f"The length ({len(rate)}) of the array specified for the rate parameter "
+                                          f"({rate}) of {self.name} must match the length "
+                                          f"({np.array(self.defaults.variable).size}) of the default input "
+                                          f"({self.defaults.variable}); the default input has been updated to match.")
                         self._instantiate_value()
                         self._variable_shape_flexibility = DefaultsFlexibility.INCREASE_DIMENSION
                     else:
-                        raise FunctionError(
-                            "The length of the array specified for the rate parameter of {} ({})"
-                            "must match the length of the default input ({}).".format(
-                                len(rate),
-                                # rate,
-                                self.name,
-                                np.array(self.defaults.variable).size,
-                                # self.defaults.variable,
-                            )
-                        )
+                        raise FunctionError(f"The length of the array specified for the rate parameter of "
+                                            f"{len(rate)} ({self.name}) must match the length of the default input "
+                                            f"({np.array(self.defaults.variable).size}).")
 
     # Ensure that the noise parameter makes sense with the input type and shape; flag any noise functions that will
     # need to be executed
     def _validate_noise(self, noise):
-        # Noise is a list or array
+        # Noise must be a scalar, list, array or Distribution Function
+
+        if isinstance(noise, DistributionFunction):
+            noise = noise.execute
+
         if isinstance(noise, (np.ndarray, list)):
             if len(noise) == 1:
                 pass
             # Variable is a list/array
             elif (not iscompatible(np.atleast_2d(noise), self.defaults.variable)
                   and not iscompatible(np.atleast_1d(noise), self.defaults.variable) and len(noise) > 1):
-                raise FunctionError(
-                    "Noise parameter ({}) does not match default variable ({}). Noise parameter of {} "
-                    "must be specified as a float, a function, or an array of the appropriate shape ({}).".format(
-                        noise, self.defaults.variable, self.name,
-                        np.shape(np.array(self.defaults.variable))
-                    ),
-                    component=self
-                )
+                raise FunctionError(f"Noise parameter ({noise})  for '{self.name}' does not match default variable "
+                                    f"({self.defaults.variable}); it must be specified as a float, a function, "
+                                    f"or an array of the appropriate shape "
+                                    f"({np.shape(np.array(self.defaults.variable))}).",
+                    component=self)
             else:
                 for i in range(len(noise)):
                     if isinstance(noise[i], DistributionFunction):
                         noise[i] = noise[i].execute
-                    # if not isinstance(noise[i], (float, int)) and not callable(noise[i]):
-                    if not np.isscalar(noise[i]) and not callable(noise[i]):
-                        raise FunctionError("The elements of a noise list or array must be scalars or functions. "
-                                            "{} is not a valid noise element for {}".format(noise[i], self.name))
+                    if (not np.isscalar(noise[i]) and not callable(noise[i])
+                            and not iscompatible(np.atleast_2d(noise[i]), self.defaults.variable[i])
+                            and not iscompatible(np.atleast_1d(noise[i]), self.defaults.variable[i])):
+                        raise FunctionError(f"The element '{noise[i]}' specified in 'noise' for {self.name} "
+                                             f"is not valid; noise must be list or array must be floats or functions.")
 
     def _instantiate_attributes_before_function(self, function=None, context=None):
         if not self.parameters.initializer._user_specified:
@@ -470,18 +444,13 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             # old args specification can be supported only in subclasses
             # that explicitly define an order by overriding reset
             if len(args) > 0:
-                raise FunctionError(
-                    f'{self}.reset has more than one stateful attribute'
-                    f' ({self.stateful_attributes}). You must specify reset'
-                    ' values by keyword.'
-                )
+                raise FunctionError(f'{self}.reset has more than one stateful attribute'
+                                    f' ({self.stateful_attributes}). You must specify reset values by keyword.')
             if len(kwargs) != num_stateful_attrs:
                 type_name = type(self).__name__
-                raise FunctionError(
-                    'StatefulFunction.reset must receive a keyword argument for'
-                    f' each item in {type_name}.stateful_attributes in the order in'
-                    f' which they appear in {type_name}.value'
-                )
+                raise FunctionError(f'StatefulFunction.reset must receive a keyword argument for'
+                                    f' each item in {type_name}.stateful_attributes in the order in'
+                                    f' which they appear in {type_name}.value.')
 
         if num_stateful_attrs == 1:
             try:
@@ -513,10 +482,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     invalid_args.append(attr)
 
         if len(invalid_args) > 0:
-            raise FunctionError(
-                f'Arguments {invalid_args} to reset are invalid because they do'
-                f" not correspond to any of {self}'s stateful_attributes"
-            )
+            raise FunctionError(f'Arguments {invalid_args} to reset are invalid because they do'
+                                f" not correspond to any of {self}'s stateful_attributes.")
 
         # rebuilding value rather than simply returning reinitialization_values in case any of the stateful
         # attrs are modified during assignment
@@ -538,7 +505,8 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             source_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, initializer)
             dest_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, a)
             if source_ptr.type != dest_ptr.type:
-                warnings.warn("Shape mismatch: stateful param does not match the initializer: {}({}) vs. {}({})".format(initializer, source_ptr.type, a, dest_ptr.type))
+                warnings.warn("Shape mismatch: stateful param does not match the initializer: "
+                              "{initializer}({source_ptr.type}) vs. {a}({dest_ptr.type}).")
                 # Take a guess that dest just has an extra dimension
                 assert len(dest_ptr.type.pointee) == 1
                 dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0),
