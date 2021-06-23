@@ -2361,6 +2361,7 @@ import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
 
+import graph_scheduler
 import networkx
 import numpy as np
 import pint
@@ -3417,7 +3418,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
-            self._scheduler = Scheduler(graph=self.graph_processing, default_execution_id=self.default_execution_id)
+            self._scheduler = Scheduler(composition=self)
 
             if old_scheduler is not None:
                 self._scheduler.add_condition_set(old_scheduler.conditions)
@@ -8934,7 +8935,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # TODO: scheduler counts and clocks were not expected to be
             # used prior to Scheduler.run calls. Remove this hack when
             # accommodation is written
-            execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+            try:
+                execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+            except graph_scheduler.SchedulerError:
+                execution_scheduler._init_counts(context.execution_id)
 
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or report_num is None:

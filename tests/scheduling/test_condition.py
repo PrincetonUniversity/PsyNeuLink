@@ -969,7 +969,7 @@ class TestAbsolute:
         comp = Composition()
         comp.add_nodes([self.A, self.B, self.C])
         comp.scheduler.add_condition_set(conditions)
-        time_step_abs_value = comp.scheduler._get_absolute_time_step_unit(termination_conds)
+        time_step_abs_value = comp.scheduler._get_absolute_consideration_set_execution_unit(termination_conds)
 
         list(comp.scheduler.run(termination_conds=termination_conds))
 

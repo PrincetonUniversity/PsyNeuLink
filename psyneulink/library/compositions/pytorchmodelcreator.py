@@ -1,3 +1,5 @@
+import graph_scheduler
+
 from psyneulink.core.components.component import Component, ComponentsMeta
 from psyneulink.core.compositions.composition import NodeRole
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
@@ -61,7 +63,11 @@ class PytorchModelCreator(torch.nn.Module):
                 self.params.append(new_proj.matrix)
 
         c = Context()
-        composition.scheduler._init_counts(execution_id=c.execution_id, base_execution_id=context.execution_id)
+        try:
+            composition.scheduler._init_counts(execution_id=c.execution_id, base_execution_id=context.execution_id)
+        except graph_scheduler.SchedulerError:
+            # called from LLVM, no base context is provided
+            composition.scheduler._init_counts(execution_id=c.execution_id)
 
         # Setup execution sets
         # 1) Remove all learning-specific nodes

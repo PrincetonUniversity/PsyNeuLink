@@ -19,7 +19,7 @@ import os
 import re
 from typing import Set
 import weakref
-from psyneulink.core.scheduling.time import Time
+from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
@@ -337,7 +337,7 @@ class LLVMBuilderContext:
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
-            return ir.ArrayType(self.int32_ty, len(Time._time_scale_attr_map))
+            return ir.ArrayType(self.int32_ty, len(TimeScale))
         elif isinstance(t, SampleIterator):
             if isinstance(t.generator, list):
                 return ir.ArrayType(self.float_ty, len(t.generator))

@@ -346,123 +346,25 @@ Class Reference
 
 """
 
-import copy
-import datetime
-import enum
-import fractions
-import logging
 import typing
 
-import numpy as np
+import graph_scheduler
 import pint
-import psyneulink as pnl
 
-from toposort import toposort
-
+from psyneulink import _unit_registry
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
-from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Condition, ConditionSet, EveryNCalls, Never, _parse_absolute_unit, _quantity_as_integer
-from psyneulink.core.scheduling.time import Clock, TimeScale
+from psyneulink.core.scheduling.condition import _create_as_pnl_condition
 
 __all__ = [
-    'Scheduler', 'SchedulerError', 'SchedulingMode',
+    'Scheduler', 'SchedulingMode'
 ]
 
-logger = logging.getLogger(__name__)
 
-default_termination_conds = {
-    TimeScale.RUN: Never(),
-    TimeScale.TRIAL: AllHaveRun(),
-}
+SchedulingMode = graph_scheduler.scheduler.SchedulingMode
 
 
-class SchedulingMode(enum.Enum):
-    """
-        Attributes:
-            STANDARD
-                `Standard Mode <Scheduler_Execution>`
-
-            EXACT_TIME
-                `Exact time Mode <Scheduler_Exact_Time>`
-    """
-    STANDARD = enum.auto()
-    EXACT_TIME = enum.auto()
-
-
-class SchedulerError(Exception):
-
-    def __init__(self, error_value):
-        self.error_value = error_value
-
-    def __str__(self):
-        return repr(self.error_value)
-
-
-class Scheduler(JSONDumpable):
-    """Generates an order of execution for `Components <Component>` in a `Composition <Composition>` or graph
-    specification dictionary, possibly determined by a set of `Conditions <Condition>`.
-
-    Arguments
-    ---------
-
-    composition : Composition
-        specifies the `Components <Component>` to be ordered for execution, and any dependencies among them,
-        based on the `Composition <Composition>`\\'s `graph <Composition.graph_processing>`.
-
-    conditions  : ConditionSet
-        set of `Conditions <Condition>` that specify when individual `Components` <Component>` in **composition**
-        execute and any dependencies among them.
-
-    graph : Dict[object: set(object)], Graph
-        a graph specification dictionary - each entry of the dictionary must be an object,
-        and the value of each entry must be a set of zero or more objects that project directly to the key.
-        or, a `Graph`
-
-    mode : SchedulingMode[STANDARD|EXACT_TIME] : SchedulingMode.STANDARD
-        sets the mode of scheduling: `standard <Scheduler_Execution>` or
-        `exact time <Scheduler_Exact_Time>`
-
-    default_absolute_time_unit : ``pint.Quantity`` : ``1ms``
-        if not otherwise determined by any absolute **conditions**,
-        specifies the absolute duration of a `TIME_STEP`
-
-    Attributes
-    ----------
-
-    conditions : ConditionSet
-        the set of Conditions the Scheduler uses when running
-
-    execution_list : list
-        the full history of time steps the Scheduler has produced
-
-    consideration_queue : list
-        a list form of the Scheduler's toposort ordering of its nodes
-
-    termination_conds : Dict[TimeScale: Condition]
-        a mapping from `TimeScales <TimeScale>` to `Conditions <Condition>` that, when met, terminate the execution
-        of the specified `TimeScale`. On set, update only for the
-        `TimeScale`\\ s specified in the argument.
-
-    mode
-        sets the mode of scheduling: `standard <Scheduler_Execution>` or
-        `exact time <Scheduler_Exact_Time>`
-
-        :type: SchedulingMode
-        :default: `SchedulingMode.STANDARD`
-
-    default_absolute_time_unit
-        if not otherwise determined by any absolute **conditions**,
-        specifies the absolute duration of a `TIME_STEP`
-
-        :type: ``pint.Quantity``
-        :default: ``1ms``
-
-    times : Dict[TimeScale: Dict[TimeScale: int]]
-        a structure counting the number of occurrences of a certain `TimeScale` within the scope of another `TimeScale`.
-        For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`es that have occurred in the
-        current `RUN` that the Scheduler is scheduling at the time it is accessed
-
-    """
+class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
     def __init__(
         self,
         composition=None,
@@ -471,281 +373,51 @@ class Scheduler(JSONDumpable):
         termination_conds=None,
         default_execution_id=None,
         mode: SchedulingMode = SchedulingMode.STANDARD,
-        default_absolute_time_unit: typing.Union[str, pint.Quantity] = 1 * pnl._unit_registry.ms,
+        default_absolute_time_unit: typing.Union[str, pint.Quantity] = 1 * _unit_registry.ms,
         **kwargs
     ):
         """
-        :param self:
         :param composition: (Composition) - the Composition this scheduler is scheduling for
-        :param conditions: (ConditionSet) - a :keyword:`ConditionSet` to be scheduled
         """
-        self.conditions = ConditionSet(conditions)
-
-        # stores the in order list of self.run's yielded outputs
-        self.consideration_queue = []
-        if termination_conds is None:
-            termination_conds = default_termination_conds.copy()
-        else:
-            termination_conds = {**default_termination_conds, **termination_conds}
-        self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
-        self._termination_conds = self.default_termination_conds.copy()
-
-        self.cycle_nodes = set()
-        self.mode = mode
-        self.default_absolute_time_unit = _parse_absolute_unit(default_absolute_time_unit)
 
         if composition is not None:
-            self.nodes = [vert.component for vert in composition.graph_processing.vertices]
-            self._init_consideration_queue_from_graph(composition.graph_processing)
+            # dependency dict
+            graph = composition.graph_processing.prune_feedback_edges()[0]
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
-        elif graph is not None:
-            try:
-                self.nodes = [vert.component for vert in graph.vertices]
-                self._init_consideration_queue_from_graph(graph)
-            except AttributeError:
-                self.dependency_dict = graph
-                self.consideration_queue = list(toposort(graph))
-                self.nodes = []
-                for consideration_set in self.consideration_queue:
-                    for node in consideration_set:
-                        self.nodes.append(node)
-        else:
-            raise SchedulerError('Must instantiate a Scheduler with either a Composition (kwarg composition) '
-                                 'or a graph dependency dict (kwarg graph)')
 
-        self._generate_consideration_queue_indices()
+        super().__init__(
+            graph=graph,
+            conditions=conditions,
+            termination_conds=termination_conds,
+            default_execution_id=default_execution_id,
+            mode=mode,
+            default_absolute_time_unit=default_absolute_time_unit,
+            **kwargs,
+        )
 
-        self.default_execution_id = default_execution_id
-        self.execution_list = {self.default_execution_id: []}
-        self.execution_timestamps = {self.default_execution_id: []}
-        self.clocks = {self.default_execution_id: Clock()}
-        self.counts_total = {}
-        self.counts_useable = {}
-        self._init_counts(execution_id=self.default_execution_id)
-        self.date_creation = datetime.datetime.now()
-        self.date_last_run_end = None
-
-    # the consideration queue is the ordered list of sets of nodes in the graph, by the
-    # order in which they should be checked to ensure that all parents have a chance to run before their children
-    def _init_consideration_queue_from_graph(self, graph):
-        self.dependency_dict, self.removed_dependencies, self.structural_dependencies = graph.prune_feedback_edges()
-        self.consideration_queue = list(toposort(self.dependency_dict))
-
-    def _generate_consideration_queue_indices(self):
-        self.consideration_queue_indices = {}
-        for i, cs in enumerate(self.consideration_queue):
-            self.consideration_queue_indices.update({
-                n: i for n in cs
-            })
-
-    def _init_counts(self, execution_id=None, base_execution_id=None):
-        """
-            Attributes
-            ----------
-
-                execution_id
-                    the execution_id to initialize counts for
-                    default : self.default_execution_id
-
-                base_execution_id
-                    if specified, the counts for execution_id will be copied from the counts of base_execution_id
-                    default : None
-        """
-        # all counts are divided by execution_id, which provides a context for the scheduler's execution, so that
-        # it can be reused in multiple contexts
-
-        # stores total the number of occurrences of a node through the time scale
-        # i.e. the number of times node has ran/been queued to run in a trial
-        if execution_id not in self.counts_total:
-            self.counts_total[execution_id] = {}
-
-            if base_execution_id is not None:
-                if base_execution_id not in self.counts_total:
-                    raise SchedulerError('execution_id {0} not in {1}.counts_total'.format(base_execution_id, self))
-
-                self.counts_total[execution_id] = {
-                    ts: {n: self.counts_total[base_execution_id][ts][n] for n in self.nodes} for ts in TimeScale
-                }
-            else:
-                self.counts_total[execution_id] = {
-                    ts: {n: 0 for n in self.nodes} for ts in TimeScale
-                }
-
-        # counts_useable is a dictionary intended to store the number of available "instances" of a certain node that
-        # are available to expend in order to satisfy conditions such as "run B every two times A runs"
-        # specifically, counts_useable[a][b] = n indicates that there are n uses of a that are available for b to expend
-        # so, in the previous example B would check to see if counts_useable[A][B] >= 2, in which case B can run
-        # then, counts_useable[a][b] would be reset to 0, even if it was greater than 2
-        if execution_id not in self.counts_useable:
-            self.counts_useable[execution_id] = {}
-
-            if base_execution_id is not None:
-                if base_execution_id not in self.counts_useable:
-                    raise SchedulerError('execution_id {0} not in {1}.counts_useable'.format(base_execution_id, self))
-
-                self.counts_useable[execution_id] = {
-                    node: {n: self.counts_useable[base_execution_id][node][n] for n in self.nodes} for node in self.nodes
-                }
-            else:
-                self.counts_useable[execution_id] = {
-                    node: {n: 0 for n in self.nodes} for node in self.nodes
-                }
-
-        if execution_id not in self.execution_list:
-            if base_execution_id is not None:
-                if base_execution_id not in self.execution_list:
-                    raise SchedulerError('execution_id {0} not in {1}.execution_list'.format(base_execution_id, self))
-
-                self.execution_list[execution_id] = list(self.execution_list[base_execution_id])
-            else:
-                self.execution_list[execution_id] = []
-
-        self._init_clock(execution_id, base_execution_id)
-
-    def _init_clock(self, execution_id=None, base_execution_id=None):
-        # instantiate new Clock for this execution_id if necessary
-        # currently does not work with base_execution_id
-        if execution_id not in self.clocks:
-            if base_execution_id is not None:
-                if base_execution_id not in self.clocks:
-                    raise SchedulerError('execution_id {0} not in {1}.clocks'.format(base_execution_id, self))
-
-                self.clocks[execution_id] = copy.deepcopy(self.clocks[base_execution_id])
-            else:
-                self.clocks[execution_id] = Clock()
-
-    def _delete_counts(self, execution_id=None):
-        for obj in [self.counts_useable, self.counts_total, self.clocks, self.execution_list]:
-            try:
-                del obj[execution_id]
-            except KeyError:
-                pass
-
-    def _reset_counts_total(self, time_scale, execution_id=None):
-        for ts in TimeScale:
-            # only reset the values underneath the current scope
-            # this works because the enum is set so that higher granularities of time have lower values
-            if ts.value <= time_scale.value:
-                for c in self.counts_total[execution_id][ts]:
-                    self.counts_total[execution_id][ts][c] = 0
-
-    def _reset_counts_useable(self, execution_id=None):
-        self.counts_useable[execution_id] = {
-            node: {n: 0 for n in self.nodes} for node in self.nodes
-        }
-
-    def _combine_termination_conditions(self, termination_conds):
-        termination_conds = Scheduler._parse_termination_conditions(termination_conds)
-        new_conds = self.termination_conds.copy()
-        new_conds.update(termination_conds)
-
-        return new_conds
-
-    @staticmethod
-    def _parse_termination_conditions(termination_conds):
-        # parse string representation of TimeScale
-        parsed_conds = {}
-        delkeys = set()
-        for scale in termination_conds:
-            try:
-                parsed_conds[getattr(TimeScale, scale.upper())] = termination_conds[scale]
-                delkeys.add(scale)
-            except (AttributeError, TypeError):
-                pass
-
-        termination_conds.update(parsed_conds)
-
-        try:
-            termination_conds = {
-                k: termination_conds[k] for k in termination_conds
-                if (
-                    isinstance(k, TimeScale)
-                    and isinstance(termination_conds[k], Condition)
-                    and k not in delkeys
-                )
+        def replace_term_conds(term_conds):
+            return {
+                ts: _create_as_pnl_condition(cond) for ts, cond in term_conds.items()
             }
-        except TypeError:
-            raise TypeError('termination_conditions must be a dictionary of the form {TimeScale: Condition, ...}')
-        else:
-            return termination_conds
 
-    ################################################################################
-    # Wrapper methods
-    #   to allow the user to ignore the ConditionSet internals
-    ################################################################################
-    def __contains__(self, item):
-        return self.conditions.__contains__(item)
+        self.default_termination_conds = replace_term_conds(self.default_termination_conds)
+        self.termination_conds = replace_term_conds(self.termination_conds)
 
     def add_condition(self, owner, condition):
-        """
-        Adds a `Condition` to the Scheduler. If **owner** already has a Condition, it is overwritten
-        with the new one. If you want to add multiple conditions to a single owner, use the
-        `composite Conditions <Conditions_Composite>` to accurately specify the desired behavior.
-
-        Arguments
-        ---------
-
-        owner : Component
-            specifies the Component with which the **condition** should be associated. **condition**
-            will govern the execution behavior of **owner**
-
-        condition : Condition
-            specifies the Condition, associated with the **owner** to be added to the ConditionSet.
-        """
-        self.conditions.add_condition(owner, condition)
+        super().add_condition(owner, _create_as_pnl_condition(condition))
 
     def add_condition_set(self, conditions):
-        """
-        Adds a set of `Conditions <Condition>` (in the form of a dict or another ConditionSet) to the Scheduler.
-        Any Condition added here will overwrite an existing Condition for a given owner.
-        If you want to add multiple conditions to a single owner, add a single `Composite Condition <Conditions_Composite>`
-        to accurately specify the desired behavior.
+        try:
+            conditions = conditions.conditions
+        except AttributeError:
+            pass
 
-        Arguments
-        ---------
+        super().add_condition_set({
+            node: _create_as_pnl_condition(cond)
+            for node, cond in conditions.items()
+        })
 
-        conditions : dict[`Component <Component>`: `Condition`], `ConditionSet`
-            specifies collection of Conditions to be added to this ConditionSet,
-
-            if a dict is provided:
-                each entry should map an owner `Component` (the `Component` whose execution behavior will be
-                governed) to a `Condition <Condition>`
-
-        """
-        self.conditions.add_condition_set(conditions)
-
-    ################################################################################
-    # Validation methods
-    #   to provide the user with info if they do something odd
-    ################################################################################
-    def _validate_run_state(self):
-        self._validate_conditions()
-
-    def _validate_conditions(self):
-        unspecified_nodes = []
-        for node in self.nodes:
-            if node not in self.conditions:
-                dependencies = list(self.dependency_dict[node])
-                if len(dependencies) == 0:
-                    cond = Always()
-                elif len(dependencies) == 1:
-                    cond = EveryNCalls(dependencies[0], 1)
-                else:
-                    cond = All(*[EveryNCalls(x, 1) for x in dependencies])
-
-                self.add_condition(node, cond)
-                unspecified_nodes.append(node)
-        if len(unspecified_nodes) > 0:
-            logger.info(
-                'These nodes have no Conditions specified, and will be scheduled with conditions: {0}'.format(
-                    {node: self.conditions[node] for node in unspecified_nodes}
-                )
-            )
-
-    ################################################################################
-    # Run methods
-    ################################################################################
     @handle_external_context(fallback_default=True)
     def run(
         self,
@@ -754,186 +426,13 @@ class Scheduler(JSONDumpable):
         base_context=Context(execution_id=None),
         skip_trial_time_increment=False,
     ):
-        """
-        run is a python generator, that when iterated over provides the next `TIME_STEP` of
-        executions at each iteration
-
-        :param termination_conds: (dict) - a mapping from `TimeScale`\\s to `Condition`\\s that when met
-               terminate the execution of the specified `TimeScale`
-        """
-        self._validate_run_state()
-
-        if self.mode is SchedulingMode.EXACT_TIME:
-            effective_consideration_queue = [set(self.nodes)]
-        else:
-            effective_consideration_queue = self.consideration_queue
-
-        if termination_conds is None:
-            termination_conds = self.termination_conds
-        else:
-            termination_conds = self._combine_termination_conditions(termination_conds)
-
-        current_time = self.get_clock(context).time
-
-        in_absolute_time_mode = len(self.get_absolute_conditions(termination_conds)) > 0
-        if in_absolute_time_mode:
-            current_time.absolute_interval = self._get_absolute_time_step_unit(termination_conds)
-            # advance absolute clock time to first necessary time
-            current_time.absolute = max(
-                current_time.absolute,
-                min([
-                    min(c.absolute_fixed_points)
-                    if len(c.absolute_fixed_points) > 0 else 0
-                    for c in self.get_absolute_conditions(termination_conds).values()
-                ])
-            )
-            # convert to interval time unit to avoid pint floating point issues
-            current_time.absolute = current_time.absolute.to(current_time.absolute_interval.u)
-
-            # .to auto converts to float even if magnitude is an int, undo
-            try:
-                current_time.absolute = _quantity_as_integer(current_time.absolute)
-            except ValueError:
-                pass
-
-        current_time.absolute_enabled = in_absolute_time_mode
-
-        self._init_counts(context.execution_id, base_context.execution_id)
-        self._reset_counts_useable(context.execution_id)
-        self._reset_counts_total(TimeScale.TRIAL, context.execution_id)
-
-        while (
-            not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
-            and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
-        ):
-            self._reset_counts_total(TimeScale.PASS, context.execution_id)
-
-            execution_list_has_changed = False
-            cur_index_consideration_queue = 0
-
-            while (
-                cur_index_consideration_queue < len(effective_consideration_queue)
-                and not termination_conds[TimeScale.TRIAL].is_satisfied(scheduler=self, context=context)
-                and not termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context)
-            ):
-                # all nodes to be added during this time step
-                cur_time_step_exec = set()
-                # the current "layer/group" of nodes that MIGHT be added during this time step
-                cur_consideration_set = effective_consideration_queue[cur_index_consideration_queue]
-
-                try:
-                    iter(cur_consideration_set)
-                except TypeError as e:
-                    raise SchedulerError('cur_consideration_set is not iterable, did you ensure that this Scheduler was instantiated with an actual toposort output for param toposort_ordering? err: {0}'.format(e))
-
-                # do-while, on cur_consideration_set_has_changed
-                # we check whether each node in the current consideration set is allowed to run,
-                # and nodes can cause cascading adds within this set
-                while True:
-                    cur_consideration_set_has_changed = False
-                    for current_node in cur_consideration_set:
-                        # only add each node once during a single time step, this also serves
-                        # to prevent infinitely cascading adds
-                        if current_node not in cur_time_step_exec:
-                            if self.conditions.conditions[current_node].is_satisfied(scheduler=self, context=context):
-                                cur_time_step_exec.add(current_node)
-                                execution_list_has_changed = True
-                                cur_consideration_set_has_changed = True
-
-                                for ts in TimeScale:
-                                    self.counts_total[context.execution_id][ts][current_node] += 1
-                                # current_node's node is added to the execution queue, so we now need to
-                                # reset all of the counts useable by current_node's node to 0
-                                for n in self.counts_useable[context.execution_id]:
-                                    self.counts_useable[context.execution_id][n][current_node] = 0
-                                # and increment all of the counts of current_node's node useable by other
-                                # nodes by 1
-                                for n in self.counts_useable[context.execution_id]:
-                                    self.counts_useable[context.execution_id][current_node][n] += 1
-                    # do-while condition
-                    if not cur_consideration_set_has_changed:
-                        break
-
-                # add a new time step at each step in a pass, if the time step would not be empty
-                if len(cur_time_step_exec) >= 1 or in_absolute_time_mode:
-                    self.execution_list[context.execution_id].append(cur_time_step_exec)
-                    if in_absolute_time_mode:
-                        self.execution_timestamps[context.execution_id].append(
-                            copy.copy(current_time)
-                        )
-                    yield self.execution_list[context.execution_id][-1]
-
-                    self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
-
-                cur_index_consideration_queue += 1
-
-            # if an entire pass occurs with nothing running, add an empty time step
-            if not execution_list_has_changed and not in_absolute_time_mode:
-                self.execution_list[context.execution_id].append(set())
-                yield self.execution_list[context.execution_id][-1]
-
-                self.get_clock(context)._increment_time(TimeScale.TIME_STEP)
-
-            self.get_clock(context)._increment_time(TimeScale.PASS)
-
-        if not skip_trial_time_increment:
-            self.get_clock(context)._increment_time(TimeScale.TRIAL)
-
-        if termination_conds[TimeScale.RUN].is_satisfied(scheduler=self, context=context):
-            self.date_last_run_end = datetime.datetime.now()
-
-        return self.execution_list[context.execution_id]
-
-    def _increment_time(self, time_scale, context):
-        self.get_clock(context)._increment_time(time_scale)
-
-    def _get_absolute_time_step_unit(self, termination_conds=None):
-        """Computes the time length of the gap between two time steps
-        """
-        if termination_conds is None:
-            termination_conds = self.termination_conds
-
-        # all of the units of time that must occur on a time step
-        intervals = []
-        for c in self.get_absolute_conditions(termination_conds).values():
-            intervals.extend(c.absolute_intervals)
-            if self.mode is SchedulingMode.EXACT_TIME:
-                intervals.extend(c.absolute_fixed_points)
-
-        if len(intervals) == 0:
-            return self.default_absolute_time_unit
-        else:
-            min_time_unit = min(intervals, key=lambda x: x.u).u
-
-            # convert all intervals into the same unit
-            for i, a in enumerate(intervals):
-                unit_conversion = round(np.log10((1 * a.u).to(min_time_unit).m))
-                intervals[i] = (int(a.m) * 10 ** unit_conversion) * min_time_unit
-
-            # numerator is the largest possible length of a pass
-            # denominator evenly divides this length by number of time steps
-            numerator = np.gcd.reduce([interval.m for interval in intervals])
-            if self.mode == SchedulingMode.STANDARD:
-                denominator = len(self.consideration_queue)
-            elif self.mode == SchedulingMode.EXACT_TIME:
-                denominator = 1
-
-            if denominator == 1:
-                res = numerator
-            else:
-                res = fractions.Fraction(numerator=numerator, denominator=denominator)
-            return res * min_time_unit
-
-    def get_absolute_conditions(self, termination_conds=None):
-        if termination_conds is None:
-            termination_conds = self.termination_conds
-
-        return {
-            owner: cond
-            for owner, cond
-            in [*self.conditions.conditions.items(), *termination_conds.items()]
-            if cond.is_absolute
-        }
+        yield from super().run(
+            termination_conds=termination_conds,
+            context=context,
+            execution_id=context.execution_id,
+            base_execution_id=base_context.execution_id,
+            skip_environment_state_update_time_increment=skip_trial_time_increment,
+        )
 
     @property
     def _dict_summary(self):
@@ -948,44 +447,6 @@ class Scheduler(JSONDumpable):
             }
         }
 
+    @handle_external_context()
     def get_clock(self, context):
-        try:
-            return self.clocks[context.default_execution_id]
-        except AttributeError:
-            try:
-                return self.clocks[context.execution_id]
-            except AttributeError:
-                if context not in self.clocks:
-                    self._init_clock(context)
-
-                return self.clocks[context]
-        except KeyError:
-            raise
-
-    @property
-    def termination_conds(self):
-        return self._termination_conds
-
-    @termination_conds.setter
-    def termination_conds(self, termination_conds):
-        """Updates this Scheduler's base `termination conditions
-        <Scheduler.termination_conds>`_ to be used on future `run
-        <Scheduler.run>`\\ s for which termination conditions are not
-        specified.
-
-        Arguments:
-            termination_conds : dict[[TimeScale, str]: Condition]
-                the dictionary of termination Conditions to overwrite
-                the current base
-                `termination conditions <Scheduler.termination_conds>`
-        """
-        if termination_conds is None:
-            self._termination_conds = self.default_termination_conds.copy()
-        else:
-            self._termination_conds = self._combine_termination_conditions(
-                termination_conds
-            )
-
-    @property
-    def _in_exact_time_mode(self):
-        return self.mode is SchedulingMode.EXACT_TIME or len(self.consideration_queue) == 1
+        return super().get_clock(context.execution_id)
