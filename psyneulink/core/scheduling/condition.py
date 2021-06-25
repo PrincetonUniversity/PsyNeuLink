@@ -636,18 +636,21 @@ class AbsoluteCondition(Condition):
 class _DependencyValidation:
     @Condition.owner.setter
     def owner(self, value):
-        # "dependency" or "dependencies" is always the first positional argument
-        if not isinstance(self.args[0], collections.abc.Iterable):
-            dependencies = [self.args[0]]
+        try:
+            # "dependency" or "dependencies" is always the first positional argument
+            if not isinstance(self.args[0], collections.abc.Iterable):
+                dependencies = [self.args[0]]
+            else:
+                dependencies = self.args[0]
+        except IndexError:
+            pass
         else:
-            dependencies = self.args[0]
-
-        if value in dependencies:
-            warnings.warn(
-                f'{self} is dependent on {value}, but you are assigning {value} as its owner.'
-                ' This may result in infinite loops or unknown behavior.',
-                stacklevel=5
-            )
+            if value in dependencies:
+                warnings.warn(
+                    f'{self} is dependent on {value}, but you are assigning {value} as its owner.'
+                    ' This may result in infinite loops or unknown behavior.',
+                    stacklevel=5
+                )
 
         self._owner = value
 
