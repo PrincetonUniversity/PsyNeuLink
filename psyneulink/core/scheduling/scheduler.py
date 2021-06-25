@@ -737,7 +737,7 @@ class Scheduler(JSONDumpable):
                 else:
                     cond = All(*[EveryNCalls(x, 1) for x in dependencies])
 
-                self.conditions.add_condition(node, cond)
+                self.add_condition(node, cond)
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
             logger.info(
