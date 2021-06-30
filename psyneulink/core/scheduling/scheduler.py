@@ -471,7 +471,7 @@ class Scheduler(JSONDumpable):
         composition=None,
         graph=None,
         conditions=None,
-        termination_conds=default_termination_conds,
+        termination_conds=None,
         default_execution_id=None,
         mode: SchedulingMode = SchedulingMode.STANDARD,
         default_absolute_time_unit: typing.Union[str, pint.Quantity] = 1 * pnl._unit_registry.ms,
@@ -486,7 +486,10 @@ class Scheduler(JSONDumpable):
 
         # stores the in order list of self.run's yielded outputs
         self.consideration_queue = []
-        termination_conds = {**default_termination_conds, **termination_conds}
+        if termination_conds is None:
+            termination_conds = default_termination_conds.copy()
+        else:
+            termination_conds = {**default_termination_conds, **termination_conds}
         self.default_termination_conds = Scheduler._parse_termination_conditions(termination_conds)
         self._termination_conds = self.default_termination_conds.copy()
 
@@ -734,7 +737,7 @@ class Scheduler(JSONDumpable):
                 else:
                     cond = All(*[EveryNCalls(x, 1) for x in dependencies])
 
-                self.conditions.add_condition(node, cond)
+                self.add_condition(node, cond)
                 unspecified_nodes.append(node)
         if len(unspecified_nodes) > 0:
             logger.info(

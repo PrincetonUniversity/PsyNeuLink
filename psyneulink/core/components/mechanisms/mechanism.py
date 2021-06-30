@@ -1109,7 +1109,8 @@ from psyneulink.core.globals.registry import register_category, remove_instance_
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
     iscompatible, kwCompatibilityNumeric, convert_to_list
-from psyneulink.core.scheduling.condition import Condition, TimeScale
+from psyneulink.core.scheduling.condition import Condition
+from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'

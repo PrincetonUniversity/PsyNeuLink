@@ -852,7 +852,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
     all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals
-from psyneulink.core.scheduling.condition import TimeScale
+from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'INITIAL_VALUE', 'CLIP',  'INTEGRATOR_FUNCTION', 'INTEGRATION_RATE',

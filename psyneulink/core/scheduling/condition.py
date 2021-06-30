@@ -315,6 +315,7 @@ from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE
 from psyneulink.core.globals.parameters import parse_context
 from psyneulink.core.globals.utilities import call_with_pruned_args
 from psyneulink.core.scheduling.time import TimeScale
+from psyneulink.core.globals.context import handle_external_context
 
 __all__ = [
     'AfterCall', 'AfterNCalls', 'AfterNCallsCombined', 'AfterNPasses', 'AfterNTimeSteps', 'AfterNTrials', 'AfterPass',
@@ -539,6 +540,7 @@ class Condition(JSONDumpable):
         logger.debug('Condition ({0}) setting owner to {1}'.format(type(self).__name__, value))
         self._owner = value
 
+    @handle_external_context()
     def is_satisfied(self, *args, context=None, execution_id=None, **kwargs):
         """
         the function called to determine satisfaction of this Condition.
@@ -634,18 +636,21 @@ class AbsoluteCondition(Condition):
 class _DependencyValidation:
     @Condition.owner.setter
     def owner(self, value):
-        # "dependency" or "dependencies" is always the first positional argument
-        if not isinstance(self.args[0], collections.abc.Iterable):
-            dependencies = [self.args[0]]
+        try:
+            # "dependency" or "dependencies" is always the first positional argument
+            if not isinstance(self.args[0], collections.abc.Iterable):
+                dependencies = [self.args[0]]
+            else:
+                dependencies = self.args[0]
+        except IndexError:
+            pass
         else:
-            dependencies = self.args[0]
-
-        if value in dependencies:
-            warnings.warn(
-                f'{self} is dependent on {value}, but you are assigning {value} as its owner.'
-                ' This may result in infinite loops or unknown behavior.',
-                stacklevel=5
-            )
+            if value in dependencies:
+                warnings.warn(
+                    f'{self} is dependent on {value}, but you are assigning {value} as its owner.'
+                    ' This may result in infinite loops or unknown behavior.',
+                    stacklevel=5
+                )
 
         self._owner = value
 
@@ -879,12 +884,6 @@ class NWhen(Condition):
         self.condition.owner = value
 
     def satis(self, condition, n, *args, scheduler=None, execution_id=None, **kwargs):
-        if execution_id is None:
-            if scheduler is not None:
-                execution_id = scheduler.default_execution_id
-        # if no execution_id or scheduler is provided technically this will still work
-        # indexed on None, but that's a bit weird honestly
-
         if execution_id not in self.satisfactions:
             self.satisfactions[execution_id] = 0
 
@@ -1796,8 +1795,8 @@ class AllHaveRun(_DependencyValidation, Condition):
                     raise ConditionError(f'{type(self).__name__}: scheduler must be supplied to is_satisfied: {e}.')
                 except KeyError as e:
                     raise ConditionError(
-                        f'{type(self).__name__}: execution_id ({scheduler}) must both be specified, and '
-                        f'execution_id must be in scheduler.counts_total (scheduler: {execution_id}): {e}.')
+                        f'{type(self).__name__}: execution_id ({execution_id}) must both be specified, and '
+                        f'execution_id must be in scheduler.counts_total (scheduler: {scheduler}): {e}.')
             return True
         super().__init__(func, *dependencies)
 
@@ -1821,9 +1820,9 @@ class WhenFinished(_DependencyValidation, Condition):
 
     """
     def __init__(self, dependency):
-        def func(dependency, context=None):
+        def func(dependency, execution_id=None):
             try:
-                return dependency.is_finished(context)
+                return dependency.is_finished(execution_id)
             except AttributeError as e:
                 raise ConditionError(f'WhenFinished: Unsupported dependency type: {type(dependency)}; ({e}).')
 
@@ -1853,12 +1852,12 @@ class WhenFinishedAny(_DependencyValidation, Condition):
 
     """
     def __init__(self, *dependencies):
-        def func(*dependencies, scheduler=None, context=None):
+        def func(*dependencies, scheduler=None, execution_id=None):
             if len(dependencies) == 0:
                 dependencies = scheduler.nodes
             for d in dependencies:
                 try:
-                    if d.is_finished(context):
+                    if d.is_finished(execution_id):
                         return True
                 except AttributeError as e:
                     raise ConditionError(f'WhenFinishedAny: Unsupported dependency type: {type(d)}; ({e}).')
