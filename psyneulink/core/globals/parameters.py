@@ -1763,6 +1763,20 @@ class SharedParameter(Parameter):
 
         super(Parameter, self).__setattr__('name', name)
 
+    @handle_external_context()
+    def get_previous(
+        self,
+        context=None,
+        index: int = 1,
+        range_start: int = None,
+        range_end: int = None,
+    ):
+        return self.source.get_previous(context, index, range_start, range_end)
+
+    @handle_external_context()
+    def get_delta(self, context=None):
+        return self.source.get_delta(context)
+
     @property
     def source(self):
         try:
