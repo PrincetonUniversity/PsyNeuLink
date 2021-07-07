@@ -3087,19 +3087,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
         self.most_recent_context = context
-
-        # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
-                try:
-                    prev_val = getattr(self.parameters, param).get_previous(context)
-                    self._set_parameter_value(param, prev_val, context)
-                except AttributeError:
-                    try:
-                        prev_val = getattr(self.function.parameters, param).get_previous(context)
-                        self.function._set_parameter_value(param, prev_val, context)
-                    except:
-                        pass
+        self._reset_runtime_parameters(context)
 
         return value
 
@@ -3165,6 +3153,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
         return parameter._get(context)
+
+    def _reset_runtime_parameters(self, context):
+        if context.execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[context.execution_id]:
+                self._set_parameter_value(
+                    key,
+                    self._runtime_params_reset[context.execution_id][key],
+                    context
+                )
+            self._runtime_params_reset[context.execution_id] = {}
 
     def _try_execute_param(self, param, var, context=None):
         def fill_recursively(arr, value, indices=()):
