@@ -199,7 +199,7 @@ import types
 
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
-    MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
+    MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
     MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
@@ -377,7 +377,14 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
                 value = f'({value[1:-1]})'
             elif value_type is numpy.ndarray:
                 value = f'{value[MODEL_SPEC_ID_TYPE]}({value})'
-
+        elif MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE in value:
+            # is a stateful parameter with initial value
+            value = _parse_parameter_value(
+                value[MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE],
+                component_identifiers,
+                name,
+                parent_parameters
+            )
         else:
             # it is either a Component spec or just a plain dict
             try:
