@@ -2363,6 +2363,7 @@ from inspect import isgenerator, isgeneratorfunction
 
 import networkx
 import numpy as np
+import pint
 import typecheck as tc
 from PIL import Image
 
@@ -2419,7 +2420,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
-from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
@@ -3442,6 +3443,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @termination_processing.setter
     def termination_processing(self, termination_conds):
         self.scheduler.termination_conds = termination_conds
+
+    @property
+    def scheduling_mode(self):
+        return self.scheduler.scheduling_mode
+
+    @scheduling_mode.setter
+    def scheduling_mode(self, scheduling_mode: SchedulingMode):
+        self.scheduler.scheduling_mode = scheduling_mode
 
     # ******************************************************************************************************************
     #                                              GRAPH
@@ -8040,7 +8049,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate=False,
             log=False,
             scheduler=None,
+            scheduling_mode: typing.Optional[SchedulingMode] = None,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
             ):
@@ -8121,11 +8132,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
         termination_processing : Condition  : default None
-            specifies `Condition` under which execution of the run will occur.
-
-            COMMENT:
-               BETTER DESCRIPTION NEEDED
-            COMMENT
+            specifies
+            `termination Conditions <Scheduler_Termination_Conditions>`
+            to be used for the current `RUN <TimeScale.RUN>`. To change
+            these conditions for all future runs, use
+            `Composition.termination_processing` (or
+            `Scheduler.termination_conds`)
 
         skip_analyze_graph : bool : default False
             setting to True suppresses call to _analyze_graph()
@@ -8206,12 +8218,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
             If not specified, the Composition will use its automatically generated scheduler.
 
+        scheduling_mode : SchedulingMode[STANDARD|EXACT_TIME] : default None
+            if specified, sets the `scheduling mode <SchedulingMode>`
+            for the current and all future runs of the Composition. See
+            `Scheduler_Execution`
+
         execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
             mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
             CUDA compilation.
+
+        default_absolute_time_unit : ``pint.Quantity`` : ``1ms``
+            if not otherwise determined by any absolute **conditions**,
+            specifies the absolute duration of a `TIME_STEP`. See
+            `Scheduler.default_absolute_time_unit`
 
         context : `execution_id <Context.execution_id>` : default `default_execution_id`
             context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
@@ -8265,12 +8287,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler is None:
             scheduler = self.scheduler
 
-        if termination_processing is None:
-            termination_processing = self.termination_processing
-        else:
-            new_conds = self.termination_processing.copy()
-            new_conds.update(termination_processing)
-            termination_processing = new_conds
+        if scheduling_mode is not None:
+            scheduler.mode = scheduling_mode
+
+        if default_absolute_time_unit is not None:
+            scheduler.default_absolute_time_unit = default_absolute_time_unit
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8458,7 +8479,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_before_trial:
                     call_with_pruned_args(call_before_trial, context=context)
 
-                if termination_processing[TimeScale.RUN].is_satisfied(
+                try:
+                    run_term_cond = termination_processing[TimeScale.RUN]
+                except (TypeError, KeyError):
+                    run_term_cond = self.termination_processing[TimeScale.RUN]
+
+                if run_term_cond.is_satisfied(
                     scheduler=scheduler,
                     context=context
                 ):
@@ -8948,9 +8974,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-            if termination_processing is None:
-                termination_processing = self.termination_processing
-
             # if execute was called from command line and no inputs were specified, assign default inputs to highest level
             # composition (i.e. not on any nested Compositions)
             if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
@@ -9307,6 +9330,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(next_execution_set, context)
 
                 # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
+                if execution_scheduler.mode is SchedulingMode.EXACT_TIME:
+                    # sort flattened execution set by unflattened position
+                    next_execution_set = sorted(
+                        next_execution_set,
+                        key=lambda n: execution_scheduler.consideration_queue_indices[n]
+                    )
 
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):

@@ -28,13 +28,16 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function_Base, FunctionError
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, Function_Base, FunctionError,
+    _random_state_getter, _seed_setter,
+)
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
 from psyneulink.core.globals.context import ContextFlags
-from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec, get_global_seed
+from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
 from psyneulink.core.globals.parameters import Parameter
@@ -148,7 +151,8 @@ class NormalDist(DistributionFunction):
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None, stateful=True)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
     @tc.typecheck
     def __init__(self,
@@ -160,16 +164,11 @@ class NormalDist(DistributionFunction):
                  seed=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             mean=mean,
             standard_deviation=standard_deviation,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -331,7 +330,8 @@ class UniformToNormalDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -346,16 +346,11 @@ class UniformToNormalDist(DistributionFunction):
                  seed=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             mean=mean,
             standard_deviation=standard_deviation,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -374,7 +369,7 @@ class UniformToNormalDist(DistributionFunction):
 
         mean = self._get_current_parameter_value(DIST_MEAN, context)
         standard_deviation = self._get_current_parameter_value(STANDARD_DEVIATION, context)
-        random_state = self._get_current_parameter_value('random_state', context)
+        random_state = self.parameters.random_state._get(context)
 
         sample = random_state.rand(1)[0]
         result = ((np.sqrt(2) * erfinv(2 * sample - 1)) * standard_deviation) + mean
@@ -464,7 +459,8 @@ class ExponentialDist(DistributionFunction):
                     :type: ``numpy.random.RandomState``
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        random_state = Parameter(None, stateful=True)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
     @tc.typecheck
     def __init__(self,
@@ -475,15 +471,10 @@ class ExponentialDist(DistributionFunction):
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             beta=beta,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -593,7 +584,8 @@ class UniformDist(DistributionFunction):
         """
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
     @tc.typecheck
     def __init__(self,
@@ -605,16 +597,11 @@ class UniformDist(DistributionFunction):
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             low=low,
             high=high,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -730,7 +717,8 @@ class GammaDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -743,15 +731,12 @@ class GammaDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
-        if seed is None:
-            seed = get_global_seed()
 
-        random_state = np.random.RandomState([seed])
         super().__init__(
             default_variable=default_variable,
             scale=scale,
             dist_shape=dist_shape,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -866,7 +851,8 @@ class WaldDist(DistributionFunction):
                     :default value: 1.0
                     :type: ``float``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -879,14 +865,11 @@ class WaldDist(DistributionFunction):
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None):
-        if seed is None:
-            seed = get_global_seed()
 
-        random_state = np.random.RandomState([seed])
         super().__init__(
             default_variable=default_variable,
             scale=scale,
-            random_state=random_state,
+            seed=seed,
             mean=mean,
             params=params,
             owner=owner,

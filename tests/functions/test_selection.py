@@ -44,14 +44,10 @@ GROUP_PREFIX="SelectionFunction "
 @pytest.mark.benchmark
 @pytest.mark.parametrize("func, variable, params, expected", test_data, ids=names)
 def test_basic(func, variable, params, expected, benchmark, func_mode):
-    f = func(default_variable=variable, **params)
     benchmark.group = GROUP_PREFIX + func.componentName + params['mode']
-    if func_mode == 'Python':
-        EX = f
-    elif func_mode == 'LLVM':
-        EX = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        EX = pnlvm.execution.FuncExecution(f).cuda_execute
+
+    f = func(default_variable=variable, **params)
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)
     res = EX(variable)

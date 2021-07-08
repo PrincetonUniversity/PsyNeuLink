@@ -171,13 +171,8 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
             params.pop('dimension')
 
     f = func[0](default_variable=variable, noise=noise, **params)
+    ex = pytest.helpers.get_func_execution(f, func_mode)
 
-    if func_mode == 'Python':
-        ex = f
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f).cuda_execute
     ex(variable)
     ex(variable)
     res = ex(variable)

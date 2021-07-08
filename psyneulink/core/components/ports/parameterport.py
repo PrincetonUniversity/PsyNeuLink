@@ -400,6 +400,7 @@ class ParameterPortList(ContentAddressableList):
 
     separator = '-'
     legal_key_type_strings = ContentAddressableList.legal_key_type_strings + ['Parameter']
+    _owner_port_suffix = 'self'
 
     def __init__(
         self,
@@ -501,10 +502,13 @@ class ParameterPortList(ContentAddressableList):
         unsuffixed_name = ParameterPortList._get_base_name(param_name)
         if unsuffixed_name == param_name:
             # all possible function-suffixed names
-            names = sorted([
-                p.name for p in self.owner.parameters
-                if is_instance_or_subclass(p.default_value, Function)
-            ])
+            names = sorted(
+                [
+                    p.name for p in self.owner.parameters
+                    if is_instance_or_subclass(p.default_value, Function)
+                ]
+                + [self._owner_port_suffix]
+            )
             # put 'function' at beginning
             try:
                 function_index = names.index(FUNCTION)
@@ -1003,6 +1007,7 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
 
     port_parameters = collections.defaultdict(set)
     port_aliases = set()
+    owner_ports = set()
 
     # function may be a custom function not yet parsed to a UDF
     # function may also be a Function class, in which case parameter
@@ -1021,10 +1026,14 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
         if isinstance(p, ParameterAlias):
             port_aliases.add(p.name)
 
+        if not skip_parameter_port(p):
+            owner_ports.add(p.name)
+
     for parameter_port_name in port_parameters:
         if (
             len(port_parameters[parameter_port_name]) > 1
             or parameter_port_name in port_aliases
+            or parameter_port_name in owner_ports
         ):
             add_suffix = True
         else:
@@ -1081,10 +1090,18 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             )
 
     for p in owner.parameters:
-        if (
-            not skip_parameter_port(p)
-            and p.name not in owner.parameter_ports.names
-        ):
+        if not skip_parameter_port(p):
+            if (
+                p.name in port_parameters
+                or p.name in port_aliases
+            ):
+                explicit_name = ParameterPortList._get_explicit_name(
+                    p.name,
+                    ParameterPortList._owner_port_suffix
+                )
+            else:
+                explicit_name = p.name
+
             if p.spec is not None:
                 value = p.spec
             else:
@@ -1096,7 +1113,8 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 value,
                 context=context,
                 function=function,
-                source=p
+                source=p,
+                explicit_name=explicit_name,
             )
 
     owner.parameter_ports.sort(key=lambda port: port.name)

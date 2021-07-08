@@ -80,14 +80,7 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
                                 search_space=search_space, direction=direction,
                                 select_randomly_from_optimal_values=(selection=='RANDOM'),
                                 seed=0)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = EX(variable)
 
@@ -98,4 +91,4 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
         assert np.allclose(res[3], result[3])
 
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(EX, variable)

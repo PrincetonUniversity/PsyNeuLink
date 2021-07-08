@@ -429,12 +429,18 @@ class UserDefinedFunction(Function_Base):
                 - dict with default values (from function definition, else set to None)
             """
             try:
-                arg_names = custom_function.__code__.co_varnames
-            except AttributeError:
-                raise FunctionError("Can't get __code__ for custom_function")
+                custom_function_signature = signature(custom_function)
+            except ValueError:
+                raise FunctionError(
+                    "Assignment of a function or method ({}) without an "
+                    "inspect.signature to a {} is not supported".format(
+                        custom_function, self.__class__.__name__
+                    )
+                )
+
             args = {}
             defaults = {}
-            for arg_name, arg in signature(custom_function).parameters.items():
+            for arg_name, arg in custom_function_signature.parameters.items():
 
                 # MODIFIED 3/6/19 NEW: [JDC]
                 # Custom function specified owner as arg
@@ -467,10 +473,12 @@ class UserDefinedFunction(Function_Base):
                     args[arg_name] = defaults[arg_name]
 
             # Assign default value of first arg as variable and remove from dict
-            variable = args[arg_names[0]]
+            # .keys is ordered
+            first_arg_name = list(custom_function_signature.parameters.keys())[0]
+            variable = args[first_arg_name]
             if variable is _empty:
                 variable = None
-            del args[arg_names[0]]
+            del args[first_arg_name]
 
             return variable, args, defaults
 
@@ -481,11 +489,8 @@ class UserDefinedFunction(Function_Base):
         # Get variable and names of other any other args for custom_function and assign to cust_fct_params
         if params is not None and CUSTOM_FUNCTION in params:
             custom_function = params[CUSTOM_FUNCTION]
-        try:
-            cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
-        except FunctionError:
-            raise FunctionError("Assignment of a built-in function or method ({}) to a {} is not supported".
-                                format(custom_function, self.__class__.__name__))
+
+        cust_fct_variable, self.cust_fct_params, defaults = get_cust_fct_args(custom_function)
 
         # If params is specified as arg in custom function's definition, move it to params in UDF's constructor
         if PARAMS in self.cust_fct_params:
@@ -590,6 +595,18 @@ class UserDefinedFunction(Function_Base):
 
         func_globals = self.custom_function.__globals__
         func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
-        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
 
+        udf_block = builder.append_basic_block(name="post_udf")
+        udf_builder = pnlvm.ir.IRBuilder(udf_block)
+
+        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, udf_builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
+        # After we're done with allocating variable stack space, jump to the code
+        builder.branch(udf_block)
+
+        post_block = builder.append_basic_block(name="post_udf")
+        # If the function didn't use return as the last statement jump back to the outer block
+        if not udf_builder.block.is_terminated:
+            udf_builder.branch(post_block)
+
+        builder.position_at_start(post_block)
         return builder

@@ -47,13 +47,9 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mo
     if func_mode != 'Python' and llvm_skip:
         pytest.skip(llvm_skip)
     f = func(default_variable=variable, **params)
-    if func_mode == 'Python':
-        ex = f
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    ex = pytest.helpers.get_func_execution(f, func_mode)
     res = ex(variable)
+
     assert np.allclose(res, expected)
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(ex, variable)

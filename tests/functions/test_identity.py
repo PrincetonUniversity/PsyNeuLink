@@ -11,12 +11,7 @@ import psyneulink.core.llvm as pnlvm
 def test_basic(size, benchmark, func_mode):
     variable = np.random.rand(size)
     f = Functions.Identity(default_variable=variable)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        EX = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        EX = pnlvm.execution.FuncExecution(f).cuda_execute
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = benchmark(EX, variable)
     assert np.allclose(res, variable)

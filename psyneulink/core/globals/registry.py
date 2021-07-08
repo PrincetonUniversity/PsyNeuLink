@@ -380,7 +380,7 @@ def remove_instance_from_registry(registry, category, name=None, component=None)
                                        registry_entry.renamed_instance_counts,
                                        registry_entry.default)
 
-def clear_registry(registry):
+def clear_registry(registry=None):
     """Clear specified registry of all entries, but leave any categories created within it intact.
 
     .. note::
@@ -389,11 +389,19 @@ def clear_registry(registry):
        exactly the same PsyNeuLink name as exsiting ones within the same Python namespace.
 
     """
-    for category in registry:
-        instance_dict = registry[category].instanceDict.copy()
-        for name in instance_dict:
-            remove_instance_from_registry(registry, category, name)
-        registry[category].renamed_instance_counts.clear()
+    from psyneulink import primary_registries
+
+    if registry is None:
+        registries = primary_registries
+    else:
+        registries = [registry]
+
+    for registry in registries:
+        for category in registry:
+            instance_dict = registry[category].instanceDict.copy()
+            for name in instance_dict:
+                remove_instance_from_registry(registry, category, name)
+            registry[category].renamed_instance_counts.clear()
 
 def process_registry_object_instances(registry, func):
     for category in registry:

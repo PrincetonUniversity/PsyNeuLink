@@ -29,7 +29,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.function import Function_Base, FunctionError, is_function_type
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, Function_Base, FunctionError, _random_state_getter, _seed_setter,
+    is_function_type,
+)
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic, SoftMax
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -38,7 +41,7 @@ from psyneulink.core.globals.keywords import \
     MSE, SSE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import is_numeric, scalar_distance, get_global_seed, convert_to_np_array
+from psyneulink.core.globals.utilities import is_numeric, scalar_distance, convert_to_np_array
 
 __all__ = ['LearningFunction', 'Kohonen', 'Hebbian', 'ContrastiveHebbian',
            'Reinforcement', 'BayesGLM', 'BackPropagation', 'TDLearning',
@@ -415,7 +418,8 @@ class BayesGLM(LearningFunction):
                     :default value: 1
                     :type: ``int``
         """
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,
@@ -457,18 +461,13 @@ class BayesGLM(LearningFunction):
 
         self.user_specified_default_variable = default_variable
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             mu_0=mu_0,
             sigma_0=sigma_0,
             gamma_shape_0=gamma_shape_0,
             gamma_size_0=gamma_size_0,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,

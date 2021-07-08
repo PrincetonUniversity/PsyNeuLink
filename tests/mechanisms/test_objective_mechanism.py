@@ -18,15 +18,7 @@ class TestObjectiveMechanism:
             name='O',
             default_variable=[0 for i in range(VECTOR_SIZE)],
         )
-        if mech_mode == 'Python':
-            EX = O.execute
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(O)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(O)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(O, mech_mode)
 
         val = benchmark(EX, [10.0 for i in range(VECTOR_SIZE)])
-
         assert np.allclose(val, [[10.0 for i in range(VECTOR_SIZE)]])
