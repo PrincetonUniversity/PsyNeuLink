@@ -1152,7 +1152,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
     return '\n'.join(output)
 
 
-def generate_script_from_json(model_input):
+def generate_script_from_json(model_input, outfile=None):
     """
         Generate a Python script from JSON **model_input** in the
         `general JSON format <JSON_Model_Specification>`
@@ -1206,7 +1206,13 @@ def generate_script_from_json(model_input):
         model_input = open(model_input, 'r').read()
     except (FileNotFoundError, OSError):
         pass
-    model_input = json.loads(model_input)
+
+    try:
+        model_input = json.loads(model_input)
+    except json.decoder.JSONDecodeError:
+        raise ValueError(
+            f'{model_input} is neither valid JSON nor a file containing JSON'
+        )
 
     assert len(model_input.keys()) == 1
     model_input = model_input[list(model_input.keys())[0]]
@@ -1288,7 +1294,13 @@ def generate_script_from_json(model_input):
         comp_str
     )
 
-    return model_output
+    if outfile is not None:
+        # pass through any file exceptions
+        with open(outfile, 'w') as outfile:
+            outfile.write(model_output)
+            print(f'Wrote JSON to {outfile.name}')
+    else:
+        return model_output
 
 
 def generate_json(*compositions):
