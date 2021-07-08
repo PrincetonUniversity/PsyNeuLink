@@ -914,31 +914,36 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         for name_to_delete in keys_to_delete:
             del composition_dict[MODEL_SPEC_ID_NODES][name_to_delete]
 
-        pnl_specific_items = {}
-        keys_to_delete = []
-        for name, edge in composition_dict[MODEL_SPEC_ID_PROJECTIONS].items():
-            try:
-                _parse_component_type(edge)
-            except KeyError:
-                # will use a default type
-                pass
-            except PNLJSONError:
-                if name == MODEL_SPEC_ID_PSYNEULINK:
-                    pnl_specific_items = edge
+        try:
+            edges_dict = composition_dict[MODEL_SPEC_ID_PROJECTIONS]
+            pnl_specific_items = {}
+            keys_to_delete = []
+        except KeyError:
+            pass
+        else:
+            for name, edge in edges_dict.items():
+                try:
+                    _parse_component_type(edge)
+                except KeyError:
+                    # will use a default type
+                    pass
+                except PNLJSONError:
+                    if name == MODEL_SPEC_ID_PSYNEULINK:
+                        pnl_specific_items = edge
 
-                keys_to_delete.append(name)
+                    keys_to_delete.append(name)
 
-        for name, edge in pnl_specific_items.items():
-            # exclude CIM projections because they are automatically
-            # generated
-            if (
-                edge[MODEL_SPEC_ID_SENDER_MECH] != comp_name
-                and edge[MODEL_SPEC_ID_RECEIVER_MECH] != comp_name
-            ):
-                composition_dict[MODEL_SPEC_ID_PROJECTIONS][name] = edge
+            for name, edge in pnl_specific_items.items():
+                # exclude CIM projections because they are automatically
+                # generated
+                if (
+                    edge[MODEL_SPEC_ID_SENDER_MECH] != comp_name
+                    and edge[MODEL_SPEC_ID_RECEIVER_MECH] != comp_name
+                ):
+                    composition_dict[MODEL_SPEC_ID_PROJECTIONS][name] = edge
 
-        for name_to_delete in keys_to_delete:
-            del composition_dict[MODEL_SPEC_ID_PROJECTIONS][name_to_delete]
+            for name_to_delete in keys_to_delete:
+                del composition_dict[MODEL_SPEC_ID_PROJECTIONS][name_to_delete]
 
         # generate string for Composition itself
         output.append(
@@ -1092,35 +1097,40 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         if len(composition_dict[MODEL_SPEC_ID_NODES]) > 0:
             output.append('')
 
-        # generate string to add the projections
-        for name, projection_dict in composition_dict[MODEL_SPEC_ID_PROJECTIONS].items():
-            try:
-                projection_type = _parse_component_type(projection_dict)
-            except KeyError:
-                projection_type = default_edge_type
+        try:
+            edges_dict = composition_dict[MODEL_SPEC_ID_PROJECTIONS]
+        except KeyError:
+            pass
+        else:
+            # generate string to add the projections
+            for name, projection_dict in edges_dict.items():
+                try:
+                    projection_type = _parse_component_type(projection_dict)
+                except KeyError:
+                    projection_type = default_edge_type
 
-            if (
-                not issubclass(projection_type, implicit_types)
-                and projection_dict[MODEL_SPEC_ID_SENDER_MECH] not in implicit_names
-                and projection_dict[MODEL_SPEC_ID_RECEIVER_MECH] not in implicit_names
-            ):
-                output.append(
-                    '{0}.add_projection(projection={1}, sender={2}, receiver={3})'.format(
-                        comp_identifer,
-                        _generate_component_string(
-                            projection_dict,
-                            component_identifiers,
-                            component_name=name,
-                            default_type=default_edge_type
-                        ),
-                        parse_valid_identifier(
-                            projection_dict[MODEL_SPEC_ID_SENDER_MECH]
-                        ),
-                        parse_valid_identifier(
-                            projection_dict[MODEL_SPEC_ID_RECEIVER_MECH]
-                        ),
+                if (
+                    not issubclass(projection_type, implicit_types)
+                    and projection_dict[MODEL_SPEC_ID_SENDER_MECH] not in implicit_names
+                    and projection_dict[MODEL_SPEC_ID_RECEIVER_MECH] not in implicit_names
+                ):
+                    output.append(
+                        '{0}.add_projection(projection={1}, sender={2}, receiver={3})'.format(
+                            comp_identifer,
+                            _generate_component_string(
+                                projection_dict,
+                                component_identifiers,
+                                component_name=name,
+                                default_type=default_edge_type
+                            ),
+                            parse_valid_identifier(
+                                projection_dict[MODEL_SPEC_ID_SENDER_MECH]
+                            ),
+                            parse_valid_identifier(
+                                projection_dict[MODEL_SPEC_ID_RECEIVER_MECH]
+                            ),
+                        )
                     )
-                )
 
         # add controller if it exists (must happen after projections)
         if controller_name is not None:
