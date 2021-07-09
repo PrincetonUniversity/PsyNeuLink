@@ -200,7 +200,7 @@ import types
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
     parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals, convert_to_np_array
@@ -582,11 +582,37 @@ def _generate_component_string(
 
     # pnl objects only have one function unless specified in another way
     # than just "function"
-    try:
-        parameter_names['function'] = list(component_dict['functions'])[0]
+    if 'functions' in component_dict:
+        function_determined_by_output_port = False
+
+        try:
+            output_ports = component_dict[MODEL_SPEC_ID_OUTPUT_PORTS]
+        except KeyError:
+            pass
+        else:
+            if len(output_ports) == 1 or isinstance(output_ports, list):
+                try:
+                    primary_output_port = output_ports[0]
+                except KeyError:
+                    primary_output_port = output_ports[list(output_ports)[0]]
+                function_determined_by_output_port = True
+            else:
+                try:
+                    # 'out_port' appears to be the general primary output_port term
+                    # should ideally have a marker in json to define it as primary
+                    primary_output_port = output_ports['out_port']
+                except KeyError:
+                    pass
+                else:
+                    function_determined_by_output_port = True
+
+        # neuroml-style mdf has MODEL_SPEC_ID_PARAMETER_VALUE in output port definitions
+        if function_determined_by_output_port and MODEL_SPEC_ID_PARAMETER_VALUE in primary_output_port:
+            parameter_names['function'] = re.sub(r'(.*)\[\d+\]', '\\1', primary_output_port[MODEL_SPEC_ID_PARAMETER_VALUE])
+        else:
+            parameter_names['function'] = list(component_dict['functions'])[0]
+
         parameters['function'] = component_dict['functions'][parameter_names['function']]
-    except KeyError:
-        pass
 
     assignment_str = f'{parse_valid_identifier(name)} = ' if assignment else ''
 
