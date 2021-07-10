@@ -7,20 +7,6 @@
 
 
 # ********************************************* Time ***************************************************************
-
-"""
-
-.. _Time_Overview:
-
-Overview
---------
-
-:doc:`Scheduler`\\ s maintain `Clock` objects to track time. The current time in \
-relation to a :doc:`Scheduler` is stored in :class:`Clock.time <Time>` \
-or :class:`Clock.simple_time <SimpleTime>`
-
-"""
-
 import graph_scheduler
 
 __all__ = [
@@ -30,3 +16,16 @@ __all__ = [
 TimeScale = graph_scheduler.TimeScale
 Time = graph_scheduler.Time
 TimeHistoryTree = graph_scheduler.TimeHistoryTree
+
+_doc_subs = {
+    'TimeScale': [
+        (
+            r'(a single\n *call to `run <Scheduler\.run>`)',
+            '\\1 (a single input to a\n        `Composition <Composition>`.)'
+        ),
+        (
+            r', managed by the\n *environment using the Scheduler.',
+            r'. In PsyNeuLink, this is the scope of a call to the `run <Composition.run>` method of a `Composition <Composition>`, consisting of one or more `TRIALs <TimeScale.TRIAL>`.'
+        ),
+    ]
+}
