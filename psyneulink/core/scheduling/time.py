@@ -16,8 +16,8 @@ Overview
 --------
 
 :doc:`Scheduler`\\ s maintain `Clock` objects to track time. The current time in \
-relation to a :doc:`Scheduler` is stored in :class:`Scheduler.clock.time <Time>` \
-or :class:`Scheduler.clock.simple_time <SimpleTime>`
+relation to a :doc:`Scheduler` is stored in :class:`Clock.time <Time>` \
+or :class:`Clock.simple_time <SimpleTime>`
 
 """
 

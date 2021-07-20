@@ -462,9 +462,6 @@ class Scheduler(JSONDumpable):
         For example, `times[TimeScale.RUN][TimeScale.PASS]` is the number of `PASS`es that have occurred in the
         current `RUN` that the Scheduler is scheduling at the time it is accessed
 
-    clock : `Clock`
-        a `Clock` object that stores the current time in this Scheduler
-
     """
     def __init__(
         self,
@@ -950,10 +947,6 @@ class Scheduler(JSONDumpable):
                 }
             }
         }
-
-    @property
-    def clock(self):
-        return self.clocks[self.default_execution_id]
 
     def get_clock(self, context):
         try:
