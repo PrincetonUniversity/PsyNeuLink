@@ -72,8 +72,8 @@ z = pnl.Pathway(
 )
 
 
-def print_header(comp):
-    print("\n\n**** Time: ", comp.scheduler.clock.simple_time)
+def print_header(comp, context):
+    print("\n\n**** Time: ", comp.scheduler.get_clock(context).simple_time)
 
 
 def show_target(comp):

@@ -111,8 +111,8 @@ target_list = {
 }
 
 
-def print_header(system):
-    print("\n\n**** Time: ", system.scheduler.clock.simple_time)
+def print_header(system, context):
+    print("\n\n**** Time: ", system.scheduler.get_clock(context).simple_time)
 
 
 def show_target():
