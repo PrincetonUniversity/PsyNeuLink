@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>AutoAssociativeProjection &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -270,13 +272,13 @@ RecurrentTransferMechanism is that this allows them to be modified by a <a class
 <section id="class-reference">
 <span id="autoassociative-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
-<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.projections.pathway.autoassociativeprojection.</code><code class="sig-name descname">AutoAssociativeError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.projections.pathway.autoassociativeprojection.</span></span><span class="sig-name descname"><span class="pre">AutoAssociativeError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.projections.pathway.autoassociativeprojection.</code><code class="sig-name descname">AutoAssociativeProjection</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.projections.pathway.autoassociativeprojection.</span></span><span class="sig-name descname"><span class="pre">AutoAssociativeProjection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
 <dt>AutoAssociativeProjection(</dt><dd><p>)</p>
 </dd>
@@ -300,8 +302,8 @@ must be a square matrix (i.e., have the same number of rows and columns).</p></l
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender">
-<code class="sig-name descname">sender</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender">
+<span class="sig-name descname"><span class="pre">sender</span></span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the source of the Projection’s input; in the case of
 an AutoAssociativeProjection, it is an OutputPort of the same Mechanism to which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> belongs.</p>
 <dl class="field-list simple">
@@ -312,8 +314,8 @@ an AutoAssociativeProjection, it is an OutputPort of the same Mechanism to which
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver">
-<code class="sig-name descname">receiver</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver">
+<span class="sig-name descname"><span class="pre">receiver</span></span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the destination of the Projection’s output; in the case
 of an AutoAssociativeProjection, it is an InputPort of the same Mechanism to which the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> belongs.</p>
 <dl class="field-list simple">
@@ -324,8 +326,8 @@ of an AutoAssociativeProjection, it is an InputPort of the same Mechanism to whi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix">
-<code class="sig-name descname">matrix</code><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix">
+<span class="sig-name descname"><span class="pre">matrix</span></span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>square matrix used by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> to transform input from the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> to the value provided to the <a class="reference internal" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>;
 in the case of an AutoAssociativeProjection.</p>
 <dl class="field-list simple">
@@ -336,8 +338,8 @@ in the case of an AutoAssociativeProjection.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection._instantiate_parameter_classes">
-<code class="sig-name descname">_instantiate_parameter_classes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection._instantiate_parameter_classes" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection._instantiate_parameter_classes">
+<span class="sig-name descname"><span class="pre">_instantiate_parameter_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection._instantiate_parameter_classes" title="Permalink to this definition">¶</a></dt>
 <dd><p>An optional method that will take any Parameter values in
 <strong>context</strong> that are classes/types, and instantiate them.</p>
 </dd></dl>
@@ -408,11 +410,10 @@ in the case of an AutoAssociativeProjection.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

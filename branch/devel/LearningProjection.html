@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningProjection &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>LearningProjection &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -322,14 +324,14 @@ are next executed; see <a class="reference internal" href="Component.html#compon
 <section id="class-reference">
 <span id="learningprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.DefaultTrainingMechanism">
-<code class="sig-prename descclassname">psyneulink.core.components.projections.modulatory.learningprojection.</code><code class="sig-name descname">DefaultTrainingMechanism</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.DefaultTrainingMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.DefaultTrainingMechanism">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.modulatory.learningprojection.</span></span><span class="sig-name descname"><span class="pre">DefaultTrainingMechanism</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.DefaultTrainingMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.projections.modulatory.learningprojection.</code><code class="sig-name descname">LearningProjection</code><span class="sig-paren">(</span><em class="sig-param">sender=None</em>, <em class="sig-param">receiver=None</em>, <em class="sig-param">error_function</em>, <em class="sig-param">learning_function</em>, <em class="sig-param">learning_rate=None</em>, <em class="sig-param">learning_enabled=None                  weight=None</em>, <em class="sig-param">exponent=None</em>, <em class="sig-param">params=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.modulatory.learningprojection.</span></span><span class="sig-name descname"><span class="pre">LearningProjection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sender=None</span></em>, <em class="sig-param"><span class="pre">receiver=None</span></em>, <em class="sig-param"><span class="pre">error_function</span></em>, <em class="sig-param"><span class="pre">learning_function</span></em>, <em class="sig-param"><span class="pre">learning_rate=None</span></em>, <em class="sig-param"><span class="pre">learning_enabled=None</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">weight=None</span></em>, <em class="sig-param"><span class="pre">exponent=None</span></em>, <em class="sig-param"><span class="pre">params=None</span></em>, <em class="sig-param"><span class="pre">name=None</span></em>, <em class="sig-param"><span class="pre">prefs=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection</span></a> that modulates the value of a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the
 <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.
 See <a class="reference internal" href="ModulatoryProjection.html#modulatoryprojection-class-reference"><span class="std std-ref">Projection</span></a> for additional arguments and attributes.</p>
@@ -359,15 +361,15 @@ received from the <a class="reference internal" href="#psyneulink.core.component
 which the LearningProjection belongs, and is applied in addition to any effects of the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> from which the LearningProjection receives its
 <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> (see <a class="reference internal" href="#learningprojection-function-and-learning-rate"><span class="std std-ref">Function and learning_rate</span></a> for
 additional details).</p></li>
-<li><p><strong>learning_enabled</strong> (<em>Optional</em><em>[</em><em>bool</em><em> or </em><em>Enum</em><em>[</em><em>ONLINE|AFTER</em><em>]</em><em>] </em><em>: default : None</em>) – determines whether or when the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningProjection is used to modify
+<li><p><strong>learning_enabled</strong> (<em>Optional</em><em>[</em><em>bool</em><em> or </em><em>Enum</em><em>[</em><em>ONLINE</em><em>|</em><em>AFTER</em><em>]</em><em>] </em><em>: default : None</em>) – determines whether or when the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningProjection is used to modify
 the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> when the latter is executed (see
 <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_enabled" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> for additional details).</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender">
-<code class="sig-name descname">sender</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender">
+<span class="sig-name descname"><span class="pre">sender</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>source of <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>
 (see <a class="reference internal" href="#learningprojection-sender"><span class="std std-ref">Sender</span></a> for additional details).</p>
 <dl class="field-list simple">
@@ -378,8 +380,8 @@ the <a class="reference internal" href="#psyneulink.core.components.projections.
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.receiver">
-<code class="sig-name descname">receiver</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.receiver">
+<span class="sig-name descname"><span class="pre">receiver</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p><em>MATRIX</em> <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the <code class="xref any docutils literal notranslate"><span class="pre">matrix</span></code> parameter of the
 <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> (see <a class="reference internal" href="#learningprojection-receiver"><span class="std std-ref">Receiver</span></a> for additional
 details).</p>
@@ -391,8 +393,8 @@ details).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection">
-<code class="sig-name descname">learned_projection</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection">
+<span class="sig-name descname"><span class="pre">learned_projection</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to which LearningProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.receiver" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a> belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -402,8 +404,8 @@ details).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>same as <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -413,8 +415,8 @@ details).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_enabled">
-<code class="sig-name descname">learning_enabled</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_enabled" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_enabled">
+<span class="sig-name descname"><span class="pre">learning_enabled</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_enabled" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines whether or when the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningProjection is used to modify
 the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> when the latter is executed;  by default, its
 value is set to the value of the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_enabled"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_enabled</span></code></a> attribute of the
@@ -430,8 +432,8 @@ additional details).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal">
-<code class="sig-name descname">learning_signal</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal">
+<span class="sig-name descname"><span class="pre">learning_signal</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of the LearningProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>: a matrix of
 weight changes calculated by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> belongs;
 rows correspond to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> of the <a class="reference internal" href="#"><span class="doc">learned_projection</span></a>,
@@ -445,8 +447,8 @@ and columns to its <a class="reference internal" href="MappingProjection.html#ps
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>assigns the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> received from the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> to the
 LearningProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, possibly modified by its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>; the default in an identity function.</p>
 <dl class="field-list simple">
@@ -457,8 +459,8 @@ LearningProjection’s <a class="reference internal" href="#psyneulink.core.comp
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the learning_rate for the LearningProjection.  If specified, it is applied multiplicatively to the
 <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>; its specification may be superseded by the
 <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> of its <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>
@@ -471,8 +473,8 @@ LearningProjection’s <a class="reference internal" href="#psyneulink.core.comp
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix">
-<code class="sig-name descname">weight_change_matrix</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix">
+<span class="sig-name descname"><span class="pre">weight_change_matrix</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>output of the LearningProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, possibly modified by its
 <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a>;  reflects the matrix of weight changes to be made to the
 <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projection</span></code></a> (rows correspond to the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> of the
@@ -485,8 +487,8 @@ LearningProjection’s <a class="reference internal" href="#psyneulink.core.comp
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value">
-<code class="sig-name descname">value</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>same as <a class="reference internal" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.weight_change_matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">weight_change_matrix</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -496,28 +498,28 @@ LearningProjection’s <a class="reference internal" href="#psyneulink.core.comp
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.projection_sender">
-<code class="sig-name descname">projection_sender</code><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.projection_sender" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.projection_sender">
+<span class="sig-name descname"><span class="pre">projection_sender</span></span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection.projection_sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate sender and receiver</p>
 <p>Insure <a class="reference internal" href="#"><span class="doc">sender</span></a> is a LearningMechanism or the OutputPort of one.
 Insure <a class="reference internal" href="#"><span class="doc">receiver</span></a> is a MappingProjection or the matrix ParameterPort of one.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_sender">
-<code class="sig-name descname">_instantiate_sender</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sender</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_sender" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_sender">
+<span class="sig-name descname"><span class="pre">_instantiate_sender</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate LearningMechanism</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_receiver">
-<code class="sig-name descname">_instantiate_receiver</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_receiver">
+<span class="sig-name descname"><span class="pre">_instantiate_receiver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate that receiver has been assigned and is compatible with the output of function</p>
 <p>Set learning_enabled to value of receiver if it was not otherwise specified in the constructor</p>
 <p>Notes:
@@ -526,8 +528,8 @@ Insure <a class="reference internal" href="#"><span class="doc">receiver</span><
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._execute">
-<code class="sig-name descname">_execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">runtime_params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._execute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._execute">
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection._execute" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>(2D np.array) self.weight_change_matrix</p>
@@ -538,8 +540,8 @@ Insure <a class="reference internal" href="#"><span class="doc">receiver</span><
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjectionError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.projections.modulatory.learningprojection.</code><code class="sig-name descname">LearningProjectionError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjectionError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjectionError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.modulatory.learningprojection.</span></span><span class="sig-name descname"><span class="pre">LearningProjectionError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjectionError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -612,11 +614,10 @@ Insure <a class="reference internal" href="#"><span class="doc">receiver</span><
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

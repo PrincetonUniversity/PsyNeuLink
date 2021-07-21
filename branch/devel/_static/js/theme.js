@@ -728,7 +728,7 @@ function ThemeNav () {
             '#class-reference .method'
         ).forEach(
             function (m) {
-                if (m.querySelector('code').textContent[0] === '_') {
+                if (m.querySelector('.sig-name').textContent[0] === '_') {
                     m.classList.add('dev-mode-contingent');
                     m.querySelectorAll('.anchorjs-link').forEach(
                         function (anchor) {
@@ -743,7 +743,7 @@ function ThemeNav () {
             '#class-reference .attribute'
         ).forEach(
             function (m) {
-                if (m.querySelector('code').textContent[0] === '_') {
+                if (m.querySelector('.sig-name').textContent[0] === '_') {
                     m.classList.add('dev-mode-contingent');
                     m.querySelectorAll('.anchorjs-link').forEach(
                         function (anchor) {

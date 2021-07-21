@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ProcessingMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>ProcessingMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -263,14 +265,14 @@ for the Function’s parameters:</p>
 <section id="class-reference">
 <span id="processingmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.processingmechanism.</code><code class="sig-name descname">ProcessingMechanism</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.processingmechanism.</span></span><span class="sig-name descname"><span class="pre">ProcessingMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements instance of <a class="reference internal" href="#"><span class="doc">ProcessingMechanism_Base</span></a> subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> and <a class="reference internal" href="#processingmechanism-subtypes"><span class="std std-ref">subclasses</span></a> of ProcessingMechanism
 for arguments and additional attributes.</p>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports">
-<code class="sig-name descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports">
+<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>list of the dictionary specifications for <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">StandardOutputPorts</span></a> that can be assigned as
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, in addition to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a>
@@ -312,8 +314,8 @@ list to include additional <a class="reference internal" href="OutputPort.html#o
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.processingmechanism.</code><code class="sig-name descname">ProcessingMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.processingmechanism.</span></span><span class="sig-name descname"><span class="pre">ProcessingMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.processingmechanism.ProcessingMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -377,11 +379,10 @@ list to include additional <a class="reference internal" href="OutputPort.html#o
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

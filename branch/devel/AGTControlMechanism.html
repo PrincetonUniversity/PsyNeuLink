@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AGTControlMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>AGTControlMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -301,8 +303,8 @@ which it belongs has executed.</p>
 <section id="class-reference">
 <span id="agtcontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</code><code class="sig-name descname">AGTControlMechanism</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">monitored_output_ports</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">control_signals</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</span></span><span class="sig-name descname"><span class="pre">AGTControlMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitored_output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_signals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
 See <a class="reference internal" href="ControlMechanism.html#controlmechanism-class-reference"><span class="std std-ref">ControlMechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -316,8 +318,8 @@ See <a class="reference internal" href="ControlMechanism.html#controlmechanism-c
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism">
-<code class="sig-name descname">objective_mechanism</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism">
+<span class="sig-name descname"><span class="pre">objective_mechanism</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that monitors and evaluates the values specified in the ControlMechanism’s
 <strong>objective_mechanism</strong> argument, the output of which is used as <a class="reference internal" href="#agtcontrolmechanism-input"><span class="std std-ref">input</span></a> to the
 AGTControlMechanism. It is created automatically when AGTControlMechanism is created, and uses as a
@@ -330,8 +332,8 @@ AGTControlMechanism. It is created automatically when AGTControlMechanism is cre
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports">
-<code class="sig-name descname">monitored_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports">
+<span class="sig-name descname"><span class="pre">monitored_output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>each item is an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> monitored by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>; it is
 the same as the ObjectiveMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports</span></code>
 attribute. The <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the OutputPorts listed are used by the ObjectiveMechanism to
@@ -344,8 +346,8 @@ generate the AGTControlMechanism’s <a class="reference internal" href="#agtcon
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports_weights_and_exponents">
-<code class="sig-name descname">monitored_output_ports_weights_and_exponents</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports_weights_and_exponents">
+<span class="sig-name descname"><span class="pre">monitored_output_ports_weights_and_exponents</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
 <dd><p>each tuple in the list contains the weight and exponent associated with a corresponding item of
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.monitored_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitored_output_ports</span></code></a>;  these are the same as those in
 the <code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports_weights_and_exponents</span></code> attribute of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
@@ -358,8 +360,8 @@ it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#obj
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate SYSTEM, MONITOR_FOR_CONTROL and CONTROL_SIGNALS</p>
 <p>Check that all items in MONITOR_FOR_CONTROL are Mechanisms or OutputPorts for Mechanisms in self.system
 Check that every item in <code class="xref any docutils literal notranslate"><span class="pre">modulated_mechanisms</span></code> is a Mechanism</p>
@@ -369,8 +371,8 @@ Check that every item in <code class="xref any docutils literal notranslate"><sp
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.show">
-<code class="sig-name descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.show" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.show" title="Permalink to this definition">¶</a></dt>
 <dd><p>Display the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> monitored by the AGTControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>
 and the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_params</span></a> modulated by the AGTControlMechanism.</p>
 </dd></dl>
@@ -378,8 +380,8 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</code><code class="sig-name descname">AGTControlMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.</span></span><span class="sig-name descname"><span class="pre">AGTControlMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -457,11 +459,10 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

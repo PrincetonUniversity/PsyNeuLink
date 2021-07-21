@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatoryMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>ModulatoryMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -326,8 +328,8 @@ value until the Mechanism to which it belongs has executed.</p>
 <section id="class-reference">
 <span id="modulatorymechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</code><code class="sig-name descname">ModulatoryMechanism_Base</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span></em>, <em class="sig-param"><span class="n">size</span></em>, <em class="sig-param"><span class="n">modulation</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">name</span></em>, <em class="sig-param"><span class="n">prefs</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</span></span><span class="sig-name descname"><span class="pre">ModulatoryMechanism_Base</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that modulates the value(s) of one or more other <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> and subclasses for arguments and additional attributes.</p>
 <div class="admonition note">
@@ -336,8 +338,8 @@ See <a class="reference internal" href="Mechanism.html#mechanism-class-reference
 They should be instantiated using the constructor for a <a class="reference internal" href="#modulatorymechanism-subtypes"><span class="std std-ref">subclass</span></a>.</p>
 </div>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation">
-<code class="sig-name descname">modulation</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation">
+<span class="sig-name descname"><span class="pre">modulation</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanism_Base.modulation" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines how the output of the ModulatoryMechanism’s <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal(s)</span></a> are used to
 modulate the value of the Port(s) to which their <a class="reference internal" href="ModulatoryProjection.html"><span class="doc">ModulatoryProjection(s)</span></a> project.</p>
 <dl class="field-list simple">
@@ -350,8 +352,8 @@ modulate the value of the Port(s) to which their <a class="reference internal" h
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</code><code class="sig-name descname">ModulatoryMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.</span></span><span class="sig-name descname"><span class="pre">ModulatoryMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.modulatorymechanism.ModulatoryMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -418,11 +420,10 @@ modulate the value of the Port(s) to which their <a class="reference internal" h
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

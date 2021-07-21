@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -377,8 +379,8 @@ ISSN 0022-2496,
 <section id="class-reference">
 <span id="ddm-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.integrator.ddm.</code><code class="sig-name descname">DDM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">DriftDiffusionAnalytical</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.ddm.</span></span><span class="sig-name descname"><span class="pre">DDM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DriftDiffusionAnalytical</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a drift diffusion process (also known as the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/">Diffusion Decision Model</a>, either by calculating an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> or carrying out <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">step-wise numerical integration</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -393,8 +395,8 @@ execution (see <a class="reference internal" href="#psyneulink.library.component
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>the input to Mechanism’s execute method.  Serves as the “stimulus” component of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>’s
 <strong>drift_rate</strong> parameter.</p>
 <dl class="field-list simple">
@@ -405,8 +407,8 @@ execution (see <a class="reference internal" href="#psyneulink.library.component
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>the function used to <a class="reference internal" href="#ddm-execution"><span class="std std-ref">execute</span></a> the decision process; determines the mode of execution.
 If it is <a class="reference internal" href="DistributionFunctions.html#driftdiffusionanalytical"><span class="std std-ref">DriftDiffusionAnalytical</span></a>, an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> is calculated (note:  the latter requires that the MatLab engine is installed); if it is
 an <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code> Function with an <code class="xref any docutils literal notranslate"><span class="pre">integration_type</span></code> of
@@ -420,8 +422,8 @@ an <code class="xref any docutils literal notranslate"><span class="pre">Integra
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value">
-<code class="sig-name descname">value</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>result of executing DDM <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;  has six items, that are assigned based on the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute.  The first two items are always assigned the values of <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> (though their interpretation depends on the
 <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and corresponding <a class="reference internal" href="#ddm-modes"><span class="std std-ref">mode of</span></a> of operation).  See <a class="reference internal" href="#ddm-modes"><span class="std std-ref">DDM Function Types</span></a>,
 <a class="reference internal" href="#ddm-execution"><span class="std std-ref">Execution</span></a>, and <a class="reference internal" href="#ddm-output"><span class="std std-ref">Output</span></a> for additional information about other values that can be reported and
@@ -434,8 +436,8 @@ their interpretation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.random_state">
-<code class="sig-name descname">random_state</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.random_state" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.random_state">
+<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.random_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>private pseudorandom number generator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -445,8 +447,8 @@ their interpretation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports">
-<code class="sig-name descname">output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports">
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of the DDM’s <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  There are always two OutputPorts, <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a>; additional ones may be included
 based on the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and/or any specifications made in the <strong>output_ports</strong> argument of the
 DDM’s constructor (see <a class="reference internal" href="#ddm-output"><span class="std std-ref">Output</span></a> for additional details).</p>
@@ -458,8 +460,8 @@ DDM’s constructor (see <a class="reference internal" href="#ddm-output"><span 
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_values">
-<code class="sig-name descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_values" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_values">
+<span class="sig-name descname"><span class="pre">output_values</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>each item is the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the corresponding <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> in <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a>.  The first two items are always the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>s of the
 <a class="reference internal" href="#ddm-decision-variable"><span class="std std-ref">DECISION_VARIABLE</span></a> and <a class="reference internal" href="#ddm-response-time"><span class="std std-ref">RESPONSE_TIME</span></a> OutputPorts;  additional
 ones may be included, based on the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> and any specifications made in the
@@ -472,8 +474,8 @@ ones may be included, based on the <a class="reference internal" href="#psyneuli
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports">
-<code class="sig-name descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports">
+<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.standard_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> that includes the following addition to the
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
 <dl id="ddm-decision-variable">
@@ -631,8 +633,8 @@ closed form analytic solutions from Srivastava et al. (<a class="reference exter
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.plot">
-<code class="sig-name descname">plot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stimulus</span><span class="o">=</span><span class="default_value">1.0</span></em>, <em class="sig-param"><span class="n">threshold</span><span class="o">=</span><span class="default_value">10.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.plot" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stimulus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.plot" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a dynamic plot of the DDM integrating over time towards a threshold.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -659,15 +661,15 @@ towards a specified threshold</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Ensures that input to DDM is a single value.
 Remove when MULTIPROCESS DDM is implemented.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>validate TimeScale, INPUT_PORTS, FUNCTION_PARAMS, OUTPUT_PORTS and MONITOR_FOR_CONTROL</p>
 <dl>
 <dt>Go through target_set params (populated by Component._validate_params) and validate values for:</dt><dd><ul>
@@ -714,8 +716,8 @@ if it is a OutputPort class ref, object or specification dict, it is placed in a
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._execute">
-<code class="sig-name descname">_execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">runtime_params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._execute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._execute">
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM._execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute DDM function (currently only trial-level, analytic solution)
 Execute DDM and estimate outcome or calculate trajectory of decision variable
 Currently implements only trial-level DDM (analytic solution) and returns:</p>
@@ -766,8 +768,8 @@ variable (float): set to self.value (= self.input_value)
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">force</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.reset" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> if Mechanisms is stateful.</p>
 <p>If the mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is an <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code>, or if the mechanism has and
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a> (see <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>), this method
@@ -811,8 +813,8 @@ as well as other reinitialization steps that the reset method may carry out.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished">
-<code class="sig-name descname">is_finished</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished">
+<span class="sig-name descname"><span class="pre">is_finished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set by a Component to signal completion of its <a class="reference internal" href="Component.html#component-execution"><span class="std std-ref">execution</span></a> in a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>; used by <a class="reference internal" href="Condition.html#conditions-component-based"><span class="std std-ref">Component-based Conditions</span></a> to predicate the
 execution of one or more other Components on a Component.</p>
 </dd></dl>
@@ -820,8 +822,8 @@ execution of one or more other Components on a Component.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDMError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.integrator.ddm.</code><code class="sig-name descname">DDMError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDMError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDMError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.ddm.</span></span><span class="sig-name descname"><span class="pre">DDMError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDMError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -903,11 +905,10 @@ execution of one or more other Components on a Component.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

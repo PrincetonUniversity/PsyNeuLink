@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlSignal &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>ControlSignal &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -534,8 +536,8 @@ by <code class="docutils literal notranslate"><span class="pre">ctl_mech_B</span
 <section id="class-reference">
 <span id="controlsignal-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.ports.modulatorysignals.controlsignal.</code><code class="sig-name descname">ControlSignal</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_allocation</span><span class="o">=</span><span class="default_value">defaultControlAllocation</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">TransferWithCosts</span></em>, <em class="sig-param"><span class="n">costs_options</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">intensity_cost_function</span><span class="o">=</span><span class="default_value">Exponential</span></em>, <em class="sig-param"><span class="n">adjustment_cost_function</span><span class="o">=</span><span class="default_value">Linear</span></em>, <em class="sig-param"><span class="n">duration_cost_function</span><span class="o">=</span><span class="default_value">IntegratorFunction</span></em>, <em class="sig-param"><span class="n">combine_costs_function</span><span class="o">=</span><span class="default_value">Reduce(operation=SUM)</span></em>, <em class="sig-param"><span class="n">allocation_samples</span><span class="o">=</span><span class="default_value">self.class_defaults.allocation_samples</span></em>, <em class="sig-param"><span class="n">modulates</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">projections</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.modulatorysignals.controlsignal.</span></span><span class="sig-name descname"><span class="pre">ControlSignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_allocation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">defaultControlAllocation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TransferWithCosts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">costs_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">intensity_cost_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Exponential</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjustment_cost_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Linear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_cost_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">IntegratorFunction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">combine_costs_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Reduce(operation=SUM)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allocation_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">self.class_defaults.allocation_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal" title="Permalink to this definition">¶</a></dt>
 <dd><p>A subclass of <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> used by a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> to
 modulate the parameter(s) of one or more other <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.  See <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-class-reference"><span class="std std-ref">ModulatorySignal</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -563,8 +565,8 @@ details).</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation">
-<code class="sig-name descname">allocation</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation">
+<span class="sig-name descname"><span class="pre">allocation</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>value assigned by the ControlSignal’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>, and used as the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.variable" title="psyneulink.core.components.projections.projection.Projection_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to determine the ControlSignal’s
 <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ControlSignal.intensity</span></code></a>.</p>
 <dl class="field-list simple">
@@ -575,8 +577,8 @@ details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_allocation">
-<code class="sig-name descname">last_allocation</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_allocation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_allocation">
+<span class="sig-name descname"><span class="pre">last_allocation</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_allocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>value of <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation</span></code></a> in the previous execution of ControlSignal’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -586,8 +588,8 @@ details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples">
-<code class="sig-name descname">allocation_samples</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples">
+<span class="sig-name descname"><span class="pre">allocation_samples</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIterator</span></code></a> created from <strong>allocation_samples</strong> specification and used to generate a set of values to
 sample by the ControlSignal’s <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> when determining its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>.</p>
 <dl class="field-list simple">
@@ -598,8 +600,8 @@ sample by the ControlSignal’s <code class="xref any docutils literal notransla
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>converts <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation</span></code></a> into the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>.  The default is the identity function, which
 assigns the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation</span></code></a> as its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>, and does not calculate any costs.  See
 <code class="xref any docutils literal notranslate"><span class="pre">ControlSignals_Function</span></code> for additional details.</p>
@@ -611,8 +613,8 @@ assigns the ControlSignal’s <a class="reference internal" href="#psyneulink.co
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value">
-<code class="sig-name descname">value</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>result of the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; same as <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signal</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -622,8 +624,8 @@ assigns the ControlSignal’s <a class="reference internal" href="#psyneulink.co
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity">
-<code class="sig-name descname">intensity</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity">
+<span class="sig-name descname"><span class="pre">intensity</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="Permalink to this definition">¶</a></dt>
 <dd><p>result of the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;
 assigned as the value of the ControlSignal’s ControlProjection, and used to modify the value of the parameter
 to which the ControlSignal is assigned; same as <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signal</span></code></a>.</p>
@@ -635,8 +637,8 @@ to which the ControlSignal is assigned; same as <a class="reference internal" hr
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_intensity">
-<code class="sig-name descname">last_intensity</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_intensity">
+<span class="sig-name descname"><span class="pre">last_intensity</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a> of the ControlSignal on the previous execution of its <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -646,8 +648,8 @@ to which the ControlSignal is assigned; same as <a class="reference internal" hr
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal">
-<code class="sig-name descname">control_signal</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal">
+<span class="sig-name descname"><span class="pre">control_signal</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.control_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p>result of the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>; same as <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -657,8 +659,8 @@ to which the ControlSignal is assigned; same as <a class="reference internal" hr
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost_options">
-<code class="sig-name descname">cost_options</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost_options" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost_options">
+<span class="sig-name descname"><span class="pre">cost_options</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost_options" title="Permalink to this definition">¶</a></dt>
 <dd><p>boolean combination of currently assigned <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.CostFunctions" title="psyneulink.core.components.functions.transferfunctions.CostFunctions"><code class="xref any py py-class docutils literal notranslate"><span class="pre">CostFunctions</span></code></a>. Specified initially in <strong>costs</strong> argument of
 ControlSignal’s constructor;  can be modified using the <code class="xref any docutils literal notranslate"><span class="pre">assign_cost_options</span></code> method.</p>
 <dl class="field-list simple">
@@ -669,8 +671,8 @@ ControlSignal’s constructor;  can be modified using the <code class="xref any 
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function">
-<code class="sig-name descname">intensity_cost_function</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function">
+<span class="sig-name descname"><span class="pre">intensity_cost_function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity_cost</span></code></a> from the current value of <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>. It can be any <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a>, or any
 other function that takes and returns a scalar value. The default is <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential" title="psyneulink.core.components.functions.transferfunctions.Exponential"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Exponential</span></code></a>.  It can be disabled
 permanently for the ControlSignal by assigning <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>.</p>
@@ -682,8 +684,8 @@ permanently for the ControlSignal by assigning <code class="xref any docutils li
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost">
-<code class="sig-name descname">intensity_cost</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost">
+<span class="sig-name descname"><span class="pre">intensity_cost</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>cost associated with the current <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -693,8 +695,8 @@ permanently for the ControlSignal by assigning <code class="xref any docutils li
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function">
-<code class="sig-name descname">adjustment_cost_function</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function">
+<span class="sig-name descname"><span class="pre">adjustment_cost_function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">adjustment_cost</span></code></a> based on the change in <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a> from  <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.last_intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">last_intensity</span></code></a>.  It can be any
 <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.TransferFunction" title="psyneulink.core.components.functions.transferfunctions.TransferFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TransferFunction</span></code></a>, or any other function that takes and returns a scalar value. It can be disabled
 permanently for the ControlSignal by assigning <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>.</p>
@@ -706,8 +708,8 @@ permanently for the ControlSignal by assigning <code class="xref any docutils li
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost">
-<code class="sig-name descname">adjustment_cost</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost">
+<span class="sig-name descname"><span class="pre">adjustment_cost</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>cost associated with last change to <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>.</p>
 <p>A ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">adjustment_cost</span></code></a>, and its <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.adjustment_cost_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">adjustment_cost_function</span></code></a> are distinct from the
 <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.reconfiguration_cost" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.reconfiguration_cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reconfiguration_cost</span></code></a> and <code class="xref any docutils literal notranslate"><span class="pre">compute_reconfiguration_cost</span>
@@ -722,8 +724,8 @@ for additional details).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost_function">
-<code class="sig-name descname">duration_cost_function</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost_function">
+<span class="sig-name descname"><span class="pre">duration_cost_function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates an integral of the ControlSignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">cost</span></code></a>.  It can be any <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code>, or any other
 function that takes a list or array of two values and returns a scalar value. It can be disabled permanently
 for the ControlSignal by assigning <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>.</p>
@@ -735,8 +737,8 @@ for the ControlSignal by assigning <code class="xref any docutils literal notran
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost">
-<code class="sig-name descname">duration_cost</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost">
+<span class="sig-name descname"><span class="pre">duration_cost</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.duration_cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>intregral of <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">cost</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -746,8 +748,8 @@ for the ControlSignal by assigning <code class="xref any docutils literal notran
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.combine_costs_function">
-<code class="sig-name descname">combine_costs_function</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.combine_costs_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.combine_costs_function">
+<span class="sig-name descname"><span class="pre">combine_costs_function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.combine_costs_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>combines the results of all cost functions that are enabled, and assigns the result to <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">cost</span></code></a>.
 It can be any function that takes an array and returns a scalar value.</p>
 <dl class="field-list simple">
@@ -758,8 +760,8 @@ It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost">
-<code class="sig-name descname">cost</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost">
+<span class="sig-name descname"><span class="pre">cost</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.cost" title="Permalink to this definition">¶</a></dt>
 <dd><p>combined result of all <a class="reference internal" href="#controlsignal-costs"><span class="std std-ref">cost functions</span></a> that are enabled.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -769,8 +771,8 @@ It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.efferents">
-<code class="sig-name descname">efferents</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.efferents" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.efferents">
+<span class="sig-name descname"><span class="pre">efferents</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.efferents" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list of the <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> assigned to (i.e., that project from) the ControlSignal.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -780,14 +782,14 @@ It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.projection_type">
-<code class="sig-name descname">projection_type</code><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.projection_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.projection_type">
+<span class="sig-name descname"><span class="pre">projection_type</span></span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.projection_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="ControlProjection.html#psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection" title="psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.projections.modulatory.controlprojection.ControlProjection</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate cost functions and allocation_samples</p>
 <p>Checks if:
 - cost functions are all appropriate</p>
@@ -800,15 +802,15 @@ It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_attributes_before_function">
-<code class="sig-name descname">_instantiate_attributes_before_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_attributes_before_function">
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate default variable if it is None or numeric
 :param function:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_function">
-<code class="sig-name descname">_instantiate_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">function_params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_function">
+<span class="sig-name descname"><span class="pre">_instantiate_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate function defined in &lt;subclass&gt;.function or &lt;subclass&gt;.function</p>
 <p>Instantiate params[FUNCTION] if present, and assign it to self.function</p>
 <dl class="simple">
@@ -842,14 +844,14 @@ It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_allocation_samples">
-<code class="sig-name descname">_instantiate_allocation_samples</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_allocation_samples" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_allocation_samples">
+<span class="sig-name descname"><span class="pre">_instantiate_allocation_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._instantiate_allocation_samples" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign specified <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation_samples</span></code></a> to a <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.SampleIterator" title="psyneulink.core.components.functions.optimizationfunctions.SampleIterator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SampleIterator</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._parse_port_specific_specs">
-<code class="sig-name descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">port_dict</span></em>, <em class="sig-param"><span class="n">port_specific_spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._parse_port_specific_specs">
+<span class="sig-name descname"><span class="pre">_parse_port_specific_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_specific_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get ControlSignal specified for a parameter or in a ‘control_signals’ argument</p>
 <dl class="simple">
 <dt>Tuple specification can be:</dt><dd><p>(parameter name, Mechanism)
@@ -860,22 +862,22 @@ It can be any function that takes an array and returns a scalar value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._update">
-<code class="sig-name descname">_update</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._update" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._update">
+<span class="sig-name descname"><span class="pre">_update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal._update" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update value (intensity) and costs</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.compute_costs">
-<code class="sig-name descname">compute_costs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">intensity</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.compute_costs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.compute_costs">
+<span class="sig-name descname"><span class="pre">compute_costs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">intensity</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.compute_costs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute costs based on self.value (<a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">intensity</span></code></a>).</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignalError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.ports.modulatorysignals.controlsignal.</code><code class="sig-name descname">ControlSignalError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignalError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignalError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.modulatorysignals.controlsignal.</span></span><span class="sig-name descname"><span class="pre">ControlSignalError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignalError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -948,11 +950,10 @@ It can be any function that takes an array and returns a scalar value.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

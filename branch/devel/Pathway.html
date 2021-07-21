@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -343,13 +345,13 @@ to a Composition (i.e., it is a <a class="reference internal" href="#pathway-tem
 <span id="pathway-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>A Pathway cannot be executed on its own.  Its Components are executed when the Composition to which it belongs is
 executed, by default in the order in which they appear in the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute;  however, this
-can be modified by <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">scheduler</span></code></a>.</p>
+can be modified by <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> added to the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.scheduler" title="psyneulink.core.compositions.composition.Composition.scheduler"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">scheduler</span></code></a>.</p>
 </section>
 <section id="class-reference">
 <span id="pathway-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.compositions.pathway.Pathway">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.pathway.</code><code class="sig-name descname">Pathway</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">pathway</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.pathway.</span></span><span class="sig-name descname"><span class="pre">Pathway</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pathway</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>A sequence of <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, or a template
 for one that can be assigned to one or more Compositions.</p>
 <dl class="field-list simple">
@@ -362,8 +364,8 @@ created for the Pathway.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.pathway">
-<code class="sig-name descname">pathway</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.pathway">
+<span class="sig-name descname"><span class="pre">pathway</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="Permalink to this definition">¶</a></dt>
 <dd><p>if the Pathway is created on its own, this contains the specification provided to the <strong>pathway</strong> argument
 of its constructor, and can take any of the forms permitted for <a class="reference internal" href="#pathway-specification"><span class="std std-ref">Pathway specification</span></a>;
 if the Pathway is created by a Composition, this is a list of the <code class="xref any docutils literal notranslate"><span class="pre">Nodes</span></code> and intercolated
@@ -376,8 +378,8 @@ if the Pathway is created by a Composition, this is a list of the <code class="x
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.composition">
-<code class="sig-name descname">composition</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.composition">
+<span class="sig-name descname"><span class="pre">composition</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> to which the Pathway belongs;  if None, then Pathway is a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -387,8 +389,8 @@ if the Pathway is created by a Composition, this is a list of the <code class="x
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.roles">
-<code class="sig-name descname">roles</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.roles">
+<span class="sig-name descname"><span class="pre">roles</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PathwayRole(s)</span></code></a> assigned to the Pathway, based on the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRole(s)</span></code></a>
 assigned to its <a class="reference internal" href="Composition.html"><span class="doc">Nodes</span></a> in the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="psyneulink.core.compositions.pathway.Pathway.composition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">composition</span></code></a> to which it belongs.
 Returns an empty list if belongs to a Composition but no <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PathwayRoles</span></code></a> have been assigned,
@@ -401,8 +403,8 @@ and None if the Pathway is a <a class="reference internal" href="#pathway-templa
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.learning_function">
-<code class="sig-name descname">learning_function</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.learning_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.learning_function">
+<span class="sig-name descname"><span class="pre">learning_function</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.learning_function" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LearningFunction</span></code></a> used by <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism(s)</span></a> associated with Pathway if
 it is a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathway</span></a>.</p>
 <dl class="field-list simple">
@@ -413,8 +415,8 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.input">
-<code class="sig-name descname">input</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.input" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.input">
+<span class="sig-name descname"><span class="pre">input</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.input" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> node if Pathway contains one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -424,8 +426,8 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.output">
-<code class="sig-name descname">output</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.output" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.output">
+<span class="sig-name descname"><span class="pre">output</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.output" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> node if Pathway contains one.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -435,8 +437,8 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.target">
-<code class="sig-name descname">target</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.target" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.target" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.TARGET" title="psyneulink.core.compositions.composition.NodeRole.TARGET"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TARGET</span></code></a> node if if Pathway contains one; same as <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.learning_components" title="psyneulink.core.compositions.pathway.Pathway.learning_components"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_components</span></code></a>[<em>TARGET_MECHANISM</em>].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -446,8 +448,8 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.learning_objective">
-<code class="sig-name descname">learning_objective</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.learning_objective" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.learning_objective">
+<span class="sig-name descname"><span class="pre">learning_objective</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.learning_objective" title="Permalink to this definition">¶</a></dt>
 <dd><p><code class="xref any docutils literal notranslate"><span class="pre">OBJECTIVE_MECHANISM</span></code> if Pathway contains one; same as <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.learning_components" title="psyneulink.core.compositions.pathway.Pathway.learning_components"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_components</span></code></a>[<em>COMPATOR_MECHANISM</em>].</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -457,8 +459,8 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.learning_components">
-<code class="sig-name descname">learning_components</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.learning_components" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.learning_components">
+<span class="sig-name descname"><span class="pre">learning_components</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.learning_components" title="Permalink to this definition">¶</a></dt>
 <dd><p>dict containing the following entries if the Pathway is a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a>
 (and is assigned <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.LEARNING" title="psyneulink.core.compositions.pathway.PathwayRole.LEARNING"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PathwayRole.LEARNING</span></code></a> in <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a>):</p>
 <blockquote>
@@ -481,8 +483,8 @@ if the Pathway is a <a class="reference internal" href="#pathway-template"><span
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.Pathway.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>the name of the Pathway; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by PathwayRegistry (see <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a> for conventions used for default and duplicate names).
 See <code class="xref any docutils literal notranslate"><span class="pre">note</span></code> for additional information.</p>
@@ -494,62 +496,62 @@ See <code class="xref any docutils literal notranslate"><span class="pre">note</
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.compositions.pathway.Pathway._assign_roles">
-<code class="sig-name descname">_assign_roles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">composition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway._assign_roles" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.Pathway._assign_roles">
+<span class="sig-name descname"><span class="pre">_assign_roles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">composition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.Pathway._assign_roles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PathwayRoles</span></code></a> to Pathway based <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> assigned to its <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> by the <strong>composition</strong> to which it belongs.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.pathway.</code><code class="sig-name descname">PathwayRole</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.pathway.</span></span><span class="sig-name descname"><span class="pre">PathwayRole</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole" title="Permalink to this definition">¶</a></dt>
 <dd><p>Roles assigned to the <a class="reference internal" href="#"><span class="doc">Pathway</span></a> of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.ORIGIN">
-<code class="sig-name descname">ORIGIN</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.ORIGIN" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.ORIGIN">
+<span class="sig-name descname"><span class="pre">ORIGIN</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.ORIGIN" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that includes an <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.ORIGIN" title="psyneulink.core.compositions.pathway.PathwayRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.INPUT">
-<code class="sig-name descname">INPUT</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.INPUT" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.INPUT">
+<span class="sig-name descname"><span class="pre">INPUT</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.INPUT" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that includes an <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.INPUT" title="psyneulink.core.compositions.pathway.PathwayRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.SINGELTON">
-<code class="sig-name descname">SINGELTON</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.SINGELTON" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.SINGELTON">
+<span class="sig-name descname"><span class="pre">SINGELTON</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.SINGELTON" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> with a single <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> that is a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.INTERNAL">
-<code class="sig-name descname">INTERNAL</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.INTERNAL" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.INTERNAL">
+<span class="sig-name descname"><span class="pre">INTERNAL</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.INTERNAL" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that does not include any <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.ORIGIN" title="psyneulink.core.compositions.pathway.PathwayRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.TERMINAL" title="psyneulink.core.compositions.pathway.PathwayRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.OUTPUT">
-<code class="sig-name descname">OUTPUT</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.OUTPUT" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.OUTPUT">
+<span class="sig-name descname"><span class="pre">OUTPUT</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.OUTPUT" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that includes an <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.OUTPUT" title="psyneulink.core.compositions.pathway.PathwayRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.TERMINAL">
-<code class="sig-name descname">TERMINAL</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.TERMINAL" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.TERMINAL">
+<span class="sig-name descname"><span class="pre">TERMINAL</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.TERMINAL" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that includes a <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.TERMINAL" title="psyneulink.core.compositions.pathway.PathwayRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.CYCLE">
-<code class="sig-name descname">CYCLE</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.CYCLE" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.CYCLE">
+<span class="sig-name descname"><span class="pre">CYCLE</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.CYCLE" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that constitutes a <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole.CYCLE" title="psyneulink.core.compositions.pathway.PathwayRole.CYCLE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">CYCLE</span></code></a> in the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.pathway.PathwayRole.LEARNING">
-<code class="sig-name descname">LEARNING</code><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.LEARNING" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.pathway.PathwayRole.LEARNING">
+<span class="sig-name descname"><span class="pre">LEARNING</span></span><a class="headerlink" href="#psyneulink.core.compositions.pathway.PathwayRole.LEARNING" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <a class="reference internal" href="#"><span class="doc">Pathway</span></a> that constitutes a <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning Pathway</span></a> of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 </dd></dl>
 
@@ -623,11 +625,10 @@ See <code class="xref any docutils literal notranslate"><span class="pre">note</
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -326,8 +328,8 @@ array representing a full time series as an experiment. See
 <section id="class-reference">
 <h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</code><code class="sig-name descname">PredictionErrorMechanism</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sample</span></em>, <em class="sig-param"><span class="n">target</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">PredictionErrorDeltaFunction</span></em>, <em class="sig-param"><span class="n">output_ports</span><span class="o">=</span><span class="default_value">[OUTCOME]</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</span></span><span class="sig-name descname"><span class="pre">PredictionErrorMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PredictionErrorDeltaFunction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[OUTCOME]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of ComparatorMechanism that calculates the prediction error between the predicted reward and the target.
 See <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-class-reference"><span class="std std-ref">ComparatorMechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -342,8 +344,8 @@ heavily than previous ones.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample">
-<code class="sig-name descname">sample</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <em>SAMPLE</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which will be evaluated by the function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -353,8 +355,8 @@ heavily than previous ones.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.target">
-<code class="sig-name descname">target</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.target" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.target" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <em>TARGET</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which will be used to evaluate <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -364,8 +366,8 @@ heavily than previous ones.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>the function used to evaluate the sample and target inputs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -375,8 +377,8 @@ heavily than previous ones.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports">
-<code class="sig-name descname">output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports">
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the
 PredictionErrorMechanism.</p>
 <dl class="field-list simple">
@@ -387,8 +389,8 @@ PredictionErrorMechanism.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>controls the weight of later timesteps compared to earlier ones; higher rates weight later timesteps more
 heavily than previous ones.</p>
 <dl class="field-list simple">
@@ -399,8 +401,8 @@ heavily than previous ones.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism._parse_function_variable">
-<code class="sig-name descname">_parse_function_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism._parse_function_variable">
+<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
 Function associated with this Component</p>
 </dd></dl>
@@ -408,8 +410,8 @@ Function associated with this Component</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</code><code class="sig-name descname">PredictionErrorMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</span></span><span class="sig-name descname"><span class="pre">PredictionErrorMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -482,11 +484,10 @@ Function associated with this Component</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

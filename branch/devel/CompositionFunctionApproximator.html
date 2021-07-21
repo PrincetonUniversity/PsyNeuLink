@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>CompositionFunctionApproximator &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>CompositionFunctionApproximator &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -234,8 +236,8 @@ Its <a class="reference internal" href="#psyneulink.core.compositions.compositio
 <section id="class-reference">
 <span id="compositionfunctionapproximator-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.compositions.compositionfunctionapproximator.</code><code class="sig-name descname">CompositionFunctionApproximator</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">param_defaults</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.compositionfunctionapproximator.</span></span><span class="sig-name descname"><span class="pre">CompositionFunctionApproximator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">param_defaults</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that implements a FunctionApproximator as the <code class="xref any docutils literal notranslate"><span class="pre">agent_rep</span></code> of an <code class="xref any docutils literal notranslate"><span class="pre">OptimizationControlmechanism</span></code>.</p>
 <p>Parameterizes <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">its</span> <span class="pre">function</span></code></a> to predict a <code class="xref any docutils literal notranslate"><span class="pre">net_outcome</span></code> for a set of <code class="xref any docutils literal notranslate"><span class="pre">state_feature_values</span></code>
 and a <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> provided by an <code class="xref any docutils literal notranslate"><span class="pre">OptimizationControlmechanism</span></code>.</p>
@@ -247,8 +249,8 @@ and a <a class="reference internal" href="OptimizationControlMechanism.html"><sp
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>parameterized by the CompositionFunctionApproximator’s &lt;adapt &lt;CompositionFunctionApproximator.adapt&gt;`
 method, and used by its <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a> method to generate and return
 a predicted <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> for a set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a> and a <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">control_allocation</span></a>
@@ -261,8 +263,8 @@ provided by an <a class="reference internal" href="OptimizationControlMechanism.
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.prediction_parameters">
-<code class="sig-name descname">prediction_parameters</code><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.prediction_parameters" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.prediction_parameters">
+<span class="sig-name descname"><span class="pre">prediction_parameters</span></span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.prediction_parameters" title="Permalink to this definition">¶</a></dt>
 <dd><p>parameters adjusted by <a class="reference internal" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">adapt</span></code></a> method, and used by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> to predict the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a>
 for a given set of <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a> and <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>.</p>
 <dl class="field-list simple">
@@ -273,14 +275,14 @@ for a given set of <a class="reference internal" href="OptimizationControlMechan
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt">
-<code class="sig-name descname">adapt</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">feature_values</span></em>, <em class="sig-param"><span class="n">control_allocation</span></em>, <em class="sig-param"><span class="n">net_outcome</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt">
+<span class="sig-name descname"><span class="pre">adapt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_allocation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">net_outcome</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.adapt" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adjust parameters of <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> to improve prediction of <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> from <code class="xref any docutils literal notranslate"><span class="pre">input</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate">
-<code class="sig-name descname">evaluate</code><span class="sig-paren">(</span><em class="sig-param">feature_values</em>, <em class="sig-param">control_allocation</em>, <em class="sig-param">num_estimates</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">context=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">feature_values</span></em>, <em class="sig-param"><span class="pre">control_allocation</span></em>, <em class="sig-param"><span class="pre">num_estimates</span></em>, <em class="sig-param"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">context=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.compositionfunctionapproximator.CompositionFunctionApproximator.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return <code class="xref any docutils literal notranslate"><span class="pre">target</span></code> predicted by <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p>
 </dd></dl>
 
@@ -353,11 +355,10 @@ for a given set of <a class="reference internal" href="OptimizationControlMechan
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

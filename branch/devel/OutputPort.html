@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OutputPort &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>OutputPort &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -644,8 +646,8 @@ and is used as the input to any projections for which the OutputPort is the <a c
 <section id="class-reference">
 <span id="outputport-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.ports.outputport.</code><code class="sig-name descname">OutputPort</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">reference_value</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">projections</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">index</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">assign</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.outputport.</span></span><span class="sig-name descname"><span class="pre">OutputPort</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">projections</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assign</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> that calculates and represents an output of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>.
 See <a class="reference internal" href="Port.html#port-class-reference"><span class="std std-ref">Class Reference</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -668,8 +670,8 @@ details).</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value(s) of the item(s) of the <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code> Mechanism’s attributes specified in the
 <strong>variable</strong> argument of the constructor, or a <em>VARIABLE</em> entry in the <a class="reference internal" href="#outputport-specification-dictionary"><span class="std std-ref">OutputPort specification dictionary</span></a> used to construct the OutputPort.</p>
 <dl class="field-list simple">
@@ -680,8 +682,8 @@ details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>function used to transform and/or combine the value of the items of the OutputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> into its <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>, under the possible influence of
 <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> or <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the OutputPort.</p>
 <dl class="field-list simple">
@@ -692,8 +694,8 @@ details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.value">
-<code class="sig-name descname">value</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.value">
+<span class="sig-name descname"><span class="pre">value</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="Permalink to this definition">¶</a></dt>
 <dd><p>assigned the result of <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.function" title="psyneulink.core.components.ports.outputport.OutputPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;  the same value is assigned to the corresponding item
 of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> attribute.</p>
 <dl class="field-list simple">
@@ -704,8 +706,8 @@ of the owner Mechanism’s <a class="reference internal" href="Mechanism.html#ps
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.label">
-<code class="sig-name descname">label</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.label" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.label">
+<span class="sig-name descname"><span class="pre">label</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.label" title="Permalink to this definition">¶</a></dt>
 <dd><p>the string label that represents the current <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the OutputPort, according to the
 owner mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">output_labels_dict</span></code>. If the current
 <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the OutputPort does not have a corresponding label, then the numeric
@@ -718,8 +720,8 @@ owner mechanism’s <code class="xref any docutils literal notranslate"><span cl
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>the name of the OutputPort; if it is not specified in the <strong>name</strong> argument of the constructor, a default is
 assigned by the OutputPortRegistry of the Mechanism to which the OutputPort belongs.  Note that most
 Mechanisms automatically create one or more <a class="reference internal" href="#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a>, that have
@@ -734,17 +736,17 @@ OutputPorts specified, as well as any that are added to the Mechanism once it is
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.projection_type">
-<code class="sig-name descname">projection_type</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.projection_type" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.projection_type">
+<span class="sig-name descname"><span class="pre">projection_type</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.projection_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.Parameters">
-<em class="property">class </em><code class="sig-name descname">Parameters</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">parent</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.Parameters" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.Parameters">
+<em class="property"><span class="pre">class</span> </em><span class="sig-name descname"><span class="pre">Parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.Parameters" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.Parameters.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.Parameters.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.Parameters.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.Parameters.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>see <a class="reference internal" href="#psyneulink.core.components.ports.outputport.OutputPort.variable" title="psyneulink.core.components.ports.outputport.OutputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Default value</dt>
@@ -762,22 +764,22 @@ OutputPorts specified, as well as any that are added to the Mechanism once it is
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._validate_against_reference_value">
-<code class="sig-name descname">_validate_against_reference_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">reference_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._validate_against_reference_value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._validate_against_reference_value">
+<span class="sig-name descname"><span class="pre">_validate_against_reference_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reference_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._validate_against_reference_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate that Port.variable is compatible with the reference_value</p>
 <p>reference_value is the value of the Mechanism to which the OutputPort is assigned</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._instantiate_attributes_before_function">
-<code class="sig-name descname">_instantiate_attributes_before_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._instantiate_attributes_before_function">
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate default variable if it is None or numeric
 :param function:</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._instantiate_projections">
-<code class="sig-name descname">_instantiate_projections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">projections</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._instantiate_projections" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._instantiate_projections">
+<span class="sig-name descname"><span class="pre">_instantiate_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projections</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._instantiate_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate Projections specified in PROJECTIONS entry of params arg of Port’s constructor</p>
 <dl class="simple">
 <dt>Assume specification in projections as ModulatoryProjection if it is a:</dt><dd><p>ModulatoryProjection
@@ -796,8 +798,8 @@ function_value is converted to returned value by assign function</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._check_for_duplicate_projections">
-<code class="sig-name descname">_check_for_duplicate_projections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">projection</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._check_for_duplicate_projections" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._check_for_duplicate_projections">
+<span class="sig-name descname"><span class="pre">_check_for_duplicate_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._check_for_duplicate_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check if projection is redundant with one in efferents of OutputPort</p>
 <p>Check for any instantiated projection in efferents with the same receiver as projection
 or one in deferred_init status with receiver specification that is the same type as projection.</p>
@@ -805,8 +807,8 @@ or one in deferred_init status with receiver specification that is the same type
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._parse_arg_variable">
-<code class="sig-name descname">_parse_arg_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_arg_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._parse_arg_variable">
+<span class="sig-name descname"><span class="pre">_parse_arg_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_arg_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Transforms <strong>variable</strong> into a form that Components expect. Used to allow
 users to pass input in convenient forms, like a single float when a list
 for input ports is expected</p>
@@ -821,15 +823,15 @@ for input ports is expected</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._parse_function_variable">
-<code class="sig-name descname">_parse_function_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._parse_function_variable">
+<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_function_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
 Function associated with this Component</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs">
-<code class="sig-name descname">_parse_port_specific_specs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">port_dict</span></em>, <em class="sig-param"><span class="n">port_specific_spec</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs">
+<span class="sig-name descname"><span class="pre">_parse_port_specific_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port_specific_spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._parse_port_specific_specs" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get variable spec and/or connections specified in an OutputPort specification tuple</p>
 <dl class="simple">
 <dt>Tuple specification can be:</dt><dd><p>(port_spec, connections)
@@ -852,14 +854,14 @@ Function associated with this Component</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._get_variable_from_projections">
-<code class="sig-name descname">_get_variable_from_projections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._get_variable_from_projections">
+<span class="sig-name descname"><span class="pre">_get_variable_from_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a variable to be used for self.execute when the variable passed in is None</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort._get_port_function_value">
-<em class="property">static </em><code class="sig-name descname">_get_port_function_value</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">function</span></em>, <em class="sig-param"><span class="n">variable</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._get_port_function_value" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort._get_port_function_value">
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">_get_port_function_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort._get_port_function_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>Execute the function of a Port and return its value
 # FIX: CONSIDER INTEGRATING THIS INTO _EXECUTE FOR PORT?</p>
 <p>This is a stub, that a Port subclass can override to treat its function in a Port-specific manner.
@@ -867,9 +869,9 @@ Used primarily during validation, when the function may not have been fully inst
 (e.g., InputPort must sometimes embed its variable in a list– see InputPort._get_port_function_value).</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.OutputPort.owner_value_index">
-<em class="property">property </em><code class="sig-name descname">owner_value_index</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.owner_value_index" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPort.owner_value_index">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">owner_value_index</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPort.owner_value_index" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return index or indices of items of owner.value for any to which OutputPort’s variable has been assigned
 If the OutputPort has been assigned to:
 - the entire owner value (i.e., OWNER_VALUE on its own, not in a tuple)</p>
@@ -890,13 +892,13 @@ If the OutputPort has been assigned to:
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.ports.outputport.OutputPortError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.ports.outputport.</code><code class="sig-name descname">OutputPortError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPortError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.OutputPortError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.outputport.</span></span><span class="sig-name descname"><span class="pre">OutputPortError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.OutputPortError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.ports.outputport.</code><code class="sig-name descname">StandardOutputPorts</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.StandardOutputPorts">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.outputport.</span></span><span class="sig-name descname"><span class="pre">StandardOutputPorts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_port_dicts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts" title="Permalink to this definition">¶</a></dt>
 <dd><p>Collection of OutputPort specification dicts for <a class="reference internal" href="#outputport-standard"><span class="std std-ref">standard OutputPorts</span></a> of a class.</p>
 <p>Parses specification of VARIABLE, assigning indices to OWNER_VALUE if specified.
 Adds &lt;NAME_INDEX&gt; of each OutputPort as property of the owner’s class, that returns the index of the OutputPort
@@ -924,8 +926,8 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts.data">
-<code class="sig-name descname">data</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.data" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.StandardOutputPorts.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.data" title="Permalink to this definition">¶</a></dt>
 <dd><p>dictionary of OutputPort specification dictionaries</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -935,8 +937,8 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts.indices">
-<code class="sig-name descname">indices</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.indices" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.StandardOutputPorts.indices">
+<span class="sig-name descname"><span class="pre">indices</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.indices" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of default indices for each OutputPort specified</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -946,8 +948,8 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts.names">
-<code class="sig-name descname">names</code><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.names" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.StandardOutputPorts.names">
+<span class="sig-name descname"><span class="pre">names</span></span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.names" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of the default names for each OutputPort</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -957,22 +959,22 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.ports.outputport.StandardOutputPorts.get_port_dict">
-<code class="sig-name descname">get_port_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.get_port_dict" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.StandardOutputPorts.get_port_dict">
+<span class="sig-name descname"><span class="pre">get_port_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPorts.get_port_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>returns a copy of the designated OutputPort specification dictionary</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="id0">
-<code class="sig-name descname">get_port_dict</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">name</span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">get_port_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a copy of the named OutputPort dict</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.ports.outputport.StandardOutputPortsError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.ports.outputport.</code><code class="sig-name descname">StandardOutputPortsError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPortsError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.outputport.StandardOutputPortsError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.ports.outputport.</span></span><span class="sig-name descname"><span class="pre">StandardOutputPortsError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.outputport.StandardOutputPortsError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -1056,11 +1058,10 @@ ignoring any VARIABLE entries previously specified for individual OutputPorts;</
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

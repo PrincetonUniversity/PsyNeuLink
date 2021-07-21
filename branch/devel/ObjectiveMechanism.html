@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -427,8 +429,8 @@ specified, as it is not used.  However it, and the <a class="reference internal"
 <section id="class-reference">
 <span id="objectivemechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.objectivemechanism.</code><code class="sig-name descname">ObjectiveMechanism</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">monitor</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">LinearCombination</span></em>, <em class="sig-param"><span class="n">output_ports</span><span class="o">=</span><span class="default_value">OUTCOME</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.objectivemechanism.</span></span><span class="sig-name descname"><span class="pre">ObjectiveMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LinearCombination</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">OUTCOME</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ProcessingMechanism.html"><span class="doc">ProcessingMechanism</span></a> that evaluates the value(s) of one or more <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -443,8 +445,8 @@ specified, as it is not used.  However it, and the <a class="reference internal"
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor">
-<code class="sig-name descname">monitor</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor">
+<span class="sig-name descname"><span class="pre">monitor</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the OutputPorts, the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of which are monitored, and evaluated by the
 ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  Each item in the list refers to an
 <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> containing the value to be monitored, with a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from it to an
@@ -464,8 +466,8 @@ than the list of the ObjectiveMechanism’s <code class="xref any docutils liter
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents">
-<code class="sig-name descname">monitor_weights_and_exponents</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents">
+<span class="sig-name descname"><span class="pre">monitor_weights_and_exponents</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
 <dd><p>each tuple in the list contains a weight and exponent associated with a corresponding InputPort listed in the
 ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> attribute;  these are used by its
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to parametrize the contribution that the values of each of the
@@ -478,8 +480,8 @@ OuputStates monitored by the ObjectiveMechanism makes to its output (see <a clas
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports">
-<code class="sig-name descname">input_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports">
+<span class="sig-name descname"><span class="pre">input_ports</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.input_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the InputPorts of the ObjectiveMechanism, each of which receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the
 OutputPorts specified in its <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> attribute.</p>
 <dl class="field-list simple">
@@ -490,8 +492,8 @@ OutputPorts specified in its <a class="reference internal" href="#psyneulink.cor
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be
 any PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code> or a Python function that takes a 2d array with an arbitrary number of
 items or a number equal to the number of items in the ObjectiveMechanism’s variable (i.e., its number of
@@ -504,8 +506,8 @@ input_ports) and returns a 1d array.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role">
-<code class="sig-name descname">role</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role">
+<span class="sig-name descname"><span class="pre">role</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="Permalink to this definition">¶</a></dt>
 <dd><p>specifies whether the ObjectiveMechanism is used for learning in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (in conjunction with a
 <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>), or for control in a Composition (in conjunction with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>).</p>
 <dl class="field-list simple">
@@ -516,8 +518,8 @@ input_ports) and returns a 1d array.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port">
-<code class="sig-name descname">output_port</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port">
+<span class="sig-name descname"><span class="pre">output_port</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the ObjectiveMechanism; the default is
 its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>, the value of which is equal to the
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute of the ObjectiveMechanism.</p>
@@ -529,8 +531,8 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports">
-<code class="sig-name descname">output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports">
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort of the ObjectiveMechanism.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -540,8 +542,8 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_values">
-<code class="sig-name descname">output_values</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_values">
+<span class="sig-name descname"><span class="pre">output_values</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains one item that is the value of the <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-output"><span class="std std-ref">OutputPort</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -551,8 +553,8 @@ its <em>OUTCOME</em> <a class="reference internal" href="#objectivemechanism-out
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports">
-<code class="sig-name descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports">
+<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPort</span></a> that includes the following in addition to
 the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>:</p>
 <dl class="simple">
@@ -568,14 +570,14 @@ ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.comp
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate <strong>role</strong>, <strong>monitor</strong>, amd <strong>input_ports</strong> arguments</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_input_ports">
-<code class="sig-name descname">_instantiate_input_ports</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">monitor_specs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">reference_value</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_input_ports">
+<span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitor_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate InputPorts specified in <strong>input_ports</strong> argument of constructor or each OutputPort
 specified in monitor_specs</p>
 <dl class="simple">
@@ -589,8 +591,8 @@ specified in monitor_specs</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor">
-<code class="sig-name descname">add_to_monitor</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">monitor_specs</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor">
+<span class="sig-name descname"><span class="pre">add_to_monitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">monitor_specs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.add_to_monitor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> to be monitored by the ObjectiveMechanism.</p>
 <p>Used by other Components to add a <a class="reference internal" href="Port.html"><span class="doc">Port</span></a> or list of Ports to be monitored by the ObjectiveMechanism.
 The <strong>monitor_spec</strong> can be any of the following:
@@ -604,14 +606,14 @@ If the item is a Mechanism, its <a class="reference internal" href="OutputPort.h
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function">
-<code class="sig-name descname">_instantiate_attributes_after_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function">
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_after_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_attributes_after_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign InputPort weights and exponents to ObjectiveMechanism’s function</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents">
-<code class="sig-name descname">_instantiate_function_weights_and_exponents</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents">
+<span class="sig-name descname"><span class="pre">_instantiate_function_weights_and_exponents</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
 <dd><p>Assign weights and exponents to ObjectiveMechanism’s function if it has those attributes</p>
 <p>For each, only make assignment if one or more entries in it has been assigned a value
 If any one value has been assigned, assign default value (1) to all other elements</p>
@@ -620,8 +622,8 @@ If any one value has been assigned, assign default value (1) to all other elemen
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.mechanisms.processing.objectivemechanism.</code><code class="sig-name descname">ObjectiveMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.processing.objectivemechanism.</span></span><span class="sig-name descname"><span class="pre">ObjectiveMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -693,11 +695,10 @@ If any one value has been assigned, assign default value (1) to all other elemen
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

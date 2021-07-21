@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ComparatorMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>ComparatorMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -314,8 +316,8 @@ more than one OutputPort, and one of those was desired, it would have had to be 
 <section id="class-reference">
 <span id="comparatormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</code><code class="sig-name descname">ComparatorMechanism</code><span class="sig-paren">(</span><em class="sig-param">sample,                                                 target,                                                 input_ports=[SAMPLE,TARGET]                             function=LinearCombination(weights=[[-1],[1]],          output_ports=OUTCOME</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</span></span><span class="sig-name descname"><span class="pre">ComparatorMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">sample,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">target,</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">input_ports=[SAMPLE,TARGET]</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">function=LinearCombination(weights=[[-1],[1]],</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">output_ports=OUTCOME</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that compares the values of two <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.
 See <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-class-reference"><span class="std std-ref">ObjectiveMechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -332,8 +334,8 @@ for additional details).</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample">
-<code class="sig-name descname">sample</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the value to compare with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target</span></code></a> by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -343,8 +345,8 @@ for additional details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target">
-<code class="sig-name descname">target</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the value with which <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a> is compared by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -354,8 +356,8 @@ for additional details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports">
-<code class="sig-name descname">input_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports">
+<span class="sig-name descname"><span class="pre">input_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the two InputPorts named, by default, <em>SAMPLE</em> and <em>TARGET</em>, each of which receives a
 <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from the OutputPorts referenced by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a> and <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target</span></code></a> attributes
 (see <a class="reference internal" href="#comparatormechanism-structure"><span class="std std-ref">Structure</span></a> for additional details).</p>
@@ -367,8 +369,8 @@ for additional details).</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>used to compare the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a> with the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target</span></code></a>.  It can be any PsyNeuLink <code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code>,
 or a python function that takes a 2d array with two items and returns a 1d array of the same length
 as the two input items.</p>
@@ -380,8 +382,8 @@ as the two input items.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port">
-<code class="sig-name descname">output_port</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port">
+<span class="sig-name descname"><span class="pre">output_port</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_port" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a> OutputPort of the ComparatorMechanism; the default is
 its <em>OUTCOME</em> OutputPort, the value of which is equal to the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code>
 attribute of the ComparatorMechanism.</p>
@@ -393,8 +395,8 @@ attribute of the ComparatorMechanism.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_ports">
-<code class="sig-name descname">output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_ports">
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains, by default, only the <em>OUTCOME</em> (primary) OutputPort of the ComparatorMechanism.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -404,8 +406,8 @@ attribute of the ComparatorMechanism.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values">
-<code class="sig-name descname">output_values</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values">
+<span class="sig-name descname"><span class="pre">output_values</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.output_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains one item that is the value of the <em>OUTCOME</em> OutputPort.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -415,8 +417,8 @@ attribute of the ComparatorMechanism.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports">
-<code class="sig-name descname">standard_output_ports</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports">
+<span class="sig-name descname"><span class="pre">standard_output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.standard_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="OutputPort.html#outputport-standard"><span class="std std-ref">Standard OutputPorts</span></a> that includes the following in addition to the
 <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.standard_output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">standard_output_ports</span></code></a> of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a>:</p>
 <dl class="simple">
@@ -435,16 +437,16 @@ attribute of the ComparatorMechanism.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>If sample and target values are specified, validate that they are compatible</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</code><code class="sig-name descname">ComparatorMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.</span></span><span class="sig-name descname"><span class="pre">ComparatorMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -517,11 +519,10 @@ attribute of the ComparatorMechanism.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

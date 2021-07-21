@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Scheduler &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>Scheduler &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -222,7 +224,7 @@ can also be assigned for execution (e.g., during <code class="xref any docutils 
 for a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> when it is created.  When creating a Scheduler explicitly, the set of <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be executed and their order must be specified in the Scheduler’s constructor using one the following:</p>
 <ul class="simple">
 <li><p>a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> in the <strong>composition</strong> argument - if a Composition is specified,
-the Scheduler is created using the nodes and edges in the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">graph</span></code></a>.</p></li>
+the Scheduler is created using the nodes and edges in the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>.</p></li>
 <li><p>a <em>graph specification dictionary</em> in the <strong>graph</strong> argument -
 each entry of the dictionary must be a Component of a Composition, and the value of each entry must be a set of
 zero or more Components that project directly to the key.  The graph must be acyclic; an error is generated if any
@@ -496,21 +498,21 @@ inputs to nodes accordingly. Additionally, non-absolute conditions like
 <section id="class-reference">
 <h4>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h4>
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.scheduler.</code><code class="sig-name descname">Scheduler</code><span class="sig-paren">(</span><em class="sig-param">composition=None</em>, <em class="sig-param">graph=None</em>, <em class="sig-param">conditions=None</em>, <em class="sig-param">termination_conds=None</em>, <em class="sig-param">default_execution_id=None</em>, <em class="sig-param">mode=&lt;SchedulingMode.STANDARD: 1&gt;</em>, <em class="sig-param">default_absolute_time_unit=&lt;Quantity(1</em>, <em class="sig-param">'millisecond')&gt;</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.scheduler.</span></span><span class="sig-name descname"><span class="pre">Scheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">composition=None</span></em>, <em class="sig-param"><span class="pre">graph=None</span></em>, <em class="sig-param"><span class="pre">conditions=None</span></em>, <em class="sig-param"><span class="pre">termination_conds=None</span></em>, <em class="sig-param"><span class="pre">default_execution_id=None</span></em>, <em class="sig-param"><span class="pre">mode=SchedulingMode.STANDARD</span></em>, <em class="sig-param"><span class="pre">default_absolute_time_unit=&lt;Quantity(1</span></em>, <em class="sig-param"><span class="pre">'millisecond')&gt;</span></em>, <em class="sig-param"><span class="pre">**kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generates an order of execution for <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> or graph
 specification dictionary, possibly determined by a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>composition</strong> (<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition"><em>Composition</em></a>) – specifies the <a class="reference internal" href="Component.html"><span class="doc">Components</span></a> to be ordered for execution, and any dependencies among them,
-based on the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">graph</span></code></a>.</p></li>
+based on the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>'s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.graph_processing" title="psyneulink.core.compositions.composition.Composition.graph_processing"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">graph</span></code></a>.</p></li>
 <li><p><strong>conditions</strong> (<a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.ConditionSet" title="psyneulink.core.scheduling.condition.ConditionSet"><em>ConditionSet</em></a>) – set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that specify when individual <a class="reference internal" href="Components.html"><span class="doc">Components</span></a> &lt;Component&gt;` in <strong>composition</strong>
 execute and any dependencies among them.</p></li>
 <li><p><strong>graph</strong> (<em>Dict</em><em>[</em><em>object: set</em><em>(</em><em>object</em><em>)</em><em>]</em><em>, </em><em>Graph</em>) – a graph specification dictionary - each entry of the dictionary must be an object,
 and the value of each entry must be a set of zero or more objects that project directly to the key.
 or, a <code class="xref any docutils literal notranslate"><span class="pre">Graph</span></code></p></li>
-<li><p><strong>mode</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="psyneulink.core.scheduling.scheduler.SchedulingMode"><em>SchedulingMode</em></a><em>[</em><em>STANDARD|EXACT_TIME</em><em>] </em><em>: SchedulingMode.STANDARD</em>) – sets the mode of scheduling: <a class="reference internal" href="#scheduler-execution"><span class="std std-ref">standard</span></a> or
+<li><p><strong>mode</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="psyneulink.core.scheduling.scheduler.SchedulingMode"><em>SchedulingMode</em></a><em>[</em><em>STANDARD</em><em>|</em><em>EXACT_TIME</em><em>] </em><em>: SchedulingMode.STANDARD</em>) – sets the mode of scheduling: <a class="reference internal" href="#scheduler-execution"><span class="std std-ref">standard</span></a> or
 <a class="reference internal" href="#scheduler-exact-time"><span class="std std-ref">exact time</span></a></p></li>
 <li><p><strong>default_absolute_time_unit</strong> (<code class="docutils literal notranslate"><span class="pre">pint.Quantity</span></code> : <code class="docutils literal notranslate"><span class="pre">1ms</span></code>) – if not otherwise determined by any absolute <strong>conditions</strong>,
 specifies the absolute duration of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a></p></li>
@@ -518,8 +520,8 @@ specifies the absolute duration of a <a class="reference internal" href="Time.ht
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.conditions">
-<code class="sig-name descname">conditions</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.conditions" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.conditions">
+<span class="sig-name descname"><span class="pre">conditions</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>the set of Conditions the Scheduler uses when running</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -529,8 +531,8 @@ specifies the absolute duration of a <a class="reference internal" href="Time.ht
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.execution_list">
-<code class="sig-name descname">execution_list</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.execution_list" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.execution_list">
+<span class="sig-name descname"><span class="pre">execution_list</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.execution_list" title="Permalink to this definition">¶</a></dt>
 <dd><p>the full history of time steps the Scheduler has produced</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -540,8 +542,8 @@ specifies the absolute duration of a <a class="reference internal" href="Time.ht
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue">
-<code class="sig-name descname">consideration_queue</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue">
+<span class="sig-name descname"><span class="pre">consideration_queue</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.consideration_queue" title="Permalink to this definition">¶</a></dt>
 <dd><p>a list form of the Scheduler’s toposort ordering of its nodes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -551,8 +553,8 @@ specifies the absolute duration of a <a class="reference internal" href="Time.ht
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.termination_conds">
-<code class="sig-name descname">termination_conds</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.termination_conds" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.termination_conds">
+<span class="sig-name descname"><span class="pre">termination_conds</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.termination_conds" title="Permalink to this definition">¶</a></dt>
 <dd><p>a mapping from <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScales</span></code></a> to <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> that, when met, terminate the execution
 of the specified <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>. On set, update only for the
 <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>s specified in the argument.</p>
@@ -564,8 +566,8 @@ of the specified <a class="reference internal" href="Time.html#psyneulink.core.s
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.mode">
-<code class="sig-name descname">mode</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.mode" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.mode">
+<span class="sig-name descname"><span class="pre">mode</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.mode" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets the mode of scheduling: <a class="reference internal" href="#scheduler-execution"><span class="std std-ref">standard</span></a> or
 <a class="reference internal" href="#scheduler-exact-time"><span class="std std-ref">exact time</span></a></p>
 <dl class="field-list simple">
@@ -579,8 +581,8 @@ of the specified <a class="reference internal" href="Time.html#psyneulink.core.s
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit">
-<code class="sig-name descname">default_absolute_time_unit</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit">
+<span class="sig-name descname"><span class="pre">default_absolute_time_unit</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.default_absolute_time_unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>if not otherwise determined by any absolute <strong>conditions</strong>,
 specifies the absolute duration of a <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a></p>
 <dl class="field-list simple">
@@ -594,8 +596,8 @@ specifies the absolute duration of a <a class="reference internal" href="Time.ht
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.times">
-<code class="sig-name descname">times</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.times" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.times">
+<span class="sig-name descname"><span class="pre">times</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.times" title="Permalink to this definition">¶</a></dt>
 <dd><p>a structure counting the number of occurrences of a certain <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> within the scope of another <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a>.
 For example, <code class="xref any docutils literal notranslate"><span class="pre">times[TimeScale.RUN][TimeScale.PASS]</span></code> is the number of <code class="xref any docutils literal notranslate"><span class="pre">PASS`es</span> <span class="pre">that</span> <span class="pre">have</span> <span class="pre">occurred</span> <span class="pre">in</span> <span class="pre">the</span>
 <span class="pre">current</span> <span class="pre">`RUN</span></code> that the Scheduler is scheduling at the time it is accessed</p>
@@ -607,18 +609,18 @@ For example, <code class="xref any docutils literal notranslate"><span class="pr
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler._init_counts">
-<code class="sig-name descname">_init_counts</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">execution_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">base_execution_id</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler._init_counts" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler._init_counts">
+<span class="sig-name descname"><span class="pre">_init_counts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">execution_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_execution_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler._init_counts" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.execution_id">
-<code class="sig-name descname">execution_id</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.execution_id" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.execution_id">
+<span class="sig-name descname"><span class="pre">execution_id</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.execution_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>the execution_id to initialize counts for
 default : self.default_execution_id</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.base_execution_id">
-<code class="sig-name descname">base_execution_id</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.base_execution_id" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.base_execution_id">
+<span class="sig-name descname"><span class="pre">base_execution_id</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.base_execution_id" title="Permalink to this definition">¶</a></dt>
 <dd><p>if specified, the counts for execution_id will be copied from the counts of base_execution_id
 default : None</p>
 </dd></dl>
@@ -626,8 +628,8 @@ default : None</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition">
-<code class="sig-name descname">add_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">condition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition">
+<span class="sig-name descname"><span class="pre">add_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> to the Scheduler. If <strong>owner</strong> already has a Condition, it is overwritten
 with the new one. If you want to add multiple conditions to a single owner, use the
 <a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">composite Conditions</span></a> to accurately specify the desired behavior.</p>
@@ -643,8 +645,8 @@ will govern the execution behavior of <strong>owner</strong></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition_set">
-<code class="sig-name descname">add_condition_set</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conditions</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition_set" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.add_condition_set">
+<span class="sig-name descname"><span class="pre">add_condition_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.add_condition_set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a set of <a class="reference internal" href="Condition.html"><span class="doc">Conditions</span></a> (in the form of a dict or another ConditionSet) to the Scheduler.
 Any Condition added here will overwrite an existing Condition for a given owner.
 If you want to add multiple conditions to a single owner, add a single <a class="reference internal" href="Condition.html#conditions-composite"><span class="std std-ref">Composite Condition</span></a>
@@ -663,8 +665,8 @@ governed) to a <a class="reference internal" href="Condition.html"><span class="
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler.run">
-<code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param">termination_conds=None</em>, <em class="sig-param">context=None</em>, <em class="sig-param">base_context=&lt;psyneulink.core.globals.context.Context object&gt;</em>, <em class="sig-param">skip_trial_time_increment=False</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.run" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">termination_conds=None</span></em>, <em class="sig-param"><span class="pre">context=None</span></em>, <em class="sig-param"><span class="pre">base_context=&lt;psyneulink.core.globals.context.Context</span> <span class="pre">object&gt;</span></em>, <em class="sig-param"><span class="pre">skip_trial_time_increment=False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>run is a python generator, that when iterated over provides the next <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a> of
 executions at each iteration</p>
 <dl class="field-list simple">
@@ -676,30 +678,30 @@ terminate the execution of the specified <a class="reference internal" href="Tim
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.scheduler.Scheduler._get_absolute_time_step_unit">
-<code class="sig-name descname">_get_absolute_time_step_unit</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">termination_conds</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler._get_absolute_time_step_unit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.Scheduler._get_absolute_time_step_unit">
+<span class="sig-name descname"><span class="pre">_get_absolute_time_step_unit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">termination_conds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.Scheduler._get_absolute_time_step_unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the time length of the gap between two time steps</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.scheduling.scheduler.SchedulerError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.scheduling.scheduler.</code><code class="sig-name descname">SchedulerError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulerError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.SchedulerError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.scheduler.</span></span><span class="sig-name descname"><span class="pre">SchedulerError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulerError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.scheduler.SchedulingMode">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.scheduler.</code><code class="sig-name descname">SchedulingMode</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.SchedulingMode">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.scheduler.</span></span><span class="sig-name descname"><span class="pre">SchedulingMode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD">
-<code class="sig-name descname">STANDARD</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD">
+<span class="sig-name descname"><span class="pre">STANDARD</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode.STANDARD" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#scheduler-execution"><span class="std std-ref">Standard Mode</span></a></p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME">
-<code class="sig-name descname">EXACT_TIME</code><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME">
+<span class="sig-name descname"><span class="pre">EXACT_TIME</span></span><a class="headerlink" href="#psyneulink.core.scheduling.scheduler.SchedulingMode.EXACT_TIME" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="#scheduler-exact-time"><span class="std std-ref">Exact time Mode</span></a></p>
 </dd></dl>
 
@@ -776,11 +778,10 @@ terminate the execution of the specified <a class="reference internal" href="Tim
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

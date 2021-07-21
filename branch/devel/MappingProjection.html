@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -445,13 +447,13 @@ ParameterPort’s <a class="reference internal" href="ParameterPort.html#psyneul
 <section id="class-reference">
 <span id="mappingprojection-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py exception">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.components.projections.pathway.mappingprojection.</code><code class="sig-name descname">MappingError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.pathway.mappingprojection.</span></span><span class="sig-name descname"><span class="pre">MappingError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.projections.pathway.mappingprojection.</code><code class="sig-name descname">MappingProjection</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sender</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">receiver</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weight</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">exponent</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">matrix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learnable</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.projections.pathway.mappingprojection.</span></span><span class="sig-name descname"><span class="pre">MappingProjection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sender</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">receiver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learnable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> that transmits the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of one <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of another (or possibly itself).  See <a class="reference internal" href="Projection.html#projection-class-reference"><span class="std std-ref">Projection</span></a>
 for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -470,8 +472,8 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender">
-<code class="sig-name descname">sender</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender">
+<span class="sig-name descname"><span class="pre">sender</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the source of the Projection’s input.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -481,8 +483,8 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver">
-<code class="sig-name descname">receiver</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver">
+<span class="sig-name descname"><span class="pre">receiver</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> of the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is the destination of the Projection’s output.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -492,8 +494,8 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix">
-<code class="sig-name descname">matrix</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix">
+<span class="sig-name descname"><span class="pre">matrix</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>the matrix used by <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to transform the input from the MappingProjection’s
 <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> into the value provided to its <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.receiver"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">receiver</span></code></a>.</p>
 <dl class="field-list simple">
@@ -504,8 +506,8 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.has_learning_projection">
-<code class="sig-name descname">has_learning_projection</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.has_learning_projection">
+<span class="sig-name descname"><span class="pre">has_learning_projection</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.has_learning_projection" title="Permalink to this definition">¶</a></dt>
 <dd><p>identifies the <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> assigned to the MappingProjection’s <code class="xref any docutils literal notranslate"><span class="pre">MATRIX</span></code> <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -515,8 +517,8 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_mechanism">
-<code class="sig-name descname">learning_mechanism</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_mechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_mechanism">
+<span class="sig-name descname"><span class="pre">learning_mechanism</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.learning_mechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>source of the <a class="reference internal" href="LearningSignal.html"><span class="doc">learning signal</span></a> that determines the changes to the <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> when <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a> is used.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -526,8 +528,8 @@ for the <a class="reference internal" href="InputPort.html#psyneulink.core.compo
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.name">
-<code class="sig-name descname">name</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.name" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.name" title="Permalink to this definition">¶</a></dt>
 <dd><p>the name of the MappingProjection. If the specified name is the name of an existing MappingProjection,
 it is appended with an indexed suffix, incremented for each MappingProjection with the same base name (see
 <a class="reference internal" href="Registry.html#registry-naming"><span class="std std-ref">Naming</span></a>). If the name is not specified in the <strong>name</strong> argument of its constructor, a default name is
@@ -547,14 +549,14 @@ then the parenthesized name of class is used in place of the unassigned attribut
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.projection_sender">
-<code class="sig-name descname">projection_sender</code><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.projection_sender" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.projection_sender">
+<span class="sig-name descname"><span class="pre">projection_sender</span></span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.projection_sender" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.ports.outputport.OutputPort</span></code></a></p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection._instantiate_receiver">
-<code class="sig-name descname">_instantiate_receiver</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection._instantiate_receiver">
+<span class="sig-name descname"><span class="pre">_instantiate_receiver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection._instantiate_receiver" title="Permalink to this definition">¶</a></dt>
 <dd><p>Determine matrix needed to map from sender to receiver</p>
 <p>Assign specification to self.matrix_spec attribute
 Assign matrix to self.matrix attribute</p>
@@ -635,11 +637,10 @@ Assign matrix to self.matrix attribute</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

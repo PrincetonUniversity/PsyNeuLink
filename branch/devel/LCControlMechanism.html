@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LCControlMechanism &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>LCControlMechanism &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -413,8 +415,8 @@ a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.com
 <section id="class-reference">
 <span id="lccontrolmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.</code><code class="sig-name descname">LCControlMechanism</code><span class="sig-paren">(</span><em class="sig-param">modulated_mechanisms=None</em>, <em class="sig-param">initial_w_FitzHughNagumo=0.0</em>, <em class="sig-param">initial_v_FitzHughNagumo=0.0</em>, <em class="sig-param">time_step_size_FitzHughNagumo=0.05</em>, <em class="sig-param">t_0_FitzHughNagumo=0.0</em>, <em class="sig-param">a_v_FitzHughNagumo=-1/3</em>, <em class="sig-param">b_v_FitzHughNagumo=0.0</em>, <em class="sig-param">c_v_FitzHughNagumo=1.0</em>, <em class="sig-param">d_v_FitzHughNagumo=0.0</em>, <em class="sig-param">e_v_FitzHughNagumo=-1.0</em>, <em class="sig-param">f_v_FitzHughNagumo=1.0</em>, <em class="sig-param">threshold_FitzHughNagumo=-1.0                     time_constant_v_FitzHughNagumo=1.0</em>, <em class="sig-param">a_w_FitzHughNagumo=1.0</em>, <em class="sig-param">b_w_FitzHughNagumo=-0.8</em>, <em class="sig-param">c_w_FitzHughNagumo=0.7</em>, <em class="sig-param">mode_FitzHughNagumo=1.0</em>, <em class="sig-param">uncorrelated_activity_FitzHughNagumo=0.0          time_constant_w_FitzHughNagumo = 12.5</em>, <em class="sig-param">integration_method=&quot;RK4&quot;                          base_level_gain=0.5</em>, <em class="sig-param">scaling_factor_gain=3.0</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.</span></span><span class="sig-name descname"><span class="pre">LCControlMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">modulated_mechanisms=None</span></em>, <em class="sig-param"><span class="pre">initial_w_FitzHughNagumo=0.0</span></em>, <em class="sig-param"><span class="pre">initial_v_FitzHughNagumo=0.0</span></em>, <em class="sig-param"><span class="pre">time_step_size_FitzHughNagumo=0.05</span></em>, <em class="sig-param"><span class="pre">t_0_FitzHughNagumo=0.0</span></em>, <em class="sig-param"><span class="pre">a_v_FitzHughNagumo=-1/3</span></em>, <em class="sig-param"><span class="pre">b_v_FitzHughNagumo=0.0</span></em>, <em class="sig-param"><span class="pre">c_v_FitzHughNagumo=1.0</span></em>, <em class="sig-param"><span class="pre">d_v_FitzHughNagumo=0.0</span></em>, <em class="sig-param"><span class="pre">e_v_FitzHughNagumo=-1.0</span></em>, <em class="sig-param"><span class="pre">f_v_FitzHughNagumo=1.0</span></em>, <em class="sig-param"><span class="pre">threshold_FitzHughNagumo=-1.0</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">time_constant_v_FitzHughNagumo=1.0</span></em>, <em class="sig-param"><span class="pre">a_w_FitzHughNagumo=1.0</span></em>, <em class="sig-param"><span class="pre">b_w_FitzHughNagumo=-0.8</span></em>, <em class="sig-param"><span class="pre">c_w_FitzHughNagumo=0.7</span></em>, <em class="sig-param"><span class="pre">mode_FitzHughNagumo=1.0</span></em>, <em class="sig-param"><span class="pre">uncorrelated_activity_FitzHughNagumo=0.0</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">time_constant_w_FitzHughNagumo</span> <span class="pre">=</span> <span class="pre">12.5</span></em>, <em class="sig-param"><span class="pre">integration_method=&quot;RK4&quot;</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">base_level_gain=0.5</span></em>, <em class="sig-param"><span class="pre">scaling_factor_gain=3.0</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a> that modulates the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of one or more <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a>.
 See <a class="reference internal" href="ControlMechanism.html#controlmechanism-class-reference"><span class="std std-ref">ControlMechanism</span></a> for additional arguments and attributes.</p>
@@ -463,8 +465,8 @@ applies to each of the mechanisms it modulates</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control">
-<code class="sig-name descname">monitor_for_control</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control">
+<span class="sig-name descname"><span class="pre">monitor_for_control</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitor_for_control" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> that project to <code class="xref any docutils literal notranslate"><span class="pre">objective_mechanism</span></code> (and also listed in the ObjectiveMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports</span></code> attribute);  these are used by the ObjectiveMechanism to
 generate the ControlMechanism’s <a class="reference internal" href="ControlMechanism.html#controlmechanism-input"><span class="std std-ref">input</span></a>, which drives the <a class="reference internal" href="#lccontrolmechanism-modes-of-operation"><span class="std std-ref">phasic response</span></a> of its <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p>
 <dl class="field-list simple">
@@ -475,8 +477,8 @@ generate the ControlMechanism’s <a class="reference internal" href="ControlMec
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports_weights_and_exponents">
-<code class="sig-name descname">monitored_output_ports_weights_and_exponents</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports_weights_and_exponents">
+<span class="sig-name descname"><span class="pre">monitored_output_ports_weights_and_exponents</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.monitored_output_ports_weights_and_exponents" title="Permalink to this definition">¶</a></dt>
 <dd><p>each tuple in the list contains the weight and exponent associated with a corresponding item of
 <code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports</span></code>;  these are the same as those in
 the <code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports_weights_and_exponents</span></code> attribute of the <code class="xref any docutils literal notranslate"><span class="pre">objective_mechanism</span></code>, and are used by the ObjectiveMechanism’s <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to parametrize the contribution made to its output by each of the values that
@@ -489,8 +491,8 @@ it monitors (see <a class="reference internal" href="ObjectiveMechanism.html#obj
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>takes the LCControlMechanism’s <a class="reference internal" href="#lccontrolmechanism-input"><span class="std std-ref">input</span></a> and generates its response
 &lt;LCControlMechanism_Output&gt;` under
 the influence of the <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> Function’s <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> attribute
@@ -503,8 +505,8 @@ the influence of the <code class="xref any docutils literal notranslate"><span c
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation">
-<code class="sig-name descname">control_allocation</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation">
+<span class="sig-name descname"><span class="pre">control_allocation</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_allocation" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains a single item — the result of the LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> —
 that is assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation</span></code></a> for the LCControlMechanism’s single
 <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>, listed in its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_signals" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a> attribute;  the control_allocation is the same as the
@@ -517,8 +519,8 @@ ControlMechanism’s <a class="reference internal" href="Mechanism.html#psyneuli
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_signals">
-<code class="sig-name descname">control_signals</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_signals" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_signals">
+<span class="sig-name descname"><span class="pre">control_signals</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_signals" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the LCControlMechanism’s single <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>, which sends <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> to the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of each of the Mechanisms
 listed in the LCControlMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulated_mechanisms</span></code></a>
 attribute.</p>
@@ -530,8 +532,8 @@ attribute.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_projections">
-<code class="sig-name descname">control_projections</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_projections" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_projections">
+<span class="sig-name descname"><span class="pre">control_projections</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.control_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjections</span></a> sent by the LCControlMechanism’s <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>, each of
 which projects to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_param</span></a> of the
 <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of one of the Mechanisms listed in <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulated_mechanisms</span></code></a> attribute.</p>
@@ -543,8 +545,8 @@ which projects to the <a class="reference internal" href="ParameterPort.html"><s
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms">
-<code class="sig-name descname">modulated_mechanisms</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms">
+<span class="sig-name descname"><span class="pre">modulated_mechanisms</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p>list of <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanisms</span></a> modulated by the LCControlMechanism.</p>
 <p>initial_w_FitzHughNagumo : float : default 0.0
 sets <code class="xref any docutils literal notranslate"><span class="pre">initial_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
@@ -556,8 +558,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo">
-<code class="sig-name descname">initial_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">initial_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">initial_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -567,8 +569,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FitzHughNagumo">
-<code class="sig-name descname">time_step_size_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">time_step_size_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_step_size_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">time_step_size</span></code> on the LCControlMechanism’s
 <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
@@ -579,8 +581,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo">
-<code class="sig-name descname">t_0_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">t_0_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.t_0_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">t_0</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -590,8 +592,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_v_FitzHughNagumo">
-<code class="sig-name descname">a_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">a_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">a_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -601,8 +603,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_v_FitzHughNagumo">
-<code class="sig-name descname">b_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">b_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">b_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -612,8 +614,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_v_FitzHughNagumo">
-<code class="sig-name descname">c_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">c_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">c_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -623,8 +625,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo">
-<code class="sig-name descname">d_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">d_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">d_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -634,8 +636,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.e_v_FitzHughNagumo">
-<code class="sig-name descname">e_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.e_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.e_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">e_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.e_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">e_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -645,8 +647,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.f_v_FitzHughNagumo">
-<code class="sig-name descname">f_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.f_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.f_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">f_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.f_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">f_v</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -656,8 +658,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.threshold_FitzHughNagumo">
-<code class="sig-name descname">threshold_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.threshold_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.threshold_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">threshold_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.threshold_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">threshold</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -667,8 +669,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo">
-<code class="sig-name descname">time_constant_v_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">time_constant_v_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_v_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s
 <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
@@ -679,8 +681,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo">
-<code class="sig-name descname">a_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">a_w_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.a_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">a_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -690,8 +692,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_w_FitzHughNagumo">
-<code class="sig-name descname">b_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_w_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">b_w_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.b_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">b_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -701,8 +703,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_w_FitzHughNagumo">
-<code class="sig-name descname">c_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_w_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">c_w_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.c_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">c_w</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -712,8 +714,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo">
-<code class="sig-name descname">mode_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">mode_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">mode</span></code> on the LCControlMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -723,8 +725,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FitzHughNagumo">
-<code class="sig-name descname">uncorrelated_activity_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">uncorrelated_activity_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.uncorrelated_activity_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">uncorrelated_activity</span></code> on the LCControlMechanism’s
 <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
@@ -735,8 +737,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FitzHughNagumo">
-<code class="sig-name descname">time_constant_w_FitzHughNagumo</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FitzHughNagumo">
+<span class="sig-name descname"><span class="pre">time_constant_w_FitzHughNagumo</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.time_constant_w_FitzHughNagumo" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">time_constant_w</span></code> on the LCControlMechanism’s
 <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
@@ -747,8 +749,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.integration_method">
-<code class="sig-name descname">integration_method</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.integration_method" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.integration_method">
+<span class="sig-name descname"><span class="pre">integration_method</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.integration_method" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets <code class="xref any docutils literal notranslate"><span class="pre">integration_method</span></code> on the LCControlMechanism’s
 <code class="xref any docutils literal notranslate"><span class="pre">FitzHughNagumoIntegrator</span></code> function</p>
 <dl class="field-list simple">
@@ -759,8 +761,8 @@ sets <code class="xref any docutils literal notranslate"><span class="pre">initi
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.base_level_gain">
-<code class="sig-name descname">base_level_gain</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.base_level_gain" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.base_level_gain">
+<span class="sig-name descname"><span class="pre">base_level_gain</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.base_level_gain" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets the base value in the equation used to compute the time-dependent gain value that the LCControl applies
 to each of the mechanisms it modulates</p>
 <div class="math notranslate nohighlight">
@@ -774,8 +776,8 @@ to each of the mechanisms it modulates</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.scaling_factor_gain">
-<code class="sig-name descname">scaling_factor_gain</code><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.scaling_factor_gain" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.scaling_factor_gain">
+<span class="sig-name descname"><span class="pre">scaling_factor_gain</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.scaling_factor_gain" title="Permalink to this definition">¶</a></dt>
 <dd><p>sets the scaling factor in the equation used to compute the time-dependent gain value that the LCControl
 applies to each of the mechanisms it modulates</p>
 <div class="math notranslate nohighlight">
@@ -789,16 +791,16 @@ applies to each of the mechanisms it modulates</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate modulated_mechanisms argument.</p>
 <p>Validate that <strong>modulated_mechanisms</strong> is either a Composition or a list of eligible Mechanisms .
 Eligible Mechanisms are ones with a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><code class="xref any py py-class docutils literal notranslate"><span class="pre">function</span></code></a> that has a multiplicative_param.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_output_ports">
-<code class="sig-name descname">_instantiate_output_ports</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_output_ports">
+<span class="sig-name descname"><span class="pre">_instantiate_output_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._instantiate_output_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate ControlSignals and assign ControlProjections to Mechanisms in self.modulated_mechanisms</p>
 <dl class="simple">
 <dt>If <strong>modulated_mechanisms</strong> argument of constructor was specified as <em>ALL</em>, assign all ProcessingMechanisms</dt><dd><p>in Compositions to which LCControlMechanism belongs to self.modulated_mechanisms.</p>
@@ -809,33 +811,33 @@ Eligible Mechanisms are ones with a <a class="reference internal" href="Mechanis
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._check_for_composition">
-<code class="sig-name descname">_check_for_composition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._check_for_composition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._check_for_composition">
+<span class="sig-name descname"><span class="pre">_check_for_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._check_for_composition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Allow Component to check whether it or its attributes are suitable for inclusion in a Composition
 Called by Composition.add_node.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._execute">
-<code class="sig-name descname">_execute</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">runtime_params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._execute">
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism._execute" title="Permalink to this definition">¶</a></dt>
 <dd><p>Updates LCControlMechanism’s ControlSignal based on input and mode parameter value</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms">
-<code class="sig-name descname">add_modulated_mechanisms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mechanisms</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms">
+<span class="sig-name descname"><span class="pre">add_modulated_mechanisms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanisms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.add_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add ControlProjections to the specified Mechanisms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.remove_modulated_mechanisms">
-<code class="sig-name descname">remove_modulated_mechanisms</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mechanisms</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.remove_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.remove_modulated_mechanisms">
+<span class="sig-name descname"><span class="pre">remove_modulated_mechanisms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mechanisms</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.remove_modulated_mechanisms" title="Permalink to this definition">¶</a></dt>
 <dd><p>Remove the ControlProjections to the specified Mechanisms.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show">
-<code class="sig-name descname">show</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.show" title="Permalink to this definition">¶</a></dt>
 <dd><p>Display the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a> monitored by the LCControlMechanism’s <a class="reference internal" href="AGTControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism" title="psyneulink.library.components.mechanisms.modulatory.control.agt.agtcontrolmechanism.AGTControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>
 and the <a class="reference internal" href="Functions.html#function-modulatory-params"><span class="std std-ref">multiplicative_params</span></a> modulated by the LCControlMechanism.</p>
 </dd></dl>
@@ -843,8 +845,8 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanismError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.</code><code class="sig-name descname">LCControlMechanismError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanismError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.</span></span><span class="sig-name descname"><span class="pre">LCControlMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanismError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -932,11 +934,11 @@ and the <a class="reference internal" href="Functions.html#function-modulatory-p
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 
   

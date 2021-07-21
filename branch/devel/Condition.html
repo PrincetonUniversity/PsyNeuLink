@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -422,8 +424,8 @@ with each of those Components.  If it returns <code class="xref any docutils lit
 <section id="class-reference">
 <span id="condition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterCall">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterCall</code><span class="sig-paren">(</span><em class="sig-param">dependency</em>, <em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterCall" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterCall">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterCall" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -444,8 +446,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterNCalls">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterNCalls</code><span class="sig-paren">(</span><em class="sig-param">dependency</em>, <em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCalls" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNCalls">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -466,14 +468,14 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterNCallsCombined">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterNCallsCombined</code><span class="sig-paren">(</span><em class="sig-param">*dependencies</em>, <em class="sig-param">n=None</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCallsCombined" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNCallsCombined">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNCallsCombined</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCallsCombined" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*components</strong> (<em>Components</em>) – one or more Components on which the Condition depends</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – the number of combined executions of all Components specified in <strong>components</strong> after which the</p></li>
-<li><p><strong>is satisfied</strong><strong> (</strong><strong>default</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a>) – None)</p></li>
+<li><p><strong>(</strong><strong>default</strong> (<em>Condition is satisfied</em>) – None)</p></li>
 <li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>component</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
@@ -489,8 +491,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterNPasses">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterNPasses</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNPasses" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNPasses">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNPasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNPasses" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -508,8 +510,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterNTimeSteps">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterNTimeSteps</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTimeSteps" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNTimeSteps">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNTimeSteps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTimeSteps" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -527,8 +529,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterNTrials">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterNTrials</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.RUN: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNTrials">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNTrials</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.RUN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNTrials" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -548,8 +550,8 @@ specified by <strong>time_scale</strong>.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterPass">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterPass</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterPass" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterPass">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterPass" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -572,8 +574,8 @@ specified by <strong>time_scale</strong>.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtRun">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtRun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRun" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtRun">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRun" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> at which the Condition is satisfied</p>
@@ -588,8 +590,8 @@ specified by <strong>time_scale</strong>.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterRun">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterRun</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterRun" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterRun">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterRun" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> after which the Condition is satisfied</p>
@@ -604,8 +606,8 @@ specified by <strong>time_scale</strong>.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterNRuns">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterNRuns</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNRuns">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNRuns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNRuns" title="Permalink to this definition">¶</a></dt>
 <dd><p>AfterNTrials</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -621,8 +623,8 @@ specified by <strong>time_scale</strong>.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterTimeStep">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterTimeStep</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterTimeStep" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterTimeStep">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterTimeStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterTimeStep" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -645,8 +647,8 @@ specified by <strong>time_scale</strong>.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AfterTrial">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AfterTrial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.RUN: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterTrial" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterTrial">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterTrial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.RUN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterTrial" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -672,8 +674,8 @@ has occurred and thereafter (i.e., in <a class="reference internal" href="Time.h
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.All">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">All</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">dependencies</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.All" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.All">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">All</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">dependencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.All" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>args</strong> – one or more <a class="reference internal" href="#"><span class="doc">Conditions</span></a></p>
@@ -700,8 +702,8 @@ has occurred and thereafter (i.e., in <a class="reference internal" href="Time.h
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AllHaveRun">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AllHaveRun</code><span class="sig-paren">(</span><em class="sig-param">*dependencies</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AllHaveRun">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AllHaveRun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AllHaveRun" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -721,8 +723,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.Always">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Always</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Always" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Always">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Always</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Always" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>none</strong> – </p>
@@ -737,14 +739,14 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.And">
-<code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">And</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.And" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.And">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">And</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.And" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.All" title="psyneulink.core.scheduling.condition.All"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.All</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.Any">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Any</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">dependencies</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Any" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Any">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Any</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">dependencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Any" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>args</strong> – one or more <a class="reference internal" href="#"><span class="doc">Conditions</span></a></p>
@@ -771,8 +773,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtNCalls">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtNCalls</code><span class="sig-paren">(</span><em class="sig-param">dependency</em>, <em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtNCalls" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtNCalls">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -793,8 +795,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtPass">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtPass</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtPass" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtPass">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtPass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtPass" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -818,8 +820,8 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtRunStart">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtRunStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunStart" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtRunStart">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtRunStart</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunStart" title="Permalink to this definition">¶</a></dt>
 <dd><p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
@@ -833,8 +835,8 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtRunNStart">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtRunNStart</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtRunNStart">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtRunNStart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtRunNStart" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>n</strong> (<em>int</em>) – the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.RUN" title="psyneulink.core.scheduling.time.TimeScale.RUN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">RUN</span></code></a> on which the Condition is satisfied</p>
@@ -853,8 +855,8 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtTimeStep">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtTimeStep</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTimeStep" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtTimeStep">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtTimeStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTimeStep" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -878,8 +880,8 @@ when two <a class="reference internal" href="Time.html#psyneulink.core.schedulin
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtTrial">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtTrial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.RUN: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrial" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtTrial">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtTrial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.RUN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrial" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -905,8 +907,8 @@ the second <a class="reference internal" href="Time.html#psyneulink.core.schedul
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtTrialStart">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtTrialStart</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtTrialStart">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtTrialStart</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialStart" title="Permalink to this definition">¶</a></dt>
 <dd><p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
@@ -920,8 +922,8 @@ the second <a class="reference internal" href="Time.html#psyneulink.core.schedul
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.AtTrialNStart">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">AtTrialNStart</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.RUN: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialNStart" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtTrialNStart">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtTrialNStart</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.RUN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtTrialNStart" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -944,8 +946,8 @@ the second <a class="reference internal" href="Time.html#psyneulink.core.schedul
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.BeforeNCalls">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">BeforeNCalls</code><span class="sig-paren">(</span><em class="sig-param">dependency</em>, <em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeNCalls" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforeNCalls">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -966,8 +968,8 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.BeforePass">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">BeforePass</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforePass" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforePass">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforePass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforePass" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -990,8 +992,8 @@ so, <code class="xref any docutils literal notranslate"><span class="pre">Before
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.BeforeTimeStep">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">BeforeTimeStep</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeTimeStep" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforeTimeStep">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeTimeStep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeTimeStep" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1014,8 +1016,8 @@ so, <code class="xref any docutils literal notranslate"><span class="pre">Before
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.BeforeTrial">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">BeforeTrial</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.RUN: 3&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeTrial" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforeTrial">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeTrial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.RUN</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeTrial" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1041,8 +1043,8 @@ and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.tim
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.Condition">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Condition">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used in conjunction with a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> to specify the condition under which a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> should be
 allowed to execute.</p>
 <dl class="field-list simple">
@@ -1055,14 +1057,14 @@ allowed to execute.</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.Condition.owner">
-<code class="sig-name descname">owner</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">Component</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Condition.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Component</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> with which the Condition is associated, and the execution of which it determines.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.Condition.is_satisfied">
-<code class="sig-name descname">is_satisfied</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">execution_id</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.is_satisfied" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Condition.is_satisfied">
+<span class="sig-name descname"><span class="pre">is_satisfied</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">execution_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.is_satisfied" title="Permalink to this definition">¶</a></dt>
 <dd><p>the function called to determine satisfaction of this Condition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1083,16 +1085,16 @@ these are added to the <strong>kwargs</strong> specified at instantiation of thi
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.Condition.absolute_intervals">
-<em class="property">property </em><code class="sig-name descname">absolute_intervals</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.absolute_intervals" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Condition.absolute_intervals">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">absolute_intervals</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.absolute_intervals" title="Permalink to this definition">¶</a></dt>
 <dd><p>In absolute time, repeated intervals for satisfaction or
 unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.Condition.absolute_fixed_points">
-<em class="property">property </em><code class="sig-name descname">absolute_fixed_points</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Condition.absolute_fixed_points">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">absolute_fixed_points</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Condition.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>In absolute time, specific time points for satisfaction or
 unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
@@ -1100,13 +1102,13 @@ unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt id="psyneulink.core.scheduling.condition.ConditionError">
-<em class="property">exception </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">ConditionError</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">error_value</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionError" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.ConditionError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">ConditionError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionError" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.ConditionSet">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">ConditionSet</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conditions</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.ConditionSet">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">ConditionSet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used in conjunction with a <a class="reference internal" href="Scheduler.html"><span class="doc">Scheduler</span></a> to store the <a class="reference internal" href="#"><span class="doc">Conditions</span></a> associated with a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -1115,8 +1117,8 @@ with each.</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.ConditionSet.conditions">
-<code class="sig-name descname">conditions</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet.conditions" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.ConditionSet.conditions">
+<span class="sig-name descname"><span class="pre">conditions</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet.conditions" title="Permalink to this definition">¶</a></dt>
 <dd><p>the key of each entry is a <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>, and its value is the <a class="reference internal" href="#"><span class="doc">Condition</span></a> associated
 with that Component.  Conditions can be added to the
 ConditionSet using the ConditionSet’s <a class="reference internal" href="#psyneulink.core.scheduling.condition.ConditionSet.add_condition" title="psyneulink.core.scheduling.condition.ConditionSet.add_condition"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_condition</span></code></a> method.</p>
@@ -1128,8 +1130,8 @@ ConditionSet using the ConditionSet’s <a class="reference internal" href="#psy
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.ConditionSet.add_condition">
-<code class="sig-name descname">add_condition</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">owner</span></em>, <em class="sig-param"><span class="n">condition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet.add_condition" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.ConditionSet.add_condition">
+<span class="sig-name descname"><span class="pre">add_condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">owner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet.add_condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a <a class="reference internal" href="#"><span class="doc">Condition</span></a> to the ConditionSet. If <strong>owner</strong> already has a Condition, it is overwritten
 with the new one. If you want to add multiple conditions to a single owner, use the
 <a class="reference internal" href="#conditions-composite"><span class="std std-ref">composite Conditions</span></a> to accurately specify the desired behavior.</p>
@@ -1145,8 +1147,8 @@ will govern the execution behavior of <strong>owner</strong></p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.ConditionSet.add_condition_set">
-<code class="sig-name descname">add_condition_set</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">conditions</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet.add_condition_set" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.ConditionSet.add_condition_set">
+<span class="sig-name descname"><span class="pre">add_condition_set</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">conditions</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.ConditionSet.add_condition_set" title="Permalink to this definition">¶</a></dt>
 <dd><p>Adds a set of <a class="reference internal" href="#"><span class="doc">Conditions</span></a> (in the form of a dict or another ConditionSet) to the ConditionSet.
 Any Condition added here will overwrite an existing Condition for a given owner.
 If you want to add multiple conditions to a single owner, add a single <a class="reference internal" href="#conditions-composite"><span class="std std-ref">Composite Condition</span></a>
@@ -1167,8 +1169,8 @@ governed) to a <a class="reference internal" href="#"><span class="doc">Conditio
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.EveryNCalls">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">EveryNCalls</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dependency</span></em>, <em class="sig-param"><span class="n">n</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.EveryNCalls">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">EveryNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1192,8 +1194,8 @@ Component runs</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.EveryNPasses">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">EveryNPasses</code><span class="sig-paren">(</span><em class="sig-param">n</em>, <em class="sig-param">time_scale=&lt;TimeScale.TRIAL: 2&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.EveryNPasses" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.EveryNPasses">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">EveryNPasses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.TRIAL</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.EveryNPasses" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1213,8 +1215,8 @@ Component runs</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.JustRan">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">JustRan</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dependency</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.JustRan" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.JustRan">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">JustRan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.JustRan" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>component</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – the Component on which the Condition depends</p>
@@ -1235,8 +1237,8 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.Never">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Never</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Never" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Never">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Never</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Never" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>none</strong> – </p>
@@ -1251,8 +1253,8 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.Not">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Not</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">condition</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Not" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Not">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Not</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Not" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>condition</strong> (<a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a>) – a <a class="reference internal" href="#"><span class="doc">Condition</span></a></p>
@@ -1267,8 +1269,8 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.NWhen">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">NWhen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">condition</span></em>, <em class="sig-param"><span class="n">n</span><span class="o">=</span><span class="default_value">1</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.NWhen" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.NWhen">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">NWhen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.NWhen" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1286,14 +1288,14 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.Or">
-<code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">Or</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.Or" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Or">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Or</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Or" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.Any" title="psyneulink.core.scheduling.condition.Any"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.Any</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.WhenFinished">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">WhenFinished</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dependency</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinished" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.WhenFinished">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhenFinished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinished" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>component</strong> (<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component" title="psyneulink.core.components.component.Component"><em>Component</em></a>) – the Component on which the Condition depends</p>
@@ -1314,8 +1316,8 @@ this Condition) can vary arbitrarily in time.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.WhenFinishedAll">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">WhenFinishedAll</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">dependencies</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinishedAll" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.WhenFinishedAll">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhenFinishedAll</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">dependencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinishedAll" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>*components</strong> (<em>Components</em>) – zero or more Components on which the Condition depends</p>
@@ -1339,8 +1341,8 @@ this Condition) can vary arbitrarily in time.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.WhenFinishedAny">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">WhenFinishedAny</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">dependencies</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinishedAny" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.WhenFinishedAny">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhenFinishedAny</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">dependencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinishedAny" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>*components</strong> (<em>Components</em>) – zero or more Components on which the Condition depends</p>
@@ -1364,14 +1366,14 @@ this Condition) can vary arbitrarily in time.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.While">
-<code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">While</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.While" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.While">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">While</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.While" title="Permalink to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.scheduling.condition.Condition</span></code></a></p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.WhileNot">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">WhileNot</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func</span></em>, <em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhileNot" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.WhileNot">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhileNot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhileNot" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1393,47 +1395,47 @@ specifies keyword arguments to pass to <code class="xref any docutils literal no
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">TimeInterval</code><span class="sig-paren">(</span><em class="sig-param">repeat=None</em>, <em class="sig-param">start=None</em>, <em class="sig-param">end=None</em>, <em class="sig-param">unit=&lt;Unit('millisecond')&gt;</em>, <em class="sig-param">start_inclusive=True</em>, <em class="sig-param">end_inclusive=True</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">TimeInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">repeat=None</span></em>, <em class="sig-param"><span class="pre">start=None</span></em>, <em class="sig-param"><span class="pre">end=None</span></em>, <em class="sig-param"><span class="pre">unit=&lt;Unit('millisecond')&gt;</span></em>, <em class="sig-param"><span class="pre">start_inclusive=True</span></em>, <em class="sig-param"><span class="pre">end_inclusive=True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.repeat">
-<code class="sig-name descname">repeat</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.repeat" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.repeat">
+<span class="sig-name descname"><span class="pre">repeat</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.repeat" title="Permalink to this definition">¶</a></dt>
 <dd><p>the interval between <a href="#id33"><span class="problematic" id="id34">*</span></a>unit*s where this condition can be
 satisfied</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.start">
-<code class="sig-name descname">start</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.start" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.start">
+<span class="sig-name descname"><span class="pre">start</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.start" title="Permalink to this definition">¶</a></dt>
 <dd><p>the time at/after which this condition can be
 satisfied</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.end">
-<code class="sig-name descname">end</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.end" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.end">
+<span class="sig-name descname"><span class="pre">end</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.end" title="Permalink to this definition">¶</a></dt>
 <dd><p>the time at/fter which this condition can be
 satisfied</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.unit">
-<code class="sig-name descname">unit</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.unit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.unit">
+<span class="sig-name descname"><span class="pre">unit</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">pint.Unit</span></code> to use for scalar values of <em>repeat</em>,
 <em>start</em>, and <em>end</em></p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.start_inclusive">
-<code class="sig-name descname">start_inclusive</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.start_inclusive" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.start_inclusive">
+<span class="sig-name descname"><span class="pre">start_inclusive</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.start_inclusive" title="Permalink to this definition">¶</a></dt>
 <dd><p>if True, <em>start</em> allows satisfaction exactly at the time
 corresponding to <em>start</em>. if False, satisfaction can occur
 only after <em>start</em></p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.end_inclusive">
-<code class="sig-name descname">end_inclusive</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.end_inclusive" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.end_inclusive">
+<span class="sig-name descname"><span class="pre">end_inclusive</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.end_inclusive" title="Permalink to this definition">¶</a></dt>
 <dd><p>if True, <em>end</em> allows satisfaction exactly until the time
 corresponding to <em>end</em>. if False, satisfaction can occur
 only before <em>end</em></p>
@@ -1455,16 +1457,16 @@ this will do the opposite and be true only and always until time
 <p>If the scheduler is not set to <code class="xref any docutils literal notranslate"><span class="pre">exact_time_mode</span> <span class="pre">=</span> <span class="pre">True</span></code>,
 <em>start_inclusive</em> and <em>end_inclusive</em> may not behave as
 expected. See <a class="reference internal" href="Scheduler.html#scheduler-exact-time"><span class="std std-ref">Exact Time Mode</span></a> for more info.</p>
-<dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals">
-<em class="property">property </em><code class="sig-name descname">absolute_intervals</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">absolute_intervals</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.absolute_intervals" title="Permalink to this definition">¶</a></dt>
 <dd><p>In absolute time, repeated intervals for satisfaction or
 unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
 
-<dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points">
-<em class="property">property </em><code class="sig-name descname">absolute_fixed_points</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">absolute_fixed_points</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeInterval.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>In absolute time, specific time points for satisfaction or
 unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
@@ -1472,24 +1474,24 @@ unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.scheduling.condition.TimeTermination">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.scheduling.condition.</code><code class="sig-name descname">TimeTermination</code><span class="sig-paren">(</span><em class="sig-param">t</em>, <em class="sig-param">inclusive=True</em>, <em class="sig-param">unit=&lt;Unit('millisecond')&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeTermination">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">TimeTermination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">t</span></em>, <em class="sig-param"><span class="pre">inclusive=True</span></em>, <em class="sig-param"><span class="pre">unit=&lt;Unit('millisecond')&gt;</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeTermination.t">
-<code class="sig-name descname">t</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.t" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeTermination.t">
+<span class="sig-name descname"><span class="pre">t</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.t" title="Permalink to this definition">¶</a></dt>
 <dd><p>the time at/after which this condition is satisfied</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeTermination.unit">
-<code class="sig-name descname">unit</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.unit" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeTermination.unit">
+<span class="sig-name descname"><span class="pre">unit</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.unit" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">pint.Unit</span></code> to use for scalar values of <em>t</em>, <em>start</em>,
 and <em>end</em></p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.scheduling.condition.TimeTermination.start_inclusive">
-<code class="sig-name descname">start_inclusive</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.start_inclusive" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeTermination.start_inclusive">
+<span class="sig-name descname"><span class="pre">start_inclusive</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.start_inclusive" title="Permalink to this definition">¶</a></dt>
 <dd><p>if True, the condition is satisfied exactly at the time
 corresponding to <em>t</em>. if False, satisfaction can occur
 only after <em>t</em></p>
@@ -1499,9 +1501,9 @@ only after <em>t</em></p>
 <blockquote>
 <div><p>At/After time <em>t</em></p>
 </div></blockquote>
-<dl class="py method">
-<dt id="psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points">
-<em class="property">property </em><code class="sig-name descname">absolute_fixed_points</code><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">absolute_fixed_points</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.TimeTermination.absolute_fixed_points" title="Permalink to this definition">¶</a></dt>
 <dd><p>In absolute time, specific time points for satisfaction or
 unsatisfaction of this Condition or those it contains</p>
 </dd></dl>
@@ -1575,11 +1577,10 @@ unsatisfaction of this Condition or those it contains</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

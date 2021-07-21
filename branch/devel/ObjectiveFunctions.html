@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveFunctions &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>ObjectiveFunctions &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -207,14 +209,14 @@
 </ul>
 <p>Functions that return a scalar evaluation of their input.</p>
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="sig-name descname">ObjectiveFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">ObjectiveFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> used for evaluating ports.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="sig-name descname">Stability</code><span class="sig-paren">(</span><em class="sig-param">default_variable=None</em>, <em class="sig-param">size=None</em>, <em class="sig-param">matrix=HOLLOW_MATRIX</em>, <em class="sig-param">metric=ENERGY                                   transfer_fct=None                               normalize=False</em>, <em class="sig-param">params=None</em>, <em class="sig-param">owner=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">Stability</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">size=None</span></em>, <em class="sig-param"><span class="pre">matrix=HOLLOW_MATRIX</span></em>, <em class="sig-param"><span class="pre">metric=ENERGY</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">transfer_fct=None</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">normalize=False</span></em>, <em class="sig-param"><span class="pre">params=None</span></em>, <em class="sig-param"><span class="pre">owner=None</span></em>, <em class="sig-param"><span class="pre">prefs=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="Permalink to this definition">¶</a></dt>
 <dd><p id="stabilityfunction">Return the stability of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> based on a state transformation matrix.</p>
 <p>The value of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is passed through the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a>,
 transformed using the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct" title="psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">transfer_fct</span></code></a> (if specified), and then compared with its initial
@@ -241,8 +243,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>array for which stability is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -252,8 +254,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.size">
-<code class="sig-name descname">size</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.size">
+<span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>length of array for which stability is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -263,8 +265,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.matrix">
-<code class="sig-name descname">matrix</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.matrix">
+<span class="sig-name descname"><span class="pre">matrix</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>weight matrix from each element of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> to each other;  if a matrix other
 than HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from the
 stability calculation.</p>
@@ -276,8 +278,8 @@ stability calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.metric">
-<code class="sig-name descname">metric</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.metric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.metric">
+<span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>metric used to compute stability; must be a <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">DistanceMetrics</span></code></a> keyword. The <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="psyneulink.core.components.functions.objectivefunctions.Distance"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Distance</span></code></a> Function is used to
 compute the stability of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with respect to its value after its transformation
 by <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct" title="psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">transfer_fct</span></code></a>.</p>
@@ -289,8 +291,8 @@ by <a class="reference internal" href="#psyneulink.core.components.functions.obj
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct">
-<code class="sig-name descname">transfer_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct">
+<span class="sig-name descname"><span class="pre">transfer_fct</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct" title="Permalink to this definition">¶</a></dt>
 <dd><p>function used to transform output of weight <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> prior to computing stability.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -300,8 +302,8 @@ by <a class="reference internal" href="#psyneulink.core.components.functions.obj
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.normalize">
-<code class="sig-name descname">normalize</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.normalize" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>if <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, result of stability calculation is normalized by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -311,8 +313,8 @@ by <a class="reference internal" href="#psyneulink.core.components.functions.obj
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.params">
-<code class="sig-name descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.params" title="Permalink to this definition">¶</a></dt>
 <dd><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p>
@@ -324,8 +326,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -335,8 +337,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -346,14 +348,14 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validates that variable is 1d array</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate matrix param</p>
 <dl class="simple">
 <dt><a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> argument must be one of the following</dt><dd><ul class="simple">
@@ -371,8 +373,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability._instantiate_attributes_before_function">
-<code class="sig-name descname">_instantiate_attributes_before_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability._instantiate_attributes_before_function">
+<span class="sig-name descname"><span class="pre">_instantiate_attributes_before_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._instantiate_attributes_before_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate matrix</p>
 <dl class="simple">
 <dt>Specified matrix is convolved with HOLLOW_MATRIX</dt><dd><p>to eliminate the diagonal (self-connections) from the calculation.</p>
@@ -384,8 +386,8 @@ If ENTROPY is specified as the metric, convert to CROSS_ENTROPY for use with the
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Stability._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Stability._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Stability._function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the stability of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <p>Compare the value of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> with its value after transformation by
 <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> and <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct" title="psyneulink.core.components.functions.objectivefunctions.Stability.transfer_fct"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">transfer_fct</span></code></a> (if specified), using the specified
@@ -404,8 +406,8 @@ by the length of <a class="reference internal" href="#psyneulink.core.components
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="sig-name descname">Distance</code><span class="sig-paren">(</span><em class="sig-param">default_variable=None</em>, <em class="sig-param">metric=EUCLIDEAN                                 normalize=False</em>, <em class="sig-param">params=None</em>, <em class="sig-param">owner=None</em>, <em class="sig-param">prefs=None</em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">Distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">metric=EUCLIDEAN</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">normalize=False</span></em>, <em class="sig-param"><span class="pre">params=None</span></em>, <em class="sig-param"><span class="pre">owner=None</span></em>, <em class="sig-param"><span class="pre">prefs=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance" title="Permalink to this definition">¶</a></dt>
 <dd><p id="distance">Return the distance between the vectors in the two items of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> using the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">distance</span>
 <span class="pre">metric</span></code></a> specified in the <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.metric" title="psyneulink.core.components.functions.objectivefunctions.Stability.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> attribute.  If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the result is normalized by the length of (number of elements in) <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
@@ -424,8 +426,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the arrays between which the distance is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -435,8 +437,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.metric">
-<code class="sig-name descname">metric</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance.metric">
+<span class="sig-name descname"><span class="pre">metric</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">metric</span></code></a> used to compute the distance between the two items in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -446,8 +448,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.normalize">
-<code class="sig-name descname">normalize</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines whether the distance is normalized by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -457,8 +459,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.params">
-<code class="sig-name descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.params" title="Permalink to this definition">¶</a></dt>
 <dd><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p>
@@ -470,8 +472,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -481,8 +483,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -492,14 +494,14 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate that variable has two items of equal length</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Distance._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Distance._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Distance._function" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the distance between the two vectors in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.variable" title="psyneulink.core.components.functions.objectivefunctions.Stability.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <p>Use the <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics" title="psyneulink.core.globals.keywords.DistanceMetrics"><code class="xref any py py-class docutils literal notranslate"><span class="pre">distance</span> <span class="pre">metric</span></code></a> specified in <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.metric" title="psyneulink.core.components.functions.objectivefunctions.Distance.metric"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">metric</span></code></a> to calculate the distance.
 If <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.normalize" title="psyneulink.core.components.functions.objectivefunctions.Distance.normalize"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">normalize</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, the result is divided by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Distance.variable" title="psyneulink.core.components.functions.objectivefunctions.Distance.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
@@ -516,8 +518,8 @@ If <a class="reference internal" href="#psyneulink.core.components.functions.obj
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="sig-name descname">Energy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">normalize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">matrix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">Energy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy" title="Permalink to this definition">¶</a></dt>
 <dd><p id="energyfunction">Subclass of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stability</span></code></a> Function that returns the energy of an array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -541,8 +543,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>array for which energy is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -552,8 +554,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.size">
-<code class="sig-name descname">size</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.size">
+<span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>length of array for which energy is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -563,8 +565,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.matrix">
-<code class="sig-name descname">matrix</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.matrix">
+<span class="sig-name descname"><span class="pre">matrix</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>weight matrix from each element of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> to each other;  if a matrix other
 than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
 the energy calculation.</p>
@@ -576,8 +578,8 @@ the energy calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.transfer_fct">
-<code class="sig-name descname">transfer_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.transfer_fct" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.transfer_fct">
+<span class="sig-name descname"><span class="pre">transfer_fct</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.transfer_fct" title="Permalink to this definition">¶</a></dt>
 <dd><p>function used to transform output of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> prior to computing energy
 (see <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stability</span></code></a> for explanation).</p>
 <dl class="field-list simple">
@@ -588,8 +590,8 @@ the energy calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.normalize">
-<code class="sig-name descname">normalize</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.normalize" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>if <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, result of energy calculation is normalized by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Energy.variable" title="psyneulink.core.components.functions.objectivefunctions.Energy.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -599,8 +601,8 @@ the energy calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.params">
-<code class="sig-name descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.params" title="Permalink to this definition">¶</a></dt>
 <dd><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p>
@@ -612,8 +614,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -623,8 +625,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Energy.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Energy.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Energy.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -636,8 +638,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.objectivefunctions.</code><code class="sig-name descname">Entropy</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">normalize</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">transfer_fct</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.objectivefunctions.</span></span><span class="sig-name descname"><span class="pre">Entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">transfer_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy" title="Permalink to this definition">¶</a></dt>
 <dd><p id="entropyfunction">Subclass of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stability</span></code></a> Function that returns the entropy of an array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -661,8 +663,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>array for which entropy is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -672,8 +674,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.size">
-<code class="sig-name descname">size</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.size" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.size">
+<span class="sig-name descname"><span class="pre">size</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.size" title="Permalink to this definition">¶</a></dt>
 <dd><p>length of array for which energy is calculated.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -683,8 +685,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.matrix">
-<code class="sig-name descname">matrix</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.matrix">
+<span class="sig-name descname"><span class="pre">matrix</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>weight matrix from each element of <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> to each other;  if a matrix other
 than INVERSE_HOLLOW_MATRIX is assigned, it is convolved with HOLLOW_MATRIX to eliminate self-connections from
 the entropy calculation.</p>
@@ -696,8 +698,8 @@ the entropy calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.transfer_fct">
-<code class="sig-name descname">transfer_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.transfer_fct" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.transfer_fct">
+<span class="sig-name descname"><span class="pre">transfer_fct</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.transfer_fct" title="Permalink to this definition">¶</a></dt>
 <dd><p>function used to transform output of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability.matrix" title="psyneulink.core.components.functions.objectivefunctions.Stability.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> prior to computing entropy
 (see <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Stability" title="psyneulink.core.components.functions.objectivefunctions.Stability"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Stability</span></code></a> for explanation).</p>
 <dl class="field-list simple">
@@ -708,8 +710,8 @@ the entropy calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.normalize">
-<code class="sig-name descname">normalize</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.normalize" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.normalize">
+<span class="sig-name descname"><span class="pre">normalize</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.normalize" title="Permalink to this definition">¶</a></dt>
 <dd><p>if <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, result of entropy calculation is normalized by the length of <a class="reference internal" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.variable" title="psyneulink.core.components.functions.objectivefunctions.Entropy.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -719,8 +721,8 @@ the entropy calculation.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.params">
-<code class="sig-name descname">params</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.params">
+<span class="sig-name descname"><span class="pre">params</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.params" title="Permalink to this definition">¶</a></dt>
 <dd><p>a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p>
@@ -732,8 +734,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Component.html"><span class="doc">component</span></a> to which to assign the Function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -743,8 +745,8 @@ arguments of the constructor.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.objectivefunctions.Entropy.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.objectivefunctions.Entropy.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.objectivefunctions.Entropy.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>specifies the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -807,11 +809,10 @@ arguments of the constructor.</p>
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
      
 
   

@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0+untagged.30.g1f944b9 documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0+untagged.31.g8cbf717 documentation</title>
   
 
   
@@ -28,6 +28,8 @@
 
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -97,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.30.g1f944b9
+                  0+untagged.31.g8cbf717
                 </div>
               
             
@@ -210,12 +212,12 @@
 </ul>
 <p>Functions that parameterize a function.</p>
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">LearningFunction</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span></em>, <em class="sig-param"><span class="n">params</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">LearningFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Abstract class of <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> used for learning.</p>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>most LearningFunctions take a list or 2d array that must contain three items:</p>
 <ul class="simple">
 <li><p>the input to the parameter being modified (variable[LEARNING_ACTIVATION_INPUT]);</p></li>
@@ -231,8 +233,8 @@
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate">
-<code class="sig-name descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate">
+<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> parameter if none of the
 following are specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to
 which the function has been assigned, the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for any <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> or
@@ -246,8 +248,8 @@ The exact form of the value (i.e., whether it is a scalar or array) depends on t
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>generally used to multiply the result of the function before it is returned;  however, both the form of the
 value (i.e., whether it is a scalar or array) and how it is used depend on the function’s type.</p>
 <dl class="field-list simple">
@@ -269,8 +271,8 @@ value (i.e., whether it is a scalar or array) and how it is used depend on the f
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">Kohonen</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">distance_function</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">Kohonen</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates a matrix of weight changes using the Kohenen learning rule.</p>
 <p>The Kohonen learning rule is used to implement a <a class="reference external" href="http://scholarpedia.org/article/Kohonen_network">Kohonen netowrk</a>, which is an instance of the more general category of
 <a class="reference external" href="https://en.wikipedia.org/wiki/Self-organizing_map">self organizing map (SOM)</a>, that modifies the weights to
@@ -302,8 +304,8 @@ of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>input pattern, array of activation values, and weight matrix  used to generate the weight change matrix
 returned by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <dl class="field-list simple">
@@ -314,8 +316,8 @@ returned by <a class="reference internal" href="#psyneulink.core.components.func
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="psyneulink.core.components.functions.learningfunctions.Kohonen.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="psyneulink.core.components.functions.learningfunctions.Kohonen.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>
 belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
 multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Kohonen.variable&gt;` before calculating the weight change
@@ -330,8 +332,8 @@ for the System to which it belongs is used. If all are <code class="xref any doc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate">
-<code class="sig-name descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate">
+<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Kohonen.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -341,8 +343,8 @@ for the System to which it belongs is used. If all are <code class="xref any doc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates a matrix of weight changes from: i) the difference between an input pattern (variable
 &lt;Kohonen.variable&gt;`[0]) and the weights in a weigh matrix (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>[2]) to each
 element of an activity array (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.variable" title="psyneulink.core.components.functions.learningfunctions.Kohonen.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>[1]); and ii) the distance of each element of
@@ -356,8 +358,8 @@ input array (variable &lt;Kohonen.variable&gt;`[0])) using <code class="xref any
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -367,8 +369,8 @@ input array (variable &lt;Kohonen.variable&gt;`[0])) using <code class="xref any
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -378,8 +380,8 @@ input array (variable &lt;Kohonen.variable&gt;`[0])) using <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -413,14 +415,14 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate learning_rate</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Kohonen._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Kohonen._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Kohonen._function" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -444,8 +446,8 @@ similar to that input pattern.</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">Hebbian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">Hebbian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian" title="Permalink to this definition">¶</a></dt>
 <dd><p id="hebbian-learning-rule">Calculate a matrix of weight changes using the Hebbian (correlational) learning rule.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> calculates a matrix of weight changes from a 1d array of activity values in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> using the <a class="reference external" href="https://en.wikipedia.org/wiki/Hebbian_theory#Principles">Hebbian learning rule</a>:</p>
 <div class="math notranslate nohighlight">
@@ -467,8 +469,8 @@ of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>activation values, the pair-wise products of which are used to generate the weight change matrix returned by
 the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <dl class="field-list simple">
@@ -479,8 +481,8 @@ the <a class="reference internal" href="#psyneulink.core.components.functions.le
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="psyneulink.core.components.functions.learningfunctions.Hebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="psyneulink.core.components.functions.learningfunctions.Hebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a>
 belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it is a 1d array, it is
 multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;Hebbian.variable&gt;` before calculating the weight change
@@ -495,8 +497,8 @@ for the System to which it belongs is used. If all are <code class="xref any doc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate">
-<code class="sig-name descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate">
+<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -506,8 +508,8 @@ for the System to which it belongs is used. If all are <code class="xref any doc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates the pairwise product of all elements in the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.variable" title="psyneulink.core.components.functions.learningfunctions.Hebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, and then
 scales that by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Hebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> to generate the weight change matrix
 returned by the function.</p>
@@ -519,8 +521,8 @@ returned by the function.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -530,8 +532,8 @@ returned by the function.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -541,8 +543,8 @@ returned by the function.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -576,14 +578,14 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate learning_rate</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Hebbian._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Hebbian._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Hebbian._function" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -606,8 +608,8 @@ with all diagonal elements = 0 (i.e., hollow matix).</p>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">ContrastiveHebbian</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">ContrastiveHebbian</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian" title="Permalink to this definition">¶</a></dt>
 <dd><p id="contrastivehebbian-learning-rule">Calculate a matrix of weight changes using the Contrastive Hebbian learning rule.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> calculates a matrix of weight changes from a 1d array of activity values
 in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> using the <a class="reference external" href="https://www.sciencedirect.com/science/article/pii/B978148321448150007X">ContrastiveHebbian learning rule</a>:</p>
@@ -633,8 +635,8 @@ of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>activation values, the pair-wise products of which are used to generate the weight change matrix returned by
 the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p>
 <dl class="field-list simple">
@@ -645,8 +647,8 @@ the <a class="reference internal" href="#psyneulink.core.components.functions.le
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>used by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix returned by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  If specified, it supersedes any learning_rate specified for the <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs.  If it is a scalar, it is multiplied by the weight change matrix;  if it
 is a 1d array, it is multiplied Hadamard (elementwise) by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> &lt;ContrastiveHebbian.variable&gt;`
 before calculating the weight change matrix;  if it is a 2d array, it is multiplied Hadamard (elementwise) by
@@ -662,8 +664,8 @@ Process to which the <a class="reference internal" href="#psyneulink.core.compon
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate">
-<code class="sig-name descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate">
+<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -673,8 +675,8 @@ Process to which the <a class="reference internal" href="#psyneulink.core.compon
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>calculates the pairwise product of all elements in the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>, and then
 scales that by the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate" title="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> to generate the weight change matrix
 returned by the function.</p>
@@ -686,8 +688,8 @@ returned by the function.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -697,8 +699,8 @@ returned by the function.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -708,8 +710,8 @@ returned by the function.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -743,14 +745,14 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate learning_rate</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.ContrastiveHebbian._function" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -772,8 +774,8 @@ of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">Reinforcement</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">Reinforcement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate error term for a single item in an input array, scaled by the learning_rate.</p>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> takes an array (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>) with
 only one non-zero value, and returns an array of the same length with the one non-zero value replaced by
@@ -821,8 +823,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>specifies three values used as input to the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>:</p>
 <blockquote>
 <div><ul class="simple">
@@ -839,8 +841,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input">
-<code class="sig-name descname">activation_input</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input">
+<span class="sig-name descname"><span class="pre">activation_input</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_input" title="Permalink to this definition">¶</a></dt>
 <dd><p>first item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  this is not used (it is implemented for compatibility
 with other LearningFunctions).</p>
 <dl class="field-list simple">
@@ -851,8 +853,8 @@ with other LearningFunctions).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output">
-<code class="sig-name descname">activation_output</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output">
+<span class="sig-name descname"><span class="pre">activation_output</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="Permalink to this definition">¶</a></dt>
 <dd><p>second item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  contains a single “prediction” or “action” value as one
 of its elements, the others of which are zero.</p>
 <dl class="field-list simple">
@@ -863,8 +865,8 @@ of its elements, the others of which are zero.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal">
-<code class="sig-name descname">error_signal</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal">
+<span class="sig-name descname"><span class="pre">error_signal</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p>third item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.variable" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>; contains a single scalar value, specifying the error
 associated with the non-zero item in <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>.</p>
 <dl class="field-list simple">
@@ -875,8 +877,8 @@ associated with the non-zero item in <a class="reference internal" href="#psyneu
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
 <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the function’s
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code>
@@ -891,8 +893,8 @@ then the <code class="xref any docutils literal notranslate"><span class="pre">l
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate">
-<code class="sig-name descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate">
+<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -902,8 +904,8 @@ then the <code class="xref any docutils literal notranslate"><span class="pre">l
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.function">
-<code class="sig-name descname">function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.function" title="Permalink to this definition">¶</a></dt>
 <dd><p>the function that computes the weight change matrix, and returns that along with the
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal" title="psyneulink.core.components.functions.learningfunctions.Reinforcement.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> received.</p>
 <dl class="field-list simple">
@@ -914,8 +916,8 @@ then the <code class="xref any docutils literal notranslate"><span class="pre">l
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -925,8 +927,8 @@ then the <code class="xref any docutils literal notranslate"><span class="pre">l
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -936,8 +938,8 @@ then the <code class="xref any docutils literal notranslate"><span class="pre">l
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -971,14 +973,14 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate learning_rate</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.Reinforcement._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.Reinforcement._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement._function" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1009,8 +1011,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">BayesGLM</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">mu_0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">sigma_0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gamma_shape_0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">gamma_size_0</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">seed</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">BayesGLM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma_shape_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma_size_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Use Bayesian linear regression to find means and distributions of weights that predict dependent variable(s).</p>
 <p><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> uses a normal linear model:</p>
 <blockquote>
@@ -1064,8 +1066,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>samples used to update parameters of prediction weight distributions.
 variable[0] is a 2d array of predictor vectors, all of the same length;
 variable[1] is a 2d array of scalar dependent variables, one for each predictor vector.</p>
@@ -1077,8 +1079,8 @@ variable[1] is a 2d array of scalar dependent variables, one for each predictor 
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_0">
-<code class="sig-name descname">mu_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_0">
+<span class="sig-name descname"><span class="pre">mu_0</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_0" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the initial prior(s) for the means of the distributions of the prediction weights;
 if it is a scalar, that value is assigned as the priors for all means.</p>
 <dl class="field-list simple">
@@ -1089,8 +1091,8 @@ if it is a scalar, that value is assigned as the priors for all means.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior">
-<code class="sig-name descname">mu_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior">
+<span class="sig-name descname"><span class="pre">mu_prior</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="Permalink to this definition">¶</a></dt>
 <dd><p>current priors for the means of the distributions of the predictions weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1100,8 +1102,8 @@ if it is a scalar, that value is assigned as the priors for all means.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n">
-<code class="sig-name descname">mu_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n">
+<span class="sig-name descname"><span class="pre">mu_n</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="Permalink to this definition">¶</a></dt>
 <dd><p>current means for the distributions of the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1111,8 +1113,8 @@ if it is a scalar, that value is assigned as the priors for all means.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0">
-<code class="sig-name descname">sigma_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0">
+<span class="sig-name descname"><span class="pre">sigma_0</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sigma_0" title="Permalink to this definition">¶</a></dt>
 <dd><p>value used to determine the initial prior(s) for the variances of the distributions of the prediction
 weights; if it is a scalar, that value is assigned as the priors for all variances.</p>
 <dl class="field-list simple">
@@ -1123,8 +1125,8 @@ weights; if it is a scalar, that value is assigned as the priors for all varianc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior">
-<code class="sig-name descname">Lambda_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior">
+<span class="sig-name descname"><span class="pre">Lambda_prior</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="Permalink to this definition">¶</a></dt>
 <dd><p>current priors for the variances of the distributions of the predictions weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1134,8 +1136,8 @@ weights; if it is a scalar, that value is assigned as the priors for all varianc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n">
-<code class="sig-name descname">Lambda_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n">
+<span class="sig-name descname"><span class="pre">Lambda_n</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="Permalink to this definition">¶</a></dt>
 <dd><p>current variances for the distributions of the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1145,8 +1147,8 @@ weights; if it is a scalar, that value is assigned as the priors for all varianc
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_0">
-<code class="sig-name descname">gamma_shape_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_0">
+<span class="sig-name descname"><span class="pre">gamma_shape_0</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_0" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the initial value used for the shape parameter of the gamma distribution used to sample the
 prediction weights.</p>
 <dl class="field-list simple">
@@ -1157,8 +1159,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior">
-<code class="sig-name descname">gamma_shape_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior">
+<span class="sig-name descname"><span class="pre">gamma_shape_prior</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="Permalink to this definition">¶</a></dt>
 <dd><p>current prior for the shape parameter of the gamma distribution used to sample the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1168,8 +1170,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n">
-<code class="sig-name descname">gamma_shape_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n">
+<span class="sig-name descname"><span class="pre">gamma_shape_n</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="Permalink to this definition">¶</a></dt>
 <dd><p>current value of the shape parameter of the gamma distribution used to sample the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1179,8 +1181,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_0">
-<code class="sig-name descname">gamma_size_0</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_0">
+<span class="sig-name descname"><span class="pre">gamma_size_0</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_0" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the initial value used for the size parameter of the gamma distribution used to sample the
 prediction weights.</p>
 <dl class="field-list simple">
@@ -1191,8 +1193,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior">
-<code class="sig-name descname">gamma_size_prior</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior">
+<span class="sig-name descname"><span class="pre">gamma_size_prior</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="Permalink to this definition">¶</a></dt>
 <dd><p>current prior for the size parameter of the gamma distribution used to sample the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1202,8 +1204,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n">
-<code class="sig-name descname">gamma_size_n</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n">
+<span class="sig-name descname"><span class="pre">gamma_size_n</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="Permalink to this definition">¶</a></dt>
 <dd><p>current value of the size parameter of the gamma distribution used to sample the prediction weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1213,8 +1215,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.random_state">
-<code class="sig-name descname">random_state</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.random_state" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.random_state">
+<span class="sig-name descname"><span class="pre">random_state</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.random_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>private pseudorandom number generator</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1224,8 +1226,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample">
-<code class="sig-name descname">weights_sample</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample">
+<span class="sig-name descname"><span class="pre">weights_sample</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.weights_sample" title="Permalink to this definition">¶</a></dt>
 <dd><p>last sample of prediction weights drawn in call to <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">sample_weights</span></code></a> and returned by
 <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p>
 <dl class="field-list simple">
@@ -1236,8 +1238,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1247,8 +1249,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1258,8 +1260,8 @@ prediction weights.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM._handle_default_variable">
-<code class="sig-name descname">_handle_default_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">size</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM._handle_default_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM._handle_default_variable">
+<span class="sig-name descname"><span class="pre">_handle_default_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM._handle_default_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Finds whether default_variable can be determined using <strong>default_variable</strong> and <strong>size</strong>
 arguments.</p>
 <dl class="field-list simple">
@@ -1274,16 +1276,16 @@ arguments.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.initialize_priors">
-<code class="sig-name descname">initialize_priors</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.initialize_priors" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.initialize_priors">
+<span class="sig-name descname"><span class="pre">initialize_priors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.initialize_priors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the prior parameters (<a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mu_prior</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Lamba_prior</span></code></a>,
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gamma_shape_prior</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_prior"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gamma_size_prior</span></code></a>)
 to their initial (_0) values, and assign current (_n) values to the priors</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.reset">
-<code class="sig-name descname">reset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.reset" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.reset">
+<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.reset" title="Permalink to this definition">¶</a></dt>
 <dd><p>If the component’s execute method involves execution of an <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
@@ -1291,8 +1293,8 @@ value based on its default_variable.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM._function" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -1319,8 +1321,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights">
-<code class="sig-name descname">sample_weights</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">gamma_shape_n</span></em>, <em class="sig-param"><span class="n">gamma_size_n</span></em>, <em class="sig-param"><span class="n">mu_n</span></em>, <em class="sig-param"><span class="n">Lambda_n</span></em>, <em class="sig-param"><span class="n">context</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights">
+<span class="sig-name descname"><span class="pre">sample_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gamma_shape_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma_size_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mu_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Lambda_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.sample_weights" title="Permalink to this definition">¶</a></dt>
 <dd><p>Draw a sample of prediction weights from the distributions parameterized by <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.mu_n"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mu_n</span></code></a>,
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.Lambda_n"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Lambda_n</span></code></a>, <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_shape_n"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gamma_shape_n</span></code></a>, and <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n" title="psyneulink.core.components.functions.learningfunctions.BayesGLM.gamma_size_n"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gamma_size_n</span></code></a>.</p>
 </dd></dl>
@@ -1328,8 +1330,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">BackPropagation</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">activation_derivative_fct</span><span class="o">=</span><span class="default_value">Logistic().derivative</span></em>, <em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">name</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">BackPropagation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_derivative_fct</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Logistic().derivative</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate and return a matrix of weight changes and weighted error signal from arrays of inputs, outputs and error
 terms.</p>
 <p><code class="xref any docutils literal notranslate"><span class="pre">function</span></code> calculates a matrix of weight changes using the
@@ -1382,8 +1384,8 @@ arguments of the constructor.</p></li>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable">
-<code class="sig-name descname">variable</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
 <div><p>contains the three values used as input to the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>:</p>
 </div></blockquote>
@@ -1398,8 +1400,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input">
-<code class="sig-name descname">activation_input</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input">
+<span class="sig-name descname"><span class="pre">activation_input</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_input" title="Permalink to this definition">¶</a></dt>
 <dd><p>the input to the matrix being modified; same as 1st item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1409,8 +1411,8 @@ arguments of the constructor.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output">
-<code class="sig-name descname">activation_output</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output">
+<span class="sig-name descname"><span class="pre">activation_output</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="Permalink to this definition">¶</a></dt>
 <dd><p>the output of the function for which the matrix being modified provides the input;
 same as 2nd item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1421,8 +1423,8 @@ same as 2nd item of <a class="reference internal" href="#psyneulink.core.compone
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct">
-<code class="sig-name descname">activation_derivative_fct</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct">
+<span class="sig-name descname"><span class="pre">activation_derivative_fct</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_derivative_fct" title="Permalink to this definition">¶</a></dt>
 <dd><p>the derivative for the function of the Mechanism that generates
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a>.</p>
 <dl class="field-list simple">
@@ -1433,8 +1435,8 @@ same as 2nd item of <a class="reference internal" href="#psyneulink.core.compone
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal">
-<code class="sig-name descname">error_signal</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal">
+<span class="sig-name descname"><span class="pre">error_signal</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="Permalink to this definition">¶</a></dt>
 <dd><p>the error signal for the next matrix (layer above) in the learning pathway, or the error computed from the
 target (training signal) and the output of the last Mechanism in the sequence;
 same as 3rd item of <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.variable" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>.</p>
@@ -1446,8 +1448,8 @@ same as 3rd item of <a class="reference internal" href="#psyneulink.core.compone
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix">
-<code class="sig-name descname">error_matrix</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix">
+<span class="sig-name descname"><span class="pre">error_matrix</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>matrix, the input of which is <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.activation_output"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activation_output</span></code></a> and the output of which
 is used to calculate the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a>; if it is a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a>,
 it refers to the MATRIX parameterPort of the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned.</p>
@@ -1459,8 +1461,8 @@ it refers to the MATRIX parameterPort of the <a class="reference internal" href=
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate">
-<code class="sig-name descname">learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the learning rate used by the function.  If specified, it supersedes any learning_rate specified for the
 <code class="xref any docutils literal notranslate"><span class="pre">process</span></code> and/or <code class="xref any docutils literal notranslate"><span class="pre">system</span></code> to which the function’s  <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs.  If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the learning_rate specified for the process to
 which the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">owner</span></code></a> belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the learning_rate for
@@ -1474,8 +1476,8 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate">
-<code class="sig-name descname">default_learning_rate</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate">
+<span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> if it is not otherwise specified.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1485,8 +1487,8 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_function">
-<code class="sig-name descname">loss_function</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_function">
+<span class="sig-name descname"><span class="pre">loss_function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.loss_function" title="Permalink to this definition">¶</a></dt>
 <dd><p>the operation to apply to the error signal before computing weight changes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1496,8 +1498,8 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner">
-<code class="sig-name descname">owner</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.owner">
+<span class="sig-name descname"><span class="pre">owner</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.owner" title="Permalink to this definition">¶</a></dt>
 <dd><p><a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> to which the Function belongs.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1507,8 +1509,8 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 </dd></dl>
 
 <dl class="py attribute">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation.prefs">
-<code class="sig-name descname">prefs</code><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.prefs" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation.prefs">
+<span class="sig-name descname"><span class="pre">prefs</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.prefs" title="Permalink to this definition">¶</a></dt>
 <dd><p>the <code class="xref any docutils literal notranslate"><span class="pre">PreferenceSet</span></code> for the Function (see <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.prefs" title="psyneulink.core.components.functions.function.Function_Base.prefs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">prefs</span></code></a> for details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -1518,8 +1520,8 @@ the system to which it belongs is used. If all are <code class="xref any docutil
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -1553,8 +1555,8 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_params">
-<code class="sig-name descname">_validate_params</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">request_set</span></em>, <em class="sig-param"><span class="n">target_set</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_params" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_params">
+<span class="sig-name descname"><span class="pre">_validate_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">request_set</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._validate_params" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate learning_rate and error_matrix params</p>
 <dl class="simple">
 <dt><a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_matrix</span></code></a> argument must be one of the following</dt><dd><ul class="simple">
@@ -1576,8 +1578,8 @@ It is called only if the parameter_validation attribute is <code class="xref any
 </dd></dl>
 
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.BackPropagation._function">
-<code class="sig-name descname">_function</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">error_matrix</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._function" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.BackPropagation._function">
+<span class="sig-name descname"><span class="pre">_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">error_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation._function" title="Permalink to this definition">¶</a></dt>
 <dd><div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Both variable and error_matrix must be specified for the function to execute.</p>
@@ -1612,13 +1614,13 @@ function of <a class="reference internal" href="#psyneulink.core.components.func
 </dd></dl>
 
 <dl class="py class">
-<dt id="psyneulink.core.components.functions.learningfunctions.TDLearning">
-<em class="property">class </em><code class="sig-prename descclassname">psyneulink.core.components.functions.learningfunctions.</code><code class="sig-name descname">TDLearning</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">default_variable</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">learning_rate</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">owner</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">prefs</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.TDLearning" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.TDLearning">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.learningfunctions.</span></span><span class="sig-name descname"><span class="pre">TDLearning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.TDLearning" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implement temporal difference learning using the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reinforcement</span></code></a> Function
 (see <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reinforcement</span></code></a> for class details).</p>
 <dl class="py method">
-<dt id="psyneulink.core.components.functions.learningfunctions.TDLearning._validate_variable">
-<code class="sig-name descname">_validate_variable</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">variable</span></em>, <em class="sig-param"><span class="n">context</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.TDLearning._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.TDLearning._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.TDLearning._validate_variable" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate variable and return validated variable</p>
 <p>Convert self.class_defaults.variable specification and variable (if specified) to list of 1D np.ndarrays:</p>
 <p>VARIABLE SPECIFICATION:                                        ENCODING:
@@ -1705,11 +1707,11 @@ It is called only if the parameter_validation attribute is <code class="xref any
 
      
        <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
          <script src="_static/jquery.js"></script>
          <script src="_static/underscore.js"></script>
          <script src="_static/doctools.js"></script>
-         <script src="_static/language_data.js"></script>
-         <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
      
 
   
