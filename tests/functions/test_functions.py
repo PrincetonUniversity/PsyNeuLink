@@ -111,3 +111,10 @@ def test_seed_setting_params(obj):
 
     obj.parameters.seed.set(new_seed, context='c1')
     assert obj.parameters.random_state.get('c1').rand() == c1res1
+
+
+def test_runtime_params_reset():
+    f = pnl.Linear()
+    assert f.function(1) == 1
+    assert f.function(1, params={'slope': 2}) == 2
+    assert f.function(1) == 1

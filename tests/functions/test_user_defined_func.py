@@ -634,6 +634,16 @@ def test_udf_with_pnl_func():
     assert np.allclose(val1, L([1, 2, 3]) + 2)
 
 
+def test_udf_runtime_params_reset():
+    def myFunction(variable, x):
+        return variable + x
+
+    U = UserDefinedFunction(custom_function=myFunction, x=0)
+    assert U.function(0) == 0
+    assert U.function(0, params={'x': 1}) == 1
+    assert U.function(0) == 0
+
+
 class TestUserDefFunc:
     def test_udf_creates_parameter_ports(self):
         def func(input=[[0], [0]], p=0, q=1):

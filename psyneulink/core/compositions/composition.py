@@ -9399,21 +9399,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                            # Reset runtim_params
-                            # Reset any specified for Mechanism
-                            if context.execution_id in node._runtime_params_reset:
-                                for key in node._runtime_params_reset[context.execution_id]:
-                                    node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
-                                                              context)
-                            node._runtime_params_reset[context.execution_id] = {}
-                            # Reset any specified for Mechanism's function
-                            if context.execution_id in node.function._runtime_params_reset:
-                                for key in node.function._runtime_params_reset[context.execution_id]:
-                                    node.function._set_parameter_value(
-                                            key,
-                                            node.function._runtime_params_reset[context.execution_id][key],
-                                            context)
-                            node.function._runtime_params_reset[context.execution_id] = {}
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
