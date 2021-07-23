@@ -3545,6 +3545,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._update_shadows_dict(node)
 
+        # HACK: AutodiffCompositions automatically infer the backprop pathway whwen `.learn` is called
+        # To ensure this also happens in the nested case, we must explicitly build the pathway here
+        if hasattr(node, '_built_backprop_pathway') and not node._built_backprop_pathway:
+            node.infer_backpropagation_learning_pathways()
+            node._built_backprop_pathway = True
         try:
             node._analyze_graph(context = context)
         except AttributeError:
@@ -6715,6 +6720,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return learning_pathway
 
+    def _writeback_parameters(self, context):
+        for node in (n for n in self.nodes if hasattr(n, "_writeback_parameters")):
+            node._writeback_parameters(context)
+
     def infer_backpropagation_learning_pathways(self):
         """Convenience method that automatically creates backpropapagation learning pathways for every
         Input Node --> Output Node pathway
@@ -7581,6 +7590,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if targets is not None:
             targets = self._infer_target_nodes(targets)
             inputs = _recursive_update(inputs, targets)
+
+        for child, values in inputs.items():
+            if isinstance(child, Composition):
+                # We must call `_parse_learning_spec` on the child since we now have nested learning
+                inputs[child], _ = child._parse_learning_spec(values, None)
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
@@ -9408,7 +9422,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # EXECUTE A NESTED COMPOSITION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
                     elif isinstance(node, Composition):
-
                         if execution_mode:
                             # Invoking nested composition passes data via Python
                             # structures. Make sure all sources get their latest values
@@ -9629,7 +9642,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
     def _update_learning_parameters(self, context):
-        pass
+        for node in (n for n in self.nodes if hasattr(n, "_writeback_parameters")):
+            node._update_learning_parameters(context)
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, values=None, include_unspecified_nodes=True, context=NotImplemented):

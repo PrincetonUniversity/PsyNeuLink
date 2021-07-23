@@ -20,7 +20,7 @@ __all__ = ['PytorchModelCreator']
 
 class PytorchModelCreator(torch.nn.Module):
     # sets up parameters of model & the information required for forward computation
-    def __init__(self, composition, device, context=None):
+    def __init__(self, composition, device, context=None, passed_scheduler=None):
 
         if not torch_available:
             raise Exception('Pytorch python module (torch) is not installed. Please install it with '
@@ -60,8 +60,13 @@ class PytorchModelCreator(torch.nn.Module):
                 self.projections.append(new_proj)
                 self.params.append(new_proj.matrix)
 
+        # Here, we have to use the passed scheduler to account for nested case
+        if passed_scheduler is None:
+            run_scheduler = composition.scheduler
+        else:
+            run_scheduler = passed_scheduler
         c = Context()
-        composition.scheduler._init_counts(execution_id=c.execution_id, base_execution_id=context.execution_id)
+        run_scheduler._init_counts(execution_id=c.execution_id, base_execution_id=composition.name)
 
         # Setup execution sets
         # 1) Remove all learning-specific nodes
@@ -71,7 +76,7 @@ class PytorchModelCreator(torch.nn.Module):
         # 3) Remove empty execution sets
         self.execution_sets = [x for x in self.execution_sets if len(x) > 0]
 
-        composition.scheduler._delete_counts(c.execution_id)
+        run_scheduler._delete_counts(c.execution_id)
 
     __deepcopy__ = get_deepcopy_with_shared(shared_types=(Component, ComponentsMeta))
 
