@@ -9,7 +9,7 @@ from psyneulink.core.components.mechanisms.processing.integratormechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.compositions.composition import Composition
 
-debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state", "stat"]
+debug_options=["const_input=[[[7]]]", "const_input", "const_data", "const_params", "const_data", "const_state", "stat", "time_stat"]
 options_combinations = (";".join(("debug_info", *c)) for i in range(len(debug_options) + 1) for c in combinations(debug_options, i))
 
 @pytest.mark.composition

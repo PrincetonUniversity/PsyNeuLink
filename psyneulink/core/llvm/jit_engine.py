@@ -9,6 +9,7 @@
 # ********************************************* LLVM bindings **************************************************************
 
 from llvmlite import binding
+import time
 import warnings
 
 from .builder_context import LLVMBuilderContext, _find_llvm_function, _gen_cuda_kernel_wrapper_module
@@ -165,7 +166,13 @@ class jit_engine:
             print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
+        start = time.perf_counter()
         self._pass_manager.run(module)
+        finish = time.perf_counter()
+
+        if "time_stat" in debug_env:
+            print("Time to optimize LLVM module bundle '{}': {}".format(module.name, finish - start))
+
         if "opt" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
@@ -175,8 +182,12 @@ class jit_engine:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
+        start = time.perf_counter()
         self._engine.add_module(module)
         self._engine.finalize_object()
+        finish = time.perf_counter()
+        if "time_stat" in debug_env:
+            print("Time to finalize LLVM module bundle '{}': {}".format(module.name, finish - start))
         self.__optimized_modules += 1
 
     def _remove_bin_module(self, module):
@@ -228,7 +239,14 @@ class jit_engine:
         mod_bundle = binding.parse_assembly("")
         while self.staged_modules:
             m = self.staged_modules.pop()
+
+            start = time.perf_counter()
             new_mod = _try_parse_module(m)
+            finish = time.perf_counter()
+
+            if "time_stat" in debug_env:
+                print("Time to parse LLVM modules '{}': {}".format(m.name, finish - start))
+
             self.__parsed_modules += 1
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
@@ -276,11 +294,20 @@ class ptx_jit_engine(jit_engine):
         def add_module(self, module):
             try:
                 # LLVM can't produce CUBIN for some reason
+                start_time = time.perf_counter()
                 ptx = self._target_machine.emit_assembly(module)
+                ptx_time = time.perf_counter()
                 mod = pycuda.compiler.DynamicModule()
                 mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
                 mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
+                module_time = time.perf_counter()
                 ptx_mod = mod.link()
+                finish_time = time.perf_counter()
+                if "time_stat" in debug_env:
+                    print("Time to emit PTX module bundle '{}'({} lines): {}".format(module.name, len(ptx.splitlines()), ptx_time - start_time))
+                    print("Time to add PTX module bundle '{}': {}".format(module.name, module_time - ptx_time))
+                    print("Time to link PTX module bundle '{}': {}".format(module.name, finish_time - module_time))
+                    print("Total time to process PTX module bundle '{}': {}".format(module.name, finish_time - start_time))
 
             except Exception as e:
                 print("FAILED to generate PTX module:", e)

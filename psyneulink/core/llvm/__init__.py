@@ -12,6 +12,7 @@ import ctypes
 import enum
 import functools
 import numpy as np
+import time
 from typing import Set
 
 from llvmlite import ir
@@ -89,9 +90,16 @@ class LLVMBinaryFunction:
         f = _find_llvm_function(self.name, _compiled_modules() | _staged_modules())
 
         # Create ctype function instance
+        start = time.perf_counter()
         return_type = _convert_llvm_ir_to_ctype(f.return_value.type)
         params = [_convert_llvm_ir_to_ctype(a.type) for a in f.args]
+        middle = time.perf_counter()
         self.__c_func_type = ctypes.CFUNCTYPE(return_type, *params)
+        finish = time.perf_counter()
+
+        if "time_stat" in debug_env:
+            print("Time to create ctype function '{}': {} ({} to create types)".format(
+                  name, finish - start, middle - start))
 
         self.byref_arg_types = [p._type_ for p in params]
 
@@ -157,6 +165,7 @@ if ptx_enabled:
 
 # Initialize builtins
 def init_builtins():
+    start = time.perf_counter()
     with LLVMBuilderContext.get_global() as ctx:
         # Numeric
         builtins.setup_pnl_intrinsics(ctx)
@@ -182,6 +191,10 @@ def init_builtins():
         builtins.setup_mat_scalar_mult(ctx)
         builtins.setup_mat_scalar_add(ctx)
 
+    finish = time.perf_counter()
+
+    if "time_stat" in debug_env:
+        print("Time to setup PNL builtins: {}".format(finish - start))
 
 def cleanup():
     _cpu_engine.clean_module()
