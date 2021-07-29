@@ -1041,17 +1041,25 @@ class Projection_Base(Projection):
 
     @property
     def _dict_summary(self):
+        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+
         # these may occur during deferred init
         if not isinstance(self.sender, type):
             sender_name = self.sender.name
-            sender_mech = self.sender.owner.name
+            if isinstance(self.sender.owner, CompositionInterfaceMechanism):
+                sender_mech = self.sender.owner.composition.name
+            else:
+                sender_mech = self.sender.owner.name
         else:
             sender_name = None
             sender_mech = None
 
         if not isinstance(self.receiver, type):
             receiver_name = self.receiver.name
-            receiver_mech = self.receiver.owner.name
+            if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
+                receiver_mech = self.receiver.owner.composition.name
+            else:
+                receiver_mech = self.receiver.owner.name
         else:
             receiver_name = None
             receiver_mech = None

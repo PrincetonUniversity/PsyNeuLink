@@ -11442,32 +11442,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
 
         for p in list(self.projections) + additional_projections:
-            has_cim_sender = isinstance(
-                p.sender.owner,
-                CompositionInterfaceMechanism
-            )
-            has_cim_receiver = isinstance(
-                p.receiver.owner,
-                CompositionInterfaceMechanism
-            )
-
-            # filter projections to/from CIMs, unless they are to embedded
-            # compositions (any others should be automatically generated)
+            p_summary = p._dict_summary
+            # filter projections to/from CIMs of this composition
+            # and projections to things outside this composition
             if (
-                (not has_cim_sender or p.sender.owner.composition in self.nodes)
+                (
+                    p_summary[MODEL_SPEC_ID_SENDER_MECH] != self.name
+                    and p_summary[MODEL_SPEC_ID_RECEIVER_MECH] != self.name
+                )
                 and (
-                    not has_cim_receiver
-                    or p.receiver.owner.composition in self.nodes
+                    p_summary[MODEL_SPEC_ID_SENDER_MECH] in nodes_dict
+                    or p_summary[MODEL_SPEC_ID_RECEIVER_MECH] in nodes_dict
                 )
             ):
-                p_summary = p._dict_summary
-
-                if has_cim_sender:
-                    p_summary[MODEL_SPEC_ID_SENDER_MECH] = p.sender.owner.composition.name
-
-                if has_cim_receiver:
-                    p_summary[MODEL_SPEC_ID_RECEIVER_MECH] = p.receiver.owner.composition.name
-
                 projections_dict[p.name] = p_summary
 
         if len(nodes_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
