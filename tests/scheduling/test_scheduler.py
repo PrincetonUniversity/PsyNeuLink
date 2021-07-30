@@ -1657,4 +1657,4 @@ class TestAbsoluteTime:
         for node in conditions:
             comp.scheduler.add_condition(eval(node), conditions[node])
 
-        assert comp.scheduler._get_absolute_time_step_unit() == interval
+        assert comp.scheduler._get_absolute_consideration_set_execution_unit() == interval

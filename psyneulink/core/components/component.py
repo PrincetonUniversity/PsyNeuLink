@@ -505,6 +505,7 @@ from collections.abc import Iterable
 from enum import Enum, IntEnum
 
 import dill
+import graph_scheduler
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
@@ -1325,7 +1326,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Skip first element of random state (id string)
                 val = pnlvm._tupleize(x.get_state()[1:])
             elif isinstance(x, Time):
-                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+                val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
             elif isinstance(x, ContentAddressableList):
