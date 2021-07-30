@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferMechanism &mdash; PsyNeuLink 0+untagged.31.g4f90fcb documentation</title>
+  <title>TransferMechanism &mdash; PsyNeuLink 0+untagged.14.g5f4b74f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.31.g4f90fcb
+                  0+untagged.14.g5f4b74f
                 </div>
               
             
@@ -891,7 +891,7 @@ execute). The value of the <code class="docutils literal notranslate"><span clas
 <span class="go">&#39;OutputPort-0&#39; 0:1:2:4      [0.54679699 0.65839718]  # Trial 1</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> signatures are <code class="docutils literal notranslate"><span class="pre">run:trial:pass:time_step</span></code>.  Note that <code class="docutils literal notranslate"><span class="pre">attention</span></code> always executes in <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.Time.time_step" title="psyneulink.core.scheduling.time.Time.time_step"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">time_step</span></code></a> 1
+<p>The <a class="reference internal" href="Time.html"><span class="doc">Time</span></a> signatures are <code class="docutils literal notranslate"><span class="pre">run:trial:pass:time_step</span></code>.  Note that <code class="docutils literal notranslate"><span class="pre">attention</span></code> always executes in <code class="xref any docutils literal notranslate"><span class="pre">time_step</span></code> 1
 (after <code class="docutils literal notranslate"><span class="pre">stim_input</span></code> and <code class="docutils literal notranslate"><span class="pre">instruction_input</span></code> which execute in time_step 0).  In trial 0, <code class="docutils literal notranslate"><span class="pre">attention</span></code>
 executes three times in pass 0 (to reach its specified threshold), and then again in passes 1, 2 and 3 and 4
 along with <code class="docutils literal notranslate"><span class="pre">decision</span></code> (which executes in time_step 3, after <code class="docutils literal notranslate"><span class="pre">stim_percept</span></code> in time_step 2),
