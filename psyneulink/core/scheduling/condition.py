@@ -75,7 +75,7 @@ class Condition(graph_scheduler.Condition, JSONDumpable):
     def _dict_summary(self):
         from psyneulink.core.components.component import Component
 
-        if type(self) is graph_scheduler.Condition:
+        if type(self) in {graph_scheduler.Condition, Condition}:
             try:
                 func_val = inspect.getsource(self.func)
             except OSError:
