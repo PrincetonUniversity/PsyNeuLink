@@ -316,6 +316,13 @@ def _parse_component_type(component_dict):
         pass
 
     try:
+        eval(type_str)
+    except (TypeError, NameError, SyntaxError):
+        pass
+    else:
+        return type_str
+
+    try:
         from modeci_mdf.functions.standard import mdf_functions
         mdf_functions[type_str]['function']
     # remove import/module errors when modeci_mdf is a package
