@@ -83,19 +83,43 @@ class Condition(graph_scheduler.Condition, JSONDumpable):
         else:
             func_val = None
 
-        args_list = []
-        for a in self.args:
-            if isinstance(a, Component):
-                a = a.name
-            elif isinstance(a, graph_scheduler.Condition):
-                a = a._dict_summary
-            args_list.append(a)
+        extra_args = {
+            'function': func_val,
+            **self.kwargs,
+        }
+
+        sig = inspect.signature(self.__init__)
+
+        for name, param in sig.parameters.items():
+            if param.kind is inspect.Parameter.VAR_POSITIONAL:
+                args_list = []
+                for a in self.args:
+                    if isinstance(a, Component):
+                        a = a.name
+                    elif isinstance(a, graph_scheduler.Condition):
+                        a = a._dict_summary
+                    args_list.append(a)
+                extra_args[name] = args_list
+
+        for i, (name, param) in enumerate(filter(
+            lambda item: item[1].kind is inspect.Parameter.POSITIONAL_OR_KEYWORD and item[0] not in self.kwargs,
+            sig.parameters.items()
+        )):
+            try:
+                extra_args[name] = self.args[i]
+            except IndexError:
+                # was specified with keyword not as positional arg
+                extra_args[name] = param.default
+
+        for name in extra_args:
+            if isinstance(extra_args[name], Component):
+                extra_args[name] = extra_args[name].name
+            elif isinstance(extra_args[name], graph_scheduler.Condition):
+                extra_args[name] = extra_args[name]._dict_summary
 
         return {
             MODEL_SPEC_ID_TYPE: self.__class__.__name__,
-            'function': func_val,
-            'args': args_list,
-            'kwargs': self.kwargs,
+            'args': extra_args
         }
 
 

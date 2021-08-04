@@ -188,6 +188,7 @@ import binascii
 import copy
 import dill
 import enum
+import inspect
 import json
 import math
 import numpy
@@ -817,28 +818,44 @@ def _generate_condition_string(condition_dict, component_identifiers):
         return str(_parse_parameter_value(value, component_identifiers))
 
     args_str = ''
+    sig = inspect.signature(getattr(psyneulink, condition_dict[MODEL_SPEC_ID_TYPE]).__init__)
 
-    if len(condition_dict['args']) > 0:
-        arg_str_list = []
-        for arg in condition_dict['args']:
-            # handle nested Conditions
-            try:
-                arg = _generate_condition_string(arg, component_identifiers)
-            except TypeError:
-                pass
+    var_positional_arg_name = None
 
-            arg_str_list.append(_parse_condition_arg_value(arg))
-        args_str = f", {', '.join(arg_str_list)}"
+    for name, param in sig.parameters.items():
+        if param.kind is inspect.Parameter.VAR_POSITIONAL:
+            var_positional_arg_name = name
+            break
+
+    args_dict = condition_dict['args']
+
+    try:
+        pos_args = args_dict[var_positional_arg_name]
+    except KeyError:
+        pass
+    else:
+        if len(pos_args) > 0:
+            arg_str_list = []
+            for arg in pos_args:
+                # handle nested Conditions
+                try:
+                    arg = _generate_condition_string(arg, component_identifiers)
+                except TypeError:
+                    pass
+
+                arg_str_list.append(_parse_condition_arg_value(arg))
+            args_str = f", {', '.join(arg_str_list)}"
 
     kwargs_str = ''
-    if len(condition_dict['kwargs']) > 0:
+    kwargs = {k: v for k, v in args_dict.items() if k not in {'function', var_positional_arg_name}}
+    if len(kwargs) > 0:
         kwarg_str_list = []
-        for key, val in condition_dict['kwargs'].items():
+        for key, val in kwargs.items():
             kwarg_str_list.append(f'{key}={_parse_condition_arg_value(val)}')
         kwargs_str = f", {', '.join(kwarg_str_list)}"
 
     arguments_str = '{0}{1}{2}'.format(
-        condition_dict['function'] if condition_dict['function'] is not None else '',
+        args_dict['function'] if args_dict['function'] is not None else '',
         args_str,
         kwargs_str
     )
