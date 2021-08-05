@@ -654,6 +654,55 @@ def _generate_component_string(
         except KeyError:
             pass
 
+    def parameter_value_matches_default(component_type, param, value):
+        default_val = getattr(component_type.defaults, param)
+        evaled_val = NotImplemented
+
+        # see if val is a psyneulink class instantiation
+        # if so, do not instantiate it (avoid offsetting rng for
+        # testing - see if you can bypass another way?)
+        try:
+            eval(re.match(r'(psyneulink\.\w+)\(', value).group(1))
+            is_pnl_instance = True
+        except (AttributeError, TypeError, NameError, ValueError):
+            is_pnl_instance = False
+
+        if not is_pnl_instance:
+            # val may be a string that evaluates to the default value
+            # also skip listing in constructor in this case
+            try:
+                evaled_val = eval(value)
+            except (TypeError, NameError, ValueError):
+                pass
+            except Exception:
+                # Assume this occurred in creation of a Component
+                # that probably needs some hidden/automatic modification.
+                # Special handling here?
+                # still relevant after testing for instance above?
+                pass
+
+        # skip specifying parameters that match the class defaults
+        if (
+            not safe_equals(value, default_val)
+            and (
+                evaled_val is NotImplemented
+                or not safe_equals(evaled_val, default_val)
+            )
+        ):
+            # test for dill use/equivalence
+            try:
+                is_dill_str = value[:5] == 'dill.'
+            except TypeError:
+                is_dill_str = False
+
+            if (
+                not is_dill_str
+                or dill.dumps(eval(value)) != dill.dumps(default_val)
+            ):
+                return False
+
+        return True
+
     # sort on arg name
     for arg, val in sorted(parameters.items(), key=lambda p: p[0]):
         try:
@@ -681,59 +730,21 @@ def _generate_component_string(
             except KeyError:
                 val = _parse_parameter_value(val, component_identifiers, parent_parameters=parent_parameters)
 
-            default_val = getattr(component_type.defaults, arg)
-
-            evaled_val = NotImplemented
-
-            # see if val is a psyneulink class instantiation
-            # if so, do not instantiate it (avoid offsetting rng for
-            # testing - see if you can bypass another way?)
-            try:
-                eval(re.match(r'(psyneulink\.\w+)\(', val).group(1))
-                is_pnl_instance = True
-            except (AttributeError, TypeError, NameError, ValueError):
-                is_pnl_instance = False
-
-            if not is_pnl_instance:
-                # val may be a string that evaluates to the default value
-                # also skip listing in constructor in this case
-                try:
-                    evaled_val = eval(val)
-                except (TypeError, NameError, ValueError):
-                    pass
-                except Exception:
-                    # Assume this occurred in creation of a Component
-                    # that probably needs some hidden/automatic modification.
-                    # Special handling here?
-                    # still relevant after testing for instance above?
-                    pass
-
-            # skip specifying parameters that match the class defaults
-            if (
-                not safe_equals(val, default_val)
-                and (
-                    evaled_val is NotImplemented
-                    or not safe_equals(evaled_val, default_val)
-                )
-            ):
-                # test for dill use/equivalence
-                try:
-                    is_dill_str = val[:5] == 'dill.'
-                except TypeError:
-                    is_dill_str = False
-
-                if (
-                    not is_dill_str
-                    or dill.dumps(eval(val)) != dill.dumps(default_val)
-                ):
-                    additional_arguments.append(f'{constructor_arg}={val}')
+            if not parameter_value_matches_default(component_type, arg, val):
+                additional_arguments.append(f'{constructor_arg}={val}')
         elif component_type is UserDefinedFunction:
             if arg != MODEL_SPEC_ID_MDF_VARIABLE:
                 val = _parse_parameter_value(
                     val, component_identifiers, parent_parameters=parent_parameters
                 )
 
-                additional_arguments.append(f'{constructor_arg}={val}')
+                try:
+                    matches = parameter_value_matches_default(component_type, arg, val)
+                except AttributeError:
+                    matches = False
+
+                if not matches:
+                    additional_arguments.append(f'{constructor_arg}={val}')
 
     output = '{0}psyneulink.{1}{2}{3}{4}'.format(
         assignment_str,
