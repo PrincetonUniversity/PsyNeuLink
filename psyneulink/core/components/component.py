@@ -1010,10 +1010,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     fallback_default=True,
                                     pnl_internal=True)
         is_finished_flag = Parameter(True, loggable=False, stateful=True)
-        execute_until_finished = True
-        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False)
-        num_executions_before_finished = Parameter(0, read_only=True, modulable=False)
-        max_executions_before_finished = Parameter(1000, modulable=False)
+        execute_until_finished = Parameter(True, pnl_internal=True)
+        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False, pnl_internal=True)
+        num_executions_before_finished = Parameter(0, read_only=True, modulable=False, pnl_internal=True)
+        max_executions_before_finished = Parameter(1000, modulable=False, pnl_internal=True)
 
         def _parse_variable(self, variable):
             if variable is None:
@@ -3930,7 +3930,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             A set of Parameter names that should not be added to the generated
             constructor string
         """
-        return {'function', 'value'}
+        return {'function', 'value', 'execution_count', 'is_finished_flag', 'num_executions', 'num_executions_before_finished'}
 
 
 COMPONENT_BASE_CLASS = Component

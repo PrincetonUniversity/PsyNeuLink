@@ -1088,7 +1088,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         """
         variable = Parameter([[0],[0]], pnl_internal=True, constructor_argument='default_variable')
         initializer = Parameter(None, pnl_internal=True)
-        previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
+        previous_value = Parameter(None, initializer='initializer')
         retrieval_prob = Parameter(1.0, modulable=True)
         storage_prob = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         # FIX: MAKE THESE ATTRIBUTES RATHER THAN PARAMETERS:

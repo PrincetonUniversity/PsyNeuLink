@@ -447,6 +447,7 @@ class UserDefinedFunction(Function_Base):
             None,
             stateful=False,
             loggable=False,
+            pnl_internal=True,
         )
 
     @tc.typecheck

@@ -1066,7 +1066,7 @@ class GradientOptimization(OptimizationFunction):
 
         # these should be removed and use switched to .get_previous()
         previous_variable = Parameter([[0], [0]], read_only=True, pnl_internal=True, constructor_argument='default_variable')
-        previous_value = Parameter([[0], [0]], read_only=True, initializer='initializer', pnl_internal=True)
+        previous_value = Parameter([[0], [0]], read_only=True, initializer='initializer')
 
         gradient_function = Parameter(None, stateful=False, loggable=False)
         step_size = Parameter(1.0, modulable=True)

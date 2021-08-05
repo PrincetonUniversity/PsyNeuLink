@@ -3698,7 +3698,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
-        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
+        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
 

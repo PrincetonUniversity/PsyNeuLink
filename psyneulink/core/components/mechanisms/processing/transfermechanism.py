@@ -1227,7 +1227,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         )
         termination_threshold = Parameter(None, modulable=True)
         termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
-        termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
+        termination_measure_value = Parameter(0.0, modulable=False, read_only=True, pnl_internal=True)
 
         output_ports = Parameter(
             [RESULTS],
