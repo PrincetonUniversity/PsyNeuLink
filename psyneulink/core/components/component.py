@@ -1099,8 +1099,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
-        self._handle_illegal_kwargs(**kwargs)
-
         context = Context(
             source=ContextFlags.CONSTRUCTOR,
             execution_phase=ContextFlags.IDLE,
@@ -1116,6 +1114,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except (KeyError, TypeError):
             function_params = {}
+
+        # if function is string, assume any unknown kwargs are for the
+        # corresponding UDF expression
+        if isinstance(function, (types.FunctionType, str)):
+            function_params = {
+                **kwargs,
+                **function_params
+            }
+        else:
+            self._handle_illegal_kwargs(**kwargs)
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
@@ -2821,10 +2829,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
         if isinstance(function, types.FunctionType):
-            function = UserDefinedFunction(default_variable=function_variable,
-                                                custom_function=function,
-                                                owner=self,
-                                                context=context)
+            function = UserDefinedFunction(
+                default_variable=function_variable,
+                custom_function=function,
+                owner=self,
+                context=context,
+                **function_params,
+            )
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):

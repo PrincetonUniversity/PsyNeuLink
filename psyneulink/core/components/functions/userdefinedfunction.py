@@ -554,6 +554,8 @@ class UserDefinedFunction(Function_Base):
             # First check for value passed in params as runtime param:
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
+            elif param in kwargs:
+                self.cust_fct_params[param] = kwargs[param]
             else:
                 # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
                 self.cust_fct_params[param] = self._get_current_parameter_value(param, context)
