@@ -5510,6 +5510,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 )
             )
 
+    def _check_for_nesting_with_absolute_conditions(self, scheduler, termination_conds=None):
+        if any(isinstance(n, Composition) for n in self.nodes):
+            interval_conds = set()
+            fixed_point_conds = set()
+            for _, cond in scheduler.get_absolute_conditions(termination_conds).items():
+                if len(cond.absolute_intervals) > 0:
+                    interval_conds.add(cond)
+                if scheduler.mode == SchedulingMode.EXACT_TIME:
+                    if len(cond.absolute_fixed_points) > 0:
+                        fixed_point_conds.add(cond)
+
+            warn_str = f'{self} contains a nested Composition, which may cause unexpected behavior in absolute time conditions or failure to terminate execution.'
+            warn = False
+            if len(interval_conds) > 0:
+                warn_str += '\nFor repeating intervals:\n\t'
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tintervals: {cond.absolute_intervals}' for cond in interval_conds])
+                warn = True
+            if len(fixed_point_conds) > 0:
+                warn_str += '\nIn EXACT_TIME SchedulingMode, strict time points:\n\t'
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tstrict time points: {cond.absolute_fixed_points}' for cond in fixed_point_conds])
+                warn = True
+
+            if warn:
+                warnings.warn(warn_str)
+
     # ******************************************************************************************************************
     #                                            PATHWAYS
     # ******************************************************************************************************************
@@ -8317,6 +8342,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._analyze_graph(context=context)
 
         self._check_for_unnecessary_feedback_projections()
+        self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
