@@ -2828,7 +2828,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
-        if isinstance(function, types.FunctionType):
+        if isinstance(function, (types.FunctionType, str)):
             function = UserDefinedFunction(
                 default_variable=function_variable,
                 custom_function=function,
