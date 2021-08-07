@@ -677,6 +677,31 @@ def test_expression_execution(expression, parameters, result, explicit_udf):
     assert u.execute() == result
 
 
+def _function_test_integration(variable, x, y, z):
+    return x * y + z
+
+
+@pytest.mark.parametrize(
+    'function',
+    [
+        (lambda variable, x, y, z: x * y + z),
+        'x * y + z',
+        _function_test_integration
+    ]
+)
+def test_integration(function):
+    u = UserDefinedFunction(
+        custom_function=function,
+        x=2,
+        y=3,
+        z=5,
+        stateful_parameter='x'
+    )
+
+    assert u.execute() == 11
+    assert u.execute() == 38
+
+
 class TestUserDefFunc:
     def test_udf_creates_parameter_ports(self):
         def func(input=[[0], [0]], p=0, q=1):

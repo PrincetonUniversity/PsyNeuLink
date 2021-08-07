@@ -456,6 +456,7 @@ class UserDefinedFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
+                 stateful_parameter=None,
                  **kwargs):
 
         def get_cust_fct_args(custom_function):
@@ -564,6 +565,13 @@ class UserDefinedFunction(Function_Base):
                 context = self.cust_fct_params[CONTEXT]
             del self.cust_fct_params[CONTEXT]
 
+        if stateful_parameter is not None:
+            if stateful_parameter not in self.cust_fct_params:
+                raise FunctionError(
+                    f'{stateful_parameter} specified as integration parameter is not a parameter of {custom_function}'
+                )
+        self.stateful_parameter = stateful_parameter
+
         # Assign variable to default_variable if default_variable was not specified
         if default_variable is None:
             default_variable = cust_fct_variable
@@ -642,6 +650,9 @@ class UserDefinedFunction(Function_Base):
                 value = self.custom_function(variable, **call_params)
             else:
                 value = eval(self.custom_function, kwargs)
+
+        if self.stateful_parameter is not None and not self.is_initializing:
+            getattr(self.parameters, self.stateful_parameter)._set(value, context)
 
         return self.convert_output_type(value)
 
