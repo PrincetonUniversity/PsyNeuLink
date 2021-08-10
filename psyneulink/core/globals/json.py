@@ -317,13 +317,6 @@ def _parse_component_type(component_dict):
         pass
 
     try:
-        eval(type_str)
-    except (TypeError, NameError, SyntaxError):
-        pass
-    else:
-        return type_str
-
-    try:
         from modeci_mdf.functions.standard import mdf_functions
         mdf_functions[type_str]['function']
     # remove import/module errors when modeci_mdf is a package
@@ -338,6 +331,15 @@ def _parse_component_type(component_dict):
         pass
     else:
         return f'math.{type_str}'
+
+    try:
+        eval(type_str)
+    except (TypeError, SyntaxError):
+        pass
+    except NameError:
+        return type_str
+    else:
+        return type_str
 
     raise PNLJSONError(
         'Invalid type specified for JSON object: {0}'.format(
