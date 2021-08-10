@@ -641,6 +641,11 @@ def _generate_component_string(
     if parent_parameters is None:
         parent_parameters = parameters
 
+    parameters = {
+        **{k: v for k, v in parent_parameters.items() if isinstance(v, dict) and MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE in v},
+        **parameters
+    }
+
     if 'variable' not in parameters:
         try:
             ip = parameters['function'][Function_Base._model_spec_id_parameters][MODEL_SPEC_ID_MDF_VARIABLE]
