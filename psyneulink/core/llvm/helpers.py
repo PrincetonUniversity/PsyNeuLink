@@ -14,9 +14,9 @@ from ctypes import util
 from llvmlite import ir
 
 from .debug import debug_env
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
     EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
-from ..scheduling.time import TimeScale
+from psyneulink.core.scheduling.time import TimeScale
 
 
 @contextmanager

@@ -87,7 +87,7 @@ class TestCondition:
             comp.add_node(A)
 
             sched = Scheduler(composition=comp)
-            sched.add_condition(A, WhileNot(lambda sched: sched.clock.get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 0, sched))
+            sched.add_condition(A, WhileNot(lambda sched: sched.get_clock(sched.default_execution_id).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 0, sched))
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
@@ -103,7 +103,7 @@ class TestCondition:
             comp.add_node(A)
 
             sched = Scheduler(composition=comp)
-            sched.add_condition(A, WhileNot(lambda sched: sched.clock.get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 2, sched))
+            sched.add_condition(A, WhileNot(lambda sched: sched.get_clock(sched.default_execution_id).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL) == 2, sched))
 
             termination_conds = {}
             termination_conds[TimeScale.RUN] = AfterNTrials(1)
@@ -969,7 +969,7 @@ class TestAbsolute:
         comp = Composition()
         comp.add_nodes([self.A, self.B, self.C])
         comp.scheduler.add_condition_set(conditions)
-        time_step_abs_value = comp.scheduler._get_absolute_time_step_unit(termination_conds)
+        time_step_abs_value = comp.scheduler._get_absolute_consideration_set_execution_unit(termination_conds)
 
         list(comp.scheduler.run(termination_conds=termination_conds))
 
@@ -1036,4 +1036,4 @@ class TestAbsolute:
         }
         list(comp.scheduler.run())
 
-        assert comp.scheduler.clock.time.absolute == last_time
+        assert comp.scheduler.get_clock(comp.scheduler.default_execution_id).time.absolute == last_time

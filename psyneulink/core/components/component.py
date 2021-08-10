@@ -505,6 +505,7 @@ from collections.abc import Iterable
 from enum import Enum, IntEnum
 
 import dill
+import graph_scheduler
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
@@ -1325,7 +1326,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # Skip first element of random state (id string)
                 val = pnlvm._tupleize(x.get_state()[1:])
             elif isinstance(x, Time):
-                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+                val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
             elif isinstance(x, ContentAddressableList):
@@ -3087,19 +3088,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
         self.most_recent_context = context
-
-        # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
-                try:
-                    prev_val = getattr(self.parameters, param).get_previous(context)
-                    self._set_parameter_value(param, prev_val, context)
-                except AttributeError:
-                    try:
-                        prev_val = getattr(self.function.parameters, param).get_previous(context)
-                        self.function._set_parameter_value(param, prev_val, context)
-                    except:
-                        pass
+        self._reset_runtime_parameters(context)
 
         return value
 
@@ -3165,6 +3154,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
         return parameter._get(context)
+
+    def _reset_runtime_parameters(self, context):
+        if context.execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[context.execution_id]:
+                self._set_parameter_value(
+                    key,
+                    self._runtime_params_reset[context.execution_id][key],
+                    context
+                )
+            self._runtime_params_reset[context.execution_id] = {}
 
     def _try_execute_param(self, param, var, context=None):
         def fill_recursively(arr, value, indices=()):
