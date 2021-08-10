@@ -735,6 +735,15 @@ def _generate_component_string(
             if not parameter_value_matches_default(component_type, arg, val):
                 additional_arguments.append(f'{constructor_arg}={val}')
         elif component_type is UserDefinedFunction:
+            try:
+                val[MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE]
+            except (KeyError, TypeError):
+                pass
+            else:
+                # is a stateful parameter corresponding to this function
+                if val[MODEL_SPEC_ID_PARAMETER_VALUE] == name:
+                    additional_arguments.append(f"stateful_parameter='{arg}'")
+
             if arg != MODEL_SPEC_ID_MDF_VARIABLE:
                 val = _parse_parameter_value(
                     val, component_identifiers, parent_parameters=parent_parameters
