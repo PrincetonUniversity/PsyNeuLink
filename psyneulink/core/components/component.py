@@ -423,14 +423,14 @@ The following attributes and methods control and provide information about the e
 
 * **num_executions_before_finished** -- contains the number of times the Component has executed prior to finishing
   (and since it last finished);  depending upon the class, these may all be within a single call to the Component's
-  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evalutes
+  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evaluates
   to True. Note that this is distinct from the `execution_count <Component_Execution_Count>` and `num_executions
   <Component_Num_Executions>` attributes.
 
 .. _Component_Max_Executions_Before_Finished:
 
 * **max_executions_before_finished** -- determines the maximum number of executions allowed before finishing
-  (i.e., the maxmium allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
+  (i.e., the maximum allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
   If it is exceeded, a warning message is generated.  Note that this only pertains to `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>`, and not its `execution_count <Component_Execution_Count>`, which can be
   unlimited.
@@ -444,7 +444,7 @@ The following attributes and methods control and provide information about the e
 
 * **execution_count** -- maintains a record of the number of times a Component has executed since it was constructed,
   *excluding*  executions carried out during initialization and validation, but including all others whether they are
-  of the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which
+  of the Component on its own are as part of a `Composition`, and irrespective of the `context <Context>` in which
   they are occur. The value can be changed "manually" or programmatically by assigning an integer
   value directly to the attribute.  Note that this is the distinct from the `num_executions <Component_Num_Executions>`
   and `num_executions_before_finished <Component_Num_Executions_Before_Finished>` attributes.
