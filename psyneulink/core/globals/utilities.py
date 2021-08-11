@@ -1739,20 +1739,32 @@ def parse_string_to_psyneulink_object_string(string):
             The output of this function will cause
             getattr(psyneulink, <output>) to return a psyneulink object
     """
-    try:
-        eval(f'psyneulink.{string}')
+    def is_pnl_obj(string):
+        try:
+            # remove parens to get rid of class instantiations
+            string = re.sub(r'\(.*?\)', '', string)
+            attr_sequence = string.split('.')
+            obj = getattr(psyneulink, attr_sequence[0])
+
+            for item in attr_sequence[1:]:
+                obj = getattr(obj, item)
+
+            return True
+        except (AttributeError, TypeError):
+            return False
+
+    if is_pnl_obj(string):
         return string
-    except (AttributeError, SyntaxError, TypeError):
-        pass
 
     # handle potential psyneulink keyword
     try:
         # insert space between camel case words
         keyword = re.sub('([a-z])([A-Z])', r'\1 \2', string)
         keyword = keyword.upper().replace(' ', '_')
-        eval(f'psyneulink.{keyword}')
-        return keyword
-    except (AttributeError, SyntaxError, TypeError):
+
+        if is_pnl_obj(keyword):
+            return keyword
+    except TypeError:
         pass
 
     return None
