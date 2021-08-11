@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0+untagged.19.gea68163 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0+untagged.20.gbeb8905 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.19.gea68163
+                  0+untagged.20.gbeb8905
                 </div>
               
             
@@ -512,12 +512,12 @@ irrespective of its <a class="reference internal" href="DDM.html#psyneulink.libr
 <ul class="simple" id="component-num-executions-before-finished">
 <li><p><strong>num_executions_before_finished</strong> – contains the number of times the Component has executed prior to finishing
 (and since it last finished);  depending upon the class, these may all be within a single call to the Component’s
-<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evalutes
+<a class="reference internal" href="#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method, or extend over several calls.  It is set to 0 each time <a class="reference internal" href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.is_finished"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">is_finished</span></code></a> evaluates
 to True. Note that this is distinct from the <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a> and <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a> attributes.</p></li>
 </ul>
 <ul class="simple" id="component-max-executions-before-finished">
 <li><p><strong>max_executions_before_finished</strong> – determines the maximum number of executions allowed before finishing
-(i.e., the maxmium allowable value of <a class="reference internal" href="#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_executions_before_finished</span></code></a>).
+(i.e., the maximum allowable value of <a class="reference internal" href="#psyneulink.core.components.component.Component.num_executions_before_finished" title="psyneulink.core.components.component.Component.num_executions_before_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_executions_before_finished</span></code></a>).
 If it is exceeded, a warning message is generated.  Note that this only pertains to <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a>, and not its <a class="reference internal" href="#component-execution-count"><span class="std std-ref">execution_count</span></a>, which can be
 unlimited.</p></li>
 </ul>
@@ -527,7 +527,7 @@ unlimited.</p></li>
 <ul class="simple" id="component-execution-count">
 <li><p><strong>execution_count</strong> – maintains a record of the number of times a Component has executed since it was constructed,
 <em>excluding</em>  executions carried out during initialization and validation, but including all others whether they are
-of the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, and irresective of the <a class="reference internal" href="Context.html"><span class="doc">context</span></a> in which
+of the Component on its own are as part of a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, and irrespective of the <a class="reference internal" href="Context.html"><span class="doc">context</span></a> in which
 they are occur. The value can be changed “manually” or programmatically by assigning an integer
 value directly to the attribute.  Note that this is the distinct from the <a class="reference internal" href="#component-num-executions"><span class="std std-ref">num_executions</span></a>
 and <a class="reference internal" href="#component-num-executions-before-finished"><span class="std std-ref">num_executions_before_finished</span></a> attributes.</p></li>
