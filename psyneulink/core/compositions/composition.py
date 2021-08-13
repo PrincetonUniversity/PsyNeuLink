@@ -9914,7 +9914,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         super()._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
 
         for c in contexts:
-            self.scheduler._delete_counts(c.execution_id)
+            try:
+                self.scheduler._delete_counts(c.execution_id)
+            except AttributeError:
+                self.scheduler._delete_counts(c)
 
     # ******************************************************************************************************************
     #                                           LLVM
