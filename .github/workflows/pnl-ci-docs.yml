@@ -103,6 +103,18 @@ jobs:
         retention-days: 1
         path: docs/build/html
 
+    - name: Store PR number
+      if: ${{ github.event_name == 'pull_request' }}
+      run: echo ${{ github.event.pull_request.number }} > ./pr_number.txt
+
+    - name: Upload PR number for other workflows
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: actions/upload-artifact@v2.2.4
+      with:
+          name: pr_number
+          path: ./pr_number.txt
+
+
   docs-deploy:
     strategy:
       fail-fast: false
