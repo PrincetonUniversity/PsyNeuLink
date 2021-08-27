@@ -22,7 +22,7 @@ jobs:
         branch: master
 
     - name: Check for existing release with the reference tag
-      uses: actions/github-script@v4
+      uses: actions/github-script@v4.1
       id: exist_check
       with:
         script: |
@@ -47,7 +47,7 @@ jobs:
           }
 
     - name: Create Release
-      uses: actions/github-script@v4
+      uses: actions/github-script@v4.1
       if: steps.on_master.outputs.on-branch == 'master' && steps.exist_check.outputs.exists == 'no'
       with:
         # We need custom token since the default one doesn't trigger actions
