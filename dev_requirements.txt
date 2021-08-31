@@ -1,5 +1,5 @@
 jupyter<=1.0.0
-pytest<6.2.5
+pytest<6.2.6
 pytest-benchmark<3.4.2
 pytest-cov<2.12.2
 pytest-helpers-namespace<2021.4.30
