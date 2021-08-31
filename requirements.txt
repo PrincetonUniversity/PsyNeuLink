@@ -2,7 +2,7 @@ autograd<=1.3
 graph-scheduler>=0.2.0, <=1.0.0rc1
 dill<=0.32
 elfi<0.8.1
-graphviz<0.17.0
+graphviz<0.18.0
 grpcio<1.35.0
 grpcio-tools<1.35.0
 llvmlite<0.38
