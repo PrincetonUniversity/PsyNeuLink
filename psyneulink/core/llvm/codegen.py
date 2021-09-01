@@ -55,6 +55,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         numpy_handlers = {
             'tanh': self.call_builtin_np_tanh,
             'exp': self.call_builtin_np_exp,
+            'sqrt': self.call_builtin_np_sqrt,
             'equal': get_np_cmp("=="),
             'not_equal': get_np_cmp("!="),
             'less': get_np_cmp("<"),
@@ -469,6 +470,10 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
     def call_builtin_np_exp(self, builder, x):
         x = self.get_rval(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.exp(self.ctx, builder, x))
+
+    def call_builtin_np_sqrt(self, builder, x):
+        x = self.get_rval(x)
+        return self._do_unary_op(builder, x, lambda builder, x: helpers.sqrt(self.ctx, builder, x))
 
     def call_builtin_np_max(self, builder, x):
         # numpy max searches for the largest scalar and propagates NaNs be default.
