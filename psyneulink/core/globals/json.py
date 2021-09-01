@@ -288,6 +288,16 @@ def _dump_pnl_json_from_dict(dict_summary):
     )
 
 
+def _get_variable_parameter_name(obj):
+    try:
+        if obj.parameters.variable.mdf_name is not None:
+            return obj.parameters.variable.mdf_name
+    except AttributeError:
+        pass
+
+    return MODEL_SPEC_ID_MDF_VARIABLE
+
+
 def _parse_component_type(component_dict):
     def get_pnl_component_type(s):
         from psyneulink.core.components.component import ComponentsMeta
@@ -1490,7 +1500,7 @@ def generate_script_from_json(model_input, outfile=None):
         return model_output
 
 
-def generate_json(*compositions):
+def generate_json(*compositions, simple_edge_format=True):
     """
         Generate the `general JSON format <JSON_Model_Specification>`
         for one or more `Compositions <Composition>` and associated
@@ -1538,12 +1548,12 @@ def generate_json(*compositions):
             raise PNLJSONError(
                 f'Item in compositions arg of {__name__}() is not a Composition: {c}.'
             )
-        model.graphs.append(c.as_mdf_model())
+        model.graphs.append(c.as_mdf_model(simple_edge_format=simple_edge_format))
 
     return model.to_json()
 
 
-def write_json_file(compositions, filename:str, path:str=None):
+def write_json_file(compositions, filename:str, path:str=None, simple_edge_format=True):
     """
         Write one or more `Compositions <Composition>` and associated objects to file in the `general JSON format
         <JSON_Model_Specification>`
@@ -1572,4 +1582,4 @@ def write_json_file(compositions, filename:str, path:str=None):
     compositions = convert_to_list(compositions)
 
     with open(filename, 'w') as json_file:
-        json_file.write(generate_json(*compositions))
+        json_file.write(generate_json(*compositions, simple_edge_format=simple_edge_format))

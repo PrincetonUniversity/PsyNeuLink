@@ -21,36 +21,49 @@ stroop_stimuli = {
 
 
 json_results_parametrization = [
-    ('model_basic.py', 'comp', '{A: 1}'),
-    ('model_udfs.py', 'comp', '{A: 10}'),
+    ('model_basic.py', 'comp', '{A: 1}', True),
+    ('model_basic.py', 'comp', '{A: 1}', False),
+    ('model_udfs.py', 'comp', '{A: 10}', True),
+    ('model_udfs.py', 'comp', '{A: 10}', False),
     pytest.param(
         'model_nested_comp_with_scheduler.py',
         'comp',
         '{A: 1}',
+        True,
+        marks=pytest.mark.xfail(reason='Nested Graphs not supported in MDF')
+    ),
+    pytest.param(
+        'model_nested_comp_with_scheduler.py',
+        'comp',
+        '{A: 1}',
+        False,
         marks=pytest.mark.xfail(reason='Nested Graphs not supported in MDF')
     ),
     (
         'model_with_control.py',
         'comp',
-        '{Input: [0.5, 0.123], reward: [20, 20]}'
+        '{Input: [0.5, 0.123], reward: [20, 20]}',
+        False
     ),
     (
         'stroop_conflict_monitoring.py',
         'Stroop_model',
-        str(stroop_stimuli).replace("'", '')
+        str(stroop_stimuli).replace("'", ''),
+        False
     ),
-    ('model_backprop.py', 'comp', '{a: [1, 2, 3]}'),
+    ('model_backprop.py', 'comp', '{a: [1, 2, 3]}', False),
 ]
 
 
 @pytest.mark.parametrize(
-    'filename, composition_name, input_dict_str',
+    'filename, composition_name, input_dict_str, simple_edge_format',
     json_results_parametrization
 )
 def test_json_results_equivalence(
     filename,
     composition_name,
     input_dict_str,
+    simple_edge_format,
 ):
     # Get python script from file and execute
     filename = f'{os.path.dirname(__file__)}/{filename}'
@@ -61,9 +74,8 @@ def test_json_results_equivalence(
 
     # reset random seed
     pnl.core.globals.utilities.set_global_seed(0)
-
     # Generate python script from JSON summary of composition and execute
-    json_summary = pnl.generate_json(eval(f'{composition_name}'))
+    json_summary = pnl.generate_json(eval(f'{composition_name}'), simple_edge_format=simple_edge_format)
     exec(pnl.generate_script_from_json(json_summary))
     exec(f'{composition_name}.run(inputs={input_dict_str})')
     new_results = eval(f'{composition_name}.results')
@@ -71,13 +83,14 @@ def test_json_results_equivalence(
 
 
 @pytest.mark.parametrize(
-    'filename, composition_name, input_dict_str',
+    'filename, composition_name, input_dict_str, simple_edge_format',
     json_results_parametrization
 )
 def test_write_json_file(
     filename,
     composition_name,
     input_dict_str,
+    simple_edge_format,
 ):
     # Get python script from file and execute
     filename = f'{os.path.dirname(__file__)}/{filename}'
@@ -91,7 +104,7 @@ def test_write_json_file(
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py','.json')
-    exec(f'pnl.write_json_file({composition_name}, json_filename)')
+    exec(f'pnl.write_json_file({composition_name}, json_filename, simple_edge_format=simple_edge_format)')
     exec(pnl.generate_script_from_json(json_filename))
     # exec(f'{composition_name}.run(inputs={input_dict_str})')
     exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
@@ -141,13 +154,15 @@ def test_write_json_file_multiple_comps(
 
 
 @pytest.mark.parametrize(
-    'filename, composition_name, input_dict',
+    'filename, composition_name, input_dict, simple_edge_format',
     [
-        ('model_basic.py', 'comp', {'A': 1}),
-        ('model_udfs.py', 'comp', {'A': 10})
+        ('model_basic.py', 'comp', {'A': [[1.0]]}, True),
+        ('model_basic.py', 'comp', {'A': 1}, False),
+        ('model_udfs.py', 'comp', {'A': [[10.0]]}, True),
+        ('model_udfs.py', 'comp', {'A': 10}, False),
     ]
 )
-def test_mdf_equivalence(filename, composition_name, input_dict):
+def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format):
     # Get python script from file and execute
     filename = f'{os.path.dirname(__file__)}/{filename}'
     with open(filename, 'r') as orig_file:
@@ -158,7 +173,7 @@ def test_mdf_equivalence(filename, composition_name, input_dict):
 
     # Save json_summary of Composition to file and read back in.
     json_filename = filename.replace('.py', '.json')
-    pnl.write_json_file(eval(composition_name), json_filename)
+    pnl.write_json_file(eval(composition_name), json_filename, simple_edge_format=simple_edge_format)
 
     m = load_mdf(json_filename)
     eg = ee.EvaluableGraph(m.graphs[0], verbose=True)

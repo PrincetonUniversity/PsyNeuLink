@@ -2724,7 +2724,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -11480,7 +11480,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # endregion LLVM
 
-    def as_mdf_model(self):
+    def as_mdf_model(self, simple_edge_format=True):
         """Creates a ModECI MDF Model representing this Composition
 
         Args:
@@ -11490,6 +11490,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Returns:
             modeci_mdf.Model: a ModECI Model representing this Composition
         """
+        def is_included_projection(proj):
+            included_types = (
+                CompositionInterfaceMechanism,
+                LearningMechanism,
+                OptimizationControlMechanism,
+            )
+            return (
+                not isinstance(proj.sender.owner, included_types)
+                and not isinstance(proj.receiver.owner, included_types)
+                and not isinstance(proj, (AutoAssociativeProjection, ControlProjection))
+            )
         nodes_dict = {}
         projections_dict = {}
         self_identifier = parse_valid_identifier(self.name)
@@ -11513,20 +11524,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
 
         for p in list(self.projections) + additional_projections:
-            p_model = p.as_mdf_model()
             # filter projections to/from CIMs of this composition
             # and projections to things outside this composition
-            if (
-                (
-                    p_model.sender != self_identifier
-                    and p_model.receiver != self_identifier
-                )
-                and (
-                    p_model.sender in nodes_dict
-                    or p_model.receiver in nodes_dict
-                )
-            ):
-                projections_dict[parse_valid_identifier(p.name)] = p_model
+            if is_included_projection(p):
+                try:
+                    pre_edge, edge_node, post_edge = p.as_mdf_model(simple_edge_format)
+                except TypeError:
+                    edges = [p.as_mdf_model(simple_edge_format)]
+                else:
+                    nodes_dict[edge_node.id] = edge_node
+                    edges = [pre_edge, post_edge]
+                    if 'excluded_node_roles' not in metadata[MODEL_SPEC_ID_METADATA]:
+                        metadata[MODEL_SPEC_ID_METADATA]['excluded_node_roles'] = []
+
+                    metadata[MODEL_SPEC_ID_METADATA]['excluded_node_roles'].append([edge_node.id, str(NodeRole.OUTPUT)])
+
+                for e in edges:
+                    projections_dict[e.id] = e
 
         metadata[MODEL_SPEC_ID_METADATA]['controller'] = self.controller.as_mdf_model() if self.controller is not None else None
 

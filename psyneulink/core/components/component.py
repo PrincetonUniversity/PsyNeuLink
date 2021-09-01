@@ -3873,7 +3873,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 if no_expand_components:
                     value = parse_valid_identifier(value.name)
                 else:
-                    value = value.as_mdf_model()
+                    try:
+                        value = value.as_mdf_model(simple_edge_format=False)
+                    except TypeError:
+                        value = value.as_mdf_model()
             elif isinstance(value, ComponentsMeta):
                 value = value.__name__
             elif isinstance(value, (type, types.BuiltinFunctionType)):

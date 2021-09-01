@@ -404,11 +404,13 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import get_matrix
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.json import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
@@ -1077,7 +1079,7 @@ class Projection_Base(Projection):
             **socket_dict
         }
 
-    def as_mdf_model(self):
+    def as_mdf_model(self, simple_edge_format=True):
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 
         # these may occur during deferred init
@@ -1112,22 +1114,67 @@ class Projection_Base(Projection):
         if self.defaults.weight is None:
             parameters[self._model_spec_id_parameters]['weight'] = 1
 
-        metadata = self._mdf_metadata
-        try:
-            metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict_format(
-                self.function.as_mdf_model(),
-                ordered=False
+        if simple_edge_format:
+            edge_node = ProcessingMechanism(
+                name=f'{self.name}_dummy_node',
+                default_variable=self.defaults.variable,
+                function=self.function
             )
-        except AttributeError:
-            # projection is in deferred init, special handling here?
-            pass
+            edge_function = edge_node.function
+            edge_node = edge_node.as_mdf_model()
 
-        return mdf.Edge(
-            id=parse_valid_identifier(self.name),
-            **socket_dict,
-            **parameters,
-            **metadata
-        )
+            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(edge_function.name)][0]
+            var_name = _get_variable_parameter_name(edge_function)
+
+            # 2d variable on LinearMatrix will be incorrect on import back to psyneulink
+            func_model.metadata[var_name] = func_model.metadata[var_name][-1]
+
+            pre_edge = mdf.Edge(
+                id=parse_valid_identifier(f'{self.name}_dummy_pre_edge'),
+                # assume weight applied before function
+                **{
+                    self._model_spec_id_parameters: {
+                        'weight': parameters[self._model_spec_id_parameters]['weight']
+                    },
+                    MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
+                    MODEL_SPEC_ID_RECEIVER_PORT: edge_node.input_ports[0].id,
+                    MODEL_SPEC_ID_SENDER_MECH: sender_mech,
+                    MODEL_SPEC_ID_RECEIVER_MECH: edge_node.id
+                }
+            )
+
+            for name, value in parameters[self._model_spec_id_parameters].items():
+                if name not in {'weight'}:
+                    edge_node.parameters.append(mdf.Parameter(id=name, value=value))
+            edge_node.metadata['orig_metadata'] = self._mdf_metadata[MODEL_SPEC_ID_METADATA]
+
+            post_edge = mdf.Edge(
+                id=parse_valid_identifier(f'{self.name}_dummy_post_edge'),
+                **{
+                    MODEL_SPEC_ID_SENDER_PORT: edge_node.output_ports[0].id,
+                    MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+                    MODEL_SPEC_ID_SENDER_MECH: edge_node.id,
+                    MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
+                }
+            )
+            return pre_edge, edge_node, post_edge
+        else:
+            metadata = self._mdf_metadata
+            try:
+                metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict_format(
+                    self.function.as_mdf_model(),
+                    ordered=False
+                )
+            except AttributeError:
+                # projection is in deferred init, special handling here?
+                pass
+
+            return mdf.Edge(
+                id=parse_valid_identifier(self.name),
+                **socket_dict,
+                **parameters,
+                **metadata
+            )
 
 
 @tc.typecheck
