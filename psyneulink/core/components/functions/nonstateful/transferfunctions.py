@@ -2870,6 +2870,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     DEFAULT_FILLER_VALUE = 0
 
+    _model_spec_generic_type_name = 'onnx::MatMul'
+
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2881,7 +2883,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     :default value: None
                     :type:
         """
-        matrix = Parameter(None, modulable=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
+        matrix = Parameter(None, modulable=True, mdf_name='B')
         bounds = None
 
     # def is_matrix_spec(m):
