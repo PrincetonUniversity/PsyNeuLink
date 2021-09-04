@@ -1148,6 +1148,14 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         except KeyError:
             node_roles = []
 
+        try:
+            excluded_node_roles = {
+                parse_valid_identifier(node): role for (node, role) in
+                composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['excluded_node_roles']
+            }
+        except KeyError:
+            excluded_node_roles = []
+
         # do not add the controller as a normal node
         try:
             controller_name = composition_dict['controller']['name']
@@ -1179,6 +1187,13 @@ def _generate_composition_string(graphs_dict, component_identifiers):
                     )
                 )
         if len(composition_dict[MODEL_SPEC_ID_NODES]) > 0:
+            output.append('')
+
+        if len(excluded_node_roles) > 0:
+            for node, roles in excluded_node_roles.items():
+                output.append(
+                    f'{comp_identifer}.exclude_node_roles({node}, {_parse_parameter_value(roles, component_identifiers)})'
+                )
             output.append('')
 
         try:

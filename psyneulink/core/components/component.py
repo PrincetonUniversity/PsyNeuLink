@@ -3702,7 +3702,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # attributes that aren't Parameters but are psyneulink-specific
         # and are stored in the PNL parameters section
-        implicit_parameter_attributes = ['node_ordering', 'required_node_roles']
+        implicit_parameter_attributes = ['node_ordering', 'required_node_roles', 'excluded_node_roles']
 
         parameters_dict = {}
         pnl_specific_parameters = {}
