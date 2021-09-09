@@ -1146,7 +1146,7 @@ class Projection_Base(Projection):
             for name, value in parameters[self._model_spec_id_parameters].items():
                 if name not in {'weight'}:
                     edge_node.parameters.append(mdf.Parameter(id=name, value=value))
-            edge_node.metadata['orig_metadata'] = self._mdf_metadata[MODEL_SPEC_ID_METADATA]
+            edge_node.metadata.update(self._mdf_metadata[MODEL_SPEC_ID_METADATA])
 
             post_edge = mdf.Edge(
                 id=parse_valid_identifier(f'{self.name}_dummy_post_edge'),

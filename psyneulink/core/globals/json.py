@@ -202,8 +202,8 @@ import types
 
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
-    MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA
+    MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA
 from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
@@ -1067,7 +1067,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
 
         for name, node in composition_dict[MODEL_SPEC_ID_NODES].items():
             try:
-                _parse_component_type(node)
+                component_type = _parse_component_type(node)
             except KeyError:
                 # will use a default type
                 pass
@@ -1080,6 +1080,77 @@ def _generate_composition_string(graphs_dict, component_identifiers):
 
                 if MODEL_SPEC_ID_COMPOSITION not in node:
                     keys_to_delete.append(name)
+            else:
+                # projection was written out as a node for simple_edge_format
+                if issubclass(component_type, psyneulink.Projection_Base):
+                    assert len(node[MODEL_SPEC_ID_INPUT_PORTS]) == 1
+                    assert len(node[MODEL_SPEC_ID_OUTPUT_PORTS]) == 1
+
+                    extra_projs_to_delete = set()
+
+                    sender = None
+                    sender_port = None
+                    receiver = None
+                    receiver_port = None
+
+                    for proj_name, proj in composition_dict[MODEL_SPEC_ID_PROJECTIONS].items():
+                        if proj[MODEL_SPEC_ID_RECEIVER_MECH] == name:
+                            assert 'dummy' in proj_name
+                            sender = proj[MODEL_SPEC_ID_SENDER_MECH]
+                            sender_port = proj[MODEL_SPEC_ID_SENDER_PORT]
+                            extra_projs_to_delete.add(proj_name)
+
+                        if proj[MODEL_SPEC_ID_SENDER_MECH] == name:
+                            assert 'dummy' in proj_name
+                            receiver = proj[MODEL_SPEC_ID_RECEIVER_MECH]
+                            receiver_port = proj[MODEL_SPEC_ID_RECEIVER_PORT]
+                            # if for some reason the projection has node as both sender and receiver
+                            # this is a bug, let the deletion fail
+                            extra_projs_to_delete.add(proj_name)
+
+                    if sender is None:
+                        raise PNLJSONError(f'Dummy node {name} for projection has no sender in projections list')
+
+                    if receiver is None:
+                        raise PNLJSONError(f'Dummy node {name} for projection has no receiver in projections list')
+
+                    proj_dict = {
+                        **{
+                            MODEL_SPEC_ID_SENDER_PORT: sender_port,
+                            MODEL_SPEC_ID_RECEIVER_PORT: receiver_port,
+                            MODEL_SPEC_ID_SENDER_MECH: sender,
+                            MODEL_SPEC_ID_RECEIVER_MECH: receiver
+                        },
+                        **{
+                            MODEL_SPEC_ID_METADATA: {
+                                # variable isn't specified for projections
+                                **{k: v for k, v in node[MODEL_SPEC_ID_METADATA].items() if k != 'variable'},
+                                'functions': node['functions']
+                            }
+                        },
+                    }
+                    try:
+                        proj_dict[component_type._model_spec_id_parameters] = node[psyneulink.Component._model_spec_id_parameters]
+                    except KeyError:
+                        pass
+
+                    composition_dict[MODEL_SPEC_ID_PROJECTIONS][name.rstrip('_dummy_node')] = proj_dict
+
+                    keys_to_delete.append(name)
+                    for p in extra_projs_to_delete:
+                        del composition_dict[MODEL_SPEC_ID_PROJECTIONS][p]
+
+                    for nr_item in ['required_node_roles', 'excluded_node_roles']:
+                        nr_removal_indices = []
+
+                        for i, (nr_name, nr_role) in enumerate(
+                            composition_dict[MODEL_SPEC_ID_METADATA][nr_item]
+                        ):
+                            if nr_name == name:
+                                nr_removal_indices.append(i)
+
+                        for i in nr_removal_indices:
+                            del composition_dict[MODEL_SPEC_ID_METADATA][nr_item][i]
 
         for nodes_dict in pnl_specific_items:
             for name, node in nodes_dict.items():
@@ -1279,9 +1350,10 @@ def _generate_composition_string(graphs_dict, component_identifiers):
 
         if len(excluded_node_roles) > 0:
             for node, roles in excluded_node_roles.items():
-                output.append(
-                    f'{comp_identifer}.exclude_node_roles({node}, {_parse_parameter_value(roles, component_identifiers)})'
-                )
+                if name not in implicit_names and name != controller_name:
+                    output.append(
+                        f'{comp_identifer}.exclude_node_roles({node}, {_parse_parameter_value(roles, component_identifiers)})'
+                    )
             output.append('')
 
         try:
