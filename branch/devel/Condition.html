@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0+untagged.10.gd698b08 documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0+untagged.10.g4312056 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.gd698b08
+                  0+untagged.10.g4312056
                 </div>
               
             
@@ -425,13 +425,13 @@ with each of those nodes.  If it returns <code class="xref any docutils literal 
 <span id="condition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterCall">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterCall" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterCall</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterCall" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependency</strong> after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependency</strong></p></li>
+<li><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependencies</strong> after which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependencies</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
 </dd>
@@ -439,7 +439,7 @@ with each of those nodes.  If it returns <code class="xref any docutils literal 
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the node specified in <strong>dependency</strong> has executed at least n+1 times
+<li><p>the node specified in <strong>dependencies</strong> has executed at least n+1 times
 within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
 </ul>
 </div></blockquote>
@@ -447,13 +447,13 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AfterNCalls">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCalls" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AfterNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AfterNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependency</strong> after which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependency</strong></p></li>
+<li><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependencies</strong> after which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependencies</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
 </dd>
@@ -461,7 +461,7 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the node specified in <strong>dependency</strong> has executed at least n times
+<li><p>the node specified in <strong>dependencies</strong> has executed at least n times
 within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
 </ul>
 </div></blockquote>
@@ -476,7 +476,7 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 <li><p><strong>*nodes</strong> (<em>nodes</em>) – one or more nodes on which the Condition depends</p></li>
 <li><p><strong>n</strong> (<em>int</em>) – the number of combined executions of all nodes specified in <strong>dependencies</strong> after which the</p></li>
 <li><p><strong>(</strong><strong>default</strong> (<em>Condition is satisfied</em>) – None)</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependency</strong></p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependencies</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
 </dd>
@@ -714,7 +714,7 @@ has occurred and thereafter (i.e., in <a class="reference internal" href="Time.h
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*nodes</strong> (<em>nodes</em>) – an iterable of nodes on which the Condition depends</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependency</strong></p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependencies</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
 </dd>
@@ -802,13 +802,13 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.AtNCalls">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtNCalls" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">AtNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.AtNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependency</strong> at which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependency</strong></p></li>
+<li><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependencies</strong> at which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependencies</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
 </dd>
@@ -816,7 +816,7 @@ within one unit of time at the <a class="reference internal" href="Time.html#psy
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the node specified in <strong>dependency</strong> has executed exactly n times
+<li><p>the node specified in <strong>dependencies</strong> has executed exactly n times
 within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
 </ul>
 </div></blockquote>
@@ -981,13 +981,13 @@ the second <a class="reference internal" href="Time.html#psyneulink.core.schedul
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.BeforeNCalls">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeNCalls" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">BeforeNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">TimeScale.ENVIRONMENT_STATE_UPDATE</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.BeforeNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependency</strong> before which the Condition is satisfied</p></li>
-<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependency</strong></p></li>
+<li><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – the number of executions of <strong>dependencies</strong> before which the Condition is satisfied</p></li>
+<li><p><strong>time_scale</strong> (<a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><em>TimeScale</em></a>) – the TimeScale used as basis for counting executions of <strong>dependencies</strong></p></li>
 <li><p><strong>(</strong><strong>default</strong> – TimeScale.TRIAL)</p></li>
 </ul>
 </dd>
@@ -995,7 +995,7 @@ the second <a class="reference internal" href="Time.html#psyneulink.core.schedul
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the node specified in <strong>dependency</strong> has executed at most n-1 times
+<li><p>the node specified in <strong>dependencies</strong> has executed at most n-1 times
 within one unit of time at the <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale" title="psyneulink.core.scheduling.time.TimeScale"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TimeScale</span></code></a> specified by <strong>time_scale</strong>.</p></li>
 </ul>
 </div></blockquote>
@@ -1193,19 +1193,19 @@ governed) to a <a class="reference internal" href="#"><span class="doc">Conditio
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.EveryNCalls">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">EveryNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">EveryNCalls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.EveryNCalls" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
-<li><p><strong>n</strong> (<em>int</em>) – the frequency of executions of <strong>dependency</strong> at which the Condition is satisfied</p></li>
+<li><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – the frequency of executions of <strong>dependencies</strong> at which the Condition is satisfied</p></li>
 </ul>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the node specified in <strong>dependency</strong> has executed at least n times since the last time the
+<li><p>the node specified in <strong>dependencies</strong> has executed at least n times since the last time the
 Condition’s owner executed.</p></li>
 </ul>
 </div></blockquote>
@@ -1239,16 +1239,16 @@ node runs</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.JustRan">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">JustRan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.JustRan" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">JustRan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.JustRan" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p>
+<dd class="field-odd"><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>the node specified in <strong>dependency</strong> executed in the previous <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>.</p></li>
+<li><p>the node specified in <strong>dependencies</strong> executed in the previous <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TIME_STEP" title="psyneulink.core.scheduling.time.TimeScale.TIME_STEP"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TIME_STEP</span></code></a>.</p></li>
 </ul>
 </div></blockquote>
 <p class="rubric">Notes</p>
@@ -1340,10 +1340,10 @@ JustRan(A) is satisfied at the beginning of the next <a class="reference interna
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.WhenFinished">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhenFinished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinished" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">WhenFinished</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.WhenFinished" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dependency</strong> (<em>node</em>) – the node on which the Condition depends</p>
+<dd class="field-odd"><p><strong>dependencies</strong> (<em>node</em>) – the node on which the Condition depends</p>
 </dd>
 </dl>
 <p>Satisfied when:</p>
