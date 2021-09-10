@@ -153,7 +153,7 @@ class Condition(graph_scheduler.Condition, JSONDumpable):
         else:
             func_dict = {}
 
-        extra_args = {MODEL_SPEC_ID_TYPE: self.__class__.__name__}
+        extra_args = {MODEL_SPEC_ID_TYPE: getattr(graph_scheduler.condition, type(self).__name__).__name__}
 
         sig = inspect.signature(self.__init__)
 

@@ -188,6 +188,7 @@ import binascii
 import copy
 import dill
 import enum
+import graph_scheduler
 import inspect
 import json
 import math
@@ -921,8 +922,19 @@ def _generate_condition_string(condition_dict, component_identifiers):
 
         return str(_parse_parameter_value(value, component_identifiers))
 
+    def _parse_graph_scheduler_type(typ):
+        for ts, pnl_ts in graph_scheduler.time._time_scale_aliases.items():
+            ts_class_name = graph_scheduler.time._time_scale_to_class_str(ts)
+            pnl_ts_class_name = graph_scheduler.time._time_scale_to_class_str(pnl_ts)
+
+            if ts_class_name in typ:
+                return typ.replace(ts_class_name, pnl_ts_class_name)
+
+        return typ
+
     args_str = ''
-    sig = inspect.signature(getattr(psyneulink, condition_dict[MODEL_SPEC_ID_TYPE]).__init__)
+    cond_type = _parse_graph_scheduler_type(condition_dict[MODEL_SPEC_ID_TYPE])
+    sig = inspect.signature(getattr(psyneulink, cond_type).__init__)
 
     var_positional_arg_name = None
 
@@ -971,7 +983,7 @@ def _generate_condition_string(condition_dict, component_identifiers):
     if len(arguments_str) > 0 and arguments_str[0] == ',':
         arguments_str = arguments_str[2:]
 
-    return f'psyneulink.{condition_dict[MODEL_SPEC_ID_TYPE]}({arguments_str})'
+    return f'psyneulink.{cond_type}({arguments_str})'
 
 
 def _generate_composition_string(graphs_dict, component_identifiers):
