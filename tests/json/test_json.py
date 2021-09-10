@@ -25,6 +25,8 @@ stroop_stimuli = {
 json_results_parametrization = [
     ('model_basic.py', 'comp', '{A: 1}', True),
     ('model_basic.py', 'comp', '{A: 1}', False),
+    ('model_basic_non_identity.py', 'comp', '{A: 1}', True),
+    ('model_basic_non_identity.py', 'comp', '{A: 1}', False),
     ('model_udfs.py', 'comp', '{A: 10}', True),
     ('model_udfs.py', 'comp', '{A: 10}', False),
     pytest.param(
@@ -160,6 +162,7 @@ def test_write_json_file_multiple_comps(
     [
         ('model_basic.py', 'comp', {'A': [[1.0]]}, True),
         ('model_basic.py', 'comp', {'A': 1}, False),
+        ('model_basic_non_identity.py', 'comp', {'A': [[1.0]]}, True),  # requires simple edges
         ('model_udfs.py', 'comp', {'A': [[10.0]]}, True),
         ('model_udfs.py', 'comp', {'A': 10}, False),
     ]
