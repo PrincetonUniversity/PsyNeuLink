@@ -1115,7 +1115,7 @@ class Projection_Base(Projection):
         if self.defaults.weight is None:
             parameters[self._model_spec_id_parameters]['weight'] = 1
 
-        if simple_edge_format:
+        if simple_edge_format and not self.function._is_identity(defaults=True):
             edge_node = ProcessingMechanism(
                 name=f'{self.name}_dummy_node',
                 default_variable=self.defaults.variable,
