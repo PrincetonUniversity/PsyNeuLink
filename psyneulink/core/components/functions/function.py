@@ -759,7 +759,7 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _is_identity(self, context=None):
+    def _is_identity(self, context=None, defaults=False):
         # should return True in subclasses if the parameters for context are such that
         # the Function's output will be the same as its input
         # Used to bypass execute when unnecessary
