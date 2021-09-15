@@ -602,6 +602,13 @@ def _generate_condition_string(condition_dict, component_identifiers):
             if identifier in component_identifiers:
                 return str(identifier)
 
+        try:
+            getattr(psyneulink.core.scheduling.condition, value['type'])
+        except (AttributeError, KeyError, TypeError):
+            pass
+        else:
+            return _generate_condition_string(value, component_identifiers)
+
         return str(_parse_parameter_value(value, component_identifiers))
 
     args_str = ''
