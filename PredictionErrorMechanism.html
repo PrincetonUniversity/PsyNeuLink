@@ -1,0 +1,563 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PredictionErrorMechanism &mdash; PsyNeuLink 0.9.1.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="LeabraMechanism" href="LeabraMechanism.html" />
+    <link rel="prev" title="ComparatorMechanism" href="ComparatorMechanism.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.9.1.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Components.html">Components</a> &gt;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &gt;</li>
+        
+          <li><a href="ProcessingMechanisms.html">Processing Mechanisms</a> &gt;</li>
+        
+          <li><a href="ObjectiveMechanisms.html">Objective Mechanisms</a> &gt;</li>
+        
+      <li>PredictionErrorMechanism</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="module-psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism">
+<span id="predictionerrormechanism"></span><h1>PredictionErrorMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism" title="Permalink to this headline">¶</a></h1>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#predictionerrormechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#predictionerrormechanism-creation"><span class="std std-ref">Creating a PredictionErrorMechanism</span></a></p></li>
+<li><p><a class="reference internal" href="#predictionerrormechanism-structure"><span class="std std-ref">Structure</span></a></p></li>
+<li><p><a class="reference internal" href="#predictionerrormechanism-execution"><span class="std std-ref">Execution</span></a></p></li>
+<li><p><a class="reference internal" href="#predictionerrormechanism-example"><span class="std std-ref">Example</span></a></p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">PredictionErrorMechanism_Class_Reference</span></code></p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="overview">
+<span id="predictionerrormechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A PredictionErrorMechanism is a subclass of <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> that receives two inputs (a sample and a target),
+and calculates the temporal difference prediction error as found in <a class="reference external" href="http://www.jneurosci.org/content/jneuro/16/5/1936.full.pdf">Montague, Dayan, and Sejnowski (1996)</a> using its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and places the delta values (the difference between the actual and predicted
+reward) in its <em>OUTCOME</em> <code class="xref any docutils literal notranslate"><span class="pre">OutputPort</span></code>.</p>
+</section>
+<section id="creating-a-predictionerrormechanism">
+<span id="predictionerrormechanism-creation"></span><h2>Creating a PredictionErrorMechanism<a class="headerlink" href="#creating-a-predictionerrormechanism" title="Permalink to this headline">¶</a></h2>
+<p>A PredictionErrorMechanism is usually created automatically when a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
+<a class="reference internal" href="LearningMechanism.html#learningmechanism-creation"><span class="std std-ref">is created</span></a> using the <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TDLearning</span></code></a> function).
+A PredictionErrorMechanism can also be created directly by calling its constructor.
+Its <strong>sample</strong> and <strong>target</strong>  arguments are used to specify the OutputPorts
+that provide the sample and target inputs, respectively (see
+<a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">ObjectiveMechanism Monitored Output Ports</span></a>
+for details). When the PredictionErrorMechanism is created, two InputPorts are
+created, one each for its sample and target inputs (and named, by default
+<em>SAMPLE</em> and <em>TARGET</em>). Each is assigned a MappingProjection from the
+corresponding OutputPort specified in the <strong>sample</strong> and <strong>target</strong> arguments.</p>
+<p>It is important to recognize that the value of the <em>SAMPLE</em> and <em>TARGET</em>
+InputPorts must have the same length and type, so that they can be compared
+using the PredictionErrorMechanism’s <code class="xref any docutils literal notranslate"><span class="pre">function</span>
+<span class="pre">&lt;PredictionErrorMechanism.function&gt;.</span></code> By default, they use the format of the
+OutputPorts specified in the <strong>sample</strong> and <strong>target</strong> arguments, respectively,
+and the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> to each uses an <a class="reference internal" href="Keywords.html#psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX" title="psyneulink.core.globals.keywords.MatrixKeywords.IDENTITY_MATRIX"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">IDENTITY_MATRIX</span></code></a>. Therefore, for
+the default configuration, the OutputPorts specified in the <strong>sample</strong> and
+<strong>target</strong> arguments must have values of the same length and type. If these
+differ, the <strong>input_ports</strong> argument can be used to explicitly specify the
+format of the PredictionErrorMechanism’s <em>SAMPLE</em> and <em>TARGET</em> InputPorts, to
+insure they are compatible with one another (as well as to customize their
+names, if desired). If the <strong>input_ports</strong> argument is used, <em>both</em> the sample
+and target InputPorts must be specified. Any of the formats for <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">specifying
+InputPorts</span></a> can be used in the argument. If values
+are assigned for the InputPorts, they must be of equal length and type. Their
+types must also be compatible with the value of the OutputPorts specified in
+the <strong>sample</strong> and <strong>target</strong> arguments. However, the length specified for an
+InputPort can differ from its corresponding OutputPort; in that case, by
+default, the MappingProjection created uses a <code class="xref any docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY</span></code> matrix. Thus,
+OutputPorts of differing lengths can be mapped to the sample and target
+InputPorts of a PredictionErrorMechanism (see the <a class="reference internal" href="#predictionerrormechanism-example"><span class="std std-ref">example</span></a> below), so long as the latter of of the
+same length. If a projection other than a <code class="xref any docutils literal notranslate"><span class="pre">FULL_CONNECTIVITY</span></code> matrix is
+needed, this can be specified using the <em>PROJECTION</em> entry of a <a class="reference internal" href="Port.html#port-specification"><span class="std std-ref">Port
+specification dictionary</span></a> for the InputPort in the
+<strong>input_ports</strong> argument.</p>
+</section>
+<section id="structure">
+<span id="predictionerrormechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>A PredictionErrorMechanism has two <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>, each of which receives a
+<a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from a corresponding OutputPort specified in the
+<strong>sample</strong> and <strong>target</strong> arguments of its constructor. The InputPorts are
+listed in the Mechanism’s <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>
+attribute and named, respectively, <em>SAMPLE</em> and <em>TARGET</em>. The OutputPorts
+from which they receive their projections (specified in the <strong>sample</strong> and
+<strong>target</strong> arguments) are listed in the Mechanism’s <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a> and <a class="reference internal" href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target" title="psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.target"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">target</span></code></a> attributes as well as in its
+<code class="xref any docutils literal notranslate"><span class="pre">monitored_output_ports</span></code>
+attribute. The PredictionErrorMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> calculates the difference between the
+predicted reward and the true reward at each timestep in <strong>SAMPLE</strong>. By
+default, it uses a <a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction" title="psyneulink.core.components.functions.combinationfunctions.PredictionErrorDeltaFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">PredictionErrorDeltaFunction</span></code></a>. However, the
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> can be customized, so long as it
+is replaced with one that takes two arrays with the same format as its inputs
+and generates a similar array as its result. The result is assigned as the
+value of the PredictionErrorMechanism’s <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort.</p>
+</section>
+<section id="execution">
+<span id="predictionerrormechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>When a PredictionErrorMechanism is executed, it updates its input_ports with
+the values of the OutputPorts specified in its <strong>sample</strong> and <strong>target</strong>
+arguments, and then uses its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to
+compare these. By default, the result is assigned to the <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of its <em>OUTCOME</em> <code class="xref any docutils literal notranslate"><span class="pre">output_port</span></code>, and as the first item of the
+Mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">output_values</span></code> attribute.</p>
+<p class="rubric" id="predictionerrormechanism-example">Example</p>
+<p id="predictionerrormechanism-default-input-value-example"><em>Formatting InputPort values</em></p>
+<p>The <strong>default_variable</strong> argument can be used to specify a particular format
+for the SAMPLE and/or TARGET InputPorts of a PredictionErrorMechanism. This
+can be useful when one or both of these differ from the format of the
+OutputPort(s) specified in the <strong>sample</strong> and <strong>target</strong> arguments. For
+example, for <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.TDLearning" title="psyneulink.core.components.functions.learningfunctions.TDLearning"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Temporal</span> <span class="pre">Difference</span> <span class="pre">Learning</span></code></a>, a
+PredictionErrorMechanism is used to compare the predicted reward from the
+sample with the true reward (the target). In the example below, the sample
+Mechanism is a <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a> that uses the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Linear" title="psyneulink.core.components.functions.transferfunctions.Linear"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Linear</span></code></a> function to output
+the sample values. Because the output is a vector, specifying it as the
+PredictionErrorMechanism’s <strong>sample</strong> argument will generate a corresponding
+InputPort with a vector as its value. This should match the reward
+signal specified in the PredictionErrorMechanism’s <strong>target</strong> argument, the
+value of which is a vector of the same length as the output of sample.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sample_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">Linear</span><span class="p">())</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">reward_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">size</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">prediction_error_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">PredictionErrorMechanism</span><span class="p">(</span><span class="n">sample</span><span class="o">=</span><span class="n">sample_mech</span><span class="p">,</span>
+<span class="gp">... </span>                                                     <span class="n">target</span><span class="o">=</span><span class="n">reward_mech</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">sample_mech</span></code> is specified to take an array of length 5 as its
+input, and therefore generate one of the same length as its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary output</span></a>. Since it is assigned as the <strong>sample</strong> of the
+PredictionErrorMechanism, by default this will create a <em>SAMPLE</em> InputPort of
+length 5, that will match the length of the <em>TARGET</em> InputPort.</p>
+<p>Currently the default method of implementing temporal difference learning in
+PsyNeuLink requires the values of <em>SAMPLE</em> and <em>TARGET</em> to be provided as an
+array representing a full time series as an experiment. See
+<code class="xref any docutils literal notranslate"><span class="pre">MontagueDayanSejnowski.py</span></code> in the Scripts folder for an example.</p>
+</section>
+<section id="class-reference">
+<h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</span></span><span class="sig-name descname"><span class="pre">PredictionErrorMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">PredictionErrorDeltaFunction</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[OUTCOME]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Subclass of ComparatorMechanism that calculates the prediction error between the predicted reward and the target.
+See <a class="reference internal" href="ComparatorMechanism.html#comparatormechanism-class-reference"><span class="std std-ref">ComparatorMechanism</span></a> for additional arguments and attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the <em>SAMPLE</em> InputPort, that is evaluated by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.</p></li>
+<li><p><strong>target</strong> (<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base"><em>Mechanism_Base</em></a><em>, </em><em>dict</em><em>, </em><em>number</em><em>, or </em><em>str</em>) – specifies the <em>TARGET</em> InputPort used by the function to evaluate <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a>.</p></li>
+<li><p><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><em>function</em><em>, or </em><em>method : default PredictionErrorDeltaFunction</em>) – the function used to evaluate the SAMPLE and TARGET inputs.</p></li>
+<li><p><strong>learning_rate</strong> (<em>Number : default 0.3</em>) – controls the weight of later timesteps compared to earlier ones;  higher rates weight later timesteps more
+heavily than previous ones.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample">
+<span class="sig-name descname"><span class="pre">sample</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <em>SAMPLE</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which will be evaluated by the function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>, <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base">Mechanism_Base</a>, dict, number, or str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.target">
+<span class="sig-name descname"><span class="pre">target</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.target" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <em>TARGET</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which will be used to evaluate <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample" title="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.sample"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sample</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>, <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base">Mechanism_Base</a>, dict, number, or str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>the function used to evaluate the sample and target inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>CombinationFunction, <a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">ObjectiveFunction</a>, Function, or method : default PredictionErrorDeltaFunction</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports">
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>by default, contains only the <em>OUTCOME</em> (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of the
+PredictionErrorMechanism.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>str, Iterable : default OUTCOME</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>controls the weight of later timesteps compared to earlier ones; higher rates weight later timesteps more
+heavily than previous ones.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Number : default 0.3</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism._parse_function_variable">
+<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
+Function associated with this Component</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.</span></span><span class="sig-name descname"><span class="pre">PredictionErrorMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.objective.predictionerrormechanism.PredictionErrorMechanismError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LeabraMechanism.html" class="btn btn-neutral float-right" title="LeabraMechanism" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="ComparatorMechanism.html" class="btn btn-neutral" title="ComparatorMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">PredictionErrorMechanism</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#creating-a-predictionerrormechanism">Creating a PredictionErrorMechanism</a></li>
+<li><a class="reference internal" href="#structure">Structure</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>

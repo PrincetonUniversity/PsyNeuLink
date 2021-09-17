@@ -1,0 +1,657 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>AutoAssociativeLearningMechanism &mdash; PsyNeuLink 0.9.1.1 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Projections" href="Projections.html" />
+    <link rel="prev" title="Learning Mechanisms" href="LearningMechanisms.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0.9.1.1
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Components.html">Components</a> &gt;</li>
+        
+          <li><a href="Mechanisms.html">Mechanisms</a> &gt;</li>
+        
+          <li><a href="ModulatoryMechanisms.html">Modulatory Mechanisms</a> &gt;</li>
+        
+          <li><a href="LearningMechanisms.html">Learning Mechanisms</a> &gt;</li>
+        
+      <li>AutoAssociativeLearningMechanism</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="module-psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism">
+<span id="autoassociativelearningmechanism"></span><h1>AutoAssociativeLearningMechanism<a class="headerlink" href="#module-psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h1>
+<section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#autoassociativelearningmechanism-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#autoassociativelearningmechanism-creation"><span class="std std-ref">Creating an AutoAssociativeLearningMechanism</span></a></p></li>
+<li><p><a class="reference internal" href="#autoassociativelearningmechanism-structure"><span class="std std-ref">Structure</span></a></p></li>
+<li><p><a class="reference internal" href="#autoassociativelearningmechanism-execution"><span class="std std-ref">Execution</span></a></p></li>
+<li><p><a class="reference internal" href="#autoassociativelearningmechanism-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="overview">
+<span id="autoassociativelearningmechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism is a subclass of <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, modified for use with a
+<a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> to train its <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a>.</p>
+</section>
+<section id="creating-an-autoassociativelearningmechanism">
+<span id="autoassociativelearningmechanism-creation"></span><h2>Creating an AutoAssociativeLearningMechanism<a class="headerlink" href="#creating-an-autoassociativelearningmechanism" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism can be created directly by calling its constructor, but most commonly it is created
+automatically when a RecurrentTransferMechanism is <a class="reference internal" href="RecurrentTransferMechanism.html#recurrenttransfermechanism-learning"><span class="std std-ref">configured for learning</span></a>,
+(identified in its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a> attribute).</p>
+</section>
+<section id="structure">
+<span id="autoassociativelearningmechanism-structure"></span><h2>Structure<a class="headerlink" href="#structure" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism is identical to a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> in all respects except the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>it has only a single <em>ACTIVATION_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, that receives a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> from an <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of
+the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with which it is associated (identified by the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a>);</p></li>
+<li><p>it has a single <em>LEARNING_SIGNAL</em> <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> that sends a <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection</span></a> to the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of an ‘AutoAssociativeProjection` (typically, the
+<a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a> of a RecurrentTransferMechanism),
+but not an <em>ERROR_SIGNAL</em> OutputPort.</p></li>
+<li><p>it has no <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.input_source" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.input_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_source</span></code></a>, <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.output_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_source</span></code></a>,
+or <code class="xref any docutils literal notranslate"><span class="pre">error_source</span></code> attributes;  instead, it has a single <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a> attribute that identifies the source of the activity vector
+used by the Mechanism’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.</p></li>
+<li><p>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> takes as its <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>
+a list or 1d np.array of numeric entries, corresponding in length to the AutoAssociativeLearningMechanism’s
+<em>ACTIVATION_INPUT</em> InputPort; and it returns a <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>
+(a weight change matrix assigned to the Mechanism’s <em>LEARNING_SIGNAL</em> OutputPort), but not necessarily an
+<a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a>.</p></li>
+<li><p>its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> can be specified as a 1d or 2d array (or
+matrix) to scale the contribution made, respectively, by individual elements or connections among them,
+to the weight change matrix;  as with a standard <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, a scalar can also be specified to scale
+the entire weight change matrix (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for
+additional details).</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="execution">
+<span id="autoassociativelearningmechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<p>An AutoAssociativeLearningMechanism executes in the same manner as standard <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, with two exceptions:
+* 1) its execution can be enabled or disabled by setting the <a href="#id1"><span class="problematic" id="id2">`</span></a>learning_enabled</p>
+<blockquote>
+<div><p>&lt;RecurrentTransferMechanism.learning_enabled&gt;` attribute of the <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a> with which it is
+associated (identified in its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a> attribute).</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>2) it is executed during the <code class="xref any docutils literal notranslate"><span class="pre">execution</span> <span class="pre">phase</span></code> of the System’s execution.  Note that this is
+different from the behavior of supervised learning algorithms (such as <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.Reinforcement" title="psyneulink.core.components.functions.learningfunctions.Reinforcement"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Reinforcement</span></code></a> and <a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation" title="psyneulink.core.components.functions.learningfunctions.BackPropagation"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BackPropagation</span></code></a>),
+that are executed during the <code class="xref any docutils literal notranslate"><span class="pre">learning</span> <span class="pre">phase</span></code> of a System’s execution</p></li>
+</ul>
+</section>
+<section id="class-reference">
+<span id="autoassociativelearningmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.</span></span><span class="sig-name descname"><span class="pre">AutoAssociativeLearningMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">Hebbian</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_signals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">LEARNING_SIGNAL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modulation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ADDITIVE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> that modifies the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of an
+<a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a> (typically the <a class="reference internal" href="RecurrentTransferMechanism.html#psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection" title="psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism.RecurrentTransferMechanism.recurrent_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">recurrent_projection</span></code></a>
+of a <a class="reference internal" href="RecurrentTransferMechanism.html"><span class="doc">RecurrentTransferMechanism</span></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>variable</strong> (<em>List</em><em> or </em><em>2d np.array : default None</em>) – it must have a single item that corresponds to the value required by the AutoAssociativeLearningMechanism’s
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>;  it must each be compatible (in number and type)
+with the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Mechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-inputports"><span class="std std-ref">InputPort</span></a> (see
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for additional details).</p></li>
+<li><p><strong>learning_signals</strong> (<em>List</em><em>[</em><em>parameter of Projection</em><em>, </em><a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort" title="psyneulink.core.components.ports.parameterport.ParameterPort"><em>ParameterPort</em></a><em>, </em><em>Projection</em><em>, </em><em>tuple</em><em>[</em><em>str</em><em>, </em><em>Projection</em><em>] or </em><em>dict</em><em>]     </em><em>: default None</em>) – specifies the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> to be learned (see <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signals" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signals</span></code></a> for details of specification).</p></li>
+<li><p><strong>function</strong> (<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction"><em>LearningFunction</em></a><em> or </em><em>function : default Hebbian</em>) – specifies the function used to calculate the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> attribute.  It must take as its <strong>variable</strong> argument a
+list or 1d array of numeric values (the “activity vector”) and return a list, 2d np.array or np.matrix
+representing a square matrix with dimensions that equal the length of its variable (the “weight change
+matrix”).</p></li>
+<li><p><strong>learning_rate</strong> (<em>float : default None</em>) – specifies the learning rate for the AutoAssociativeLearningMechanism. (see <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for details).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable">
+<span class="sig-name descname"><span class="pre">variable</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>has a single item, that serves as the template for the input required by the AutoAssociativeLearningMechanism’s
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, corresponding to the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>2d np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source">
+<span class="sig-name descname"><span class="pre">activity_source</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> that is the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a> of the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection</span></a>
+that the Mechanism trains.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.input_ports">
+<span class="sig-name descname"><span class="pre">input_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>has a single item, that contains the AutoAssociativeLearningMechanism’s single <em>ACTIVATION_INPUT</em> <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ContentAddressableList[<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.primary_learned_projection">
+<span class="sig-name descname"><span class="pre">primary_learned_projection</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.primary_learned_projection" title="Permalink to this definition">¶</a></dt>
+<dd><p>the <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> with the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter being trained by the
+AutoAssociativeLearningMechanism.  It is always the first Projection listed in the
+AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learned_projections" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learned_projections"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learned_projections</span></code></a>
+attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection">AutoAssociativeProjection</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learned_projections">
+<span class="sig-name descname"><span class="pre">learned_projections</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learned_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>all of the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjections</span></a> modified by the
+AutoAssociativeLearningMechanism;  the first item in the list is always the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.primary_learned_projection" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.primary_learned_projection"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">primary_learned_projection</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection">MappingProjection</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function">
+<span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="Permalink to this definition">¶</a></dt>
+<dd><p>the function used to calculate the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>
+(assigned to the AutoAssociativeLearningMechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-learningsignal"><span class="std std-ref">LearningSignal(s)</span></a>).
+It’s <a class="reference internal" href="Functions.html#psyneulink.core.components.functions.function.Function_Base.variable" title="psyneulink.core.components.functions.function.Function_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> must be a list or 1d np.array of numeric entries, corresponding in
+length to the AutoAssociativeLearningMechanism’s <em>ACTIVATION_INPUT</em> (<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary</span></a>) InputPort.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction" title="psyneulink.core.components.functions.learningfunctions.LearningFunction">LearningFunction</a> or function : default Hebbian</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate">
+<span class="sig-name descname"><span class="pre">learning_rate</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_rate" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the learning rate used by the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> to scale the weight change matrix it returns. If it is a scalar, it is used to multiply the weight change matrix;  if it is a 2d array or matrix,
+it is used to Hadamard (elementwise) multiply the weight matrix (allowing the contribution of individual
+<em>connections</em> to be scaled);  if it is a 1d np.array, it is used to Hadamard (elementwise) multiply the input
+to the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (i.e., the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the
+AutoAssociativeLearningMechanism’s <em>ACTIVATION_INPUT</em> <a class="reference internal" href="#autoassociativelearningmechanism-structure"><span class="std std-ref">InputPort</span></a>,
+allowing the contribution of individual <em>units</em> to be scaled). If specified, the value supersedes the
+learning_rate assigned to any <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> or <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which the AutoAssociativeLearningMechanism belongs.
+If it is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> specified for the Process to which the
+AutoAssociativeLearningMechanism belongs belongs is used;  and, if that is <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for the System to which it belongs is used. If all are <code class="xref any docutils literal notranslate"><span class="pre">None</span></code>, then the
+<a class="reference internal" href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_learning_rate</span></code></a> for the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> is used (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-rate"><span class="std std-ref">learning_rate</span></a>
+for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>float, 1d or 2d np.array, or np.matrix of numeric values : default None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal">
+<span class="sig-name descname"><span class="pre">learning_signal</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="Permalink to this definition">¶</a></dt>
+<dd><p>the value returned by <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, that specifies
+the changes to the weights of the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter for the
+AutoAssociativeLearningMechanism’s`learned_projections &lt;AutoAssociativeLearningMechanism.learned_projections&gt;`;
+It is assigned as the value of the AutoAssociativeLearningMechanism’s <a class="reference internal" href="LearningMechanism.html#learningmechanism-learningsignal"><span class="std std-ref">LearningSignal(s)</span></a> and, in turn, its <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjection(s)</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>2d ndarray or matrix of numeric values</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals">
+<span class="sig-name descname"><span class="pre">learning_signals</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all of the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> for the AutoAssociativeLearningMechanism, each of which
+sends one or more <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort(s)</span></a> for
+the <a class="reference internal" href="AutoAssociativeProjection.html#psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix" title="psyneulink.library.components.projections.pathway.autoassociativeprojection.AutoAssociativeProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter of the <a class="reference internal" href="AutoAssociativeProjection.html"><span class="doc">AutoAssociativeProjection(s)</span></a> trained by the AutoAssociativeLearningMechanism.  Although in most instances an
+AutoAssociativeLearningMechanism is used to train a single AutoAssociativeProjection, like a standard
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, it can be assigned additional LearningSignals and/or LearningProjections to train
+additional ones;  in such cases, the <a class="reference internal" href="LearningSignal.html"><span class="doc">value</span></a> for all of the LearningSignals is the
+the same:  the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> attribute, based on its <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.activity_source"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">activity_source</span></code></a>.  Since LearningSignals are <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, they are also listed in the AutoAssociativeLearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a> attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="LearningSignal.html#psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal" title="psyneulink.core.components.ports.modulatorysignals.learningsignal.LearningSignal">LearningSignal</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_projections">
+<span class="sig-name descname"><span class="pre">learning_projections</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of all of the LearningProjections &lt;LearningProjection&gt;` from the AutoAssociativeLearningMechanism, listed
+in the order of the <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> to which they belong (that is, in the order they are
+listed in the <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signals</span></code></a> attribute).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[<a class="reference internal" href="LearningProjection.html#psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection" title="psyneulink.core.components.projections.modulatory.learningprojection.LearningProjection">LearningProjection</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports">
+<span class="sig-name descname"><span class="pre">output_ports</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of the AutoAssociativeLearningMechanism’s <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>, beginning with its
+<a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signals</span></code></a>, and followed by any additional
+(user-specified) <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>ContentAddressableList[<a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_values">
+<span class="sig-name descname"><span class="pre">output_values</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>the first item is the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the LearningMechanism’s <a class="reference internal" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal" title="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a>, followed by the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>s
+of any additional (user-specified) OutputPorts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>2d np.array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._parse_function_variable">
+<span class="sig-name descname"><span class="pre">_parse_function_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._parse_function_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the <strong>variable</strong> passed in to a Component into a function_variable that can be used with the
+Function associated with this Component</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._validate_variable">
+<span class="sig-name descname"><span class="pre">_validate_variable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._validate_variable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that variable has only one item: activation_input.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._execute">
+<span class="sig-name descname"><span class="pre">_execute</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._execute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute AutoAssociativeLearningMechanism. function and return learning_signal</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>(2D np.array) self.learning_signal</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._update_output_ports">
+<span class="sig-name descname"><span class="pre">_update_output_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanism._update_output_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the weights for the AutoAssociativeProjection for which this is the AutoAssociativeLearningMechanism</p>
+<p>Must do this here, so it occurs after LearningMechanism’s OutputPort has been updated.
+This insures that weights are updated within the same trial in which they have been learned</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanismError">
+<em class="property"><span class="pre">exception</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.</span></span><span class="sig-name descname"><span class="pre">AutoAssociativeLearningMechanismError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">error_value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.AutoAssociativeLearningMechanismError" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.DefaultTrainingMechanism">
+<span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.</span></span><span class="sig-name descname"><span class="pre">DefaultTrainingMechanism</span></span><a class="headerlink" href="#psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism.DefaultTrainingMechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism"><code class="xref py py-class docutils literal notranslate"><span class="pre">psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism</span></code></a></p>
+</dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Projections.html" class="btn btn-neutral float-right" title="Projections" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="LearningMechanisms.html" class="btn btn-neutral" title="Learning Mechanisms" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">AutoAssociativeLearningMechanism</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#creating-an-autoassociativelearningmechanism">Creating an AutoAssociativeLearningMechanism</a></li>
+<li><a class="reference internal" href="#structure">Structure</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
