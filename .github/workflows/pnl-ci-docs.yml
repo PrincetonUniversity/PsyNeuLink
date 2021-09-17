@@ -94,14 +94,26 @@ jobs:
       run: git tag 'v999.999.999.999'
 
     - name: Build Documentation
-      run: sphinx-build -b html -aE -j auto docs/source pnl-html
+      run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
 
     - name: Upload Documentation
       uses: actions/upload-artifact@v2.2.4
       with:
         name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
-        path: pnl-html
+        path: docs/build/html
+
+    - name: Store PR number
+      if: ${{ github.event_name == 'pull_request' }}
+      run: echo ${{ github.event.pull_request.number }} > ./pr_number.txt
+
+    - name: Upload PR number for other workflows
+      if: ${{ github.event_name == 'pull_request' }}
+      uses: actions/upload-artifact@v2.2.4
+      with:
+          name: pr_number
+          path: ./pr_number.txt
+
 
   docs-deploy:
     strategy:

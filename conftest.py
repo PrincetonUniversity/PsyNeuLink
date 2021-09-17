@@ -118,7 +118,7 @@ def get_func_execution(func, func_mode):
     elif func_mode == 'Python':
         return func.function
     else:
-        assert False, "Unknown function mode: {}".format(mode)
+        assert False, "Unknown function mode: {}".format(mech_mode)
 
 @pytest.helpers.register
 def get_mech_execution(mech, mech_mode):
@@ -132,7 +132,7 @@ def get_mech_execution(mech, mech_mode):
             return mech.output_values
         return mech_wrapper
     else:
-        assert False, "Unknown mechanism mode: {}".format(mode)
+        assert False, "Unknown mechanism mode: {}".format(mech_mode)
 
 @pytest.helpers.register
 def expand_np_ndarray(arr):

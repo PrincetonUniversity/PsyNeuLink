@@ -775,7 +775,7 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
 
     **Composition with Learning**
 
-    .. figure:: _static/Composition_XOR_animation.gif
+    .. figure:: _images/Composition_XOR_animation.gif
        :alt: Animation of Composition with learning
        :scale: 50 %
 
@@ -9914,7 +9914,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         super()._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
 
         for c in contexts:
-            self.scheduler._delete_counts(c.execution_id)
+            try:
+                self.scheduler._delete_counts(c.execution_id)
+            except AttributeError:
+                self.scheduler._delete_counts(c)
 
     # ******************************************************************************************************************
     #                                           LLVM

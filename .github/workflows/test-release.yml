@@ -180,7 +180,7 @@ jobs:
         TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
 
     - name: Upload dist files to release
-      uses: actions/github-script@v4
+      uses: actions/github-script@v4.1
       with:
         script: |
           const fs = require('fs')
