@@ -199,6 +199,7 @@ import pint
 import psyneulink
 import re
 import types
+import warnings
 
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
@@ -206,7 +207,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA
 from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
+from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comma_str, get_all_explicit_arguments, \
     parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals, convert_to_np_array
 
 __all__ = [
@@ -651,6 +652,14 @@ def _generate_component_string(
     # pnl objects only have one function unless specified in another way
     # than just "function"
     if 'functions' in component_dict:
+        dup_function_names = set([name for name in component_dict['functions'] if name in component_identifiers])
+        if len(dup_function_names) > 0:
+            warnings.warn(
+                f'Functions ({gen_friendly_comma_str(dup_function_names)}) of'
+                f' {name} share names of mechanisms or compositions in this'
+                ' model. This is likely to cause incorrect script reproduction.'
+            )
+
         function_determined_by_output_port = False
 
         try:
