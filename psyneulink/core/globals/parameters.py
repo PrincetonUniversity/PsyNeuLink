@@ -1775,11 +1775,19 @@ class SharedParameter(Parameter):
                     f' cannot be stateful.'
                 )
             obj = obj.values[None]
-        except (AttributeError, KeyError):
+        except AttributeError:
             try:
                 obj = getattr(self._owner._owner, self.attribute_name)
             except AttributeError:
                 return None
+        except KeyError:
+            # KeyError means there is no stored value for this
+            # parameter, which should only occur when the source is
+            # desired for a descriptive parameter attribute value (e.g.
+            # stateful or loggable) and when either self._owner._owner
+            # is a type or is in the process of instantiating a
+            # Parameter for an instance of a Component
+            obj = getattr(self._owner._owner.defaults, self.attribute_name)
 
         try:
             obj = getattr(obj.parameters, self.shared_parameter_name)
