@@ -1050,46 +1050,33 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    def test_modulation_of_random_state(self):
-        src = pnl.ProcessingMechanism()
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
+    @pytest.mark.parametrize("num_trials", [1])
+    @pytest.mark.parametrize("num_generators", [5])
+    def test_modulation_of_random_state(self, mode, num_trials, num_generators):
+        obj = pnl.ObjectiveMechanism()
         mech = pnl.ProcessingMechanism(function=pnl.UniformDist())
 
         comp = pnl.Composition(retain_old_simulation_data=True)
         comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
-        comp.add_node(src)
+        comp.add_linear_processing_pathway([mech, obj])
 
         comp.add_controller(
             pnl.OptimizationControlMechanism(
-                monitor_for_control=src,
+                objective_mechanism=obj,
                 control_signals=pnl.ControlSignal(
                     modulates=('seed', mech),
                     modulation=pnl.OVERRIDE,
-                    allocation_samples=pnl.SampleSpec(start=0, stop=5, step=1),
+                    allocation_samples=pnl.SampleSpec(start=0, stop=num_generators, step=1),
+                    cost_options=pnl.CostFunctions.NONE
                 )
             )
         )
 
-        def seed_check(context):
-            latest_sim = comp.controller.parameters.simulation_ids._get(context)[-1]
-
-            seed = mech.get_mod_seed(latest_sim)
-            rs = mech.function.parameters.random_state.get(latest_sim)
-
-            # mech (and so its function and random_state) should be called
-            # exactly twice in one trial given the specified condition,
-            # and the random_state should be reset before the first execution
-            new_rs = np.random.RandomState([int(seed)])
-
-            for i in range(2):
-                new_rs.uniform(0, 1)
-
-            assert rs.uniform(0, 1) == new_rs.uniform(0, 1)
-
-        comp.termination_processing = {pnl.TimeScale.TRIAL: pnl.AfterNCalls(mech, 2)}
-        comp.run(
-            inputs={src: [1], mech: [1]},
-            call_after_trial=seed_check
-        )
+        comp.run(inputs={mech: [1]}, num_trials=num_trials, execution_mode=mode)
+        all_generator_samples = [np.random.RandomState([seed]).uniform(0, 1) for seed in range(num_generators)]
+        # Check that we select the minimum of generated values
+        assert np.allclose(min(all_generator_samples), comp.results[0])
 
 
 class TestModelBasedOptimizationControlMechanisms:
