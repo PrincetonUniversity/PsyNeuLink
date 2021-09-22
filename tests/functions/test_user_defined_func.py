@@ -476,6 +476,7 @@ def test_user_def_func_return(dtype, expected, func_mode, benchmark):
 @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
                 ("TANH", [[1, 3]], [0.76159416, 0.99505475]),
                 ("EXP", [[1, 3]], [2.71828183, 20.08553692]),
+                ("SQRT", [[1, 3]], [1.0, 1.7320508075688772]),
                 ("SHAPE", [1, 2], [2]),
                 ("SHAPE", [[1, 3]], [1, 2]),
                 ("ASTYPE_FLOAT", [1], [1.0]),
@@ -504,6 +505,9 @@ def test_user_def_func_numpy(op, variable, expected, func_mode, benchmark):
     elif op == "EXP":
         def myFunction(variable):
             return np.exp(variable)
+    elif op == "SQRT":
+        def myFunction(variable):
+            return np.sqrt(variable)
     elif op == "SHAPE":
         def myFunction(variable):
             return variable.shape

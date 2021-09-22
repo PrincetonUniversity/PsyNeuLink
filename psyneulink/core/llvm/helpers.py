@@ -136,6 +136,9 @@ def exp(ctx, builder, x):
     exp_f = ctx.get_builtin("exp", [x.type])
     return builder.call(exp_f, [x])
 
+def sqrt(ctx, builder, x):
+    sqrt_f = ctx.get_builtin("sqrt", [x.type])
+    return builder.call(sqrt_f, [x])
 
 def tanh(ctx, builder, x):
     tanh_f = ctx.get_builtin("tanh", [x.type])

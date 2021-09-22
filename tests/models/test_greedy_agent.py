@@ -133,48 +133,72 @@ def test_predator_prey(benchmark, mode, samples):
     benchmark.group = "Predator-Prey " + str(len(samples))
     obs_len = 3
     obs_coords = 2
-    player_idx = 0
-    player_obs_start_idx = player_idx * obs_len
-    player_value_idx = player_idx * obs_len + obs_coords
-    player_coord_slice = slice(player_obs_start_idx,player_value_idx)
-    predator_idx = 1
-    predator_obs_start_idx = predator_idx * obs_len
-    predator_value_idx = predator_idx * obs_len + obs_coords
-    predator_coord_slice = slice(predator_obs_start_idx,predator_value_idx)
-    prey_idx = 2
-    prey_obs_start_idx = prey_idx * obs_len
-    prey_value_idx = prey_idx * obs_len + obs_coords
-    prey_coord_slice = slice(prey_obs_start_idx,prey_value_idx)
 
     player_len = prey_len = predator_len = obs_coords
+
+    # Input Mechanisms
+    player_pos = ProcessingMechanism(size=player_len, name="PLAYER POS")
+    prey_pos = ProcessingMechanism(size=prey_len, name="PREY POS")
+    predator_pos = ProcessingMechanism(size=predator_len, name="PREDATOR POS")
 
     # Perceptual Mechanisms
     player_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PLAYER OBS")
     prey_obs = ProcessingMechanism(size=prey_len, function=GaussianDistort, name="PREY OBS")
     predator_obs = TransferMechanism(size=predator_len, function=GaussianDistort, name="PREDATOR OBS")
 
-    # Action Mechanism
-    #    Use ComparatorMechanism to compute direction of action as difference of coordinates between player and prey:
-    #    note: unitization is done in main loop, to allow compilation of LinearCombination function) (TBI)
-    greedy_action_mech = ComparatorMechanism(name='ACTION',sample=player_obs,target=prey_obs)
+
+    def action_fn(variable):
+        predator_pos = variable[0]
+        player_pos = variable[1]
+        prey_pos = variable[2]
+
+        # Directions away from predator and towards prey
+        pred_2_player = player_pos - predator_pos
+        play_2_prey = prey_pos - player_pos
+
+        # Distances to predator and prey
+        distance_predator = np.sqrt(pred_2_player[0] * pred_2_player[0] + pred_2_player[1] * pred_2_player[1])
+        distance_prey = np.sqrt(play_2_prey[0] * play_2_prey[0] + play_2_prey[1] * play_2_prey[1])
+
+        # Normalized directions from predator and towards prey
+        pred_2_player_norm = pred_2_player / distance_predator
+        play_2_prey_norm = play_2_prey / distance_prey
+
+        # Weighted directions from predator and towards prey
+        # weights are reversed so closer agent has greater impact on movement
+        pred_2_player_n = pred_2_player_norm * (distance_prey / (distance_predator + distance_prey))
+        play_2_prey_n = play_2_prey_norm * (distance_predator / (distance_predator + distance_prey))
+
+        return pred_2_player_n + play_2_prey_n
+
+    # note: unitization is done in main loop
+    greedy_action_mech = pnl.ProcessingMechanism(function=action_fn, input_ports=["predator", "player", "prey"],
+                                                 default_variable=[[0,0],[0,0],[0,0]], name="ACTION")
+
+    direct_move = ComparatorMechanism(name='DIRECT MOVE',sample=player_pos, target=prey_pos)
 
     # Create Composition
     agent_comp = Composition(name='PREDATOR-PREY COMPOSITION')
-    agent_comp.add_node(player_obs)
-    agent_comp.add_node(predator_obs)
-    agent_comp.add_node(prey_obs)
+    agent_comp.add_linear_processing_pathway([player_pos, player_obs])
+    agent_comp.add_linear_processing_pathway([prey_pos, prey_obs])
+    agent_comp.add_linear_processing_pathway([predator_pos, predator_obs])
     agent_comp.add_node(greedy_action_mech)
-    agent_comp.exclude_node_roles(predator_obs, NodeRole.OUTPUT)
+    agent_comp.add_node(direct_move)
+    agent_comp.add_projection(pnl.MappingProjection(predator_obs, greedy_action_mech.input_ports[0]))
+    agent_comp.add_projection(pnl.MappingProjection(prey_obs, greedy_action_mech.input_ports[1]))
+    agent_comp.add_projection(pnl.MappingProjection(player_obs, greedy_action_mech.input_ports[2]))
+    agent_comp.exclude_node_roles(direct_move, NodeRole.OUTPUT)
 
-    ocm = OptimizationControlMechanism(state_features={SHADOW_INPUTS: [player_obs, predator_obs, prey_obs]},
+
+    ocm = OptimizationControlMechanism(state_features={SHADOW_INPUTS: [player_pos, predator_pos, prey_pos]},
                                        agent_rep=agent_comp,
                                        function=GridSearch(direction=MINIMIZE,
                                                            save_values=True),
 
                                        objective_mechanism=ObjectiveMechanism(function=Distance(metric=NORMED_L0_SIMILARITY),
                                                                               monitor=[
-                                                                                  player_obs,
-                                                                                  prey_obs
+                                                                                  greedy_action_mech,
+                                                                                  direct_move
                                                                               ]),
                                        control_signals=[ControlSignal(modulates=(VARIANCE,player_obs),
                                                                       allocation_samples=samples),
@@ -188,18 +212,14 @@ def test_predator_prey(benchmark, mode, samples):
     agent_comp.enable_controller = True
     ocm.comp_execution_mode = ocm_mode
 
-    input_dict = {player_obs:[[1.1576537,  0.60782117]],
-                  predator_obs:[[-0.03479106, -0.47666293]],
-                  prey_obs:[[-0.60836214,  0.1760381 ]],
+    input_dict = {player_pos:[[1.1576537,  0.60782117]],
+                  predator_pos:[[-0.03479106, -0.47666293]],
+                  prey_pos:[[-0.60836214,  0.1760381 ]],
                  }
     run_results = agent_comp.run(inputs=input_dict, num_trials=2, execution_mode=mode)
 
     if len(samples) == 2:
-        # KDM 12/4/19: modified results due to global seed offset of
-        # GaussianDistort assignment.
-        # to produce old numbers, run get_global_seed once before creating
-        # each Mechanism with GaussianDistort above
-        assert np.allclose(run_results[0], [[-10.06333025,   2.4845505 ]])
+        assert np.allclose(run_results[0], [[ 0.97052163, -0.13433325]])
         if mode is pnl.ExecutionMode.Python:
             assert np.allclose(ocm.state_feature_values, [[ 1.1576537,   0.60782117],
                                                           [-0.03479106, -0.47666293],
