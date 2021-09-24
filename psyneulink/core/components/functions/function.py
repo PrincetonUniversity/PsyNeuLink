@@ -616,11 +616,10 @@ class Function_Base(Function):
         new = super().__deepcopy__(memo)
         # ensure copy does not have identical name
         register_category(new, Function_Base, new.name, FunctionRegistry)
-        try:
+        if "random_state" in new.parameters:
             # HACK: Make sure any copies are re-seeded to avoid dependent RNG.
-            new.random_state.seed([get_global_seed()])
-        except:
-            pass
+            # functions with "random_state" param must have "seed" parameter
+            new.seed.base = DEFAULT_SEED
         return new
 
     @handle_external_context()
