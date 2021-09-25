@@ -1095,7 +1095,17 @@ class Projection_Base(Projection):
             sender_mech = None
 
         if not isinstance(self.receiver, type):
-            receiver_name = parse_valid_identifier(self.receiver.name)
+            try:
+                num_path_afferents = len(self.receiver.path_afferents)
+            except PortError:
+                # ParameterPort as receiver
+                num_path_afferents = 0
+
+            if num_path_afferents > 1:
+                receiver_name = parse_valid_identifier(f'input_port_{self.name}')
+            else:
+                receiver_name = parse_valid_identifier(self.receiver.name)
+
             if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
                 receiver_mech = parse_valid_identifier(self.receiver.owner.composition.name)
             else:

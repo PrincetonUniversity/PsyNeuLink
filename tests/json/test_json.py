@@ -29,6 +29,8 @@ json_results_parametrization = [
     ('model_basic_non_identity.py', 'comp', '{A: 1}', False),
     ('model_udfs.py', 'comp', '{A: 10}', True),
     ('model_udfs.py', 'comp', '{A: 10}', False),
+    ('model_varied_matrix_sizes.py', 'comp', '{A: [1, 2]}', True),
+    ('model_varied_matrix_sizes.py', 'comp', '{A: [1, 2]}', False),
     pytest.param(
         'model_nested_comp_with_scheduler.py',
         'comp',
@@ -165,6 +167,7 @@ def test_write_json_file_multiple_comps(
         ('model_basic_non_identity.py', 'comp', {'A': [[1.0]]}, True),  # requires simple edges
         ('model_udfs.py', 'comp', {'A': [[10.0]]}, True),
         ('model_udfs.py', 'comp', {'A': 10}, False),
+        ('model_varied_matrix_sizes.py', 'comp', {'A': [[1.0, 2.0]]}, True),
     ]
 )
 def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format):

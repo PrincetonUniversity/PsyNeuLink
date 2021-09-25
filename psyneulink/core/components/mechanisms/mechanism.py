@@ -1108,7 +1108,7 @@ from psyneulink.core.globals.keywords import \
     MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
+    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
@@ -4132,10 +4132,48 @@ class Mechanism_Base(Mechanism):
             model.parameters.append(mdf.Parameter(id=name, value=val))
 
         for ip in self.input_ports:
-            ip_model = ip.as_mdf_model()
-            ip_model.id = f'{parse_valid_identifier(self.name)}_{ip_model.id}'
+            if len(ip.path_afferents) > 1:
+                for aff in ip.path_afferents:
+                    ip_model = mdf.InputPort(
+                        id=parse_valid_identifier(f'{self.name}_input_port_{aff.name}'),
+                        shape=str(aff.defaults.value.shape),
+                        type=str(aff.defaults.value.dtype)
+                    )
+                    model.input_ports.append(ip_model)
 
-            model.input_ports.append(ip_model)
+                # create combination function
+                model.parameters.append(
+                    mdf.Parameter(
+                        id='combination_function_input_data',
+                        value=f"[{', '.join(f'{mip.id}' for mip in model.input_ports)}]"
+                    )
+                )
+                combination_function_id = f'{parse_valid_identifier(self.name)}_{MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION}'
+                model.functions.append(
+                    mdf.Function(
+                        id=combination_function_id,
+                        function='onnx::ReduceSum',
+                        args={
+                            'data': "combination_function_input_data",
+                            'axes': 0
+                        }
+                    )
+                )
+                combination_function_dimreduce_id = f'{combination_function_id}_dimreduce'
+                model.functions.append(
+                    mdf.Function(
+                        id=combination_function_dimreduce_id,
+                        value=f'{MODEL_SPEC_ID_MDF_VARIABLE}[0][0]',
+                        args={
+                            MODEL_SPEC_ID_MDF_VARIABLE: combination_function_id,
+                        }
+                    )
+                )
+            else:
+                ip_model = ip.as_mdf_model()
+                ip_model.id = f'{parse_valid_identifier(self.name)}_{ip_model.id}'
+
+                model.input_ports.append(ip_model)
 
         for op in self.output_ports:
             op_model = op.as_mdf_model()
@@ -4144,8 +4182,13 @@ class Mechanism_Base(Mechanism):
             model.output_ports.append(op_model)
 
         function_model = self.function.as_mdf_model()
-        # primary input port
-        function_model.args[_get_variable_parameter_name(self.function)] = model.input_ports[0].id
+
+        if len(ip.path_afferents) > 1:
+            primary_function_input_name = combination_function_dimreduce_id
+        else:
+            primary_function_input_name = model.input_ports[0].id
+
+        function_model.args[_get_variable_parameter_name(self.function)] = primary_function_input_name
         model.functions.append(function_model)
 
         return model

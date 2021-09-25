@@ -204,7 +204,7 @@ import warnings
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comma_str, get_all_explicit_arguments, \
@@ -687,7 +687,10 @@ def _generate_component_string(
         if function_determined_by_output_port and MODEL_SPEC_ID_PARAMETER_VALUE in primary_output_port:
             parameter_names['function'] = re.sub(r'(.*)\[\d+\]', '\\1', primary_output_port[MODEL_SPEC_ID_PARAMETER_VALUE])
         else:
-            parameter_names['function'] = list(component_dict['functions'])[0]
+            parameter_names['function'] = [
+                f for f in component_dict['functions']
+                if not f.endswith(MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION)
+            ][0]
 
         parameters['function'] = {
             parameter_names['function']: component_dict['functions'][parameter_names['function']]
