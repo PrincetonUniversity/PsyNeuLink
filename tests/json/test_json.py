@@ -58,7 +58,7 @@ def test_json_results_equivalence(
     exec(pnl.generate_script_from_json(json_summary))
     exec(f'{composition_name}.run(inputs={input_dict_str})')
     new_results = eval(f'{composition_name}.results')
-    assert orig_results == new_results
+    assert pnl.safe_equals(orig_results, new_results)
 
 
 @pytest.mark.parametrize(
@@ -87,7 +87,7 @@ def test_write_json_file(
     # exec(f'{composition_name}.run(inputs={input_dict_str})')
     exec(f'pnl.get_compositions()[0].run(inputs={input_dict_str})')
     final_results = eval(f'{composition_name}.results')
-    assert orig_results == final_results
+    assert pnl.safe_equals(orig_results, final_results)
 
 
 @pytest.mark.parametrize(
