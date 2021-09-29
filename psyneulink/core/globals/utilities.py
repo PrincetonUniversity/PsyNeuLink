@@ -195,15 +195,15 @@ def is_modulation_operation(val):
     return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
-        x = operation(1, 2)
-        if x == 1:
-            return MODULATION_OVERRIDE
-        elif x == 2:
-            return MODULATION_MULTIPLY
-        elif x == 3:
-            return MODULATION_ADD
-        else:
-            return False
+    x = operation(1, 2)
+    if x == 1:
+        return MODULATION_OVERRIDE
+    elif x == 2:
+        return MODULATION_MULTIPLY
+    elif x == 3:
+        return MODULATION_ADD
+    else:
+        return False
 
 
 
@@ -1204,7 +1204,7 @@ class ContentAddressableList(UserList):
             key_num = self._get_key_for_item(key)
             if key_num is None:
                 # raise TypeError("\'{}\' is not a key in the {} being addressed".
-                                # format(key, self.__class__.__name__))
+                #                 format(key, self.__class__.__name__))
                 # raise KeyError("\'{}\' is not a key in {}".
                 raise TypeError("\'{}\' is not a key in {}".
                                 format(key, self.name))

@@ -495,39 +495,39 @@ class TestHebbian:
 class TestReinforcement:
 
     def test_rl(self):
-            input_layer = pnl.TransferMechanism(size=2,
-                                                name='Input Layer')
-            input_layer.log.set_log_conditions(items=pnl.VALUE)
-            action_selection = pnl.DDM(input_format=pnl.ARRAY,
-                                       function=pnl.DriftDiffusionAnalytical(),
-                                       output_ports=[pnl.SELECTED_INPUT_ARRAY],
-                                       name='DDM')
-            action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
+        input_layer = pnl.TransferMechanism(size=2,
+                                            name='Input Layer')
+        input_layer.log.set_log_conditions(items=pnl.VALUE)
+        action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                                   function=pnl.DriftDiffusionAnalytical(),
+                                   output_ports=[pnl.SELECTED_INPUT_ARRAY],
+                                   name='DDM')
+        action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
-            comp = pnl.Composition(name='comp')
-            learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
-                                                                          learning_rate=0.05)
-            learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
-            learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
-            target_mechanism = learning_pathway.target
-            comparator_mechanism = learning_pathway.learning_objective
+        comp = pnl.Composition(name='comp')
+        learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+                                                                      learning_rate=0.05)
+        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
+        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+        target_mechanism = learning_pathway.target
+        comparator_mechanism = learning_pathway.learning_objective
 
-            learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
+        learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
-            inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
-                           target_mechanism: [[10.], [10.]]
-                           }
-            learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
-            comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+        inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
+                       target_mechanism: [[10.], [10.]]
+                       }
+        learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+        comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
 
-            target_mechanism.log.set_log_conditions(items=pnl.VALUE)
-            comp.learn(inputs=inputs_dict)
+        target_mechanism.log.set_log_conditions(items=pnl.VALUE)
+        comp.learn(inputs=inputs_dict)
 
 
-            assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                        [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                        [1.85006765]])
+        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
+        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
+                                                    [1.85006765]])
 
     def test_reinforcement_fixed_targets(self):
         input_layer = pnl.TransferMechanism(size=2,
@@ -1326,56 +1326,56 @@ class TestReinforcement:
                                        err_msg="mismatch on timestep {}".format(i))
 
     def test_rl_enable_learning_false(self):
-            input_layer = pnl.TransferMechanism(size=2,
-                                                name='Input Layer')
-            input_layer.log.set_log_conditions(items=pnl.VALUE)
-            action_selection = pnl.DDM(input_format=pnl.ARRAY,
-                                       function=pnl.DriftDiffusionAnalytical(),
-                                       output_ports=[pnl.SELECTED_INPUT_ARRAY],
-                                       name='DDM')
-            action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
+        input_layer = pnl.TransferMechanism(size=2,
+                                            name='Input Layer')
+        input_layer.log.set_log_conditions(items=pnl.VALUE)
+        action_selection = pnl.DDM(input_format=pnl.ARRAY,
+                                   function=pnl.DriftDiffusionAnalytical(),
+                                   output_ports=[pnl.SELECTED_INPUT_ARRAY],
+                                   name='DDM')
+        action_selection.log.set_log_conditions(items=pnl.SELECTED_INPUT_ARRAY)
 
-            comp = pnl.Composition(name='comp')
-            learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
-                                                                          learning_rate=0.05)
-            learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
-            learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
-            target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
-            comparator_mechanism = learning_pathway.learning_components[pnl.OBJECTIVE_MECHANISM]
+        comp = pnl.Composition(name='comp')
+        learning_pathway = comp.add_reinforcement_learning_pathway(pathway=[input_layer, action_selection],
+                                                                      learning_rate=0.05)
+        learned_projection = learning_pathway.learning_components[pnl.LEARNED_PROJECTIONS]
+        learning_mechanism = learning_pathway.learning_components[pnl.LEARNING_MECHANISMS]
+        target_mechanism = learning_pathway.learning_components[pnl.TARGET_MECHANISM]
+        comparator_mechanism = learning_pathway.learning_components[pnl.OBJECTIVE_MECHANISM]
 
-            learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
+        learned_projection.log.set_log_conditions(items=["matrix", "mod_matrix"])
 
-            inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
-                           target_mechanism: [[10.], [10.]]
-                           }
-            learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
-            comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+        inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
+                       target_mechanism: [[10.], [10.]]
+                       }
+        learning_mechanism.log.set_log_conditions(items=[pnl.VALUE])
+        comparator_mechanism.log.set_log_conditions(items=[pnl.VALUE])
 
-            target_mechanism.log.set_log_conditions(items=pnl.VALUE)
-            comp.learn(inputs=inputs_dict)
+        target_mechanism.log.set_log_conditions(items=pnl.VALUE)
+        comp.learn(inputs=inputs_dict)
 
 
-            assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                        [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                        [1.85006765]])
+        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
+        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
+                                                    [1.85006765]])
 
-            # Pause learning -- values are the same as the previous trial (because we pass in the same inputs)
-            inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
-            comp.run(inputs=inputs_dict)
-            assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
-                                                        [2.08614798], [1.85006765], [2.30401336], [2.08614798],
-                                                        [1.85006765]])
+        # Pause learning -- values are the same as the previous trial (because we pass in the same inputs)
+        inputs_dict = {input_layer: [[1., 1.], [1., 1.]]}
+        comp.run(inputs=inputs_dict)
+        assert np.allclose(learning_mechanism.value, [np.array([0.4275, 0.]), np.array([0.4275, 0.])])
+        assert np.allclose(action_selection.value, [[1.], [2.30401336], [0.97340301], [0.02659699], [2.30401336],
+                                                    [2.08614798], [1.85006765], [2.30401336], [2.08614798],
+                                                    [1.85006765]])
 
-            # Resume learning
-            inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
-                           target_mechanism: [[10.], [10.]]}
-            comp.learn(inputs=inputs_dict)
-            assert np.allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])])
-            assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
-                                                        [0.118109771], [1.32123733], [0.978989672], [0.118109771],
-                                                        [1.32123733]])
+        # Resume learning
+        inputs_dict = {input_layer: [[1., 1.], [1., 1.]],
+                       target_mechanism: [[10.], [10.]]}
+        comp.learn(inputs=inputs_dict)
+        assert np.allclose(learning_mechanism.value, [np.array([0.38581875, 0.]), np.array([0.38581875, 0.])])
+        assert np.allclose(action_selection.value, [[1.], [0.978989672], [0.99996], [0.0000346908466], [0.978989672],
+                                                    [0.118109771], [1.32123733], [0.978989672], [0.118109771],
+                                                    [1.32123733]])
 
     def test_td_enabled_learning_false(self):
 

@@ -1762,14 +1762,12 @@ class GridSearch(OptimizationFunction):
 
 
             ocm = self._get_optimized_controller()
-            if ocm is not None and \
-               (ocm.parameters.comp_execution_mode._get(context) == "PTX" or
-                ocm.parameters.comp_execution_mode._get(context) == "LLVM"):
-                    opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
-                    # This should not be evaluated unless needed
-                    all_samples = [itertools.product(*self.search_space)]
-                    value_optimal = opt_value
-                    sample_optimal = opt_sample
+            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+                opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
+                # This should not be evaluated unless needed
+                all_samples = [itertools.product(*self.search_space)]
+                value_optimal = opt_value
+                sample_optimal = opt_sample
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,

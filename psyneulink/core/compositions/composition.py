@@ -5755,8 +5755,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 raise ProjectionError(str(error.error_value))
 
                     except (InputPortError, ProjectionError, MappingError) as error:
-                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                                   f"{str(error.error_value)}")
+                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                               f"{str(error.error_value)}")
 
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
@@ -7177,8 +7177,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                     receiver = input_port)
                                     shadow_proj._activate_for_compositions(self)
                             else:
-                                    shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                                    shadow_proj._activate_for_compositions(self)
+                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
+                                shadow_proj._activate_for_compositions(self)
                     except DuplicateProjectionError:
                         continue
             for proj in input_port.path_afferents:
@@ -9208,16 +9208,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
             # method, because there's no way to tell from within the execute method whether or not we are at the last trial
             # of the run.
-            if (self.controller_time_scale == TimeScale.RUN and
-                scheduler.get_clock(context).time.trial == 0):
-                    self._execute_controller(
-                        relative_order=BEFORE,
-                        execution_mode=execution_mode,
-                        _comp_ex=_comp_ex,
-                        report=report,
-                        report_num=report_num,
-                        context=context
-                    )
+            if self.controller_time_scale == TimeScale.RUN and scheduler.get_clock(context).time.trial == 0:
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    execution_mode=execution_mode,
+                    _comp_ex=_comp_ex,
+                    report=report,
+                    report_num=report_num,
+                    context=context
+                )
             elif self.controller_time_scale == TimeScale.TRIAL:
                 self._execute_controller(
                     relative_order=BEFORE,
