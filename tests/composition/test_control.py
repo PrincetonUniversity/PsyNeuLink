@@ -1051,13 +1051,18 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
-    @pytest.mark.parametrize("num_trials", [1])
     @pytest.mark.parametrize("num_generators", [5])
-    def test_modulation_of_random_state(self, mode, num_trials, num_generators):
+    def test_modulation_of_random_state(self, mode, num_generators):
         obj = pnl.ObjectiveMechanism()
-        mech = pnl.ProcessingMechanism(function=pnl.UniformDist())
+        # Set original seed that is not used by any evaluation
+        # this prevents dirty state from initialization skewing the results.
+        # The alternative would be to set:
+        # mech.functions.seed.base = mech.functions.seed.base
+        # to reset the PRNG
+        mech = pnl.ProcessingMechanism(function=pnl.UniformDist(seed=num_generators))
 
-        comp = pnl.Composition(retain_old_simulation_data=True)
+        comp = pnl.Composition(retain_old_simulation_data=True,
+                               controller_mode=pnl.BEFORE)
         comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
         comp.add_linear_processing_pathway([mech, obj])
 
@@ -1067,16 +1072,30 @@ class TestControlMechanisms:
                 control_signals=pnl.ControlSignal(
                     modulates=('seed', mech),
                     modulation=pnl.OVERRIDE,
-                    allocation_samples=pnl.SampleSpec(start=0, stop=num_generators, step=1),
+                    allocation_samples=pnl.SampleSpec(start=0, stop=num_generators - 1, step=1),
                     cost_options=pnl.CostFunctions.NONE
                 )
             )
         )
 
-        comp.run(inputs={mech: [1]}, num_trials=num_trials, execution_mode=mode)
-        all_generator_samples = [np.random.RandomState([seed]).uniform(0, 1) for seed in range(num_generators)]
-        # Check that we select the minimum of generated values
-        assert np.allclose(min(all_generator_samples), comp.results[0])
+        comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
+
+        # Construct expected results.
+        # First all generators rest their sequence.
+        # In the second trial, the "winning" seed from the previous one continues its
+        # random sequence
+        all_generators = [np.random.RandomState([seed]) for seed in range(num_generators)]
+        first_generator_samples = [g.uniform(0, 1) for g in all_generators]
+        best_first = max(first_generator_samples)
+        index_best = first_generator_samples.index(best_first)
+        second_generator_samples = [g.uniform(0, 1) for g in all_generators]
+        second_considerations = first_generator_samples[:index_best] + \
+                                second_generator_samples[index_best:index_best + 1] + \
+                                first_generator_samples[index_best + 1:]
+        best_second = max(second_considerations)
+        # Check that we select the maximum of generated values
+        assert np.allclose(best_first, comp.results[0])
+        assert np.allclose(best_second, comp.results[1])
 
 
 class TestModelBasedOptimizationControlMechanisms:
