@@ -94,10 +94,9 @@ Class Reference
 
 """
 
-from psyneulink.core.components.projections.projection import Projection_Base, ProjectionRegistry
+from psyneulink.core.components.projections.projection import Projection_Base
 from psyneulink.core.globals.keywords import MODULATORY_PROJECTION, NAME
-from psyneulink.core.globals.log import ContextFlags, LogEntry
-from psyneulink.core.globals.registry import remove_instance_from_registry
+from psyneulink.core.globals.log import ContextFlags
 
 
 __all__ = [
