@@ -1811,9 +1811,9 @@ class Report:
                         self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
                     if self._record_reports:
                         with self._recording_console.capture() as capture:
-                            if report_type is EXECUTE_REPORT:
+                            if report_type == EXECUTE_REPORT:
                                 self._recording_console.print(output_report.trial_report)
-                            elif report_type is RUN_REPORT:
+                            elif report_type == RUN_REPORT:
                                 self._recording_console.print(output_report.run_report)
                         self._recorded_reports += capture.get()
 

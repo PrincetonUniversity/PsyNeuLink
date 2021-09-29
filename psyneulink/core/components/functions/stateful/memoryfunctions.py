@@ -1606,7 +1606,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
 
             # If duplicate_entries_allowed is True or OVERWRITE, replace value for matching entry:
             # FIX: SHOULD BE OVERWRITE or False
-            elif matches and self.duplicate_entries_allowed is OVERWRITE:
+            elif matches and self.duplicate_entries_allowed == OVERWRITE:
                 if len(matches)>1:
                     # If there is already more than one duplicate, raise error as it is not clear what to overwrite
                     raise FunctionError(f"Attempt to store item ({entry}) in {self.name} "
