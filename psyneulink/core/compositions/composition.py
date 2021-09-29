@@ -8823,7 +8823,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Animate controller (before execution)
                 context.execution_phase = ContextFlags.CONTROL
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 

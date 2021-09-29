@@ -2032,7 +2032,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[A,D,E])
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {A})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {E,C})
@@ -2057,7 +2057,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[D,B,E])
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {A,D})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C})
@@ -2084,7 +2084,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[D,E,A])
             comp.add_backpropagation_learning_pathway(pathway=[A,B,C])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C})
@@ -2107,7 +2107,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[A,D])
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {B})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {D, C})
@@ -2130,7 +2130,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[D,A,E])
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,B})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {E,C})
@@ -2153,7 +2153,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[D,A])
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,B})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C})
@@ -2176,7 +2176,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[C,A,D])
             comp.add_backpropagation_learning_pathway(pathway=[B,A])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {C,B})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {D})
@@ -2199,7 +2199,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[D,E,A])
             comp.add_backpropagation_learning_pathway(pathway=[C,B,A])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,C})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {A})
@@ -2227,7 +2227,7 @@ class TestBackProp:
             comp = pnl.Composition(name=configuration)
             comp.add_backpropagation_learning_pathway(pathway=[E,A,B,C])
             comp.add_backpropagation_learning_pathway(pathway=[A,D,C,F])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {E})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {F})
@@ -2258,7 +2258,7 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[B,A,C])
             comp.add_backpropagation_learning_pathway(pathway=[E,B,F])
             comp.add_backpropagation_learning_pathway(pathway=[H,D,G,I])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {E,H})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {C,I})
@@ -2283,7 +2283,7 @@ class TestBackProp:
             comp.add_backpropagation_learning_pathway(pathway=[D,E,A])
             comp.add_backpropagation_learning_pathway(pathway=[C,B,F])
             comp.add_backpropagation_learning_pathway(pathway=[B,A])
-            if show_graph == True:
+            if show_graph is True:
                 comp.show_graph(show_learning=True)
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.INPUT) for n in {D,C})
             assert all(n in comp.get_nodes_by_role(pnl.NodeRole.OUTPUT) for n in {A,F})
