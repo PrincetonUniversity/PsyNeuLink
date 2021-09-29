@@ -773,8 +773,8 @@ class Function_Base(Function):
             'multiplicative_param', 'additive_param',
         })
 
-# *****************************************   EXAMPLE FUNCTION   *******************************************************
 
+# *****************************************   EXAMPLE FUNCTION   *******************************************************
 PROPENSITY = "PROPENSITY"
 PERTINACITY = "PERTINACITY"
 

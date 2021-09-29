@@ -1213,6 +1213,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         return self.convert_output_type(adjusted_value, variable)
         # MODIFIED 6/21/19 END
 
+
 S_MINUS_L = 's-l'
 L_MINUS_S = 'l-s'
 OPERATIONS = {PRODUCT, SUM, S_MINUS_L, L_MINUS_S}

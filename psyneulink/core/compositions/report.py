@@ -342,6 +342,7 @@ class ReportParams(Enum):
     LOGGED = auto()
     ALL = auto()
 
+
 MODULATED = ReportParams.MODULATED
 CONTROLLED = ReportParams.CONTROLLED
 MONITORED = ReportParams.MONITORED
@@ -467,6 +468,7 @@ class ReportDevices(Flag):
     RECORD = auto()
     DIVERT = auto()
     PNL_VIEW = auto()
+
 
 CONSOLE = ReportDevices.CONSOLE
 RECORD = ReportDevices.RECORD

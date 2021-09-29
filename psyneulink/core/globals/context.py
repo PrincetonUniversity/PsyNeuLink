@@ -235,6 +235,7 @@ class ContextFlags(enum.IntFlag):
         string += ", ".join(flagged_items)
         return string
 
+
 INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
                                ContextFlags.VALIDATING,

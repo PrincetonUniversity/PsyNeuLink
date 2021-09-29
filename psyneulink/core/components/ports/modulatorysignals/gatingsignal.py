@@ -268,6 +268,7 @@ class GatingSignalError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 gating_signal_keywords = {GATE}
 # gating_signal_keywords.update(modulatory_signal_keywords)
 

@@ -238,8 +238,8 @@ class AutoNumber(IntEnum):
         obj._value_ = value
         return obj
 
-# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 
+# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 TEST_CONDTION = False
 
 
