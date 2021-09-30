@@ -253,14 +253,14 @@ class OneHot(SelectionFunction):
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
-    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         idx_ptr = builder.alloca(ctx.int32_ty)
         builder.store(ctx.int32_ty(0), idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
             rng_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             dice_ptr = builder.alloca(ctx.float_ty)
-            mt_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+            mt_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             builder.call(rng_f, [mt_state_ptr, dice_ptr])
             dice = builder.load(dice_ptr)
             sum_ptr = builder.alloca(ctx.float_ty)

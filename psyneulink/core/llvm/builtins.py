@@ -527,6 +527,8 @@ def _setup_mt_rand_init_scalar(ctx, state_ty):
 
     pidx = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
     builder.store(pidx.type.pointee(_MERSENNE_N), pidx)
+    seed_p = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+    builder.store(seed, seed_p)
     builder.ret_void()
 
     return builder.function
@@ -615,6 +617,10 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
 
     # set the 0th element to INT_MIN
     builder.store(a_0.type.pointee(0x80000000), a_0)
+
+    # store used seed
+    used_seed_p = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+    builder.store(seed, used_seed_p)
     builder.ret_void()
 
     return builder.function
@@ -842,7 +848,8 @@ def get_mersenne_twister_state_struct(ctx):
         ir.ArrayType(ctx.int32_ty, _MERSENNE_N),  # array
         ctx.int32_ty,   # index
         ctx.int32_ty,   # last_gauss available
-        ctx.float_ty])  # last_gauss
+        ctx.float_ty,   # last_gauss
+        ctx.int32_ty])  # used seed
 
 
 def setup_mersenne_twister(ctx):

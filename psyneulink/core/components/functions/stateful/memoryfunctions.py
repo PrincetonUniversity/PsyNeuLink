@@ -2243,7 +2243,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        rand_struct = ctx.get_random_state_ptr(builder, self, state, params)
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
