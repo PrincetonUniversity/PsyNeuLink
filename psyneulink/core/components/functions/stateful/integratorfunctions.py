@@ -2485,7 +2485,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
         rand_val_ptr = builder.alloca(ctx.float_ty)
         rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(rand_f, [random_state, rand_val_ptr])

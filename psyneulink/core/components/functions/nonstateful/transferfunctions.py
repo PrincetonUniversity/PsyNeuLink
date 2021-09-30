@@ -2249,7 +2249,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
         normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 

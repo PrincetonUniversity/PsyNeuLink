@@ -1085,6 +1085,27 @@ class TestControlMechanisms:
         assert np.allclose(ret, expected)
         assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
 
+    @pytest.mark.benchmark
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_modulation_of_random_state_direct(self, comp_mode, benchmark):
+        # set explicit seed to make sure modulation is different
+        mech = pnl.ProcessingMechanism(function=pnl.UniformDist(seed=0))
+        ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed', mech),
+                                                                          modulation=pnl.OVERRIDE))
+        comp = pnl.Composition()
+        comp.add_node(mech)
+        comp.add_node(ctl_mech)
+
+        seeds = [13, 13, 14]
+        prngs = {s:np.random.RandomState([s]) for s in seeds}
+        expected = [prngs[s].uniform() for s in seeds] * 2
+        # cycle over the seeds twice setting and resetting the random state
+        benchmark(comp.run, inputs={ctl_mech:seeds}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
+
+        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
+
+
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
