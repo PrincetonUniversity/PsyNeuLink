@@ -619,6 +619,28 @@ class UniformDist(DistributionFunction):
 
         return self.convert_output_type(result)
 
+    def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
+        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        low_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LOW)
+        high_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, HIGH)
+        ret_val_ptr = builder.alloca(ctx.float_ty)
+        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+        builder.call(norm_rand_f, [random_state, ret_val_ptr])
+
+        ret_val = builder.load(ret_val_ptr)
+        high = pnlvm.helpers.load_extract_scalar_array_one(builder, high_ptr)
+        low = pnlvm.helpers.load_extract_scalar_array_one(builder, low_ptr)
+        scale = builder.fsub(high, low)
+
+        ret_val = builder.fmul(ret_val, scale)
+        ret_val = builder.fadd(ret_val, low)
+
+        while isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType):
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.store(ret_val, arg_out)
+        return builder
+
 
 class GammaDist(DistributionFunction):
     """

@@ -26,6 +26,8 @@ test_data = [
     # Two tests with different inputs to show that input is ignored.
     (Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
     (Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
+    (Functions.UniformDist, 1e14, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6879771504250405)),
+    (Functions.UniformDist, 1e-4, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6879771504250405)),
 ]
 
 # use list, naming function produces ugly names
@@ -36,6 +38,8 @@ names = [
 #    "DriftDiffusionAnalytical-SmallDriftRate",
     "NormalDist1",
     "NormalDist2",
+    "UniformDist1",
+    "UniformDist2",
 ]
 
 @pytest.mark.function
