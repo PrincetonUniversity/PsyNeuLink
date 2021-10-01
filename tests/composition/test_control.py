@@ -1050,46 +1050,52 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    def test_modulation_of_random_state(self):
-        src = pnl.ProcessingMechanism()
-        mech = pnl.ProcessingMechanism(function=pnl.UniformDist())
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
+    @pytest.mark.parametrize("num_generators", [5])
+    def test_modulation_of_random_state(self, mode, num_generators):
+        obj = pnl.ObjectiveMechanism()
+        # Set original seed that is not used by any evaluation
+        # this prevents dirty state from initialization skewing the results.
+        # The alternative would be to set:
+        # mech.functions.seed.base = mech.functions.seed.base
+        # to reset the PRNG
+        mech = pnl.ProcessingMechanism(function=pnl.UniformDist(seed=num_generators))
 
-        comp = pnl.Composition(retain_old_simulation_data=True)
+        comp = pnl.Composition(retain_old_simulation_data=True,
+                               controller_mode=pnl.BEFORE)
         comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
-        comp.add_node(src)
+        comp.add_linear_processing_pathway([mech, obj])
 
         comp.add_controller(
             pnl.OptimizationControlMechanism(
-                monitor_for_control=src,
+                objective_mechanism=obj,
                 control_signals=pnl.ControlSignal(
                     modulates=('seed', mech),
                     modulation=pnl.OVERRIDE,
-                    allocation_samples=pnl.SampleSpec(start=0, stop=5, step=1),
+                    allocation_samples=pnl.SampleSpec(start=0, stop=num_generators - 1, step=1),
+                    cost_options=pnl.CostFunctions.NONE
                 )
             )
         )
 
-        def seed_check(context):
-            latest_sim = comp.controller.parameters.simulation_ids._get(context)[-1]
+        comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
 
-            seed = mech.get_mod_seed(latest_sim)
-            rs = mech.function.parameters.random_state.get(latest_sim)
-
-            # mech (and so its function and random_state) should be called
-            # exactly twice in one trial given the specified condition,
-            # and the random_state should be reset before the first execution
-            new_rs = np.random.RandomState([int(seed)])
-
-            for i in range(2):
-                new_rs.uniform(0, 1)
-
-            assert rs.uniform(0, 1) == new_rs.uniform(0, 1)
-
-        comp.termination_processing = {pnl.TimeScale.TRIAL: pnl.AfterNCalls(mech, 2)}
-        comp.run(
-            inputs={src: [1], mech: [1]},
-            call_after_trial=seed_check
-        )
+        # Construct expected results.
+        # First all generators rest their sequence.
+        # In the second trial, the "winning" seed from the previous one continues its
+        # random sequence
+        all_generators = [np.random.RandomState([seed]) for seed in range(num_generators)]
+        first_generator_samples = [g.uniform(0, 1) for g in all_generators]
+        best_first = max(first_generator_samples)
+        index_best = first_generator_samples.index(best_first)
+        second_generator_samples = [g.uniform(0, 1) for g in all_generators]
+        second_considerations = first_generator_samples[:index_best] + \
+                                second_generator_samples[index_best:index_best + 1] + \
+                                first_generator_samples[index_best + 1:]
+        best_second = max(second_considerations)
+        # Check that we select the maximum of generated values
+        assert np.allclose(best_first, comp.results[0])
+        assert np.allclose(best_second, comp.results[1])
 
 
 class TestModelBasedOptimizationControlMechanisms:

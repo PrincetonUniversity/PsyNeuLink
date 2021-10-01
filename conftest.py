@@ -118,7 +118,7 @@ def get_func_execution(func, func_mode):
     elif func_mode == 'Python':
         return func.function
     else:
-        assert False, "Unknown function mode: {}".format(mech_mode)
+        assert False, "Unknown function mode: {}".format(func_mode)
 
 @pytest.helpers.register
 def get_mech_execution(mech, mech_mode):
