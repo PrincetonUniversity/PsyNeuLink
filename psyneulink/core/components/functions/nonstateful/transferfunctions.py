@@ -44,7 +44,7 @@ All TransferFunctions have the following attributes:
 import numbers
 import types
 import warnings
-from enum import IntEnum
+from enum import IntFlag
 from math import e, pi, sqrt
 
 import numpy as np
@@ -3364,7 +3364,7 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 
 
-class CostFunctions(IntEnum):
+class CostFunctions(IntFlag):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
     These can be used alone or in combination with one another, by enabling or disabling each using the

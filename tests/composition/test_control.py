@@ -1050,6 +1050,43 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
+    @pytest.mark.parametrize("cost, expected, exp_values", [
+        (pnl.CostFunctions.NONE, 7.0, [1, 2, 3, 4, 5]),
+        (pnl.CostFunctions.INTENSITY, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591]),
+        (pnl.CostFunctions.ADJUSTMENT, 3, [1, 1, 1, 1, 1] ),
+        (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [-1.71828183, -6.3890561, -19.08553692, -53.59815003, -147.4131591]),
+        (pnl.CostFunctions.DURATION, 3, [-19, -22., -25., -28., -31]),
+        # FIXME: combinations with DURATION are broken
+        # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
+        # (pnl.CostFunctions.ALL, ,),
+        pytest.param(pnl.CostFunctions.DEFAULTS, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591], id="CostFunctions.DEFAULT")],
+        ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
+    def test_modulation_simple(self, cost, expected, exp_values):
+        obj = pnl.ObjectiveMechanism()
+        mech = pnl.ProcessingMechanism()
+
+        comp = pnl.Composition(controller_mode=pnl.BEFORE)
+        comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
+        comp.add_linear_processing_pathway([mech, obj])
+
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=('intercept', mech),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=pnl.SampleSpec(start=1, stop=5, step=1),
+                    cost_options=cost,
+                )
+            )
+        )
+
+        ret = comp.run(inputs={mech: [2]}, num_trials=1)
+        assert np.allclose(ret, expected)
+        assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
+
+    @pytest.mark.control
+    @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
     @pytest.mark.parametrize("num_generators", [5])
     def test_modulation_of_random_state(self, mode, num_generators):
