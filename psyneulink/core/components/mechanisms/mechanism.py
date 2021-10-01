@@ -2409,7 +2409,7 @@ class Mechanism_Base(Mechanism):
                                     for i in range(len(item.shape)))
                                 for item in return_value))):
 
-                        return return_value
+                    return return_value
                 else:
                     converted_to_2d = convert_to_np_array(return_value, dimension=2)
                 # If return_value is a list of heterogenous elements, return as is
@@ -2503,7 +2503,7 @@ class Mechanism_Base(Mechanism):
                                 all(item.shape[i]==value[0].shape[0]
                                     for i in range(len(item.shape)))
                                 for item in value))):
-                        pass
+                    pass
                 else:
                     converted_to_2d = convert_to_np_array(value, dimension=2)
                     # If return_value is a list of heterogenous elements, return as is
@@ -2942,20 +2942,20 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
-            port_spec = port._variable_spec
-            if port_spec == OWNER_VALUE:
-                return value
-            elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-                index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+        port_spec = port._variable_spec
+        if port_spec == OWNER_VALUE:
+            return value
+        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
+            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
 
-                assert index < len(value.type.pointee)
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
-            elif port_spec == OWNER_EXECUTION_COUNT:
-                execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
-                return execution_count
-            else:
-                #TODO: support more spec options
-                assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            assert index < len(value.type.pointee)
+            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
+        elif port_spec == OWNER_EXECUTION_COUNT:
+            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
+            return execution_count
+        else:
+            #TODO: support more spec options
+            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
@@ -3595,7 +3595,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for port in instantiated_input_ports:
                 if port.name is port.componentName or port.componentName + '-' in port.name:
-                        port._assign_default_port_Name()
+                    port._assign_default_port_Name()
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)

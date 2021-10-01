@@ -39,10 +39,10 @@ def pytest_runtest_setup(item):
             pytest.skip('{0} tests not requested'.format(m))
 
     if 'cuda' in item.keywords and not pnlvm.ptx_enabled:
-            pytest.skip('PTX engine not enabled/available')
+        pytest.skip('PTX engine not enabled/available')
 
     if 'pytorch' in item.keywords and not pytorch_available:
-            pytest.skip('pytorch not available')
+        pytest.skip('pytorch not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
 

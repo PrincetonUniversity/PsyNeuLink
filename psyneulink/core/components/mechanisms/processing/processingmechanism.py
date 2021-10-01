@@ -204,6 +204,7 @@ class ProcessingMechanism_Base(Mechanism_Base):
         # Let mechanism itself do validation of the input
         pass
 
+
 __all__ = [
     'DEFAULT_RATE', 'ProcessingMechanism', 'ProcessingMechanismError'
 ]

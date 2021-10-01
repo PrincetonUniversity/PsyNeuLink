@@ -44,7 +44,7 @@ from psyneulink.core.globals.keywords import \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel

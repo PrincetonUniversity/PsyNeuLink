@@ -296,7 +296,6 @@ import types
 import typing
 import weakref
 
-import numpy as np
 
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context

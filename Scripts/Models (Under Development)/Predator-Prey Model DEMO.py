@@ -271,7 +271,7 @@ def main():
                 print(f'OUTER LOOP AGENT ACTION:{agent_action}')
 
             if VERBOSE >= STANDARD_REPORTING:
-                if agent_comp.controller_mode is BEFORE:
+                if agent_comp.controller_mode == BEFORE:
                     print_controller()
                 print(f'\nObservations:'
                       f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(context)}'
@@ -283,7 +283,7 @@ def main():
                       f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
                       f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(context)}'
                       )
-                if agent_comp.controller_mode is AFTER:
+                if agent_comp.controller_mode == AFTER:
                     print_controller()
 
             # Restore frame buffer to state after optimal action taken (at beginning of trial)
@@ -292,9 +292,9 @@ def main():
             # # The following allows accumulation of agent's errors (assumes simulations are run before actual action)
             # ddqn_agent.buffer.buffer = actual_agent_frame_buffer
 
-            if ACTION is OPTIMAL_ACTION:
+            if ACTION == OPTIMAL_ACTION:
                 action = optimal_action
-            elif ACTION is AGENT_ACTION:
+            elif ACTION == AGENT_ACTION:
                 action = agent_action
             else:
                 assert False, "Must choose either OPTIMAL_ACTION or AGENT_ACTION"

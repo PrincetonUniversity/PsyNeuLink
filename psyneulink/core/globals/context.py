@@ -93,7 +93,7 @@ from queue import Queue
 import time as py_time  # "time" is declared below
 import typecheck as tc
 
-from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
+from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 
 
@@ -234,6 +234,7 @@ class ContextFlags(enum.IntFlag):
                     flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
+
 
 INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,

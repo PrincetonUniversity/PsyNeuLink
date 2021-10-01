@@ -206,6 +206,7 @@ def pass_threshold2(response_layer, thresh, terminate, context):
         return True
     return False
 
+
 # Create different terminate trial conditions --------------------------------------------------------------------------
 terminate_trial = {
    pnl.TimeScale.TRIAL: pnl.While(pass_threshold, response_layer, threshold)
@@ -240,6 +241,7 @@ def trial_dict(red_color, green_color, neutral_color, red_word, green_word, neut
     task_input_layer: [CN, WR]
     }
     return trialdict
+
 
 # Define initialization trials separately
 # WR_initialize_input = trial_dict(0, 0, 0, 0, 0, 0, 0, 1)
