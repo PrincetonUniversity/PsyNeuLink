@@ -14,12 +14,10 @@ import typecheck as tc
 from inspect import signature, _empty, getsourcelines
 import ast
 
-from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, CONTEXT, CUSTOM_FUNCTION, EXECUTION_ID, MULTIPLICATIVE_PARAM, OWNER, PARAMS, \
-    PARAMETER_PORT_PARAMS, SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
+    CONTEXT, CUSTOM_FUNCTION, OWNER, PARAMS, \
+    SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
 from psyneulink.core.globals.utilities import iscompatible

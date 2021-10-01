@@ -1016,20 +1016,20 @@ class PreferenceSet(object):
 
 def _assign_prefs(object, prefs, prefs_class:PreferenceSet):
 
-        if isinstance(prefs, PreferenceSet):
-            object.prefs = prefs
-            # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
-        # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
-        else:
-            object.prefs = prefs_class(owner=object, prefs=prefs)
-        try:
-            # assign log conditions from preferences
-            object.parameters.value.log_condition = object.prefs._log_pref.setting
-        except AttributeError:
-            pass
+    if isinstance(prefs, PreferenceSet):
+        object.prefs = prefs
+        # FIX:  CHECK LEVEL HERE??  OR DOES IT NOT MATTER, AS OWNER WILL BE ASSIGNED DYNAMICALLY??
+    # Otherwise, if prefs is a specification dict instantiate it, or if it is None assign defaults
+    else:
+        object.prefs = prefs_class(owner=object, prefs=prefs)
+    try:
+        # assign log conditions from preferences
+        object.parameters.value.log_condition = object.prefs._log_pref.setting
+    except AttributeError:
+        pass
 
-        try:
-            # assign delivery conditions from preferences
-            object.parameters.value.delivery_condition = object.prefs._delivery_pref.setting
-        except AttributeError:
-            pass
+    try:
+        # assign delivery conditions from preferences
+        object.parameters.value.delivery_condition = object.prefs._delivery_pref.setting
+    except AttributeError:
+        pass

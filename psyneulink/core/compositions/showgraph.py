@@ -897,7 +897,7 @@ class ShowGraph():
         #    (node: this allows TARGET node for learning to remain marked as an INPUT node)
         if (NodeRole.LEARNING in composition.nodes_to_roles[rcvr]):
             # MODIFIED 6/13/20 OLD: FIX - MODIFIED TO ALLOW TARGET TO BE MARKED AS INPUT
-                # and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
+            #     and not NodeRole.INPUT in composition.nodes_to_roles[rcvr]):
             # MODIFIED 6/13/20 END
             return
 

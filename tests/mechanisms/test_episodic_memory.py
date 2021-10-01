@@ -58,9 +58,9 @@ def test_with_dictionary_memory(variable, func, params, expected, benchmark, mec
     if benchmark.enabled:
         benchmark(EX, variable)
 
+
 # TEST WITH ContentAddressableMemory ***********************************************************************************
 # Note:  ContentAddressableMemory has not yet been compiled for use with LLVM or PTX, so those are dummy tests for now
-
 test_data = [
     (
         # name

@@ -1086,7 +1086,7 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
 
     if isinstance(spec, Projection):
         if proj_type is None or isinstance(spec, proj_type):
-                return True
+            return True
         else:
             return False
     if isinstance(spec, Port):
@@ -1588,7 +1588,7 @@ def _parse_connection_specs(connectee_port_type,
 
                 # If specification is a list of Ports and/or Mechanisms, get Projection spec for each
                 if isinstance(first_item, list):
-                     # Call _parse_connection_spec for each Port or Mechanism, to generate a conection spec for each
+                    # Call _parse_connection_spec for each Port or Mechanism, to generate a connection spec for each
                     for connect_with_spec in first_item:
                         if not isinstance(connect_with_spec, (Port, Mechanism)):
                             raise PortError(f"Item in the list used to specify a {last_item.__name__} "
@@ -1617,7 +1617,7 @@ def _parse_connection_specs(connectee_port_type,
                                           "Mechanism".format(connectee_port_type.__name__, owner.name, mech_item))
                 # First item of tuple is a list of Port names, so recursively process it
                 if isinstance(port_item, list):
-                     # Call _parse_connection_spec for each Port name, to generate a conection spec for each
+                    # Call _parse_connection_spec for each Port name, to generate a connection spec for each
                     for port_Name in port_item:
                         if not isinstance(port_Name, str):
                             raise ProjectionError("Expected 1st item of the {} specification tuple for {} ({}) to be "

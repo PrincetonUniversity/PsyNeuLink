@@ -1420,8 +1420,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             elif isinstance(x, Component):
                 return x._get_param_initializer(context)
 
-            try:   # This can't use tupleize and needs to recurse to handle
-                   # 'search_space' list of SampleIterators
+            try:
+                # This can't use tupleize and needs to recurse to handle
+                # 'search_space' list of SampleIterators
                 return tuple(_convert(i) for i in x)
             except TypeError:
                 return x if x is not None else tuple()
@@ -2536,10 +2537,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     inspect.isclass(param_value) and
                     inspect.isclass(getattr(self.defaults, param_name))
                     and issubclass(param_value, getattr(self.defaults, param_name))):
-                    # Assign instance to target and move on
-                    #  (compatiblity check no longer needed and can't handle function)
-                    target_set[param_name] = param_value()
-                    continue
+                # Assign instance to target and move on
+                #  (compatiblity check no longer needed and can't handle function)
+                target_set[param_name] = param_value()
+                continue
 
             # Check if param value is of same type as one with the same name in defaults
             #    don't worry about length

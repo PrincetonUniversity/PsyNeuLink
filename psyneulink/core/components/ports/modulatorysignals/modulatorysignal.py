@@ -435,6 +435,7 @@ def _is_modulatory_spec(spec, include_matrix_spec=True):
     else:
         return False
 
+
 modulatory_signal_keywords = {MECHANISM, MODULATION}
 modulatory_signal_keywords.update(component_keywords)
 modulation_type_keywords = [MULTIPLICATIVE_PARAM, ADDITIVE_PARAM, OVERRIDE, DISABLE]

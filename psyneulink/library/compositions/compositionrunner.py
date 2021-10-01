@@ -177,7 +177,7 @@ class CompositionRunner():
 
         for stim_input, stim_target, stim_epoch in zip(inputs, targets, epochs):
             if not callable(stim_input) and 'epochs' in stim_input:
-                    stim_epoch = stim_input['epochs']
+                stim_epoch = stim_input['epochs']
 
             stim_input, num_input_trials = self._composition._parse_learning_spec(stim_input, stim_target)
 
