@@ -365,7 +365,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
     from psyneulink.core.components.component import Component, ComponentsMeta
 
     if shared_types is None:
-        shared_types = (Component, ComponentsMeta, types.MethodType)
+        shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
     else:
         shared_types = tuple(shared_types)
 
@@ -1520,7 +1520,7 @@ class Parameter(ParameterBase):
                 pass
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
-        from psyneulink.core.components.component import Component
+        from psyneulink.core.components.component import Component, ComponentsMeta
 
         try:
             try:
@@ -1539,7 +1539,7 @@ class Parameter(ParameterBase):
                 except KeyError:
                     new_history = NotImplemented
 
-                shared_types = (Component, types.MethodType)
+                shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
 
                 if isinstance(new_val, (dict, list)):
                     new_val = copy_iterable_with_shared(new_val, shared_types)

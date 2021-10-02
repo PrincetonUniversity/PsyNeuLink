@@ -1948,6 +1948,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Composition_Base,
             ComponentsMeta,
             types.MethodType,
+            types.ModuleType,
             functools.partial,
         )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
