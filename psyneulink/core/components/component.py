@@ -1357,12 +1357,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "grid",
+                     "modulated_mechanisms", "grid", "control_signal_params",
                      "activation_derivative_fct", "input_specification",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "auto", "hetero", "cost", "costs", "combined_costs",
+                     "control_signal",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
