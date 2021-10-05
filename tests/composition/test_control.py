@@ -1802,6 +1802,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        if mode == pnl.ExecutionMode.Python:
+            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
@@ -1850,6 +1852,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        if mode == pnl.ExecutionMode.Python:
+            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)

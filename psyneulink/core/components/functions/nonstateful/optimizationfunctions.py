@@ -1765,9 +1765,17 @@ class GridSearch(OptimizationFunction):
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
                 opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
                 # This should not be evaluated unless needed
-                all_samples = [itertools.product(*self.search_space)]
+                all_samples = [s for s in itertools.product(*self.search_space)]
                 value_optimal = opt_value
                 sample_optimal = opt_sample
+
+                # These are normally stored in the parent function (OptimizationFunction).
+                # Since we didn't  call super()._function like the python path,
+                # save the values here
+                if self.parameters.save_samples._get(context):
+                    self.parameters.saved_samples._set(all_samples, context)
+                if self.parameters.save_values._get(context):
+                    self.parameters.saved_values._set(all_values, context)
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,

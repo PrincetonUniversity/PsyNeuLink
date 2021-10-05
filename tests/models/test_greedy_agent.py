@@ -224,6 +224,9 @@ def test_predator_prey(benchmark, mode, samples):
             assert np.allclose(ocm.state_feature_values, [[ 1.1576537,   0.60782117],
                                                           [-0.03479106, -0.47666293],
                                                           [-0.60836214,  0.1760381 ]])
+            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(),
+                               [-2.66258741, -22027.9970321, -22028.17515945, -44053.59867802,
+                                -22028.06045185, -44053.4048842, -44053.40736234, -66078.90687915])
 
     if benchmark.enabled:
         benchmark(agent_comp.run, inputs=input_dict, execution_mode=mode)
