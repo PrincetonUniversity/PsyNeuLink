@@ -94,6 +94,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
+from psyneulink.core.globals.utilities import parse_valid_identifier
 
 __all__ = [
     'DEFAULT_RATE', 'IntegratorMechanism', 'IntegratorMechanismError'
@@ -228,3 +229,18 @@ class IntegratorMechanism(ProcessingMechanism_Base):
                                                 input_ports=input_ports,
                                                 function=function,
                                                 params=params)
+
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        model = super().as_mdf_model()
+        function_model = [
+            f for f in model.functions
+            if f.id == parse_valid_identifier(self.function.name)
+        ][0]
+        assert function_model.id == parse_valid_identifier(self.function.name), (function_model.id, parse_valid_identifier(self.function.name))
+
+        for _, func_param in function_model.metadata['function_stateful_params'].items():
+            model.parameters.append(mdf.Parameter(**func_param))
+
+        return model

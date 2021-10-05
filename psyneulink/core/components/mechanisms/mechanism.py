@@ -4183,6 +4183,9 @@ class Mechanism_Base(Mechanism):
 
         function_model = self.function.as_mdf_model()
 
+        for _, func_param in function_model.metadata['function_stateful_params'].items():
+            model.parameters.append(mdf.Parameter(**func_param))
+
         if len(ip.path_afferents) > 1:
             primary_function_input_name = combination_function_dimreduce_id
         else:

@@ -842,6 +842,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.json import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
@@ -851,7 +852,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals
+    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals, parse_valid_identifier
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -1806,3 +1807,25 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.parameters.initial_value._set(copy.deepcopy(integrator_function_variable), context)
 
         super()._update_default_variable(new_default_variable, context=context)
+
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        model = super().as_mdf_model()
+        function_model = [
+            f for f in model.functions
+            if f.id == parse_valid_identifier(self.function.name)
+        ][0]
+        assert function_model.id == parse_valid_identifier(self.function.name), (function_model.id, parse_valid_identifier(self.function.name))
+
+        if self.defaults.integrator_mode:
+            integrator_function_model = self.integrator_function.as_mdf_model()
+            primary_input = function_model.args[_get_variable_parameter_name(self.function)]
+            integrator_function_model.args[_get_variable_parameter_name(self.function)] = primary_input
+            function_model.args[_get_variable_parameter_name(self.function)] = integrator_function_model.id
+
+            for _, func_param in integrator_function_model.metadata['function_stateful_params'].items():
+                model.parameters.append(mdf.Parameter(**func_param))
+
+            model.functions.append(integrator_function_model)
+        return model
