@@ -26,6 +26,31 @@ from psyneulink.core import llvm as pnlvm
 
 __all__ = ['UserDefinedFunction']
 
+
+class _ExpressionVisitor(ast.NodeVisitor):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.vars = set()
+        self.functions = set()
+
+    def visit_Name(self, node):
+        if node.id not in __builtins__:
+            self.vars.add(node.id)
+
+    def visit_Call(self, node):
+        try:
+            # gives top level module name if module function used
+            func_id = node.func.value.id
+        except AttributeError:
+            func_id = node.func.id
+
+        if func_id not in __builtins__:
+            self.functions.add(func_id)
+
+        for c in ast.iter_child_nodes(node):
+            self.visit(c)
+
+
 class UserDefinedFunction(Function_Base):
     """UserDefinedFunction(  \
     custom_function=None,    \
@@ -37,7 +62,8 @@ class UserDefinedFunction(Function_Base):
 
     .. _UDF_Description:
 
-    A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, including a lamdba function,
+    A UserDefinedFunction (UDF) is used to "wrap" a Python function or method, lamdba function,
+    or an expression written in string format
     as a PsyNeuLink `Function <Function>`, so that it can be used as the `function <Component.function>` of a
     `Component <Component>`.  This is done automatically if a Python function or method is assigned as the `function
     <Component.function>` attribute of a Component.  A Python function or method can also be wrapped explicitly,
@@ -47,13 +73,15 @@ class UserDefinedFunction(Function_Base):
 
     .. _UDF_Variable:
 
-    * It must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
+    * If providing a Python function, method, or lambda function, it must have **at least one argument** (that can be a positional or a keyword argument);  this will be treated
       as the `variable <UserDefinedFunction.variable>` attribute of the UDF's `function <UserDefinedFunction.function>`.
       When the UDF calls the function or method that it wraps, an initial attempt is made to do so with **variable**
       as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
       2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
       UDF is assigned.  It is the user's responsibility to insure that the number of items expected in the first
       argument of the function or method is compatible with the circumstances in which it will be called.
+      If providing a string expression, **variable** is optional. However, if **variable** is not included in
+      the expression, the resulting UDF will not use **variable** at all in its calculation.
     ..
     .. _UDF_Additional_Arguments:
 
@@ -163,6 +191,17 @@ class UserDefinedFunction(Function_Base):
     ``my_wave_mech``, those parameters are assigned to `ParameterPorts <ParameterPort>` of ``my_wave_mech``, which
     that be used to modify their values by `ControlSignals <ControlSignal>` (see `example below <_
     UDF_Control_Signal_Example>`).
+
+    .. _UDF_String_Expression_Function_Examples:
+
+    The **function** argument may also be an expression written as a string::
+
+        >>> my_mech = pnl.ProcessingMechanism(function='sum(variable, 2)')
+        >>> my_mech.execute(input=[1])
+        array([[3]])
+
+    This option is primarily designed for compatibility with other packages that use string expressions as
+    their main description of computation and may be less flexible or reliable than the previous styles.
 
     .. _UDF_Explicit_Creation_Examples:
 
@@ -417,6 +456,7 @@ class UserDefinedFunction(Function_Base):
                  params=None,
                  owner=None,
                  prefs: tc.optional(is_pref_set) = None,
+                 stateful_parameter=None,
                  **kwargs):
 
         def get_cust_fct_args(custom_function):
@@ -435,6 +475,26 @@ class UserDefinedFunction(Function_Base):
                         custom_function, self.__class__.__name__
                     )
                 )
+            except TypeError:
+                v = _ExpressionVisitor()
+                v.visit(ast.parse(custom_function))
+                parameters = v.vars.union(v.functions)
+
+                if 'variable' in parameters:
+                    parameters.remove('variable')
+                    variable = kwargs['variable']
+                else:
+                    variable = None
+
+                args = {}
+                for p in parameters:
+                    if '.' not in p:  # assume . indicates external module function call
+                        try:
+                            args[p] = kwargs[p]
+                        except KeyError:
+                            args[p] = None
+
+                return variable, args, args
 
             args = {}
             defaults = {}
@@ -505,6 +565,13 @@ class UserDefinedFunction(Function_Base):
                 context = self.cust_fct_params[CONTEXT]
             del self.cust_fct_params[CONTEXT]
 
+        if stateful_parameter is not None:
+            if stateful_parameter not in self.cust_fct_params:
+                raise FunctionError(
+                    f'{stateful_parameter} specified as integration parameter is not a parameter of {custom_function}'
+                )
+        self.stateful_parameter = stateful_parameter
+
         # Assign variable to default_variable if default_variable was not specified
         if default_variable is None:
             default_variable = cust_fct_variable
@@ -554,6 +621,8 @@ class UserDefinedFunction(Function_Base):
             # First check for value passed in params as runtime param:
             if PARAMS in kwargs and kwargs[PARAMS] is not None and param in kwargs[PARAMS]:
                 self.cust_fct_params[param] = kwargs[PARAMS][param]
+            elif param in kwargs:
+                self.cust_fct_params[param] = kwargs[param]
             else:
                 # Otherwise, get current value from ParameterPort (in case it is being modulated by ControlSignal(s)
                 self.cust_fct_params[param] = self._get_current_parameter_value(param, context)
@@ -575,9 +644,15 @@ class UserDefinedFunction(Function_Base):
         try:
             # Try calling with full list of args (including context and params)
             value = self.custom_function(variable, **kwargs)
-        except TypeError:
-            # Try calling with just variable and cust_fct_params
-            value = self.custom_function(variable, **call_params)
+        except TypeError as e:
+            if "'str' object is not callable" != str(e):
+                # Try calling with just variable and cust_fct_params
+                value = self.custom_function(variable, **call_params)
+            else:
+                value = eval(self.custom_function, kwargs)
+
+        if self.stateful_parameter is not None and not self.is_initializing:
+            getattr(self.parameters, self.stateful_parameter)._set(value, context)
 
         return self.convert_output_type(value)
 
