@@ -2915,24 +2915,26 @@ class Mechanism_Base(Mechanism):
         # Few extra copies will be eliminated by the compiler.
         builder.store(builder.load(params_in), params_out)
 
-        # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
+        # This should be faster than 'obj._get_compilation_params'
+        compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
+        # Filter out param ports without corresponding param for this function
+        param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
-                                              param_ports[i].name)
+                                              param_ports[i].source.name)
             return b, ptr
 
         def _fill_input(b, p_input, i):
-            param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                                       param_ports[i].name)
+            param_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
+                                                    param_ports[i].source.name)
             # Parameter port inputs are {original parameter, [modulations]},
-            # fill in the first one.
+            # here we fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            assert data_ptr.type == param_in_ptr.type, \
+            assert data_ptr.type == param_ptr.type, \
                 "Mishandled modulation type for: {} in '{}' in '{}'".format(
                     param_ports[i].name, obj.name, self.name)
-            b.store(b.load(param_in_ptr), data_ptr)
+            b.store(b.load(param_ptr), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
