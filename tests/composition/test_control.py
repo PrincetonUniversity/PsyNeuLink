@@ -1105,6 +1105,28 @@ class TestControlMechanisms:
 
         assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
 
+    @pytest.mark.benchmark
+    @pytest.mark.control
+    @pytest.mark.composition
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_modulation_of_random_state_DDM(self, comp_mode, benchmark):
+        # set explicit seed to make sure modulation is different
+        mech = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=5.),
+                       reset_stateful_function_when=pnl.AtPass(0),
+                       execute_until_finished=True)
+        ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed-function', mech),
+                                                                          modulation=pnl.OVERRIDE))
+        comp = pnl.Composition()
+        comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(ctl_mech)
+
+        seeds = [13, 13, 14]
+        # cycle over the seeds twice setting and resetting the random state
+        benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
+
+        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
 
     @pytest.mark.control
     @pytest.mark.composition
