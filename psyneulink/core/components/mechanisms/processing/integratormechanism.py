@@ -243,4 +243,15 @@ class IntegratorMechanism(ProcessingMechanism_Base):
         for _, func_param in function_model.metadata['function_stateful_params'].items():
             model.parameters.append(mdf.Parameter(**func_param))
 
+        res = self.function._get_mdf_noise_function()
+        try:
+            main_noise_function, extra_noise_functions = res
+        except TypeError:
+            pass
+        else:
+            main_noise_function.id = f'{model.id}_{main_noise_function.id}'
+            model.functions.append(main_noise_function)
+            model.functions.extend(extra_noise_functions)
+            function_model.args['noise'] = main_noise_function.id
+
         return model

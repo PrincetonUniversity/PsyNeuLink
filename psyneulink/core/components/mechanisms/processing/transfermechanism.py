@@ -1828,4 +1828,16 @@ class TransferMechanism(ProcessingMechanism_Base):
                 model.parameters.append(mdf.Parameter(**func_param))
 
             model.functions.append(integrator_function_model)
+
+            res = self.integrator_function._get_mdf_noise_function()
+            try:
+                main_noise_function, extra_noise_functions = res
+            except TypeError:
+                pass
+            else:
+                main_noise_function.id = f'{model.id}_{main_noise_function.id}'
+                model.functions.append(main_noise_function)
+                model.functions.extend(extra_noise_functions)
+                integrator_function_model.args['noise'] = main_noise_function.id
+
         return model

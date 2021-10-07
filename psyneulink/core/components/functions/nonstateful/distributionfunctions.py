@@ -51,6 +51,11 @@ __all__ = [
 class DistributionFunction(Function_Base):
     componentType = DIST_FUNCTION_TYPE
 
+    def as_mdf_model(self):
+        model = super().as_mdf_model()
+        model.args['shape'] = self.defaults.variable.shape
+        return model
+
 
 class NormalDist(DistributionFunction):
     """
@@ -124,6 +129,7 @@ class NormalDist(DistributionFunction):
     """
 
     componentName = NORMAL_DIST_FUNCTION
+    _model_spec_generic_type_name = 'onnx::RandomNormal'
 
     class Parameters(DistributionFunction.Parameters):
         """
@@ -149,7 +155,7 @@ class NormalDist(DistributionFunction):
                     :type: ``numpy.random.RandomState``
         """
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
+        standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM], mdf_name='scale')
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
@@ -557,6 +563,7 @@ class UniformDist(DistributionFunction):
 
     """
     componentName = UNIFORM_DIST_FUNCTION
+    _model_spec_generic_type_name = 'onnx::RandomUniform'
 
     class Parameters(DistributionFunction.Parameters):
         """
