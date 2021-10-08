@@ -403,6 +403,7 @@ import typecheck as tc
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
@@ -1078,3 +1079,52 @@ class ControlSignal(ModulatorySignal):
         all_costs = [intensity_cost, adjustment_cost, duration_cost]
         combined_cost = self.combine_costs_function(all_costs, context=context)
         return max(0.0, combined_cost)
+
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                    extra_args=[], tags:frozenset):
+        if "costs" in tags:
+            assert len(extra_args) == 0
+            return self._gen_llvm_costs(ctx=ctx, tags=tags)
+
+        return super()._gen_llvm_function(ctx=ctx, extra_args=extra_args, tags=tags)
+
+    def _gen_llvm_costs(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer()]
+
+        assert "costs" in tags
+        builder = ctx.create_llvm_function(args, self, str(self) + "_costs",
+                                           tags=tags,
+                                           return_type=ctx.float_ty)
+
+        params, state, arg_in = builder.function.args
+
+        # FIXME: Add support for other cost types
+        assert self.cost_options == CostFunctions.INTENSITY
+
+        ifunc = ctx.import_llvm_function(self.function.intensity_cost_fct)
+
+        func_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                  "function")
+        func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                 "function")
+        ifunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
+                                                   func_params,
+                                                   "intensity_cost_fct")
+        ifunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
+                                                  func_state,
+                                                  "intensity_cost_fct")
+        ifunc_out = builder.alloca(ifunc.args[3].type.pointee)
+        # Port input is always struct
+        ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+        builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_out])
+
+
+        # Cost function output is 1 element array
+        ret_ptr = builder.gep(ifunc_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        ret_val = builder.load(ret_ptr)
+        builder.ret(ret_val)
+
+        return builder.function
