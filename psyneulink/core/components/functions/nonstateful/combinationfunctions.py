@@ -858,6 +858,13 @@ class Reduce(CombinationFunction):  # ------------------------------------------
 
         return self.convert_output_type(result)
 
+    def _get_input_struct_type(self, ctx):
+        # FIXME: Workaround a special case of simple array.
+        #        It should just pass through to modifiers, which matches what
+        #        single element 2d array does
+        default_var = np.atleast_2d(self.defaults.variable)
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
+
     def _gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, index, 1.0)
         offset = self._gen_llvm_load_param(ctx, builder, params, OFFSET, index, -0.0)
