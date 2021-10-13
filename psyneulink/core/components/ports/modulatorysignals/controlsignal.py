@@ -1100,31 +1100,51 @@ class ControlSignal(ModulatorySignal):
 
         params, state, arg_in = builder.function.args
 
+        func_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                 "function")
+        func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                 "function")
         # FIXME: Add support for other cost types
         assert self.cost_options == CostFunctions.INTENSITY
 
-        ifunc = ctx.import_llvm_function(self.function.intensity_cost_fct)
+        cfunc = ctx.import_llvm_function(self.function.combine_costs_fct)
+        cfunc_in = builder.alloca(cfunc.args[2].type.pointee)
 
-        func_params = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                  "function")
-        func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
-                                                 "function")
-        ifunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
+        # Set to 0 be default
+        builder.store(cfunc_in.type.pointee(None), cfunc_in)
+
+        cost_funcs = 0
+        if self.cost_options & CostFunctions.INTENSITY:
+            ifunc = ctx.import_llvm_function(self.function.intensity_cost_fct)
+
+            ifunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
+                                                       func_params,
+                                                       "intensity_cost_fct")
+            ifunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
+                                                      func_state,
+                                                      "intensity_cost_fct")
+            # Port input is always struct { data input, modulations }
+            ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            # point output to the proper slot in comb func input
+            ifunc_comb_slot = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
+
+            builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_comb_slot])
+
+            cost_funcs += 1
+
+
+        # Call combination function
+        cfunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                    func_params,
-                                                   "intensity_cost_fct")
-        ifunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
+                                                   "combine_costs_fct")
+        cfunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
                                                   func_state,
-                                                  "intensity_cost_fct")
-        ifunc_out = builder.alloca(ifunc.args[3].type.pointee)
-        # Port input is always struct
-        ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-        builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_out])
+                                                  "combine_costs_fct")
+        cfunc_out = builder.alloca(cfunc.args[3].type.pointee)
+        builder.call(cfunc, [cfunc_params, cfunc_state, cfunc_in, cfunc_out])
 
 
-        # Cost function output is 1 element array
-        ret_ptr = builder.gep(ifunc_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        ret_val = builder.load(ret_ptr)
+        ret_val = pnlvm.helpers.load_extract_scalar_array_one(builder, cfunc_out)
         builder.ret(ret_val)
 
         return builder.function
