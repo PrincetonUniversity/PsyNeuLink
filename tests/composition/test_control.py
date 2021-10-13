@@ -1062,7 +1062,10 @@ class TestControlMechanisms:
         # (pnl.CostFunctions.ALL, ,),
         pytest.param(pnl.CostFunctions.DEFAULTS, 7, [3, 4, 5, 6, 7], id="CostFunctions.DEFAULT")],
         ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
-    def test_modulation_simple(self, cost, expected, exp_values):
+    def test_modulation_simple(self, cost, expected, exp_values, comp_mode):
+        if comp_mode != pnl.ExecutionMode.Python and cost not in {pnl.CostFunctions.NONE, pnl.CostFunctions.INTENSITY}:
+            pytest.skip("Not implemented!")
+
         obj = pnl.ObjectiveMechanism()
         mech = pnl.ProcessingMechanism()
 
@@ -1083,9 +1086,10 @@ class TestControlMechanisms:
             )
         )
 
-        ret = comp.run(inputs={mech: [2]}, num_trials=1)
+        ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(ret, expected)
-        assert np.allclose([float(np.squeeze(x)) for x in comp.controller.function.saved_values], exp_values)
+        if comp_mode == pnl.ExecutionMode.Python:
+            assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -1145,9 +1149,8 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
     @pytest.mark.parametrize("num_generators", [5])
-    def test_modulation_of_random_state(self, mode, num_generators):
+    def test_modulation_of_random_state(self, comp_mode, num_generators):
         obj = pnl.ObjectiveMechanism()
         # Set original seed that is not used by any evaluation
         # this prevents dirty state from initialization skewing the results.
@@ -1175,12 +1178,11 @@ class TestControlMechanisms:
             )
         )
 
-        # comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
         comp.run(inputs={mech: [1]},
                  num_trials=2,
                  report_output=pnl.ReportOutput.FULL,
                  report_params=pnl.ReportParams.MONITORED,
-                 execution_mode=mode)
+                 execution_mode=comp_mode)
 
         # Construct expected results.
         # First all generators rest their sequence.
