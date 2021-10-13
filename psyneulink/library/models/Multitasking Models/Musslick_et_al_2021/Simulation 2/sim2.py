@@ -1,4 +1,3 @@
-import sys
 import sim2_configure
 
 iterations_train = 50 # maximum number of training iterations

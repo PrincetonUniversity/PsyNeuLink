@@ -1,10 +1,10 @@
-import sim3_configure
+import sim7_configure
 
-iterations_train = 5000 # maximum number of training iterations
+iterations_train = 1000 # maximum number of training iterations
 
 def main():
     # Configure network
-    task_net = sim3_configure.config()
+    task_net = sim7_configure.config()
     # Train
     task_net.train(iterations_train)
     # Analysis and validation
