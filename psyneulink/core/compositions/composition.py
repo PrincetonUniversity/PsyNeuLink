@@ -7443,10 +7443,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             block_simulate=False
     ):
         """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `controller <Composition.controller>` in order to return the
-           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation.
+           `controller <Composition.controller>` in order to return the `net_outcome <ControlMechanism.net_outcome>`
+           of the Composition, calculated using the `controller <Composition.controller>`'s
+           <ControlMechanism.compute_net_outcome>` function under the specified control_allocation.
+           All values are reset to pre-simulation values at the end of the simulation.
 
            If `block_simulate` is set to True, the `controller <Composition.controller>` will attempt to use the
            entire input set provided to the `run <Composition.run>` method of the `Composition` as input for the

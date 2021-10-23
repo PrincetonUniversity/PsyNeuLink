@@ -483,7 +483,6 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(         \
         objective_mechanism=None,            \
         monitor_for_control=None,            \
-        objective_mechanism=None,            \
         origin_objective_mechanism=False     \
         terminal_objective_mechanism=False   \
         state_features=None,                 \
@@ -1056,7 +1055,7 @@ class OptimizationControlMechanism(ControlMechanism):
         Assigned as the `objective_function <OptimizationFunction.objective_function>` for the
         OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.
 
-        Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute` method.
+        Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method.
 
         Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>`
         for the current `state_feature_values <OptimizationControlMechanism.state_feature_values>`
@@ -1091,9 +1090,9 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
 
-            # If results of the simulation shoudld be returned then, do so. Agent Rep Evaluate will
+            # If results of the simulation should be returned then, do so. Agent Rep Evaluate will
             # return a tuple in this case where the first element is the outcome as usual and the
-            # results of composision run are the second element.
+            # results of composition run are the second element.
             if return_results:
                 return result[0], result[1]
             else:
