@@ -278,7 +278,7 @@ def main():
                 print(f'OUTER LOOP AGENT ACTION:{agent_action}')
 
             if VERBOSE >= STANDARD_REPORTING:
-                if agent_comp.controller_mode is BEFORE:
+                if agent_comp.controller_mode == BEFORE:
                     print_controller()
                 print(f'\nObservations:'
                       f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(context)}'
@@ -290,7 +290,7 @@ def main():
                       f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
                       f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(context)}'
                       )
-                if agent_comp.controller_mode is AFTER:
+                if agent_comp.controller_mode == AFTER:
                     print_controller()
 
             # Restore frame buffer to state after optimal action taken (at beginning of trial)

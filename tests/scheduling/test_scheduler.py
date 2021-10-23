@@ -46,7 +46,7 @@ class TestScheduler:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp.add_node(A)
 
-        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.get_clock(comp.scheduler.default_execution_id)._increment_time(TimeScale.TRIAL)
 
         eid = 'eid'
         eid1 = 'eid1'
@@ -54,7 +54,7 @@ class TestScheduler:
 
         assert comp.scheduler.clocks[eid].time.trial == 0
 
-        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.get_clock(comp.scheduler.default_execution_id)._increment_time(TimeScale.TRIAL)
 
         assert comp.scheduler.clocks[eid].time.trial == 0
 
@@ -1168,7 +1168,7 @@ class TestTermination:
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
         # reset the RUN because schedulers run TRIALs
-        sched.clock._increment_time(TimeScale.RUN)
+        sched.get_clock(sched.default_execution_id)._increment_time(TimeScale.RUN)
         sched._reset_counts_total(TimeScale.RUN, execution_id=sched.default_execution_id)
 
         output = list(sched.run())
@@ -1657,4 +1657,4 @@ class TestAbsoluteTime:
         for node in conditions:
             comp.scheduler.add_condition(eval(node), conditions[node])
 
-        assert comp.scheduler._get_absolute_time_step_unit() == interval
+        assert comp.scheduler._get_absolute_consideration_set_execution_unit() == interval

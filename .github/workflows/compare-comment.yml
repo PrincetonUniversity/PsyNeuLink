@@ -16,7 +16,7 @@ jobs:
 
     - name: 'Download docs artifacts'
       id: docs-artifacts
-      uses: actions/github-script@v4.0.2
+      uses: actions/github-script@v5
       with:
         script: |
           var artifacts = await github.actions.listWorkflowRunArtifacts({
@@ -32,11 +32,14 @@ jobs:
           core.setOutput('DOCS_GEN_ENV', docsSuffix);
 
           var docsArtifacts = artifacts.data.artifacts.filter((artifact) => {
-            return artifact.name.endsWith(docsSuffix) && artifact.name.startsWith('Documentation-')
+            return (
+              (artifact.name.endsWith(docsSuffix) && artifact.name.startsWith('Documentation-'))
+              || artifact.name == 'pr_number'
+            )
           });
 
-          // check that we got exactly 2 artifacts
-          console.assert(docsArtifacts.length == 2, docsSuffix, docsArtifacts, artifacts.data.artifacts);
+          // check that we got exactly 3 artifacts
+          console.assert(docsArtifacts.length == 3, docsSuffix, docsArtifacts, artifacts.data.artifacts);
 
           var fs = require('fs');
           for (artifact of docsArtifacts) {
@@ -55,6 +58,7 @@ jobs:
       run: |
         unzip Documentation-base-*.zip -d docs-base/
         unzip Documentation-head-*.zip -d docs-head/
+        unzip pr_number.zip
 
     - name: Compare
       shell: bash
@@ -64,16 +68,17 @@ jobs:
         (diff -r docs-base docs-head && echo 'No differences!' || true) | tee ./result.diff
 
     - name: Post comment with docs diff
-      uses: actions/github-script@v4.0.2
+      uses: actions/github-script@v5
       with:
         script: |
           var fs = require('fs');
           var text = fs.readFileSync("./result.diff").slice(0,16384);
+          var issue_number = Number(fs.readFileSync('./pr_number.txt'));
 
-          console.log('Posting diff to PR: ${{ github.event.workflow_run.pull_requests[0].number }}')
+          console.log('Posting diff to PR: ' + issue_number);
 
           github.issues.createComment({
-            issue_number: ${{ github.event.workflow_run.pull_requests[0].number }},
+            issue_number: issue_number,
             owner: context.repo.owner,
             repo: context.repo.repo,
             body: 'This PR causes the following changes to the html docs (${{ steps.docs-artifacts.outputs.DOCS_GEN_ENV }}):\n```\n' + text + '\n...\n```\nSee CI logs for the full diff.'

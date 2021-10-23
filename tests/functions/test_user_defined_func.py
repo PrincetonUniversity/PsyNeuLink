@@ -476,6 +476,7 @@ def test_user_def_func_return(dtype, expected, func_mode, benchmark):
 @pytest.mark.parametrize("op,variable,expected", [ # parameter is string since compiled udf doesn't support closures as of present
                 ("TANH", [[1, 3]], [0.76159416, 0.99505475]),
                 ("EXP", [[1, 3]], [2.71828183, 20.08553692]),
+                ("SQRT", [[1, 3]], [1.0, 1.7320508075688772]),
                 ("SHAPE", [1, 2], [2]),
                 ("SHAPE", [[1, 3]], [1, 2]),
                 ("ASTYPE_FLOAT", [1], [1.0]),
@@ -504,6 +505,9 @@ def test_user_def_func_numpy(op, variable, expected, func_mode, benchmark):
     elif op == "EXP":
         def myFunction(variable):
             return np.exp(variable)
+    elif op == "SQRT":
+        def myFunction(variable):
+            return np.sqrt(variable)
     elif op == "SHAPE":
         def myFunction(variable):
             return variable.shape
@@ -632,6 +636,70 @@ def test_udf_with_pnl_func():
     val2 = U.execute(variable=[[1, 2, 3]])
     assert np.allclose(val1, val2)
     assert np.allclose(val1, L([1, 2, 3]) + 2)
+
+
+def test_udf_runtime_params_reset():
+    def myFunction(variable, x):
+        return variable + x
+
+    U = UserDefinedFunction(custom_function=myFunction, x=0)
+    assert U.function(0) == 0
+    assert U.function(0, params={'x': 1}) == 1
+    assert U.function(0) == 0
+
+
+@pytest.mark.parametrize(
+    'expression, parameters, result',
+    [
+        ('x + y', {'x': 2, 'y': 4}, 6),
+        ('(x + y) * z', {'x': 2, 'y': 4, 'z': 2}, 12),
+        ('x + f(3)', {'x': 1, 'f': lambda x: x}, 4),
+        ('x + f (3)', {'x': 1, 'f': lambda x: x}, 4),
+        ('np.sum([int(x), 2])', {'x': 1, 'np': np}, 3),
+        (
+            '(x * y) / 3 + f(z_0, z) + z0 - (x**y) * VAR',
+            {'x': 2, 'y': 3, 'f': lambda a, b: a + b, 'z_0': 1, 'z0': 1, 'z': 1, 'VAR': 1},
+            -3
+        )
+    ]
+)
+@pytest.mark.parametrize('explicit_udf', [True, False])
+def test_expression_execution(expression, parameters, result, explicit_udf):
+    if explicit_udf:
+        u = UserDefinedFunction(custom_function=expression, **parameters)
+    else:
+        m = ProcessingMechanism(function=expression, **parameters)
+        u = m.function
+
+    for p in parameters:
+        assert p in u.cust_fct_params
+
+    assert u.execute() == result
+
+
+def _function_test_integration(variable, x, y, z):
+    return x * y + z
+
+
+@pytest.mark.parametrize(
+    'function',
+    [
+        (lambda variable, x, y, z: x * y + z),
+        'x * y + z',
+        _function_test_integration
+    ]
+)
+def test_integration(function):
+    u = UserDefinedFunction(
+        custom_function=function,
+        x=2,
+        y=3,
+        z=5,
+        stateful_parameter='x'
+    )
+
+    assert u.execute() == 11
+    assert u.execute() == 38
 
 
 class TestUserDefFunc:

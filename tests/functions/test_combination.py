@@ -150,6 +150,7 @@ class TestReduce:
     #     # print("mech = ", R_mechanism.execute([[[1, 2], [3, 4, 5], [6, 7, 8, 9]]]))
     #
 
+
 SIZE=5
 np.random.seed(0)
 #This gives us the correct 2d array

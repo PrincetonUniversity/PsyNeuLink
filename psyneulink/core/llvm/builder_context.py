@@ -19,11 +19,12 @@ import os
 import re
 from typing import Set
 import weakref
-from psyneulink.core.scheduling.time import Time
+from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
 from . import codegen
+from . import helpers
 from .debug import debug_env
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
@@ -51,7 +52,7 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close', 'mt_rand_init'))
 
 
 class _node_wrapper():
@@ -187,6 +188,26 @@ class LLVMBuilderContext:
             assert decl_f.is_declaration
             return decl_f
         return f
+
+    def get_random_state_ptr(self, builder, component, state, params):
+        random_state_ptr = helpers.get_state_ptr(builder, component, state, "random_state")
+        used_seed_ptr = builder.gep(random_state_ptr, [self.int32_ty(0), self.int32_ty(4)])
+        used_seed = builder.load(used_seed_ptr)
+
+        seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
+        if isinstance(seed_ptr.type.pointee, ir.ArrayType):
+            # Modulated params are usually single element arrays
+            seed_ptr = builder.gep(seed_ptr, [self.int32_ty(0), self.int32_ty(0)])
+        new_seed = builder.load(seed_ptr)
+        # FIXME: the seed should ideally be integer already
+        new_seed = builder.fptoui(new_seed, used_seed.type)
+
+        seeds_cmp = builder.icmp_unsigned("!=", used_seed, new_seed)
+        with builder.if_then(seeds_cmp, likely=False):
+            reseed_f = self.get_builtin("mt_rand_init")
+            builder.call(reseed_f, [random_state_ptr, new_seed])
+
+        return random_state_ptr
 
     @staticmethod
     def get_debug_location(func: ir.Function, component):
@@ -337,7 +358,7 @@ class LLVMBuilderContext:
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
         elif isinstance(t, Time):
-            return ir.ArrayType(self.int32_ty, len(Time._time_scale_attr_map))
+            return ir.ArrayType(self.int32_ty, len(TimeScale))
         elif isinstance(t, SampleIterator):
             if isinstance(t.generator, list):
                 return ir.ArrayType(self.float_ty, len(t.generator))

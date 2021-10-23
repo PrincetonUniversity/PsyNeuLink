@@ -1195,7 +1195,7 @@ def _instantiate_parameter_port(
 
     elif _is_modulatory_spec(param_value, include_matrix_spec=False) and not isinstance(param_value, tuple):
         # If parameter is a single Modulatory specification (e.g., ControlSignal, or CONTROL, etc.)
-         #  try to place it in a tuple (for interpretation by _parse_port_spec) using default value as 1st item
+        #   try to place it in a tuple (for interpretation by _parse_port_spec) using default value as 1st item
         #   (note: exclude matrix since it is allowed as a value specification but not a projection reference)
         try:
             param_value = _get_tuple_for_single_item_modulatory_spec(function, param_name, param_value)

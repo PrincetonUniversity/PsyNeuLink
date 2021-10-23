@@ -17,6 +17,7 @@ def correlation(v1,v2):
     v2_norm = v2 - np.mean(v2)
     return np.sum(v1_norm * v2_norm) / np.sqrt(np.sum(v1_norm**2) * np.sum(v2_norm**2))
 
+
 test_data = [
     (kw.MAX_ABS_DIFF, False, None, np.max(abs(v1 - v2))),
     (kw.MAX_ABS_DIFF, True,  None, np.max(abs(v1 - v2))),

@@ -36,7 +36,6 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DIST_FUNCTION_TYPE, BETA, DIST_MEAN, DIST_SHAPE, DRIFT_DIFFUSION_ANALYTICAL_FUNCTION, \
     EXPONENTIAL_DIST_FUNCTION, GAMMA_DIST_FUNCTION, HIGH, LOW, MULTIPLICATIVE_PARAM, NOISE, NORMAL_DIST_FUNCTION, \
     SCALE, STANDARD_DEVIATION, THRESHOLD, UNIFORM_DIST_FUNCTION, WALD_DIST_FUNCTION
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.utilities import convert_to_np_array, parameter_spec
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 
@@ -196,7 +195,7 @@ class NormalDist(DistributionFunction):
         return self.convert_output_type(result)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
         mean_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "mean")
         std_dev_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "standard_deviation")
         ret_val_ptr = builder.alloca(ctx.float_ty)
@@ -619,6 +618,28 @@ class UniformDist(DistributionFunction):
         result = random_state.uniform(low, high)
 
         return self.convert_output_type(result)
+
+    def _gen_llvm_function_body(self, ctx, builder, params, state, _, arg_out, *, tags:frozenset):
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
+        low_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LOW)
+        high_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, HIGH)
+        ret_val_ptr = builder.alloca(ctx.float_ty)
+        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+        builder.call(norm_rand_f, [random_state, ret_val_ptr])
+
+        ret_val = builder.load(ret_val_ptr)
+        high = pnlvm.helpers.load_extract_scalar_array_one(builder, high_ptr)
+        low = pnlvm.helpers.load_extract_scalar_array_one(builder, low_ptr)
+        scale = builder.fsub(high, low)
+
+        ret_val = builder.fmul(ret_val, scale)
+        ret_val = builder.fadd(ret_val, low)
+
+        while isinstance(arg_out.type.pointee, pnlvm.ir.ArrayType):
+            assert len(arg_out.type.pointee) == 1
+            arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        builder.store(ret_val, arg_out)
+        return builder
 
 
 class GammaDist(DistributionFunction):

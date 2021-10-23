@@ -44,7 +44,7 @@ All TransferFunctions have the following attributes:
 import numbers
 import types
 import warnings
-from enum import IntEnum
+from enum import IntFlag
 from math import e, pi, sqrt
 
 import numpy as np
@@ -477,11 +477,15 @@ class Linear(TransferFunction):  # ---------------------------------------------
 
         return self._get_current_parameter_value(SLOPE, context)
 
-    def _is_identity(self, context=None):
-        return (
-            self.parameters.slope._get(context) == 1
-            and self.parameters.intercept._get(context) == 0
-        )
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            slope = self.defaults.slope
+            intercept = self.defaults.intercept
+        else:
+            slope = self.parameters.slope._get(context)
+            intercept = self.parameters.intercept._get(context)
+
+        return slope == 1 and intercept == 0
 
 
 # **********************************************************************************************************************
@@ -2249,7 +2253,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         offset = pnlvm.helpers.load_extract_scalar_array_one(builder, offset_ptr)
 
         rvalp = builder.alloca(ptri.type.pointee)
-        rand_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
         normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
@@ -3278,8 +3282,11 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
         receiver_len = len(owner.receiver.defaults.variable)
         return function(sender_len, receiver_len)
 
-    def _is_identity(self, context=None):
-        matrix = self.parameters.matrix._get(context)
+    def _is_identity(self, context=None, defaults=False):
+        if defaults:
+            matrix = self.defaults.matrix
+        else:
+            matrix = self.parameters.matrix._get(context)
 
         # if matrix is not an np array with at least one dimension,
         # this isn't an identity matrix
@@ -3364,7 +3371,7 @@ costFunctionNames = [INTENSITY_COST_FUNCTION,
                      COMBINE_COSTS_FUNCTION]
 
 
-class CostFunctions(IntEnum):
+class CostFunctions(IntFlag):
     """Options for selecting constituent cost functions to be used by a `TransferWithCosts` Function.
 
     These can be used alone or in combination with one another, by enabling or disabling each using the
@@ -4088,9 +4095,18 @@ class TransferWithCosts(TransferFunction):
 
         return intensity
 
-    def _is_identity(self, context=None):
-        return (self.parameters.transfer_fct.get()._is_identity(context) and
-                self.parameters.enabled_cost_functions.get(context) == CostFunctions.NONE)
+    def _is_identity(self, context=None, defaults=False):
+        transfer_fct = self.parameters.transfer_fct.get()
+
+        if defaults:
+            enabled_cost_functions = self.defaults.enabled_cost_functions
+        else:
+            enabled_cost_functions = self.parameters.enabled_cost_functions.get(context)
+
+        return (
+            transfer_fct._is_identity(context, defaults=defaults)
+            and enabled_cost_functions == CostFunctions.NONE
+        )
 
     @tc.typecheck
     def assign_costs(self, cost_functions: tc.any(CostFunctions, list), execution_context=None):

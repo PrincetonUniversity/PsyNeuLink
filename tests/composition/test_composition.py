@@ -4298,82 +4298,82 @@ class TestNestedCompositions:
         assert myMech6 in terminals
 
     def test_combine_two_overlapping_trees(self):
-            # Goal:
+        # Goal:
 
-            # Mech1 --
-            #          --> Mech3 --
-            # Mech2 --              --> Mech5
-            #              Mech4 --
+        # Mech1 --
+        #          --> Mech3 --
+        # Mech2 --              --> Mech5
+        #              Mech4 --
 
-            # create first composition -----------------------------------------------
+        # create first composition -----------------------------------------------
 
-            # Mech1 --
-            #           --> Mech3
-            # Mech2 --
+        # Mech1 --
+        #           --> Mech3
+        # Mech2 --
 
-            tree1 = Composition()
+        tree1 = Composition()
 
-            myMech1 = TransferMechanism(name="myMech1")
-            myMech2 = TransferMechanism(name="myMech2")
-            myMech3 = TransferMechanism(name="myMech3")
-            myMech4 = TransferMechanism(name="myMech4")
-            myMech5 = TransferMechanism(name="myMech5")
+        myMech1 = TransferMechanism(name="myMech1")
+        myMech2 = TransferMechanism(name="myMech2")
+        myMech3 = TransferMechanism(name="myMech3")
+        myMech4 = TransferMechanism(name="myMech4")
+        myMech5 = TransferMechanism(name="myMech5")
 
-            tree1.add_node(myMech1)
-            tree1.add_node(myMech2)
-            tree1.add_node(myMech3)
-            tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
-            tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
+        tree1.add_node(myMech1)
+        tree1.add_node(myMech2)
+        tree1.add_node(myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
 
-            # validate first composition ---------------------------------------------
+        # validate first composition ---------------------------------------------
 
-            tree1._analyze_graph()
-            origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 2
-            assert myMech1 in origins
-            assert myMech2 in origins
-            terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech3 in terminals
+        tree1._analyze_graph()
+        origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 2
+        assert myMech1 in origins
+        assert myMech2 in origins
+        terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech3 in terminals
 
-            # create second composition ----------------------------------------------
+        # create second composition ----------------------------------------------
 
-            # Mech3 --
-            #           --> Mech5
-            # Mech4 --
+        # Mech3 --
+        #           --> Mech5
+        # Mech4 --
 
-            tree2 = Composition()
-            tree2.add_node(myMech3)
-            tree2.add_node(myMech4)
-            tree2.add_node(myMech5)
-            tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
-            tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
+        tree2 = Composition()
+        tree2.add_node(myMech3)
+        tree2.add_node(myMech4)
+        tree2.add_node(myMech5)
+        tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
+        tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
 
-            # validate second composition ----------------------------------------------
+        # validate second composition ----------------------------------------------
 
-            tree2._analyze_graph()
-            origins = tree2.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 2
-            assert myMech3 in origins
-            assert myMech4 in origins
-            terminals = tree2.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech5 in terminals
+        tree2._analyze_graph()
+        origins = tree2.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 2
+        assert myMech3 in origins
+        assert myMech4 in origins
+        terminals = tree2.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech5 in terminals
 
-            # combine the compositions -------------------------------------------------
+        # combine the compositions -------------------------------------------------
 
-            tree1.add_pathway(tree2)
-            tree1._analyze_graph()
-            # no need for a projection connecting the two compositions because they share myMech3
+        tree1.add_pathway(tree2)
+        tree1._analyze_graph()
+        # no need for a projection connecting the two compositions because they share myMech3
 
-            origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 3
-            assert myMech1 in origins
-            assert myMech2 in origins
-            assert myMech4 in origins
-            terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech5 in terminals
+        origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 3
+        assert myMech1 in origins
+        assert myMech2 in origins
+        assert myMech4 in origins
+        terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech5 in terminals
 
     # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM:
     # FIX SHOULD THESE BE RE-WRITTEN WITH STANDARD NESTED COMPOSITIONS AND PATHWAYS?

@@ -44,7 +44,7 @@ from psyneulink.core.globals.keywords import \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
     PREFERENCE_SET_NAME
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, is_pref_set, PreferenceEntry, PreferenceLevel
@@ -857,6 +857,13 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                                 format(self._get_current_parameter_value(OPERATION, context)))
 
         return self.convert_output_type(result)
+
+    def _get_input_struct_type(self, ctx):
+        # FIXME: Workaround a special case of simple array.
+        #        It should just pass through to modifiers, which matches what
+        #        single element 2d array does
+        default_var = np.atleast_2d(self.defaults.variable)
+        return ctx.convert_python_struct_to_llvm_ir(default_var)
 
     def _gen_llvm_combine(self, builder, index, ctx, vi, vo, params):
         scale = self._gen_llvm_load_param(ctx, builder, params, SCALE, index, 1.0)

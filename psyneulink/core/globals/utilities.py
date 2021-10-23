@@ -195,15 +195,15 @@ def is_modulation_operation(val):
     return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
-        x = operation(1, 2)
-        if x == 1:
-            return MODULATION_OVERRIDE
-        elif x == 2:
-            return MODULATION_MULTIPLY
-        elif x == 3:
-            return MODULATION_ADD
-        else:
-            return False
+    x = operation(1, 2)
+    if x == 1:
+        return MODULATION_OVERRIDE
+    elif x == 2:
+        return MODULATION_MULTIPLY
+    elif x == 3:
+        return MODULATION_ADD
+    else:
+        return False
 
 
 
@@ -238,8 +238,8 @@ class AutoNumber(IntEnum):
         obj._value_ = value
         return obj
 
-# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 
+# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 TEST_CONDTION = False
 
 
@@ -1204,7 +1204,7 @@ class ContentAddressableList(UserList):
             key_num = self._get_key_for_item(key)
             if key_num is None:
                 # raise TypeError("\'{}\' is not a key in the {} being addressed".
-                                # format(key, self.__class__.__name__))
+                #                 format(key, self.__class__.__name__))
                 # raise KeyError("\'{}\' is not a key in {}".
                 raise TypeError("\'{}\' is not a key in {}".
                                 format(key, self.name))
@@ -1739,20 +1739,32 @@ def parse_string_to_psyneulink_object_string(string):
             The output of this function will cause
             getattr(psyneulink, <output>) to return a psyneulink object
     """
-    try:
-        eval(f'psyneulink.{string}')
+    def is_pnl_obj(string):
+        try:
+            # remove parens to get rid of class instantiations
+            string = re.sub(r'\(.*?\)', '', string)
+            attr_sequence = string.split('.')
+            obj = getattr(psyneulink, attr_sequence[0])
+
+            for item in attr_sequence[1:]:
+                obj = getattr(obj, item)
+
+            return True
+        except (AttributeError, TypeError):
+            return False
+
+    if is_pnl_obj(string):
         return string
-    except (AttributeError, SyntaxError, TypeError):
-        pass
 
     # handle potential psyneulink keyword
     try:
         # insert space between camel case words
         keyword = re.sub('([a-z])([A-Z])', r'\1 \2', string)
         keyword = keyword.upper().replace(' ', '_')
-        eval(f'psyneulink.{keyword}')
-        return keyword
-    except (AttributeError, SyntaxError, TypeError):
+
+        if is_pnl_obj(keyword):
+            return keyword
+    except TypeError:
         pass
 
     return None

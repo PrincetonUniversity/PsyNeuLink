@@ -333,49 +333,48 @@ def _seed_setter(value, owning_component, context):
     if value in {None, DEFAULT_SEED}:
         value = get_global_seed()
 
-    value = int(value)
+    # Remove any old PRNG state
+    owning_component.parameters.random_state.set(None, context=context)
+    return int(value)
 
-    owning_component.parameters.random_state._set(
-        np.random.RandomState([value]),
-        context
-    )
 
-    return value
+class SeededRandomState(np.random.RandomState):
+    def __init__(self, *args, **kwargs):
+        # Extract seed
+        self.used_seed = (kwargs.get('seed', None) or args[0])[:]
+        super().__init__(*args, **kwargs)
+
+    def __deepcopy__(self, memo):
+        # There's no easy way to deepcopy parent first.
+        # Create new instance and rewrite the state.
+        dup = type(self)(seed=self.used_seed)
+        dup.set_state(self.get_state())
+        return dup
+
+    def seed(self, seed):
+        assert False, "Use 'seed' parameter instead of seeding the random state directly"
 
 
 def _random_state_getter(self, owning_component, context):
-    seed_param = owning_component.parameters.seed
 
+    seed_param = owning_component.parameters.seed
     try:
         is_modulated = seed_param._port.is_modulated(context)
     except AttributeError:
-        # no ParameterPort
-        pass
+        is_modulated = False
+
+    if is_modulated:
+        seed_value = [int(owning_component._get_current_parameter_value(seed_param, context))]
     else:
-        if is_modulated:
-            # can manage reset_for_context only in getter because we
-            # don't want to store any copied values from other contexts
-            # (from _initialize_from_context)
-            try:
-                reset_for_context = self._reset_for_context[context.execution_id]
-            except AttributeError:
-                self._reset_for_context = {}
-                reset_for_context = False
-            except KeyError:
-                reset_for_context = False
+        seed_value = [int(seed_param._get(context=context))]
 
-            if not reset_for_context:
-                self._reset_for_context[context.execution_id] = True
-                return np.random.RandomState([
-                    int(
-                        owning_component._get_current_parameter_value(
-                            seed_param,
-                            context
-                        )
-                    )
-                ])
+    assert seed_value != [DEFAULT_SEED], "Invalid seed for {} in context: {} ({})".format(owning_component, context.execution_id, seed_param)
 
-    return self.values[context.execution_id]
+    current_state = self.values.get(context.execution_id, None)
+    if current_state is None or current_state.used_seed != seed_value:
+        return SeededRandomState(seed_value)
+
+    return current_state
 
 
 class Function_Base(Function):
@@ -616,11 +615,10 @@ class Function_Base(Function):
         new = super().__deepcopy__(memo)
         # ensure copy does not have identical name
         register_category(new, Function_Base, new.name, FunctionRegistry)
-        try:
+        if "random_state" in new.parameters:
             # HACK: Make sure any copies are re-seeded to avoid dependent RNG.
-            new.random_state.seed([get_global_seed()])
-        except:
-            pass
+            # functions with "random_state" param must have "seed" parameter
+            new.seed.base = DEFAULT_SEED
         return new
 
     @handle_external_context()
@@ -647,6 +645,7 @@ class Function_Base(Function):
             raise FunctionError(err_msg)
         self.most_recent_context = context
         self.parameters.value._set(value, context=context)
+        self._reset_runtime_parameters(context)
         return value
 
     @abc.abstractmethod
@@ -760,7 +759,7 @@ class Function_Base(Function):
         except AttributeError:
             return '<no owner>'
 
-    def _is_identity(self, context=None):
+    def _is_identity(self, context=None, defaults=False):
         # should return True in subclasses if the parameters for context are such that
         # the Function's output will be the same as its input
         # Used to bypass execute when unnecessary
@@ -772,8 +771,8 @@ class Function_Base(Function):
             'multiplicative_param', 'additive_param',
         })
 
-# *****************************************   EXAMPLE FUNCTION   *******************************************************
 
+# *****************************************   EXAMPLE FUNCTION   *******************************************************
 PROPENSITY = "PROPENSITY"
 PERTINACITY = "PERTINACITY"
 

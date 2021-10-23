@@ -37,6 +37,8 @@ class DefaultControlAllocationMode(Enum):
     GUMBY_MODE = 0.0
     BADGER_MODE = 1.0
     TEST_MODE = 240
+
+
 defaultControlAllocation = DefaultControlAllocationMode.BADGER_MODE.value #: This is a string
 
 # Default gating policy mode values:
@@ -45,4 +47,6 @@ class DefaultGatingAllocationMode(Enum):
     TONIC_MODE = 0.5
     SLEEP_MODE = 0.0
     TEST_MODE = 240
+
+
 defaultGatingAllocation = DefaultGatingAllocationMode.TONIC_MODE.value

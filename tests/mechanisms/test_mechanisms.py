@@ -50,8 +50,8 @@ class TestMechanism:
         t2 = pnl.TransferMechanism(name='t2', size=2)
         t2.integrator_function.parameters.noise.set(noise())
 
-        t1.integrator_function.noise.base.random_state = np.random.RandomState([0])
-        t2.integrator_function.noise.base.random_state = np.random.RandomState([0])
+        t1.integrator_function.noise.base.seed = 0
+        t2.integrator_function.noise.base.seed = 0
 
         for _ in range(5):
             np.testing.assert_equal(t1.execute([1, 1]), t2.execute([1, 1]))

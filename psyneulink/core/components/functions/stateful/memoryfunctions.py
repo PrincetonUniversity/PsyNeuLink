@@ -1601,12 +1601,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             matches = [m for m in existing_entries if len(m) and self._is_duplicate(entry, m, field_weights, context)]
 
             # If duplicate entries are not allowed and entry matches any existing entries, don't store
-            if matches and self.duplicate_entries_allowed == False:
+            if matches and self.duplicate_entries_allowed is False:
                 storage_succeeded = False
 
             # If duplicate_entries_allowed is True or OVERWRITE, replace value for matching entry:
             # FIX: SHOULD BE OVERWRITE or False
-            elif matches and self.duplicate_entries_allowed is OVERWRITE:
+            elif matches and self.duplicate_entries_allowed == OVERWRITE:
                 if len(matches)>1:
                     # If there is already more than one duplicate, raise error as it is not clear what to overwrite
                     raise FunctionError(f"Attempt to store item ({entry}) in {self.name} "
@@ -2243,7 +2243,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        rand_struct = ctx.get_random_state_ptr(builder, self, state, params)
         uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
 
         # Ring buffer
@@ -2711,7 +2711,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         matches = [k for k in d[KEYS] if key==list(k)]
 
         # If dupliciate keys are not allowed and key matches any existing keys, don't store
-        if matches and self.duplicate_keys == False:
+        if matches and self.duplicate_keys is False:
             storage_succeeded = False
 
         # If dupliciate_keys is specified as OVERWRITE, replace value for matching key:

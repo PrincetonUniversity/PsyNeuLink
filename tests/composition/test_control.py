@@ -1050,46 +1050,132 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    def test_modulation_of_random_state(self):
-        src = pnl.ProcessingMechanism()
-        mech = pnl.ProcessingMechanism(function=pnl.UniformDist())
+    @pytest.mark.parametrize("cost, expected, exp_values", [
+        (pnl.CostFunctions.NONE, 7.0, [1, 2, 3, 4, 5]),
+        (pnl.CostFunctions.INTENSITY, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591]),
+        (pnl.CostFunctions.ADJUSTMENT, 3, [1, 1, 1, 1, 1] ),
+        (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [-1.71828183, -6.3890561, -19.08553692, -53.59815003, -147.4131591]),
+        (pnl.CostFunctions.DURATION, 3, [-19, -22., -25., -28., -31]),
+        # FIXME: combinations with DURATION are broken
+        # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
+        # (pnl.CostFunctions.ALL, ,),
+        pytest.param(pnl.CostFunctions.DEFAULTS, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591], id="CostFunctions.DEFAULT")],
+        ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
+    def test_modulation_simple(self, cost, expected, exp_values):
+        obj = pnl.ObjectiveMechanism()
+        mech = pnl.ProcessingMechanism()
 
-        comp = pnl.Composition(retain_old_simulation_data=True)
+        comp = pnl.Composition(controller_mode=pnl.BEFORE)
         comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
-        comp.add_node(src)
+        comp.add_linear_processing_pathway([mech, obj])
 
         comp.add_controller(
             pnl.OptimizationControlMechanism(
-                monitor_for_control=src,
+                objective_mechanism=obj,
                 control_signals=pnl.ControlSignal(
-                    modulates=('seed', mech),
+                    modulates=('intercept', mech),
                     modulation=pnl.OVERRIDE,
-                    allocation_samples=pnl.SampleSpec(start=0, stop=5, step=1),
+                    allocation_samples=pnl.SampleSpec(start=1, stop=5, step=1),
+                    cost_options=cost,
                 )
             )
         )
 
-        def seed_check(context):
-            latest_sim = comp.controller.parameters.simulation_ids._get(context)[-1]
+        ret = comp.run(inputs={mech: [2]}, num_trials=1)
+        assert np.allclose(ret, expected)
+        assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
 
-            seed = mech.get_mod_seed(latest_sim)
-            rs = mech.function.parameters.random_state.get(latest_sim)
+    @pytest.mark.benchmark
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_modulation_of_random_state_direct(self, comp_mode, benchmark):
+        # set explicit seed to make sure modulation is different
+        mech = pnl.ProcessingMechanism(function=pnl.UniformDist(seed=0))
+        ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed', mech),
+                                                                          modulation=pnl.OVERRIDE))
+        comp = pnl.Composition()
+        comp.add_node(mech)
+        comp.add_node(ctl_mech)
 
-            # mech (and so its function and random_state) should be called
-            # exactly twice in one trial given the specified condition,
-            # and the random_state should be reset before the first execution
-            new_rs = np.random.RandomState([int(seed)])
+        seeds = [13, 13, 14]
+        prngs = {s:np.random.RandomState([s]) for s in seeds}
+        expected = [prngs[s].uniform() for s in seeds] * 2
+        # cycle over the seeds twice setting and resetting the random state
+        benchmark(comp.run, inputs={ctl_mech:seeds}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
-            for i in range(2):
-                new_rs.uniform(0, 1)
+        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
 
-            assert rs.uniform(0, 1) == new_rs.uniform(0, 1)
+    @pytest.mark.benchmark
+    @pytest.mark.control
+    @pytest.mark.composition
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    def test_modulation_of_random_state_DDM(self, comp_mode, benchmark):
+        # set explicit seed to make sure modulation is different
+        mech = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=5.),
+                       reset_stateful_function_when=pnl.AtPass(0),
+                       execute_until_finished=True)
+        ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed-function', mech),
+                                                                          modulation=pnl.OVERRIDE))
+        comp = pnl.Composition()
+        comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(ctl_mech)
 
-        comp.termination_processing = {pnl.TimeScale.TRIAL: pnl.AfterNCalls(mech, 2)}
-        comp.run(
-            inputs={src: [1], mech: [1]},
-            call_after_trial=seed_check
+        seeds = [13, 13, 14]
+        # cycle over the seeds twice setting and resetting the random state
+        benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
+
+        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python])
+    @pytest.mark.parametrize("num_generators", [5])
+    def test_modulation_of_random_state(self, mode, num_generators):
+        obj = pnl.ObjectiveMechanism()
+        # Set original seed that is not used by any evaluation
+        # this prevents dirty state from initialization skewing the results.
+        # The alternative would be to set:
+        # mech.functions.seed.base = mech.functions.seed.base
+        # to reset the PRNG
+        mech = pnl.ProcessingMechanism(function=pnl.UniformDist(seed=num_generators))
+
+        comp = pnl.Composition(retain_old_simulation_data=True,
+                               controller_mode=pnl.BEFORE)
+        comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
+        comp.add_linear_processing_pathway([mech, obj])
+
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                objective_mechanism=obj,
+                control_signals=pnl.ControlSignal(
+                    modulates=('seed', mech),
+                    modulation=pnl.OVERRIDE,
+                    allocation_samples=pnl.SampleSpec(start=0, stop=num_generators - 1, step=1),
+                    cost_options=pnl.CostFunctions.NONE
+                )
+            )
         )
+
+        comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
+
+        # Construct expected results.
+        # First all generators rest their sequence.
+        # In the second trial, the "winning" seed from the previous one continues its
+        # random sequence
+        all_generators = [np.random.RandomState([seed]) for seed in range(num_generators)]
+        first_generator_samples = [g.uniform(0, 1) for g in all_generators]
+        best_first = max(first_generator_samples)
+        index_best = first_generator_samples.index(best_first)
+        second_generator_samples = [g.uniform(0, 1) for g in all_generators]
+        second_considerations = first_generator_samples[:index_best] + \
+                                second_generator_samples[index_best:index_best + 1] + \
+                                first_generator_samples[index_best + 1:]
+        best_second = max(second_considerations)
+        # Check that we select the maximum of generated values
+        assert np.allclose(best_first, comp.results[0])
+        assert np.allclose(best_second, comp.results[1])
 
 
 class TestModelBasedOptimizationControlMechanisms:
@@ -1759,6 +1845,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([1.])], [np.array([1.5])], [np.array([2.25])]])
+        if mode == pnl.ExecutionMode.Python:
+            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)
@@ -1807,6 +1895,8 @@ class TestModelBasedOptimizationControlMechanisms:
 
         # objective_mech.log.print_entries(pnl.OUTCOME)
         assert np.allclose(comp.results, [[np.array([0.75])], [np.array([1.5])], [np.array([2.25])]])
+        if mode == pnl.ExecutionMode.Python:
+            assert np.allclose(np.asfarray(ocm.function.saved_values).flatten(), [0.75, 1.5, 2.25])
 
         if benchmark.enabled:
             benchmark(comp.run, inputs, execution_mode=mode)

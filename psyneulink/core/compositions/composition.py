@@ -775,7 +775,7 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
 
     **Composition with Learning**
 
-    .. figure:: _static/Composition_XOR_animation.gif
+    .. figure:: _images/Composition_XOR_animation.gif
        :alt: Animation of Composition with learning
        :scale: 50 %
 
@@ -2361,6 +2361,7 @@ import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
 
+import graph_scheduler
 import networkx
 import numpy as np
 import pint
@@ -2376,8 +2377,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism, AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -3417,7 +3417,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
-            self._scheduler = Scheduler(graph=self.graph_processing, default_execution_id=self.default_execution_id)
+            self._scheduler = Scheduler(composition=self)
 
             if old_scheduler is not None:
                 self._scheduler.add_condition_set(old_scheduler.conditions)
@@ -5509,6 +5509,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 )
             )
 
+    def _check_for_nesting_with_absolute_conditions(self, scheduler, termination_conds=None):
+        if any(isinstance(n, Composition) for n in self.nodes):
+            interval_conds = set()
+            fixed_point_conds = set()
+            for _, cond in scheduler.get_absolute_conditions(termination_conds).items():
+                if len(cond.absolute_intervals) > 0:
+                    interval_conds.add(cond)
+                if scheduler.mode == SchedulingMode.EXACT_TIME:
+                    if len(cond.absolute_fixed_points) > 0:
+                        fixed_point_conds.add(cond)
+
+            warn_str = f'{self} contains a nested Composition, which may cause unexpected behavior in absolute time conditions or failure to terminate execution.'
+            warn = False
+            if len(interval_conds) > 0:
+                warn_str += '\nFor repeating intervals:\n\t'
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tintervals: {cond.absolute_intervals}' for cond in interval_conds])
+                warn = True
+            if len(fixed_point_conds) > 0:
+                warn_str += '\nIn EXACT_TIME SchedulingMode, strict time points:\n\t'
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tstrict time points: {cond.absolute_fixed_points}' for cond in fixed_point_conds])
+                warn = True
+
+            if warn:
+                warnings.warn(warn_str)
+
     # ******************************************************************************************************************
     #                                            PATHWAYS
     # ******************************************************************************************************************
@@ -5730,8 +5755,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 raise ProjectionError(str(error.error_value))
 
                     except (InputPortError, ProjectionError, MappingError) as error:
-                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                                   f"{str(error.error_value)}")
+                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                               f"{str(error.error_value)}")
 
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
@@ -7152,8 +7177,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                     receiver = input_port)
                                     shadow_proj._activate_for_compositions(self)
                             else:
-                                    shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                                    shadow_proj._activate_for_compositions(self)
+                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
+                                shadow_proj._activate_for_compositions(self)
                     except DuplicateProjectionError:
                         continue
             for proj in input_port.path_afferents:
@@ -8316,6 +8341,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._analyze_graph(context=context)
 
         self._check_for_unnecessary_feedback_projections()
+        self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
@@ -8797,7 +8823,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Animate controller (before execution)
                 context.execution_phase = ContextFlags.CONTROL
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 
@@ -8934,7 +8960,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # TODO: scheduler counts and clocks were not expected to be
             # used prior to Scheduler.run calls. Remove this hack when
             # accommodation is written
-            execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+            try:
+                execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+            except graph_scheduler.SchedulerError:
+                execution_scheduler._init_counts(context.execution_id)
 
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or report_num is None:
@@ -9179,16 +9208,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
             # method, because there's no way to tell from within the execute method whether or not we are at the last trial
             # of the run.
-            if (self.controller_time_scale == TimeScale.RUN and
-                scheduler.get_clock(context).time.trial == 0):
-                    self._execute_controller(
-                        relative_order=BEFORE,
-                        execution_mode=execution_mode,
-                        _comp_ex=_comp_ex,
-                        report=report,
-                        report_num=report_num,
-                        context=context
-                    )
+            if self.controller_time_scale == TimeScale.RUN and scheduler.get_clock(context).time.trial == 0:
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    execution_mode=execution_mode,
+                    _comp_ex=_comp_ex,
+                    report=report,
+                    report_num=report_num,
+                    context=context
+                )
             elif self.controller_time_scale == TimeScale.TRIAL:
                 self._execute_controller(
                     relative_order=BEFORE,
@@ -9399,21 +9427,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                            # Reset runtim_params
-                            # Reset any specified for Mechanism
-                            if context.execution_id in node._runtime_params_reset:
-                                for key in node._runtime_params_reset[context.execution_id]:
-                                    node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
-                                                              context)
-                            node._runtime_params_reset[context.execution_id] = {}
-                            # Reset any specified for Mechanism's function
-                            if context.execution_id in node.function._runtime_params_reset:
-                                for key in node.function._runtime_params_reset[context.execution_id]:
-                                    node.function._set_parameter_value(
-                                            key,
-                                            node.function._runtime_params_reset[context.execution_id][key],
-                                            context)
-                            node.function._runtime_params_reset[context.execution_id] = {}
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
@@ -9899,7 +9912,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         super()._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
 
         for c in contexts:
-            self.scheduler._delete_counts(c.execution_id)
+            try:
+                self.scheduler._delete_counts(c.execution_id)
+            except AttributeError:
+                self.scheduler._delete_counts(c)
 
     # ******************************************************************************************************************
     #                                           LLVM

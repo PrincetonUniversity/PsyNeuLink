@@ -423,14 +423,14 @@ The following attributes and methods control and provide information about the e
 
 * **num_executions_before_finished** -- contains the number of times the Component has executed prior to finishing
   (and since it last finished);  depending upon the class, these may all be within a single call to the Component's
-  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evalutes
+  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evaluates
   to True. Note that this is distinct from the `execution_count <Component_Execution_Count>` and `num_executions
   <Component_Num_Executions>` attributes.
 
 .. _Component_Max_Executions_Before_Finished:
 
 * **max_executions_before_finished** -- determines the maximum number of executions allowed before finishing
-  (i.e., the maxmium allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
+  (i.e., the maximum allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
   If it is exceeded, a warning message is generated.  Note that this only pertains to `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>`, and not its `execution_count <Component_Execution_Count>`, which can be
   unlimited.
@@ -444,7 +444,7 @@ The following attributes and methods control and provide information about the e
 
 * **execution_count** -- maintains a record of the number of times a Component has executed since it was constructed,
   *excluding*  executions carried out during initialization and validation, but including all others whether they are
-  of the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which
+  of the Component on its own are as part of a `Composition`, and irrespective of the `context <Context>` in which
   they are occur. The value can be changed "manually" or programmatically by assigning an integer
   value directly to the attribute.  Note that this is the distinct from the `num_executions <Component_Num_Executions>`
   and `num_executions_before_finished <Component_Num_Executions_Before_Finished>` attributes.
@@ -505,6 +505,7 @@ from collections.abc import Iterable
 from enum import Enum, IntEnum
 
 import dill
+import graph_scheduler
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
@@ -1098,8 +1099,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
-        self._handle_illegal_kwargs(**kwargs)
-
         context = Context(
             source=ContextFlags.CONSTRUCTOR,
             execution_phase=ContextFlags.IDLE,
@@ -1115,6 +1114,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except (KeyError, TypeError):
             function_params = {}
+
+        # if function is string, assume any unknown kwargs are for the
+        # corresponding UDF expression
+        if isinstance(function, (types.FunctionType, str)):
+            function_params = {
+                **kwargs,
+                **function_params
+            }
+        else:
+            self._handle_illegal_kwargs(**kwargs)
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
@@ -1323,9 +1332,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
-                val = pnlvm._tupleize(x.get_state()[1:])
+                val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
             elif isinstance(x, Time):
-                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+                val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
             elif isinstance(x, ContentAddressableList):
@@ -1348,12 +1357,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "grid",
+                     "modulated_mechanisms", "grid", "control_signal_params",
                      "activation_derivative_fct", "input_specification",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "auto", "hetero", "cost", "costs", "combined_costs",
+                     "control_signal",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
@@ -1419,8 +1429,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             elif isinstance(x, Component):
                 return x._get_param_initializer(context)
 
-            try:   # This can't use tupleize and needs to recurse to handle
-                   # 'search_space' list of SampleIterators
+            try:
+                # This can't use tupleize and needs to recurse to handle
+                # 'search_space' list of SampleIterators
                 return tuple(_convert(i) for i in x)
             except TypeError:
                 return x if x is not None else tuple()
@@ -1946,6 +1957,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Composition_Base,
             ComponentsMeta,
             types.MethodType,
+            types.ModuleType,
             functools.partial,
         )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
@@ -2535,10 +2547,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     inspect.isclass(param_value) and
                     inspect.isclass(getattr(self.defaults, param_name))
                     and issubclass(param_value, getattr(self.defaults, param_name))):
-                    # Assign instance to target and move on
-                    #  (compatiblity check no longer needed and can't handle function)
-                    target_set[param_name] = param_value()
-                    continue
+                # Assign instance to target and move on
+                #  (compatiblity check no longer needed and can't handle function)
+                target_set[param_name] = param_value()
+                continue
 
             # Check if param value is of same type as one with the same name in defaults
             #    don't worry about length
@@ -2817,11 +2829,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
-        if isinstance(function, types.FunctionType):
-            function = UserDefinedFunction(default_variable=function_variable,
-                                                custom_function=function,
-                                                owner=self,
-                                                context=context)
+        if isinstance(function, (types.FunctionType, str)):
+            function = UserDefinedFunction(
+                default_variable=function_variable,
+                custom_function=function,
+                owner=self,
+                context=context,
+                **function_params,
+            )
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):
@@ -3087,19 +3102,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
         self.most_recent_context = context
-
-        # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
-                try:
-                    prev_val = getattr(self.parameters, param).get_previous(context)
-                    self._set_parameter_value(param, prev_val, context)
-                except AttributeError:
-                    try:
-                        prev_val = getattr(self.function.parameters, param).get_previous(context)
-                        self.function._set_parameter_value(param, prev_val, context)
-                    except:
-                        pass
+        self._reset_runtime_parameters(context)
 
         return value
 
@@ -3165,6 +3168,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
         return parameter._get(context)
+
+    def _reset_runtime_parameters(self, context):
+        if context.execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[context.execution_id]:
+                self._set_parameter_value(
+                    key,
+                    self._runtime_params_reset[context.execution_id][key],
+                    context
+                )
+            self._runtime_params_reset[context.execution_id] = {}
 
     def _try_execute_param(self, param, var, context=None):
         def fill_recursively(arr, value, indices=()):

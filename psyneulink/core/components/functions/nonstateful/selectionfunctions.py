@@ -35,7 +35,7 @@ from psyneulink.core.components.functions.function import (
 )
 from psyneulink.core.globals.keywords import \
     MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR, MIN_VAL, MIN_ABS_VAL, MIN_INDICATOR, MIN_ABS_INDICATOR, \
-    MODE, ONE_HOT_FUNCTION, PARAMETER_PORT_PARAMS, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
+    MODE, ONE_HOT_FUNCTION, PROB, PROB_INDICATOR, SELECTION_FUNCTION_TYPE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import \
     REPORT_OUTPUT_PREF, PreferenceEntry, PreferenceLevel, is_pref_set
@@ -253,14 +253,14 @@ class OneHot(SelectionFunction):
                                     "array of probabilities that sum to 1".
                                     format(MODE, self.__class__.__name__, Function.__name__, PROB, prob_dist))
 
-    def _gen_llvm_function_body(self, ctx, builder, _, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         idx_ptr = builder.alloca(ctx.int32_ty)
         builder.store(ctx.int32_ty(0), idx_ptr)
 
         if self.mode in {PROB, PROB_INDICATOR}:
             rng_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             dice_ptr = builder.alloca(ctx.float_ty)
-            mt_state_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+            mt_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
             builder.call(rng_f, [mt_state_ptr, dice_ptr])
             dice = builder.load(dice_ptr)
             sum_ptr = builder.alloca(ctx.float_ty)

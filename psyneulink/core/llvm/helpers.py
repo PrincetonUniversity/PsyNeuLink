@@ -14,9 +14,9 @@ from ctypes import util
 from llvmlite import ir
 
 from .debug import debug_env
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
     EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
-from ..scheduling.time import TimeScale
+from psyneulink.core.scheduling.time import TimeScale
 
 
 @contextmanager
@@ -136,6 +136,9 @@ def exp(ctx, builder, x):
     exp_f = ctx.get_builtin("exp", [x.type])
     return builder.call(exp_f, [x])
 
+def sqrt(ctx, builder, x):
+    sqrt_f = ctx.get_builtin("sqrt", [x.type])
+    return builder.call(sqrt_f, [x])
 
 def tanh(ctx, builder, x):
     tanh_f = ctx.get_builtin("tanh", [x.type])

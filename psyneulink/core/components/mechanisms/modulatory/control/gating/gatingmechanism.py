@@ -185,11 +185,10 @@ import typecheck as tc
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    GATING, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, MULTIPLICATIVE, PROJECTION_TYPE
+    GATING, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel

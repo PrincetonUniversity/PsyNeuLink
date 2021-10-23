@@ -342,6 +342,7 @@ class ReportParams(Enum):
     LOGGED = auto()
     ALL = auto()
 
+
 MODULATED = ReportParams.MODULATED
 CONTROLLED = ReportParams.CONTROLLED
 MONITORED = ReportParams.MONITORED
@@ -467,6 +468,7 @@ class ReportDevices(Flag):
     RECORD = auto()
     DIVERT = auto()
     PNL_VIEW = auto()
+
 
 CONSOLE = ReportDevices.CONSOLE
 RECORD = ReportDevices.RECORD
@@ -1679,7 +1681,7 @@ class Report:
 
         # Don't indent for nodes inside Panels (except Composition.controller, which is never in a Panel)
         if report_output is ReportOutput.FULL and not is_controller:
-                depth_indent = 0
+            depth_indent = 0
 
         return Padding.indent(report, depth_indent)
 
@@ -1727,7 +1729,7 @@ class Report:
             # If was simulating previously, then have just exited, so:
             #   (note: need to use transition and not explicit count of simulations,
             #    since number of simulation trials being run is generally not known)
-                # - turn it off
+            #     - turn it off
             self.output_reports[caller][SIMULATING] = False
 
         # Update progress report
@@ -1807,15 +1809,15 @@ class Report:
                     self._rich_progress.console.print('')
             # Record output reports as they are created
             if len(self._execution_stack)==0 and self._report_output is not ReportOutput.OFF:
-                    if self._rich_divert:
-                        self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
-                    if self._record_reports:
-                        with self._recording_console.capture() as capture:
-                            if report_type is EXECUTE_REPORT:
-                                self._recording_console.print(output_report.trial_report)
-                            elif report_type is RUN_REPORT:
-                                self._recording_console.print(output_report.run_report)
-                        self._recorded_reports += capture.get()
+                if self._rich_divert:
+                    self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+                if self._record_reports:
+                    with self._recording_console.capture() as capture:
+                        if report_type == EXECUTE_REPORT:
+                            self._recording_console.print(output_report.trial_report)
+                        elif report_type == RUN_REPORT:
+                            self._recording_console.print(output_report.run_report)
+                    self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
         if (self._report_output is not ReportOutput.OFF
