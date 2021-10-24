@@ -1059,7 +1059,8 @@ class TestControlMechanisms:
         # FIXME: combinations with DURATION are broken
         # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
         # (pnl.CostFunctions.ALL, ,),
-        pytest.param(pnl.CostFunctions.DEFAULTS, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591], id="CostFunctions.DEFAULT")],
+        # pytest.param(pnl.CostFunctions.DEFAULTS, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591], id="CostFunctions.DEFAULT")],
+        pytest.param(pnl.CostFunctions.DEFAULTS, 7.0, [1, 2, 3, 4, 5], id="CostFunctions.DEFAULT")],
         ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
     def test_modulation_simple(self, cost, expected, exp_values):
         obj = pnl.ObjectiveMechanism()
@@ -1083,7 +1084,7 @@ class TestControlMechanisms:
 
         ret = comp.run(inputs={mech: [2]}, num_trials=1)
         assert np.allclose(ret, expected)
-        assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
+        assert np.allclose([float(np.squeeze(x)) for x in comp.controller.function.saved_values], exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
