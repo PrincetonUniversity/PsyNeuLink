@@ -1047,7 +1047,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._delete_contexts(sim_context, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, context=None, return_results=False):
+    def evaluation_function(self, control_allocation, num_samples=1, context=None, return_results=False):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `state_feature_values
         <OptimizationControlMechanism.state_feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -1055,14 +1055,16 @@ class OptimizationControlMechanism(ControlMechanism):
         Assigned as the `objective_function <OptimizationFunction.objective_function>` for the
         OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.
 
-        Calls `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method.
+        Makes num_samples calls to `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method,
+        and aggregates results of each call in an array of length num_samples.
 
-        Returns a scalar that is the predicted `net_outcome <ControlMechanism.net_outcome>`
-        for the current `state_feature_values <OptimizationControlMechanism.state_feature_values>`
-        and specified `control_allocation <ControlMechanism.control_allocation>`.
+        Returns array of results, each element of which is the predicted `net_outcome <ControlMechanism.net_outcome>`
+        for the current `state_feature_values <OptimizationControlMechanism.state_feature_values>` and specified
+        `control_allocation <ControlMechanism.control_allocation>` for one of the num_samples calls to the `agent_rep
+        <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method.
 
         """
-        # agent_rep is a Composition (since runs_simuluations = True)
+        # agent_rep is a Composition (since runs_simulations = True)
         if self.agent_rep.runs_simulations:
             # KDM 5/20/19: crudely using default here because it is a stateless parameter
             # and there is a bug in setting parameter values on init, see TODO note above
@@ -1078,15 +1080,24 @@ class OptimizationControlMechanism(ControlMechanism):
             # We shouldn't get this far if execution mode is not Python
             assert self.parameters.comp_execution_mode._get(context) == "Python"
             exec_mode = pnlvm.ExecutionMode.Python
-            result = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
-                                             control_allocation,
-                                             self.parameters.num_estimates._get(context),
-                                             base_context=context,
-                                             context=new_context,
-                                             execution_mode=exec_mode,
-                                             return_results=return_results)
-            context.composition = old_composition
 
+            outcomes = []
+            results = []
+            for i in range(num_samples):
+                return_value = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
+                                                       control_allocation,
+                                                       self.parameters.num_estimates._get(context),
+                                                       base_context=context,
+                                                       context=new_context,
+                                                       execution_mode=exec_mode,
+                                                       return_results=return_results)
+                if return_results:
+                    outcomes.append(return_value[0])
+                    results.append(return_value[1])
+                else:
+                    outcomes.append(return_value)
+
+            context.composition = old_composition
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
 
@@ -1094,9 +1105,9 @@ class OptimizationControlMechanism(ControlMechanism):
             # return a tuple in this case where the first element is the outcome as usual and the
             # results of composition run are the second element.
             if return_results:
-                return result[0], result[1]
+                return outcomes, results
             else:
-                return result
+                return outcomes
 
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
