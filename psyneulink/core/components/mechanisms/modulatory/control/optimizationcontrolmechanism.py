@@ -847,7 +847,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # Specify *OUTCOME* InputPort;  receives Projection from *OUTCOME* OutputPort of objective_mechanism
-        outcome_input_port = {NAME:OUTCOME, PARAMS:{INTERNAL_ONLY:True}}
+        if self.objective_mechanism:
+            outcome_num_items = self.objective_mechanism.output_ports[OUTCOME].value.size
+        else:
+            outcome_num_items = len(self.monitor_for_control) or 1
+        from psyneulink.core.globals.keywords import SIZE
+        outcome_input_port = {NAME:OUTCOME, SIZE:outcome_num_items, PARAMS:{INTERNAL_ONLY:True}}
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.input_ports:
