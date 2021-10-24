@@ -1047,7 +1047,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
             self.agent_rep._delete_contexts(sim_context, check_simulation_storage=True)
 
-    def evaluation_function(self, control_allocation, num_samples=1, context=None, return_results=False):
+    def evaluation_function(self, control_allocation, context=None, return_results=False):
         """Compute `net_outcome <ControlMechanism.net_outcome>` for current set of `state_feature_values
         <OptimizationControlMechanism.state_feature_values>` and a specified `control_allocation
         <ControlMechanism.control_allocation>`.
@@ -1055,12 +1055,12 @@ class OptimizationControlMechanism(ControlMechanism):
         Assigned as the `objective_function <OptimizationFunction.objective_function>` for the
         OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.
 
-        Makes num_samples calls to `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method,
+        Makes self.num_estimates calls to `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method,
         and aggregates results of each call in an array of length num_samples.
 
         Returns array of results, each element of which is the predicted `net_outcome <ControlMechanism.net_outcome>`
         for the current `state_feature_values <OptimizationControlMechanism.state_feature_values>` and specified
-        `control_allocation <ControlMechanism.control_allocation>` for one of the num_samples calls to the `agent_rep
+        `control_allocation <ControlMechanism.control_allocation>` for one of the num_estimates calls to the `agent_rep
         <OptimizationControlMechanism.agent_rep>`\\'s `evaluate` method.
 
         """
@@ -1083,7 +1083,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             outcomes = []
             results = []
-            for i in range(num_samples):
+            num_estimates = self.num_estimates or 1
+            for i in range(num_estimates):
                 return_value = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                                        control_allocation,
                                                        self.parameters.num_estimates._get(context),
@@ -1111,13 +1112,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
-            result = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
+            return self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                              control_allocation,
                                              self.parameters.num_estimates._get(context),
                                              context=context
                                              )
-
-        return result
 
     def _get_evaluate_input_struct_type(self, ctx):
         # We construct input from optimization function input

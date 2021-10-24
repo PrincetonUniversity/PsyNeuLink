@@ -1783,11 +1783,9 @@ class Mechanism_Base(Mechanism):
                             default_variable = default_variable_from_input_ports
                         else:
                             raise MechanismError(
-                                'default variable determined from the specified input_ports spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_ports, size_variable,
-                                )
-                            )
+                                f'Default variable for {self.name} determined from the specified input_ports spec '
+                                f'({default_variable_from_input_ports}) is not compatible with the default variable '
+                                f'determined from size parameter ({size_variable}).')
                     else:
                         # do not pass input_ports variable as default_variable, fall back to size specification
                         pass
@@ -1795,11 +1793,9 @@ class Mechanism_Base(Mechanism):
                 if input_ports_variable_was_specified:
                     if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_ports):
                         raise MechanismError(
-                            'Default variable determined from the specified input_ports spec ({0}) for {1} '
-                            'is not compatible with its specified default variable ({2})'.format(
-                                default_variable_from_input_ports, self.name, default_variable
-                            )
-                        )
+                            f'Default variable for {self.name} determined from the specified input_ports spec '
+                            f'({default_variable_from_input_ports}) is not compatible with its specified '
+                            f'default variable ({default_variable}).')
                 else:
                     # do not pass input_ports variable as default_variable, fall back to default_variable specification
                     pass

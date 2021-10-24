@@ -1396,7 +1396,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         super()._instantiate_input_ports(context=context)
         self.input_port.name = OUTCOME
-        self.input_port.name = OUTCOME
 
         # If objective_mechanism is specified, instantiate it,
         #     including Projections to it from monitor_for_control
