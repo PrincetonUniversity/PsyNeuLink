@@ -455,7 +455,7 @@ class TestControlMechanisms:
 
     def test_feedback_assignment_for_multiple_control_projections_to_same_mechanism(self):
         """Test that multiple ControlProjections from a ControlMechanism to the same Mechanism are treated
-        same as a single Controlprojection to that Mechanism.
+        same as a single ControlProjection to that Mechanism.
         Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
         control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
         """

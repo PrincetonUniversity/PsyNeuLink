@@ -856,14 +856,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Specify *OUTCOME* InputPort;
         if self.objective_mechanism:
-            outcome_input_port = {NAME:OUTCOME,
-                                  SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
-                                  PARAMS:{INTERNAL_ONLY:True}}
+            # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
+            outcome_input_ports = [({SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
+                                     PARAMS:{INTERNAL_ONLY:True}})]
         else:
-            outcome_input_port = {NAME:OUTCOME,
-                                  SIZE:len(self.monitor_for_control) or 1,
-                                  FUNCTION:Concatenate,
-                                  PARAMS:{INTERNAL_ONLY:True}}
+            # Create one InputPort for each item in monitor_for_control
+            outcome_input_ports = []
+            for item in self.monitor_for_control:
+                outcome_input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.input_ports:
@@ -871,9 +871,10 @@ class OptimizationControlMechanism(ControlMechanism):
             input_ports = self._parse_state_feature_specs(input_ports, self.state_feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
-            input_ports.insert(0, outcome_input_port),
+            # input_ports.insert(0, outcome_input_ports),
+            input_ports = outcome_input_ports + input_ports
         else:
-            input_ports = [outcome_input_port]
+            input_ports = outcome_input_ports
 
         self.parameters.input_ports._set(input_ports, context)
 
@@ -967,29 +968,38 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
 
-    def _update_input_ports(self, runtime_params=None, context=None):
-        """Update value for each InputPort in self.input_ports:
-
-        Call execute method for all (MappingProjection) Projections in Port.path_afferents
-        Aggregate results (using InputPort execute method)
-        Update InputPort.value
-        """
-        # "Outcome"
-        outcome_input_port = self.input_port
-        outcome_input_port._update(params=runtime_params, context=context)
-        port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
-        # MODIFIED 5/8/20 OLD:
-        # FIX 5/8/20 [JDC]: THIS DOESN'T CALL SUPER, SO NOT IDEAL HOWEVER, REVISION BELOW CRASHES... NEEDS TO BE FIXED
-        for i in range(1, len(self.input_ports)):
-            port = self.input_ports[i]
-            port._update(params=runtime_params, context=context)
-            port_values.append(port.parameters.value._get(context))
-        return convert_to_np_array(port_values)
-        # # MODIFIED 5/8/20 NEW:
-        # input_port_values = super()._update_input_ports(runtime_params, context)
-        # port_values.append(input_port_values)
-        # return np.array(port_values)
-        # MODIFIED 5/8/20 END
+    # def _update_input_ports(self, runtime_params=None, context=None):
+    #     """Update value for each InputPort in self.input_ports:
+    #
+    #     Call execute method for all (MappingProjection) Projections in Port.path_afferents
+    #     Aggregate results (using InputPort execute method)
+    #     Update InputPort.value
+    #     """
+    #     # "Outcome"
+    #     # MODIFIED 10/24/21 OLD:
+    #     # outcome_input_port = self.input_port
+    #     # outcome_input_port._update(params=runtime_params, context=context)
+    #     # port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
+    #     # MODIFIED 10/24/21 NEW:  [MODIFIED TO HANDLE MORE THAN ONE OUTCOME InputPort]
+    #     port_values = []
+    #     for i in range(self.num_outcome_input_ports):
+    #         outcome_input_port = self.input_ports[i]
+    #         outcome_input_port._update(params=runtime_params, context=context)
+    #         port_values.append(np.atleast_2d(outcome_input_port.parameters.value._get(context)))
+    #     # MODIFIED 10/24/21 END
+    #
+    #     # MODIFIED 5/8/20 OLD:
+    #     # FIX 5/8/20 [JDC]: THIS DOESN'T CALL SUPER, SO NOT IDEAL HOWEVER, REVISION BELOW CRASHES... NEEDS TO BE FIXED
+    #     for i in range(self.num_outcome_input_ports, len(self.input_ports)):
+    #         port = self.input_ports[i]
+    #         port._update(params=runtime_params, context=context)
+    #         port_values.append(port.parameters.value._get(context))
+    #     return convert_to_np_array(port_values)
+    #     # # MODIFIED 5/8/20 NEW:
+    #     # input_port_values = super()._update_input_ports(runtime_params, context)
+    #     # port_values.append(input_port_values)
+    #     # return np.array(port_values)
+    #     # MODIFIED 5/8/20 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
@@ -1198,7 +1208,7 @@ class OptimizationControlMechanism(ControlMechanism):
             val = builder.fadd(val, cost)
             builder.store(val, total_cost)
 
-        # compute net outcome
+        # compute net_outcome
         objective = builder.load(objective_ptr)
         net_outcome = builder.fsub(objective, builder.load(total_cost))
         builder.store(net_outcome, arg_out)

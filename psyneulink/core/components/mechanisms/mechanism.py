@@ -1836,8 +1836,8 @@ class Mechanism_Base(Mechanism):
                     default_variable_from_input_ports.append(InputPort.defaults.variable)
                     continue
                 else:
-                    raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
-                                         format(InputPort.__name__, s, self.name))
+                    raise MechanismError(f"PROGRAM ERROR: Problem parsing {InputPort.__name__} specification ({s}) "
+                                         f"for {self.name}.")
 
             mech_variable_item = None
 

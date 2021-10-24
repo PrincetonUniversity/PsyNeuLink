@@ -1395,18 +1395,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
     def _instantiate_input_ports(self, context=None):
 
         super()._instantiate_input_ports(context=context)
-        self.input_port.name = OUTCOME
 
         # If objective_mechanism is specified, instantiate it,
         #     including Projections to it from monitor_for_control
         if self.objective_mechanism:
+            self.num_outcome_input_ports = 1
             self._instantiate_objective_mechanism(context=context)
+            self.input_port.name = OUTCOME
 
         # Otherwise, instantiate Projections from monitor_for_control to ControlMechanism
         elif self.monitor_for_control:
+            self.num_outcome_input_ports = len(self.monitor_for_control)
+            # FIX: MODIFY TO CONSTRUCT MAPPING PROJECTION FROM EACH MONITOR_FOR_CONTROL SPEC TO CORRESPONDING INPUTPORT
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            for sender in convert_to_list(self.monitor_for_control):
-                self.aux_components.append(MappingProjection(sender=sender, receiver=self.input_ports[OUTCOME]))
+            for i, sender in enumerate(convert_to_list(self.monitor_for_control)):
+                input_port = self.input_ports[i]
+                input_port.name = sender.name.upper()
+                self.aux_components.append(MappingProjection(sender=sender, receiver=input_port))
 
     def _instantiate_output_ports(self, context=None):
 
