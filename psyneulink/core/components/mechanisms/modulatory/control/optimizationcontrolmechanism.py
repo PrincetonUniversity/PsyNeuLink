@@ -433,6 +433,7 @@ from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
@@ -444,7 +445,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PROJECTIONS
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PROJECTIONS, SIZE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -841,18 +842,28 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_input_ports(self, context=None):
         """Instantiate input_ports for Projections from state_features and objective_mechanism.
 
-        Inserts InputPort specification for Projection from ObjectiveMechanism as first item in list of
-        InputPort specifications generated in _parse_state_feature_specs from the **state_features** and
-        **state_feature_function** arguments of the OptimizationControlMechanism constructor.
+        Constructs and inserts specification for *OUTCOME* InputPort as first item in list of InputPort specifications
+        Generates full input_ports specification by calling _parse_state_feature_specs with *OUTCOME* InputPort and the
+        **state_features** and **state_feature_function** arguments of the OptimizationControlMechanism constructor.
+
+        If **objective_mechanism** is specified, its *OUTCOME* OutputPort is used as the size of the OCM's *OUTCOME*
+            InputPort, and a Projection is constructed from the former to the latter.
+
+        If **objective_mechanism** is NOT specified, the OCM's **monitor_for_control** argument is used as the size of
+            the OCM's *OUTCOME* InputPort, and its function is specified as Concatentate.
+
         """
 
-        # Specify *OUTCOME* InputPort;  receives Projection from *OUTCOME* OutputPort of objective_mechanism
+        # Specify *OUTCOME* InputPort;
         if self.objective_mechanism:
-            outcome_num_items = self.objective_mechanism.output_ports[OUTCOME].value.size
+            outcome_input_port = {NAME:OUTCOME,
+                                  SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
+                                  PARAMS:{INTERNAL_ONLY:True}}
         else:
-            outcome_num_items = len(self.monitor_for_control) or 1
-        from psyneulink.core.globals.keywords import SIZE
-        outcome_input_port = {NAME:OUTCOME, SIZE:outcome_num_items, PARAMS:{INTERNAL_ONLY:True}}
+            outcome_input_port = {NAME:OUTCOME,
+                                  SIZE:len(self.monitor_for_control) or 1,
+                                  FUNCTION:Concatenate,
+                                  PARAMS:{INTERNAL_ONLY:True}}
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.input_ports:
@@ -891,7 +902,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
-        Set size of control_allocadtion equal to number of modulatory_signals.
+        Set size of control_allocation equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
         from psyneulink.core.globals.keywords import OWNER_VALUE
