@@ -7436,6 +7436,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             predicted_input=None,
             control_allocation=None,
             num_simulation_trials=None,
+            num_estimates=None,
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,

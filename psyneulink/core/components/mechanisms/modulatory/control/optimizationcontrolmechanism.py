@@ -1066,6 +1066,7 @@ class OptimizationControlMechanism(ControlMechanism):
             for i in range(num_estimates):
                 return_value = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                                        control_allocation,
+                                                       self.parameters.num_trials_per_estimate._get(context),
                                                        self.parameters.num_estimates._get(context),
                                                        base_context=context,
                                                        context=new_context,
