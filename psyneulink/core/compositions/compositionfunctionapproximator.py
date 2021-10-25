@@ -32,8 +32,9 @@ and a `control_allocation <ControlMechanism.control_allocation>` provided by the
 Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `function
 <CompositionFunctionApproximator.function>` to generate and return the predicted `net_outcome
 <ControlMechanism.net_outcome>` for a given set of `state_feature_values
-<OptimizationControlMechanism.state_feature_values>`, `control_allocation <ControlMechanism.control_allocation>` and
-`num_estimates <OptimizationControlMechanism.num_estimates>`
+<OptimizationControlMechanism.state_feature_values>`, `control_allocation <ControlMechanism.control_allocation>`,
+`num_estimates <OptimizationControlMechanism.num_estimates>`, and `num_trials_per_estimate
+<OptimizationControlMechanism.num_trials_per_estimate>`.
 
 COMMENT:
 .. note::
@@ -120,8 +121,8 @@ class CompositionFunctionApproximator(Composition):
     def evaluate(self,
                  feature_values,
                  control_allocation,
-                 num_trials_per_estimate,
                  num_estimates,
+                 num_trials_per_estimate,
                  base_context=Context(execution_id=None),
                  context=None):
         """Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for

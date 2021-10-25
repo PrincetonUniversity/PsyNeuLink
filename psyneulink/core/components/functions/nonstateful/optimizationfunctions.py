@@ -2383,7 +2383,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # FIXME: This doesn't work at the moment. Need to use for loop below.
             # The batch_size is the number of estimates/simulations, set it on the
             # optimization control mechanism.
-            # self.owner.parameters.num_estimates.set(batch_size, execution_id)
+            # self.owner.parameters.num_trials_per_estimate.set(batch_size, execution_id)
 
             # Run batch_size simulations of the PsyNeuLink composition
             results = []

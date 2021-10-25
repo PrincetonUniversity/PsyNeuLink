@@ -274,8 +274,8 @@ which the OptimizationControlMechanism is the controller, then it must meet the 
       - values that correspond in shape to  the `state_feature_values
         <OptimizationControlMechanism.state_feature_values>`
       - `control_allocation <ControlMechanism.control_allocation>`
-      - `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>`
       -  `num_estimates <OptimizationControlMechanism.num_estimates>`
+      - `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>`
     ..
     * If it has an `adapt <Composition.adapt>` method, that must accept as its first three arguments, in order:
       values that correspond to the shape of the `state_feature_values
@@ -524,15 +524,15 @@ class OptimizationControlMechanism(ControlMechanism):
         <Composition.controller>` of a Composition, at which that Composition is assigned as the `agent_rep
         <agent_rep <OptimizationControlMechanism.agent_rep`.
 
-    num_trials_per_estimate : int : 1
-        specifies the number of trials that are executed each time `agent_rep <OptimizationControlMechanism.agent_rep>`
-        is executed in a call to `evaluation_function <OptimizationControlMechanism.evaluation_function>` (see
-        `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` for additional information).
-
     num_estimates : int : 1
         specifies the number of times the `agent_rep <OptimizationControlMechanism.agent_rep>` is executed each time
         `evaluation_function <OptimizationControlMechanism.evaluation_function>` is called (see
         `num_estimates <OptimizationControlMechanism.num_estimates>` for additional information).
+
+    num_trials_per_estimate : int : 1
+        specifies the number of trials that are executed each time `agent_rep <OptimizationControlMechanism.agent_rep>`
+        is executed in a call to `evaluation_function <OptimizationControlMechanism.evaluation_function>` (see
+        `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` for additional information).
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -578,15 +578,15 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_State>` (see `above <OptimizationControlMechanism_Agent_Rep>`for additional
         details).
 
-    num_trials_per_estimate : int
-        determines the number of trials that are executed each time `agent_rep <OptimizationControlMechanism.agent_rep>`
-        is executed in a call to `evaluation_function <OptimizationControlMechanism.evaluation_function>`;
-        the number of such executions is determined by `num_estimates  <OptimizationControlMechanism.num_estimates>`.
-
     num_estimates : int
         determines the number of times the `agent_rep <OptimizationControlMechanism.agent_rep>` is executed each time
         `evaluation_function <OptimizationControlMechanism.evaluation_function>` is called, each of which runs
         `num_trials_per_estimate <OptimizationControlMechanism.evaluation_function>` trials per execution.
+
+    num_trials_per_estimate : int
+        determines the number of trials that are executed each time `agent_rep <OptimizationControlMechanism.agent_rep>`
+        is executed in a call to `evaluation_function <OptimizationControlMechanism.evaluation_function>`;
+        the number of such executions is determined by `num_estimates  <OptimizationControlMechanism.num_estimates>`.
 
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer),
@@ -603,10 +603,10 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationFunction.objective_function>` parameter of `function
         <OptimizationControlMechanism.function>`, and calls the `evaluate` method of the OptimizationControlMechanism's
         `agent_rep <OptimizationControlMechanism.agent_rep>` with a `control_allocation
-        <ControlMechanism.control_allocation>`, the OptimizationControlMechanism's `num_trials_per_estimate
-        <OptimizationControlMechanism.num_trials_per_estimate>` and
-        `num_estimates <OptimizationControlMechanism.num_estimates>` attributes,
-        and the current `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
+        <ControlMechanism.control_allocation>`, the OptimizationControlMechanism's `num_estimates
+        <OptimizationControlMechanism.num_estimates>` attributes and `num_trials_per_estimate
+        <OptimizationControlMechanism.num_trials_per_estimate>`, and the current `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>`.
 
     COMMENT:
     search_function : function or method
@@ -705,14 +705,14 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type: ``list``
                     :read only: True
 
-                num_trials_per_estimate
-                    see `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>`
+                num_estimates
+                    see `num_estimates <OptimizationControlMechanism.num_estimates>`
 
                     :default value: None
                     :type:
 
-                num_estimates
-                    see `num_estimates <OptimizationControlMechanism.num_estimates>`
+                num_trials_per_estimate
+                    see `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>`
 
                     :default value: None
                     :type:
@@ -771,8 +771,8 @@ class OptimizationControlMechanism(ControlMechanism):
         #     aliases='state_features',
         #     constructor_argument='state_features'
         # )
-        num_trials_per_estimate = None
         num_estimates = None
+        num_trials_per_estimate = None
         # search_space = None
         control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
 
@@ -786,8 +786,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  function=None,
                  state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
                  state_feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
-                 num_trials_per_estimate = None,
                  num_estimates = None,
+                 num_trials_per_estimate = None,
                  search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_statefulness=None,
@@ -847,8 +847,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # input_ports=state_features,
             # state_features=state_features,
             state_feature_function=state_feature_function,
-            num_trials_per_estimate = num_trials_per_estimate,
             num_estimates=num_estimates,
+            num_trials_per_estimate = num_trials_per_estimate,
             search_statefulness=search_statefulness,
             search_function=search_function,
             search_termination_function=search_termination_function,
@@ -1090,8 +1090,8 @@ class OptimizationControlMechanism(ControlMechanism):
             exec_mode = pnlvm.ExecutionMode.Python
             outcome, result = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                                       control_allocation,
-                                                      self.parameters.num_trials_per_estimate._get(context),
                                                       self.parameters.num_estimates._get(context),
+                                                      self.parameters.num_trials_per_estimate._get(context),
                                                       base_context=context,
                                                       context=new_context,
                                                       execution_mode=exec_mode,
@@ -1112,8 +1112,8 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             return self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                              control_allocation,
-                                             self.parameters.num_trials_per_estimate._get(context),
                                              self.parameters.num_estimates._get(context),
+                                             self.parameters.num_trials_per_estimate._get(context),
                                              context=context
                                              )
 

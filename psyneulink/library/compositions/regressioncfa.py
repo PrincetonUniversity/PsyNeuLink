@@ -330,7 +330,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # FIX: IMPLEMENT USE OF num_trials_per_estimate?
     # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, state_feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_trials_per_estimate, num_estimates, context):
+    def evaluate(self, feature_values, control_allocation, num_estimates, num_trials_per_estimate, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 

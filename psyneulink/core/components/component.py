@@ -1443,6 +1443,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return (param,)
             elif p.name == 'num_estimates':
                 return 0 if param is None else param
+            # FIX: ADD num_trials_per_estimate HERE
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
