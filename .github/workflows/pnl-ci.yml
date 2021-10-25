@@ -22,6 +22,7 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         python-architecture: ['x64']
+        code-cov: ['']
         os: [ubuntu-latest, macos-latest, windows-latest]
         exclude:
           # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
@@ -36,6 +37,11 @@ jobs:
           - python-version: 3.8
             python-architecture: 'x86'
             os: windows-latest
+          # add code-coverage build on linux python 3.9
+          - python-version: 3.9
+            python-architecture: 'x64'
+            os: ubuntu-latest
+            code-cov: '--cov=psyneulink'
 
     steps:
     - name: Checkout sources
@@ -79,8 +85,8 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
-      timeout-minutes: 80
-      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2
+      timeout-minutes: 180
+      run: pytest --junit-xml=tests_out.xml ${{ matrix.code-cov }} --verbosity=0 -n auto --maxprocesses=2
 
     - name: Upload test results
       uses: actions/upload-artifact@v2.2.4
@@ -89,6 +95,15 @@ jobs:
         path: tests_out.xml
         retention-days: 5
       if: success() || failure()
+
+    - name: Upload coveralls code coverage
+      if: matrix.code-cov != ''
+      shell: bash
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: |
+        pip install coveralls
+        coveralls
 
     - name: Build dist
       run: |
