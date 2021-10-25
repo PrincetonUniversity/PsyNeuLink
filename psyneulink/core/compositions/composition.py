@@ -7435,8 +7435,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             predicted_input=None,
             control_allocation=None,
-            num_estimates=None,
-            num_trials_per_estimate=None,
+            num_estimates=1,
+            num_trials_per_estimate=1,
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,
@@ -7497,49 +7497,62 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Run Composition in "SIMULATION" context
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
-        # Use reporting options from Report context created in initial (outer) call to run()
-        with Report(self, context) as report:
-            # FIX: ??LOOP OVER num_estimates HERE, AGGREGATING RESULTS
-            #         (THEN NEED SEPARATE NEW num_trials ARGUMENT FOR evaluate())
-            results = self.run(inputs=inputs,
-                               context=context,
-                               runtime_params=runtime_params,
-                               num_trials=num_trials_per_estimate,
-                               animate=animate,
-                               execution_mode=execution_mode,
-                               skip_initialization=True,
-                               )
-            context.remove_flag(ContextFlags.SIMULATION_MODE)
-            context.execution_phase = ContextFlags.CONTROL
-            if buffer_animate_state:
-                self._animate = buffer_animate_state
 
-        # Store simulation results on "base" composition
-        if self.initialization_status != ContextFlags.INITIALIZING:
-            try:
-                self.parameters.simulation_results._get(base_context).append(
-                    self.get_output_values(context))
-            except AttributeError:
-                self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
+        results = []
+        net_outcomes = []
 
-        # Update input ports in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_ports(runtime_params, context)
-        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-        # outcome = self.controller.input_port.parameters.value._get(context)
-        outcome = []
-        for i in range(self.controller.num_outcome_input_ports):
-            outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
+        # ITERATE OVER num_estimates, aggregating results and net_outcomes
+        for i in range(num_estimates):
 
-        if outcome is None:
-            net_outcome = 0.0
-        else:
-            # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-            net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+            # EXECUTE run of composition and aggregate results
+
+            # Use reporting options from Report context created in initial (outer) call to run()
+            with Report(self, context) as report:
+                result = self.run(inputs=inputs,
+                                        context=context,
+                                        runtime_params=runtime_params,
+                                        num_trials=num_trials_per_estimate,
+                                        animate=animate,
+                                        execution_mode=execution_mode,
+                                        skip_initialization=True,
+                                        )
+                context.remove_flag(ContextFlags.SIMULATION_MODE)
+                context.execution_phase = ContextFlags.CONTROL
+                if buffer_animate_state:
+                    self._animate = buffer_animate_state
+
+            assert result == self.get_output_values(context)
+
+            # Store simulation results on "base" composition
+            if self.initialization_status != ContextFlags.INITIALIZING:
+                try:
+                    self.parameters.simulation_results._get(base_context).append(result)
+                except AttributeError:
+                    self.parameters.simulation_results._set([result], base_context)
+            if return_results:
+                results.append(result)
+
+            # COMPUTE net_outcome and aggregate in net_outcomes
+
+            # Update input ports in order to get correct value for "outcome" (from objective mech)
+            self.controller._update_input_ports(runtime_params, context)
+            # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
+            # outcome = self.controller.input_port.parameters.value._get(context)
+            outcome = []
+            for i in range(self.controller.num_outcome_input_ports):
+                outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
+
+            if outcome is None:
+                net_outcome = 0.0
+            else:
+                # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+                net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+            net_outcomes.append(net_outcome)
 
         if return_results:
-            return net_outcome, results
+            return net_outcomes, results
         else:
-            return net_outcome
+            return net_outcomes
 
 
     def _infer_target_nodes(self, targets: dict):
