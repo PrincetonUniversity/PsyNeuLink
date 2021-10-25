@@ -842,16 +842,19 @@ class OptimizationControlMechanism(ControlMechanism):
                                                     f"must be either a {Composition.__name__} or a sublcass of one")
 
     def _instantiate_input_ports(self, context=None):
-        """Instantiate input_ports for Projections from state_features and objective_mechanism.
-        Constructs and inserts specification for *OUTCOME* InputPort as first item in list of InputPort specifications
-        Generates full input_ports specification by calling _parse_state_feature_specs with *OUTCOME* InputPort and the
-        **state_features** and **state_feature_function** arguments of the OptimizationControlMechanism constructor.
+        """Instantiate InputPorts, including any for state_features (and projections from them)
 
-        If **objective_mechanism** is specified, its *OUTCOME* OutputPort is used as the size of the OCM's *OUTCOME*
-            InputPort, and a Projection is constructed from the former to the latter.
+        Call to _instantiate_input_ports constructs:
+         - ObjectiveMechanism if specified, and corresponding OUTCOME InputPort to which it projects, or if
+         - monitor_for_control is specified, InputPorts with names and projections from the specified senders
 
-        If **objective_mechanism** is NOT specified, the OCM's **monitor_for_control** argument is used to construct
-        an InputPort for each item in **monitor_for_control**.
+        If state_features are specified:
+          - InputPorts are constructed for them by calling _parse_state_feature_specs with **state_features** and
+            **state_feature_function** arguments of the OptimizationControlMechanism constructor.
+          - These are appended to input_ports after the OUTCOME or monitor_for_control INPUT_PORTS
+
+        If nothing is specified:
+           - the OptimizationControlMechanmism is assigned a default OUTCOME InputPort with no projections to it.
         """
 
         super()._instantiate_input_ports(context=context)

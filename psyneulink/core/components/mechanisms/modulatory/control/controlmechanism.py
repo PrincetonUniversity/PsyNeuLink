@@ -1405,23 +1405,25 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """Instantiate input_ports for items being monitored and evaluated, and ObjectiveMechanism if specified
 
         If **objective_mechanism** is specified:
-          - instantiate ObjectiveMechanism, as well as OUTCOME InputPort and projection to it from ObjectiveMechanism
+          - instantiate ObjectiveMechanism, which also instantiates an OUTCOME InputPort
+            and a MappingProjection to it from the ObjectiveMechanisms OUTCOME OutputPort
 
-        If **objective_mechanism** is NOT specified:
-          - **monitor_for_control** argument is used to construct an InputPort from each item,
-            and a corresponding MappingProjection from it to the InputPort;
-          - each InputPort is names using an uppercase version of the item's name
+        If **monitor_for_control** is specified:
+          - it is used to construct an InputPort from each sender specified in it,
+            and a corresponding MappingProjection from the sender to that InputPort;
+          - each InputPort is named using an uppercase version of the sender's name
+
+        If nothing is specified, a default OUTCOME InputPort is instantiated with no projections to it
         """
 
-        self.num_outcome_input_ports = 1 # The default
+        self.num_outcome_input_ports = 1 # the default (OUTCOME InputPort)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:
-            # First, instantiate it, including Projections to it from monitor_for_control
-            # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
+            # This instantiates an OUTCOME InputPort sized to match the ObjectiveMechanism's OUTCOME OutputPort
             self._instantiate_objective_mechanism(context=context)
 
-        # If items to monitor are specified, instantiate Projections from them to the ControlMechanism
+        # If items to monitor are specified, instantiate InputPorts and projections to them from the specified senders
         elif self.monitor_for_control:
             # Create one InputPort for each item in monitor_for_control
             reference_value = []
@@ -1429,7 +1431,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             for sender in self.monitor_for_control:
                 reference_value.append(sender.value)
                 input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
-
             super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=reference_value)
 
             self.num_outcome_input_ports = len(self.monitor_for_control)
@@ -1440,7 +1441,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 input_port.name = sender.name.upper()
                 self.aux_components.append(MappingProjection(sender=sender, receiver=input_port))
 
-        # Otherwise, just instantiate default OUTCOME InputPort
+        # Nothing has been specified, so just instantiate the default OUTCOME InputPort
         else:
             super()._instantiate_input_ports(context=context)
 
