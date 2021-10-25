@@ -843,7 +843,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_input_ports(self, context=None):
         """Instantiate input_ports for Projections from state_features and objective_mechanism.
-
         Constructs and inserts specification for *OUTCOME* InputPort as first item in list of InputPort specifications
         Generates full input_ports specification by calling _parse_state_feature_specs with *OUTCOME* InputPort and the
         **state_features** and **state_feature_function** arguments of the OptimizationControlMechanism constructor.
@@ -857,18 +856,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super()._instantiate_input_ports(context=context)
 
-        # # FIX: MOVED TO ControlMechanism:
-        # # Specify *OUTCOME* InputPort;
-        # if self.objective_mechanism:
-        #     # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
-        #     outcome_input_ports = [({SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
-        #                              PARAMS:{INTERNAL_ONLY:True}})]
-        # else:
-        #     # Create one InputPort for each item in monitor_for_control
-        #     outcome_input_ports = []
-        #     for item in self.monitor_for_control:
-        #         outcome_input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
-
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
             input_ports = _parse_shadow_inputs(self, self.state_features)
@@ -877,12 +864,6 @@ class OptimizationControlMechanism(ControlMechanism):
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             # input_ports.insert(0, outcome_input_ports),
             self.add_ports(input_ports)
-
-        # self.parameters.input_ports._set(input_ports, context)
-
-        # # Configure default_variable to comport with full set of input_ports
-        # self.defaults.variable, _ = self._handle_arg_input_ports(self.input_ports)
-
 
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
@@ -968,39 +949,6 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
-
-    # def _update_input_ports(self, runtime_params=None, context=None):
-    #     """Update value for each InputPort in self.input_ports:
-    #
-    #     Call execute method for all (MappingProjection) Projections in Port.path_afferents
-    #     Aggregate results (using InputPort execute method)
-    #     Update InputPort.value
-    #     """
-    #     # "Outcome"
-    #     # MODIFIED 10/24/21 OLD:
-    #     # outcome_input_port = self.input_port
-    #     # outcome_input_port._update(params=runtime_params, context=context)
-    #     # port_values = [np.atleast_2d(outcome_input_port.parameters.value._get(context))]
-    #     # MODIFIED 10/24/21 NEW:  [MODIFIED TO HANDLE MORE THAN ONE OUTCOME InputPort]
-    #     port_values = []
-    #     for i in range(self.num_outcome_input_ports):
-    #         outcome_input_port = self.input_ports[i]
-    #         outcome_input_port._update(params=runtime_params, context=context)
-    #         port_values.append(np.atleast_2d(outcome_input_port.parameters.value._get(context)))
-    #     # MODIFIED 10/24/21 END
-    #
-    #     # MODIFIED 5/8/20 OLD:
-    #     # FIX 5/8/20 [JDC]: THIS DOESN'T CALL SUPER, SO NOT IDEAL HOWEVER, REVISION BELOW CRASHES... NEEDS TO BE FIXED
-    #     for i in range(self.num_outcome_input_ports, len(self.input_ports)):
-    #         port = self.input_ports[i]
-    #         port._update(params=runtime_params, context=context)
-    #         port_values.append(port.parameters.value._get(context))
-    #     return convert_to_np_array(port_values)
-    #     # # MODIFIED 5/8/20 NEW:
-    #     # input_port_values = super()._update_input_ports(runtime_params, context)
-    #     # port_values.append(input_port_values)
-    #     # return np.array(port_values)
-    #     # MODIFIED 5/8/20 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""

@@ -1393,6 +1393,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self.parameters.monitor_for_control._set(self.monitored_output_ports, context)
 
     def _instantiate_input_ports(self, context=None):
+        """Instantiate input_ports for items being monitored and evaluated, and ObjectiveMechanism if specified
+
+        If **objective_mechanism** is specified:
+          - construct an InputPort named OUTCOME
+          - instantiate ObjectiveMechanism, and MappingProjection from its OUTCOME OutputPort,
+          - the ObjectiveMechanism's OUTCOME OutputPort is used as the size of the ControlMechanism's OUTCOME InputPort
+
+        If **objective_mechanism** is NOT specified:
+          - **monitor_for_control** argument is used to construct an InputPort from each item,
+            and a corresponding MappingProjection from it to the InputPort;
+          - each InputPort is names using an uppercase version of the item's name
+        """
 
         reference_value = []
         if self.objective_mechanism:
