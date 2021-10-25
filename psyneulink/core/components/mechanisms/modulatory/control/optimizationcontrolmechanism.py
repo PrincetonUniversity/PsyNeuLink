@@ -527,13 +527,12 @@ class OptimizationControlMechanism(ControlMechanism):
     num_trials_per_estimate : int : 1
         specifies the number of trials that are executed each time `agent_rep <OptimizationControlMechanism.agent_rep>`
         is executed in a call to `evaluation_function <OptimizationControlMechanism.evaluation_function>` (see
-
+        `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` for additional information).
 
     num_estimates : int : 1
-        determines the number of times the `agent_rep <OptimizationControlMechanism.agent_rep>` is executed each time
-        `evaluation_function <OptimizationControlMechanism.evaluation_function>` is called, each of which runs
-        `num_trials_per_estimate <OptimizationControlMechanism.evaluation_function>` trials per execution.
-
+        specifies the number of times the `agent_rep <OptimizationControlMechanism.agent_rep>` is executed each time
+        `evaluation_function <OptimizationControlMechanism.evaluation_function>` is called (see
+        `num_estimates <OptimizationControlMechanism.num_estimates>` for additional information).
 
     search_function : function or method
         specifies the function assigned to `function <OptimizationControlMechanism.function>` as its
@@ -1069,8 +1068,8 @@ class OptimizationControlMechanism(ControlMechanism):
         Returns array of results, each element of which is the predicted `net_outcome <ControlMechanism.net_outcome>`
         for the current `state_feature_values <OptimizationControlMechanism.state_feature_values>` and specified
         `control_allocation <ControlMechanism.control_allocation>` for an execution of the
-        `agent_rep <OptimizationControlMechanism.agent_rep>`, which is executed num_estimates times within its
-        `evaluate` method, in which each execution involves num_trials_per_estimate trials.
+        `agent_rep <OptimizationControlMechanism.agent_rep>`, which is executed **num_estimates** times within its
+        `evaluate` method, in which each execution is run for **num_trials_per_estimate** trials.
 
         """
         # agent_rep is a Composition (since runs_simulations = True)

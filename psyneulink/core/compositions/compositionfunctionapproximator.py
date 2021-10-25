@@ -105,7 +105,11 @@ class CompositionFunctionApproximator(Composition):
        # self.function = function
         super().__init__(name=name, **param_defaults)
 
-    def adapt(self, feature_values, control_allocation, net_outcome, context=None):
+    def adapt(self,
+              feature_values,
+              control_allocation,
+              net_outcome,
+              context=None):
         """Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
         <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`.
         """
@@ -113,11 +117,17 @@ class CompositionFunctionApproximator(Composition):
                                                    format(CompositionFunctionApproximator.__name__,
                                                           self.__class__.__name__, repr('adapt')))
 
-    def evaluate(self, feature_values, control_allocation, num_estimates, base_context=Context(execution_id=None), context=None):
+    def evaluate(self,
+                 feature_values,
+                 control_allocation,
+                 num_trials_per_estimate,
+                 num_estimates,
+                 base_context=Context(execution_id=None),
+                 context=None):
         """Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         """
-        # FIX: AUGMENTTO USE num_estimates
+        # FIX: AUGMENT TO USE num_estimates and num_trials_per_estimate
         return self.function(feature_values, control_allocation, context=context)
 
     @property
