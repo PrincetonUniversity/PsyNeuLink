@@ -582,9 +582,9 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
-    EID_SIMULATION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, NAME, \
+    EID_SIMULATION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
-    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, PORT_TYPE
+    OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PRODUCT, PROJECTION_TYPE, PROJECTIONS, PORT_TYPE, SIZE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1393,6 +1393,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
         self.parameters.monitor_for_control._set(self.monitored_output_ports, context)
 
     def _instantiate_input_ports(self, context=None):
+
+        self.input_ports = []
+        if self.objective_mechanism:
+            # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
+            self.input_ports = ({SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
+                                     PARAMS:{INTERNAL_ONLY:True}})
+        else:
+            # Create one InputPort for each item in monitor_for_control
+            self.input_ports = []
+            for i in self.monitor_for_control:
+                self.input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
 
         super()._instantiate_input_ports(context=context)
 

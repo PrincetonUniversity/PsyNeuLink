@@ -849,39 +849,41 @@ class OptimizationControlMechanism(ControlMechanism):
         If **objective_mechanism** is specified, its *OUTCOME* OutputPort is used as the size of the OCM's *OUTCOME*
             InputPort, and a Projection is constructed from the former to the latter.
 
-        If **objective_mechanism** is NOT specified, the OCM's **monitor_for_control** argument is used as the size of
-            the OCM's *OUTCOME* InputPort, and its function is specified as Concatentate.
-
+        If **objective_mechanism** is NOT specified, the OCM's **monitor_for_control** argument is used to construct
+        an InputPort for each item in **monitor_for_control**.
         """
 
-        # Specify *OUTCOME* InputPort;
-        if self.objective_mechanism:
-            # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
-            outcome_input_ports = [({SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
-                                     PARAMS:{INTERNAL_ONLY:True}})]
-        else:
-            # Create one InputPort for each item in monitor_for_control
-            outcome_input_ports = []
-            for item in self.monitor_for_control:
-                outcome_input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
+        if self.input_ports:
+            feature_input_ports = self.input_ports
+
+        super()._instantiate_input_ports(context=context)
+
+        # # FIX: MOVED TO ControlMechanism:
+        # # Specify *OUTCOME* InputPort;
+        # if self.objective_mechanism:
+        #     # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
+        #     outcome_input_ports = [({SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
+        #                              PARAMS:{INTERNAL_ONLY:True}})]
+        # else:
+        #     # Create one InputPort for each item in monitor_for_control
+        #     outcome_input_ports = []
+        #     for item in self.monitor_for_control:
+        #         outcome_input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
-        if self.input_ports:
-            input_ports = _parse_shadow_inputs(self, self.input_ports)
+        if feature_input_ports:
+            input_ports = _parse_shadow_inputs(self, feature_input_ports)
             input_ports = self._parse_state_feature_specs(input_ports, self.state_feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             # input_ports.insert(0, outcome_input_ports),
-            input_ports = outcome_input_ports + input_ports
-        else:
-            input_ports = outcome_input_ports
+            self.add_ports(input_ports)
 
-        self.parameters.input_ports._set(input_ports, context)
+        # self.parameters.input_ports._set(input_ports, context)
 
-        # Configure default_variable to comport with full set of input_ports
-        self.defaults.variable, _ = self._handle_arg_input_ports(self.input_ports)
+        # # Configure default_variable to comport with full set of input_ports
+        # self.defaults.variable, _ = self._handle_arg_input_ports(self.input_ports)
 
-        super()._instantiate_input_ports(context=context)
 
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
