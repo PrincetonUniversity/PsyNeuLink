@@ -771,8 +771,8 @@ class OptimizationControlMechanism(ControlMechanism):
         #     aliases='state_features',
         #     constructor_argument='state_features'
         # )
-        num_estimates = None
-        num_trials_per_estimate = None
+        num_estimates = 1
+        num_trials_per_estimate = 1
         # search_space = None
         control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
 
