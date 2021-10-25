@@ -7521,7 +7521,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
         self.controller._update_input_ports(runtime_params, context)
-        outcome = self.controller.input_port.parameters.value._get(context)
+        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
+        # outcome = self.controller.input_port.parameters.value._get(context)
+        outcome = []
+        for i in range(self.controller.num_outcome_input_ports):
+            outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
 
         if outcome is None:
             net_outcome = 0.0

@@ -1394,18 +1394,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
     def _instantiate_input_ports(self, context=None):
 
-        self.input_ports = []
+        reference_value = []
         if self.objective_mechanism:
             # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
-            self.input_ports = ({SIZE:self.objective_mechanism.output_ports[OUTCOME].value.size,
-                                     PARAMS:{INTERNAL_ONLY:True}})
+            size = self.objective_mechanism.output_ports[OUTCOME].value.size
+            reference_value.append(size)
+            input_ports = [{SIZE:size,
+                            PARAMS:{INTERNAL_ONLY:True}}]
         else:
             # Create one InputPort for each item in monitor_for_control
-            self.input_ports = []
-            for i in self.monitor_for_control:
-                self.input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
+            input_ports = []
+            for sender in self.monitor_for_control:
+                reference_value.append(sender.value)
+                input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
 
-        super()._instantiate_input_ports(context=context)
+        super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=reference_value)
 
         # If objective_mechanism is specified, instantiate it,
         #     including Projections to it from monitor_for_control

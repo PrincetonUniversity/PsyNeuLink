@@ -734,16 +734,16 @@ class OptimizationControlMechanism(ControlMechanism):
                                          user=False,
                                          pnl_internal=True)
 
-        input_ports = Parameter(
-            [{NAME: OUTCOME, PARAMS: {INTERNAL_ONLY: True}}],
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-            parse_spec=True,
-            aliases='state_features',
-            constructor_argument='state_features'
-        )
+        # input_ports = Parameter(
+        #     [{NAME: OUTCOME, PARAMS: {INTERNAL_ONLY: True}}],
+        #     stateful=False,
+        #     loggable=False,
+        #     read_only=True,
+        #     structural=True,
+        #     parse_spec=True,
+        #     aliases='state_features',
+        #     constructor_argument='state_features'
+        # )
         num_estimates = None
         # search_space = None
         control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
@@ -811,10 +811,12 @@ class OptimizationControlMechanism(ControlMechanism):
                 assert False, f"PROGRAM ERROR: 'agent_rep' arg should have been specified " \
                               f"in internal call to constructor for {self.name}."
 
+        self.state_features = state_features
+
         super().__init__(
             function=function,
-            input_ports=state_features,
-            state_features=state_features,
+            # input_ports=state_features,
+            # state_features=state_features,
             state_feature_function=state_feature_function,
             num_estimates=num_estimates,
             search_statefulness=search_statefulness,
@@ -853,9 +855,6 @@ class OptimizationControlMechanism(ControlMechanism):
         an InputPort for each item in **monitor_for_control**.
         """
 
-        if self.input_ports:
-            feature_input_ports = self.input_ports
-
         super()._instantiate_input_ports(context=context)
 
         # # FIX: MOVED TO ControlMechanism:
@@ -871,8 +870,8 @@ class OptimizationControlMechanism(ControlMechanism):
         #         outcome_input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
-        if feature_input_ports:
-            input_ports = _parse_shadow_inputs(self, feature_input_ports)
+        if self.state_features:
+            input_ports = _parse_shadow_inputs(self, self.state_features)
             input_ports = self._parse_state_feature_specs(input_ports, self.state_feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
