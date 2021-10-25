@@ -1103,14 +1103,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
 
-        input_ports = Parameter(
-            [OUTCOME],
-            stateful=False,
-            loggable=False,
-            read_only=True,
-            structural=True,
-            parse_spec=True,
-        )
+        # # MODIFIED 10/24/21 OLD:
+        # input_ports = Parameter(
+        #     [OUTCOME],
+        #     stateful=False,
+        #     loggable=False,
+        #     read_only=True,
+        #     structural=True,
+        #     parse_spec=True,
+        # )
+        # # MODIFIED 10/24/21 END
 
         monitor_for_control = Parameter(
             [OUTCOME],
@@ -1370,9 +1372,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                          self.monitored_output_ports.index(port)][EXPONENT_INDEX]
                 print(f"\t{weight} (exp: {weight}; wt: {exponent})")
 
+
+        # Instantiate OUTCOME InputPort on ControlMechanism that receives projection from ObjectiveMechanism
+        size = self.objective_mechanism.output_ports[OUTCOME].value.size
+        input_port = [{SIZE:size,
+                        NAME:OUTCOME,
+                        PARAMS:{INTERNAL_ONLY:True}}]
+        super()._instantiate_input_ports(context=context, input_ports=input_port, reference_value=[size])
+        self.num_outcome_input_ports = 1
+
         # Instantiate MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
-                                                      receiver=self,
+                                                      receiver=self.input_port,
                                                       matrix=AUTO_ASSIGN_MATRIX,
                                                       context=context)
 
@@ -1396,9 +1407,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """Instantiate input_ports for items being monitored and evaluated, and ObjectiveMechanism if specified
 
         If **objective_mechanism** is specified:
-          - construct an InputPort named OUTCOME
-          - instantiate ObjectiveMechanism, and MappingProjection from its OUTCOME OutputPort,
-          - the ObjectiveMechanism's OUTCOME OutputPort is used as the size of the ControlMechanism's OUTCOME InputPort
+          - instantiate ObjectiveMechanism, as well as OUTCOME InputPort and projection to it from ObjectiveMechanism
 
         If **objective_mechanism** is NOT specified:
           - **monitor_for_control** argument is used to construct an InputPort from each item,
@@ -1406,31 +1415,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
           - each InputPort is names using an uppercase version of the item's name
         """
 
-        reference_value = []
+        # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:
+            # First, instantiate it, including Projections to it from monitor_for_control
             # Only need one InputPort, but match shape to OUTCOME OutputPort of ObjectiveMechanism
-            size = self.objective_mechanism.output_ports[OUTCOME].value.size
-            reference_value.append(size)
-            input_ports = [{SIZE:size,
-                            PARAMS:{INTERNAL_ONLY:True}}]
+            self._instantiate_objective_mechanism(context=context)
+
+        # Otherwise, instantiate Projections from monitor_for_control to ControlMechanism
         else:
             # Create one InputPort for each item in monitor_for_control
+            reference_value = []
             input_ports = []
             for sender in self.monitor_for_control:
                 reference_value.append(sender.value)
                 input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
 
-        super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=reference_value)
+            super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=reference_value)
 
-        # If objective_mechanism is specified, instantiate it,
-        #     including Projections to it from monitor_for_control
-        if self.objective_mechanism:
-            self.num_outcome_input_ports = 1
-            self._instantiate_objective_mechanism(context=context)
-            self.input_port.name = OUTCOME
-
-        # Otherwise, instantiate Projections from monitor_for_control to ControlMechanism
-        elif self.monitor_for_control:
             self.num_outcome_input_ports = len(self.monitor_for_control)
             # FIX: MODIFY TO CONSTRUCT MAPPING PROJECTION FROM EACH MONITOR_FOR_CONTROL SPEC TO CORRESPONDING INPUTPORT
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
