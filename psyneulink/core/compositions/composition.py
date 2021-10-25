@@ -7498,6 +7498,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.remove_flag(ContextFlags.CONTROL)
         # Use reporting options from Report context created in initial (outer) call to run()
         with Report(self, context) as report:
+            # FIX: ??LOOP OVER num_estimates HERE, AGGREGATING RESULTS
+            #         (THEN NEED SEPARATE NEW num_trials ARGUMENT FOR evaluate())
             results = self.run(inputs=inputs,
                                context=context,
                                runtime_params=runtime_params,

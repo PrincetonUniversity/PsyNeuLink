@@ -1061,6 +1061,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             outcomes = []
             results = []
+            # FIX: REMOVE LOOP AND MOVE TO Composition.evaluate;  then just return return_value
             num_estimates = self.num_estimates or 1
             for i in range(num_estimates):
                 return_value = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
@@ -1089,6 +1090,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 return outcomes
 
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
+        # NOTE: it handles looping over num_estimates itself
         else:
             return self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                              control_allocation,

@@ -1103,7 +1103,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
 
-        # MODIFIED 10/24/21 OLD:
         input_ports = Parameter(
             [OUTCOME],
             stateful=False,
@@ -1112,7 +1111,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             structural=True,
             parse_spec=True,
         )
-        # MODIFIED 10/24/21 END
 
         monitor_for_control = Parameter(
             [OUTCOME],
