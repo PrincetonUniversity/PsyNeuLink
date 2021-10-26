@@ -989,7 +989,8 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find control_allocation that optimizes result of `agent_rep.evaluate`  ."""
+        """Find ``control_allocation <ControlMechanism.control_allocation>` that optimizes result of
+        `agent_rep.evaluate`."""
 
         if self.is_initializing:
             return [defaultControlAllocation]
