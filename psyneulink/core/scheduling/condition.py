@@ -17,7 +17,6 @@ import warnings
 
 import dill
 import graph_scheduler
-import modeci_mdf.mdf as mdf
 import numpy as np
 
 from psyneulink.core.globals.context import handle_external_context
@@ -127,6 +126,7 @@ class Condition(graph_scheduler.Condition, JSONDumpable):
         }
 
     def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
         from psyneulink.core.components.component import Component
 
         def _parse_condition_arg(arg):

@@ -146,8 +146,6 @@ import types
 import warnings
 from enum import Enum, IntEnum
 
-import modeci_mdf.mdf as mdf
-import modeci_mdf.functions.standard as mdf_functions
 import numpy as np
 import typecheck as tc
 
@@ -832,6 +830,9 @@ class Function_Base(Function):
         }
 
     def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+        import modeci_mdf.functions.standard as mdf_functions
+
         if self._model_spec_generic_type_name is not NotImplemented:
             typ = self._model_spec_generic_type_name
         else:

@@ -3,8 +3,10 @@ import os
 import psyneulink as pnl
 import pytest
 
-from modeci_mdf.utils import load_mdf
-import modeci_mdf.execution_engine as ee
+pytest.importorskip(
+    'modeci_mdf',
+    reason='JSON methods require modeci_mdf package'
+)
 
 # stroop stimuli
 red = [1, 0]
@@ -163,6 +165,9 @@ def test_write_json_file_multiple_comps(
     ]
 )
 def test_mdf_equivalence(filename, composition_name, input_dict, simple_edge_format):
+    from modeci_mdf.utils import load_mdf
+    import modeci_mdf.execution_engine as ee
+
     # Get python script from file and execute
     filename = f'{os.path.dirname(__file__)}/{filename}'
     with open(filename, 'r') as orig_file:

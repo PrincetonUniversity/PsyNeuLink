@@ -10,7 +10,6 @@
 import typing
 
 import graph_scheduler
-import modeci_mdf.mdf as mdf
 import pint
 
 from psyneulink import _unit_registry
@@ -111,6 +110,8 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
         }
 
     def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
         return mdf.ConditionSet(
             node_specific={
                 parse_valid_identifier(n.name): self.conditions[n].as_mdf_model() for n in self.nodes if n in self.conditions

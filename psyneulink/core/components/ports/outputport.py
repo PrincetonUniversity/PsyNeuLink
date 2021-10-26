@@ -621,8 +621,6 @@ import warnings
 import numpy as np
 import typecheck as tc
 
-import modeci_mdf.mdf as mdf
-
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.ports.port import Port_Base, _instantiate_port_list, port_type_keywords
@@ -1305,6 +1303,8 @@ class OutputPort(Port_Base):
         }
 
     def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
         owner_func_name = parse_valid_identifier(self.owner.function.name)
         if self._variable_spec == OWNER_VALUE:
             value = owner_func_name

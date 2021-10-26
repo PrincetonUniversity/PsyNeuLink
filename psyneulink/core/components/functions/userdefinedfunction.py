@@ -720,22 +720,17 @@ class UserDefinedFunction(Function_Base):
 
     def as_mdf_model(self):
         import math
+        import modeci_mdf.functions.standard
 
         model = super().as_mdf_model()
         ext_function_str = None
 
-        try:
-            import modeci_mdf.functions.standard
-            # remove import/module errors when modeci_mdf is a package
-        except (ImportError, ModuleNotFoundError):
-            pass
-        else:
-            if self.custom_function in [
-                func_dict['function']
-                for name, func_dict
-                in modeci_mdf.functions.standard.mdf_functions.items()
-            ]:
-                ext_function_str = self.custom_function.__name__
+        if self.custom_function in [
+            func_dict['function']
+            for name, func_dict
+            in modeci_mdf.functions.standard.mdf_functions.items()
+        ]:
+            ext_function_str = self.custom_function.__name__
 
         if _is_module_class(self.custom_function, math):
             ext_function_str = f'{self.custom_function.__module__}.{self.custom_function.__name__}'

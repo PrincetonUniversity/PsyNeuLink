@@ -191,7 +191,6 @@ import enum
 import inspect
 import json
 import math
-import modeci_mdf.mdf as mdf
 import numbers
 import numpy
 import pickle
@@ -239,6 +238,7 @@ class PNLJSONEncoder(json.JSONEncoder):
         into a more JSON-friendly format.
     """
     def default(self, o):
+        import modeci_mdf.mdf as mdf
         from psyneulink.core.components.component import Component, ComponentsMeta
 
         if isinstance(o, ComponentsMeta):
@@ -1591,6 +1591,7 @@ def generate_json(*compositions, simple_edge_format=True):
                 in JSON
     """
     import modeci_mdf
+    import modeci_mdf.mdf as mdf
     from psyneulink.core.compositions.composition import Composition
 
     model_name = "_".join([c.name for c in compositions])

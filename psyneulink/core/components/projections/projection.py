@@ -398,7 +398,6 @@ import itertools
 import warnings
 from collections import namedtuple, defaultdict
 
-import modeci_mdf.mdf as mdf
 import numpy as np
 import typecheck as tc
 
@@ -1080,6 +1079,8 @@ class Projection_Base(Projection):
         }
 
     def as_mdf_model(self, simple_edge_format=True):
+        import modeci_mdf.mdf as mdf
+
         from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 
         # these may occur during deferred init

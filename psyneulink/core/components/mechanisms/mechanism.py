@@ -1083,7 +1083,6 @@ from collections import defaultdict, OrderedDict, UserDict, UserList
 from inspect import isclass
 from numbers import Number
 
-import modeci_mdf.mdf as mdf
 import numpy as np
 import typecheck as tc
 
@@ -4122,6 +4121,8 @@ class Mechanism_Base(Mechanism):
         }
 
     def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
         model = mdf.Node(
             id=parse_valid_identifier(self.name),
             **self._mdf_metadata,
