@@ -1080,12 +1080,21 @@ class OptimizationControlMechanism(ControlMechanism):
         OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.
 
         Evaluates `agent_rep <OptimizationControlMechanism.agent_rep>` by calling its `evaluate <Composition.evaluate>`
-        method, and returning an array with its `net_outcomes <ControlMechanism.net_outcome>` for `num_estimates
-        <OptimizationControlMechanism.num_estimates>` independent runs of the `agent_rep
-        <OptimizationControlMechanism.agent_rep>`, each of which is executed for `num_trials_per_estimate
-        <OptimizationControlMechanism.num_trials_per_estimate>`.  If **return_results** is True, also returns an
-        array with the `results <Composition.results>` of each run.  See `evaluate <Composition.evaluate>` for
-        additional information.
+        method, which executes it `agent_rep <OptimizationControlMechanism.agent_rep>` `num_estimates
+        <OptimizationControlMechanism.num_estimates>` times, each for `num_trials_per_estimate
+        <OptimizationControlMechanism.num_trials_per_estimate>` trials. Each execution uses the current
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>` as the input and the specified
+        **control_allocation**.  (If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `Composition`,
+        each execution is a call to its `run <Composition.run>` method with `num_trials_per_estimate
+        <OptimizationControlMechanism.num_trials_per_estimate>` as its **num_trials** argument, and the same
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>` as inputs and **control_allocation**,
+        but a randomly chosen seed for the random number generators.
+
+        Returns an array of length **number_estimates** containing the `net_outcome <ControlMechanism.net_outcome>`
+        of each execution and, if **return_results** is True, also an array with the `results <Composition.results>`
+        of each run.
+
+        See `evaluate <Composition.evaluate>` for additional details)
         """
 
         # agent_rep is a Composition (since runs_simulations = True)
@@ -1116,9 +1125,9 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
 
-            # If results of the simulation should be returned then, do so. Agent Rep Evaluate will
-            # return a tuple in this case where the first element is the outcome as usual and the
-            # results of composition run are the second element.
+            # If results of the simulation should be returned then, do so. agent_rep's evaluate method will
+            # return a tuple in this case in which the first element is the outcome as usual and the second
+            # is the results of the composition run.
             if return_results:
                 return outcome, result
             else:
