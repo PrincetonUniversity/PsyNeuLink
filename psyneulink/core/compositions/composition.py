@@ -2965,7 +2965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
-    controller : `OptimizationControlmechanism` : default None
+    controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the Composition's `controller
         <Composition.controller>` (see `Composition_Controller` for details).
 
@@ -7464,7 +7464,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         The `net_outcome <ControlMechanism.net_outcome>` for each run is calculated using the `controller
         <Composition.controller>`'s <ControlMechanism.compute_net_outcome>` function.  Each run is executed
         independently, using the same **predicted_inputs** and **control_allocation**, and a randomly and
-        indepndently sampled seed for the random number generator.  All values are reset to pre-simulation
+        independently sampled seed for the random number generator.  All values are reset to pre-simulation
         values at the end of the simulation.
 
         Returns an array of length `num_estimates <OptimizationControlMechanism.num_estimates>`,

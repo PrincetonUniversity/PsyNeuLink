@@ -1075,8 +1075,8 @@ class OptimizationControlMechanism(ControlMechanism):
         **control_allocation**.  (If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `Composition`,
         each execution is a call to its `run <Composition.run>` method with `num_trials_per_estimate
         <OptimizationControlMechanism.num_trials_per_estimate>` as its **num_trials** argument, and the same
-        `state_feature_values <OptimizationControlMechanism.state_feature_values>` as inputs and **control_allocation**,
-        but a randomly chosen seed for the random number generators.
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>` and **control_allocation**,
+        but a randomly chosen seed for the random number generator, for each run.
 
         Returns an array of length **number_estimates** containing the `net_outcome <ControlMechanism.net_outcome>`
         of each execution and, if **return_results** is True, also an array with the `results <Composition.results>`
