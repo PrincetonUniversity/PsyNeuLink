@@ -314,7 +314,7 @@ until the `search_termination_function <OptimizationFunction.search_termination_
 A custom function can be assigned as the `function <OptimizationControlMechanism.function>` of an
 OptimizationControlMechanism, however it must meet the following requirements:
 
-.. _OptimizationControlMechanism_Custom_Funtion:
+.. _OptimizationControlMechanism_Custom_Function:
 
   - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
@@ -366,7 +366,7 @@ When an OptimizationControlMechanism is executed, it carries out the following s
   * Calls `function <OptimizationControlMechanism.function>` to find the `control_allocation
     <ControlMechanism.control_allocation>` that optimizes `net_outcome <ControlMechanism.net_outcome>`.  The
     way in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
-    the type of `OptimzationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the way
+    the type of `OptimizationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the way
     that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function
     <OptimizationControlMechanism.evalutation_function>`.  More specifically:
 
@@ -1103,7 +1103,7 @@ class OptimizationControlMechanism(ControlMechanism):
             exec_mode = pnlvm.ExecutionMode.Python
             outcome, result = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                                       control_allocation,
-                                                      self.parameters.num_estimates._get(context),
+#                                                      self.parameters.num_estimates._get(context),
                                                       self.parameters.num_trials_per_estimate._get(context),
                                                       base_context=context,
                                                       context=new_context,

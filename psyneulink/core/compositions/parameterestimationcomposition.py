@@ -151,11 +151,12 @@ class ParameterEstimationComposition(Composition):
         specifies the `Composition` for which parameters are to be `fit to data
         <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`.
 
-    parameters : dict[Parameter:<list, iterator, or value>]
+    parameters : dict[Parameter:Union[Iterator, Function, List, value]
         specifies the parameters of the `target <ParameterEstimationComposition.target>` Composition used to `fit
         it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
         <ParameterEstimationComposition_Optimization>` according to the `optimization_function
-        <ParameterEstimationComposition.optimization_function>`, and the range of values to be evaluated for each.
+        <ParameterEstimationComposition.optimization_function>`, and either the range of values to be evaluated for
+        each, or priors that define a distribution.
 
     outcome_variables : list[Composition output nodes]
         specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
@@ -197,13 +198,13 @@ class ParameterEstimationComposition(Composition):
         the constructor for the ParameterEstimationComposition's `OptimizationControlMechanism`, that is used to
         construct its `control_signals <OptimizationControlMechanism.control_signals>`.
 
-    parameter_ranges : list[iterator, list or value
+    parameter_ranges_or_priors : List[Union[Iterator, Function, ist or Value]
         determines the range of values evaluated for each `parameter <ParameterEstimationComposition.parameters>`.
         These are assigned as the `allocation_samples <ControlSignal.allocation_samples>` for the `ControlSignal`
         assigned to the ParameterEstimationComposition` `OptimizationControlMechanism` corresponding to each of the
         specified `parameters <ParameterEstimationComposition.parameters>`.
 
-    outcome_variables : list[Composition output nodes]
+    outcome_variables : list[Composition Output Nodes]
         determines the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
         Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
         ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
@@ -218,9 +219,13 @@ class ParameterEstimationComposition(Composition):
         by the `optimization_function <ParameterEstimationComposition.optimization_function>` specified as the
         `function <OptimizationControlMechanism.function> of the ParameterEstimationComposition's
         `OptimizationControlMechanism`.
+        XXXX NEEDS TO BE ORGANIZED IN A WAY THAT IS COMPATIBLE WITH outcome_variables [SAME NUMBER OF ITEMS IN OUTER
+        DIMENSION, WITH CORRESPONDING TYPES]
 
     objective_function : ObjectiveFunction, function or method
-        determines XXX
+        IS EITHER:  THE NAME OF THE EXTERNAL OPTIMIZER FOR DATA FITTING OR A FUNCTION THAT IS OPTIMIZED FOR
+        PARAMETER OPTIMZATION
+        Elfi, PYMC, S
 
     optimization_function : OptimizationFunction, function or method
         determines the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
@@ -230,6 +235,7 @@ class ParameterEstimationComposition(Composition):
         ParameterEstimationComposition is used for `parameter optimization
         <ParameterEstimationComposition_Optimization>`.  This is assigned as the `function
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
+        DAVE'S OptimizationFunction
 
     results : array
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
