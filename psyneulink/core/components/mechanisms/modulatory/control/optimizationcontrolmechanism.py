@@ -609,22 +609,20 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_Function>` for additional details).
 
     evaluation_function : function or method
-        returns the `net_outcomes <ControlMechanism.net_outcome>` for a given `state
+        returns the `net_outcome(s) <ControlMechanism.net_outcome>` for a given `state
         <OptimizationControlMechanism_State>` (i.e., combination of `state_feature_values
         <OptimizationControlMechanism.state_feature_values>` and `control_allocation
         <ControlMechanism.control_allocation>`. It is assigned as the `objective_function
         <OptimizationFunction.objective_function>` parameter of `function
         <OptimizationControlMechanism.function>`, and calls the `evaluate` method of the OptimizationControlMechanism's
-        `agent_rep <OptimizationControlMechanism.agent_rep>` with a `control_allocation
-        <ControlMechanism.control_allocation>`, the OptimizationControlMechanism's `num_estimates
-        <OptimizationControlMechanism.num_estimates>` and `num_trials_per_estimate
-        <OptimizationControlMechanism.num_trials_per_estimate>` attributes, and the current `state_feature_values
-        <OptimizationControlMechanism.state_feature_values>`, which runs the `agent_rep
-        <OptimizationControlMechanism.agent_rep>` is then run independently `num_estimates
-        <OptimizationControlMechanism.num_estimates>` times, each of which
-        runs `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` trials. It returns
-        an array containing the `net_outcome <ControlMechanism.net_outcome>` of each run, together with an array
-        containing the `results <Composition.results>` of each run if the **return_results** argument is specified.
+        `agent_rep <OptimizationControlMechanism.agent_rep>` with the current `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>` and a specified `control_allocation
+        <ControlMechanism.control_allocation>`, which executes `num_estimates
+        <OptimizationControlMechanism.num_estimates>` independent runs of the `agent_rep
+        <OptimizationControlMechanism.agent_rep>`, each for `num_trials_per_estimate
+        <OptimizationControlMechanism.num_trials_per_estimate>` trials. It returns an array containing the
+        `net_outcome <ControlMechanism.net_outcome>` of each run and, if the **return_results** argument is True,
+        an array containing the `results <Composition.results>` of each run.
 
     COMMENT:
     search_function : function or method
@@ -778,21 +776,10 @@ class OptimizationControlMechanism(ControlMechanism):
         state_feature_values = Parameter(_parse_state_feature_values_from_variable([defaultControlAllocation]),
                                          user=False,
                                          pnl_internal=True)
-
-        # input_ports = Parameter(
-        #     [{NAME: OUTCOME, PARAMS: {INTERNAL_ONLY: True}}],
-        #     stateful=False,
-        #     loggable=False,
-        #     read_only=True,
-        #     structural=True,
-        #     parse_spec=True,
-        #     aliases='state_features',
-        #     constructor_argument='state_features'
-        # )
-        num_estimates = 1
-        num_trials_per_estimate = 1
         # search_space = None
         control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
+        num_estimates = 1
+        num_trials_per_estimate = 1
 
         saved_samples = None
         saved_values = None
