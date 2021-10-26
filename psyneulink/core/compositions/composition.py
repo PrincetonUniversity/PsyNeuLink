@@ -7444,23 +7444,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return_results=False,
             block_simulate=False
     ):
-        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `controller <Composition.controller>` in order to return the `net_outcome <ControlMechanism.net_outcome>`
-           of the Composition, calculated using the `controller <Composition.controller>`'s
-           <ControlMechanism.compute_net_outcome>` function under the specified control_allocation.
-           All values are reset to pre-simulation values at the end of the simulation.
+        """Run Composition and compute `net_outcomes <ControlMechanism.net_outcome>`
 
-           If `block_simulate` is set to True, the `controller <Composition.controller>` will attempt to use the
-           entire input set provided to the `run <Composition.run>` method of the `Composition` as input for the
-           simulated call to `run <Composition.run>`. If it is not, the `controller <Composition.controller>` will
-           use the inputs slated for its next or previous execution, depending on whether the `controller_mode` of the
-           `Composition` is set to `before` or `after`, respectively.
+        Runs the `Composition` in simulation mode (i.e., excluding its `controller <Composition.controller>`)
+        using the **predicted_input** and specified **control_allocation** for each run. The Composition is
+        run **num_estimates** times, each for **num_trials_per_estimate
 
-           .. note::
-                Block simulation can not be used if the Composition's stimuli were specified as a generator. If
-                `block_simulate` is set to True and the input type for the Composition was a generator,
-                block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
+        If **predicted_input** is not specified, and `block_simulate` is set to True, the `controller
+        <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
+        method of the `Composition` as input for the call to `run <Composition.run>`. If it is not, the `controller
+        <Composition.controller>` uses the inputs slated for its next or previous execution, depending on whether the
+        `controller_mode` of the `Composition` is set to `before` or `after`, respectively.
+
+       .. note::
+            Block simulation can not be used if the Composition's stimuli were specified as a generator.
+            If `block_simulate` is set to True and the input type for the Composition was a generator,
+            block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
+
+        The `net_outcome <ControlMechanism.net_outcome>` for each run is calculated using the `controller
+        <Composition.controller>`'s <ControlMechanism.compute_net_outcome>` function.  Each run is executed
+        independently, using the same **predicted_inputs** and **control_allocation**, and a randomly and
+        indepndently sampled seed for the random number generator.  All values are reset to pre-simulation
+        values at the end of the simulation.
+
+        Returns an array of length `num_estimates <OptimizationControlMechanism.num_estimates>`,
+        each element of which contains the `net_outcome <ControlMechanism.net_outcome>` of a run of
+        the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
+        an array with the results of each run is also returned.
         """
+
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
