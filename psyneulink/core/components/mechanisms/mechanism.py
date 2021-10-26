@@ -1083,6 +1083,7 @@ from collections import defaultdict, OrderedDict, UserDict, UserList
 from inspect import isclass
 from numbers import Number
 
+import modeci_mdf.mdf as mdf
 import numpy as np
 import typecheck as tc
 
@@ -1107,13 +1108,13 @@ from psyneulink.core.globals.keywords import \
     MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
+    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list
+    iscompatible, kwCompatibilityNumeric, convert_to_list, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -4118,6 +4119,34 @@ class Mechanism_Base(Mechanism):
             **inputs_dict,
             **outputs_dict
         }
+
+    def as_mdf_model(self):
+        model = mdf.Node(
+            id=parse_valid_identifier(self.name),
+            **self._mdf_metadata,
+        )
+
+        for name, val in self._mdf_model_parameters[self._model_spec_id_parameters].items():
+            model.parameters.append(mdf.Parameter(id=name, value=val))
+
+        for ip in self.input_ports:
+            ip_model = ip.as_mdf_model()
+            ip_model.id = f'{parse_valid_identifier(self.name)}_{ip_model.id}'
+
+            model.input_ports.append(ip_model)
+
+        for op in self.output_ports:
+            op_model = op.as_mdf_model()
+            op_model.id = f'{parse_valid_identifier(self.name)}_{op_model.id}'
+
+            model.output_ports.append(op_model)
+
+        function_model = self.function.as_mdf_model()
+        # primary input port
+        function_model.args[MODEL_SPEC_ID_MDF_VARIABLE] = model.input_ports[0].id
+        model.functions.append(function_model)
+
+        return model
 
 
 def _is_mechanism_spec(spec):

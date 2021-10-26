@@ -12,15 +12,19 @@ import collections
 import copy
 import functools
 import inspect
+import numbers
 import warnings
 
 import dill
 import graph_scheduler
+import modeci_mdf.mdf as mdf
 import numpy as np
+
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
 from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
+from psyneulink.core.globals.utilities import parse_valid_identifier
 
 __all__ = copy.copy(graph_scheduler.condition.__all__)
 __all__.extend(['Threshold'])
@@ -121,6 +125,66 @@ class Condition(graph_scheduler.Condition, JSONDumpable):
             MODEL_SPEC_ID_TYPE: self.__class__.__name__,
             'args': extra_args
         }
+
+    def as_mdf_model(self):
+        from psyneulink.core.components.component import Component
+
+        def _parse_condition_arg(arg):
+            if isinstance(arg, Component):
+                return parse_valid_identifier(arg.name)
+            elif isinstance(arg, graph_scheduler.Condition):
+                return arg.as_mdf_model()
+            elif arg is None or isinstance(arg, numbers.Number):
+                return arg
+            else:
+                try:
+                    iter(arg)
+                except TypeError:
+                    return str(arg)
+                else:
+                    return arg
+
+        if type(self) in {graph_scheduler.Condition, Condition}:
+            try:
+                func_val = inspect.getsource(self.func)
+            except OSError:
+                func_val = dill.dumps(self.func)
+            func_dict = {'function': func_val}
+        else:
+            func_dict = {}
+
+        extra_args = {MODEL_SPEC_ID_TYPE: self.__class__.__name__}
+
+        sig = inspect.signature(self.__init__)
+
+        for name, param in sig.parameters.items():
+            if param.kind is inspect.Parameter.VAR_POSITIONAL:
+                args_list = []
+                for a in self.args:
+                    if isinstance(a, Component):
+                        a = parse_valid_identifier(a.name)
+                    elif isinstance(a, graph_scheduler.Condition):
+                        a = a.as_mdf_model()
+                    args_list.append(a)
+                extra_args[name] = args_list
+
+        for i, (name, param) in enumerate(filter(
+            lambda item: item[1].kind is inspect.Parameter.POSITIONAL_OR_KEYWORD and item[0] not in self.kwargs,
+            sig.parameters.items()
+        )):
+            try:
+                extra_args[name] = self.args[i]
+            except IndexError:
+                # was specified with keyword not as positional arg
+                extra_args[name] = param.default
+
+        return mdf.Condition(
+            **func_dict,
+            **{
+                k: _parse_condition_arg(v)
+                for k, v in (*self.kwargs.items(), *extra_args.items())
+            }
+        )
 
 
 # below produces psyneulink versions of each Condition class so that

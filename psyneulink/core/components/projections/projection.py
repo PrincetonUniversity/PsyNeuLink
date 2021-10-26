@@ -398,6 +398,7 @@ import itertools
 import warnings
 from collections import namedtuple, defaultdict
 
+import modeci_mdf.mdf as mdf
 import numpy as np
 import typecheck as tc
 
@@ -412,7 +413,7 @@ from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_METADATA, \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
@@ -420,7 +421,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric
+from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -1075,6 +1076,59 @@ class Projection_Base(Projection):
             **super()._dict_summary,
             **socket_dict
         }
+
+    def as_mdf_model(self):
+        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+
+        # these may occur during deferred init
+        if not isinstance(self.sender, type):
+            sender_name = parse_valid_identifier(self.sender.name)
+            if isinstance(self.sender.owner, CompositionInterfaceMechanism):
+                sender_mech = parse_valid_identifier(self.sender.owner.composition.name)
+            else:
+                sender_mech = parse_valid_identifier(self.sender.owner.name)
+        else:
+            sender_name = None
+            sender_mech = None
+
+        if not isinstance(self.receiver, type):
+            receiver_name = parse_valid_identifier(self.receiver.name)
+            if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
+                receiver_mech = parse_valid_identifier(self.receiver.owner.composition.name)
+            else:
+                receiver_mech = parse_valid_identifier(self.receiver.owner.name)
+        else:
+            receiver_name = None
+            receiver_mech = None
+
+        socket_dict = {
+            MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
+            MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+            MODEL_SPEC_ID_SENDER_MECH: sender_mech,
+            MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
+        }
+
+        parameters = self._mdf_model_parameters
+        if self.defaults.weight is None:
+            parameters[self._model_spec_id_parameters]['weight'] = 1
+
+        metadata = self._mdf_metadata
+        try:
+            metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict_format(
+                self.function.as_mdf_model(),
+                ordered=False
+            )
+        except AttributeError:
+            # projection is in deferred init, special handling here?
+            pass
+
+        return mdf.Edge(
+            id=parse_valid_identifier(self.name),
+            **socket_dict,
+            **parameters,
+            **metadata
+        )
+
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):

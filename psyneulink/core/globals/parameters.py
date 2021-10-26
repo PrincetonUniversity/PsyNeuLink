@@ -860,6 +860,7 @@ class Parameter(ParameterBase):
         dependencies=None,
         initializer=None,
         port=None,
+        mdf_name=None,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -923,6 +924,7 @@ class Parameter(ParameterBase):
             dependencies=dependencies,
             initializer=initializer,
             port=port,
+            mdf_name=mdf_name,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,

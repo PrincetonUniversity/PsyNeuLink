@@ -191,6 +191,8 @@ import enum
 import inspect
 import json
 import math
+import modeci_mdf.mdf as mdf
+import numbers
 import numpy
 import pickle
 import pint
@@ -201,7 +203,8 @@ import types
 from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
     MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_GENERATING_APP, MODEL_SPEC_ID_FORMAT, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_VERSION, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE
+    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA
+from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, get_all_explicit_arguments, \
     parse_string_to_psyneulink_object_string, parse_valid_identifier, safe_equals, convert_to_np_array
@@ -266,6 +269,8 @@ class PNLJSONEncoder(json.JSONEncoder):
             return f'numpy.random.RandomState({o.seed})'
         elif isinstance(o, numpy.number):
             return o.item()
+        elif isinstance(o, mdf.BaseWithId):
+            return json.loads(o.to_json())
 
         try:
             return super().default(o)
@@ -298,17 +303,25 @@ def _parse_component_type(component_dict):
             # if matching component not found, raise original exception
             raise
 
-    try:
+    type_str = None
+    if MODEL_SPEC_ID_TYPE in component_dict:
         type_dict = component_dict[MODEL_SPEC_ID_TYPE]
-    except KeyError:
-        # specifically for functions the keyword is not 'type'
-        type_str = component_dict['function']
     else:
+        try:
+            type_dict = component_dict[MODEL_SPEC_ID_METADATA][MODEL_SPEC_ID_TYPE]
+        except KeyError:
+            # specifically for functions the keyword is not 'type'
+            type_str = component_dict['function']
+
+    if type_str is None:
         try:
             type_str = type_dict[MODEL_SPEC_ID_PSYNEULINK]
         except KeyError:
             # catch error outside of this function if necessary
             type_str = type_dict[MODEL_SPEC_ID_GENERIC]
+        except TypeError:
+            # actually a str
+            type_str = type_dict
 
     try:
         # gets the actual psyneulink type (Component, etc..) from the module
@@ -355,8 +368,18 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
     exec('import numpy')
 
     if isinstance(value, list):
-        value = [_parse_parameter_value(x, component_identifiers, name, parent_parameters) for x in value]
-        value = f"[{', '.join([str(x) for x in value])}]"
+        new_val = [_parse_parameter_value(x, component_identifiers, name, parent_parameters) for x in value]
+
+        # check for ParameterPort spec
+        if (
+            len(value) == 2
+            and isinstance(value[0], (numbers.Number, numpy.ndarray))
+            and isinstance(value[1], dict)
+        ):
+            # make tuple instead of list
+            value = f"({', '.join([str(x) for x in new_val])})"
+        else:
+            value = f"[{', '.join([str(x) for x in new_val])}]"
     elif isinstance(value, dict):
         if (
             MODEL_SPEC_ID_PARAMETER_SOURCE in value
@@ -391,6 +414,14 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
             # is a stateful parameter with initial value
             value = _parse_parameter_value(
                 value[MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE],
+                component_identifiers,
+                name,
+                parent_parameters
+            )
+        elif MODEL_SPEC_ID_PARAMETER_VALUE in value:
+            # is a standard mdf Parameter class with value
+            value = _parse_parameter_value(
+                value[MODEL_SPEC_ID_PARAMETER_VALUE],
                 component_identifiers,
                 name,
                 parent_parameters
@@ -533,6 +564,7 @@ def _generate_component_string(
 ):
     from psyneulink.core.components.functions.function import Function_Base
     from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
+    from psyneulink.core.components.projections.projection import Projection_Base
 
     try:
         component_type = _parse_component_type(component_dict)
@@ -555,9 +587,15 @@ def _generate_component_string(
         except KeyError:
             pass
 
+    is_user_defined_function = False
     try:
         parameters = dict(component_dict[component_type._model_spec_id_parameters])
     except AttributeError:
+        is_user_defined_function = True
+    except KeyError:
+        parameters = {}
+
+    if is_user_defined_function or component_type is UserDefinedFunction:
         custom_func = component_type
         component_type = UserDefinedFunction
         try:
@@ -566,11 +604,9 @@ def _generate_component_string(
             pass
         parameters['custom_function'] = f'{custom_func}'
         try:
-            del parameters[MODEL_SPEC_ID_PSYNEULINK]['custom_function']
+            del component_dict[MODEL_SPEC_ID_METADATA]['custom_function']
         except KeyError:
             pass
-    except KeyError:
-        parameters = {}
 
     try:
         parameters.update(component_dict[component_type._model_spec_id_stateful_parameters])
@@ -589,6 +625,17 @@ def _generate_component_string(
         del parameters[MODEL_SPEC_ID_PSYNEULINK]
     except KeyError:
         pass
+
+    try:
+        metadata = component_dict[MODEL_SPEC_ID_METADATA]
+    except KeyError:
+        metadata = {}
+
+    if issubclass(component_type, Projection_Base):
+        try:
+            component_dict['functions'] = metadata['functions']
+        except KeyError:
+            pass
 
     # pnl objects only have one function unless specified in another way
     # than just "function"
@@ -622,7 +669,9 @@ def _generate_component_string(
         else:
             parameter_names['function'] = list(component_dict['functions'])[0]
 
-        parameters['function'] = component_dict['functions'][parameter_names['function']]
+        parameters['function'] = {
+            parameter_names['function']: component_dict['functions'][parameter_names['function']]
+        }
 
     assignment_str = f'{parse_valid_identifier(name)} = ' if assignment else ''
 
@@ -643,10 +692,15 @@ def _generate_component_string(
 
     parameters = {
         **{k: v for k, v in parent_parameters.items() if isinstance(v, dict) and MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE in v},
-        **parameters
+        **parameters,
+        **metadata
     }
 
-    if 'variable' not in parameters:
+    # MDF input ports do not have functions, so their shape is
+    # equivalent to ours after the InputPort function is run (this
+    # function may change the shape of the default variable), so ignore
+    # the input port shape if input_ports parameter is specified
+    if 'variable' not in parameters and 'input_ports' not in parameters:
         try:
             ip = parameters['function'][Function_Base._model_spec_id_parameters][MODEL_SPEC_ID_MDF_VARIABLE]
             var = convert_to_np_array(
@@ -710,8 +764,18 @@ def _generate_component_string(
 
         return True
 
+    mdf_names_to_pnl = {
+        p.mdf_name: p.name for p in component_type.parameters
+        if p.mdf_name is not None and not isinstance(p, ParameterAlias)
+    }
+
     # sort on arg name
     for arg, val in sorted(parameters.items(), key=lambda p: p[0]):
+        try:
+            arg = mdf_names_to_pnl[arg]
+        except KeyError:
+            pass
+
         try:
             constructor_parameter_name = getattr(component_type.parameters, arg).constructor_argument
             # Some Parameters may be stored just to be replicated here, and
@@ -737,7 +801,10 @@ def _generate_component_string(
             except KeyError:
                 val = _parse_parameter_value(val, component_identifiers, parent_parameters=parent_parameters)
 
-            if not parameter_value_matches_default(component_type, arg, val):
+            if (
+                (arg in component_type.parameters or constructor_arg in component_type.parameters)
+                and not parameter_value_matches_default(component_type, arg, val)
+            ):
                 additional_arguments.append(f'{constructor_arg}={val}')
         elif component_type is UserDefinedFunction:
             try:
@@ -881,8 +948,13 @@ def _generate_condition_string(condition_dict, component_identifiers):
             kwarg_str_list.append(f'{key}={_parse_condition_arg_value(val)}')
         kwargs_str = f", {', '.join(kwarg_str_list)}"
 
+    if 'function' in args_dict and args_dict['function'] is not None:
+        func_str = args_dict['function']
+    else:
+        func_str = ''
+
     arguments_str = '{0}{1}{2}'.format(
-        args_dict['function'] if args_dict['function'] is not None else '',
+        func_str,
         args_str,
         kwargs_str
     )
@@ -936,26 +1008,40 @@ def _generate_composition_string(graphs_dict, component_identifiers):
     # may be given multiple compositions
     for comp_name, composition_dict in graphs_dict.items():
         try:
-            comp_type = _parse_component_type(composition_dict)
-        except KeyError:
-            comp_type = default_composition_type
-
-        try:
             assert comp_name == composition_dict['name']
         except KeyError:
             pass
 
         comp_identifer = parse_valid_identifier(comp_name)
 
+        def alphabetical_order(items):
+            alphabetical = enumerate(
+                sorted(items)
+            )
+            return {
+                parse_valid_identifier(item[1]): item[0]
+                for item in alphabetical
+            }
+
         # get order in which nodes were added
         # may be node names or dictionaries
         try:
-            node_order = composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['node_ordering']
+            node_order = composition_dict[MODEL_SPEC_ID_METADATA]['node_ordering']
             node_order = {
-                parse_valid_identifier(node['name']) if isinstance(node, dict)
+                parse_valid_identifier(list(node.keys())[0]) if isinstance(node, dict)
                 else parse_valid_identifier(node): node_order.index(node)
                 for node in node_order
             }
+
+            unspecified_node_order = {
+                node: position + len(node_order)
+                for node, position in alphabetical_order([
+                    n for n in composition_dict[MODEL_SPEC_ID_NODES] if n not in node_order
+                ]).items()
+            }
+
+            node_order.update(unspecified_node_order)
+
             assert all([
                 (parse_valid_identifier(node) in node_order)
                 for node in composition_dict[MODEL_SPEC_ID_NODES]
@@ -963,13 +1049,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         except (KeyError, TypeError, AssertionError):
             # if no node_ordering attribute exists, fall back to
             # alphabetical order
-            alphabetical = enumerate(
-                sorted(composition_dict[MODEL_SPEC_ID_NODES])
-            )
-            node_order = {
-                parse_valid_identifier(item[1]): item[0]
-                for item in alphabetical
-            }
+            node_order = alphabetical_order(composition_dict[MODEL_SPEC_ID_NODES])
 
         # clean up pnl-specific and other software-specific items
         pnl_specific_items = {}
@@ -1143,7 +1223,7 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         try:
             node_roles = {
                 parse_valid_identifier(node): role for (node, role) in
-                composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['required_node_roles']
+                composition_dict[MODEL_SPEC_ID_METADATA]['required_node_roles']
             }
         except KeyError:
             node_roles = []
@@ -1151,17 +1231,15 @@ def _generate_composition_string(graphs_dict, component_identifiers):
         try:
             excluded_node_roles = {
                 parse_valid_identifier(node): role for (node, role) in
-                composition_dict[comp_type._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['excluded_node_roles']
+                composition_dict[MODEL_SPEC_ID_METADATA]['excluded_node_roles']
             }
         except KeyError:
             excluded_node_roles = []
 
         # do not add the controller as a normal node
         try:
-            controller_name = composition_dict['controller']['name']
-        except TypeError:
-            controller_name = composition_dict['controller']
-        except KeyError:
+            controller_name = list(composition_dict[MODEL_SPEC_ID_METADATA]['controller'].keys())[0]
+        except (AttributeError, KeyError, TypeError):
             controller_name = None
 
         for name in sorted(
@@ -1430,6 +1508,7 @@ def generate_json(*compositions):
                 specifies `Composition` or iterable of ones to be output
                 in JSON
     """
+    import modeci_mdf
     from psyneulink.core.compositions.composition import Composition
 
     model_name = "_".join([c.name for c in compositions])
@@ -1448,13 +1527,20 @@ def generate_json(*compositions):
         except KeyError:
             merged_graphs_dict_summary.update(c._dict_summary)
 
-    return _dump_pnl_json_from_dict({
-        model_name: {
-            MODEL_SPEC_ID_FORMAT: MODEL_SPEC_ID_VERSION,
-            MODEL_SPEC_ID_GENERATING_APP: f'psyneulink v{psyneulink.__version__}',
-            **merged_graphs_dict_summary
-        }
-    })
+    model = mdf.Model(
+        id=model_name,
+        format=f'ModECI MDF v{modeci_mdf.__version__}',
+        generating_application=f'PsyNeuLink v{psyneulink.__version__}',
+    )
+
+    for c in compositions:
+        if not isinstance(c, Composition):
+            raise PNLJSONError(
+                f'Item in compositions arg of {__name__}() is not a Composition: {c}.'
+            )
+        model.graphs.append(c.as_mdf_model())
+
+    return model.to_json()
 
 
 def write_json_file(compositions, filename:str, path:str=None):

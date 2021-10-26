@@ -1042,6 +1042,19 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         return gain * scale * output * (1 - output)
 
+    def as_mdf_model(self):
+        model = super().as_mdf_model()
+        # x_0 is included in bias in MDF logistic
+        model.args['bias'] = model.args['bias'] - model.args['x_0']
+        model.args['x_0'] = 0
+
+        if model.args['scale'] != 1.0:
+            warnings.warn(
+                f"Scale (set to {model.args['scale']} is not a supported"
+                ' parameter for MDF logistic'
+            )
+        return model
+
 
 # **********************************************************************************************************************
 #                                                    Tanh

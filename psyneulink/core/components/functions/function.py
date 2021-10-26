@@ -146,6 +146,8 @@ import types
 import warnings
 from enum import Enum, IntEnum
 
+import modeci_mdf.mdf as mdf
+import modeci_mdf.functions.standard as mdf_functions
 import numpy as np
 import typecheck as tc
 
@@ -163,7 +165,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len,
+    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
     SeededRandomState, contains_type, is_instance_or_subclass
 )
 
@@ -828,6 +830,25 @@ class Function_Base(Function):
             **summary,
             'function': type_str.lower()
         }
+
+    def as_mdf_model(self):
+        if self._model_spec_generic_type_name is not NotImplemented:
+            typ = self._model_spec_generic_type_name
+        else:
+            try:
+                typ = self.custom_function.__name__
+            except AttributeError:
+                typ = type(self).__name__.lower()
+
+        if typ not in mdf_functions.mdf_functions:
+            warnings.warn(f'{typ} is not an MDF standard function, this is likely to produce an incompatible model.')
+
+        return mdf.Function(
+            id=parse_valid_identifier(self.name),
+            function=typ,
+            **self._mdf_model_parameters,
+            **self._mdf_metadata
+        )
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

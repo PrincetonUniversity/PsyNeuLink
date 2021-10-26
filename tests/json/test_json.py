@@ -3,6 +3,9 @@ import os
 import psyneulink as pnl
 import pytest
 
+from modeci_mdf.utils import load_mdf
+import modeci_mdf.execution_engine as ee
+
 # stroop stimuli
 red = [1, 0]
 green = [0, 1]
@@ -19,7 +22,13 @@ stroop_stimuli = {
 
 json_results_parametrization = [
     ('model_basic.py', 'comp', '{A: 1}'),
-    ('model_nested_comp_with_scheduler.py', 'comp', '{A: 1}'),
+    ('model_udfs.py', 'comp', '{A: 10}'),
+    pytest.param(
+        'model_nested_comp_with_scheduler.py',
+        'comp',
+        '{A: 1}',
+        marks=pytest.mark.xfail(reason='Nested Graphs not supported in MDF')
+    ),
     (
         'model_with_control.py',
         'comp',
@@ -129,3 +138,35 @@ def test_write_json_file_multiple_comps(
         exec(f'{composition_name}.run(inputs={input_dict_strs[composition_name]})')
         final_results = eval(f'{composition_name}.results')
         assert orig_results[composition_name] == final_results, f'{composition_name}:'
+
+
+@pytest.mark.parametrize(
+    'filename, composition_name, input_dict',
+    [
+        ('model_basic.py', 'comp', {'A': 1}),
+        ('model_udfs.py', 'comp', {'A': 10})
+    ]
+)
+def test_mdf_equivalence(filename, composition_name, input_dict):
+    # Get python script from file and execute
+    filename = f'{os.path.dirname(__file__)}/{filename}'
+    with open(filename, 'r') as orig_file:
+        exec(orig_file.read())
+        inputs_str = str(input_dict).replace("'", '')
+        exec(f'{composition_name}.run(inputs={inputs_str})')
+        orig_results = eval(f'{composition_name}.results')
+
+    # Save json_summary of Composition to file and read back in.
+    json_filename = filename.replace('.py', '.json')
+    pnl.write_json_file(eval(composition_name), json_filename)
+
+    m = load_mdf(json_filename)
+    eg = ee.EvaluableGraph(m.graphs[0], verbose=True)
+    eg.evaluate(initializer={f'{node}_InputPort_0': i for node, i in input_dict.items()})
+
+    mdf_results = [
+        [eo.curr_value for _, eo in eg.enodes[node.id].evaluable_outputs.items()]
+        for node in eg.scheduler.consideration_queue[-1]
+    ]
+
+    assert pnl.safe_equals(orig_results, mdf_results)
