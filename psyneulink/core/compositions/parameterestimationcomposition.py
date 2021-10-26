@@ -14,7 +14,9 @@ Contents
 --------
 
   * `ParameterEstimationComposition_Overview`
-  * `ParameterEstimationComposition_Supported_Optimzers`
+  * `ParameterEstimationComposition_Data_Fitting`
+  * `ParameterEstimationComposition_Optimization`
+  * `ParameterEstimationComposition_Supported_Optimizers`
   * `ParameterEstimationComposition_Class_Reference`
 
 
@@ -24,28 +26,98 @@ Overview
 --------
 
 A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate parameters of
-another `Composition` required to satisfy some objective function. The latter can be a fit to a set of empirical
-data, using an external optimizer ("estimation"), or an optimization function that specifies some other conditions
-that the results of the composition should satisfy when run on the inputs ("optimization").  The **target** argument
-ParameterEstimationComposition's constructor is used to specify the Composition for which the parameters are to be
-estimated; its **data** argument is used to specify the inputs over which the parameters should be estimated,
+another `Composition` (its `target <ParameterEstimationComposition.target>` in order to fit that to a set of
+data (`ParameterEstimationComposition_Data_Fitting`) or to optimize the `results <Composition.results>` of the
+`target <ParameterEstimationComposition.target>` according to an `objective_function`
+(`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
+<Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of parameters
+that it estimates best satisfy either of those conditions using its `optimization_function
+<ParameterEstimationComposition.optimization_function>`.
+
+.. _ParameterEstimationComposition_Data_Fitting:
+
+Data Fitting
+------------
+
+The ParameterEstimationComposition can be used to find a set of parameters for another "target" Composition such that,
+when that Composition is run with a given set of inputs, its results best match a specified set of empirical data. A
+ParameterEstimationComposition can be configured for data fitting by specifying the arguments of its constructor as
+follows:
+
+    * **target** - specifies the `Composition` for which parameters are to be estimated.
+
+    * **parameters** - list[Parameters]
+        specifies the parameters of the `target <ParameterEstimationComposition.target>` Composition to be estimated.
+
+    * **data** - specifies the inputs to the `target <ParameterEstimationComposition.target>` Composition over which its
+        parameters are to be estimated.
+
+    * **objective_function** -- ??this is automatically specified as MLE??
+
+    * **optimization_function**  OptimizationFunction, function or method
+        specifies the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
+        Composition.
+
+
+
+   * **target** - specifies the `Composition` for which parameters are to be estimated.
+
+   * **data** - specifies the inputs to the `target <ParameterEstimationComposition.target>` Composition over which its
+        parameters are to be estimated. This is assigned as the **state_feature_values** argument of the constructor
+        for the ParameterEstimationComposition's `OptimizationControlMechanism`.
+
+    parameters : list[Parameters]
+        determines the parameters of the `target <ParameterEstimationComposition.target>` Composition to be estimated.
+        This is assigned as the **control_signals** argument of the constructor for the ParameterEstimationComposition's
+        `OptimizationControlMechanism`.
+
+    outcome_variables : list[Composition output nodes]
+        determines the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
+        Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
+        ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
+        or evaluated by the ParameterEstimationComposition's `optimization_function
+        <ParameterEstimationComposition.optimization_function>` when it is used for `parameter optimization
+        <ParameterEstimationComposition_Optimization>`.
+
+    optimization_function : OptimizationFunction, function or method
+        determines the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
+        Composition.  This is assigned as the `function <OptimizationControlMechanism.function>` of the
+        ParameterEstimationComposition's `OptimizationControlMechanism`.
+
+    results : array
+        contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
+         `target <ParameterEstimationComposition.target>` Composition that best satisfy the
+        `optimization_function <ParameterEstimationComposition.optimization_function>` given the `data
+        <ParameterEstimationComposition.data>`.  This is the same as the final set of `control_signals
+        <ControlMechanism.control_signals>` for the ParameterEstimationComposition's `OptimizationControlMechanism`.
+
+
+of the `target <ParameterEstimationComposition.target>` Composition that
+best fit the data
+
+The  **target**
+argument ParameterEstimationComposition's constructor is used to specify the Composition for which the parameters
+are to be estimated; its **data** argument is used to specify the data to be fit for parameter *estimation*,
 its **parameters** argument is used to specify the parameters of the **target** Composition to be estimated,
 and its **optimization_function** is used to specify either an optimizer in another supported Python package (see
 `ParameterEstimationComposition_Supported_Optimizers`), or a PsyNeuLink `OptimizationFunction`.  The optimized set
 of parameters are returned when executing the  ParameterEstimationComposition`s `run <Composition.run>` method,
 and stored in its `results <ParameterEstimationComposition.results>` attribute.
 
-COMMENT:
- (which are passed to the `OptimizationControlMechanism`\\'s **state_feature_values** argument), 
-the parameters of the  
 
-its **optimization_function** are provided
+.. _ParameterEstimationComposition_Optimization
 
-If it is used for "estimation", then an external
-optimizer   
- and either an external optimizer as its 
-**optimization** 
-COMMENT
+Parameter Optimization
+----------------------
+
+
+.. _ParameterEstimationComposition_Supported_Optimizers:
+
+Supported Optimizers
+--------------------
+
+TBD
+
 
 .. _ParameterEstimationComposition_Class_Reference:
 
@@ -72,59 +144,103 @@ class ParameterEstimationComposition(Composition):
     Automatically implements an OptimizationControlMechanism as its `controller <Composition.controller>`,
     that is constructed using arguments to the ParameterEstimationComposition's constructor as described below.
 
-    assigns
-    its arguments using those
-    the Composition for which the parameters are to be optimized, specified in its
-    **target** argument, as the OptimizationControlMechanism' `agent_rep <OptimizationControlMechanism.agent>`;
-    the
-
-    See `Composition <Composition_Class_Reference>` for additional arguments and attributes.
-
     Arguments
     ---------
 
     target : Composition
-        specifies the `Composition` for which parameters are to be estimated.
+        specifies the `Composition` for which parameters are to be `fit to data
+        <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`.
 
-    data : array
-        specifies the inputs to the `target <ParameterEstimationComposition.target>` Composition over which its
-        parameters are to be estimated.
+    parameters : dict[Parameter:<list, iterator, or value>]
+        specifies the parameters of the `target <ParameterEstimationComposition.target>` Composition used to `fit
+        it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
+        <ParameterEstimationComposition_Optimization>` according to the `optimization_function
+        <ParameterEstimationComposition.optimization_function>`, and the range of values to be evaluated for each.
 
-    parameters : list[Parameters]
-        specifies the parameters of the `target <ParameterEstimationComposition.target>` Composition to be estimated.
+    outcome_variables : list[Composition output nodes]
+        specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
+        Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
+        ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`
+        or used by the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+        ParameterEstimationComposition is used for `parameter optimization
+        <ParameterEstimationComposition_Optimization>`.
+
+    data : array : default None
+        specifies the data to to be fit when the ParameterEstimationComposition is used for
+        `data fitting <ParameterEstimationComposition_Data_Fitting>`.
+
+    objective_function : ObjectiveFunction, function or method
+        specifies the function that must be optimized (maximized or minimized) when the ParameterEstimationComposition
+        is used for `paramater optimization <ParameterEstimationComposition_Optimization>`.
 
     optimization_function : OptimizationFunction, function or method
-        specifies the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
-        Composition.
+        specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>` or
+        `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `target
+        <ParameterEstimationComposition.target>` Composition.
 
     Attributes
     ----------
 
     target : Composition
-        specifies the `Composition` for which parameters are to be estimated.  This is assigned as the **agent_rep**
-        argument of the constructor for the ParameterEstimationComposition's `OptimizationControlMechanism`.
-
-    data : array
-        specifies the inputs to the `target <ParameterEstimationComposition.target>` Composition over which its
-        parameters are to be estimated. This is assigned as the **state_feature_values** argument of the constructor
-        for the ParameterEstimationComposition's `OptimizationControlMechanism`.
+        determines the `Composition` for which parameters are used to `fit data
+        <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
+        <ParameterEstimationComposition_Optimization>` as defined by the `objective_function
+        <ParameterEstimationComposition.objective_function>`.  This is assigned as the `agent_rep
+        <OptimizationControlMechanism.agent_rep>` attribute of the ParameterEstimationComposition's
+        `OptimizationControlMechanism`.
 
     parameters : list[Parameters]
-        determines the parameters of the `target <ParameterEstimationComposition.target>` Composition to be estimated.
-        This is assigned as the **control_signals** argument of the constructor for the ParameterEstimationComposition's
+        determines the parameters of the `target <ParameterEstimationComposition.target>` Composition used to `fit
+        it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
+        <ParameterEstimationComposition_Optimization>` according to the `optimization_function
+        <ParameterEstimationComposition.optimization_function>`. These are assigned to the **control** argument of
+        the constructor for the ParameterEstimationComposition's `OptimizationControlMechanism`, that is used to
+        construct its `control_signals <OptimizationControlMechanism.control_signals>`.
+
+    parameter_ranges : list[iterator, list or value
+        determines the range of values evaluated for each `parameter <ParameterEstimationComposition.parameters>`.
+        These are assigned as the `allocation_samples <ControlSignal.allocation_samples>` for the `ControlSignal`
+        assigned to the ParameterEstimationComposition` `OptimizationControlMechanism` corresponding to each of the
+        specified `parameters <ParameterEstimationComposition.parameters>`.
+
+    outcome_variables : list[Composition output nodes]
+        determines the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
+        Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
+        ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
+        or evaluated by the ParameterEstimationComposition's `optimization_function
+        <ParameterEstimationComposition.optimization_function>` when it is used for `parameter optimization
+        <ParameterEstimationComposition_Optimization>`.
+
+    data : array
+        determines the data to be fit by the model specified by the `target <ParameterEstimationComposition.target>`
+        Composition when the ParameterEstimationComposition is used for `data fitting
+        <ParameterEstimationComposition_Data_Fitting>`. These are passed to the optimizer specified
+        by the `optimization_function <ParameterEstimationComposition.optimization_function>` specified as the
+        `function <OptimizationControlMechanism.function> of the ParameterEstimationComposition's
         `OptimizationControlMechanism`.
+
+    objective_function : ObjectiveFunction, function or method
+        determines XXX
 
     optimization_function : OptimizationFunction, function or method
         determines the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
-        Composition.  This is assigned as the `function <OptimizationControlMechanism.function>` of the
-        ParameterEstimationComposition's `OptimizationControlMechanism`.
+        Composition that either best fit the **data** when the ParameterEstimationComposition is used for `data
+        fitting <ParameterEstimationComposition_Data_Fitting>`, or that achieve some maximum or minimum value of the
+        the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+        ParameterEstimationComposition is used for `parameter optimization
+        <ParameterEstimationComposition_Optimization>`.  This is assigned as the `function
+        <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
 
     results : array
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
-         `target <ParameterEstimationComposition.target>` Composition that best satisfy the
-        `optimization_function <ParameterEstimationComposition.optimization_function>` given the `data
-        <ParameterEstimationComposition.data>`.  This is the same as the final set of `control_signals
-        <ControlMechanism.control_signals>` for the ParameterEstimationComposition's `OptimizationControlMechanism`.
+         `target <ParameterEstimationComposition.target>` Composition that best fit the **data** when the
+         ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
+         or that optimize performance of the `target <ParameterEstimationComposition.target>` according to the
+         `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+         ParameterEstimationComposition is used for `parameter `optimization_function
+         <ParameterEstimationComposition.optimization_function>`.  This is the same as the final set of `values
+         <ControlSignal.value>` for the `control_signals <ControlMechanism.control_signals>` of the
+         ParameterEstimationComposition's `OptimizationControlMechanism`.
     """
 
     def __init__(self, name=None, **param_defaults):
