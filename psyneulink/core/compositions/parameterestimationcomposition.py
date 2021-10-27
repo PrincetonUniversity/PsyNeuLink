@@ -126,8 +126,16 @@ Class Reference
 
 """
 
-from psyneulink.core.compositions.composition import Composition
+import numpy as np
+
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    OptimizationControlMechanism
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.sampleiterator import SampleSpec
+from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['ParameterEstimationComposition']
 
@@ -249,9 +257,87 @@ class ParameterEstimationComposition(Composition):
          ParameterEstimationComposition's `OptimizationControlMechanism`.
     """
 
-    def __init__(self, name=None, **param_defaults):
-       # self.function = function
-        super().__init__(name=name, **param_defaults)
+    def __init__(self,
+                 target, # agent_rep
+                 parameters, # OCM control_signals
+                 outcome_variables,  # OCM monitor_for_control
+                 data, # arg of OCM function
+                 objective_function, # function of OCM ObjectiveMechanism
+                 optimization_function, # function of OCM
+                 num_estimates, # num seeds per parameter combination (i.e., of OCM allocation_samples)
+                 name=None,
+                 **param_defaults):
+
+        pem = self._instantiate_pem(parameters,
+                                    outcome_variables,
+                                    data,
+                                    objective_function,
+                                    optimization_function,
+                                    num_estimates)
+
+        super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
+
+        #FIX: CHECK THAT THIS WORKS AND, IF SO, REMOVE OVERRIDE OF execute METHOD BELOW
+        self.require_node_roles(self.controller, NodeRole.OUTPUT)
+
+    def _instantiate_pem(self,
+                         target,
+                         parameters,
+                         outcome_variables,
+                         data,
+                         objective_function,
+                         optimization_function,
+                         num_estimates
+                         ):
+
+
+        # FIX: MOVE THIS TO validation METHOD?
+        if data and objective_function:
+            raise ParameterEstimationCompositionError(f"Both `data` and `objective_function` arguments for {self.name} "
+                                                      f"were specified; must choose one: `data` for fitting "
+                                                      f"or `objective_function` for optimization.")
+
+        # FIX: MOVE THIS TO validation METHOD?
+        # Ensure parameters are in target composition
+        bad_params = [p for p in parameters if p not in target.parameters]
+        if bad_params:
+            raise ParameterEstimationCompositionError(f"The following parameters "
+                                                      f"were not found in {target.name}: {bad_params}")
+
+        # FIX: MOVE THIS TO validation METHOD?
+        # Ensure outcome_variables are ports in target
+        bad_ports = [p for p in outcome_variables if not [p is not node and p not in node.ports for node in
+                                                          target.nodes]]
+        if bad_ports:
+            raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as "
+                                                      f"nodes or OutputPorts in {target.name}: {bad_ports}")
+
+        # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
+        random_params = target.find_random_params()
+        # FIX: should seeds be prespecified as list or passed as a random generator? Or should this be an option?
+        random_seeds = SampleSpec(num=num_estimates, function=np.random)
+        randomization_control_signal = ControlSignal(modulates=random_params,
+                                                     allocation_samples=random_seeds)
+        parameters = convert_to_list(parameters).append(randomization_control_signal)
+
+        if data:
+            objective_function = objective_function(data)
+
+        return OptimizationControlMechanism(control_signals=parameters,
+                                            objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
+                                                                                   function=objective_function),
+                                            function=optimization_function)
+
+    # FIX: USE THIS IF ASSIGNING PEM AS OUTPUT Node DOESN'T WORK
+    def execute(self, **kwargs):
+        super().execute(kwargs)
+        optimized_control_allocation = self.controller.output_values
+        self.results[-1] = optimized_control_allocation
+        return optimized_control_allocation
+
+    # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
+    def run(self):
+        pass
 
     def adapt(self,
               feature_values,

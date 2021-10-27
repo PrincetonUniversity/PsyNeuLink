@@ -525,7 +525,6 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
-        from psyneulink.core.compositions.report import ReportOutput
         if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
             _show_progress = True
             _progress_bar_char = '.'
@@ -578,9 +577,9 @@ class OptimizationFunction(Function_Base):
 
 
 class GridBasedOptimizationFunction(OptimizationFunction):
-    """Add helper method to partition search_space for parallel instantiation."""
+    """Implement helper method for parallelizing instantiating an evaluating samples from search space """
 
-    def _instantiate_grid_values(self, ocm, context):
+    def _grid_evaluate(self, ocm, context):
 
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
@@ -591,13 +590,13 @@ class GridBasedOptimizationFunction(OptimizationFunction):
         comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
         execution_mode = ocm.parameters.comp_execution_mode._get(context)
         if execution_mode == "PTX":
-            ct_values = comp_exec.cuda_evaluate(variable, num_evals)
+            outcomes = comp_exec.cuda_evaluate(variable, num_evals)
         elif execution_mode == "LLVM":
-            ct_values = comp_exec.thread_evaluate(variable, num_evals)
+            outcomes = comp_exec.thread_evaluate(variable, num_evals)
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
-        return ct_values, num_evals
+        return outcomes, num_evals
 
 
 ASCENT = 'ascent'
@@ -1624,7 +1623,8 @@ class GridSearch(GridBasedOptimizationFunction):
 
     def _run_grid(self, ocm, variable, context):
 
-        ct_values, num_evals = self._instantiate_grid_values(ocm, context)
+        # "ct" => c-type variables
+        ct_values, num_evals = self._grid_evaluate(ocm, context)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
@@ -1701,7 +1701,6 @@ class GridSearch(GridBasedOptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
-            from psyneulink.core.compositions.report import ReportOutput
             if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
                 _show_progress = True
                 _progress_bar_char = '.'
