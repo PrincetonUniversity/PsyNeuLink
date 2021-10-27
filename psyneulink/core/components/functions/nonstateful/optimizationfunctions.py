@@ -146,18 +146,17 @@ class OptimizationFunction(Function_Base):
         the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
         relevant argument(s) as `NotImplemnted`.
 
-    COMMENT:
-    NOTES TO DEVELOPERS:
-    - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
-      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`) so
-      that subclasses can be used interchangeably by OptimizationMechanisms.
+    .. technical_note::
+       - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments
+         required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
+         `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
-    - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-      `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
-      reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
-      `NotImplemented` should be passed as the argument's value in the call to super (i.e., the OptimizationFunction's
-      constructor).
-    COMMENT
+       - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
+         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
+         `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
+         the OptimizationFunction's
+         constructor).
 
 
     Arguments
@@ -1601,6 +1600,8 @@ class GridSearch(OptimizationFunction):
         return builder
 
     def _run_grid(self, ocm, variable, context):
+
+        # FIX: MOVE THIS ONTO GRID EVALUATE AS HELPER METHOD
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
@@ -1615,6 +1616,9 @@ class GridSearch(OptimizationFunction):
             ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
         else:
             assert False, "Unknown OCM execution variant: {}".format(variant)
+
+        # FIX: THIS IS THE GRID SEARCH
+        # CALL GRID EVALUATE HELPER METHOD HERE
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
