@@ -577,6 +577,29 @@ class OptimizationFunction(Function_Base):
         pass
 
 
+class GridBasedOptimizationFunction(OptimizationFunction):
+    """Add helper method to partition search_space for parallel instantiation."""
+
+    def _instantiate_grid_values(self, ocm, context):
+
+        assert ocm is ocm.agent_rep.controller
+        # Compiled evaluate expects the same variable as mech function
+        variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
+        num_evals = np.prod([d.num for d in self.search_space])
+
+        # Map allocations to values
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        execution_mode = ocm.parameters.comp_execution_mode._get(context)
+        if execution_mode == "PTX":
+            ct_values = comp_exec.cuda_evaluate(variable, num_evals)
+        elif execution_mode == "LLVM":
+            ct_values = comp_exec.thread_evaluate(variable, num_evals)
+        else:
+            assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
+
+        return ct_values, num_evals
+
+
 ASCENT = 'ascent'
 DESCENT = 'descent'
 
@@ -1120,7 +1143,7 @@ MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
 
 
-class GridSearch(OptimizationFunction):
+class GridSearch(GridBasedOptimizationFunction):
     """
     GridSearch(                      \
         default_variable=None,       \
@@ -1601,24 +1624,7 @@ class GridSearch(OptimizationFunction):
 
     def _run_grid(self, ocm, variable, context):
 
-        # FIX: MOVE THIS ONTO GRID EVALUATE AS HELPER METHOD
-        assert ocm is ocm.agent_rep.controller
-        # Compiled evaluate expects the same variable as mech function
-        new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
-        num_evals = np.prod([d.num for d in self.search_space])
-
-        # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        variant = ocm.parameters.comp_execution_mode._get(context)
-        if variant == "PTX":
-            ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
-        elif variant == "LLVM":
-            ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
-        else:
-            assert False, "Unknown OCM execution variant: {}".format(variant)
-
-        # FIX: THIS IS THE GRID SEARCH
-        # CALL GRID EVALUATE HELPER METHOD HERE
+        ct_values, num_evals = self._instantiate_grid_values(ocm, context)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
@@ -1766,6 +1772,8 @@ class GridSearch(OptimizationFunction):
 
 
             ocm = self._get_optimized_controller()
+
+            # Compiled version
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
                 opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
                 # This should not be evaluated unless needed
@@ -1780,6 +1788,8 @@ class GridSearch(OptimizationFunction):
                     self.parameters.saved_samples._set(all_samples, context)
                 if self.parameters.save_values._get(context):
                     self.parameters.saved_values._set(all_values, context)
+
+            # Python version
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
