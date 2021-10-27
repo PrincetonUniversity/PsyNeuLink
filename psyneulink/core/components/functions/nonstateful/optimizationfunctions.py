@@ -1152,7 +1152,7 @@ class GridSearch(OptimizationFunction):
     `search_space <GridSearch.search_space>2` is contained in `num_iterations <GridSearch.num_iterations>`).
     Iteration continues until all values in `search_space <GridSearch.search_space>` have been evaluated (i.e.,
     `num_iterations <GridSearch.num_iterations>` is reached), or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    exceeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
     is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
     <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
     samples evaluated and their values if either `save_samples <GridSearch.save_samples>` or `save_values

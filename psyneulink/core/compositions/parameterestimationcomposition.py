@@ -219,13 +219,13 @@ class ParameterEstimationComposition(Composition):
         by the `optimization_function <ParameterEstimationComposition.optimization_function>` specified as the
         `function <OptimizationControlMechanism.function> of the ParameterEstimationComposition's
         `OptimizationControlMechanism`.
-        XXXX NEEDS TO BE ORGANIZED IN A WAY THAT IS COMPATIBLE WITH outcome_variables [SAME NUMBER OF ITEMS IN OUTER
-        DIMENSION, WITH CORRESPONDING TYPES]
+        FIX: NEEDS TO BE ORGANIZED IN A WAY THAT IS COMPATIBLE WITH outcome_variables [SAME NUMBER OF ITEMS IN OUTER
+             DIMENSION, WITH CORRESPONDING TYPES]
 
     objective_function : ObjectiveFunction, function or method
-        IS EITHER:  THE NAME OF THE EXTERNAL OPTIMIZER FOR DATA FITTING OR A FUNCTION THAT IS OPTIMIZED FOR
-        PARAMETER OPTIMZATION
-        Elfi, PYMC, S
+        FIX: IS EITHER:  THE NAME OF THE EXTERNAL OPTIMIZER FOR DATA FITTING OR A FUNCTION THAT IS OPTIMIZED FOR
+            PARAMETER OPTIMIZATION [DAVE WANTS TO CALL THIS THE OPTIMZATION FUNCTION]
+            Elfi, PYMC, S
 
     optimization_function : OptimizationFunction, function or method
         determines the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
@@ -235,7 +235,7 @@ class ParameterEstimationComposition(Composition):
         ParameterEstimationComposition is used for `parameter optimization
         <ParameterEstimationComposition_Optimization>`.  This is assigned as the `function
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
-        DAVE'S OptimizationFunction
+        FIX: DAVE'S OptimizationFunction [DAVE WANTS TO CALL THIS THE OBJECTIVE_FUNTION]
 
     results : array
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
