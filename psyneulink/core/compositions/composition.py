@@ -7435,7 +7435,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             predicted_input=None,
             control_allocation=None,
-            num_estimates=1,
             num_trials_per_estimate=1,
             runtime_params=None,
             base_context=Context(execution_id=None),
@@ -7448,7 +7447,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Runs the `Composition` in simulation mode (i.e., excluding its `controller <Composition.controller>`)
         using the **predicted_input** and specified **control_allocation** for each run. The Composition is
-        run **num_estimates** times, each for **num_trials_per_estimate
+        run for ***num_trials_per_estimate**.
 
         If **predicted_input** is not specified, and `block_simulate` is set to True, the `controller
         <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
@@ -7467,8 +7466,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         independently sampled seed for the random number generator.  All values are reset to pre-simulation
         values at the end of the simulation.
 
-        Returns an array of length `num_estimates <OptimizationControlMechanism.num_estimates>`,
-        each element of which contains the `net_outcome <ControlMechanism.net_outcome>` of a run of
+        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of
         the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
         an array with the results of each run is also returned.
         """
@@ -7510,61 +7508,52 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
 
-        results = []
-        net_outcomes = []
+        # EXECUTE run of composition and aggregate results
 
-        # ITERATE OVER num_estimates, aggregating results and net_outcomes
-        for i in range(num_estimates):
+        # Use reporting options from Report context created in initial (outer) call to run()
+        with Report(self, context) as report:
+            result = self.run(inputs=inputs,
+                                    context=context,
+                                    runtime_params=runtime_params,
+                                    num_trials=num_trials_per_estimate,
+                                    animate=animate,
+                                    execution_mode=execution_mode,
+                                    skip_initialization=True,
+                                    )
+            context.remove_flag(ContextFlags.SIMULATION_MODE)
+            context.execution_phase = ContextFlags.CONTROL
+            if buffer_animate_state:
+                self._animate = buffer_animate_state
 
-            # EXECUTE run of composition and aggregate results
+        assert result == self.get_output_values(context)
 
-            # Use reporting options from Report context created in initial (outer) call to run()
-            with Report(self, context) as report:
-                result = self.run(inputs=inputs,
-                                        context=context,
-                                        runtime_params=runtime_params,
-                                        num_trials=num_trials_per_estimate,
-                                        animate=animate,
-                                        execution_mode=execution_mode,
-                                        skip_initialization=True,
-                                        )
-                context.remove_flag(ContextFlags.SIMULATION_MODE)
-                context.execution_phase = ContextFlags.CONTROL
-                if buffer_animate_state:
-                    self._animate = buffer_animate_state
+        # Store simulation results on "base" composition
+        if self.initialization_status != ContextFlags.INITIALIZING:
+            try:
+                self.parameters.simulation_results._get(base_context).append(result)
+            except AttributeError:
+                self.parameters.simulation_results._set([result], base_context)
 
-            assert result == self.get_output_values(context)
+        # COMPUTE net_outcome and aggregate in net_outcomes
 
-            # Store simulation results on "base" composition
-            if self.initialization_status != ContextFlags.INITIALIZING:
-                try:
-                    self.parameters.simulation_results._get(base_context).append(result)
-                except AttributeError:
-                    self.parameters.simulation_results._set([result], base_context)
-            if return_results:
-                results.append(result)
+        # Update input ports in order to get correct value for "outcome" (from objective mech)
+        self.controller._update_input_ports(runtime_params, context)
+        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
+        # outcome = self.controller.input_port.parameters.value._get(context)
+        outcome = []
+        for i in range(self.controller.num_outcome_input_ports):
+            outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
 
-            # COMPUTE net_outcome and aggregate in net_outcomes
-
-            # Update input ports in order to get correct value for "outcome" (from objective mech)
-            self.controller._update_input_ports(runtime_params, context)
-            # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-            # outcome = self.controller.input_port.parameters.value._get(context)
-            outcome = []
-            for i in range(self.controller.num_outcome_input_ports):
-                outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
-
-            if outcome is None:
-                net_outcome = 0.0
-            else:
-                # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-                net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
-            net_outcomes.append(net_outcome)
+        if outcome is None:
+            net_outcome = 0.0
+        else:
+            # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
+            net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
         if return_results:
-            return net_outcomes, results
+            return net_outcome, result
         else:
-            return net_outcomes
+            return net_outcome
 
 
     def _infer_target_nodes(self, targets: dict):

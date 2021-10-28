@@ -588,8 +588,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to
-        `evaluation_function <OptimizationControlMechanism.evaluation_function>`) used to estimate the outcome of each
-        `control_allocation <ControlMechanism.control_allocation>` evaluated by the OptimizationControlMechanism's
+        `evaluation_function <OptimizationControlMechanism.evaluation_function>`) used to estimate the net_outcome of
+        each `control_allocation <ControlMechanism.control_allocation>` evaluated by the OptimizationControlMechanism's
         `function <OptimizationControlMechanism.function>` (i.e., that are specified by its `search_space
         <OptimizationFunction.search_space>`).
 
@@ -1066,18 +1066,24 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Evaluates `agent_rep <OptimizationControlMechanism.agent_rep>` by calling its `evaluate <Composition.evaluate>`
         method, which executes it `agent_rep <OptimizationControlMechanism.agent_rep>` `num_estimates
-        <OptimizationControlMechanism.num_estimates>` times, each for `num_trials_per_estimate
-        <OptimizationControlMechanism.num_trials_per_estimate>` trials. Each execution uses the current
-        `state_feature_values <OptimizationControlMechanism.state_feature_values>` as the input and the specified
-        **control_allocation**.  (If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `Composition`,
-        each execution is a call to its `run <Composition.run>` method with `num_trials_per_estimate
-        <OptimizationControlMechanism.num_trials_per_estimate>` as its **num_trials** argument, and the same
-        `state_feature_values <OptimizationControlMechanism.state_feature_values>` and **control_allocation**,
-        but a randomly chosen seed for the random number generator, for each run.
+        <OptimizationControlMechanism.num_estimates>` times. Each execution uses the current `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>` as the input and the specified **control_allocation**.
 
-        Returns an array of length **number_estimates** containing the `net_outcome <ControlMechanism.net_outcome>`
-        of each execution and, if **return_results** is True, also an array with the `results <Composition.results>`
-        of each run.
+        If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `Composition`, each execution is a call to
+        its `run <Composition.run>` method that uses the `num_trials_per_estimate
+        <OptimizationControlMechanism.num_trials_per_estimate>` as its **num_trials** argument, and the same
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>` and **control_allocation**
+        but a different randomly chosen seed for the random number generator for each run.  It then returns an array of
+        length **number_estimates** containing the `net_outcome <ControlMechanism.net_outcome>` of each execution
+        and, if **return_results** is True, also an array with the `results <Composition.results>` of each run.
+
+        COMMENT:
+        FIX: THIS SHOULD BE REFACTORED TO BE HANDLED THE SAME AS A Composition AS agent_rep
+        COMMENT
+        If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a CompositionFunctionApproximator,
+        then `num_estimates <OptimizationControlMechanism.num_estimates>` is passed to it to handle execution and
+        estimation as determined by its implementaton, and returns a single estimated net_outcome.
+
 
         See `evaluate <Composition.evaluate>` for additional details)
         """
@@ -1110,6 +1116,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
 
+            # FIX: THIS SHOULD BE REFACTORED TO BE HANDLED THE SAME AS A Composition AS agent_rep
             # If results of the simulation should be returned then, do so. agent_rep's evaluate method will
             # return a tuple in this case in which the first element is the outcome as usual and the second
             # is the results of the composition run.
@@ -1117,6 +1124,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 return outcome, result
             else:
                 return outcome
+
 
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
