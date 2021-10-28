@@ -317,7 +317,8 @@ class ParameterEstimationComposition(Composition):
         # random_params = target.find_random_params()
 
         # FIX: should seeds be prespecified as list or passed as a random generator? Or should this be an option?
-        random_seeds = SampleSpec(num=num_estimates, function=np.random.default_rng())
+        random_integer_generator = lambda : np.random.default_rng().integers(num_estimates)
+        random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
         randomization_control_signal = ControlSignal(modulates=random_params,
                                                      allocation_samples=random_seeds)
         parameters = convert_to_list(parameters).append(randomization_control_signal)
