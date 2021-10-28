@@ -84,13 +84,22 @@ follows:
         Composition.  This is assigned as the `function <OptimizationControlMechanism.function>` of the
         ParameterEstimationComposition's `OptimizationControlMechanism`.
 
-    results : array
-        contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
-         `target <ParameterEstimationComposition.target>` Composition that best satisfy the
-        `optimization_function <ParameterEstimationComposition.optimization_function>` given the `data
-        <ParameterEstimationComposition.data>`.  This is the same as the final set of `control_signals
-        <ControlMechanism.control_signals>` for the ParameterEstimationComposition's `OptimizationControlMechanism`.
 
+    optimized_parameters : list
+        contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
+         `target <ParameterEstimationComposition.target>` Composition that best fit the **data** when the
+         ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
+         or that optimize performance of the `target <ParameterEstimationComposition.target>` according to the
+         `optimization_function <ParameterEstimationComposition.optimization_function>` when the
+         ParameterEstimationComposition is used for `parameter `optimization_function
+         <ParameterEstimationComposition.optimization_function>`.  This is the same as the final set of `values
+         <ControlSignal.value>` for the `control_signals <ControlMechanism.control_signals>` of the
+         ParameterEstimationComposition's `OptimizationControlMechanism`.
+
+    results : list[list[list]]
+        containts the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the ``target <ParameterEstimationComposition.target>` Composition for every `TRIAL <TimeScale.TRIAL>`
+        executed (see `Composition.results` for more details).
 
 of the `target <ParameterEstimationComposition.target>` Composition that
 best fit the data
@@ -245,7 +254,7 @@ class ParameterEstimationComposition(Composition):
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
         FIX: DAVE'S OptimizationFunction [DAVE WANTS TO CALL THIS THE OBJECTIVE_FUNTION]
 
-    results : array
+    optimized_parameters : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
          `target <ParameterEstimationComposition.target>` Composition that best fit the **data** when the
          ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
@@ -255,6 +264,11 @@ class ParameterEstimationComposition(Composition):
          <ParameterEstimationComposition.optimization_function>`.  This is the same as the final set of `values
          <ControlSignal.value>` for the `control_signals <ControlMechanism.control_signals>` of the
          ParameterEstimationComposition's `OptimizationControlMechanism`.
+
+    results : list[list[list]]
+        containts the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        in the ``target <ParameterEstimationComposition.target>` Composition for every `TRIAL <TimeScale.TRIAL>`
+        executed (see `Composition.results` for more details).
     """
 
     def __init__(self,
@@ -277,15 +291,6 @@ class ParameterEstimationComposition(Composition):
                                     num_estimates)
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
-
-        # FIX: 1) exclude_node_roles WORKS BUT require_node_roles DOES NOT, ?? BECAUSE controller NOT ALLOWED AS OUTPUT
-        #      2) output_CIM.output_ports REMAIN UNCHANGED
-        #            (APPARENTLY REMOVING OUTPUT DOESN'T WORK, AT LEAST NOT WITHOUT REPLACING THEM?)
-        #      MAY NEED TO REFACTOR _determine_node_roles() AND/OR _create_CIM_ports()
-        self.exclude_node_roles(target,NodeRole.OUTPUT)
-        self.require_node_roles(self.controller, NodeRole.OUTPUT)
-        self._analyze_graph()
-        assert True
 
     def _instantiate_pem(self,
                          target,
@@ -376,3 +381,7 @@ class ParameterEstimationComposition(Composition):
         """
         # FIX: AUGMENT TO USE num_estimates and num_trials_per_estimate
         return self.function(feature_values, control_allocation, context=context)
+
+    @property
+    def optimized_parameter_values(self):
+        return self.controller.output_values
