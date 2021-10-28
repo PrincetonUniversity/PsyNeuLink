@@ -326,7 +326,15 @@ class ParameterEstimationComposition(Composition):
         # # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
         # random_params = target.find_random_params()
         # FIX: should seeds be passed as a generator or an explicit list of seeds? Or should this be an option?
-        random_integer_generator = lambda : np.random.default_rng().integers(num_estimates)
+        def random_integer_generator():
+            # FIX: ADD SEED ATTRIBUTE TO PEC FOR np.random.seed, AND ASSIGNED RANDOMLY BY DEFAULT
+            rng = np.random.RandomState()
+            # FIX: IF MY_SEED IS SPEXIFIED IT WILL INSURE THAT RECONCSTRUCTION OF PEC PRODUCES THE EXACT SAME RESULTS
+            #      EACH TIME
+            # FIX: BY DEFAULT, ASSIGN MY_SEED BY TIME
+            rng.seed(MY SEED)
+            # return np.random.default_rng().integers(num_estimates)
+            return rng.integers(num_estimates)
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
         # randomization_control_signal = ControlSignal(modulates=random_params,
@@ -379,6 +387,7 @@ class ParameterEstimationComposition(Composition):
         """Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         """
+        # FIX: THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
         # FIX: AUGMENT TO USE num_estimates and num_trials_per_estimate
         return self.function(feature_values, control_allocation, context=context)
 
