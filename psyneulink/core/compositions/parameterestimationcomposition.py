@@ -278,8 +278,14 @@ class ParameterEstimationComposition(Composition):
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
-        #FIX: CHECK THAT THIS WORKS AND, IF SO, REMOVE OVERRIDE OF execute METHOD BELOW
+        # FIX: 1) exclude_node_roles WORKS BUT require_node_roles DOES NOT, ?? BECAUSE controller NOT ALLOWED AS OUTPUT
+        #      2) output_CIM.output_ports REMAIN UNCHANGED
+        #            (APPARENTLY REMOVING OUTPUT DOESN'T WORK, AT LEAST NOT WITHOUT REPLACING THEM?)
+        #      MAY NEED TO REFACTOR _determine_node_roles() AND/OR _create_CIM_ports()
+        self.exclude_node_roles(target,NodeRole.OUTPUT)
         self.require_node_roles(self.controller, NodeRole.OUTPUT)
+        self._analyze_graph()
+        assert True
 
     def _instantiate_pem(self,
                          target,
@@ -290,7 +296,6 @@ class ParameterEstimationComposition(Composition):
                          optimization_function,
                          num_estimates
                          ):
-
 
         # FIX: MOVE THIS TO validation METHOD?
         if data and objective_function:
@@ -319,14 +324,19 @@ class ParameterEstimationComposition(Composition):
         random_integer_generator = lambda : np.random.default_rng().integers(num_estimates)
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
-        randomization_control_signal = ControlSignal(modulates=random_params,
-                                                     allocation_samples=random_seeds)
-        parameters = convert_to_list(parameters).append(randomization_control_signal)
+        # randomization_control_signal = ControlSignal(modulates=random_params,
+        #                                              allocation_samples=random_seeds)
+        # parameters = convert_to_list(parameters).append(randomization_control_signal)
 
         if data:
             objective_function = objective_function(data)
 
-        return OptimizationControlMechanism(control_signals=parameters,
+        control_signals = []
+        for p,a in parameters.items():
+            control_signals.append(ControlSignal(modulates=p,
+                                                 allocation_samples=a))
+
+        return OptimizationControlMechanism(control_signals=control_signals,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
                                                                                    function=objective_function),
                                             function=optimization_function)

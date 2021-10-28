@@ -825,6 +825,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         function = function or GridSearch
 
+        # FIX: MAKE SURE MOVE TO HERE FROM BELOW PASSES TESTS
+        self.state_features = state_features
+
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
@@ -841,8 +844,6 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 assert False, f"PROGRAM ERROR: 'agent_rep' arg should have been specified " \
                               f"in internal call to constructor for {self.name}."
-
-        self.state_features = state_features
 
         super().__init__(
             function=function,
@@ -909,7 +910,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
-        OptimizationControlMechanism requires use of at least one of the cost options
         """
         super()._instantiate_output_ports(context)
 
