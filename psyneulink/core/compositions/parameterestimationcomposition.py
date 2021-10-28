@@ -173,7 +173,7 @@ class ParameterEstimationComposition(Composition):
         it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
         <ParameterEstimationComposition_Optimization>` according to the `optimization_function
         <ParameterEstimationComposition.optimization_function>`, and either the range of values to be evaluated for
-        each, or priors that define a distribution.
+        each, or priors that define a distribution over those.
 
     outcome_variables : list[Composition output nodes]
         specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
@@ -207,7 +207,7 @@ class ParameterEstimationComposition(Composition):
 
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
-        combination of `parameter <ParameterEstimationComposition>` values (see `constant_seed_across_search
+        combination of `parameter <ParameterEstimationComposition.parameters>` values (see `constant_seed_across_search
         <ParameterEstimationComposition.constant_seed_across_search>` for additional information).
 
 
@@ -228,12 +228,20 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition_Optimization>` according to the `optimization_function
         <ParameterEstimationComposition.optimization_function>`. These are assigned to the **control** argument of
         the constructor for the ParameterEstimationComposition's `OptimizationControlMechanism`, that is used to
-        construct its `control_signals <OptimizationControlMechanism.control_signals>`.
+        construct the `control_signals <OptimizationControlMechanism.control_signals>` used to modulate each parameter
+        that is being fit.
+
+    .. technical_note::
+        An additional ControlSignal is added to the `control_signals <OptimizationControlMechanism.control_signals>`
+        of the ParameterEstimationComposition's `OptimizationControlMechanism` (as the last one in its list),
+        that modulates the seeds used to randomize each estimate of the `net_outcome <ControlMechanism.net_outcome>`
+        for each run of the `target <ParameterEstimationComposition.target>` Composition (i.e., call to its `evaluate
+        <Composition.evaluate>` method).
 
     parameter_ranges_or_priors : List[Union[Iterator, Function, ist or Value]
         determines the range of values evaluated for each `parameter <ParameterEstimationComposition.parameters>`.
         These are assigned as the `allocation_samples <ControlSignal.allocation_samples>` for the `ControlSignal`
-        assigned to the ParameterEstimationComposition` `OptimizationControlMechanism` corresponding to each of the
+        assigned to the ParameterEstimationComposition's `OptimizationControlMechanism` corresponding to each of the
         specified `parameters <ParameterEstimationComposition.parameters>`.
 
     outcome_variables : list[Composition Output Nodes]
@@ -270,9 +278,10 @@ class ParameterEstimationComposition(Composition):
         FIX: DAVE'S OptimizationFunction [DAVE WANTS TO CALL THIS THE OBJECTIVE_FUNTION]
 
     num_estimates : int : default 1
-        determines the number of estimates (i.e., calls to the OptimizationControlMechanism's `evaluation_function
-        <OptimizationControlMechanism.evaluation_function>`) made for a each combination of `parameter
-        <ParameterEstimationComposition>` values.
+        determines the number of estimates of the `net_outcome <ControlMechanism.net_outcome>` of the `target
+        <ParameterEstimationComposition.target>` Composition (i.e., number of calls to its `evaluate
+        <Composition.evaluate>` method) for each combination of `parameter <ParameterEstimationComposition.parameters>`
+        values (i.e., `control_allocation <ControlMechanism.control_allocation>`) evaluated.
 
     initial_seed : int : default None
         determines the seed used to initialize the random number generator at construction.
@@ -282,21 +291,24 @@ class ParameterEstimationComposition(Composition):
         should yield identical results for the estimation process, which can be useful for debugging.
 
     same_seed_for_all_parameter_combinations :  bool : default False
-        determines whether the random number generator used to select seeds for each estimate is re-initialized to the
-        same value for each combination of `parameter <ParameterEstimationComposition>` values. If it is
-        True, then any differences in the estimates made for each combination of parameter values will be determined
-        exclusively by the effect of the *parameters* on the execution of the `target
-        <ParameterEstimationComposition.target>` Composition, and not to any randomness intrinsic to the
-        Composition itself (e.g., any of its Components).  This can be confirmed by identical results for repeated
+        determines whether the random number generator used to select seeds for each estimate of the `target
+        <ParameterEstimationComposition.target>` Composition's `net_outcome <ControlMechanism.net_outcome>` is
+        re-initialized to the same value for each combination of `parameter <ParameterEstimationComposition>` values
+        evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
+        of `net_outcome <ControlMechanism.net_outcome>` for each combination of parameter values will reflect
+        exclusively the influence of the *parameters* on the execution of the `target
+        <ParameterEstimationComposition.target>` Composition, and *not* any variability intrinsic to the execution of
+        the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
         executions of the OptimizationControlMechanism's `evaluation_function
-        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values.
+        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values (i.e.,
+        `control_allocation <ControlMechanism.control_allocation>`control_allocation).
         If *same_seed_for_all_parameter_combinations* is False, then each time a combination of parameter
-        values is estimated, it will use a different set of seeds. This can be confirmed by different results for
+        values is estimated, it will use a different set of seeds. This can be confirmed by differing results for
         repeated executions of the OptimizationControlMechanism's `evaluation_function
-        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values. Modest differences
-        suggest stability of the estimation process across combination of parameter values, while substantial
-        differences indicate instability, which may be helped by increasing `num_estimates
-        <ParameterEstimationComposition.num_estimates>`.
+        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values (`control_allocation
+        <ControlMechanism.control_allocation>`control_allocation). Small differences in results suggest stability of
+        the estimation process across combinations of parameter values, while substantial differences indicate
+        instability, which may be helped by increasing `num_estimates <ParameterEstimationComposition.num_estimates>`.
 
     optimized_parameters : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
@@ -389,6 +401,7 @@ class ParameterEstimationComposition(Composition):
 
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
+        # Add ControlSignal to pem for seeds use in randomizing estimates
         # randomization_control_signal = ControlSignal(modulates=random_params,
         #                                              allocation_samples=random_seeds)
         # parameters = convert_to_list(parameters).append(randomization_control_signal)
