@@ -96,10 +96,11 @@ Parameter Optimization
       `parameters <ParameterEstimationComposition.parameters>` are assessed.
 
     * **optimization_function** - specifies the function used to search over values of the `parameters
-      <ParameterEstimationComposition.parameters>` in order to optimize the **objective_function**.  It must
-      be an `OptimizationFunction` or a subclass of that.  By default OptimizationFunction conducts a grid search
-      over all combinations of  `parameter <ParameterEstimationComposition.parameters>` values, and returns the
-      set that either maximizes or minizes the **objective_function**.
+      <ParameterEstimationComposition.parameters>` in order to optimize the **objective_function**.  It can be any
+      `OptimizationFunction` that accepts an `objective_function <OptimizationFunction>` as an argument or specifies
+      one by default.  By default `GridSearch` is used which exhaustively evaluates all combinations of  `parameter
+      <ParameterEstimationComposition.parameters>` values, and returns the set that either maximizes or minimizes the
+      **objective_function**.
 
 .. _ParameterEstimationComposition_Supported_Optimizers:
 
@@ -243,11 +244,9 @@ class ParameterEstimationComposition(Composition):
              DIMENSION, WITH CORRESPONDING TYPES]
 
     objective_function : ObjectiveFunction, function or method
-        FIX: IS EITHER:  THE NAME OF THE EXTERNAL OPTIMIZER FOR DATA FITTING OR A FUNCTION THAT IS OPTIMIZED FOR
-            PARAMETER OPTIMIZATION [DAVE WANTS TO CALL THIS THE OPTIMZATION FUNCTION]
-            Elfi, PYMC, S
 
-    optimization_function : OptimizationFunction, function or method
+
+    optimization_function : OptimizationFunction
         determines the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
         Composition that either best fit the **data** when the ParameterEstimationComposition is used for `data
         fitting <ParameterEstimationComposition_Data_Fitting>`, or that achieve some maximum or minimum value of the
@@ -255,7 +254,6 @@ class ParameterEstimationComposition(Composition):
         ParameterEstimationComposition is used for `parameter optimization
         <ParameterEstimationComposition_Optimization>`.  This is assigned as the `function
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
-        FIX: DAVE'S OptimizationFunction [DAVE WANTS TO CALL THIS THE OBJECTIVE_FUNTION]
 
     num_estimates : int : default 1
         determines the number of estimates of the `net_outcome <ControlMechanism.net_outcome>` of the `target
