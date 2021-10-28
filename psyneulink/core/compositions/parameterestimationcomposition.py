@@ -378,11 +378,12 @@ class ParameterEstimationComposition(Composition):
 
         # # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
         # random_params = target.find_random_params()
+
         def random_integer_generator():
             rng = np.random.RandomState()
             rng.seed(initial_seed)
             # return np.random.default_rng().integers(num_estimates)
-            return rng.integers(num_estimates)
+            return rng.random_integers(num_estimates)
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
         # randomization_control_signal = ControlSignal(modulates=random_params,
