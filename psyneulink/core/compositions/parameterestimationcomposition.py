@@ -261,14 +261,15 @@ class ParameterEstimationComposition(Composition):
                  target, # agent_rep
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control
-                 data, # arg of OCM function
-                 objective_function, # function of OCM ObjectiveMechanism
                  optimization_function, # function of OCM
-                 num_estimates, # num seeds per parameter combination (i.e., of OCM allocation_samples)
+                 data=None, # arg of OCM function
+                 objective_function=None, # function of OCM ObjectiveMechanism
+                 num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
                  name=None,
                  **param_defaults):
 
-        pem = self._instantiate_pem(parameters,
+        pem = self._instantiate_pem(target,
+                                    parameters,
                                     outcome_variables,
                                     data,
                                     objective_function,
@@ -293,29 +294,30 @@ class ParameterEstimationComposition(Composition):
 
         # FIX: MOVE THIS TO validation METHOD?
         if data and objective_function:
-            raise ParameterEstimationCompositionError(f"Both `data` and `objective_function` arguments for {self.name} "
-                                                      f"were specified; must choose one: `data` for fitting "
-                                                      f"or `objective_function` for optimization.")
+            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' were specified for "
+                                                      f"'{self.name}'; must choose one: 'data' for fitting "
+                                                      f"or 'objective_function' for optimization.")
+
+        # # FIX: MOVE THIS TO validation METHOD?
+        # # Ensure parameters are in target composition
+        # bad_params = [p for p in parameters if p not in target.parameters]
+        # if bad_params:
+        #     raise ParameterEstimationCompositionError(f"The following parameters "
+        #                                               f"were not found in '{target.name}': {bad_params}.")
 
         # FIX: MOVE THIS TO validation METHOD?
-        # Ensure parameters are in target composition
-        bad_params = [p for p in parameters if p not in target.parameters]
-        if bad_params:
-            raise ParameterEstimationCompositionError(f"The following parameters "
-                                                      f"were not found in {target.name}: {bad_params}")
-
-        # FIX: MOVE THIS TO validation METHOD?
-        # Ensure outcome_variables are ports in target
-        bad_ports = [p for p in outcome_variables if not [p is not node and p not in node.ports for node in
+        # Ensure outcome_variables are OutputPorts in target
+        bad_ports = [p for p in outcome_variables if not [p is not node and p not in node.output_ports for node in
                                                           target.nodes]]
         if bad_ports:
             raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as "
-                                                      f"nodes or OutputPorts in {target.name}: {bad_ports}")
+                                                      f"nodes or OutputPorts in '{target.name}': {bad_ports}.")
 
-        # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
-        random_params = target.find_random_params()
+        # # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
+        # random_params = target.find_random_params()
+
         # FIX: should seeds be prespecified as list or passed as a random generator? Or should this be an option?
-        random_seeds = SampleSpec(num=num_estimates, function=np.random)
+        random_seeds = SampleSpec(num=num_estimates, function=np.random.default_rng())
         randomization_control_signal = ControlSignal(modulates=random_params,
                                                      allocation_samples=random_seeds)
         parameters = convert_to_list(parameters).append(randomization_control_signal)
