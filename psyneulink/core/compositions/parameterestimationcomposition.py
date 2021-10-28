@@ -397,13 +397,6 @@ class ParameterEstimationComposition(Composition):
                                                                                    function=objective_function),
                                             function=optimization_function)
 
-    # FIX: USE THIS IF ASSIGNING PEM AS OUTPUT Node DOESN'T WORK
-    def execute(self, **kwargs):
-        super().execute(kwargs)
-        optimized_control_allocation = self.controller.output_values
-        self.results[-1] = optimized_control_allocation
-        return optimized_control_allocation
-
     # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
     def run(self):
         pass
