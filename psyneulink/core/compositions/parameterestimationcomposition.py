@@ -158,7 +158,7 @@ class ParameterEstimationComposition(Composition):
     """Subclass of `Composition` that estimates specified parameters of a target Composition to optimize a function
     over a set of data.
 
-    Automatically implements an OptimizationControlMechanism as its `controller <Composition.controller>`,
+    Automatically implements an `OptimizationControlMechanism` as its `controller <Composition.controller>`,
     that is constructed using arguments to the ParameterEstimationComposition's constructor as described below.
 
     Arguments
@@ -189,12 +189,27 @@ class ParameterEstimationComposition(Composition):
 
     objective_function : ObjectiveFunction, function or method
         specifies the function that must be optimized (maximized or minimized) when the ParameterEstimationComposition
-        is used for `paramater optimization <ParameterEstimationComposition_Optimization>`.
+        is used for `parameter optimization <ParameterEstimationComposition_Optimization>`.
 
     optimization_function : OptimizationFunction, function or method
         specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>` or
         `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `target
         <ParameterEstimationComposition.target>` Composition.
+
+    num_estimates : int : default 1
+        specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
+        values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information).
+
+    initial_seed : int : default None
+        specifies the seed used to initialize the random number generator at construction.
+        If it is not specified then then the seed is set to a random value on construction (see `initial_seed
+        <ParameterEstimationComposition.initial_seed>` for additional information).
+
+    same_seed_for_all_parameter_combinations :  bool : default False
+        specifies whether the random number generator is re-initialized to the same value when estimating each
+        combination of `parameter <ParameterEstimationComposition>` values (see `constant_seed_across_search
+        <ParameterEstimationComposition.constant_seed_across_search>` for additional information).
+
 
     Attributes
     ----------
@@ -254,6 +269,35 @@ class ParameterEstimationComposition(Composition):
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
         FIX: DAVE'S OptimizationFunction [DAVE WANTS TO CALL THIS THE OBJECTIVE_FUNTION]
 
+    num_estimates : int : default 1
+        determines the number of estimates (i.e., calls to the OptimizationControlMechanism's `evaluation_function
+        <OptimizationControlMechanism.evaluation_function>`) made for a each combination of `parameter
+        <ParameterEstimationComposition>` values.
+
+    initial_seed : int : default None
+        determines the seed used to initialize the random number generator at construction.
+        If it is not specified then then the seed is set to a random value on construction, and different runs of a
+        script containing the ParameterEstimationComposition will yield different results, which should be roughly
+        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the script
+        should yield identical results for the estimation process, which can be useful for debugging.
+
+    same_seed_for_all_parameter_combinations :  bool : default False
+        determines whether the random number generator used to select seeds for each estimate is re-initialized to the
+        same value for each combination of `parameter <ParameterEstimationComposition>` values. If it is
+        True, then any differences in the estimates made for each combination of parameter values will be determined
+        exclusively by the effect of the *parameters* on the execution of the `target
+        <ParameterEstimationComposition.target>` Composition, and not to any randomness intrinsic to the
+        Composition itself (e.g., any of its Components).  This can be confirmed by identical results for repeated
+        executions of the OptimizationControlMechanism's `evaluation_function
+        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values.
+        If *same_seed_for_all_parameter_combinations* is False, then each time a combination of parameter
+        values is estimated, it will use a different set of seeds. This can be confirmed by different results for
+        repeated executions of the OptimizationControlMechanism's `evaluation_function
+        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values. Modest differences
+        suggest stability of the estimation process across combination of parameter values, while substantial
+        differences indicate instability, which may be helped by increasing `num_estimates
+        <ParameterEstimationComposition.num_estimates>`.
+
     optimized_parameters : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
          `target <ParameterEstimationComposition.target>` Composition that best fit the **data** when the
@@ -264,11 +308,13 @@ class ParameterEstimationComposition(Composition):
          <ParameterEstimationComposition.optimization_function>`.  This is the same as the final set of `values
          <ControlSignal.value>` for the `control_signals <ControlMechanism.control_signals>` of the
          ParameterEstimationComposition's `OptimizationControlMechanism`.
+         # FIX: ADD MENTION OF ARRAY ONCE THAT IS IMPLEMENTED FOR DISTRIBUTION OF PARAMETER VALUES
 
     results : list[list[list]]
         containts the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the ``target <ParameterEstimationComposition.target>` Composition for every `TRIAL <TimeScale.TRIAL>`
         executed (see `Composition.results` for more details).
+         # FIX: ADD MENTION OF OUTER DIMENSION ONCE THAT IS IMPLEMENTED FOR DISTRIBUTION OF PARAMETER VALUES
     """
 
     def __init__(self,
@@ -279,16 +325,21 @@ class ParameterEstimationComposition(Composition):
                  data=None, # arg of OCM function
                  objective_function=None, # function of OCM ObjectiveMechanism
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
+                 initial_seed=None,
+                 same_seed_for_all_parameter_combinations=False,
                  name=None,
                  **param_defaults):
 
-        pem = self._instantiate_pem(target,
-                                    parameters,
-                                    outcome_variables,
-                                    data,
-                                    objective_function,
-                                    optimization_function,
-                                    num_estimates)
+        pem = self._instantiate_pem(target=target,
+                                    parameters=parameters,
+                                    outcome_variables=outcome_variables,
+                                    data=data,
+                                    objective_function=objective_function,
+                                    optimization_function=optimization_function,
+                                    num_estimates=num_estimates,
+                                    initial_seed=initial_seed,
+                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations
+                                    )
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
@@ -299,7 +350,9 @@ class ParameterEstimationComposition(Composition):
                          data,
                          objective_function,
                          optimization_function,
-                         num_estimates
+                         num_estimates,
+                         initial_seed,
+                         same_seed_for_all_parameter_combinations
                          ):
 
         # FIX: MOVE THIS TO validation METHOD?
@@ -325,14 +378,9 @@ class ParameterEstimationComposition(Composition):
 
         # # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
         # random_params = target.find_random_params()
-        # FIX: should seeds be passed as a generator or an explicit list of seeds? Or should this be an option?
         def random_integer_generator():
-            # FIX: ADD SEED ATTRIBUTE TO PEC FOR np.random.seed, AND ASSIGNED RANDOMLY BY DEFAULT
             rng = np.random.RandomState()
-            # FIX: IF MY_SEED IS SPEXIFIED IT WILL INSURE THAT RECONCSTRUCTION OF PEC PRODUCES THE EXACT SAME RESULTS
-            #      EACH TIME
-            # FIX: BY DEFAULT, ASSIGN MY_SEED BY TIME
-            rng.seed(MY SEED)
+            rng.seed(initial_seed)
             # return np.random.default_rng().integers(num_estimates)
             return rng.integers(num_estimates)
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
@@ -389,6 +437,7 @@ class ParameterEstimationComposition(Composition):
         """
         # FIX: THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
         # FIX: AUGMENT TO USE num_estimates and num_trials_per_estimate
+        # FIX: AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
         return self.function(feature_values, control_allocation, context=context)
 
     @property
