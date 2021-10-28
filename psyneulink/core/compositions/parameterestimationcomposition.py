@@ -26,7 +26,7 @@ Overview
 --------
 
 COMMENT:
-    ADD MENTION THAT THIS ALLOWS FITTING AND OPTIMIZATING "LIKELIHOOD-FREE" MODELS.
+    ADD MENTION THAT THIS ALLOWS FITTING AND OPTIMIZING "LIKELIHOOD-FREE" MODELS.
 COMMENT
 
 A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate parameters of
@@ -122,10 +122,9 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.compositions.composition import Composition, NodeRole
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.sampleiterator import SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['ParameterEstimationComposition']
 
