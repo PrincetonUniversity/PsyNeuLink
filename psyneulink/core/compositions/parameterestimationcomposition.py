@@ -68,8 +68,8 @@ its results best match a specified set of empirical data.  This requires the fol
 specified:
 
     * **data** - specifies the data to which the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-      are fit in the estimation process.  The must be in a format that matches the specification of `outcome_variables
-      <ParameterEstimationComposition.outcome_variables>`
+      are fit in the estimation process.  They must be in a format that matches the specification of
+      `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
       COMMENT:
           NEED MORE HERE ABOUT THAT
@@ -80,17 +80,26 @@ specified:
       of the `parameters <ParameterEstimationComposition.parameters>` that maximize the fit. This must be either
       `ParameterEstimationFunction` or a subclass of that.  By default, ParameterEstimationFunction uses maximum
       likelihood estimation (MLE) to compare the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-      and the data, and XXXX for searching parameter combinations.
+      and the data, and
+      COMMENT:
+      XXXX - GET FROM DAVE
+      COMMENT
+      for searching over parameter combinations.
 
 .. _ParameterEstimationComposition_Optimization
 
 Parameter Optimization
 ----------------------
 
-    * **objective_function** -
+    * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
+      `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
+      `parameters <ParameterEstimationComposition.parameters>` are assessed.
 
-    * **optimization_function** - specifies the function used to estimate the parameters of the
-      `target <ParameterEstimationComposition.target>` Composition.
+    * **optimization_function** - specifies the function used to search over values of the `parameters
+      <ParameterEstimationComposition.parameters>` in order to optimize the **objective_function**.  It must
+      be an `OptimizationFunction` or a subclass of that.  By default OptimizationFunction conducts a grid search
+      over all combinations of  `parameter <ParameterEstimationComposition.parameters>` values, and returns the
+      set that either maximizes or minizes the **objective_function**.
 
 .. _ParameterEstimationComposition_Supported_Optimizers:
 
@@ -98,7 +107,6 @@ Supported Optimizers
 --------------------
 
 TBD
-
 
 .. _ParameterEstimationComposition_Class_Reference:
 
