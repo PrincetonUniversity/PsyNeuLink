@@ -330,6 +330,8 @@ class ParameterEstimationComposition(Composition):
                  name=None,
                  **param_defaults):
 
+        self._validate_params(name, target, data, objective_function, outcome_variables)
+
         pem = self._instantiate_pem(target=target,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
@@ -343,6 +345,28 @@ class ParameterEstimationComposition(Composition):
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
+    def _validate_params(self, name, target, data, objective_function, outcome_variables):
+
+        # # Ensure parameters are in target composition
+        if data and objective_function:
+            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
+                                                      f"'{name or self.__class__.__name__}'; must choose one "
+                                                      f"('data' for fitting or 'objective_function' for optimization).")
+
+        # FIX: IMPLEMENT KATHERINE'S METHOD WHEN AVAILABLE
+        # # Ensure parameters are in target composition
+        # bad_params = [p for p in parameters if p not in target.parameters]
+        # if bad_params:
+        #     raise ParameterEstimationCompositionError(f"The following parameters "
+        #                                               f"were not found in '{target.name}': {bad_params}.")
+
+        # Ensure outcome_variables are OutputPorts in target
+        bad_ports = [p for p in outcome_variables if not [p is not node and p not in node.output_ports for node in
+                                                          target.nodes]]
+        if bad_ports:
+            raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as "
+                                                      f"nodes or OutputPorts in '{target.name}': {bad_ports}.")
+
     def _instantiate_pem(self,
                          target,
                          parameters,
@@ -355,35 +379,14 @@ class ParameterEstimationComposition(Composition):
                          same_seed_for_all_parameter_combinations
                          ):
 
-        # FIX: MOVE THIS TO validation METHOD?
-        if data and objective_function:
-            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' were specified for "
-                                                      f"'{self.name}'; must choose one: 'data' for fitting "
-                                                      f"or 'objective_function' for optimization.")
-
-        # # FIX: MOVE THIS TO validation METHOD?
-        # # Ensure parameters are in target composition
-        # bad_params = [p for p in parameters if p not in target.parameters]
-        # if bad_params:
-        #     raise ParameterEstimationCompositionError(f"The following parameters "
-        #                                               f"were not found in '{target.name}': {bad_params}.")
-
-        # FIX: MOVE THIS TO validation METHOD?
-        # Ensure outcome_variables are OutputPorts in target
-        bad_ports = [p for p in outcome_variables if not [p is not node and p not in node.output_ports for node in
-                                                          target.nodes]]
-        if bad_ports:
-            raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as "
-                                                      f"nodes or OutputPorts in '{target.name}': {bad_ports}.")
-
         # # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
         # random_params = target.find_random_params()
 
         def random_integer_generator():
             rng = np.random.RandomState()
             rng.seed(initial_seed)
-            # return np.random.default_rng().integers(num_estimates)
             return rng.random_integers(num_estimates)
+
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
         # randomization_control_signal = ControlSignal(modulates=random_params,
@@ -393,6 +396,7 @@ class ParameterEstimationComposition(Composition):
         if data:
             objective_function = objective_function(data)
 
+        # Get ControlSignals for parameters to be searched
         control_signals = []
         for p,a in parameters.items():
             control_signals.append(ControlSignal(modulates=p,
