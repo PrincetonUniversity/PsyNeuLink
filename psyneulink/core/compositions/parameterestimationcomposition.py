@@ -140,6 +140,7 @@ from psyneulink.core.globals.sampleiterator import SampleSpec
 
 __all__ = ['ParameterEstimationComposition']
 
+SEED_CONTROL_SIGNAL_NAME = 'RANDOMIZATION SEEDS'
 
 class ParameterEstimationCompositionError(Exception):
     def __init__(self, error_value):
@@ -225,7 +226,7 @@ class ParameterEstimationComposition(Composition):
 
     .. technical_note::
         An additional ControlSignal is added to the `control_signals <OptimizationControlMechanism.control_signals>`
-        of the ParameterEstimationComposition's `OptimizationControlMechanism` (as the last one in its list),
+        of the ParameterEstimationComposition's `OptimizationControlMechanism`, named *SEED_CONTROL_SIGNAL_NAME*,
         that modulates the seeds used to randomize each estimate of the `net_outcome <ControlMechanism.net_outcome>`
         for each run of the `target <ParameterEstimationComposition.target>` Composition (i.e., call to its `evaluate
         <Composition.evaluate>` method).
@@ -317,16 +318,19 @@ class ParameterEstimationComposition(Composition):
     results : list[list[list]]
         contains the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the ``target <ParameterEstimationComposition.target>` Composition for every `TRIAL <TimeScale.TRIAL>`
-        executed (see `Composition.results` for more details).  If the ParameterEstimationComposition is used for
+        executed (see `Composition.results` for more details). If the ParameterEstimationComposition is used for
         `data fitting <ParameterEstimationComposition_Data_Fitting>`, and `parameter values
-         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
-         each item of `results <Composition.results>` is an array of values (sampled over `num_estimates
-         <ParameterEstimationComposition.num_estimates>` obtained for the single optimized combination of `parameter
-         <ParameterEstimationComposition.parameters>` values. However, if `parameter values
-         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors, then each item of
-         `results` is an array containing the values of the corresponding `parameter
-         <ParameterEstimationComposition.parameter>` the distribution of which were determined to be optimal.
-         XXX
+        <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
+        each item of `results <Composition.results>` is an array of `output_values <Mechanism_Base.output_values>`
+        (sampled over `num_estimates <ParameterEstimationComposition.num_estimates>`) obtained for the single
+        optimized combination of `parameter <ParameterEstimationComposition.parameters>` values contained in the
+        corresponding item of `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`.
+        If `parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors,
+        then each item of `results` is an array of `output_values <Mechanism_Base.output_values>` (sampled over
+        `num_estimates <ParameterEstimationComposition.num_estimates>`), each of which corresponds to a combination
+        of `parameter <ParameterEstimationComposition.parameters>` values that were used to generate those results;
+        it is the *distribution* of those `parameter <ParameterEstimationComposition.parameters>` values that were
+        found to best fit the data.
     """
 
     def __init__(self,
@@ -420,7 +424,8 @@ class ParameterEstimationComposition(Composition):
             seed_params.extend([p._port for p in list(params_dict.values())])
 
         # Construct ControlSignal to modify seeds over estimates
-        seed_control_signal = ControlSignal(modulates=seed_params,
+        seed_control_signal = ControlSignal(name=SEED_CONTROL_SIGNAL_NAME,
+                                            modulates=seed_params,
                                             allocation_samples=random_seeds)
 
         # FIX: WHAT iS THIS DOING?
