@@ -10,7 +10,7 @@
 
 # FIX: SEED FOR noise PARAMETER OF TransferMechanism GETS ASSIGNED TO THE MECHANISM,
 #      BUT THERE DOES NOT SEEM TO BE A PARAMETER PORT ASSIGNED TO IT FOR THAT
-# FIX: ADD Parameters FOR PEC
+# FIX: ADD Parameters Class DEFINTION FOR ParameterEstimationComposition
 # FIX: CHANGE REFERENCES TO <`parameter <ParameterEstimationComposition.parameters>` values> AND THE LIKE TO
 #      <`parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>`>
 # FIX: ADD TESTS:
@@ -387,14 +387,13 @@ class ParameterEstimationComposition(Composition):
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
+    # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION
     def _validate_params(self, params):
 
         if params['data'] and params['objective_function']:
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
                                                       f"'{params['name'] or self.__class__.__name__}'; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
-
-        # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION
 
         # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
         # Ensure that a ControlSignal can be created for all parameters specified
@@ -456,20 +455,12 @@ class ParameterEstimationComposition(Composition):
             objective_function = objective_function(data)
 
         # Get ControlSignals for parameters to be searched
-        try:
-            control_signals = []
-            ctl_sig_errors = []
-            for param,allocation in parameters.items():
-                try:
-                    control_signals.append(ControlSignal(modulates=param,
-                                                         allocation_samples=allocation))
-                except Exception as e:
-                    ctl_sig_errors.append(f"'\n{param}:{allocation}': {e}.")
-                    # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
-            convert_to_list(control_signals).append(seed_control_signal)
-        except Exception as e:
-            raise ParameterEstimationCompositionError(f"The following specifications in params caused problems: \n"
-                                                      f"{ctl_sig_errors}")
+        control_signals = []
+        for param,allocation in parameters.items():
+            control_signals.append(ControlSignal(modulates=param,
+                                                 allocation_samples=allocation))
+        # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
+        convert_to_list(control_signals).append(seed_control_signal)
 
         return OptimizationControlMechanism(control_signals=control_signals,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
