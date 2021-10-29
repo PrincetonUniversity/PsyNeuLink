@@ -319,8 +319,6 @@ class ParameterEstimationComposition(Composition):
                  name=None,
                  **param_defaults):
 
-        self._validate_params(name, target, data, objective_function, outcome_variables)
-
         pem = self._instantiate_pem(target=target,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
@@ -334,6 +332,10 @@ class ParameterEstimationComposition(Composition):
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
+        # Need to do this after instantiation, to be able to validate references to parameters of target
+        self._validate_params(name, target, data, objective_function, outcome_variables)
+
+
     def _validate_params(self, name, target, data, objective_function, outcome_variables):
 
         # # Ensure parameters are in target composition
@@ -343,7 +345,9 @@ class ParameterEstimationComposition(Composition):
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
         # FIX: IMPLEMENT KATHERINE'S METHOD WHEN AVAILABLE
-        # # Ensure parameters are in target composition
+        # Ensure parameters are in target composition
+        x = self.all_dependent_parameters('seed')
+        assert True
         # bad_params = [p for p in parameters if p not in target.parameters]
         # if bad_params:
         #     raise ParameterEstimationCompositionError(f"The following parameters "
