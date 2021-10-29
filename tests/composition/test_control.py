@@ -1059,8 +1059,7 @@ class TestControlMechanisms:
         # FIXME: combinations with DURATION are broken
         # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
         # (pnl.CostFunctions.ALL, ,),
-        # pytest.param(pnl.CostFunctions.DEFAULTS, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591], id="CostFunctions.DEFAULT")],
-        pytest.param(pnl.CostFunctions.DEFAULTS, 7.0, [1, 2, 3, 4, 5], id="CostFunctions.DEFAULT")],
+        pytest.param(pnl.CostFunctions.DEFAULTS, 7, [1, 2, 3, 4, 5], id="CostFunctions.DEFAULT")],
         ids=lambda x: x if isinstance(x, pnl.CostFunctions) else "")
     def test_modulation_simple(self, cost, expected, exp_values):
         obj = pnl.ObjectiveMechanism()
@@ -1827,6 +1826,7 @@ class TestModelBasedOptimizationControlMechanisms:
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
                                            variable=1.0,
                                            allocation_samples=search_range,
+                                           cost_options=pnl.CostFunctions.INTENSITY,
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
@@ -1877,6 +1877,7 @@ class TestModelBasedOptimizationControlMechanisms:
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
                                            variable=1.0,
                                            allocation_samples=search_range,
+                                           cost_options=pnl.CostFunctions.INTENSITY,
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
@@ -2227,6 +2228,7 @@ class TestModelBasedOptimizationControlMechanisms:
         control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, A)],
                                            variable=1.0,
                                            allocation_samples=search_range,
+                                           cost_options=pnl.CostFunctions.INTENSITY,
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
@@ -2282,9 +2284,11 @@ class TestModelBasedOptimizationControlMechanisms:
                 control_signals=[
                     pnl.ControlSignal(modulates=[(pnl.SLOPE, input_a)],
                                       intensity_cost_function=pnl.Linear(slope=1),
+                                      cost_options=pnl.CostFunctions.INTENSITY,
                                       allocation_samples=[-1, 1]),
                     pnl.ControlSignal(modulates=[(pnl.SLOPE, input_b)],
                                       intensity_cost_function=pnl.Linear(slope=0),
+                                      cost_options=pnl.CostFunctions.INTENSITY,
                                       allocation_samples=[-1, 1])
                 ]))
         results = comp.run(inputs={input_a: [[5]], input_b: [[-2]]},
