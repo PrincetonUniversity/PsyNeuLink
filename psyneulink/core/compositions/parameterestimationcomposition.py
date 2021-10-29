@@ -8,6 +8,8 @@
 
 # *************************************  CompositionFunctionApproximator ***********************************************
 
+# FIX: CHANGE REFERENCES TO <`parameter <ParameterEstimationComposition.parameters>` values> AND THE LIKE TO
+#      <`parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>`>
 """
 
 Contents
@@ -35,12 +37,12 @@ data (`ParameterEstimationComposition_Data_Fitting`) or to optimize the `net_out
 of the `target <ParameterEstimationComposition.target>` Compositoin according to an `objective_function`
 (`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
 <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of
-parameter values in `optimized_parameters <ParameterEstimationComposition.optimized_parameters>` that it estimates
-best satisfy either of those conditions, and the results of running the `target <ParameterEstimationComposition.target>`
-with those parameters in its `results <ParameterEstimationComposition.results>` attribute.  The arguments below
-are the primary ones used to configure a ParameterEstimationComposition for either purpose
-`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`), followed by sections
-that describe arguments specific to each.
+parameter values in `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
+that it estimates best satisfy either of those conditions, and the results of running the `target 
+<ParameterEstimationComposition.target>` with those parameters in its `results <ParameterEstimationComposition.results>`
+attribute.  The arguments below are the primary ones used to configure a ParameterEstimationComposition for either 
+purpose `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`), followed by
+sections that describe arguments specific to each.
 
     * **target** - specifies the `Composition` for which parameters are to be estimated.
 
@@ -288,17 +290,20 @@ class ParameterEstimationComposition(Composition):
         the estimation process across combinations of parameter values, while substantial differences indicate
         instability, which may be helped by increasing `num_estimates <ParameterEstimationComposition.num_estimates>`.
 
-    optimized_parameters : list
+    optimized_parameter_values : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
          `target <ParameterEstimationComposition.target>` Composition that best fit the **data** when the
          ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
          or that optimize performance of the `target <ParameterEstimationComposition.target>` according to the
          `optimization_function <ParameterEstimationComposition.optimization_function>` when the
-         ParameterEstimationComposition is used for `parameter `optimization_function
-         <ParameterEstimationComposition.optimization_function>`.  This is the same as the final set of `values
-         <ControlSignal.value>` for the `control_signals <ControlMechanism.control_signals>` of the
-         ParameterEstimationComposition's `OptimizationControlMechanism`.
-         # FIX: ADD MENTION OF ARRAY ONCE THAT IS IMPLEMENTED FOR DISTRIBUTION OF PARAMETER VALUES
+         ParameterEstimationComposition is used for `parameter optimization
+         <ParameterEstimationComposition_Optimization>`.  If `parameter values
+         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
+         each item of `optimized_parameter_values` is the optimized value of the corresponding `parameter
+         <ParameterEstimationComposition.parameter>`. If `parameter values
+         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors, then each item of
+         `optimized_parameter_values` is an array containing the values of the corresponding `parameter
+         <ParameterEstimationComposition.parameter>` the distribution of which were determined to be optimal.
 
     results : list[list[list]]
         containts the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
@@ -324,6 +329,7 @@ class ParameterEstimationComposition(Composition):
         # self._validate_params(name, target, data, objective_function, outcome_variables)
         self._validate_params(locals())
 
+        self.optimized_parameter_values = []
 
         pem = self._instantiate_pem(target=target,
                                     parameters=parameters,
@@ -435,7 +441,3 @@ class ParameterEstimationComposition(Composition):
         # FIX: AUGMENT TO USE num_estimates and num_trials_per_estimate
         # FIX: AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
         return self.function(feature_values, control_allocation, context=context)
-
-    @property
-    def optimized_parameter_values(self):
-        return self.controller.output_values
