@@ -469,9 +469,28 @@ class ParameterEstimationComposition(Composition):
                                                                                    function=objective_function),
                                             function=optimization_function)
 
-    # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
     def run(self):
-        # ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
+        # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
+        # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE TARGET COMP FOR ITS RUN:
+        #     inputs=None,
+        #     initialize_cycle_values=None,
+        #     reset_stateful_functions_to=None,
+        #     reset_stateful_functions_when=Never(),
+        #     skip_initialization=False,
+        #     clamp_input=SOFT_CLAMP,
+        #     runtime_params=None,
+        #     call_before_time_step=None,
+        #     call_after_time_step=None,
+        #     call_before_pass=None,
+        #     call_after_pass=None,
+        #     call_before_trial=None,
+        #     call_after_trial=None,
+        #     termination_processing=None,
+        #     scheduler=None,
+        #     scheduling_mode: typing.Optional[SchedulingMode] = None,
+        #     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+        #     default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
+        # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
         pass
 
     def evaluate(self,
