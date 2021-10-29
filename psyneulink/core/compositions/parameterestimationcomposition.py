@@ -391,7 +391,7 @@ class ParameterEstimationComposition(Composition):
                                                       f"'{params['name'] or self.__class__.__name__}'; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
-        # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION
+        # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION (PROBLEM IS, ERROR MESSAGES ARE MORE OPAQUE)
 
         # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
         # Ensure that a ControlSignal can be created for all parameters specified
