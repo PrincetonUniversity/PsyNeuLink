@@ -479,7 +479,8 @@ class ParameterEstimationComposition(Composition):
         """Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         """
-        # FIX: THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
-        # FIX: AUGMENT TO USE num_estimates and num_trials_per_estimate
-        # FIX: AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
+        # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluation_function AND/OR grid_evaluate
+        # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
+        # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
+        # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
         return self.function(feature_values, control_allocation, context=context)
