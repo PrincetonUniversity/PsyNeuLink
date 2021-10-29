@@ -13,8 +13,6 @@
 # FIX: ADD Parameters FOR PEC
 # FIX: CHANGE REFERENCES TO <`parameter <ParameterEstimationComposition.parameters>` values> AND THE LIKE TO
 #      <`parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>`>
-# FIX: CONFIRM THAT IF THERE ARE MORE THAN ONE RANDOM PARAMETER IN TARGET, ONLY ONE SEED CONTROL SIGNAL IS CREATED
-#      THAT RPOJECTS TO THEM ALL
 # FIX: ADD TESTS:
 #      - FOR ERRORS IN parameters AND outcome_variables SPECIFICATIONS
 #      - GENERATES CORRECT SEED ITERATOR, control_signals AND THEIR projections
