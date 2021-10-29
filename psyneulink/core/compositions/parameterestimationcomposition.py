@@ -134,6 +134,7 @@ import numpy as np
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
+from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context
@@ -366,11 +367,7 @@ class ParameterEstimationComposition(Composition):
                  name=None,
                  **param_defaults):
 
-        # self._validate_params(locals())
-        if data and objective_function:
-            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
-                                                      f"'{name or self.__class__.__name__}'; must choose one "
-                                                      f"('data' for fitting or 'objective_function' for optimization).")
+        self._validate_params(locals())
 
         self.optimized_parameter_values = []
 
