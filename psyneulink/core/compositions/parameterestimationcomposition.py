@@ -384,13 +384,14 @@ class ParameterEstimationComposition(Composition):
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
-    # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION
     def _validate_params(self, params):
 
         if params['data'] and params['objective_function']:
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
                                                       f"'{params['name'] or self.__class__.__name__}'; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
+
+        # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION
 
         # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
         # Ensure that a ControlSignal can be created for all parameters specified
