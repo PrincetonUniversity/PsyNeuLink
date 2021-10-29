@@ -124,6 +124,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.sampleiterator import SampleSpec
 
 __all__ = ['ParameterEstimationComposition']
@@ -319,6 +320,11 @@ class ParameterEstimationComposition(Composition):
                  name=None,
                  **param_defaults):
 
+        # Need to do this after instantiation, to be able to validate references to parameters and ports of target
+        # self._validate_params(name, target, data, objective_function, outcome_variables)
+        self._validate_params(locals())
+
+
         pem = self._instantiate_pem(target=target,
                                     parameters=parameters,
                                     outcome_variables=outcome_variables,
@@ -332,33 +338,37 @@ class ParameterEstimationComposition(Composition):
 
         super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
 
-        # Need to do this after instantiation, to be able to validate references to parameters of target
-        self._validate_params(name, target, data, objective_function, outcome_variables)
-
-
-    def _validate_params(self, name, target, data, objective_function, outcome_variables):
+    def _validate_params(self, params):
 
         # # Ensure parameters are in target composition
-        if data and objective_function:
+        if params['data'] and params['objective_function']:
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
-                                                      f"'{name or self.__class__.__name__}'; must choose one "
+                                                      f"'{params['name'] or self.__class__.__name__}'; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
-        # FIX: IMPLEMENT KATHERINE'S METHOD WHEN AVAILABLE
-        # Ensure parameters are in target composition
-        x = self.all_dependent_parameters('seed')
-        assert True
-        # bad_params = [p for p in parameters if p not in target.parameters]
-        # if bad_params:
-        #     raise ParameterEstimationCompositionError(f"The following parameters "
-        #                                               f"were not found in '{target.name}': {bad_params}.")
+        # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION
 
+        # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
+        # Ensure that a ControlSignal can be created for all parameters specified
+        bad_params = []
+        from psyneulink.core.components.ports.port import _parse_port_spec
+        for param_spec in list(params['parameters'].keys()):
+            try:
+                _parse_port_spec(owner=params['target'], port_type=ControlSignal, port_spec=param_spec)
+            except:
+                bad_params.append(param_spec)
+        if bad_params:
+            raise ParameterEstimationCompositionError(f"The following parameter specifications "
+                                                      f"were not valid for '{params['target'].name}': {bad_params}.")
+
+        # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
         # Ensure outcome_variables are OutputPorts in target
-        bad_ports = [p for p in outcome_variables if not [p is not node and p not in node.output_ports for node in
-                                                          target.nodes]]
+        bad_ports = [p for p in params['outcome_variables'] if not [p is not node and p not in node.output_ports for
+                                                                 node in
+                                                          params['target'].nodes]]
         if bad_ports:
-            raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as "
-                                                      f"nodes or OutputPorts in '{target.name}': {bad_ports}.")
+            raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as nodes or "
+                                                      f"OutputPorts in '{params['target'].name}': {bad_ports}.")
 
     def _instantiate_pem(self,
                          target,
@@ -372,29 +382,35 @@ class ParameterEstimationComposition(Composition):
                          same_seed_for_all_parameter_combinations
                          ):
 
-        # # FIX: NEED TO GET CORRECT METHOD FOR "find_random_params"
-        # random_params = target.find_random_params()
-
+        # Construct iterator for seeds used for estimates
         def random_integer_generator():
             rng = np.random.RandomState()
             rng.seed(initial_seed)
             return rng.random_integers(num_estimates)
-
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
-        # Add ControlSignal to pem for seeds use in randomizing estimates
-        # randomization_control_signal = ControlSignal(modulates=random_params,
-        #                                              allocation_samples=random_seeds)
-        # parameters = convert_to_list(parameters).append(randomization_control_signal)
+        # FIX: SHOULD BE GENERALIZED TO LOOK FOR SEED PARAMS RECURSIVELY IN NESTED COMPOSITIONS
+        # Get parameters of target that use seeds (i.e., implement a random value)
+        seed_params = []
+        for params_dict in target.all_dependent_parameters('seed').values():
+            seed_params.extend([p._port for p in list(params_dict.values())])
 
+        # Construct ControlSignal to modify seeds over estimates
+        seed_control_signal = ControlSignal(modulates=seed_params,
+                                            allocation_samples=random_seeds)
+
+        # FIX: WHAT iS THIS DOING?
         if data:
             objective_function = objective_function(data)
 
         # Get ControlSignals for parameters to be searched
         control_signals = []
-        for p,a in parameters.items():
-            control_signals.append(ControlSignal(modulates=p,
-                                                 allocation_samples=a))
+        for params,allocations in parameters.items():
+            control_signals.append(ControlSignal(modulates=params,
+                                                 allocation_samples=allocations))
+
+        # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
+        convert_to_list(control_signals).append(seed_control_signal)
 
         return OptimizationControlMechanism(control_signals=control_signals,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
@@ -404,18 +420,6 @@ class ParameterEstimationComposition(Composition):
     # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
     def run(self):
         pass
-
-    def adapt(self,
-              feature_values,
-              control_allocation,
-              net_outcome,
-              context=None):
-        """Adjust parameters of `function <FunctionAppproximator.function>` to improve prediction of `target
-        <FunctionAppproximator.target>` from `input <FunctionAppproximator.input>`.
-        """
-        raise ParameterEstimationCompositionError("Subclass of {} ({}) must implement {} method.".
-                                                   format(ParameterEstimationComposition.__name__,
-                                                          self.__class__.__name__, repr('adapt')))
 
     def evaluate(self,
                  feature_values,
