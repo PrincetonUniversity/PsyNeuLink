@@ -131,7 +131,7 @@ The following arguments of its constructor are specific to the OptimizationContr
 * **state_features** -- takes the place of the standard **input_ports** argument in the constructor for a Mechanism`,
   and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
-  `model-based optimzation <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
+  `model-based optimization <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
   Composition (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
   method is called (see `OptimizationControlMechanism_State_Features` below).  Features can be specified using
   any of the following, singly or combined in a list:
@@ -886,7 +886,7 @@ class OptimizationControlMechanism(ControlMechanism):
           - These are appended to input_ports after the OUTCOME or monitor_for_control INPUT_PORTS
 
         If nothing is specified:
-           - the OptimizationControlMechanmism is assigned a default OUTCOME InputPort with no projections to it.
+           - the OptimizationControlMechanism is assigned a default OUTCOME InputPort with no projections to it.
         """
 
         super()._instantiate_input_ports(context=context)
