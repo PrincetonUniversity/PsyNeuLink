@@ -498,7 +498,9 @@ import inspect
 import itertools
 import logging
 import numbers
+import re
 import types
+import typing
 import warnings
 from abc import ABCMeta
 from collections.abc import Iterable
@@ -3527,6 +3529,56 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if obj not in visited:
                 visited.add(obj)
                 obj._propagate_most_recent_context(context, visited)
+
+    def all_dependent_parameters(self,
+                                 filter_name: typing.Union[str, typing.Iterable[str]] = None,
+                                 filter_regex: typing.Union[str, typing.Iterable[str]] = None
+                                 ):
+        """Dictionary of Parameters of this Component and its _dependent_components` filtered by **filter_name** and \
+        **filter_regex**. If no filter is specified, all Parameters \
+        are included.
+        Args:
+            filter_name (Union[str, Iterable[str]], optional): The \
+                exact name or names of Parameters to include. Defaults \
+                to None.
+            filter_regex (Union[str, Iterable[str]], optional): \
+                Regular expression patterns. If any pattern matches a \
+                Parameter name (using re.match), it will be included \
+                in the result. Defaults to None.
+        Returns:
+            dict[Component:dict[str:Parameter]]: Dictionary of \
+                filtered Parameters
+        """
+        parameters = {}
+        if isinstance(filter_name, str):
+            filter_name = [filter_name]
+        if isinstance(filter_regex, str):
+            filter_regex = [filter_regex]
+        if filter_name is not None:
+            filter_name = set(filter_name)
+        try:
+            filter_regex = [re.compile(r) for r in filter_regex]
+        except TypeError:
+            pass
+        for p in self.parameters:
+            include = filter_name is None and filter_regex is None
+            if filter_name is not None:
+                if p.name in filter_name:
+                    include = True
+            if not include and filter_regex is not None:
+                for r in filter_regex:
+                    if r.match(p.name):
+                        include = True
+                        break
+            if include:
+                if self not in parameters:
+                    parameters[self] = {}
+                parameters[self][p.name] = p
+        for c in self._dependent_components:
+            parameters.update(
+                c.all_dependent_parameters(filter_name, filter_regex)
+            )
+        return parameters
 
     @property
     def _dict_summary(self):
