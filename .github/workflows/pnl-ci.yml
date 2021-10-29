@@ -101,8 +101,7 @@ jobs:
       env:
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
       run: |
-        # We need both coveralls and github tokens
-        if [ -n "$COVERALLS_REPO_TOKEN" -a -n "$GITHUB_TOKEN" ]; then
+        if [ -n "$COVERALLS_REPO_TOKEN" ]; then
           pip install coveralls
           coveralls
         else
