@@ -200,12 +200,15 @@ def test_predator_prey(benchmark, mode, samples):
                                                                                   greedy_action_mech,
                                                                                   direct_move
                                                                               ]),
-                                       control_signals=[ControlSignal(modulates=(VARIANCE,player_obs),
-                                                                      allocation_samples=samples),
-                                                        ControlSignal(modulates=(VARIANCE,predator_obs),
-                                                                      allocation_samples=samples),
-                                                        ControlSignal(modulates=(VARIANCE,prey_obs),
-                                                                      allocation_samples=samples)
+                                       control_signals=[ControlSignal(modulates=(VARIANCE, player_obs),
+                                                                      allocation_samples=samples,
+                                                                      cost_options=pnl.CostFunctions.INTENSITY),
+                                                        ControlSignal(modulates=(VARIANCE, predator_obs),
+                                                                      allocation_samples=samples,
+                                                                      cost_options=pnl.CostFunctions.INTENSITY),
+                                                        ControlSignal(modulates=(VARIANCE, prey_obs),
+                                                                      allocation_samples=samples,
+                                                                      cost_options=pnl.CostFunctions.INTENSITY),
                                                         ],
                                        )
     agent_comp.add_controller(ocm)
