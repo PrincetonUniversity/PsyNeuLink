@@ -10,6 +10,15 @@
 
 # FIX: CHANGE REFERENCES TO <`parameter <ParameterEstimationComposition.parameters>` values> AND THE LIKE TO
 #      <`parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>`>
+# FIX: NEED TO ENSURE ControlSignal FOR seed IS EITHER LAST OR GIVEN AN IDENTIFIABLE NAME IN PEC.OCM.control_signals (
+#      RIGHT NOW, IT SEEMS TO BE LIST ALPHABETICALLY)
+# FIX: CONFIRM THAT IF THERE ARE MORE THAN ONE RANDOM PARAMETER IN TARGET, ONLY ONE SEED CONTROL SIGNAL IS CREATED
+#      THAT RPOJECTS TO THEM ALL
+# FIX: ADD TESTS:
+#      - FOR ERRORS IN parameters AND outcome_variables SPECIFICATIONS
+#      - GENERATES CORRECT SEED ITERATOR, control_signals AND THEIR projections
+#      - EVENTUALLY, EXECUTION IN BOTH DATA FITTING AND OPTIMIZATION MODES
+
 """
 
 Contents
@@ -306,10 +315,18 @@ class ParameterEstimationComposition(Composition):
          <ParameterEstimationComposition.parameter>` the distribution of which were determined to be optimal.
 
     results : list[list[list]]
-        containts the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
+        contains the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
         in the ``target <ParameterEstimationComposition.target>` Composition for every `TRIAL <TimeScale.TRIAL>`
-        executed (see `Composition.results` for more details).
-         # FIX: ADD MENTION OF OUTER DIMENSION ONCE THAT IS IMPLEMENTED FOR DISTRIBUTION OF PARAMETER VALUES
+        executed (see `Composition.results` for more details).  If the ParameterEstimationComposition is used for
+        `data fitting <ParameterEstimationComposition_Data_Fitting>`, and `parameter values
+         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
+         each item of `results <Composition.results>` is an array of values (sampled over `num_estimates
+         <ParameterEstimationComposition.num_estimates>` obtained for the single optimized combination of `parameter
+         <ParameterEstimationComposition.parameters>` values. However, if `parameter values
+         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors, then each item of
+         `results` is an array containing the values of the corresponding `parameter
+         <ParameterEstimationComposition.parameter>` the distribution of which were determined to be optimal.
+         XXX
     """
 
     def __init__(self,
@@ -325,9 +342,11 @@ class ParameterEstimationComposition(Composition):
                  name=None,
                  **param_defaults):
 
-        # Need to do this after instantiation, to be able to validate references to parameters and ports of target
-        # self._validate_params(name, target, data, objective_function, outcome_variables)
-        self._validate_params(locals())
+        # self._validate_params(locals())
+        if data and objective_function:
+            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
+                                                      f"'{name or self.__class__.__name__}'; must choose one "
+                                                      f"('data' for fitting or 'objective_function' for optimization).")
 
         self.optimized_parameter_values = []
 
@@ -346,7 +365,6 @@ class ParameterEstimationComposition(Composition):
 
     def _validate_params(self, params):
 
-        # # Ensure parameters are in target composition
         if params['data'] and params['objective_function']:
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
                                                       f"'{params['name'] or self.__class__.__name__}'; must choose one "
@@ -388,7 +406,7 @@ class ParameterEstimationComposition(Composition):
                          same_seed_for_all_parameter_combinations
                          ):
 
-        # Construct iterator for seeds used for estimates
+        # Construct iterator for seeds used to randomize estimates
         def random_integer_generator():
             rng = np.random.RandomState()
             rng.seed(initial_seed)
@@ -410,13 +428,20 @@ class ParameterEstimationComposition(Composition):
             objective_function = objective_function(data)
 
         # Get ControlSignals for parameters to be searched
-        control_signals = []
-        for params,allocations in parameters.items():
-            control_signals.append(ControlSignal(modulates=params,
-                                                 allocation_samples=allocations))
-
-        # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
-        convert_to_list(control_signals).append(seed_control_signal)
+        try:
+            control_signals = []
+            ctl_sig_errors = []
+            for param,allocation in parameters.items():
+                try:
+                    control_signals.append(ControlSignal(modulates=param,
+                                                         allocation_samples=allocation))
+                except Exception as e:
+                    ctl_sig_errors.append(f"'\n{param}:{allocation}': {e}.")
+                    # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
+            convert_to_list(control_signals).append(seed_control_signal)
+        except Exception as e:
+            raise ParameterEstimationCompositionError(f"The following specifications in params caused problems: \n"
+                                                      f"{ctl_sig_errors}")
 
         return OptimizationControlMechanism(control_signals=control_signals,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
