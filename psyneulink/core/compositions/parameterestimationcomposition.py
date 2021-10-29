@@ -97,7 +97,7 @@ specified:
       COMMENT
       for searching over parameter combinations.
 
-.. _ParameterEstimationComposition_Optimization
+.. _ParameterEstimationComposition_Optimization:
 
 Parameter Optimization
 ----------------------
