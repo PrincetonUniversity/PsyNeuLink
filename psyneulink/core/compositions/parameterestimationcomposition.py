@@ -41,20 +41,31 @@ COMMENT:
     ADD MENTION THAT THIS ALLOWS FITTING AND OPTIMIZING "LIKELIHOOD-FREE" MODELS.
 COMMENT
 
-A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate parameters of
-another `Composition` (the `model <ParameterEstimationComposition.model>`) in order to fit that to a set of
-data (`ParameterEstimationComposition_Data_Fitting`) or to optimize the `net_outcome <ControlMechanism.net_outcome>`
-of the `model <ParameterEstimationComposition.model>` Composition according to an `objective_function`
+A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate specified `parameters
+<parameters.ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>`)
+Composition in order to fit the `outputs <outcome_variables <ParameterEstimationComposition.outcome_variables>`
+of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`),
+or to optimize its `net_outcome <ControlMechanism.net_outcome>` according to an `objective_function`
 (`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
 <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of
-parameter values in `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
-that it estimates best satisfy either of those conditions, and the results of running the `model
+parameter values in its `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
+attribute that it estimates best satisfy either of those conditions, and the results of running the `model
 <ParameterEstimationComposition.model>` with those parameters in its `results <ParameterEstimationComposition.results>`
-attribute.  The arguments below are the primary ones used to configure a ParameterEstimationComposition for either 
-purpose `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`), followed by
+attribute.  The arguments below are the primary ones used to configure a ParameterEstimationComposition for either
+`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`), followed by
 sections that describe arguments specific to each.
 
-    * **model** - specifies the `Composition` for which parameters are to be estimated.
+    .. _ParameterEstimationComposition_Model:
+
+    * **model** - this is a convenience argument that can be used to specify a `Composition` other than the
+      ParameterEstimationComposition itself as the model. Alternatively, the model to be fit can be constructed
+      within the ParameterEstimationComposition itself, using the **nodes** and/or **pathways** arguments of its
+      constructor (see `Composition_Constructor` for additional details).   The **model** argument
+      or the **nodes** and/or **pathways** arguments must be specified, but not both.
+
+      .. note::
+         The **controller** argument *cannot* be used in the constructor for a ParameterEstimationComposition;
+         this is constructed automatically by a ParameterEstimationComposition, using the arguments described below.
 
     * **parameters** - specifies the parameters of the `model <ParameterEstimationComposition.model>` Composition
       to be estimated.  These are specified in a dict, in which the key of each entry specifies a parameter to
@@ -163,10 +174,6 @@ class ParameterEstimationComposition(Composition):
     Arguments
     ---------
 
-    model : Composition
-        specifies the `Composition` for which parameters are to be `fit to data
-        <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`.
-
     parameters : dict[Parameter:Union[Iterator, Function, List, value]
         specifies the parameters of the `model <ParameterEstimationComposition.model>` Composition used to `fit
         it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
@@ -181,6 +188,12 @@ class ParameterEstimationComposition(Composition):
         or used by the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
         ParameterEstimationComposition is used for `parameter optimization
         <ParameterEstimationComposition_Optimization>`.
+
+    model : Composition : default None
+        specifies an external `Composition` for which parameters are to be `fit to data
+        <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`.
+        If it is None (the default), the ParameterEstimationComposition itself is used (see
+        `ParameterEstimationComposition_Model` for additional information).
 
     data : array : default None
         specifies the data to to be fit when the ParameterEstimationComposition is used for
@@ -218,11 +231,10 @@ class ParameterEstimationComposition(Composition):
     ----------
 
     model : Composition
-        determines the `Composition` for which parameters are used to `fit data
-        <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
-        <ParameterEstimationComposition_Optimization>` as defined by the `objective_function
-        <ParameterEstimationComposition.objective_function>`.  Can be the PEC itself or one
-        `nested <Composition_Nested>` within it.
+        identifies the `Composition` used for `data fitting` or `optimization
+        <ParameterEstimationComposition_Optimization>`.  If the **model** argument of the
+        ParameterEstimationComposition's constructor is not specified, the `model` attribute returns
+        the ParameterEstimationComposition itself.
 
     parameters : list[Parameters]
         determines the parameters of the `model <ParameterEstimationComposition.model>` Composition used to `fit
@@ -373,21 +385,25 @@ class ParameterEstimationComposition(Composition):
 
         self._validate_params(locals())
 
-        # _validate_params() ensures that if **model** is specified, neither **nodes** nor **pathways** is)
+        # Assign model
         if model:
+            # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
+            # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
             kwargs.update({'nodes':model})
+        self.model =  model or self
+
+        self.optimized_parameter_values = []
 
         super().__init__(name=name,
                          controller_mode=BEFORE,
                          enable_controller=True,
                          **kwargs)
 
-        self.optimized_parameter_values = []
-
-        # Implement after Composition itself, so that:
+        # Implement OptimizationControlMechanism and assign as PEC controller
+        # (Note: Implement after Composition itself, so that:
         #     - Composition's components are all available (limits need for deferred_inits)
-        #     - search for seed params in _instantiate_pem doesn't include pem itself or its functions
-        pem = self._instantiate_pem(parameters=parameters,
+        #     - search for seed params in _instantiate_pem doesn't include pem itself or its functions)
+        ocm = self._instantiate_pem(parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=data,
                                     objective_function=objective_function,
@@ -395,7 +411,7 @@ class ParameterEstimationComposition(Composition):
                                     num_estimates=num_estimates,
                                     initial_seed=initial_seed,
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
-        self.add_controller(pem)
+        self.add_controller(ocm)
 
     def _validate_params(self, args):
 
