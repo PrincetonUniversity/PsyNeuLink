@@ -1105,12 +1105,12 @@ class OptimizationControlMechanism(ControlMechanism):
             assert self.parameters.comp_execution_mode._get(context) == "Python"
             exec_mode = pnlvm.ExecutionMode.Python
             ret_val = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
-                                                      control_allocation,
-                                                      self.parameters.num_trials_per_estimate._get(context),
-                                                      base_context=context,
-                                                      context=new_context,
-                                                      execution_mode=exec_mode,
-                                                      return_results=return_results)
+                                              control_allocation,
+                                              self.parameters.num_trials_per_estimate._get(context),
+                                              base_context=context,
+                                              context=new_context,
+                                              execution_mode=exec_mode,
+                                              return_results=return_results)
             context.composition = old_composition
             if self.defaults.search_statefulness:
                 self._tear_down_simulation(new_context)
@@ -1127,11 +1127,11 @@ class OptimizationControlMechanism(ControlMechanism):
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             return self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
-                                             control_allocation,
-                                             # self.parameters.num_estimates._get(context),
-                                             self.parameters.num_trials_per_estimate._get(context),
-                                             context=context
-                                             )
+                                           control_allocation,
+                                           self.parameters.num_estimates._get(context),
+                                           self.parameters.num_trials_per_estimate._get(context),
+                                           context=context
+                                           )
 
     def _get_evaluate_input_struct_type(self, ctx):
         # We construct input from optimization function input
