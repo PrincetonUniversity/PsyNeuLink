@@ -382,8 +382,7 @@ class ParameterEstimationComposition(Composition):
                                     optimization_function=optimization_function,
                                     num_estimates=num_estimates,
                                     initial_seed=initial_seed,
-                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations
-                                    )
+                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
 
         super().__init__(name=name,
                          nodes=target,
