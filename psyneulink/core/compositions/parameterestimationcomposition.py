@@ -19,6 +19,11 @@
 #      - EVENTUALLY, EXECUTION IN BOTH DATA FITTING AND OPTIMIZATION MODES
 # FIX: SHOULD PASS ANY ARGS OF RUN METHOD (OTHER THAN num_trial) TO evaluate METHOD OF TARGET COMPOSITION
 #  NUM_TRIALS?)
+# FIX: * ALLOW PEC TO BE USED TO CONSTRUCT A COMOPOSITION, BY PASSING RELEVANT COMPONENTS TO ITS
+#          nodes, pathways, projections, AND controller ARGS INSTEAD OF A COMPOSITION IN ITS target ARG:
+#          USE THOSE TO CONSTUCT A target COMPOSITION (CALLED "TARGET");
+#      * DISALLOW DOING THE ABOVE + SPECIFYING THE target ARG
+#      * FOR NOW, HAVE DISALLOWED THE ABOVE ALTOGETHER BY DISABLING nodes, pathways, projections, AND controller ARGS
 
 """
 
@@ -388,7 +393,9 @@ class ParameterEstimationComposition(Composition):
                          nodes=target,
                          controller=pem,
                          controller_mode=BEFORE,
+                         enable_controller=True,
                          **param_defaults)
+        assert True
 
     def _validate_params(self, params):
 
