@@ -17,14 +17,8 @@
 #      - FOR ERRORS IN parameters AND outcome_variables SPECIFICATIONS
 #      - GENERATES CORRECT SEED ITERATOR, control_signals AND THEIR projections
 #      - EVENTUALLY, EXECUTION IN BOTH DATA FITTING AND OPTIMIZATION MODES
-# FIX: SHOULD PASS ANY ARGS OF RUN METHOD (OTHER THAN num_trial) TO evaluate METHOD OF TARGET COMPOSITION
+# FIX: SHOULD PASS ANY ARGS OF RUN METHOD (OTHER THAN num_trial) TO evaluate METHOD OF model COMPOSITION
 #  NUM_TRIALS?)
-# FIX: * ALLOW PEC TO BE USED TO CONSTRUCT A COMPOSITION, BY PASSING RELEVANT COMPONENTS TO ITS
-#          nodes, pathways, projections, and controller ARGS INSTEAD OF A COMPOSITION IN ITS target ARG:
-#          - USE THOSE TO CONSTUCT A target COMPOSITION (CALLED "TARGET");
-#          - PASS name ARG (IF SPECIFIED) TO THE "TARGET" COMPOSITION; ASSIGN PEC name AS f"ESTIMATE {name}"
-#      * DISALLOW DOING THE ABOVE + SPECIFYING THE target ARG
-#      * FOR NOW, HAVE DISALLOWED THE ABOVE ALTOGETHER BY DISABLING nodes, pathways, projections, AND controller ARGS
 
 """
 
@@ -48,27 +42,27 @@ COMMENT:
 COMMENT
 
 A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate parameters of
-another `Composition` (its `target <ParameterEstimationComposition.target>` in order to fit that to a set of
+another `Composition` (the `model <ParameterEstimationComposition.model>`) in order to fit that to a set of
 data (`ParameterEstimationComposition_Data_Fitting`) or to optimize the `net_outcome <ControlMechanism.net_outcome>`
-of the `target <ParameterEstimationComposition.target>` Compositoin according to an `objective_function`
+of the `model <ParameterEstimationComposition.model>` Composition according to an `objective_function`
 (`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
 <Composition.run>` with a given set of `inputs <Composition_Execution_Inputs>`, it returns the set of
 parameter values in `optimized_parameter_values <ParameterEstimationComposition.optimized_parameter_values>`
-that it estimates best satisfy either of those conditions, and the results of running the `target 
-<ParameterEstimationComposition.target>` with those parameters in its `results <ParameterEstimationComposition.results>`
+that it estimates best satisfy either of those conditions, and the results of running the `model
+<ParameterEstimationComposition.model>` with those parameters in its `results <ParameterEstimationComposition.results>`
 attribute.  The arguments below are the primary ones used to configure a ParameterEstimationComposition for either 
 purpose `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`), followed by
 sections that describe arguments specific to each.
 
-    * **target** - specifies the `Composition` for which parameters are to be estimated.
+    * **model** - specifies the `Composition` for which parameters are to be estimated.
 
-    * **parameters** - specifies the parameters of the `target <ParameterEstimationComposition.target>` Composition
+    * **parameters** - specifies the parameters of the `model <ParameterEstimationComposition.model>` Composition
       to be estimated.  These are specified in a dict, in which the key of each entry specifies a parameter to
       estimate, and its value either a range of values to sample for that parameter or a distribution from which
       to draw them.
 
-    * **outcome_variables** - specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `target
-      <ParameterEstimationComposition.target>` Composition, the `values <Mechanism_Base.value>` of which are used
+    * **outcome_variables** - specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
+      <ParameterEstimationComposition.model>` Composition, the `values <Mechanism_Base.value>` of which are used
       to evaluate the fit of the different combination of parameter values sampled.
 
     * **num_estimates** - specifies the number of independent samples that are estimated for a given combination of
@@ -80,10 +74,9 @@ sections that describe arguments specific to each.
 Data Fitting
 ------------
 
-The ParameterEstimationComposition can be used to find a set of parameters for the `target
-<ParameterEstimationComposition.target>` such that, when that Composition is run with a given set of inputs,
-its results best match a specified set of empirical data.  This requires the following additional arguments to be
-specified:
+The ParameterEstimationComposition can be used to find a set of parameters for the `model
+<ParameterEstimationComposition.model>` Composition such that, when it is run with a given set of inputs, its results
+best match a specified set of empirical data.  This requires the following additional arguments to be specified:
 
     .. _ParameterEstimationComposition_Data:
 
@@ -161,8 +154,8 @@ class ParameterEstimationCompositionError(Exception):
 
 
 class ParameterEstimationComposition(Composition):
-    """Subclass of `Composition` that estimates specified parameters of a target Composition to optimize a function
-    over a set of data.
+    """Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
+    to a set of data or to optimize a specified function.
 
     Automatically implements an `OptimizationControlMechanism` as its `controller <Composition.controller>`,
     that is constructed using arguments to the ParameterEstimationComposition's constructor as described below.
@@ -170,19 +163,19 @@ class ParameterEstimationComposition(Composition):
     Arguments
     ---------
 
-    target : Composition
+    model : Composition
         specifies the `Composition` for which parameters are to be `fit to data
         <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`.
 
     parameters : dict[Parameter:Union[Iterator, Function, List, value]
-        specifies the parameters of the `target <ParameterEstimationComposition.target>` Composition used to `fit
+        specifies the parameters of the `model <ParameterEstimationComposition.model>` Composition used to `fit
         it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
         <ParameterEstimationComposition_Optimization>` according to the `optimization_function
         <ParameterEstimationComposition.optimization_function>`, and either the range of values to be evaluated for
         each, or priors that define a distribution over those.
 
     outcome_variables : list[Composition output nodes]
-        specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
+        specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model <ParameterEstimationComposition.model>`
         Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
         ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`
         or used by the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
@@ -195,15 +188,15 @@ class ParameterEstimationComposition(Composition):
         **outcome_variables** (see `data <ParameterEstimationComposition.data>` for additional information).
 
     objective_function : ObjectiveFunction, function or method
-        specifies the function used to evaluate the `net_outcome <ControlMechanism.net_outcome>` of the `target
-        <ParameterEstimationComposition.target>` Composition when the ParameterEstimationComposition
+        specifies the function used to evaluate the `net_outcome <ControlMechanism.net_outcome>` of the `model
+        <ParameterEstimationComposition.model>` Composition when the ParameterEstimationComposition
         is used for `parameter optimization <ParameterEstimationComposition_Optimization>`
         (see `objective_function <ParameterEstimationComposition.objective_function>` for additional information).
 
     optimization_function : OptimizationFunction, function or method
         specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>` or
-        `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `target
-        <ParameterEstimationComposition.target>` Composition.
+        `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `model
+        <ParameterEstimationComposition.model>` Composition.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -224,7 +217,7 @@ class ParameterEstimationComposition(Composition):
     Attributes
     ----------
 
-    target : Composition
+    model : Composition
         determines the `Composition` for which parameters are used to `fit data
         <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
         <ParameterEstimationComposition_Optimization>` as defined by the `objective_function
@@ -232,7 +225,7 @@ class ParameterEstimationComposition(Composition):
         `nested <Composition_Nested>` within it.
 
     parameters : list[Parameters]
-        determines the parameters of the `target <ParameterEstimationComposition.target>` Composition used to `fit
+        determines the parameters of the `model <ParameterEstimationComposition.model>` Composition used to `fit
         it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
         <ParameterEstimationComposition_Optimization>` according to the `optimization_function
         <ParameterEstimationComposition.optimization_function>`. These are assigned to the **control** argument of
@@ -244,13 +237,13 @@ class ParameterEstimationComposition(Composition):
             A `ControlSignal` is added to the `control_signals <ControlMechanism.control_signals>` of the
             ParameterEstimationComposition's `OptimizationControlMechanism`, named
             *RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME*, to modulate the seeds used to randomize each estimate of the
-            `net_outcome <ControlMechanism.net_outcome>` for each run of the `target
-            <ParameterEstimationComposition.target>` Composition (i.e., call to its `evaluate <Composition.evaluate>`
+            `net_outcome <ControlMechanism.net_outcome>` for each run of the `model
+            <ParameterEstimationComposition.model>` Composition (i.e., call to its `evaluate <Composition.evaluate>`
             method). That ControlSignal sends a `ControlProjection` to every `Parameter` of every `Component` in the
-            `target <ParameterEstimationComposition.target>` Composition that is labelled "seed", each of which
+            `model <ParameterEstimationComposition.model>` Composition that is labelled "seed", each of which
             corresponds to a Parameter that uses a random number generator to assign its value (i.e., as its `function
             <ParameterPort.function>`.  This ControlSignal is used to change the seeds for all Parameters that use
-            random values at the start of each run of the `target <ParameterEstimationComposition.target>`
+            random values at the start of each run of the `model <ParameterEstimationComposition.model>`
             Composition used to estimate a given `control_allocation <ControlMechanism.control_allocation>` of the other
             ControlSignals (i.e., the ones for the `parameters <ParameterEstimationComposition.parameters>` being fit).
             The `initial_seed <ParameterEstimationComposition.initial_seed>` `same_seed_for_all_parameter_combinations
@@ -264,7 +257,7 @@ class ParameterEstimationComposition(Composition):
         specified `parameters <ParameterEstimationComposition.parameters>`.
 
     outcome_variables : list[Composition Output Nodes]
-        determines the `OUTPUT` `Nodes <Composition_Nodes>` of the `target <ParameterEstimationComposition.target>`
+        determines the `OUTPUT` `Nodes <Composition_Nodes>` of the `model <ParameterEstimationComposition.model>`
         Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
         ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
         or evaluated by the ParameterEstimationComposition's `optimization_function
@@ -272,7 +265,7 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition_Optimization>`.
 
     data : array
-        determines the data to be fit by the model specified by the `target <ParameterEstimationComposition.target>`
+        determines the data to be fit by the model specified by the `model <ParameterEstimationComposition.model>`
         Composition when the ParameterEstimationComposition is used for `data fitting
         <ParameterEstimationComposition_Data_Fitting>`.  These must be structured in form that aligns with the
         specified `outcome_variables <ParameterEstimationComposition.outcome_variables>` (see `data
@@ -280,18 +273,18 @@ class ParameterEstimationComposition(Composition):
         used by `optimization_function <ParameterEstimationComposition.optimization_function>`.
 
     objective_function : ObjectiveFunction, function or method
-        determines the function used to evaluate the `results <Composition.results>` of the `target
-        <ParameterEstimationComposition.target>` Composition under each set of `parameter
+        determines the function used to evaluate the `results <Composition.results>` of the `model
+        <ParameterEstimationComposition.model>` Composition under each set of `parameter
         <ParameterEstimationComposition.parameters>` values when the ParameterEstimationComposition
         is used for `parameter optimization <ParameterEstimationComposition_Optimization>`.  It is passed to the
         ParameterEstimationComposition's `OptimizationControlMechanism` as the function of its `objective_mechanism
         <OptimizationControlMechanism.objective_mechanism>`, that is used to compute the `net_outcome
-        <ControlMechanism.net_outcome>` for of the `target <ParameterEstimationComposition.target>` Composition each
+        <ControlMechanism.net_outcome>` for of the `model <ParameterEstimationComposition.model>` Composition each
         time it is `run <Composition.run>` (see `objective_function <ParameterEstimationComposition_Objective_Function>`
         for additional details).
 
     optimization_function : OptimizationFunction
-        determines the function used to estimate the parameters of the `target <ParameterEstimationComposition.target>`
+        determines the function used to estimate the parameters of the `model <ParameterEstimationComposition.model>`
         Composition that either best fit the **data** when the ParameterEstimationComposition is used for `data
         fitting <ParameterEstimationComposition_Data_Fitting>`, or that achieve some maximum or minimum value of the
         the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
@@ -300,8 +293,8 @@ class ParameterEstimationComposition(Composition):
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
 
     num_estimates : int : default 1
-        determines the number of estimates of the `net_outcome <ControlMechanism.net_outcome>` of the `target
-        <ParameterEstimationComposition.target>` Composition (i.e., number of calls to its `evaluate
+        determines the number of estimates of the `net_outcome <ControlMechanism.net_outcome>` of the `model
+        <ParameterEstimationComposition.model>` Composition (i.e., number of calls to its `evaluate
         <Composition.evaluate>` method) for each combination of `parameter <ParameterEstimationComposition.parameters>`
         values (i.e., `control_allocation <ControlMechanism.control_allocation>`) evaluated.
 
@@ -313,13 +306,13 @@ class ParameterEstimationComposition(Composition):
         should yield identical results for the estimation process, which can be useful for debugging.
 
     same_seed_for_all_parameter_combinations :  bool : default False
-        determines whether the random number generator used to select seeds for each estimate of the `target
-        <ParameterEstimationComposition.target>` Composition's `net_outcome <ControlMechanism.net_outcome>` is
+        determines whether the random number generator used to select seeds for each estimate of the `model
+        <ParameterEstimationComposition.model>` Composition's `net_outcome <ControlMechanism.net_outcome>` is
         re-initialized to the same value for each combination of `parameter <ParameterEstimationComposition>` values
         evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
         of `net_outcome <ControlMechanism.net_outcome>` for each combination of parameter values will reflect
-        exclusively the influence of the *parameters* on the execution of the `target
-        <ParameterEstimationComposition.target>` Composition, and *not* any variability intrinsic to the execution of
+        exclusively the influence of the *parameters* on the execution of the `model
+        <ParameterEstimationComposition.model>` Composition, and *not* any variability intrinsic to the execution of
         the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
         executions of the OptimizationControlMechanism's `evaluation_function
         <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values (i.e.,
@@ -334,9 +327,9 @@ class ParameterEstimationComposition(Composition):
 
     optimized_parameter_values : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
-         `target <ParameterEstimationComposition.target>` Composition that best fit the **data** when the
+         `model <ParameterEstimationComposition.model>` Composition that best fit the **data** when the
          ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
-         or that optimize performance of the `target <ParameterEstimationComposition.target>` according to the
+         or that optimize performance of the `model <ParameterEstimationComposition.model>` according to the
          `optimization_function <ParameterEstimationComposition.optimization_function>` when the
          ParameterEstimationComposition is used for `parameter optimization
          <ParameterEstimationComposition_Optimization>`.  If `parameter values
@@ -349,7 +342,7 @@ class ParameterEstimationComposition(Composition):
 
     results : list[list[list]]
         contains the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
-        in the `target <ParameterEstimationComposition.target>` Composition for every `TRIAL <TimeScale.TRIAL>`
+        in the `model <ParameterEstimationComposition.model>` Composition for every `TRIAL <TimeScale.TRIAL>`
         executed (see `Composition.results` for more details). If the ParameterEstimationComposition is used for
         `data fitting <ParameterEstimationComposition_Data_Fitting>`, and `parameter values
         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
@@ -369,7 +362,7 @@ class ParameterEstimationComposition(Composition):
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control
                  optimization_function, # function of OCM
-                 target=None,
+                 model=None,
                  data=None, # arg of OCM function
                  objective_function=None, # function of OCM ObjectiveMechanism
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
@@ -380,9 +373,9 @@ class ParameterEstimationComposition(Composition):
 
         self._validate_params(locals())
 
-        # _validate_params() ensures that if **target** is specified, neither **nodes** nor **pathways** is)
-        if target:
-            kwargs.update({'nodes':target})
+        # _validate_params() ensures that if **model** is specified, neither **nodes** nor **pathways** is)
+        if model:
+            kwargs.update({'nodes':model})
 
         super().__init__(name=name,
                          controller_mode=BEFORE,
@@ -409,14 +402,14 @@ class ParameterEstimationComposition(Composition):
         kwargs = args.pop('kwargs')
         pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
 
-        # Must specify either target or a COMPOSITION_SPECIFICATION_ARGUMENTS
-        if not (args['target'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
-            raise ParameterEstimationCompositionError(f"Must specify either 'target' or the 'nodes' and/or 'pathways' "
+        # Must specify either model or a COMPOSITION_SPECIFICATION_ARGUMENTS
+        if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
+            raise ParameterEstimationCompositionError(f"Must specify either 'model' or the 'nodes' and/or 'pathways' "
                                                       f"args in the constructor for {pec_name}.")
 
-        # Can't specify both target and COMPOSITION_SPECIFICATION_ARGUMENTS
-        if (args['target'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
-            raise ParameterEstimationCompositionError(f"Can't specify both 'target' and the 'nodes' and/or 'pathways' "
+        # Can't specify both model and COMPOSITION_SPECIFICATION_ARGUMENTS
+        if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
+            raise ParameterEstimationCompositionError(f"Can't specify both 'model' and the 'nodes' and/or 'pathways' "
                                                       f"args in the constructor for {pec_name}.")
 
         # Disallow specification of PEC controller args
@@ -463,7 +456,7 @@ class ParameterEstimationComposition(Composition):
 
         # FIX: noise PARAM OF TRANSFERMECHANISM IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTUION FUNCTION,
         #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
-        #                BUT THAT IS NOT FOUND BY target.all_dependent_parameters
+        #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
         # Get parameters that use seeds (i.e., implement a random value)
         seed_params = []
         for params_dict in self.all_dependent_parameters('seed').values():
@@ -494,7 +487,7 @@ class ParameterEstimationComposition(Composition):
 
     def run(self):
         # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
-        # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE TARGET COMP FOR ITS RUN:
+        # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE model COMP FOR ITS RUN:
         #     inputs=None,
         #     initialize_cycle_values=None,
         #     reset_stateful_functions_to=None,
@@ -523,7 +516,7 @@ class ParameterEstimationComposition(Composition):
                  num_trials_per_estimate,
                  base_context=Context(execution_id=None),
                  context=None):
-        """Return `target <FunctionAppproximator.target>` predicted by `function <FunctionAppproximator.function> for
+        """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         """
         # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluation_function AND/OR grid_evaluate
