@@ -152,6 +152,7 @@ from psyneulink.core.globals.sampleiterator import SampleSpec
 
 __all__ = ['ParameterEstimationComposition']
 
+COMPOSITION_SPECIFICATION_ARGUMENTS =  {'nodes', 'pathways', 'projections', 'controller'}
 RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME = 'RANDOMIZATION SEEDS'
 
 class ParameterEstimationCompositionError(Exception):
@@ -365,10 +366,10 @@ class ParameterEstimationComposition(Composition):
     """
 
     def __init__(self,
-                 target,
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control
                  optimization_function, # function of OCM
+                 target=None,
                  data=None, # arg of OCM function
                  objective_function=None, # function of OCM ObjectiveMechanism
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
@@ -378,11 +379,21 @@ class ParameterEstimationComposition(Composition):
                  **kwargs):
 
         self._validate_params(locals())
+        # self._instantiate_target(target, kwargs)
+
+        super().__init__(name=name,
+                         nodes=target,
+                         # controller=pem,
+                         controller_mode=BEFORE,
+                         enable_controller=True,
+                         **kwargs)
 
         self.optimized_parameter_values = []
 
-        pem = self._instantiate_pem(target=target,
-                                    parameters=parameters,
+        # Implement after Composition itself, so that:
+        #     - Composition's components are all available (limits need for deferred_inits)
+        #     - search for seed params in _instantiate_pem doesn't include pem itself or its functions
+        pem = self._instantiate_pem(parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=data,
                                     objective_function=objective_function,
@@ -390,24 +401,23 @@ class ParameterEstimationComposition(Composition):
                                     num_estimates=num_estimates,
                                     initial_seed=initial_seed,
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
-
-        super().__init__(name=name,
-                         nodes=target,
-                         controller=pem,
-                         controller_mode=BEFORE,
-                         enable_controller=True,
-                         **kwargs)
-        assert True
+        self.add_controller(pem)
 
     def _validate_params(self, args):
 
         kwargs = args.pop('kwargs')
+        pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
+
+        # Must specify either target or a COMPOSITION_SPECIFICATION_ARGUMENTS
+        if not (args['target'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
+            raise ParameterEstimationCompositionError(f"Must specify either 'target' or the 'nodes' and/or 'pathways' "
+                                                      f"args in the constructor for {pec_name}.")
+
 
         # Disallow use of PEC to specify a Composition other than to **target**
-        comp_spec_args =  {'nodes', 'pathways', 'projections', 'controller'}
-        comp_spec_args_found = [arg for arg in comp_spec_args if arg in list(kwargs.keys())]
+        comp_spec_args_found = [arg for arg in COMPOSITION_SPECIFICATION_ARGUMENTS if arg in list(kwargs.keys())]
         if comp_spec_args_found:
-            raise ParameterEstimationCompositionError(f"Cannot use {self.__class__.__name__} to implement a "
+            raise ParameterEstimationCompositionError(f"Cannot use {pec_name} to implement a "
                                                       f"{Composition.__name__} by specifying its "
                                                       f"'{', '.join(comp_spec_args_found)}' "
                                                       f"arg{'s' if len(comp_spec_args_found)>1 else ''}; "
@@ -425,8 +435,7 @@ class ParameterEstimationComposition(Composition):
         if ctlr_spec_args_found:
             plural = len(ctlr_spec_args_found) > 1
             raise ParameterEstimationCompositionError(f"Cannot specify the following controller arg"
-                                                      f"{'s' if plural else ''} "
-                                                      f"for a {self.__class__.__name__}: "
+                                                      f"{'s' if plural else ''} for {pec_name}: "
                                                       f"'{', '.join(ctlr_spec_args_found)}'; "
                                                       f"{'these are' if plural else 'this is'} "
                                                       f"set automatically.")
@@ -435,8 +444,8 @@ class ParameterEstimationComposition(Composition):
         #     data (for data fitting; see _ParameterEstimationComposition_Data_Fitting)
         #          and objective_function (for optimization; see _ParameterEstimationComposition_Optimization)
         if args['data'] and args['objective_function']:
-            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
-                                                      f"'{args['name'] or self.__class__.__name__}'; must choose one "
+            raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were "
+                                                      f"specified for {pec_name}; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
         # FIX: REMOVE ALL OF THE FOLLOWING, AND LET IT BE HANDLED BY CONSTRUCTION
@@ -465,7 +474,6 @@ class ParameterEstimationComposition(Composition):
                                                       f"OutputPorts in '{args['target'].name}': {bad_ports}.")
 
     def _instantiate_pem(self,
-                         target,
                          parameters,
                          outcome_variables,
                          data,
@@ -483,13 +491,12 @@ class ParameterEstimationComposition(Composition):
             return rng.random_integers(num_estimates)
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
-        # FIX: DOES target.all_dependent_parameters LOOK FOR PARAMS RECURSIVELY IN NESTED COMPOSITIONS??
         # FIX: noise PARAM OF TRANSFERMECHANISM IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTUION FUNCTION,
         #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
         #                BUT THAT IS NOT FOUND BY target.all_dependent_parameters
-        # Get parameters of target that use seeds (i.e., implement a random value)
+        # Get parameters that use seeds (i.e., implement a random value)
         seed_params = []
-        for params_dict in target.all_dependent_parameters('seed').values():
+        for params_dict in self.all_dependent_parameters('seed').values():
             seed_params.extend([p._port for p in list(params_dict.values())])
 
         # Construct ControlSignal to modify seeds over estimates
