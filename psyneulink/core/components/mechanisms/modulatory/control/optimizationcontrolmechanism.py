@@ -894,12 +894,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
-            input_ports = _parse_shadow_inputs(self, self.state_features)
-            input_ports = self._parse_state_feature_specs(input_ports, self.state_feature_function)
+            feature_input_ports = _parse_shadow_inputs(self, self.state_features)
+            feature_input_ports = self._parse_state_feature_specs(feature_input_ports, self.state_feature_function)
             # Insert primary InputPort for outcome from ObjectiveMechanism;
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             # input_ports.insert(0, outcome_input_ports),
-            self.add_ports(input_ports)
+            self.add_ports(feature_input_ports)
 
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
