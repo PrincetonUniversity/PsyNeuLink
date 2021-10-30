@@ -10,7 +10,7 @@
 
 # FIX: SEED FOR noise PARAMETER OF TransferMechanism GETS ASSIGNED TO THE MECHANISM,
 #      BUT THERE DOES NOT SEEM TO BE A PARAMETER PORT ASSIGNED TO IT FOR THAT
-# FIX: ADD Parameters Class DEFINTION FOR ParameterEstimationComposition
+# FIX: ADD Parameters Class DEFINITION FOR ParameterEstimationComposition
 # FIX: CHANGE REFERENCES TO <`parameter <ParameterEstimationComposition.parameters>` values> AND THE LIKE TO
 #      <`parameter values <ParameterEstimationComposition.parameter_ranges_or_priors>`>
 # FIX: ADD TESTS:
@@ -42,8 +42,8 @@ COMMENT:
 COMMENT
 
 A `ParameterEstimationComposition` is a subclass of `Composition` that is used to estimate specified `parameters
-<parameters.ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>`)
-Composition in order to fit the `outputs <outcome_variables <ParameterEstimationComposition.outcome_variables>`
+<ParameterEstimationComposition.parameters>` of a `model <ParameterEstimationComposition.model>`)
+Composition in order to fit the `outputs <ParameterEstimationComposition.outcome_variables>`
 of the `model <ParameterEstimationComposition.model>` to a set of data (`ParameterEstimationComposition_Data_Fitting`),
 or to optimize its `net_outcome <ControlMechanism.net_outcome>` according to an `objective_function`
 (`ParameterEstimationComposition_Optimization`). In either case, when the ParameterEstimationComposition is `run
@@ -64,8 +64,8 @@ sections that describe arguments specific to each.
       or the **nodes** and/or **pathways** arguments must be specified, but not both.
 
       .. note::
-         The **controller** argument *cannot* be used in the constructor for a ParameterEstimationComposition;
-         this is constructed automatically by a ParameterEstimationComposition, using the arguments described below.
+         Neither the **controller** nor any of its associated arguments can be specified in the constructor for a
+         ParameterEstimationComposition; this is constructed automatically using the arguments described below.
 
     * **parameters** - specifies the parameters of the `model <ParameterEstimationComposition.model>` Composition
       to be estimated.  These are specified in a dict, in which the key of each entry specifies a parameter to
@@ -156,7 +156,13 @@ from psyneulink.core.globals.sampleiterator import SampleSpec
 
 __all__ = ['ParameterEstimationComposition']
 
-COMPOSITION_SPECIFICATION_ARGUMENTS =  {'nodes', 'pathways', 'projections', 'controller'}
+COMPOSITION_SPECIFICATION_ARGS =  {'nodes', 'pathways', 'projections'}
+CONTROLLER_SPECIFICATION_ARGS = {'controller',
+                                 'enable_controller',
+                                 'controller_mode',
+                                 'controller_time_scale',
+                                 'controller_condition',
+                                 'retain_old_simulation_data'}
 RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME = 'RANDOMIZATION SEEDS'
 
 class ParameterEstimationCompositionError(Exception):
@@ -176,24 +182,23 @@ class ParameterEstimationComposition(Composition):
 
     parameters : dict[Parameter:Union[Iterator, Function, List, value]
         specifies the parameters of the `model <ParameterEstimationComposition.model>` Composition used to `fit
-        it to data <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
+        it to data <ParameterEstimationComposition_Data_Fitting>`, or `optimize its performance
         <ParameterEstimationComposition_Optimization>` according to the `optimization_function
         <ParameterEstimationComposition.optimization_function>`, and either the range of values to be evaluated for
         each, or priors that define a distribution over those.
 
     outcome_variables : list[Composition output nodes]
         specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model <ParameterEstimationComposition.model>`
-        Composition, the `values <Mechanism_Base.value>` of which are either compared to the **data** when the
-        ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`
+        Composition, the `values <Mechanism_Base.value>` of which are either compared to a specified **data** when
+        the ParameterEstimationComposition is used for `data fitting<ParameterEstimationComposition_Data_Fitting>`,
         or used by the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
-        ParameterEstimationComposition is used for `parameter optimization
-        <ParameterEstimationComposition_Optimization>`.
+        ParameterEstimationComposition is used for `optimization <ParameterEstimationComposition_Optimization>`.
 
     model : Composition : default None
         specifies an external `Composition` for which parameters are to be `fit to data
         <ParameterEstimationComposition_Data_Fitting>` or `optimized <ParameterEstimationComposition_Optimization>`.
         If it is None (the default), the ParameterEstimationComposition itself is used (see
-        `ParameterEstimationComposition_Model` for additional information).
+        `model <ParameterEstimationComposition_Model>` for additional information).
 
     data : array : default None
         specifies the data to to be fit when the ParameterEstimationComposition is used for
@@ -233,8 +238,8 @@ class ParameterEstimationComposition(Composition):
     model : Composition
         identifies the `Composition` used for `data fitting` or `optimization
         <ParameterEstimationComposition_Optimization>`.  If the **model** argument of the
-        ParameterEstimationComposition's constructor is not specified, the `model` attribute returns
-        the ParameterEstimationComposition itself.
+        ParameterEstimationComposition's constructor is not specified, `model` returns the
+        ParameterEstimationComposition itself.
 
     parameters : list[Parameters]
         determines the parameters of the `model <ParameterEstimationComposition.model>` Composition used to `fit
@@ -279,10 +284,11 @@ class ParameterEstimationComposition(Composition):
     data : array
         determines the data to be fit by the model specified by the `model <ParameterEstimationComposition.model>`
         Composition when the ParameterEstimationComposition is used for `data fitting
-        <ParameterEstimationComposition_Data_Fitting>`.  These must be structured in form that aligns with the
+        <ParameterEstimationComposition_Data_Fitting>`. These must be structured in form that aligns with the
         specified `outcome_variables <ParameterEstimationComposition.outcome_variables>` (see `data
         <ParameterEstimationComposition_Data>` for additional details). The data are passed to the optimizer
-        used by `optimization_function <ParameterEstimationComposition.optimization_function>`.
+        used by `optimization_function <ParameterEstimationComposition.optimization_function>`.  Returns
+        None if the model is being used for `ParameterEstimationComposition_Optimization`.
 
     objective_function : ObjectiveFunction, function or method
         determines the function used to evaluate the `results <Composition.results>` of the `model
@@ -297,11 +303,11 @@ class ParameterEstimationComposition(Composition):
 
     optimization_function : OptimizationFunction
         determines the function used to estimate the parameters of the `model <ParameterEstimationComposition.model>`
-        Composition that either best fit the **data** when the ParameterEstimationComposition is used for `data
-        fitting <ParameterEstimationComposition_Data_Fitting>`, or that achieve some maximum or minimum value of the
-        the `optimization_function <ParameterEstimationComposition.optimization_function>` when the
-        ParameterEstimationComposition is used for `parameter optimization
-        <ParameterEstimationComposition_Optimization>`.  This is assigned as the `function
+        Composition that either best fit the `data <ParameterEstimationComposition.data>` when the
+        ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
+        or that achieve some maximum or minimum value of the the `optimization_function
+        <ParameterEstimationComposition.optimization_function>` when the ParameterEstimationComposition is used for
+        `parameter optimization <ParameterEstimationComposition_Optimization>`.  This is assigned as the `function
         <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's `OptimizationControlMechanism`.
 
     num_estimates : int : default 1
@@ -338,19 +344,19 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.num_estimates>`.
 
     optimized_parameter_values : list
-        contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the
-         `model <ParameterEstimationComposition.model>` Composition that best fit the **data** when the
-         ParameterEstimationComposition is used for `data fitting <ParameterEstimationComposition_Data_Fitting>`,
-         or that optimize performance of the `model <ParameterEstimationComposition.model>` according to the
-         `optimization_function <ParameterEstimationComposition.optimization_function>` when the
-         ParameterEstimationComposition is used for `parameter optimization
-         <ParameterEstimationComposition_Optimization>`.  If `parameter values
-         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
-         each item of `optimized_parameter_values` is the optimized value of the corresponding `parameter
-         <ParameterEstimationComposition.parameter>`. If `parameter values
-         <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors, then each item of
-         `optimized_parameter_values` is an array containing the values of the corresponding `parameter
-         <ParameterEstimationComposition.parameters>` the distribution of which were determined to be optimal.
+        contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the `model
+        <ParameterEstimationComposition.model>` Composition that best fit the `data
+        <ParameterEstimationComposition.data>` when the ParameterEstimationComposition is used for `data fitting
+        <ParameterEstimationComposition_Data_Fitting>`, or that optimize performance of the `model
+        <ParameterEstimationComposition.model>` according to the `optimization_function
+        <ParameterEstimationComposition.optimization_function>` when the ParameterEstimationComposition is used for
+        `parameter optimization <ParameterEstimationComposition_Optimization>`.  If `parameter values
+        <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as ranges of values, then
+        each item of `optimized_parameter_values` is the optimized value of the corresponding `parameter
+        <ParameterEstimationComposition.parameter>`. If `parameter values
+        <ParameterEstimationComposition.parameter_ranges_or_priors>` are specified as priors, then each item of
+        `optimized_parameter_values` is an array containing the values of the corresponding `parameter
+        <ParameterEstimationComposition.parameters>` the distribution of which were determined to be optimal.
 
     results : list[list[list]]
         contains the `output_values <Mechanism_Base.output_values>` of the `OUTPUT` `Nodes <Composition_Nodes>`
@@ -418,24 +424,20 @@ class ParameterEstimationComposition(Composition):
         kwargs = args.pop('kwargs')
         pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
 
-        # Must specify either model or a COMPOSITION_SPECIFICATION_ARGUMENTS
-        if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
-            raise ParameterEstimationCompositionError(f"Must specify either 'model' or the 'nodes' and/or 'pathways' "
-                                                      f"args in the constructor for {pec_name}.")
+        # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
+        if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+            raise ParameterEstimationCompositionError(f"Must specify either 'model' or the "
+                                                      f"'nodes', 'pathways', and/or `projections` ars "
+                                                      f"in the constructor for {pec_name}.")
 
         # Can't specify both model and COMPOSITION_SPECIFICATION_ARGUMENTS
-        if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
-            raise ParameterEstimationCompositionError(f"Can't specify both 'model' and the 'nodes' and/or 'pathways' "
-                                                      f"args in the constructor for {pec_name}.")
+        if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+            raise ParameterEstimationCompositionError(f"Can't specify both 'model' and the "
+                                                      f"'nodes', 'pathways', or 'projections' args "
+                                                      f"in the constructor for {pec_name}.")
 
         # Disallow specification of PEC controller args
-        ctlr_spec_args =  {'controller',
-                           'enable_controller',
-                           'controller_mode',
-                           'controller_time_scale',
-                           'controller_condition',
-                           'retain_old_simulation_data'}
-        ctlr_spec_args_found = [arg for arg in ctlr_spec_args if arg in list(kwargs.keys())]
+        ctlr_spec_args_found = [arg for arg in CONTROLLER_SPECIFICATION_ARGS if arg in list(kwargs.keys())]
         if ctlr_spec_args_found:
             plural = len(ctlr_spec_args_found) > 1
             raise ParameterEstimationCompositionError(f"Cannot specify the following controller arg"
