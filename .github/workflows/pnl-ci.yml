@@ -22,11 +22,8 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         python-architecture: ['x64']
+        extra-args: ['']
         os: [ubuntu-latest, macos-latest, windows-latest]
-        exclude:
-          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
-          - python-version: 3.7
-            os: macos-latest
         include:
           # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
           - python-version: 3.7
@@ -36,6 +33,14 @@ jobs:
           - python-version: 3.8
             python-architecture: 'x86'
             os: windows-latest
+          # code-coverage build on macos python 3.9
+          - python-version: 3.9
+            os: macos-latest
+            extra-args: '--cov=psyneulink'
+        exclude:
+          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
+          - python-version: 3.7
+            os: macos-latest
 
     steps:
     - name: Checkout sources
@@ -79,16 +84,29 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
-      timeout-minutes: 80
-      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2
+      timeout-minutes: 180
+      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto ${{ matrix.extra-args }}
 
     - name: Upload test results
       uses: actions/upload-artifact@v2.2.4
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.extra-args }}
         path: tests_out.xml
         retention-days: 5
       if: success() || failure()
+
+    - name: Upload coveralls code coverage
+      if: contains(matrix.extra-args, '--cov=psyneulink')
+      shell: bash
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: |
+        if [ -n "$COVERALLS_REPO_TOKEN" ]; then
+          pip install coveralls
+          coveralls
+        else
+          echo "::warning::Not uploading to coveralls.io, token not available!"
+        fi
 
     - name: Build dist
       run: |
