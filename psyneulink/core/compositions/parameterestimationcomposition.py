@@ -379,11 +379,12 @@ class ParameterEstimationComposition(Composition):
                  **kwargs):
 
         self._validate_params(locals())
-        # self._instantiate_target(target, kwargs)
+
+        # _validate_params() ensures that if **target** is specified, neither **nodes** nor **pathways** is)
+        if target:
+            kwargs.update({'nodes':target})
 
         super().__init__(name=name,
-                         nodes=target,
-                         # controller=pem,
                          controller_mode=BEFORE,
                          enable_controller=True,
                          **kwargs)
@@ -413,16 +414,10 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(f"Must specify either 'target' or the 'nodes' and/or 'pathways' "
                                                       f"args in the constructor for {pec_name}.")
 
-
-        # Disallow use of PEC to specify a Composition other than to **target**
-        comp_spec_args_found = [arg for arg in COMPOSITION_SPECIFICATION_ARGUMENTS if arg in list(kwargs.keys())]
-        if comp_spec_args_found:
-            raise ParameterEstimationCompositionError(f"Cannot use {pec_name} to implement a "
-                                                      f"{Composition.__name__} by specifying its "
-                                                      f"'{', '.join(comp_spec_args_found)}' "
-                                                      f"arg{'s' if len(comp_spec_args_found)>1 else ''}; "
-                                                      f"must assign an existing {Composition.__name__} "
-                                                      f"to its 'target' arg.")
+        # Can't specify both target and COMPOSITION_SPECIFICATION_ARGUMENTS
+        if (args['target'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGUMENTS]):
+            raise ParameterEstimationCompositionError(f"Can't specify both 'target' and the 'nodes' and/or 'pathways' "
+                                                      f"args in the constructor for {pec_name}.")
 
         # Disallow specification of PEC controller args
         ctlr_spec_args =  {'controller',
@@ -447,31 +442,6 @@ class ParameterEstimationComposition(Composition):
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were "
                                                       f"specified for {pec_name}; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
-
-        # FIX: REMOVE ALL OF THE FOLLOWING, AND LET IT BE HANDLED BY CONSTRUCTION
-        #      (PROBLEM IS, LOCAL ERROR MESSAGES ARE MORE OPAQUE)
-
-        # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
-        # Ensure that a ControlSignal can be created for all parameters specified
-        bad_params = []
-        from psyneulink.core.components.ports.port import _parse_port_spec
-        for param_spec in list(args['parameters'].keys()):
-            try:
-                _parse_port_spec(owner=args['target'], port_type=ControlSignal, port_spec=param_spec)
-            except:
-                bad_params.append(param_spec)
-        if bad_params:
-            raise ParameterEstimationCompositionError(f"The following parameter specifications "
-                                                      f"were not valid for '{args['target'].name}': {bad_params}.")
-
-        # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
-        # Ensure outcome_variables are OutputPorts in target
-        bad_ports = [p for p in args['outcome_variables'] if not [p is not node and p not in node.output_ports for
-                                                                 node in
-                                                          args['target'].nodes]]
-        if bad_ports:
-            raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as nodes or "
-                                                      f"OutputPorts in '{args['target'].name}': {bad_ports}.")
 
     def _instantiate_pem(self,
                          parameters,
