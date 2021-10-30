@@ -19,9 +19,10 @@
 #      - EVENTUALLY, EXECUTION IN BOTH DATA FITTING AND OPTIMIZATION MODES
 # FIX: SHOULD PASS ANY ARGS OF RUN METHOD (OTHER THAN num_trial) TO evaluate METHOD OF TARGET COMPOSITION
 #  NUM_TRIALS?)
-# FIX: * ALLOW PEC TO BE USED TO CONSTRUCT A COMOPOSITION, BY PASSING RELEVANT COMPONENTS TO ITS
-#          nodes, pathways, projections, AND controller ARGS INSTEAD OF A COMPOSITION IN ITS target ARG:
-#          USE THOSE TO CONSTUCT A target COMPOSITION (CALLED "TARGET");
+# FIX: * ALLOW PEC TO BE USED TO CONSTRUCT A COMPOSITION, BY PASSING RELEVANT COMPONENTS TO ITS
+#          nodes, pathways, projections, and controller ARGS INSTEAD OF A COMPOSITION IN ITS target ARG:
+#          - USE THOSE TO CONSTUCT A target COMPOSITION (CALLED "TARGET");
+#          - PASS name ARG (IF SPECIFIED) TO THE "TARGET" COMPOSITION; ASSIGN PEC name AS f"ESTIMATE {name}"
 #      * DISALLOW DOING THE ABOVE + SPECIFYING THE target ARG
 #      * FOR NOW, HAVE DISALLOWED THE ABOVE ALTOGETHER BY DISABLING nodes, pathways, projections, AND controller ARGS
 
@@ -374,9 +375,10 @@ class ParameterEstimationComposition(Composition):
                  initial_seed=None,
                  same_seed_for_all_parameter_combinations=False,
                  name=None,
-                 **param_defaults):
+                 **kwargs):
 
         self._validate_params(locals())
+
         self.optimized_parameter_values = []
 
         pem = self._instantiate_pem(target=target,
@@ -394,39 +396,73 @@ class ParameterEstimationComposition(Composition):
                          controller=pem,
                          controller_mode=BEFORE,
                          enable_controller=True,
-                         **param_defaults)
+                         **kwargs)
         assert True
 
-    def _validate_params(self, params):
+    def _validate_params(self, args):
 
-        if params['data'] and params['objective_function']:
+        kwargs = args.pop('kwargs')
+
+        # Disallow use of PEC to specify a Composition other than to **target**
+        comp_spec_args =  {'nodes', 'pathways', 'projections', 'controller'}
+        comp_spec_args_found = [arg for arg in comp_spec_args if arg in list(kwargs.keys())]
+        if comp_spec_args_found:
+            raise ParameterEstimationCompositionError(f"Cannot use {self.__class__.__name__} to implement a "
+                                                      f"{Composition.__name__} by specifying its "
+                                                      f"'{', '.join(comp_spec_args_found)}' "
+                                                      f"arg{'s' if len(comp_spec_args_found)>1 else ''}; "
+                                                      f"must assign an existing {Composition.__name__} "
+                                                      f"to its 'target' arg.")
+
+        # Disallow specification of PEC controller args
+        ctlr_spec_args =  {'controller',
+                           'enable_controller',
+                           'controller_mode',
+                           'controller_time_scale',
+                           'controller_condition',
+                           'retain_old_simulation_data'}
+        ctlr_spec_args_found = [arg for arg in ctlr_spec_args if arg in list(kwargs.keys())]
+        if ctlr_spec_args_found:
+            plural = len(ctlr_spec_args_found) > 1
+            raise ParameterEstimationCompositionError(f"Cannot specify the following controller arg"
+                                                      f"{'s' if plural else ''} "
+                                                      f"for a {self.__class__.__name__}: "
+                                                      f"'{', '.join(ctlr_spec_args_found)}'; "
+                                                      f"{'these are' if plural else 'this is'} "
+                                                      f"set automatically.")
+
+        # Disallow simultaneous specification of
+        #     data (for data fitting; see _ParameterEstimationComposition_Data_Fitting)
+        #          and objective_function (for optimization; see _ParameterEstimationComposition_Optimization)
+        if args['data'] and args['objective_function']:
             raise ParameterEstimationCompositionError(f"Both 'data' and 'objective_function' args were specified for "
-                                                      f"'{params['name'] or self.__class__.__name__}'; must choose one "
+                                                      f"'{args['name'] or self.__class__.__name__}'; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
-        # FIX: REMOVE ALL THIS, AND LET IT BE HANDLED BY CONSTRUCTION (PROBLEM IS, ERROR MESSAGES ARE MORE OPAQUE)
+        # FIX: REMOVE ALL OF THE FOLLOWING, AND LET IT BE HANDLED BY CONSTRUCTION
+        #      (PROBLEM IS, LOCAL ERROR MESSAGES ARE MORE OPAQUE)
 
         # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
         # Ensure that a ControlSignal can be created for all parameters specified
         bad_params = []
         from psyneulink.core.components.ports.port import _parse_port_spec
-        for param_spec in list(params['parameters'].keys()):
+        for param_spec in list(args['parameters'].keys()):
             try:
-                _parse_port_spec(owner=params['target'], port_type=ControlSignal, port_spec=param_spec)
+                _parse_port_spec(owner=args['target'], port_type=ControlSignal, port_spec=param_spec)
             except:
                 bad_params.append(param_spec)
         if bad_params:
             raise ParameterEstimationCompositionError(f"The following parameter specifications "
-                                                      f"were not valid for '{params['target'].name}': {bad_params}.")
+                                                      f"were not valid for '{args['target'].name}': {bad_params}.")
 
         # FIX: IMPLEMENT RECURSIVELY FOR NESTED COMPS
         # Ensure outcome_variables are OutputPorts in target
-        bad_ports = [p for p in params['outcome_variables'] if not [p is not node and p not in node.output_ports for
+        bad_ports = [p for p in args['outcome_variables'] if not [p is not node and p not in node.output_ports for
                                                                  node in
-                                                          params['target'].nodes]]
+                                                          args['target'].nodes]]
         if bad_ports:
             raise ParameterEstimationCompositionError(f"The following outcome_variables were not found as nodes or "
-                                                      f"OutputPorts in '{params['target'].name}': {bad_ports}.")
+                                                      f"OutputPorts in '{args['target'].name}': {bad_ports}.")
 
     def _instantiate_pem(self,
                          target,
