@@ -220,9 +220,8 @@ class ParameterEstimationComposition(Composition):
         determines the `Composition` for which parameters are used to `fit data
         <ParameterEstimationComposition_Data_Fitting>` or `optimize its performance
         <ParameterEstimationComposition_Optimization>` as defined by the `objective_function
-        <ParameterEstimationComposition.objective_function>`.  This is assigned as the `agent_rep
-        <OptimizationControlMechanism.agent_rep>` attribute of the ParameterEstimationComposition's
-        `OptimizationControlMechanism`.
+        <ParameterEstimationComposition.objective_function>`.  Can be the PEC itself or one
+        `nested <Composition_Nested>` within it.
 
     parameters : list[Parameters]
         determines the parameters of the `target <ParameterEstimationComposition.target>` Composition used to `fit
@@ -359,7 +358,7 @@ class ParameterEstimationComposition(Composition):
     """
 
     def __init__(self,
-                 target, # agent_rep
+                 target,
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control
                  optimization_function, # function of OCM
@@ -464,7 +463,8 @@ class ParameterEstimationComposition(Composition):
         # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
         convert_to_list(control_signals).append(seed_control_signal)
 
-        return OptimizationControlMechanism(control_signals=control_signals,
+        return OptimizationControlMechanism(agent_rep=self,
+                                            control_signals=control_signals,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
                                                                                    function=objective_function),
                                             function=optimization_function)
