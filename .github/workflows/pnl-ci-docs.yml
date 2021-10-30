@@ -122,6 +122,8 @@ jobs:
         python-version: [3.7]
         os: [ubuntu-latest]
 
+    permissions:
+      contents: write
     runs-on: ${{ matrix.os }}
     needs: [docs-build]
     if: github.event_name == 'push' &&
