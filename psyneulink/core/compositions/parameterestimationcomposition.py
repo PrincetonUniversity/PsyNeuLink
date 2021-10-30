@@ -385,7 +385,11 @@ class ParameterEstimationComposition(Composition):
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations
                                     )
 
-        super().__init__(name=name, nodes=target, controller=pem, controller_mode=BEFORE, **param_defaults)
+        super().__init__(name=name,
+                         nodes=target,
+                         controller=pem,
+                         controller_mode=BEFORE,
+                         **param_defaults)
 
     def _validate_params(self, params):
 
