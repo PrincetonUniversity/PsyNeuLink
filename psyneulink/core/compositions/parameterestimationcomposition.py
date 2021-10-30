@@ -139,6 +139,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.utilities import convert_to_list
 from psyneulink.core.globals.sampleiterator import SampleSpec
@@ -371,7 +372,6 @@ class ParameterEstimationComposition(Composition):
                  **param_defaults):
 
         self._validate_params(locals())
-
         self.optimized_parameter_values = []
 
         pem = self._instantiate_pem(target=target,
@@ -385,7 +385,7 @@ class ParameterEstimationComposition(Composition):
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations
                                     )
 
-        super().__init__(name=name, nodes=target, controller=pem, **param_defaults)
+        super().__init__(name=name, nodes=target, controller=pem, controller_mode=BEFORE, **param_defaults)
 
     def _validate_params(self, params):
 
