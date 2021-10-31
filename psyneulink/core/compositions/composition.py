@@ -7435,7 +7435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self,
             predicted_input=None,
             control_allocation=None,
-            num_trials_per_estimate=1,
+            num_trials=1,
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,
@@ -7447,7 +7447,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Runs the `Composition` in simulation mode (i.e., excluding its `controller <Composition.controller>`)
         using the **predicted_input** and specified **control_allocation** for each run. The Composition is
-        run for ***num_trials_per_estimate**.
+        run for ***num_trials**.
 
         If **predicted_input** is not specified, and `block_simulate` is set to True, the `controller
         <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
@@ -7515,7 +7515,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             result = self.run(inputs=inputs,
                                     context=context,
                                     runtime_params=runtime_params,
-                                    num_trials=num_trials_per_estimate,
+                                    num_trials=num_trials,
                                     animate=animate,
                                     execution_mode=execution_mode,
                                     skip_initialization=True,
