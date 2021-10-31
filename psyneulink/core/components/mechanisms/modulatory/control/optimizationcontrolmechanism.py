@@ -480,6 +480,8 @@ class OptimizationControlMechanismError(Exception):
 
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
+    if 'METHOD INITIALIZING' in context.string:
+        return None
     search_space = owning_component.parameters.search_space._get(context)
     if not search_space:
         return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
