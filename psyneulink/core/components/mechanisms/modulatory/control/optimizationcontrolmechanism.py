@@ -456,7 +456,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_np_array
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -828,7 +828,7 @@ class OptimizationControlMechanism(ControlMechanism):
         function = function or GridSearch
 
         # FIX: MAKE SURE MOVE TO HERE FROM BELOW PASSES TESTS
-        self.state_features = state_features
+        self.state_features = convert_to_list(state_features)
 
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
