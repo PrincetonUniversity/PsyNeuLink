@@ -538,7 +538,7 @@ class OptimizationControlMechanism(ControlMechanism):
         to estimate the outcome for each `control_allocation <ControlMechanism.control_allocation>` sampled
         (see `num_estimates <OptimizationControlMechanism.num_estimates>` for additional information).
 
-    num_trials_per_estimate : int : 1
+    num_trials_per_estimate : int : default None
         specifies the number of trials that are executed in each run of `agent_rep
         <OptimizationControlMechanism.agent_rep>` in a call to `evaluation_function
         <OptimizationControlMechanism.evaluation_function>` (see `num_trials_per_estimate
@@ -595,10 +595,12 @@ class OptimizationControlMechanism(ControlMechanism):
         `function <OptimizationControlMechanism.function>` (i.e., that are specified by its `search_space
         <OptimizationFunction.search_space>`).
 
-    num_trials_per_estimate : int
+    num_trials_per_estimate : int or None
         determines the number of trials that are executed in each run of `agent_rep
         <OptimizationControlMechanism.agent_rep>` used to evaluate its outcome in a call to
         the OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evaluation_function>`.
+        If it is None, then the value specified for **num_trials** in the Composition's `run <Composition.run>`
+        method is used.
 
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer),
@@ -778,7 +780,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # search_space = None
         control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
         num_estimates = 1
-        num_trials_per_estimate = 1
+        num_trials_per_estimate = None
 
         saved_samples = None
         saved_values = None

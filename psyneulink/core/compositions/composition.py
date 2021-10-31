@@ -3327,7 +3327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.disable_learning = disable_learning
 
-        # status attributes
+        # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
         self.needs_update_graph = True  # Tracks if Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
@@ -3364,6 +3364,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
+        # This is set at runtime and may be used by the controller to assign its
+        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        self.num_trials = None
+
 
         self._update_parameter_components()
 
@@ -8123,7 +8127,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         num_trials : int : default 1
             typically, the composition will infer the number of trials from the length of its input specification.
-            To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+            To reuse the same inputs across many trials, an input dictionary can be specified with lists of length 1,
             or use default inputs, and select a number of trials with num_trials.
 
         initialize_cycle_values : Dict { Node: Node Value } : default None
@@ -8400,6 +8404,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             num_trials = num_trials
         else:
             num_trials = num_inputs_sets
+        self.num_trials = num_trials
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
 
@@ -8700,9 +8705,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <Composition_Target_Inputs>` for additional details concerning the formatting of targets).
 
             num_trials : int (default=None)
-                typically, the composition will infer the number of trials from the length of its input specification.
-                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-                or use default inputs, and select a number of trials with num_trials.
+                typically, the Composition infers the number of trials to execute from the length of its input
+                specification.  However, **num_trials** can be used to enforce an exact number of trials to execute;
+                if it is greater than there are inputs then inputs will be repeated (see `Composition_Execution_Inputs`
+                for additional information).
 
             epochs : int (default=1)
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
