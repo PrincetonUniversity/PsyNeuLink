@@ -8361,6 +8361,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except:
                 self.parameters.input_specification._set(inputs, context)
 
+        # May be used by controller for specifying num_trials_per_simulation
+        self.num_trials = num_trials
+
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
@@ -8404,7 +8407,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             num_trials = num_trials
         else:
             num_trials = num_inputs_sets
-        self.num_trials = num_trials
 
         scheduler._reset_counts_total(TimeScale.RUN, context.execution_id)
 

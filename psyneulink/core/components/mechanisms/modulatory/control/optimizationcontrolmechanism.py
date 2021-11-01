@@ -1105,12 +1105,16 @@ class OptimizationControlMechanism(ControlMechanism):
             old_composition = context.composition
             context.composition = self.agent_rep
 
+            # If num_trials_per_estimate has not been specified use num_trials specified in call to Composition.run()
+            num_trials_per_estimate = (self.parameters.num_trials_per_estimate._get(context)
+                                       or self.composition.num_trials)
+
             # We shouldn't get this far if execution mode is not Python
             assert self.parameters.comp_execution_mode._get(context) == "Python"
             exec_mode = pnlvm.ExecutionMode.Python
             ret_val = self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
                                               control_allocation,
-                                              self.parameters.num_trials_per_estimate._get(context),
+                                              num_trials_per_estimate,
                                               base_context=context,
                                               context=new_context,
                                               execution_mode=exec_mode,
