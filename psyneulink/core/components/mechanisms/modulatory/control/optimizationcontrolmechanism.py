@@ -480,8 +480,10 @@ class OptimizationControlMechanismError(Exception):
 
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
+    # MODIFIED 10/31/21 OLD:
     if 'METHOD INITIALIZING' in context.string:
         return None
+    # MODIFIED 10/31/21 END
     search_space = owning_component.parameters.search_space._get(context)
     if not search_space:
         return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
@@ -894,6 +896,7 @@ class OptimizationControlMechanism(ControlMechanism):
            - the OptimizationControlMechanism is assigned a default OUTCOME InputPort with no projections to it.
         """
 
+        # MODIFIED 10/31/21 OLD:
         super()._instantiate_input_ports(context=context)
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
@@ -904,6 +907,21 @@ class OptimizationControlMechanism(ControlMechanism):
             #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
             # input_ports.insert(0, outcome_input_ports),
             self.add_ports(feature_input_ports)
+
+        # # # MODIFIED 10/31/21 NEW:
+        # # If any state_features were specified (assigned to self.input_ports in __init__):
+        # if self.state_features:
+        #     state_features = convert_to_list(self.state_features)
+        #     feature_input_ports = _parse_shadow_inputs(self, state_features)
+        #     feature_input_ports = self._parse_state_feature_specs(feature_input_ports, self.state_feature_function)
+        #     # Insert primary InputPort for outcome from ObjectiveMechanism;
+        #     #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
+        #     # input_ports.insert(0, outcome_input_ports),
+        #     # self.input_ports.extend(feature_input_ports)
+        #     input_ports = self.input_ports + feature_input_ports
+        # super()._instantiate_input_ports(input_ports, context=context)
+        # assert True
+        # MODIFIED 10/31/21 END
 
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
