@@ -176,6 +176,7 @@ def init_builtins():
 
         # PRNG
         builtins.setup_mersenne_twister(ctx)
+        builtins.setup_philox(ctx)
 
         # Matrix/Vector
         builtins.setup_vxm(ctx)

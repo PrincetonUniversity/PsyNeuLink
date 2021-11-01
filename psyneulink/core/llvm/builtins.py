@@ -861,3 +861,327 @@ def setup_mersenne_twister(ctx):
     gen_int = _setup_mt_rand_integer(ctx, state_ty)
     gen_float = _setup_mt_rand_float(ctx, state_ty, gen_int)
     _setup_mt_rand_normal(ctx, state_ty, gen_float)
+
+
+_PHILOX_DEFAULT_ROUNDS = 10
+_PHILOX_DEFAULT_BUFFER_SIZE = 4
+_PHILOX_INIT_A = 0x43b0d7e5
+_PHILOX_MULT_A = 0x931e8875
+_PHILOX_MIX_MULT_L = 0xca01f9dd
+_PHILOX_MIX_MULT_R = 0x4973f715
+_PHILOX_INIT_B = 0x8b51f9dd
+_PHILOX_MULT_B = 0x58f38ded
+
+
+def _hash_mix(builder, a, hash_const):
+    val = builder.xor(a, hash_const)
+    hash_const = builder.mul(hash_const, hash_const.type(_PHILOX_MULT_A))
+    val = builder.mul(val, hash_const)
+    # XSHIFT sizeof(uint32) * 8 // 2 == 16
+    val_sh = builder.lshr(val, val.type(16))
+    val = builder.xor(val, val_sh)
+    return val, hash_const
+
+def _mix(builder, a, b):
+    val_a = builder.mul(a, a.type(_PHILOX_MIX_MULT_L))
+    val_b = builder.mul(b, b.type(_PHILOX_MIX_MULT_R))
+
+    val = builder.sub(val_a, val_b)
+    # XSHIFT sizeof(uint32) * 8 // 2 == 16
+    val_sh = builder.lshr(val, val.type(16))
+    return builder.xor(val, val_sh)
+
+
+def _setup_philox_rand_init(ctx, state_ty):
+    seed_ty = ir.IntType(64)
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_init", (state_ty.as_pointer(), seed_ty))
+    state, seed = builder.function.args
+
+    # Most of the state is set to 0
+    builder.store(state.type.pointee(None), state)
+
+    # reset buffer position to max
+    buffer_pos_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+    assert buffer_pos_ptr.type.pointee.width == 16
+    builder.store(buffer_pos_ptr.type.pointee(_PHILOX_DEFAULT_BUFFER_SIZE),
+                  buffer_pos_ptr)
+
+    # np calls '_seed_seq.generate_state(2, np.int64) to get the key
+    # the passed seed is used as an entropy array
+    # for np.SeedSeq, which in turn generates 2x64 bit words to
+    # use as key.
+
+    # 1.) Generate SeedSeq entropy pool
+    # 1. a) Generate assembled entropy based on the provided seed
+    assembled_entropy = ir.ArrayType(ctx.int32_ty, 4)(None)
+    seed_lo = builder.trunc(seed, ctx.int32_ty)
+    seed_hi = builder.lshr(seed, seed.type(32))
+    seed_hi = builder.trunc(seed_hi, ctx.int32_ty)
+
+    assembled_entropy = builder.insert_value(assembled_entropy, seed_lo, 0)
+    assembled_entropy = builder.insert_value(assembled_entropy, seed_hi, 1)
+
+    # 1. b) Mix assembled entropy to the pool
+    entropy_pool = ir.ArrayType(ctx.int32_ty, 4)(None)
+    # any diff would be filled with 0,
+    # so we might as well force the same size
+    assert len(entropy_pool.type) == len(assembled_entropy.type)
+
+    # First perturb the entropy with some magic constants
+    hash_const = ctx.int32_ty(_PHILOX_INIT_A)
+    for i in range(len(entropy_pool.type)):
+        ent_val = builder.extract_value(assembled_entropy, i)
+        new_val, hash_const = _hash_mix(builder, ent_val, hash_const)
+
+        entropy_pool = builder.insert_value(entropy_pool, new_val, i)
+
+    # Next perturb the entropy with itself
+    for i_src in range(len(entropy_pool.type)):
+        for i_dst in range(len(entropy_pool.type)):
+            if i_src != i_dst:
+                src_val = builder.extract_value(entropy_pool, i_src)
+                dst_val = builder.extract_value(entropy_pool, i_dst)
+
+                new_val, hash_const = _hash_mix(builder, src_val, hash_const)
+                new_val = _mix(builder, dst_val, new_val)
+                entropy_pool = builder.insert_value(entropy_pool, new_val, i_dst)
+
+    # 2.) Use the mixed entropy pool to generate 2xi64 keys
+    hash_const = ctx.int32_ty(_PHILOX_INIT_B)
+    key_state = ir.ArrayType(ctx.int32_ty, 4)(None)
+    for i in range(len(key_state.type)):
+        pool_val = builder.extract_value(entropy_pool, i)
+        val = builder.xor(pool_val, hash_const)
+        hash_const = builder.mul(hash_const, hash_const.type(_PHILOX_MULT_B))
+        val = builder.mul(val, hash_const)
+        # XSHIFT sizeof(uint32) * 8 // 2 == 16
+        val_sh = builder.lshr(val, val.type(16))
+        val = builder.xor(val, val_sh)
+        key_state = builder.insert_value(key_state, val, i)
+
+    key_state_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    for i in range(len(key_state_ptr.type.pointee)):
+        key_ptr = builder.gep(key_state_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
+        key_lo = builder.extract_value(key_state, i * 2)
+        key_lo = builder.zext(key_lo, key_ptr.type.pointee)
+        key_hi = builder.extract_value(key_state, i * 2 + 1)
+        key_hi = builder.zext(key_hi, key_ptr.type.pointee)
+        key_hi = builder.shl(key_hi, key_hi.type(32))
+        key = builder.or_(key_lo, key_hi)
+        builder.store(key, key_ptr)
+
+    # Store used seed
+    used_seed_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(6)])
+    builder.store(seed, used_seed_ptr)
+
+    builder.ret_void()
+
+    return builder.function
+
+
+def _philox_encode(builder, rounds, value, key):
+    assert len(value.type) == 4
+    assert len(key.type) == 2
+
+    for i in range(rounds):
+        # One round of encoding
+        keys = [builder.extract_value(key, j) for j in range(len(key.type))]
+        vals = [builder.extract_value(value, k) for k in range(len(value.type))]
+        lo0, hi0 = helpers.umul_lo_hi(builder, vals[0].type(0xD2E7470EE14C6C93), vals[0])
+        lo1, hi1 = helpers.umul_lo_hi(builder, vals[2].type(0xCA5A826395121157), vals[2])
+
+        new_vals = [None] * len(vals)
+        new_vals[0] = builder.xor(hi1, vals[1])
+        new_vals[0] = builder.xor(new_vals[0], keys[0])
+        new_vals[1] = lo1
+        new_vals[2] = builder.xor(hi0, vals[3])
+        new_vals[2] = builder.xor(new_vals[2], keys[1])
+        new_vals[3] = lo0
+        for l, new_val in enumerate(new_vals):
+            value = builder.insert_value(value, new_val, l)
+
+        # Now bump the key
+        new_key0 = builder.add(keys[0], keys[0].type(0x9E3779B97F4A7C15))
+        new_key1 = builder.add(keys[1], keys[1].type(0xBB67AE8584CAA73B))
+        key = builder.insert_value(key, new_key0, 0)
+        key = builder.insert_value(key, new_key1, 1)
+
+    return value
+
+
+def _setup_philox_rand_int64(ctx, state_ty):
+    int64_ty = ir.IntType(64)
+    # Generate random number generator function.
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_int64", (state_ty.as_pointer(), int64_ty.as_pointer()))
+    state, out = builder.function.args
+
+    counter_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
+    key_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(1)])
+    buffer_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(2)])
+    buffer_pos_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(4)])
+
+    assert buffer_pos_ptr.type.pointee.width == 16
+
+    # Check if there is a pre-generated value
+    buffer_pos = builder.load(buffer_pos_ptr)
+    already_generated = builder.icmp_unsigned("<", buffer_pos, buffer_pos.type(len(buffer_ptr.type.pointee)))
+    with builder.if_then(already_generated, likely=True):
+        # Get value from pre-generated buffer
+        val_ptr = builder.gep(buffer_ptr, [ctx.int32_ty(0), buffer_pos])
+        builder.store(builder.load(val_ptr), out)
+
+        # Update buffer position
+        buffer_pos = builder.add(buffer_pos, buffer_pos.type(1))
+        builder.store(buffer_pos, buffer_pos_ptr)
+        builder.ret_void()
+
+
+    # Generate 4 new numbers
+
+    # "counter" is 256 bit wide split into 4 64b integers.
+    # field i should only be incremented if all fields <i
+    # were incremented and wrapped around.
+    cond = ctx.bool_ty(True)
+    for i in range(len(counter_ptr.type.pointee)):
+        counter_el_ptr = builder.gep(counter_ptr, [ctx.int32_ty(0), ctx.int32_ty(i)])
+        counter_el = builder.load(counter_el_ptr)
+        new_counter = builder.add(counter_el, counter_el.type(1))
+        with builder.if_then(cond):
+            builder.store(new_counter, counter_el_ptr)
+
+        carry = builder.icmp_unsigned("==", new_counter, new_counter.type(0))
+        cond = builder.and_(cond, carry)
+
+    # generate 4 new numbers by encrypting the counter using 'key'
+    counter = builder.load(counter_ptr)
+    key = builder.load(key_ptr)
+    new_buffer = _philox_encode(builder, _PHILOX_DEFAULT_ROUNDS, counter, key)
+
+    # Store the newly generated numbers
+    builder.store(new_buffer, buffer_ptr)
+
+    # Return the first one and set the counter
+    builder.store(buffer_pos.type(1), buffer_pos_ptr)
+    val = builder.extract_value(new_buffer, 0)
+    builder.store(val, out)
+
+    builder.ret_void()
+
+    return builder.function
+
+
+def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
+    # Generate random number generator function.
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_int32", (state_ty.as_pointer(), ctx.int32_ty.as_pointer()))
+    state, out = builder.function.args
+
+    buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(3)])
+    has_buffered_ptr = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(5)])
+    has_buffered = builder.load(has_buffered_ptr)
+    with builder.if_then(has_buffered):
+        buffered = builder.load(buffered_ptr)
+        builder.store(buffered, out)
+        builder.store(has_buffered.type(False), has_buffered_ptr)
+        builder.ret_void()
+
+
+    val_ptr = builder.alloca(gen_int64.args[1].type.pointee)
+    builder.call(gen_int64, [state, val_ptr])
+    val = builder.load(val_ptr)
+
+    val_lo = builder.trunc(val, out.type.pointee)
+    builder.store(val_lo, out)
+
+    val_hi = builder.lshr(val, val.type(val.type.width // 2))
+    val_hi = builder.trunc(val_hi, buffered_ptr.type.pointee)
+    builder.store(val_hi, buffered_ptr)
+    builder.store(has_buffered.type(True), has_buffered_ptr)
+
+    builder.ret_void()
+
+    return builder.function
+
+
+def _setup_philox_rand_double(ctx, state_ty, gen_int64):
+    # Generate random float number generator function
+    double_ty = ir.DoubleType()
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_double", (state_ty.as_pointer(), double_ty.as_pointer()))
+    state, out = builder.function.args
+
+    # (rnd >> 11) * (1.0 / 9007199254740992.0)
+    rhs = double_ty(1.0 / 9007199254740992.0)
+
+    # Generate random integer
+    lhs_ptr = builder.alloca(gen_int64.args[1].type.pointee)
+    builder.call(gen_int64, [state, lhs_ptr])
+
+    # convert to float
+    lhs_int = builder.load(lhs_ptr)
+    lhs_shift = builder.lshr(lhs_int, lhs_int.type(11))
+    lhs = builder.uitofp(lhs_shift, double_ty)
+
+    res = builder.fmul(lhs, rhs)
+    builder.store(res, out)
+
+    builder.ret_void()
+
+    return builder.function
+
+
+def _setup_philox_rand_float(ctx, state_ty, gen_int32):
+    # Generate random float number generator function
+    float_ty = ir.FloatType()
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_float", (state_ty.as_pointer(), float_ty.as_pointer()))
+    state, out = builder.function.args
+
+    # (next_uint32(bitgen_state) >> 9) * (1.0f / 8388608.0f);
+    rhs = float_ty(1.0 / 8388608.0)
+
+    # Generate random integer
+    lhs_ptr = builder.alloca(gen_int32.args[1].type.pointee)
+    builder.call(gen_int32, [state, lhs_ptr])
+
+    # convert to float
+    lhs_int = builder.load(lhs_ptr)
+    lhs_shift = builder.lshr(lhs_int, lhs_int.type(9))
+    lhs = builder.uitofp(lhs_shift, float_ty)
+
+    res = builder.fmul(lhs, rhs)
+    builder.store(res, out)
+
+    builder.ret_void()
+
+    return builder.function
+
+
+def _setup_philox_rand_normal(ctx, state_ty, gen_float):
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
+    state, out = builder.function.args
+
+
+    builder.ret_void()
+
+
+def get_philox_state_struct(ctx):
+    int64_ty = ir.IntType(64)
+    int16_ty = ir.IntType(16)
+    return ir.LiteralStructType([
+        ir.ArrayType(int64_ty, 4),  # counter
+        ir.ArrayType(int64_ty, 2),  # key
+        ir.ArrayType(int64_ty, _PHILOX_DEFAULT_BUFFER_SIZE),  #  pre-gen buffer
+        ctx.int32_ty,  #  the other half of random 64 bit int
+        int16_ty,      #  buffer pos
+        ctx.bool_ty,   #  has uint buffered
+        int64_ty])     #  seed
+
+
+def setup_philox(ctx):
+    state_ty = get_philox_state_struct(ctx)
+
+    _setup_philox_rand_init(ctx, state_ty)
+
+    gen_int64 = _setup_philox_rand_int64(ctx, state_ty)
+    gen_double = _setup_philox_rand_double(ctx, state_ty, gen_int64)
+    gen_int32 = _setup_philox_rand_int32(ctx, state_ty, gen_int64)
+    gen_float = _setup_philox_rand_float(ctx, state_ty, gen_int32)
+    _setup_philox_rand_normal(ctx, state_ty, gen_double)

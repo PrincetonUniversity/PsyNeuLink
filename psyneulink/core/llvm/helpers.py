@@ -128,6 +128,19 @@ def load_extract_scalar_array_one(builder, ptr):
     return val
 
 
+def umul_lo_hi(builder, a, b):
+    assert a.type.width == b.type.width
+
+    a_val = builder.zext(a, ir.IntType(a.type.width * 2))
+    b_val = builder.zext(b, ir.IntType(b.type.width * 2))
+    res = builder.mul(a_val, b_val)
+
+    lo = builder.trunc(res, a.type)
+    hi = builder.lshr(res, res.type(a.type.width))
+    hi = builder.trunc(hi, a.type)
+    return lo, hi
+
+
 def fneg(builder, val, name=""):
     return builder.fsub(val.type(-0.0), val, name)
 

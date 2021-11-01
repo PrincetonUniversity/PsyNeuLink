@@ -471,7 +471,9 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        if t.width == 8:
+        if t.width == 1:
+            return ctypes.c_bool
+        elif t.width == 8:
             return ctypes.c_int8
         elif t.width == 16:
             return ctypes.c_int16
