@@ -908,18 +908,19 @@ class OptimizationControlMechanism(ControlMechanism):
         #     # input_ports.insert(0, outcome_input_ports),
         #     self.add_ports(feature_input_ports)
         # # MODIFIED 10/31/21 NEW:
+        # FIX: THE FOLLOWING CAN BE CONDENSED:
         feature_input_ports = []
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
             state_features = convert_to_list(self.state_features)
-            feature_input_ports = _parse_shadow_inputs(self, state_features)
-            feature_input_ports = self._parse_state_feature_specs(feature_input_ports, self.state_feature_function)
-            # Insert primary InputPort for outcome from ObjectiveMechanism;
-            #     assumes this will be a single scalar value and must be named OUTCOME by convention of ControlSignal
-            # input_ports.insert(0, outcome_input_ports),
-            # self.input_ports.extend(feature_input_ports)
+            # MODIFIED 10/31/21 OLD NESTED:
+            # FIX: IS THIS NECESSARY SINCE IT IS DONE AS PART OF super()._instantiate_input_ports?
+            # feature_input_ports = _parse_shadow_inputs(self, state_features)
+            # feature_input_ports = self._parse_state_feature_specs(feature_input_ports, self.state_feature_function)
+            # MODIFIED 10/31/21 NEW NESTED:
+            feature_input_ports = self._parse_state_feature_specs(state_features, self.state_feature_function)
+            # MODIFIED 10/31/21 END NESTED
         super()._instantiate_input_ports(feature_input_ports, context=context)
-        assert True
         # MODIFIED 10/31/21 END
 
         for i in range(1, len(self.input_ports)):
