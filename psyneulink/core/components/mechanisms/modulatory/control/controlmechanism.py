@@ -1481,8 +1481,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
         outcome_input_port = {SIZE:size,
                                NAME:OUTCOME,
                                PARAMS:{INTERNAL_ONLY:True}}
+        input_port_values = [[size], [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]]
         input_ports = [outcome_input_port] + input_ports
-        input_port_values = [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]
+        # input_port_values = [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]
         super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=input_port_values)
 
         # INSTANTIATE MappingProjection from ObjectiveMechanism to ControlMechanism
