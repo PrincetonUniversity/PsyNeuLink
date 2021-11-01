@@ -1478,11 +1478,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # INSTANTIATE OUTCOME InputPort on ControlMechanism that receives projection from ObjectiveMechanism
         size = self.objective_mechanism.output_ports[OUTCOME].value.size
-        outcome_input_port = [{SIZE:size,
+        outcome_input_port = {SIZE:size,
                                NAME:OUTCOME,
-                               PARAMS:{INTERNAL_ONLY:True}}]
-        input_ports += outcome_input_port
-        super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=[size])
+                               PARAMS:{INTERNAL_ONLY:True}}
+        input_ports = [outcome_input_port] + input_ports
+        input_port_values = [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]
+        super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=input_port_values)
 
         # INSTANTIATE MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
@@ -1567,6 +1568,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         If nothing is specified, a default OUTCOME InputPort is instantiated with no projections to it
         """
 
+        input_ports = input_ports or []
         self.num_outcome_input_ports = 1 # the default (OUTCOME InputPort)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
@@ -1576,7 +1578,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # If items to monitor are specified, instantiate InputPorts and projections to them from the specified senders
         elif self.monitor_for_control:
-            input_ports = input_ports or []
             len_stim_input_ports = len(input_ports)
             self.num_outcome_input_ports = len(self.monitor_for_control)
             # Create one InputPort for each item in monitor_for_control
