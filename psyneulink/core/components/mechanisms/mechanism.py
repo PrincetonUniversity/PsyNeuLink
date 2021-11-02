@@ -1810,7 +1810,7 @@ class Mechanism_Base(Mechanism):
         Returns
         -------
             A, B where
-            A is an defaults.variable-like object
+            A is a defaults.variable-like object
             B is True if **input_ports** contained an explicit variable specification, False otherwise
         """
 

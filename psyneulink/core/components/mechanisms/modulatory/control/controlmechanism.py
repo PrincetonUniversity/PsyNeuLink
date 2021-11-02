@@ -1481,11 +1481,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         outcome_input_port = {SIZE:size,
                                NAME:OUTCOME,
                                PARAMS:{INTERNAL_ONLY:True}}
-        input_port_values = [size] + [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]
+        # input_port_values = [size] + [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]
+        # FIX: 10/31/21 THE NEXT LINE SHOULD BE MOVED TO _instantiate_input_ports
+        input_port_values, _  = self._handle_arg_input_ports(input_ports)
+        input_port_values = [size] + input_port_values
         input_ports = [outcome_input_port] + input_ports
         # input_port_values = [_parse_port_spec(InputPort, input_port)['value'] for input_port in input_ports]
-        # super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=input_port_values)
-        super()._instantiate_input_ports(context=context, input_ports=input_ports)
+        super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=input_port_values)
+        # super()._instantiate_input_ports(context=context, input_ports=input_ports)
 
         # INSTANTIATE MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
