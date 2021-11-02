@@ -7261,7 +7261,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # of the OCM and know which InputPort maps to which predicted_input value
 
         # MODIFIED 10/31/21 NEW:
-        default_input = not bool(predicted_input)
+        default_input = predicted_input is None
         if default_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
         # MODIFIED 10/31/21 END
