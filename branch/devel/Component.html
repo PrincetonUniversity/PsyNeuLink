@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0+untagged.11.gc3024f1 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0+untagged.10.gd77519a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.11.gc3024f1
+                  0+untagged.10.gd77519a
                 </div>
               
             
@@ -1186,6 +1186,26 @@ method of the Component’s <a class="reference internal" href="#psyneulink.core
 <dd><p>Specifies items to be logged; ; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>. This is a convenience method that calls the <code class="xref any docutils literal notranslate"><span class="pre">log_values</span></code> method
 of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.all_dependent_parameters">
+<span class="sig-name descname"><span class="pre">all_dependent_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.all_dependent_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of Parameters of this Component and its         <a class="reference internal" href="#psyneulink.core.components.component.Component._dependent_components" title="psyneulink.core.components.component.Component._dependent_components"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">_dependent_components</span></code></a> filtered by <strong>filter_name</strong> and         <strong>filter_regex</strong>. If no filter is specified, all Parameters         are included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filter_name</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The                 exact name or names of Parameters to include. Defaults                 to None.</p></li>
+<li><p><strong>filter_regex</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Regular expression patterns. If any pattern matches a                 Parameter name (using re.match), it will be included                 in the result. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Component]: Dictionary of filtered Parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict[<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter">Parameter</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
