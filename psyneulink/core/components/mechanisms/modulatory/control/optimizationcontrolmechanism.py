@@ -442,7 +442,6 @@ from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
@@ -453,8 +452,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, NAME, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PROJECTIONS, SIZE
+    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, OPTIMIZATION_CONTROL_MECHANISM, PARAMS, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -993,8 +991,8 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find ``control_allocation <ControlMechanism.control_allocation>` that optimizes result of
-        `agent_rep.evaluate`."""
+        """Find control_allocation that optimizes result of agent_rep.evaluate().
+        """
 
         if self.is_initializing:
             return [defaultControlAllocation]

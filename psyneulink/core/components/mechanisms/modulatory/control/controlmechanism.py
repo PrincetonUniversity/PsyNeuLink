@@ -560,25 +560,26 @@ Class Reference
 
 """
 
-import copy
 import collections
+import copy
 import itertools
-import numpy as np
 import threading
-import typecheck as tc
 import uuid
 import warnings
+
+import numpy as np
+import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
-from psyneulink.core.components.ports.port import Port, _parse_port_spec
-from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
+from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
+from psyneulink.core.components.ports.port import Port, _parse_port_spec
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, \
@@ -1444,7 +1445,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # FIX: MODIFY TO CONSTRUCT MAPPING PROJECTION FROM EACH MONITOR_FOR_CONTROL SPEC TO CORRESPONDING INPUTPORT
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             for i, sender in enumerate(convert_to_list(self.monitor_for_control)):
-                input_port = self.input_ports[len_stim_input_ports+i]
+                input_port = self.input_ports[len_stim_input_ports + i]
                 input_port.name = sender.name.upper()
                 self.aux_components.append(MappingProjection(sender=sender, receiver=input_port))
 

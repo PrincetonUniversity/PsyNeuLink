@@ -145,17 +145,16 @@ import numpy as np
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.sampleiterator import SampleSpec
+from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['ParameterEstimationComposition']
 
-COMPOSITION_SPECIFICATION_ARGS =  {'nodes', 'pathways', 'projections'}
+COMPOSITION_SPECIFICATION_ARGS = {'nodes', 'pathways', 'projections'}
 CONTROLLER_SPECIFICATION_ARGS = {'controller',
                                  'enable_controller',
                                  'controller_mode',
@@ -431,7 +430,7 @@ class ParameterEstimationComposition(Composition):
             # If model has been specified, assign as (only) node in PEC, otherwise specification(s) in kwargs are used
             # (Note: _validate_params() ensures that either model or nodes and/or pathways are specified, but not both)
             kwargs.update({'nodes':model})
-        self.model =  model or self
+        self.model = model or self
 
         self.optimized_parameter_values = []
 
