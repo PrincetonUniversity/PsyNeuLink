@@ -1163,7 +1163,7 @@ class TestControlMechanisms:
         comp.run(inputs={mech: [1]},
                  num_trials=2,
                  report_output=pnl.ReportOutput.FULL,
-                 report_params=pnl.ReportParams.CONTROLLED,
+                 report_params=pnl.ReportParams.MONITORED,
                  execution_mode=mode)
 
         # Construct expected results.

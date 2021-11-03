@@ -784,10 +784,12 @@ class OptimizationControlMechanism(ControlMechanism):
         state_feature_values = Parameter(_parse_state_feature_values_from_variable([defaultControlAllocation]),
                                          user=False,
                                          pnl_internal=True)
-        # search_space = None
-        control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
+
         num_estimates = 1
         num_trials_per_estimate = None
+
+        # search_space = None
+        control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
 
         saved_samples = None
         saved_values = None
@@ -1329,7 +1331,7 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.store(builder.load(src), dst)
 
 
-        # FIX: ??MAY NEED TO BE REFACTORED TO USE num_trials_per_estimate?? AS DISTINCT FROM num_estimates
+        # FIX: 11/3/21 ??MAY NEED TO BE REFACTORED TO USE num_trials_per_estimate?? AS DISTINCT FROM num_estimates
         # Determine simulation counts
         num_estimates_ptr = pnlvm.helpers.get_param_ptr(builder, self,
                                                         controller_params,
@@ -1459,6 +1461,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         parsed_features = []
 
+        # FIX: 11/3/21: input_ports IS IGNORED;  DELETE??
         if not isinstance(feature_input_ports, list):
             input_ports = [feature_input_ports]
 
