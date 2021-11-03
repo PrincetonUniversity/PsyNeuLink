@@ -899,13 +899,11 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
-
         feature_input_ports = None
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
-            state_features = convert_to_list(self.state_features)
-            feature_input_ports = _parse_shadow_inputs(self, state_features)
-            feature_input_ports = self._parse_state_feature_specs(feature_input_ports, self.state_feature_function)
+            feature_input_ports = self._parse_state_feature_specs(self.state_features,
+                                                                  self.state_feature_function)
         super()._instantiate_input_ports(feature_input_ports, context=context)
 
         for i in range(1, len(self.input_ports)):
@@ -1449,7 +1447,7 @@ class OptimizationControlMechanism(ControlMechanism):
         self.add_ports(InputPort, features)
 
     @tc.typecheck
-    def _parse_state_feature_specs(self, input_ports, feature_function, context=None):
+    def _parse_state_feature_specs(self, feature_input_ports, feature_function, context=None):
         """Parse entries of state_features into InputPort spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
@@ -1457,12 +1455,14 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries
         """
 
+        feature_input_ports = _parse_shadow_inputs(self, convert_to_list(feature_input_ports))
+
         parsed_features = []
 
-        if not isinstance(input_ports, list):
-            input_ports = [input_ports]
+        if not isinstance(feature_input_ports, list):
+            input_ports = [feature_input_ports]
 
-        for spec in input_ports:
+        for spec in feature_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             spec[PARAMS][INTERNAL_ONLY] = True
             spec[PARAMS][PROJECTIONS] = None
