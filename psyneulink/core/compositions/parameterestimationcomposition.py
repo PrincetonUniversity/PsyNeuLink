@@ -343,6 +343,14 @@ class ParameterEstimationComposition(Composition):
         the ParameterEstimationComposition's `run <ParameterEstimationComposition.run>` method used to determine the
         number of trials executed (see `Composition_Execution_Num_Trials` for additional information).
 
+        .. _note::
+           Note that **num_trials_per_estimate** is distinct from the **num_trials** argument of the
+           ParameterEstimationComposition's `run <Composition.run>` method.  The latter determines how many full fits
+           of the `model <ParameterEstimationComposition.model>` are carried out (that is, how many times the
+           ParameterEstimationComposition *itself* is run), whereas **num_trials_per_estimate** determines how many
+           trials are run for a given combination of `parameter <ParameterEstimationComposition.parameters>` values
+           *within* each fit.
+
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
         If it is not specified then then the seed is set to a random value on construction, and different runs of a
