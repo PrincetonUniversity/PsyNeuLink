@@ -1109,8 +1109,14 @@ class OptimizationControlMechanism(ControlMechanism):
             context.composition = self.agent_rep
 
             # If num_trials_per_estimate has not been specified use num_trials specified in call to Composition.run()
-            num_trials_per_estimate = (self.parameters.num_trials_per_estimate._get(context)
-                                       or self.composition.num_trials)
+            # # MODIFIED 11/3/21 OLD:
+            # num_trials_per_estimate = (self.parameters.num_trials_per_estimate._get(context)
+            #                            or self.composition.num_trials)
+            # MODIFIED 11/3/21 NEW:
+            # FIX: NEED TO MODIFY DOCSTRING TO SAY THAT CALL PEC.run(num_trials=n) WILL CARRY OUT n FULL FITS OF THE
+            #      MODEL, NOT RUN EACH FIT FOR n TRIALS
+            num_trials_per_estimate = self.parameters.num_trials_per_estimate._get(context)
+            # MODIFIED 11/3/21 END
 
             # We shouldn't get this far if execution mode is not Python
             assert self.parameters.comp_execution_mode._get(context) == "Python"
