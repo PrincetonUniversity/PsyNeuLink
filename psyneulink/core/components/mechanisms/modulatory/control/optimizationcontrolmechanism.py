@@ -888,18 +888,12 @@ class OptimizationControlMechanism(ControlMechanism):
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts, including any for state_features (and projections from them)
 
-        # FIX: 10/31/21: REVISE
-        Call to _instantiate_input_ports constructs:
-         - ObjectiveMechanism if specified, and corresponding OUTCOME InputPort to which it projects, or if
-         - monitor_for_control is specified, InputPorts with names and projections from the specified senders
-
-        If state_features are specified:
+        If **state_features** are specified in the constructor:
           - InputPorts are constructed for them by calling _parse_state_feature_specs with **state_features** and
             **state_feature_function** arguments of the OptimizationControlMechanism constructor.
-          - These are appended to input_ports after the OUTCOME or monitor_for_control INPUT_PORTS
-
-        If nothing is specified:
-           - the OptimizationControlMechanism is assigned a default OUTCOME InputPort with no projections to it.
+          - The constructed feature_input_ports  are passed to ControlMechanism_instantiate_input_ports(),
+             which appends them to the InputPort(s) that receive input from the **objective_mechanism* (if specified)
+             or **monitor_for_control** ports (if **objective_mechanism** is not specified).
         """
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
