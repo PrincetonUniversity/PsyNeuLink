@@ -170,11 +170,28 @@ class ParameterEstimationCompositionError(Exception):
 
 
 class ParameterEstimationComposition(Composition):
-    """Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
+    """
+    Composition(                           \
+        parameters,
+        outcome_variables,
+        model=None,
+        data=None,
+        objective_function=None,
+        optimization_function=None,
+        num_estimates=1,
+        number_trials_per_estimate=None,
+        initial_seed=None,
+        same_seed_for_all_parameter_combinations=False
+        )
+
+    Subclass of `Composition` that estimates specified parameters either to fit the results of a Composition
     to a set of data or to optimize a specified function.
 
     Automatically implements an `OptimizationControlMechanism` as its `controller <Composition.controller>`,
     that is constructed using arguments to the ParameterEstimationComposition's constructor as described below.
+
+    The following arguments are those specific to ParmeterEstimationComposition; see `Composition` for additional
+    arguments
 
     Arguments
     ---------
@@ -218,6 +235,12 @@ class ParameterEstimationComposition(Composition):
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
         values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information).
+
+    num_trials_per_estimate : int : default None
+        specifies an exact number of trials to execute for each run of the `model
+        <ParameterEstimationComposition.model>` when estimating each combination of `parameter
+        <ParameterEstimationComposition.parameters>` values (see `num_trials_per_estimate
+        <ParameterEstimationComposition.num_trials_per_estimate>` for additional information).
 
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
@@ -306,13 +329,21 @@ class ParameterEstimationComposition(Composition):
         the `function <OptimizationControlMechanism.function>` of the ParameterEstimationComposition's
         `OptimizationControlMechanism`.
 
-    num_estimates : int : default 1
+    num_estimates : int
         determines the number of estimates of the `net_outcome <ControlMechanism.net_outcome>` of the `model
         <ParameterEstimationComposition.model>` (i.e., number of calls to its `evaluate <Composition.evaluate>`
-        method) for each combination of `parameter <ParameterEstimationComposition.parameters>` values (i.e.,
+        method) for a given combination of `parameter <ParameterEstimationComposition.parameters>` values (i.e.,
         `control_allocation <ControlMechanism.control_allocation>`) evaluated.
 
-    initial_seed : int : default None
+    num_trials_per_estimate : int or None
+        imposes an exact number of trials to be executed in each run of `model <ParameterEstimationComposition.model>`
+        used to evaluate its `net_outcome <ControlMechanism.net_outcome>` by a call to its
+        OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evaluation_function>`. If
+        it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
+        the ParameterEstimationComposition's `run <ParameterEstimationComposition.run>` method used to determine the
+        number of trials executed (see `Composition_Execution_Num_Trials` for additional information).
+
+    initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
         If it is not specified then then the seed is set to a random value on construction, and different runs of a
         script containing the ParameterEstimationComposition will yield different results, which should be roughly
@@ -379,6 +410,7 @@ class ParameterEstimationComposition(Composition):
                  data=None, # arg of OCM function
                  objective_function=None, # function of OCM ObjectiveMechanism
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
+                 num_trials_per_estimate=None, # num trials per run of model for each combination of parameters
                  initial_seed=None,
                  same_seed_for_all_parameter_combinations=False,
                  name=None,
@@ -403,13 +435,14 @@ class ParameterEstimationComposition(Composition):
         # Implement OptimizationControlMechanism and assign as PEC controller
         # (Note: Implement after Composition itself, so that:
         #     - Composition's components are all available (limits need for deferred_inits)
-        #     - search for seed params in _instantiate_pem doesn't include pem itself or its functions)
-        ocm = self._instantiate_pem(parameters=parameters,
+        #     - search for seed params in _instantiate_ocm doesn't include pem itself or its functions)
+        ocm = self._instantiate_ocm(parameters=parameters,
                                     outcome_variables=outcome_variables,
                                     data=data,
                                     objective_function=objective_function,
                                     optimization_function=optimization_function,
                                     num_estimates=num_estimates,
+                                    num_trials_per_estimate=num_trials_per_estimate,
                                     initial_seed=initial_seed,
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
         self.add_controller(ocm)
@@ -449,13 +482,14 @@ class ParameterEstimationComposition(Composition):
                                                       f"specified for {pec_name}; must choose one "
                                                       f"('data' for fitting or 'objective_function' for optimization).")
 
-    def _instantiate_pem(self,
+    def _instantiate_ocm(self,
                          parameters,
                          outcome_variables,
                          data,
                          objective_function,
                          optimization_function,
                          num_estimates,
+                         num_trials_per_estimate,
                          initial_seed,
                          same_seed_for_all_parameter_combinations
                          ):
@@ -496,7 +530,10 @@ class ParameterEstimationComposition(Composition):
                                             control_signals=control_signals,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
                                                                                    function=objective_function),
-                                            function=optimization_function)
+                                            function=optimization_function,
+                                            num_estimates=num_estimates,
+                                            num_trials_per_estimate=num_trials_per_estimate
+                                            )
 
     def run(self):
         # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.

@@ -577,7 +577,7 @@ class OptimizationFunction(Function_Base):
 
 
 class GridBasedOptimizationFunction(OptimizationFunction):
-    """Implement helper method for parallelizing instantiating an evaluating samples from search space """
+    """Implement helper method for parallelizing instantiation for evaluating samples from search space """
 
     def _grid_evaluate(self, ocm, context):
 

@@ -921,9 +921,9 @@ the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
 executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
 For the `run <Composition.run>` and `learn <Composition.learn>`, the **num_trials** argument can be used to specify
-the number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for each
-Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number of
-`TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
+an exact number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for
+each Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number
+of `TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
 then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of inputs provided for each `Node
 <Composition_Nodes>` in **inputs** argument.
 
@@ -7260,22 +7260,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
-        # MODIFIED 10/31/21 NEW:
-        default_input = predicted_input is None
-        if default_input:
+        if predicted_input is None:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
-        # MODIFIED 10/31/21 END
 
         nested_nodes = dict(self._get_nested_nodes())
         shadow_inputs_start_index = self.controller.num_outcome_input_ports
         for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
             input_port = self.controller.input_ports[j + shadow_inputs_start_index]
-            # MODIFIED 10/31/21 NEW:
-            if default_input:
+            if predicted_input is None:
                 shadowed_input = input_port.defaults.value
             else:
                 shadowed_input = predicted_input[j]
-            # MODIFIED 10/31/21 END
 
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 shadow_input_owner = input_port.shadow_inputs.owner
@@ -7487,12 +7482,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
         an array with the results of each run is also returned.
         """
-
-        # # MODIFIED 10/31/21 NEW:
-        # # FIX: MODIFY TO USE DEFAULT INPUT IF NO PREDICTED INPUT IS SPECIFIED
-        # if not predicted_input:
-        #     raise CompositionError(f"{self.name}.evaluate() called without any 'input' specified.")
-        # # MODIFIED 10/31/21 END
 
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
