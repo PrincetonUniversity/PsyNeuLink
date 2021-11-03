@@ -262,12 +262,8 @@ class PNLJSONEncoder(json.JSONEncoder):
             return list(o)
         elif isinstance(o, numpy.random.RandomState):
             return f'numpy.random.RandomState({o.seed})'
-        else:
-            try:
-                # convert numpy number type to python type
-                return o.item()
-            except AttributeError:
-                pass
+        elif isinstance(o, numpy.number):
+            return o.item()
 
         return super().default(o)
 
