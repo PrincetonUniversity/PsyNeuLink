@@ -1159,7 +1159,12 @@ class TestControlMechanisms:
             )
         )
 
-        comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
+        # comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
+        comp.run(inputs={mech: [1]},
+                 num_trials=2,
+                 report_output=pnl.ReportOutput.FULL,
+                 report_params=pnl.ReportParams.CONTROLLED,
+                 execution_mode=mode)
 
         # Construct expected results.
         # First all generators rest their sequence.
