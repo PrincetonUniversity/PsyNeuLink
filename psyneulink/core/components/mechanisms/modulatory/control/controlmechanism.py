@@ -1379,11 +1379,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                NAME:OUTCOME,
                                PARAMS:{INTERNAL_ONLY:True}}
         other_input_port_value_sizes, _  = self._handle_arg_input_ports(other_input_ports)
-        other_input_port_value_sizes = [outcome_input_port_size] + other_input_port_value_sizes
+        input_port_value_sizes = [outcome_input_port_size] + other_input_port_value_sizes
         input_ports = [outcome_input_port] + other_input_ports
         super()._instantiate_input_ports(context=context,
                                          input_ports=input_ports,
-                                         reference_value=other_input_port_value_sizes)
+                                         reference_value=input_port_value_sizes)
 
         # INSTANTIATE MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
