@@ -501,7 +501,7 @@ class ParameterEstimationComposition(Composition):
             return rng.random_integers(num_estimates)
         random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
 
-        # FIX: noise PARAM OF TRANSFERMECHANISM IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTUION FUNCTION,
+        # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
         #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
         #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
         # Get parameters that use seeds (i.e., implement a random value)

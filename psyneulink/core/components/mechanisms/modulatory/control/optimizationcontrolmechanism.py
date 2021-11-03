@@ -886,7 +886,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                     f"must be either a {Composition.__name__} or a sublcass of one")
 
     def _instantiate_input_ports(self, context=None):
-        """Instantiate InputPorts, including any for state_features (and projections from them)
+        """Instantiate InputPorts for state_features (with state_feature_function) if specified.
 
         If **state_features** are specified in the constructor:
           - InputPorts are constructed for them by calling _parse_state_feature_specs with **state_features** and
@@ -894,9 +894,12 @@ class OptimizationControlMechanism(ControlMechanism):
           - The constructed feature_input_ports  are passed to ControlMechanism_instantiate_input_ports(),
              which appends them to the InputPort(s) that receive input from the **objective_mechanism* (if specified)
              or **monitor_for_control** ports (if **objective_mechanism** is not specified).
+
+        Ensure that every InputPort has only a single Projection.
         """
 
-        # If any state_features were specified (assigned to self.input_ports in __init__):
+        # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
+        feature_input_ports = None
         if self.state_features:
             feature_input_ports = self._parse_state_feature_specs(convert_to_list(self.state_features),
                                                                   self.state_feature_function)

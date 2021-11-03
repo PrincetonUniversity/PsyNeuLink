@@ -1324,8 +1324,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # GET OutputPorts to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_ports attribute
 
-        input_ports = input_ports or []
-        len_stim_input_ports = len(input_ports)
+        other_input_ports = input_ports or []
         monitored_output_ports = []
 
         monitor_for_control = self.monitor_for_control or []
@@ -1373,15 +1372,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
 
         # INSTANTIATE OUTCOME InputPort on ControlMechanism that receives projection from ObjectiveMechanism
-        size = self.objective_mechanism.output_ports[OUTCOME].value.size
-        outcome_input_port = {SIZE:size,
+
+        # Get size of ObjectiveMechanism's OUTCOME OutputPort, and then append sizes of other any InputPorts passed in
+        outcome_input_port_size = self.objective_mechanism.output_ports[OUTCOME].value.size
+        outcome_input_port = {SIZE:outcome_input_port_size,
                                NAME:OUTCOME,
                                PARAMS:{INTERNAL_ONLY:True}}
-        # FIX: 10/31/21 THE NEXT LINE SHOULD BE MOVED TO _instantiate_input_ports
-        input_port_values, _  = self._handle_arg_input_ports(input_ports)
-        input_port_values = [size] + input_port_values
-        input_ports = [outcome_input_port] + input_ports
-        super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=input_port_values)
+        other_input_port_value_sizes, _  = self._handle_arg_input_ports(other_input_ports)
+        other_input_port_value_sizes = [outcome_input_port_size] + other_input_port_value_sizes
+        input_ports = [outcome_input_port] + other_input_ports
+        super()._instantiate_input_ports(context=context,
+                                         input_ports=input_ports,
+                                         reference_value=other_input_port_value_sizes)
 
         # INSTANTIATE MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
