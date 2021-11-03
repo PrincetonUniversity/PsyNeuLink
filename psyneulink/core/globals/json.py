@@ -265,7 +265,10 @@ class PNLJSONEncoder(json.JSONEncoder):
         elif isinstance(o, numpy.number):
             return o.item()
 
-        return super().default(o)
+        try:
+            return super().default(o)
+        except TypeError:
+            return str(o)
 
 
 def _dump_pnl_json_from_dict(dict_summary):
