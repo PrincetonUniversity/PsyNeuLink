@@ -899,10 +899,13 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
+
         feature_input_ports = None
+        # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
-            feature_input_ports = self._parse_state_feature_specs(convert_to_list(self.state_features),
-                                                                  self.state_feature_function)
+            state_features = convert_to_list(self.state_features)
+            feature_input_ports = _parse_shadow_inputs(self, state_features)
+            feature_input_ports = self._parse_state_feature_specs(feature_input_ports, self.state_feature_function)
         super()._instantiate_input_ports(feature_input_ports, context=context)
 
         for i in range(1, len(self.input_ports)):
