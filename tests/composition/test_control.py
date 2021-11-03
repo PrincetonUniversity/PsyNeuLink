@@ -1153,6 +1153,7 @@ class TestControlMechanisms:
                     modulates=('seed', mech),
                     modulation=pnl.OVERRIDE,
                     allocation_samples=pnl.SampleSpec(start=0, stop=num_generators - 1, step=1),
+                    # FIX: 11/3/21 DELETE: [NOT NEEDED ANYMORE]
                     cost_options=pnl.CostFunctions.NONE
                 )
             )
