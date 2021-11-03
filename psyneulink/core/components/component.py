@@ -1445,7 +1445,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return (param,)
             elif p.name == 'num_estimates':
                 return 0 if param is None else param
-            # FIX: ADD num_trials_per_estimate HERE
+            # FIX: ADD num_trials_per_estimate HERE  11/3/21
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
@@ -3534,7 +3534,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         self,
         filter_name: typing.Union[str, typing.Iterable[str]] = None,
         filter_regex: typing.Union[str, typing.Iterable[str]] = None,
-        _visited=None,
     ):
         """Dictionary of Parameters of this Component and its \
         `_dependent_components` filtered by **filter_name** and \
@@ -3551,55 +3550,60 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 in the result. Defaults to None.
 
         Returns:
-            dict[Component:dict[str:Parameter]]: Dictionary of \
-                filtered Parameters
+            dict[Parameter:Component]: Dictionary of filtered Parameters
         """
-        parameters = {}
+        def _all_dependent_parameters(obj, filter_name, filter_regex, visited):
+            parameters = {}
 
-        if _visited is None:
-            _visited = set()
+            if isinstance(filter_name, str):
+                filter_name = [filter_name]
 
-        if isinstance(filter_name, str):
-            filter_name = [filter_name]
-
-        if isinstance(filter_regex, str):
-            filter_regex = [filter_regex]
-
-        if filter_name is not None:
-            filter_name = set(filter_name)
-
-        try:
-            filter_regex = [re.compile(r) for r in filter_regex]
-        except TypeError:
-            pass
-
-        for p in self.parameters:
-            include = filter_name is None and filter_regex is None
+            if isinstance(filter_regex, str):
+                filter_regex = [filter_regex]
 
             if filter_name is not None:
-                if p.name in filter_name:
-                    include = True
+                filter_name = set(filter_name)
 
-            if not include and filter_regex is not None:
-                for r in filter_regex:
-                    if r.match(p.name):
+            try:
+                filter_regex = [re.compile(r) for r in filter_regex]
+            except TypeError:
+                pass
+
+            for p in obj.parameters:
+                include = filter_name is None and filter_regex is None
+
+                if filter_name is not None:
+                    if p.name in filter_name:
                         include = True
-                        break
 
-            if include:
-                if self not in parameters:
-                    parameters[self] = {}
+                if not include and filter_regex is not None:
+                    for r in filter_regex:
+                        if r.match(p.name):
+                            include = True
+                            break
 
-                parameters[self][p.name] = p
+                # owner check is primarily for value parameter on
+                # Composition which is deleted in
+                # ba56af82585e2d61f5b5bd13d9a19b7ee3b60124 presumably
+                # for clarity (results is used instead)
+                if include and p._owner._owner is obj:
+                    parameters[p] = obj
 
-        for c in self._dependent_components:
-            if c not in _visited:
-                _visited.add(c)
-                parameters.update(
-                    c.all_dependent_parameters(filter_name, filter_regex, _visited)
-                )
+            for c in obj._dependent_components:
+                if c not in visited:
+                    visited.add(c)
+                    parameters.update(
+                        _all_dependent_parameters(
+                            c,
+                            filter_name,
+                            filter_regex,
+                            visited
+                        )
+                    )
 
-        return parameters
+            return parameters
+
+        return _all_dependent_parameters(self, filter_name, filter_regex, set())
 
     @property
     def _dict_summary(self):
