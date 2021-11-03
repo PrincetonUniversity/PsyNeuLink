@@ -512,14 +512,12 @@ class ParameterEstimationComposition(Composition):
         # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
         #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
         #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
-        # Get parameters that use seeds (i.e., implement a random value)
-        seed_params = []
-        for params_dict in self.all_dependent_parameters('seed').values():
-            seed_params.extend([p._port for p in list(params_dict.values())])
+        # Get ParameterPorts for seeds of parameters that use them (i.e., that return a random value)
+        seed_param_ports = [param._port for param in self.all_dependent_parameters('seed').keys()]
 
         # Construct ControlSignal to modify seeds over estimates
         seed_control_signal = ControlSignal(name=RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME,
-                                            modulates=seed_params,
+                                            modulates=seed_param_ports,
                                             allocation_samples=random_seeds)
 
         # FIX: WHAT iS THIS DOING?
