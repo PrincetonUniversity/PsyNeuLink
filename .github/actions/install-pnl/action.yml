@@ -23,6 +23,20 @@ runs:
           *) echo "Unsupported OS"; exit 1 ;;
         esac
 
+    - name: Setup Python venv
+      shell: bash
+      run: |
+        case "$RUNNER_OS" in
+          macOS* | Linux*)
+            export VIRTUAL_ENV='${{ runner.temp }}/_venv'; export PYTHON_LOC=$VIRTUAL_ENV/bin/ ;;
+          Windows*)
+            export VIRTUAL_ENV='${{ runner.temp }}\_venv'; export PYTHON_LOC=$VIRTUAL_ENV\\Scripts ;;
+          *) echo "Unsupported OS"; exit 1 ;;
+        esac
+        python -m venv $VIRTUAL_ENV
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "$PYTHON_LOC" >> $GITHUB_PATH
+
     - name: Drop pytorch on x86
       shell: bash
       run: |
