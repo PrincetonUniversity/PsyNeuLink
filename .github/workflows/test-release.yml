@@ -12,6 +12,7 @@ jobs:
         # Python version in matrix for easier reference
         python-version: [3.8]
     if: ${{ github.event.release.prerelease == true }}
+    environment: test-pypi
     outputs:
       sdist: ${{ steps.create_dist.outputs.sdist }}
       wheel: ${{ steps.create_dist.outputs.wheel }}
@@ -59,7 +60,7 @@ jobs:
         pip install twine
         # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
         # environment variables
-        # It's not possibel to condition steps on env or secrets,
+        # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
         if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
           twine upload dist/*
@@ -86,7 +87,7 @@ jobs:
 
     steps:
 
-    - name: Get release tarball
+    - name: Get tests from the release tarball
       id: get_release
       shell: bash
       run: |
@@ -107,7 +108,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     # The installation _could_ reuse the 'install-pnl' action,
-    # but we intentionally avoid workarounds in there.
+    # but actions deploys workarounds that we want to avoid here.
     - name: MacOS dependencies
       run: HOMEBREW_NO_AUTO_UPDATE=1 brew install graphviz
       if: startsWith(runner.os, 'macOS')
@@ -134,7 +135,7 @@ jobs:
       # run only tests/. We don't care about codestyle/docstyle at this point
       timeout-minutes: 80
       run: |
-        # Enter the PNL directory otherwise docstyle won't pick up the configuration
+        # Enter the PNL directory otherwise pytest won't pick up the configuration
         cd ${{ steps.get_release.outputs.release_dir }}
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2 tests
 
@@ -147,10 +148,11 @@ jobs:
       if: success() || failure()
 
 
-  publish-release:
+  publish-pypi:
     runs-on: ubuntu-latest
     needs: [create-python-dist, test-release]
     if: ${{ github.event.release.prerelease == true }}
+    environment: pypi
 
     steps:
     - name: Download dist files
@@ -167,7 +169,7 @@ jobs:
         pip3 install --user twine
         # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
         # environment variables
-        # It's not possibel to condition steps on env or secrets,
+        # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
         if [ -n "$TWINE_USERNAME" -a -n "$TWINE_PASSWORD" ]; then
           twine upload dist/*
@@ -178,6 +180,21 @@ jobs:
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
         TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+
+  publish-github:
+    runs-on: ubuntu-latest
+    needs: [create-python-dist, test-release]
+    if: ${{ github.event.release.prerelease == true }}
+    environment: gh-release
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download dist files
+      uses: actions/download-artifact@v2
+      with:
+        name: Python-dist-files
+        path: dist/
 
     - name: Upload dist files to release
       uses: actions/github-script@v5

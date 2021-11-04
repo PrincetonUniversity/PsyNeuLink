@@ -128,10 +128,11 @@ jobs:
         python-version: [3.7]
         os: [ubuntu-latest]
 
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
-    runs-on: ${{ matrix.os }}
     needs: [docs-build]
+    environment: github-pages
     if: github.event_name == 'push' &&
         (github.ref == 'refs/heads/master' ||
          github.ref == 'refs/heads/devel' ||
