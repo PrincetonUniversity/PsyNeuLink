@@ -157,7 +157,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         prediction_terms=[PV.F, PV.C, PV.COST])
 
     Subclass of `CompositionFunctionApproximator` that implements a CompositionFunctionApproximator as the
-    `agent_rep <OptimizationControlmechanism.agent>` of an `OptimizationControlmechanism`.
+    `agent_rep <OptimizationControlMechanism.agent>` of an `OptimizationControlMechanism`.
 
     See `CompositionFunctionApproximator <CompositionFunctionApproximator_Class_Reference>` for additional arguments
     and attributes.
@@ -328,8 +328,9 @@ class RegressionCFA(CompositionFunctionApproximator):
         )
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
+    # FIX: IMPLEMENT USE OF num_trials_per_estimate?
     # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, state_feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_estimates, context):
+    def evaluate(self, feature_values, control_allocation, num_estimates, num_trials_per_estimate, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
@@ -345,6 +346,7 @@ class RegressionCFA(CompositionFunctionApproximator):
         predicted_outcome=0
 
         prediction_vector = self.parameters.prediction_vector._get(context)
+        num_trials_per_estimate = num_trials_per_estimate or 1
         num_estimates = num_estimates or 1
 
         for i in range(num_estimates):
@@ -354,7 +356,7 @@ class RegressionCFA(CompositionFunctionApproximator):
             term_values_dict = prediction_vector.compute_terms(control_allocation, context=context)
             # FIX: THIS SHOULD GET A SAMPLE RATHER THAN JUST USE THE ONE RETURNED FROM ADAPT METHOD
             #      OR SHOULD MULTIPLE SAMPLES BE DRAWN AND AVERAGED AT END OF ADAPT METHOD?
-            #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OTPIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
+            #      I.E., AVERAGE WEIGHTS AND THEN OPTIMIZE OR OPTIMZE FOR EACH SAMPLE OF WEIGHTS AND THEN AVERAGE?
             weights = self.parameters.regression_weights._get(context)
 
             v = np.array([])
@@ -366,7 +368,7 @@ class RegressionCFA(CompositionFunctionApproximator):
                     item_idx = prediction_vector.idx[pv_enum_val]
                     v = np.append(v, term_value.reshape(-1))
                     w = np.append(w, weights[item_idx])
-            # Get predicted outcome for this esimtate and add to sum over estimates
+            # Get predicted outcome for this estimate and add to sum over estimates
             predicted_outcome += np.dot(v,w)
 
         # Compute average over estimates

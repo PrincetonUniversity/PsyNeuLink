@@ -10,6 +10,8 @@ Composition
 
        AutodiffComposition
        CompositionFunctionApproximator
+       ParameterEstimationComposition
+
     |
 
 .. container:: related

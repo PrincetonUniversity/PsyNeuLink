@@ -1390,7 +1390,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     return port_list
 
 def _parse_shadow_inputs(owner, input_ports):
-    """Parses any {SHADOW_INPUTS:[InputPort or Mechaism,...]} items in input_ports into InputPort specif. dict."""
+    """Parses any {SHADOW_INPUTS:[InputPort or Mechanism,...]} items in input_ports into InputPort specif. dict."""
 
     input_ports_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_ports):

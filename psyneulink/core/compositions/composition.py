@@ -921,9 +921,9 @@ the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
 executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
 For the `run <Composition.run>` and `learn <Composition.learn>`, the **num_trials** argument can be used to specify
-the number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for each
-Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number of
-`TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
+an exact number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for
+each Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number
+of `TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
 then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of inputs provided for each `Node
 <Composition_Nodes>` in **inputs** argument.
 
@@ -2965,7 +2965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
-    controller : `OptimizationControlmechanism` : default None
+    controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the Composition's `controller
         <Composition.controller>` (see `Composition_Controller` for details).
 
@@ -3327,7 +3327,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.disable_learning = disable_learning
 
-        # status attributes
+        # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
         self.needs_update_graph = True  # Tracks if Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
@@ -3364,6 +3364,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
+        # This is set at runtime and may be used by the controller to assign its
+        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        self.num_trials = None
+
 
         self._update_parameter_components()
 
@@ -7256,26 +7260,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
+        if predicted_input is None:
+            warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
+
         nested_nodes = dict(self._get_nested_nodes())
-        for j in range(len(self.controller.input_ports) - 1):
-            input_port = self.controller.input_ports[j + 1]
+        shadow_inputs_start_index = self.controller.num_outcome_input_ports
+        for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
+            input_port = self.controller.input_ports[j + shadow_inputs_start_index]
+            if predicted_input is None:
+                shadowed_input = input_port.defaults.value
+            else:
+                shadowed_input = predicted_input[j]
+
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                owner = input_port.shadow_inputs.owner
+                shadow_input_owner = input_port.shadow_inputs.owner
                 if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
-                        and owner not in nested_nodes \
-                        and owner not in self.nodes:
+                        and shadow_input_owner not in nested_nodes \
+                        and shadow_input_owner not in self.nodes:
                     continue
-                if owner not in nested_nodes:
-                    shadow_input_owner = input_port.shadow_inputs.owner
+                if shadow_input_owner not in nested_nodes:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
-                    inputs[shadow_input_owner] = predicted_input[j]
+                    inputs[shadow_input_owner] = shadowed_input
                 else:
-                    comp = nested_nodes[owner]
+                    comp = nested_nodes[shadow_input_owner]
                     if comp not in inputs:
-                        inputs[comp]=[[predicted_input[j]]]
+                        inputs[comp]=[[shadowed_input]]
                     else:
-                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
+                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
         return inputs
 
     def _get_invalid_aux_components(self, controller):
@@ -7430,11 +7442,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"or a composition nested within it."
                 )
 
+    @handle_external_context()
     def evaluate(
             self,
             predicted_input=None,
             control_allocation=None,
-            num_simulation_trials=None,
+            num_trials=1,
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,
@@ -7442,23 +7455,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return_results=False,
             block_simulate=False
     ):
-        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `controller <Composition.controller>` in order to return the
-           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation.
+        """Run Composition and compute `net_outcomes <ControlMechanism.net_outcome>`
 
-           If `block_simulate` is set to True, the `controller <Composition.controller>` will attempt to use the
-           entire input set provided to the `run <Composition.run>` method of the `Composition` as input for the
-           simulated call to `run <Composition.run>`. If it is not, the `controller <Composition.controller>` will
-           use the inputs slated for its next or previous execution, depending on whether the `controller_mode` of the
-           `Composition` is set to `before` or `after`, respectively.
+        Runs the `Composition` in simulation mode (i.e., excluding its `controller <Composition.controller>`)
+        using the **predicted_input** and specified **control_allocation** for each run. The Composition is
+        run for ***num_trials**.
 
-           .. note::
-                Block simulation can not be used if the Composition's stimuli were specified as a generator. If
-                `block_simulate` is set to True and the input type for the Composition was a generator,
-                block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
+        If **predicted_input** is not specified, and `block_simulate` is set to True, the `controller
+        <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
+        method of the `Composition` as input for the call to `run <Composition.run>`. If it is not, the `controller
+        <Composition.controller>` uses the inputs slated for its next or previous execution, depending on whether the
+        `controller_mode` of the `Composition` is set to `before` or `after`, respectively.
+
+       .. note::
+            Block simulation can not be used if the Composition's stimuli were specified as a generator.
+            If `block_simulate` is set to True and the input type for the Composition was a generator,
+            block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
+
+        The `net_outcome <ControlMechanism.net_outcome>` for each run is calculated using the `controller
+        <Composition.controller>`'s <ControlMechanism.compute_net_outcome>` function.  Each run is executed
+        independently, using the same **predicted_inputs** and **control_allocation**, and a randomly and
+        independently sampled seed for the random number generator.  All values are reset to pre-simulation
+        values at the end of the simulation.
+
+        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of
+        the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
+        an array with the results of each run is also returned.
         """
+
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
@@ -7495,32 +7519,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Run Composition in "SIMULATION" context
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
+
+        # EXECUTE run of composition and aggregate results
+
         # Use reporting options from Report context created in initial (outer) call to run()
         with Report(self, context) as report:
-            results = self.run(inputs=inputs,
-                               context=context,
-                               runtime_params=runtime_params,
-                               num_trials=num_simulation_trials,
-                               animate=animate,
-                               execution_mode=execution_mode,
-                               skip_initialization=True,
-                               )
+            result = self.run(inputs=inputs,
+                                    context=context,
+                                    runtime_params=runtime_params,
+                                    num_trials=num_trials,
+                                    animate=animate,
+                                    execution_mode=execution_mode,
+                                    skip_initialization=True,
+                                    )
             context.remove_flag(ContextFlags.SIMULATION_MODE)
             context.execution_phase = ContextFlags.CONTROL
             if buffer_animate_state:
                 self._animate = buffer_animate_state
 
+        assert result == self.get_output_values(context)
+
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
-                self.parameters.simulation_results._get(base_context).append(
-                    self.get_output_values(context))
+                self.parameters.simulation_results._get(base_context).append(result)
             except AttributeError:
-                self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
+                self.parameters.simulation_results._set([result], base_context)
+
+        # COMPUTE net_outcome and aggregate in net_outcomes
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
         self.controller._update_input_ports(runtime_params, context)
-        outcome = self.controller.input_port.parameters.value._get(context)
+
+        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
+        outcome_is_array = self.controller.num_outcome_input_ports > 1
+        if not outcome_is_array:
+            outcome = self.controller.input_port.parameters.value._get(context)
+        else:
+            outcome = []
+            for i in range(self.controller.num_outcome_input_ports):
+                outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
 
         if outcome is None:
             net_outcome = 0.0
@@ -7529,7 +7567,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
         if return_results:
-            return net_outcome, results
+            return net_outcome, result
         else:
             return net_outcome
 
@@ -8097,7 +8135,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         num_trials : int : default 1
             typically, the composition will infer the number of trials from the length of its input specification.
-            To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+            To reuse the same inputs across many trials, an input dictionary can be specified with lists of length 1,
             or use default inputs, and select a number of trials with num_trials.
 
         initialize_cycle_values : Dict { Node: Node Value } : default None
@@ -8330,6 +8368,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.parameters.input_specification._set(copy(inputs), context)
             except:
                 self.parameters.input_specification._set(inputs, context)
+
+        # May be used by controller for specifying num_trials_per_simulation
+        self.num_trials = num_trials
 
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
@@ -8674,9 +8715,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <Composition_Target_Inputs>` for additional details concerning the formatting of targets).
 
             num_trials : int (default=None)
-                typically, the composition will infer the number of trials from the length of its input specification.
-                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-                or use default inputs, and select a number of trials with num_trials.
+                typically, the Composition infers the number of trials to execute from the length of its input
+                specification.  However, **num_trials** can be used to enforce an exact number of trials to execute;
+                if it is greater than there are inputs then inputs will be repeated (see `Composition_Execution_Inputs`
+                for additional information).
 
             epochs : int (default=1)
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with

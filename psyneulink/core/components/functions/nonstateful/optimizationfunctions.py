@@ -146,18 +146,17 @@ class OptimizationFunction(Function_Base):
         the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
         relevant argument(s) as `NotImplemnted`.
 
-    COMMENT:
-    NOTES TO DEVELOPERS:
-    - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
-      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`) so
-      that subclasses can be used interchangeably by OptimizationMechanisms.
+    .. technical_note::
+       - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments
+         required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
+         `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
-    - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-      `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
-      reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
-      `NotImplemented` should be passed as the argument's value in the call to super (i.e., the OptimizationFunction's
-      constructor).
-    COMMENT
+       - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
+         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
+         `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
+         the OptimizationFunction's
+         constructor).
 
 
     Arguments
@@ -526,7 +525,6 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
-        from psyneulink.core.compositions.report import ReportOutput
         if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
             _show_progress = True
             _progress_bar_char = '.'
@@ -576,6 +574,29 @@ class OptimizationFunction(Function_Base):
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
+
+
+class GridBasedOptimizationFunction(OptimizationFunction):
+    """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
+
+    def _grid_evaluate(self, ocm, context):
+
+        assert ocm is ocm.agent_rep.controller
+        # Compiled evaluate expects the same variable as mech function
+        variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
+        num_evals = np.prod([d.num for d in self.search_space])
+
+        # Map allocations to values
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        execution_mode = ocm.parameters.comp_execution_mode._get(context)
+        if execution_mode == "PTX":
+            outcomes = comp_exec.cuda_evaluate(variable, num_evals)
+        elif execution_mode == "LLVM":
+            outcomes = comp_exec.thread_evaluate(variable, num_evals)
+        else:
+            assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
+
+        return outcomes, num_evals
 
 
 ASCENT = 'ascent'
@@ -1121,7 +1142,7 @@ MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
 
 
-class GridSearch(OptimizationFunction):
+class GridSearch(GridBasedOptimizationFunction):
     """
     GridSearch(                      \
         default_variable=None,       \
@@ -1152,7 +1173,7 @@ class GridSearch(OptimizationFunction):
     `search_space <GridSearch.search_space>2` is contained in `num_iterations <GridSearch.num_iterations>`).
     Iteration continues until all values in `search_space <GridSearch.search_space>` have been evaluated (i.e.,
     `num_iterations <GridSearch.num_iterations>` is reached), or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    exceeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
     is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
     <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
     samples evaluated and their values if either `save_samples <GridSearch.save_samples>` or `save_values
@@ -1601,20 +1622,9 @@ class GridSearch(OptimizationFunction):
         return builder
 
     def _run_grid(self, ocm, variable, context):
-        assert ocm is ocm.agent_rep.controller
-        # Compiled evaluate expects the same variable as mech function
-        new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
-        num_evals = np.prod([d.num for d in self.search_space])
 
-        # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        variant = ocm.parameters.comp_execution_mode._get(context)
-        if variant == "PTX":
-            ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
-        elif variant == "LLVM":
-            ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
-        else:
-            assert False, "Unknown OCM execution variant: {}".format(variant)
+        # "ct" => c-type variables
+        ct_values, num_evals = self._grid_evaluate(ocm, context)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
@@ -1691,7 +1701,6 @@ class GridSearch(OptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
-            from psyneulink.core.compositions.report import ReportOutput
             if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
                 _show_progress = True
                 _progress_bar_char = '.'
@@ -1762,6 +1771,8 @@ class GridSearch(OptimizationFunction):
 
 
             ocm = self._get_optimized_controller()
+
+            # Compiled version
             if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
                 opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
                 # This should not be evaluated unless needed
@@ -1776,6 +1787,8 @@ class GridSearch(OptimizationFunction):
                     self.parameters.saved_samples._set(all_samples, context)
                 if self.parameters.save_values._get(context):
                     self.parameters.saved_values._set(all_values, context)
+
+            # Python version
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
@@ -2383,7 +2396,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # FIXME: This doesn't work at the moment. Need to use for loop below.
             # The batch_size is the number of estimates/simulations, set it on the
             # optimization control mechanism.
-            # self.owner.parameters.num_estimates.set(batch_size, execution_id)
+            # self.owner.parameters.num_trials_per_estimate.set(batch_size, execution_id)
 
             # Run batch_size simulations of the PsyNeuLink composition
             results = []
