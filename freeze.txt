@@ -35,7 +35,7 @@ imagesize==1.2.0
 importlib-metadata==1.5.0
 iniconfig==1.1.1
 ipykernel==5.1.4
-ipyparallel==6.2.4
+ipyparallel==7.1.0
 ipython==7.13.0
 ipython-genutils==0.2.0
 ipywidgets==7.5.1
