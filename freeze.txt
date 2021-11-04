@@ -123,7 +123,7 @@ torch==1.4.0
 tornado==6.0.4
 traitlets==4.3.3
 typecheck-decorator==1.2
-typing-extensions==3.7.4.3
+typing-extensions==3.10.0.2
 urllib3==1.25.8
 wcwidth==0.1.8
 webencodings==0.5.1
