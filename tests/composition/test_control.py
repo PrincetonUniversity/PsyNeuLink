@@ -455,7 +455,7 @@ class TestControlMechanisms:
 
     def test_feedback_assignment_for_multiple_control_projections_to_same_mechanism(self):
         """Test that multiple ControlProjections from a ControlMechanism to the same Mechanism are treated
-        same as a single Controlprojection to that Mechanism.
+        same as a single ControlProjection to that Mechanism.
         Note: Even though both mech and control_mech don't receive pathway inputs, since control_mech projects to mech,
         control_mech is assigned as NodeRole.INPUT (can be overridden with assignments in add_nodes)
         """
@@ -1083,7 +1083,7 @@ class TestControlMechanisms:
 
         ret = comp.run(inputs={mech: [2]}, num_trials=1)
         assert np.allclose(ret, expected)
-        assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
+        assert np.allclose([float(np.squeeze(x)) for x in comp.controller.function.saved_values], exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -1153,12 +1153,18 @@ class TestControlMechanisms:
                     modulates=('seed', mech),
                     modulation=pnl.OVERRIDE,
                     allocation_samples=pnl.SampleSpec(start=0, stop=num_generators - 1, step=1),
+                    # FIX: 11/3/21 DELETE: [NOT NEEDED ANYMORE]
                     cost_options=pnl.CostFunctions.NONE
                 )
             )
         )
 
-        comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
+        # comp.run(inputs={mech: [1]}, num_trials=2, execution_mode=mode)
+        comp.run(inputs={mech: [1]},
+                 num_trials=2,
+                 report_output=pnl.ReportOutput.FULL,
+                 report_params=pnl.ReportParams.MONITORED,
+                 execution_mode=mode)
 
         # Construct expected results.
         # First all generators rest their sequence.
