@@ -58,7 +58,7 @@ jobs:
         # Include implicit dependency on setuptools{,-rust} and preinstall wheel
         pip install setuptools setuptools-rust wheel
         pip install twine
-        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
+        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY_URL
         # environment variables
         # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
@@ -70,7 +70,7 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.TWINE_TEST_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_TEST_PASSWORD }}
-        TWINE_REPOSITORY: ${{ secrets.TWINE_TEST_REPOSITORY }}
+        TWINE_REPOSITORY_URL: ${{ secrets.TWINE_TEST_REPOSITORY_URL }}
 
 
   test-release:
@@ -167,7 +167,7 @@ jobs:
         # Include implicit dependency on setuptools{,-rust} and preinstall wheel
         pip3 install --user setuptools setuptools-rust wheel
         pip3 install --user twine
-        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY
+        # This expects TWINE_USERNAME, TWINE_PASSWORD, and TWINE_REPOSITORY_URL
         # environment variables
         # It's not possible to condition steps on env or secrets,
         # We need an explicit check here
@@ -179,7 +179,7 @@ jobs:
       env:
         TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
         TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
-        TWINE_REPOSITORY: ${{ secrets.TWINE_REPOSITORY }}
+        TWINE_REPOSITORY_URL: ${{ secrets.TWINE_REPOSITORY_URL }}
 
   publish-github:
     runs-on: ubuntu-latest
