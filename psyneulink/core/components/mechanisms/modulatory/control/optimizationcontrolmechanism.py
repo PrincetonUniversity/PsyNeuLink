@@ -1455,9 +1455,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         parsed_features = []
 
-        # FIX: 11/3/21: input_ports IS IGNORED;  DELETE??
-        if not isinstance(feature_input_ports, list):
-            input_ports = [feature_input_ports]
+        # # FIX: 11/3/21: input_ports IS IGNORED;  DELETE??
+        # if not isinstance(feature_input_ports, list):
+        #     input_ports = [feature_input_ports]
 
         for spec in feature_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict

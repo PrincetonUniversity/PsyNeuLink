@@ -1439,6 +1439,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             reference_value = []
             for sender in self.monitor_for_control:
                 reference_value.append(sender.value)
+                # FIX: 11/3/21: NEED TO ADD SENDER TO PORT INPUT PORT SPECIFICATION DICT BELOW:
                 input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
             super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=reference_value)
 
