@@ -1,4 +1,4 @@
-aenum==2.2.3
+aenum==3.1.2
 alabaster==0.7.12
 apipkg==1.5
 appnope==0.1.0
