@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0+untagged.10.gd77519a documentation</title>
+  <title>Index &mdash; PsyNeuLink 0+untagged.10.g6ae1221 documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.gd77519a
+                  0+untagged.10.g6ae1221
                 </div>
               
             
@@ -821,11 +821,7 @@
 </li>
       </ul></li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_input_ports">_update_input_ports() (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base method)</a>
-
-      <ul>
-        <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_input_ports">(psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism method)</a>
 </li>
-      </ul></li>
       <li><a href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition._update_learning_parameters">_update_learning_parameters() (psyneulink.library.compositions.autodiffcomposition.AutodiffComposition method)</a>
 </li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._update_output_ports">_update_output_ports() (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base method)</a>
@@ -1547,7 +1543,11 @@
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.d_v_FitzHughNagumo">d_v_FitzHughNagumo (psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
       <li><a href="OutputPort.html#psyneulink.core.components.ports.outputport.StandardOutputPorts.data">data (psyneulink.core.components.ports.outputport.StandardOutputPorts attribute)</a>
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
 </li>
+      </ul></li>
       <li><a href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM">DDM (class in psyneulink.library.components.mechanisms.processing.integrator.ddm)</a>
 </li>
       <li><a href="DDM.html#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDMError">DDMError</a>
@@ -2132,6 +2132,8 @@
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.infer_backpropagation_learning_pathways">infer_backpropagation_learning_pathways() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed">initial_seed (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.initial_v_FitzHughNagumo">initial_v_FitzHughNagumo (psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
       <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.initial_value">initial_value (psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
@@ -2652,6 +2654,8 @@
       </ul></li>
       <li><a href="LCControlMechanism.html#psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism.mode_FitzHughNagumo">mode_FitzHughNagumo (psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism.LCControlMechanism attribute)</a>
 </li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model">model (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.Parameter.modulable">modulable (psyneulink.core.globals.parameters.Parameter attribute)</a>
 </li>
       <li><a href="Report.html#psyneulink.core.compositions.report.ReportParams.MODULATED">MODULATED (psyneulink.core.compositions.report.ReportParams attribute)</a>
@@ -2769,6 +2773,8 @@
         <li><a href="Composition.html#module-psyneulink.core.compositions.composition">psyneulink.core.compositions.composition</a>
 </li>
         <li><a href="CompositionFunctionApproximator.html#module-psyneulink.core.compositions.compositionfunctionapproximator">psyneulink.core.compositions.compositionfunctionapproximator</a>
+</li>
+        <li><a href="ParameterEstimationComposition.html#module-psyneulink.core.compositions.parameterestimationcomposition">psyneulink.core.compositions.parameterestimationcomposition</a>
 </li>
         <li><a href="Pathway.html#module-psyneulink.core.compositions.pathway">psyneulink.core.compositions.pathway</a>
 </li>
@@ -3003,12 +3009,24 @@
 </li>
       <li><a href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector.num_elems">num_elems (psyneulink.library.compositions.regressioncfa.RegressionCFA.PredictionVector attribute)</a>
 </li>
+      <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.num_estimates">num_estimates (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism attribute)</a>
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="Component.html#psyneulink.core.components.component.Component.num_executions">num_executions (psyneulink.core.components.component.Component attribute)</a>
 </li>
       <li><a href="Component.html#psyneulink.core.components.component.Component.num_executions_before_finished">num_executions_before_finished (psyneulink.core.components.component.Component attribute)</a>
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GridSearch.num_iterations">num_iterations (psyneulink.core.components.functions.optimizationfunctions.GridSearch attribute)</a>
 </li>
+      <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.num_trials_per_estimate">num_trials_per_estimate (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism attribute)</a>
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_trials_per_estimate">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
+      </ul></li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.NWhen">NWhen (class in psyneulink.core.scheduling.condition)</a>
 </li>
   </ul></td>
@@ -3025,6 +3043,8 @@
         <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function">(psyneulink.core.components.functions.optimizationfunctions.GridSearch attribute)</a>
 </li>
         <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function">(psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction attribute)</a>
+</li>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
 </li>
       </ul></li>
       <li><a href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism">objective_mechanism (psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism attribute)</a>
@@ -3095,11 +3115,15 @@
         <li><a href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.Reduce.operation">(psyneulink.core.components.functions.combinationfunctions.Reduce attribute)</a>
 </li>
       </ul></li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function">optimization_function (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism">OptimizationControlMechanism (class in psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism)</a>
 </li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanismError">OptimizationControlMechanismError</a>
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction">OptimizationFunction (class in psyneulink.core.components.functions.optimizationfunctions)</a>
+</li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values">optimized_parameter_values (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
 </li>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.Or">Or (class in psyneulink.core.scheduling.condition)</a>
 </li>
@@ -3110,6 +3134,8 @@
 </li>
       </ul></li>
       <li><a href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome">outcome (psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism attribute)</a>
+</li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables">outcome_variables (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
 </li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.SoftMax.output">output (psyneulink.core.components.functions.transferfunctions.SoftMax attribute)</a>
 </li>
@@ -3313,16 +3339,24 @@
         <li><a href="Projection.html#id0">(psyneulink.core.components.projections.projection.Projection_Base property)</a>
 </li>
       </ul></li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors">parameter_ranges_or_priors (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.ParameterAlias">ParameterAlias (class in psyneulink.core.globals.parameters)</a>
 </li>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.ParameterError">ParameterError</a>
+</li>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition">ParameterEstimationComposition (class in psyneulink.core.compositions.parameterestimationcomposition)</a>
 </li>
       <li><a href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort">ParameterPort (class in psyneulink.core.components.ports.parameterport)</a>
 </li>
       <li><a href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPortError">ParameterPortError</a>
 </li>
       <li><a href="Component.html#psyneulink.core.components.component.Component.parameters">parameters (psyneulink.core.components.component.Component attribute)</a>
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Parameters.html#psyneulink.core.globals.parameters.ParametersBase">ParametersBase (class in psyneulink.core.globals.parameters)</a>
 </li>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.ExponentialDist.params">params (psyneulink.core.components.functions.distributionfunctions.ExponentialDist attribute)</a>
@@ -3838,6 +3872,13 @@
 </li>
       </ul></li>
       <li>
+    psyneulink.core.compositions.parameterestimationcomposition
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#module-psyneulink.core.compositions.parameterestimationcomposition">module</a>
+</li>
+      </ul></li>
+      <li>
     psyneulink.core.compositions.pathway
 
       <ul>
@@ -4207,7 +4248,11 @@
       <li><a href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when">reset_stateful_function_when (psyneulink.core.components.component.Component attribute)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.results">results (psyneulink.core.compositions.composition.Composition attribute)</a>
+
+      <ul>
+        <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results">(psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
 </li>
+      </ul></li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.retain_old_simulation_data">retain_old_simulation_data (psyneulink.core.compositions.composition.Composition attribute)</a>
 
       <ul>
@@ -4240,6 +4285,8 @@
 <h2 id="S">S</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="ParameterEstimationComposition.html#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations">same_seed_for_all_parameter_combinations (psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition attribute)</a>
+</li>
       <li><a href="ComparatorMechanism.html#psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism.sample">sample (psyneulink.library.components.mechanisms.processing.objective.comparatormechanism.ComparatorMechanism attribute)</a>
 
       <ul>

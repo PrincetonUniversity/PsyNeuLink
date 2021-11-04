@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0+untagged.10.gd77519a documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0+untagged.10.g6ae1221 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.gd77519a
+                  0+untagged.10.g6ae1221
                 </div>
               
             
@@ -266,6 +266,19 @@ their <a class="reference internal" href="Mechanism.html#psyneulink.core.compone
 done explicitly for Components for which that is not the case. A warning is issued if defaults are used for
 the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
 relevant argument(s) as <code class="xref any docutils literal notranslate"><span class="pre">NotImplemnted</span></code>.</p>
+</div>
+<div class="technical-note docutils container">
+<ul class="simple">
+<li><p>Constructors of subclasses should include <a href="#id1"><span class="problematic" id="id2">**</span></a>kwargs in their constructor method, to accomodate arguments
+required by some subclasses but not others (e.g., search_space needed by <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GridSearch</span></code></a> but not
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GradientOptimization</span></code></a>) so that subclasses can be used interchangeably by OptimizationControlMechanism.</p></li>
+<li><p>Subclasses with attributes that depend on one of the OptimizationFunction’s parameters should implement the
+<a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method, that calls super().reset(<a href="#id3"><span class="problematic" id="id4">*</span></a>args) and then
+reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
+<code class="xref any docutils literal notranslate"><span class="pre">NotImplemented</span></code> should be passed as the argument’s value in the call to super (i.e.,
+the OptimizationFunction’s
+constructor).</p></li>
+</ul>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -483,7 +496,7 @@ for all the samples in the order they were evaluated; otherwise it is empty.</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.optimizationfunctions.</span></span><span class="sig-name descname"><span class="pre">GradientOptimization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ASCENT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">search_space</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">step_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">annealing_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_criterion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">VALUE</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convergence_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization" title="Permalink to this definition">¶</a></dt>
 <dd><p>Sample variable by following gradient with respect to the value of <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GradientOptimization.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> it generates, and return the sample that generates either the
-highest (<a href="#id1"><span class="problematic" id="id2">**</span></a>direction=*ASCENT*) or lowest (<a href="#id3"><span class="problematic" id="id4">**</span></a>direction=*DESCENT*) value.</p>
+highest (<a href="#id5"><span class="problematic" id="id6">**</span></a>direction=*ASCENT*) or lowest (<a href="#id7"><span class="problematic" id="id8">**</span></a>direction=*DESCENT*) value.</p>
 <p id="gradientoptimization-procedure"><strong>Optimization Procedure</strong></p>
 <p>When <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> is executed, it iterates over the folowing steps:</p>
 <blockquote>
@@ -818,7 +831,7 @@ value of <a class="reference internal" href="#psyneulink.core.components.functio
 <code class="xref any docutils literal notranslate"><span class="pre">search_space</span> <span class="pre">&lt;GridSearch.search_space&gt;2</span></code> is contained in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.num_iterations" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.num_iterations"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_iterations</span></code></a>).
 Iteration continues until all values in <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.search_space"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">search_space</span></code></a> have been evaluated (i.e.,
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.num_iterations" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.num_iterations"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_iterations</span></code></a> is reached), or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.max_iterations" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.max_iterations"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">max_iterations</span></code></a> is
-execeeded.  The function returns the sample that yielded either the highest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>
+exceeded.  The function returns the sample that yielded either the highest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a>
 is <em>MAXIMIZE</em>) or lowest (if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.direction"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">direction</span></code></a> is <em>MINIMIZE</em>) value of the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a>, along with the value for that sample, as well as lists containing all of the
 samples evaluated and their values if either <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_samples" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_samples"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">save_samples</span></code></a> or <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch.save_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">save_values</span></code></a> is <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>, respectively.</p>
 <dl class="field-list simple">
@@ -982,13 +995,13 @@ It is called only if the parameter_validation attribute is <code class="xref any
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">search_space</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Assign size of <a href="#id5"><span class="problematic" id="id6">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
+<dd><p>Assign size of <a href="#id9"><span class="problematic" id="id10">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset_grid">
 <span class="sig-name descname"><span class="pre">reset_grid</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.GridSearch.reset_grid" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset iterators in <a href="#id7"><span class="problematic" id="id8">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
+<dd><p>Reset iterators in <a href="#id11"><span class="problematic" id="id12">`</span></a>search_space &lt;GridSearch.search_space&gt;</p>
 </dd></dl>
 
 <dl class="py method">

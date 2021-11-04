@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.10.gd77519a documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.10.g6ae1221 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.gd77519a
+                  0+untagged.10.g6ae1221
                 </div>
               
             
@@ -865,7 +865,7 @@ unless they are <a class="reference internal" href="ControlSignal.html#controlsi
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_objective_mechanism">
-<span class="sig-name descname"><span class="pre">_instantiate_objective_mechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_objective_mechanism" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_instantiate_objective_mechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_objective_mechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p># FIX: ??THIS SHOULD BE IN OR MOVED TO ObjectiveMechanism
 Assign InputPort to ObjectiveMechanism for each OutputPort to be monitored;</p>
 <blockquote>
@@ -900,12 +900,22 @@ For each item in self.monitored_output_ports:
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_input_ports">
-<span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p>Call Port._instantiate_input_ports to instantiate orderedDict of InputPort(s)</p>
+<span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate input_ports for items being monitored and evaluated, and ObjectiveMechanism if specified</p>
 <dl class="simple">
-<dt>This is a stub, implemented to allow Mechanism subclasses to override _instantiate_input_ports</dt><dd><p>or process InputPorts before and/or after call to _instantiate_input_ports</p>
+<dt>If <strong>objective_mechanism</strong> is specified:</dt><dd><ul class="simple">
+<li><p>instantiate ObjectiveMechanism, which also instantiates an OUTCOME InputPort
+and a MappingProjection to it from the ObjectiveMechanisms OUTCOME OutputPort</p></li>
+</ul>
+</dd>
+<dt>If <strong>monitor_for_control</strong> is specified:</dt><dd><ul class="simple">
+<li><p>it is used to construct an InputPort from each sender specified in it,
+and a corresponding MappingProjection from the sender to that InputPort;</p></li>
+<li><p>each InputPort is named using an uppercase version of the sender’s name</p></li>
+</ul>
 </dd>
 </dl>
+<p>If nothing is specified, a default OUTCOME InputPort is instantiated with no projections to it</p>
 </dd></dl>
 
 <dl class="py method">

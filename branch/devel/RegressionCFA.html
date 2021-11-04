@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>RegressionCFA &mdash; PsyNeuLink 0+untagged.10.gd77519a documentation</title>
+  <title>RegressionCFA &mdash; PsyNeuLink 0+untagged.10.g6ae1221 documentation</title>
   
 
   
@@ -33,7 +33,7 @@
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Subsystems" href="Subystems.html" />
+    <link rel="next" title="ParameterEstimationComposition" href="ParameterEstimationComposition.html" />
     <link rel="prev" title="CompositionFunctionApproximator" href="CompositionFunctionApproximator.html" /> 
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.gd77519a
+                  0+untagged.10.g6ae1221
                 </div>
               
             
@@ -307,7 +307,7 @@ prediction_terms=[PV.F, PV.C, PV.COST])</p>
 </dd>
 </dl>
 <p>Subclass of <a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a> that implements a CompositionFunctionApproximator as the
-<code class="xref any docutils literal notranslate"><span class="pre">agent_rep</span></code> of an <code class="xref any docutils literal notranslate"><span class="pre">OptimizationControlmechanism</span></code>.</p>
+<code class="xref any docutils literal notranslate"><span class="pre">agent_rep</span></code> of an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>.</p>
 <p>See <a class="reference internal" href="CompositionFunctionApproximator.html#compositionfunctionapproximator-class-reference"><span class="std std-ref">CompositionFunctionApproximator</span></a> for additional arguments
 and attributes.</p>
 <dl class="field-list simple">
@@ -452,7 +452,7 @@ to generate predicted <code class="xref any docutils literal notranslate"><span 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.library.compositions.regressioncfa.RegressionCFA.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_allocation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_estimates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.regressioncfa.RegressionCFA.evaluate" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">control_allocation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_estimates</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials_per_estimate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.compositions.regressioncfa.RegressionCFA.evaluate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update prediction_vector &lt;RegressorCFA.prediction_vector&gt;`,
 then multiply by regression_weights.</p>
 <p>Uses the current values of <code class="xref any docutils literal notranslate"><span class="pre">regression_weights</span></code> together with
@@ -597,7 +597,7 @@ Values of entries are nd arrays.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="Subystems.html" class="btn btn-neutral float-right" title="Subsystems" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+        <a href="ParameterEstimationComposition.html" class="btn btn-neutral float-right" title="ParameterEstimationComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
         <a href="CompositionFunctionApproximator.html" class="btn btn-neutral" title="CompositionFunctionApproximator" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>

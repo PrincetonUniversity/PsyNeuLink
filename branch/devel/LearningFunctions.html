@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>LearningFunctions &mdash; PsyNeuLink 0+untagged.10.gd77519a documentation</title>
+  <title>LearningFunctions &mdash; PsyNeuLink 0+untagged.10.g6ae1221 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.gd77519a
+                  0+untagged.10.g6ae1221
                 </div>
               
             
@@ -236,7 +236,7 @@
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate">
 <span class="sig-name descname"><span class="pre">default_learning_rate</span></span><a class="headerlink" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.default_learning_rate" title="Permalink to this definition">¶</a></dt>
 <dd><p>the value used for the function’s <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> parameter if none of the
-following are specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to
+following are specified:  the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_rate</span></code></a> for the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to
 which the function has been assigned, the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for any <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code> or
 the <code class="xref any docutils literal notranslate"><span class="pre">learning_rate</span></code> for any <code class="xref any docutils literal notranslate"><span class="pre">System</span></code> to which that LearningMechanism belongs.
 The exact form of the value (i.e., whether it is a scalar or array) depends on the function’s type.</p>
@@ -263,7 +263,7 @@ value (i.e., whether it is a scalar or array) and how it is used depend on the f
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><em>The number of items returned and their format depend on the function’s type.</em></p></li>
-<li><p>Most return an array (used as the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> by a     <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>), and some also return a similarly formatted array containing either the     error received (in the third item of the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) or a     version of it modified by the function.</p></li>
+<li><p>Most return an array (used as the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.learning_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_signal</span></code></a> by a     <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>), and some also return a similarly formatted array containing either the     error received (in the third item of the <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.LearningFunction.variable" title="psyneulink.core.components.functions.learningfunctions.LearningFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>) or a     version of it modified by the function.</p></li>
 </ul>
 </p>
 </dd>
@@ -1356,7 +1356,7 @@ at the point that generates each of its entries.</p>
 items of the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> both in the constructor for the BackPropagation Function,
 and in calls to its <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.  Although <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_matrix</span></code></a>
 is not specified in the constructor, it is required as an argument of the <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>;
-it is assumed that it’s value is determined in context at the time of execution (e.g., by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>
+it is assumed that it’s value is determined in context at the time of execution (e.g., by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>
 that uses the BackPropagation LearningFunction).</p>
 <p>The BackPropagation <code class="xref any docutils literal notranslate"><span class="pre">function</span></code> returns the <em>weight_change_matrix</em> as well as the
 <a class="reference internal" href="#psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal" title="psyneulink.core.components.functions.learningfunctions.BackPropagation.error_signal"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_signal</span></code></a> it receives weighted by the contribution made by each

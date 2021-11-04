@@ -1,0 +1,726 @@
+
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0+untagged.10.g6ae1221 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!-- <link rel="stylesheet" href="_static/pygments.css" type="text/css" /> -->
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Subsystems" href="Subystems.html" />
+    <link rel="prev" title="RegressionCFA" href="RegressionCFA.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+  <!-- Preload the theme fonts -->
+
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-book.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-Medium.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/FreightSans/freight-sans-medium-italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="_static/fonts/IBMPlexMono/IBMPlexMono-SemiBold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+
+<!-- Preload the katex fonts -->
+
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Math-Italic.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Main-Bold.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size1-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size4-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size2-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Size3-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.10.0/dist/fonts/KaTeX_Caligraphic-Regular.woff2" as="font" type="font/woff2" crossorigin="anonymous">
+</head>
+
+<div class="container-fluid header-holder tutorials-header" id="header-holder">
+  <div class="container">
+    <div class="header-container">
+      <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/"></a>
+<!--      <a class="header-logo"></a>-->
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+
+      <a class="main-menu-open-button" href="#" data-behavior="open-mobile-menu"></a>
+    </div>
+
+  </div>
+</div>
+
+
+<body class="psyneulink-body">
+
+   
+
+    
+
+    <div class="table-of-contents-link-wrapper">
+      <span>Table of Contents</span>
+      <a href="#" class="toggle-table-of-contents" data-behavior="toggle-table-of-contents"></a>
+    </div>
+
+    <nav data-toggle="wy-nav-shift" class="psyneulink-left-menu" id="psyneulink-left-menu">
+      <div class="psyneulink-side-scroll">
+        <div class="psyneulink-menu psyneulink-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          <div class="psyneulink-left-menu-search">
+            
+
+            
+              
+              
+                <div class="version">
+                  0+untagged.10.g6ae1221
+                </div>
+              
+            
+
+            
+
+
+  
+
+
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search Docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+            
+          </div>
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
+<li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
+<li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
+</ul>
+
+            
+          
+          <div class="psyneulink-dev-mode-toggle">
+          </div>
+        </div>
+      </div>
+    </nav>
+    <div class="psyneulink-container">
+      <div class="psyneulink-page-level-bar" id="psyneulink-page-level-bar">
+        <div class="psyneulink-breadcrumbs-wrapper">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="psyneulink-breadcrumbs">
+    
+      <li>
+        <a href="index.html">
+          
+            Docs
+          
+        </a> &gt;
+      </li>
+
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Compositions.html">Compositions</a> &gt;</li>
+        
+      <li>ParameterEstimationComposition</li>
+    
+  </ul>
+
+  
+</div>
+        </div>
+
+        <div class="psyneulink-shortcuts-wrapper" id="psyneulink-shortcuts-wrapper">
+          Shortcuts
+        </div>
+      </div>
+
+      <section data-toggle="wy-nav-shift" id="psyneulink-content-wrap" class="psyneulink-content-wrap">
+        <div class="psyneulink-content-left">
+
+        
+          
+          <div class="rst-content">
+          
+            <div role="main" class="main-content" itemscope="itemscope" itemtype="http://schema.org/Article">
+             <article itemprop="articleBody" id="psyneulink-article" class="psyneulink-article">
+              
+  <section id="parameterestimationcomposition">
+<h1>ParameterEstimationComposition<a class="headerlink" href="#parameterestimationcomposition" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-psyneulink.core.compositions.parameterestimationcomposition"></span><section id="contents">
+<h2>Contents<a class="headerlink" href="#contents" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li><p><a class="reference internal" href="#parameterestimationcomposition-overview"><span class="std std-ref">Overview</span></a></p></li>
+<li><p><a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a></p></li>
+<li><p><a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a></p></li>
+<li><p><a class="reference internal" href="#parameterestimationcomposition-supported-optimizers"><span class="std std-ref">Supported Optimizers</span></a></p></li>
+<li><p><a class="reference internal" href="#parameterestimationcomposition-class-reference"><span class="std std-ref">Class Reference</span></a></p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="overview">
+<span id="parameterestimationcomposition-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>A <a class="reference internal" href="#"><span class="doc">ParameterEstimationComposition</span></a> is a subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that is used to estimate specified <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> of a <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> Composition,
+in order to fit the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outputs</span></code></a>
+of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> to a set of data (<a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>),
+or to optimize its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> according to an <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a>
+(<a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>). In either case, when the ParameterEstimationComposition is <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> with a given set of <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">inputs</span></a>, it returns the set of
+parameter values in its <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimized_parameter_values</span></code></a>
+attribute that it estimates best satisfy either of those conditions, and the results of running the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> with those parameters in its <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a>
+attribute.  The arguments below are the primary ones used to configure a ParameterEstimationComposition for either
+<a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a> or <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>), followed by
+sections that describe arguments specific to each.</p>
+<blockquote>
+<div><ul id="parameterestimationcomposition-model">
+<li><p><strong>model</strong> - this is a convenience argument that can be used to specify a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> other than the
+ParameterEstimationComposition itself as the model. Alternatively, the model to be fit can be constructed
+within the ParameterEstimationComposition itself, using the <strong>nodes</strong> and/or <strong>pathways</strong> arguments of its
+constructor (see <a class="reference internal" href="Composition.html#composition-constructor"><span class="std std-ref">Using the Constructor</span></a> for additional details).   The <strong>model</strong> argument
+or the <strong>nodes</strong>, <strong>pathways</strong>, and/or <strong>projections</strong> arguments must be specified, but not both.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Neither the <strong>controller</strong> nor any of its associated arguments can be specified in the constructor for a
+ParameterEstimationComposition; this is constructed automatically using the arguments described below.</p>
+</div>
+</li>
+<li><p><strong>parameters</strong> - specifies the parameters of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> to be
+estimated.  These are specified in a dict, in which the key of each entry specifies a parameter to estimate,
+and its value either a range of values to sample for that parameter or a distribution from which to draw them.</p></li>
+<li><p><strong>outcome_variables</strong> - specifies the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>, the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of which are used
+to evaluate the fit of the different combination of parameter values sampled.</p></li>
+<li><p><strong>num_estimates</strong> - specifies the number of independent samples that are estimated for a given combination of
+parameter values.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="data-fitting">
+<span id="parameterestimationcomposition-data-fitting"></span><h2>Data Fitting<a class="headerlink" href="#data-fitting" title="Permalink to this headline">¶</a></h2>
+<p>The ParameterEstimationComposition can be used to find a set of parameters for the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> such that, when it is run with a given set of inputs, its results
+best match a specified set of empirical data.  This requires the following additional arguments to be specified:</p>
+<blockquote>
+<div><ul class="simple" id="parameterestimationcomposition-data">
+<li><p><strong>data</strong> - specifies the data to which the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>
+are fit in the estimation process.  They must be in a format that aligns the specification of
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>.</p></li>
+<li><p><strong>optimization_function</strong> - specifies the function used to compare the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a> with the <strong>data</strong>, and search over values
+of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> that maximize the fit. This must be either
+<code class="xref any docutils literal notranslate"><span class="pre">ParameterEstimationFunction</span></code> or a subclass of that.  By default, ParameterEstimationFunction uses maximum
+likelihood estimation (MLE) to compare the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>
+and the data, and
+for searching over parameter combinations.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="parameter-optimization">
+<span id="parameterestimationcomposition-optimization"></span><h2>Parameter Optimization<a class="headerlink" href="#parameter-optimization" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple" id="parameterestimationcomposition-objective-function">
+<li><p><strong>objective_function</strong> - specifies a function used to evaluate the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>, according to which combinations of
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> are assessed.</p></li>
+<li><p><strong>optimization_function</strong> - specifies the function used to search over values of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> in order to optimize the <strong>objective_function</strong>.  It can be any
+<a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OptimizationFunction</span></code></a> that accepts an <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">objective_function</span></code></a> as an argument or specifies
+one by default.  By default <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GridSearch" title="psyneulink.core.components.functions.optimizationfunctions.GridSearch"><code class="xref any py py-class docutils literal notranslate"><span class="pre">GridSearch</span></code></a> is used which exhaustively evaluates all combinations of  <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values, and returns the set that either maximizes or minimizes the
+<strong>objective_function</strong>.</p></li>
+</ul>
+</div></blockquote>
+</section>
+<section id="supported-optimizers">
+<span id="parameterestimationcomposition-supported-optimizers"></span><h2>Supported Optimizers<a class="headerlink" href="#supported-optimizers" title="Permalink to this headline">¶</a></h2>
+<p>TBD</p>
+</section>
+<section id="class-reference">
+<span id="parameterestimationcomposition-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.compositions.parameterestimationcomposition.</span></span><span class="sig-name descname"><span class="pre">ParameterEstimationComposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parameters</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outcome_variables</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimization_function</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">objective_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_estimates</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_trials_per_estimate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">same_seed_for_all_parameter_combinations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Composition(                                   parameters,</dt><dd><p>outcome_variables,
+model=None,
+data=None,
+objective_function=None,
+optimization_function=None,
+num_estimates=1,
+number_trials_per_estimate=None,
+initial_seed=None,
+same_seed_for_all_parameter_combinations=False
+)</p>
+</dd>
+</dl>
+<p>Subclass of <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that estimates specified parameters either to fit the results of a Composition
+to a set of data or to optimize a specified function.</p>
+<p>Automatically implements an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> as its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>,
+that is constructed using arguments to the ParameterEstimationComposition’s constructor as described below.</p>
+<p>The following arguments are those specific to ParmeterEstimationComposition; see <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> for additional
+arguments</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parameters</strong> (<em>dict</em><em>[</em><em>Parameter:Union</em><em>[</em><em>Iterator</em><em>, </em><em>Function</em><em>, </em><em>List</em><em>, </em><em>value</em><em>]</em>) – specifies the parameters of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> used for
+<a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a> or <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>, and either
+the range of values to be evaluated for each parameter, or priors that define a distribution over those.</p></li>
+<li><p><strong>outcome_variables</strong> (<em>list</em><em>[</em><em>Composition output nodes</em><em>]</em>) – specifies the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>,
+the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of which are either compared to a specified <strong>data</strong> when the
+ParameterEstimationComposition is used for <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>, or used by the
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimization_function</span></code></a> for
+<a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.</p></li>
+<li><p><strong>model</strong> (<em>Composition : default None</em>) – specifies an external <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> for which parameters are to be <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">fit to data</span></a> or <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">optimized</span></a>
+according to a specified <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a>.
+If <strong>model</strong> is None (the default), the ParameterEstimationComposition itself is used (see
+<a class="reference internal" href="#parameterestimationcomposition-model"><span class="std std-ref">model</span></a> for additional information).</p></li>
+<li><p><strong>data</strong> (<em>array : default None</em>) – specifies the data to to be fit when the ParameterEstimationComposition is used for
+<a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>;  structure must conform to format of
+<strong>outcome_variables</strong> (see <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">data</span></code></a> for additional information).</p></li>
+<li><p><strong>objective_function</strong> (<a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><em>function</em><em> or </em><em>method</em>) – specifies the function used to evaluate the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> when the ParameterEstimationComposition is used for
+<a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a> (see <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> for additional information).</p></li>
+<li><p><strong>optimization_function</strong> (<a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><em>OptimizationFunction</em></a><em>, </em><em>function</em><em> or </em><em>method</em>) – specifies the function used to evaluate the <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">fit to data</span></a>
+or <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">optimize</span></a> the parameters of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> according to a specified <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a>.</p></li>
+<li><p><strong>num_estimates</strong> (<em>int : default 1</em>) – specifies the number of estimates made for a each combination of <a class="reference internal" href="#"><span class="doc">parameter</span></a>
+values (see <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a> for additional information).</p></li>
+<li><p><strong>num_trials_per_estimate</strong> (<em>int : default None</em>) – specifies an exact number of trials to execute for each run of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> when estimating each combination of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values (see <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_trials_per_estimate" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_trials_per_estimate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_trials_per_estimate</span></code></a> for additional information).</p></li>
+<li><p><strong>initial_seed</strong> (<em>int : default None</em>) – specifies the seed used to initialize the random number generator at construction.
+If it is not specified then then the seed is set to a random value on construction (see <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial_seed</span></code></a> for additional information).</p></li>
+<li><p><strong>same_seed_for_all_parameter_combinations</strong> (<em>bool : default False</em>) – specifies whether the random number generator is re-initialized to the same value when estimating each
+combination of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values (see
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">same_seed_for_all_parameter_combinations</span></code></a> for additional information).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model">
+<span class="sig-name descname"><span class="pre">model</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="Permalink to this definition">¶</a></dt>
+<dd><p>identifies the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> used for <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a> or
+<a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.  If the <strong>model</strong> argument of the
+ParameterEstimationComposition’s constructor is not specified, <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> returns the
+ParameterEstimationComposition itself.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition" title="psyneulink.core.compositions.composition.Composition">Composition</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters">
+<span class="sig-name descname"><span class="pre">parameters</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the parameters of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> used for
+<a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a> or <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.
+These are assigned to the <strong>control</strong> argument of the constructor for the ParameterEstimationComposition’s
+<a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>, that is used to construct the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a> used to modulate each parameter that is being fit.</p>
+<div class="technical-note docutils container">
+<p>A <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> is added to the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_signals"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_signals</span></code></a> of the
+ParameterEstimationComposition’s <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>, named
+<em>RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME</em>, to modulate the seeds used to randomize each estimate of the
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> for each run of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> (i.e., call to its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a>
+method). That ControlSignal sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to every <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> of every <a class="reference internal" href="Component.html"><span class="doc">Component</span></a> in the
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> that is labelled “seed”, each of which corresponds to a
+Parameter that uses a random number generator to assign its value (i.e., as its <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.  This ControlSignal is used to change the seeds for all Parameters that use
+random values at the start of each run of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> used to
+estimate a given <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> of the other ControlSignals
+(i.e., the ones for the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> being fit). The
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initial_seed</span></code></a> <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">same_seed_for_all_parameter_combinations</span></code></a> attributes can be used to further
+refine this behavior.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[<a class="reference internal" href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.Parameters" title="psyneulink.library.compositions.regressioncfa.RegressionCFA.Parameters">Parameters</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors">
+<span class="sig-name descname"><span class="pre">parameter_ranges_or_priors</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the range of values evaluated for each <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a>.
+These are assigned as the <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.allocation_samples"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation_samples</span></code></a> for the <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a>
+assigned to the ParameterEstimationComposition’s <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> corresponding to each of the
+specified <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[Union[Iterator, Function, ist or Value]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables">
+<span class="sig-name descname"><span class="pre">outcome_variables</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>,
+the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of which are either compared to the <strong>data</strong> when the
+ParameterEstimationComposition is used for <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>, or evaluated by the
+ParameterEstimationComposition’s <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimization_function</span></code></a>
+when it is used for <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[Composition Output Nodes]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data">
+<span class="sig-name descname"><span class="pre">data</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the data to be fit by the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> when the
+ParameterEstimationComposition is used for <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>.
+These must be structured in form that aligns with the specified <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a> (see <a class="reference internal" href="#parameterestimationcomposition-data"><span class="std std-ref">data</span></a> for additional details). The data are passed to the optimizer
+used by <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimization_function</span></code></a>.  Returns
+None if the model is being used for <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function">
+<span class="sig-name descname"><span class="pre">objective_function</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.objective_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the function used to evaluate the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> under each set of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values when the ParameterEstimationComposition is used for
+<a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.  It is passed to the ParameterEstimationComposition’s
+<a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a> as the function of its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>, that is used to compute the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> for of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> each time it is
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> (see <a class="reference internal" href="#parameterestimationcomposition-objective-function"><span class="std std-ref">objective_function</span></a>
+for additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction">ObjectiveFunction</a>, function or method</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function">
+<span class="sig-name descname"><span class="pre">optimization_function</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the function used to estimate the parameters of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>
+that either best fit the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">data</span></code></a> when the ParameterEstimationComposition
+is used for <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>, or that achieve some maximum or minimum value of
+the the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimization_function</span></code></a> when the
+ParameterEstimationComposition is used for <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.  This is assigned as
+the <a class="reference internal" href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of the ParameterEstimationComposition’s
+<a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction">OptimizationFunction</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates">
+<span class="sig-name descname"><span class="pre">num_estimates</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the number of estimates of the <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> (i.e., number of calls to its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a>
+method) for a given combination of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values (i.e.,
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>) evaluated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_trials_per_estimate">
+<span class="sig-name descname"><span class="pre">num_trials_per_estimate</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_trials_per_estimate" title="Permalink to this definition">¶</a></dt>
+<dd><p>imposes an exact number of trials to be executed in each run of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>
+used to evaluate its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> by a call to its
+OptimizationControlMechanism’s <a class="reference internal" href="OptimizationControlMechanism.html#id0" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluation_function</span></code></a>. If
+it is None (the default), then either the number of <strong>inputs</strong> or the value specified for <strong>num_trials</strong> in
+the ParameterEstimationComposition’s <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> method used to determine the
+number of trials executed (see <code class="xref any docutils literal notranslate"><span class="pre">Composition_Execution_Num_Trials</span></code> for additional information).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed">
+<span class="sig-name descname"><span class="pre">initial_seed</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.initial_seed" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines the seed used to initialize the random number generator at construction.
+If it is not specified then then the seed is set to a random value on construction, and different runs of a
+script containing the ParameterEstimationComposition will yield different results, which should be roughly
+comparable if the estimation process is stable.  If <strong>initial_seed</strong> is specified, then running the script
+should yield identical results for the estimation process, which can be useful for debugging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>int or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations">
+<span class="sig-name descname"><span class="pre">same_seed_for_all_parameter_combinations</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.same_seed_for_all_parameter_combinations" title="Permalink to this definition">¶</a></dt>
+<dd><p>determines whether the random number generator used to select seeds for each estimate of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>'s <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> is
+re-initialized to the same value for each combination of <a class="reference internal" href="#"><span class="doc">parameter</span></a> values
+evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
+of <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a> for each combination of parameter values will reflect
+exclusively the influence of the <em>parameters</em> on the execution of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a>, and <em>not</em> any variability intrinsic to the execution of
+the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
+executions of the OptimizationControlMechanism’s <a class="reference internal" href="OptimizationControlMechanism.html#id0" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluation_function</span></code></a> with the same set of parameter values (i.e.,
+<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>). If <em>same_seed_for_all_parameter_combinations</em> is
+False, then each time a combination of parameter values is estimated, it will use a different set of seeds.
+This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism’s
+<a class="reference internal" href="OptimizationControlMechanism.html#id0" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.evaluation_function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluation_function</span></code></a> with the same set of parameter
+values (<a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a>). Small differences in results suggest
+stability of the estimation process across combinations of parameter values, while substantial differences
+indicate instability, which may be helped by increasing <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool : default False</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values">
+<span class="sig-name descname"><span class="pre">optimized_parameter_values</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains the values of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> that best fit the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.data"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">data</span></code></a> when
+the ParameterEstimationComposition is used for <a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>,
+or that optimize performance of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> according to the
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimization_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimization_function</span></code></a> when the
+ParameterEstimationComposition is used for <a class="reference internal" href="#parameterestimationcomposition-optimization"><span class="std std-ref">Parameter Optimization</span></a>.  If <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span> <span class="pre">values</span></code></a> are specified as ranges of values, then
+each item of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimized_parameter_values</span></code></a> is the optimized value of the corresponding <code class="xref any docutils literal notranslate"><span class="pre">parameter</span></code>. If <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span> <span class="pre">values</span></code></a> are specified as priors, then each item of
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimized_parameter_values</span></code></a> is an array containing the values of the corresponding <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> the distribution of which were determined to be optimal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results">
+<span class="sig-name descname"><span class="pre">results</span></span><a class="headerlink" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
+in the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.model"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">model</span></code></a> for every <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a> executed (see
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">Composition.results</span></code></a> for more details). If the ParameterEstimationComposition is used for
+<a class="reference internal" href="#parameterestimationcomposition-data-fitting"><span class="std std-ref">Data Fitting</span></a>, and <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span> <span class="pre">values</span></code></a> are specified as ranges of values, then
+each item of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.results" title="psyneulink.core.compositions.composition.Composition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> is an array of <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a>
+(sampled over <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a>) obtained for the single
+optimized combination of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values contained in the
+corresponding item of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.optimized_parameter_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">optimized_parameter_values</span></code></a>.
+If <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameter_ranges_or_priors"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span> <span class="pre">values</span></code></a> are specified as priors,
+then each item of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.results"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">results</span></code></a> is an array of <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_values</span></code></a> (sampled over
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a>), each of which corresponds to a combination
+of <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values that were used to generate those results;
+it is the <em>distribution</em> of those <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameter</span></code></a> values that were
+found to best fit the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list[list[list]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+             </article>
+             
+            </div>
+            <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Subystems.html" class="btn btn-neutral float-right" title="Subsystems" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="RegressionCFA.html" class="btn btn-neutral" title="RegressionCFA" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
+  
+
+  
+
+    <hr>
+
+  
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Jonathan D. Cohen.
+
+    </p>
+  </div>
+    
+      <div>
+        Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+      </div>
+     
+
+</footer>
+
+          </div>
+        </div>
+
+        <div class="psyneulink-content-right" id="psyneulink-content-right">
+          <div class="psyneulink-right-menu" id="psyneulink-right-menu">
+            <div class="psyneulink-side-scroll" id="psyneulink-side-scroll-right">
+              <ul>
+<li><a class="reference internal" href="#">ParameterEstimationComposition</a><ul>
+<li><a class="reference internal" href="#contents">Contents</a></li>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#data-fitting">Data Fitting</a></li>
+<li><a class="reference internal" href="#parameter-optimization">Parameter Optimization</a></li>
+<li><a class="reference internal" href="#supported-optimizers">Supported Optimizers</a></li>
+<li><a class="reference internal" href="#class-reference">Class Reference</a></li>
+</ul>
+</li>
+</ul>
+
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  
+
+
+  
+
+     
+       <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+         <script src="_static/jquery.js"></script>
+         <script src="_static/underscore.js"></script>
+         <script src="_static/doctools.js"></script>
+     
+
+  
+
+  <script type="text/javascript" src="_static/js/vendor/popper.min.js"></script>
+  <script type="text/javascript" src="_static/js/vendor/bootstrap.min.js"></script>
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+  <!-- Begin Footer -->
+
+  <footer class="site-footer" id="docs-tutorials-resources">
+    <div class="container footer-container">
+      <div class="footer-logo-wrapper">
+        <a href="https://princetonuniversity.github.io/PsyNeuLink/" class="footer-logo"></a>
+      </div>
+
+  </footer>
+
+  
+
+  <!-- End Footer -->
+
+  <!-- Begin Mobile Menu -->
+
+  <div class="mobile-main-menu">
+    <div class="container-fluid">
+      <div class="container mobile-logo-container">
+        <div class="mobile-main-menu-header-container">
+          <a class="header-logo" href="https://princetonuniversity.github.io/PsyNeuLink/" aria-label="PsyNeuLink"></a>
+          <a class="main-menu-close-button" href="#" data-behavior="close-mobile-menu"></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="mobile-main-menu-links-container">
+      <div class="main-menu">
+        <ul>
+          <li>
+            <a href="https://github.com/PrincetonUniversity/PsyNeuLink">Github</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- End Mobile Menu -->
+
+  <script type="text/javascript" src="_static/js/vendor/anchor.min.js"></script>
+
+  <script type="text/javascript">
+    $(document).ready(function() {
+      mobileMenu.bind();
+      mobileTOC.bind();
+      psyneulinkAnchors.bind();
+      sideMenus.bind();
+      scrollToAnchor.bind();
+      highlightNavigation.bind();
+      mainMenuDropdown.bind();
+
+      // Add class to links that have code blocks, since we cannot create links in code blocks
+      $("article.psyneulink-article a span.pre").each(function(e) {
+        $(this).closest("a").addClass("has-code");
+      });
+    })
+  </script>
+</body>
+</html>
