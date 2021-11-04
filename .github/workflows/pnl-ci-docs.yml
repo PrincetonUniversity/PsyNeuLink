@@ -96,6 +96,12 @@ jobs:
     - name: Build Documentation
       run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
 
+    - name: Remove git tag
+      # The generated docs include PNL version,
+      # This was set to a fixed value to prevent polluting the diff
+      if: ${{ github.event_name == 'pull_request' }}
+      run: git tag -d 'v999.999.999.999'
+
     - name: Upload Documentation
       uses: actions/upload-artifact@v2.2.4
       with:
