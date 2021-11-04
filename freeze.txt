@@ -79,7 +79,7 @@ py==1.10.0
 py-cpuinfo==5.0.0
 pycodestyle==2.5.0
 pydocstyle==5.0.2
-Pygments==2.6.1
+Pygments==2.10.0
 pyparsing==2.4.6
 pyrsistent==0.15.7
 pytest==6.2.2
