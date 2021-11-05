@@ -364,9 +364,14 @@ def _random_state_getter(self, owning_component, context):
         is_modulated = False
 
     if is_modulated:
-        seed_value = [int(owning_component._get_current_parameter_value(seed_param, context))]
+        seed_value = owning_component._get_current_parameter_value(seed_param, context)
     else:
-        seed_value = [int(seed_param._get(context=context))]
+        seed_value = seed_param._get(context=context)
+
+    if seed_value is None:
+        return None
+
+    seed_value = [int(seed_value)]
 
     assert seed_value != [DEFAULT_SEED], "Invalid seed for {} in context: {} ({})".format(owning_component, context.execution_id, seed_param)
 
