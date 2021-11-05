@@ -2370,8 +2370,9 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
+    PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
@@ -7263,7 +7264,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
-        if not predicted_input:
+        if predicted_input is None or not len(predicted_input):
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
         nested_nodes = dict(self._get_nested_nodes())
