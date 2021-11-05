@@ -1628,7 +1628,8 @@ class ShowGraph():
                        arrowhead=ctl_proj_arrowhead
                        )
 
-        # If controller has objective_mechanism, assign its node and Projections
+        # If controller has objective_mechanism, assign its node and Projections,
+        #     including one from ObjectiveMechanism to controller
         if controller.objective_mechanism:
             # get projection from ObjectiveMechanism to ControlMechanism
             objmech_ctlr_proj = controller.input_port.path_afferents[0]
@@ -1733,6 +1734,58 @@ class ShowGraph():
                     else:
                         edge_label = ''
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
+                           color=proj_color, penwidth=proj_width)
+
+        # FIX: 11/3/21 NEED TO ADD HANDLING OF CASE IN WHICH THERE IS NO ObjectiveMechanism
+        #              BUT THE CONTROLLER DOES HAVE outcome_input_ports
+        # If controller has no objective_mechanism but does have outcome_input_ports, add Projetions from them
+        elif controller.num_outcome_input_ports:
+            # incoming edges (from monitored mechs directly to controller)
+            for input_port in controller.outcome_input_ports:
+                for projection in input_port.path_afferents:
+                    if controller in active_items:
+                        if self.active_color == BOLD:
+                            proj_color = self.controller_color
+                        else:
+                            proj_color = self.active_color
+                        proj_width = str(self.default_width + self.active_thicker_by)
+                        composition.active_item_rendered = True
+                    else:
+                        proj_color = self.controller_color
+                        proj_width = str(self.default_width)
+                    if show_node_structure:
+                        sndr_proj_label = self._get_graph_node_label(composition,
+                                                                     projection.sender.owner,
+                                                                     show_types,
+                                                                     show_dimensions)
+                        if projection.sender.owner not in composition.nodes:
+                            num_nesting_levels = self.num_nesting_levels or 0
+                            nested_comp = projection.sender.owner.composition
+                            try:
+                                nesting_depth = next((k for k, v in comp_hierarchy.items() if v == nested_comp))
+                                sender_visible = nesting_depth <= num_nesting_levels
+                            except StopIteration:
+                                sender_visible = False
+                        else:
+                            sender_visible = True
+                        if sender_visible:
+                            sndr_proj_label += ':' + controller._get_port_name(projection.sender)
+                        # FIX: 11/3/21: MAKE SURE ctlr_label IS CORRECT BELOW (WAS objmech_label)
+                        ctlr_input_proj_label = ctlr_label + ':' + controller._get_port_name(input_port)
+                    else:
+                        sndr_proj_label = self._get_graph_node_label(composition,
+                                                                projection.sender.owner,
+                                                                show_types,
+                                                                show_dimensions)
+                        ctlr_input_proj_label = self._get_graph_node_label(composition,
+                                                                   controller,
+                                                                   show_types,
+                                                                   show_dimensions)
+                    if show_projection_labels:
+                        edge_label = projection.name
+                    else:
+                        edge_label = ''
+                    g.edge(sndr_proj_label, ctlr_input_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
         # If controller has an agent_rep, assign its node and edges (not Projections per se)

@@ -1225,7 +1225,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  size=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
                  objective_mechanism=None,
-                 outcome_input_ports_option=SEPARATE,
+                 outcome_input_ports_option=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
                  control:tc.optional(tc.any(is_iterable,
@@ -1479,8 +1479,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # FIX 11/3/21: THIS SHOULD BE MODIFIED TO BE A LIST, THAT CONTAINS REFERENCES TO THE OUTCOME InputPorts
         self.outcome_input_ports = ContentAddressableList(component_type=OutputPort)
-        # FIX 11/3/21: MAKE THIS A PROPERTY
-        self.num_outcome_input_ports = len(self.outcome_input_ports) # the default (OUTCOME InputPort)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:
@@ -1807,18 +1805,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         dependent_projections = set()
 
-        # # MODIFIED 11/3/21 OLD:
-        # if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
-        #     # Safe to add this, as it is already in the ControlMechanism's aux_components
-        #     #    and will therefore be added to the Composition along with the ControlMechanism
-        #     from psyneulink.core.compositions.composition import NodeRole
-        #     assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
-        #         f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
-        #     dependent_projections.add(self._objective_projection)
-        #
-        #     for aff in self.objective_mechanism.afferents:
-        #         dependent_projections.add(aff)
-        # MODIFIED 11/3/21 NEW:
         if composition:
             if self.objective_mechanism and self.objective_mechanism in composition.nodes:
                  # Safe to add this, as it is already in the ControlMechanism's aux_components
@@ -1835,11 +1821,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED ZZZ
                 # Add Projections to controller's OUTCOME InputPorts
                 for i in range(self.num_outcome_input_ports):
-                    for port in self.outcome_input_ports[i]:
-                        for proj in port.path_afferents:
-                            dependent_projections.add(proj)
+                    for proj in self.outcome_input_ports[i].path_afferents:
+                        dependent_projections.add(proj)
                     assert True
-        # MODIFIED 11/3/21 END
 
         for ms in self.control_signals:
             for eff in ms.efferents:
@@ -1853,10 +1837,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 for eff in output_port.efferents:
                     dependent_projections.add(eff)
 
-        # ??ELIMINATE SYSTEM
-        # FIX: 9/15/19 AND 11/3/21 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
-        for eff in self.efferents:
-            dependent_projections.add(eff)
+        # # FIX: 9/15/19 AND 11/3/21 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
+        # for eff in self.efferents:
+        #     dependent_projections.add(eff)
 
         if composition:
             deeply_nested_aux_components = composition._get_deeply_nested_aux_projections(self)
@@ -1890,6 +1873,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self.objective_mechanism._monitored_output_ports = value
         except AttributeError:
             return None
+
+    @property
+    def num_outcome_input_ports(self):
+        try:
+            return len(self.outcome_input_ports)
+        except:
+            return 0
 
     @property
     def monitored_output_ports_weights_and_exponents(self):
