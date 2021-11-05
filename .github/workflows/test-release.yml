@@ -213,7 +213,7 @@ jobs:
             const headers = { 'content-type': 'application/zip', 'content-length': file_size(file_path) };
 
             // Upload a release asset
-            const uploadAssetResponse = await github.repos.uploadReleaseAsset({
+            const uploadAssetResponse = await github.rest.repos.uploadReleaseAsset({
               url: '${{ github.event.release.upload_url }}',
               headers,
               name: asset,
@@ -222,7 +222,7 @@ jobs:
           }
 
           // Bump to full release
-          const uploadAssetResponse = await github.repos.updateRelease({
+          const uploadAssetResponse = await github.rest.repos.updateRelease({
             owner: context.repo.owner,
             repo: context.repo.repo,
             release_id: ${{ github.event.release.id }},

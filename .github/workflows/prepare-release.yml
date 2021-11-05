@@ -32,7 +32,7 @@ jobs:
           console.log('running on:' + context.ref);
           console.log('Looking for release for tag:' + tag);
           try {
-            release_if_exists = await github.repos.getReleaseByTag({
+            release_if_exists = await github.rest.repos.getReleaseByTag({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag: tag
@@ -61,7 +61,7 @@ jobs:
           }
 
           tag = context.ref.split('/').pop()
-          return await github.repos.createRelease({
+          return await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: tag,
