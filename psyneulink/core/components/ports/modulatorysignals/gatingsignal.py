@@ -246,15 +246,12 @@ Class Reference
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.transferfunctions import Linear
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-from psyneulink.core.components.ports.outputport import PRIMARY, SEQUENTIAL, _output_port_variable_getter
-from psyneulink.core.components.ports.port import Port_Base
-from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    CONTEXT, GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, \
-    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, PROJECTION_TYPE, RECEIVER, VARIABLE
+    GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, \
+    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -270,6 +267,7 @@ class GatingSignalError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
 
 gating_signal_keywords = {GATE}
 # gating_signal_keywords.update(modulatory_signal_keywords)
@@ -446,37 +444,37 @@ class GatingSignal(ControlSignal):
                          **kwargs)
 
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
-            """Get connections specified in a ParameterPort specification tuple
+        """Get connections specified in a ParameterPort specification tuple
 
-            Tuple specification can be:
-                (Port name, Mechanism)
-            [TBI:] (Mechanism, Port name, weight, exponent, projection_specs)
+        Tuple specification can be:
+            (Port name, Mechanism)
+        [TBI:] (Mechanism, Port name, weight, exponent, projection_specs)
 
-            Returns params dict with CONNECTIONS entries if any of these was specified.
+        Returns params dict with CONNECTIONS entries if any of these was specified.
 
-            """
-            from psyneulink.core.components.projections.projection import _parse_connection_specs
+        """
+        from psyneulink.core.components.projections.projection import _parse_connection_specs
 
-            params_dict = {}
-            port_spec = port_specific_spec
+        params_dict = {}
+        port_spec = port_specific_spec
 
-            if isinstance(port_specific_spec, dict):
-                return None, port_specific_spec
+        if isinstance(port_specific_spec, dict):
+            return None, port_specific_spec
 
-            elif isinstance(port_specific_spec, tuple):
-                port_spec = None
-                params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
-                                                                   owner=owner,
-                                                                   connections=port_specific_spec)
-            elif port_specific_spec is not None:
-                raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                      format(self.__class__.__name__, port_specific_spec))
+        elif isinstance(port_specific_spec, tuple):
+            port_spec = None
+            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
+                                                               owner=owner,
+                                                               connections=port_specific_spec)
+        elif port_specific_spec is not None:
+            raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
+                                  format(self.__class__.__name__, port_specific_spec))
 
-            if params_dict[PROJECTIONS] is None:
-                raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
-                                         "with specification of {}, {} or GatingProjection(s) to it".
-                                            format(GATING_SIGNAL, INPUT_PORT, OUTPUT_PORT, owner.name))
-            return port_spec, params_dict
+        if params_dict[PROJECTIONS] is None:
+            raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
+                                     "with specification of {}, {} or GatingProjection(s) to it".
+                                        format(GATING_SIGNAL, INPUT_PORT, OUTPUT_PORT, owner.name))
+        return port_spec, params_dict
 
     def _instantiate_cost_functions(self, context):
         """Override ControlSignal as GatingSignal has not cost functions"""

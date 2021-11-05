@@ -6,9 +6,9 @@ import psyneulink as pnl
 import psyneulink.core.llvm as pnlvm
 
 from psyneulink.core.components.component import ComponentError
-from psyneulink.core.components.functions.distributionfunctions import DriftDiffusionAnalytical, NormalDist
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.functions.stateful.integratorfunctions import DriftDiffusionIntegrator
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -120,12 +120,7 @@ class TestThreshold:
         D = DDM(name='DDM',
                 function=DriftDiffusionIntegrator(threshold=5.0, time_step_size=1.0),
                 execute_until_finished=False)
-        if mech_mode == 'Python':
-            ex = D.execute
-        elif mech_mode == 'LLVM':
-            ex = pnlvm.execution.MechExecution(D).execute
-        elif mech_mode == 'PTX':
-            ex = pnlvm.execution.MechExecution(D).cuda_execute
+        ex = pytest.helpers.get_mech_execution(D, mech_mode)
 
         decision_variables = []
         time_points = []
@@ -251,12 +246,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode):
         name='DDM',
         function=DriftDiffusionAnalytical()
     )
-    if mech_mode == 'Python':
-        ex = T.execute
-    elif mech_mode == 'LLVM':
-        ex = pnlvm.execution.MechExecution(T).execute
-    elif mech_mode == 'PTX':
-        ex = pnlvm.execution.MechExecution(T).cuda_execute
+    ex = pytest.helpers.get_mech_execution(T, mech_mode)
+
     val = ex(stim)[0]
     assert np.allclose(val, [1.0])
     if benchmark.enabled:
@@ -304,12 +295,7 @@ def test_DDM_noise(mech_mode, benchmark, noise, expected):
         ),
         execute_until_finished=False
     )
-    if mech_mode == 'Python':
-        ex = T.execute
-    elif mech_mode == 'LLVM':
-        ex = pnlvm.execution.MechExecution(T).execute
-    elif mech_mode == 'PTX':
-        ex = pnlvm.execution.MechExecution(T).cuda_execute
+    ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     val = ex([10])
     assert np.allclose(val[0][0], expected)
@@ -441,12 +427,8 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
         ),
         execute_until_finished=False,
     )
-    if mech_mode == 'Python':
-        ex = T.execute
-    elif mech_mode == 'LLVM':
-        ex = pnlvm.execution.MechExecution(T).execute
-    elif mech_mode == 'PTX':
-        ex = pnlvm.execution.MechExecution(T).cuda_execute
+    ex = pytest.helpers.get_mech_execution(T, mech_mode)
+
     val = float(ex(stim)[0][0])
     assert val == expected
     if benchmark.enabled:

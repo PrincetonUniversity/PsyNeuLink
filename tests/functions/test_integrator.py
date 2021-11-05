@@ -3,10 +3,11 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-import psyneulink.core.components.functions.statefulfunctions.integratorfunctions as Functions
 import psyneulink.core.llvm as pnlvm
+import psyneulink.core.components.functions.stateful.integratorfunctions as Functions
 from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.globals.keywords import LEAK, RATE
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Angle
+from psyneulink.core.globals.parameters import ParameterError
 
 np.random.seed(0)
 SIZE=10
@@ -107,6 +108,7 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
         else:
             return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395, 2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
 
+
 GROUP_PREFIX="IntegratorFunction "
 
 
@@ -152,12 +154,8 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
     else:
         f = func[0](default_variable=variable, noise=noise, **params)
 
-    if func_mode == 'Python':
-        ex = f
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    ex = pytest.helpers.get_func_execution(f, func_mode)
+
     ex(variable)
     ex(variable)
     res = ex(variable)
@@ -204,3 +202,38 @@ def test_integrator_function_with_default_variable_and_params_of_different_lengt
     error_msg_b = "don't have the same length as its 'default_variable' (3): ['offset']."
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
+
+
+err_msg_initializer = "'initializer' must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
+err_msg_angle_func = 'Variable shape incompatibility between (DriftOnASphereIntegrator DriftOnASphereIntegrator'
+err_msg_noise = "must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
+
+test_vars = [
+    ({'initializer': 0.1}, err_msg_initializer, FunctionError),
+    ({'initializer': [0.1,0.1]}, err_msg_initializer, FunctionError),
+    ({'initializer': [0.1,0.1,0.1]}, None, None),
+    ({'angle_function': Angle}, None, None),
+    ({'angle_function': Angle()}, None, None),
+    ({'angle_function': Angle([1,1])}, err_msg_angle_func, ParameterError),
+    ({'angle_function': Angle([1,1,1])}, None, None),
+    ({'noise': .01}, None, None),
+    ({'noise': [.01, .5]}, err_msg_noise, FunctionError),
+    ({'noise': [.01, .5, .99]}, None, None),
+    ({'noise': [.01, .5, .99, .1]}, err_msg_noise, FunctionError)
+]
+
+names = [
+    "INITIALIZER_SCALAR", "INITIALIZER_2", "INITIALIZER_3",
+    "ANGLE_CLASS", "ANGLE_NONE", "ANGLE_2", "ANGLE_3",
+    "NOISE_SCALAR", "NOISE_2", "NOISE_3", "NOISE_4"
+]
+
+# FIX: CROSS WITH INITIALIZER SIZE:
+@pytest.mark.parametrize("params, error_msg, error_type", test_vars, ids=names)
+def test_drift_on_a_sphere_errors(params, error_msg, error_type):
+    if error_type:
+        with pytest.raises(error_type) as error_text:
+            Functions.DriftOnASphereIntegrator(dimension=4, params=params)
+        assert error_msg in str(error_text.value)
+    else:
+        Functions.DriftOnASphereIntegrator(dimension=4, params=params)

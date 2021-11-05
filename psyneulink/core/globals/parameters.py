@@ -224,8 +224,8 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 |                  |               |based on execution context                  |                                         |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    modulable     |     False     |if True, the parameter can be modulated     |Currently this does not determine what   |
-|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterPort, but in the future |
-|                  |               | it is assigned a `ParameterPort`)         |it should                                |
+|                  |               |(if it belongs to a Mechanism or Projection |gets a ParameterPort, but in the future  |
+|                  |               | it is assigned a `ParameterPort`)          |it should                                |
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |    read_only     |     False     |whether the user should be able to set the  |Can be manually set, but will trigger a  |
 |                  |               |value or not (e.g. variable and value are   |warning unless override=True             |
@@ -244,7 +244,7 @@ You should avoid using `dot notation <Parameter_Dot_Notation>` in internal code,
 +------------------+---------------+--------------------------------------------+-----------------------------------------+
 |      getter      |     None      |hook that allows overriding the retrieval of|kwargs self, owning_component, and       |
 |                  |               |values based on a supplied method           |context will be passed in if your        |
-|                  |               |(e.g. _output_port_variable_getter)        |method uses them. self - the Parameter   |
+|                  |               |(e.g. _output_port_variable_getter)        |method uses them. self - the Parameter    |
 |                  |               |                                            |calling the setter; owning_component -   |
 |                  |               |                                            |the Component to which the Parameter     |
 |                  |               |                                            |belongs; context - the context           |
@@ -296,7 +296,6 @@ import types
 import typing
 import weakref
 
-import numpy as np
 
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
@@ -366,7 +365,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
     from psyneulink.core.components.component import Component, ComponentsMeta
 
     if shared_types is None:
-        shared_types = (Component, ComponentsMeta, types.MethodType)
+        shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
     else:
         shared_types = tuple(shared_types)
 
@@ -854,6 +853,8 @@ class Parameter(ParameterBase):
         # attributes will be taken from
         _inherited_source=None,
         _user_specified=False,
+        # if modulated, set to the ParameterPort
+        _port=None,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -911,6 +912,7 @@ class Parameter(ParameterBase):
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
+            _port=_port,
             **kwargs
         )
 
@@ -1518,7 +1520,7 @@ class Parameter(ParameterBase):
                 pass
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
-        from psyneulink.core.components.component import Component
+        from psyneulink.core.components.component import Component, ComponentsMeta
 
         try:
             try:
@@ -1537,7 +1539,7 @@ class Parameter(ParameterBase):
                 except KeyError:
                     new_history = NotImplemented
 
-                shared_types = (Component, types.MethodType)
+                shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
 
                 if isinstance(new_val, (dict, list)):
                     new_val = copy_iterable_with_shared(new_val, shared_types)
@@ -1761,6 +1763,20 @@ class SharedParameter(Parameter):
 
         super(Parameter, self).__setattr__('name', name)
 
+    @handle_external_context()
+    def get_previous(
+        self,
+        context=None,
+        index: int = 1,
+        range_start: int = None,
+        range_end: int = None,
+    ):
+        return self.source.get_previous(context, index, range_start, range_end)
+
+    @handle_external_context()
+    def get_delta(self, context=None):
+        return self.source.get_delta(context)
+
     @property
     def source(self):
         try:
@@ -1773,11 +1789,19 @@ class SharedParameter(Parameter):
                     f' cannot be stateful.'
                 )
             obj = obj.values[None]
-        except (AttributeError, KeyError):
+        except AttributeError:
             try:
                 obj = getattr(self._owner._owner, self.attribute_name)
             except AttributeError:
                 return None
+        except KeyError:
+            # KeyError means there is no stored value for this
+            # parameter, which should only occur when the source is
+            # desired for a descriptive parameter attribute value (e.g.
+            # stateful or loggable) and when either self._owner._owner
+            # is a type or is in the process of instantiating a
+            # Parameter for an instance of a Component
+            obj = getattr(self._owner._owner.defaults, self.attribute_name)
 
         try:
             obj = getattr(obj.parameters, self.shared_parameter_name)

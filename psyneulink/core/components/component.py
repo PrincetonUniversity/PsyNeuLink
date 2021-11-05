@@ -81,8 +81,9 @@ Component Structure
 *Core Structural Attributes*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Component has the following set of core structural attributes. These attributes are not meant to be changed by the
-user once the component is constructed, with the one exception of `prefs <Component_Prefs>`.
+Every Component has the following set of core structural attributes that can be specified in its constructor using the
+arguments listed below. These attributes are not meant to be changed by the user once the component is constructed,
+with the one exception of `prefs <Component_Prefs>`.
 
 .. _Component_Type:
 
@@ -96,7 +97,7 @@ user once the component is constructed, with the one exception of `prefs <Compon
   used when the Component is executed and no input is provided), and takes precedence over the specification of `size
   <Component_Size>`.
 
-  .. note::
+  .. technical_note::
     Internally, the attribute **variable** is not directly used as input to functions, to allow for parallelization.
     The attribute is maintained as a way for the user to monitor variable along the execution chain.
     During parallelization however, the attribute may not accurately represent the most current value of variable
@@ -109,6 +110,12 @@ user once the component is constructed, with the one exception of `prefs <Compon
   attribute in which case it will be assigned as an array of zeros of the specified size.  For example,
   setting  **size** = 3 is equivalent to setting **variable** = [0, 0, 0] and setting **size** = [4, 3] is equivalent
   to setting **variable** = [[0, 0, 0, 0], [0, 0, 0]].
+
+  .. note::
+     The size attribute serves a role similar to
+     `shape <https://numpy.org/doc/stable/reference/generated/numpy.shape.html> in Numpy`_, with the difference that
+     size permits the specification of `ragged arrays <https://en.wikipedia.org/wiki/Jagged_array>`_ -- that is, ones
+     that have elements of varying lengths, such as [[1,2],[3,4,5]].
 
 .. _Component_Function:
 
@@ -416,14 +423,14 @@ The following attributes and methods control and provide information about the e
 
 * **num_executions_before_finished** -- contains the number of times the Component has executed prior to finishing
   (and since it last finished);  depending upon the class, these may all be within a single call to the Component's
-  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evalutes
+  `execute <Component.execute>` method, or extend over several calls.  It is set to 0 each time `is_finished` evaluates
   to True. Note that this is distinct from the `execution_count <Component_Execution_Count>` and `num_executions
   <Component_Num_Executions>` attributes.
 
 .. _Component_Max_Executions_Before_Finished:
 
 * **max_executions_before_finished** -- determines the maximum number of executions allowed before finishing
-  (i.e., the maxmium allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
+  (i.e., the maximum allowable value of `num_executions_before_finished <Component.num_executions_before_finished>`).
   If it is exceeded, a warning message is generated.  Note that this only pertains to `num_executions_before_finished
   <Component_Num_Executions_Before_Finished>`, and not its `execution_count <Component_Execution_Count>`, which can be
   unlimited.
@@ -437,7 +444,7 @@ The following attributes and methods control and provide information about the e
 
 * **execution_count** -- maintains a record of the number of times a Component has executed since it was constructed,
   *excluding*  executions carried out during initialization and validation, but including all others whether they are
-  of the Component on its own are as part of a `Composition`, and irresective of the `context <Context>` in which
+  of the Component on its own are as part of a `Composition`, and irrespective of the `context <Context>` in which
   they are occur. The value can be changed "manually" or programmatically by assigning an integer
   value directly to the attribute.  Note that this is the distinct from the `num_executions <Component_Num_Executions>`
   and `num_executions_before_finished <Component_Num_Executions_Before_Finished>` attributes.
@@ -486,19 +493,21 @@ COMMENT
 import base64
 import collections
 import copy
-import dill
 import functools
 import inspect
 import itertools
 import logging
 import numbers
+import re
 import types
+import typing
 import warnings
-
 from abc import ABCMeta
 from collections.abc import Iterable
 from enum import Enum, IntEnum
 
+import dill
+import graph_scheduler
 import numpy as np
 
 from psyneulink.core import llvm as pnlvm
@@ -514,19 +523,19 @@ from psyneulink.core.globals.keywords import \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
-from psyneulink.core.scheduling.time import Time, TimeScale
-from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.parameters import \
     Defaults, SharedParameter, Parameter, ParameterAlias, ParameterError, ParametersBase, copy_parameter_value
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet, VERBOSE_PREF
 from psyneulink.core.globals.preferences.preferenceset import \
-    PreferenceEntry, PreferenceLevel, PreferenceSet, _assign_prefs
+    PreferenceLevel, PreferenceSet, _assign_prefs
 from psyneulink.core.globals.registry import register_category
+from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared,\
+    ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
     get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len
 from psyneulink.core.scheduling.condition import Never
+from psyneulink.core.scheduling.time import Time, TimeScale
 
 __all__ = [
     'Component', 'COMPONENT_BASE_CLASS', 'component_keywords', 'ComponentError', 'ComponentLog',
@@ -1092,8 +1101,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
-        self._handle_illegal_kwargs(**kwargs)
-
         context = Context(
             source=ContextFlags.CONSTRUCTOR,
             execution_phase=ContextFlags.IDLE,
@@ -1109,6 +1116,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except (KeyError, TypeError):
             function_params = {}
+
+        # if function is string, assume any unknown kwargs are for the
+        # corresponding UDF expression
+        if isinstance(function, (types.FunctionType, str)):
+            function_params = {
+                **kwargs,
+                **function_params
+            }
+        else:
+            self._handle_illegal_kwargs(**kwargs)
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
@@ -1317,9 +1334,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
-                val = pnlvm._tupleize(x.get_state()[1:])
+                val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
             elif isinstance(x, Time):
-                val = tuple(getattr(x, Time._time_scale_attr_map[t]) for t in TimeScale)
+                val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
                 return x._get_state_initializer(context)
             elif isinstance(x, ContentAddressableList):
@@ -1342,12 +1359,13 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "grid",
+                     "modulated_mechanisms", "grid", "control_signal_params",
                      "activation_derivative_fct", "input_specification",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "auto", "hetero", "cost", "costs", "combined_costs",
+                     "control_signal",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
@@ -1413,8 +1431,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             elif isinstance(x, Component):
                 return x._get_param_initializer(context)
 
-            try:   # This can't use tupleize and needs to recurse to handle
-                   # 'search_space' list of SampleIterators
+            try:
+                # This can't use tupleize and needs to recurse to handle
+                # 'search_space' list of SampleIterators
                 return tuple(_convert(i) for i in x)
             except TypeError:
                 return x if x is not None else tuple()
@@ -1426,6 +1445,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 return (param,)
             elif p.name == 'num_estimates':
                 return 0 if param is None else param
+            # FIX: ADD num_trials_per_estimate HERE  11/3/21
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
@@ -1940,6 +1960,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Composition_Base,
             ComponentsMeta,
             types.MethodType,
+            types.ModuleType,
             functools.partial,
         )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
@@ -2529,10 +2550,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     inspect.isclass(param_value) and
                     inspect.isclass(getattr(self.defaults, param_name))
                     and issubclass(param_value, getattr(self.defaults, param_name))):
-                    # Assign instance to target and move on
-                    #  (compatiblity check no longer needed and can't handle function)
-                    target_set[param_name] = param_value()
-                    continue
+                # Assign instance to target and move on
+                #  (compatiblity check no longer needed and can't handle function)
+                target_set[param_name] = param_value()
+                continue
 
             # Check if param value is of same type as one with the same name in defaults
             #    don't worry about length
@@ -2811,11 +2832,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
-        if isinstance(function, types.FunctionType):
-            function = UserDefinedFunction(default_variable=function_variable,
-                                                custom_function=function,
-                                                owner=self,
-                                                context=context)
+        if isinstance(function, (types.FunctionType, str)):
+            function = UserDefinedFunction(
+                default_variable=function_variable,
+                custom_function=function,
+                owner=self,
+                context=context,
+                **function_params,
+            )
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):
@@ -3012,7 +3036,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             values on the component, depending on the component type.  Otherwise, it simply reassigns the Component's
             value based on its default_variable.
         """
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
         if isinstance(self.function, IntegratorFunction):
             new_value = self.function.reset(*args, **kwargs, context=context)
             self.parameters.value.set(np.atleast_2d(new_value), context, override=True)
@@ -3081,19 +3105,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 pass
 
         self.most_recent_context = context
-
-        # Restore runtime_params to previous value
-        if runtime_params:
-            for param in runtime_params:
-                try:
-                    prev_val = getattr(self.parameters, param).get_previous(context)
-                    self._set_parameter_value(param, prev_val, context)
-                except AttributeError:
-                    try:
-                        prev_val = getattr(self.function.parameters, param).get_previous(context)
-                        self.function._set_parameter_value(param, prev_val, context)
-                    except:
-                        pass
+        self._reset_runtime_parameters(context)
 
         return value
 
@@ -3115,6 +3127,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     self.parameter_ports.parameter_mapping[param_port.source] = param_port
                 except TypeError:
                     pass
+                param_port.source._port = param_port
 
     def _get_current_parameter_value(self, parameter, context=None):
         from psyneulink.core.components.ports.parameterport import ParameterPortError
@@ -3158,6 +3171,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     raise
 
         return parameter._get(context)
+
+    def _reset_runtime_parameters(self, context):
+        if context.execution_id in self._runtime_params_reset:
+            for key in self._runtime_params_reset[context.execution_id]:
+                self._set_parameter_value(
+                    key,
+                    self._runtime_params_reset[context.execution_id][key],
+                    context
+                )
+            self._runtime_params_reset[context.execution_id] = {}
 
     def _try_execute_param(self, param, var, context=None):
         def fill_recursively(arr, value, indices=()):
@@ -3277,7 +3300,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     # MODIFIED 9/22/19 END
 
     def _get_current_execution_time(self, context):
-        from psyneulink.core.globals.context import _get_context
         return _get_time(self, context=context)
 
     def _update_current_execution_time(self, context):
@@ -3508,13 +3530,88 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 visited.add(obj)
                 obj._propagate_most_recent_context(context, visited)
 
+    def all_dependent_parameters(
+        self,
+        filter_name: typing.Union[str, typing.Iterable[str]] = None,
+        filter_regex: typing.Union[str, typing.Iterable[str]] = None,
+    ):
+        """Dictionary of Parameters of this Component and its \
+        `_dependent_components` filtered by **filter_name** and \
+        **filter_regex**. If no filter is specified, all Parameters \
+        are included.
+
+        Args:
+            filter_name (Union[str, Iterable[str]], optional): The \
+                exact name or names of Parameters to include. Defaults \
+                to None.
+            filter_regex (Union[str, Iterable[str]], optional): \
+                Regular expression patterns. If any pattern matches a \
+                Parameter name (using re.match), it will be included \
+                in the result. Defaults to None.
+
+        Returns:
+            dict[Parameter:Component]: Dictionary of filtered Parameters
+        """
+        def _all_dependent_parameters(obj, filter_name, filter_regex, visited):
+            parameters = {}
+
+            if isinstance(filter_name, str):
+                filter_name = [filter_name]
+
+            if isinstance(filter_regex, str):
+                filter_regex = [filter_regex]
+
+            if filter_name is not None:
+                filter_name = set(filter_name)
+
+            try:
+                filter_regex = [re.compile(r) for r in filter_regex]
+            except TypeError:
+                pass
+
+            for p in obj.parameters:
+                include = filter_name is None and filter_regex is None
+
+                if filter_name is not None:
+                    if p.name in filter_name:
+                        include = True
+
+                if not include and filter_regex is not None:
+                    for r in filter_regex:
+                        if r.match(p.name):
+                            include = True
+                            break
+
+                # owner check is primarily for value parameter on
+                # Composition which is deleted in
+                # ba56af82585e2d61f5b5bd13d9a19b7ee3b60124 presumably
+                # for clarity (results is used instead)
+                if include and p._owner._owner is obj:
+                    parameters[p] = obj
+
+            for c in obj._dependent_components:
+                if c not in visited:
+                    visited.add(c)
+                    parameters.update(
+                        _all_dependent_parameters(
+                            c,
+                            filter_name,
+                            filter_regex,
+                            visited
+                        )
+                    )
+
+            return parameters
+
+        return _all_dependent_parameters(self, filter_name, filter_regex, set())
+
     @property
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
         from psyneulink.core.components.ports.parameterport import ParameterPortError
-        from psyneulink.core.components.functions.transferfunctions import LinearMatrix
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 
         def parse_parameter_value(value):
             if isinstance(value, (list, tuple)):

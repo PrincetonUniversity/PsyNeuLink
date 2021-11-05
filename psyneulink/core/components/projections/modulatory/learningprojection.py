@@ -185,30 +185,31 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import parameter_keywords
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.learningfunctions import BackPropagation
-from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import ERROR_SIGNAL, LearningMechanism
+from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation, Reinforcement
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
+from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
-from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.components.projections.projection import Projection_Base, projection_keywords
-from psyneulink.core.components.shellclasses import ShellClass
 from psyneulink.core.components.ports.modulatorysignals.learningsignal import LearningSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.globals.context import Context, ContextFlags
+from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.projection import projection_keywords
+from psyneulink.core.components.shellclasses import ShellClass
+from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTEXT, FUNCTION, FUNCTION_PARAMS, INTERCEPT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
-    MATRIX, PARAMETER_PORT, PARAMETER_PORTS, PROJECTION_SENDER, SLOPE, ONLINE, AFTER
+    LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
+    MATRIX, PARAMETER_PORT, PROJECTION_SENDER, ONLINE, AFTER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import iscompatible, parameter_spec
 
 __all__ = [
-    'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError', 'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
+    'DefaultTrainingMechanism', 'LearningProjection', 'LearningProjectionError',
+    'WT_MATRIX_RECEIVERS_DIM', 'WT_MATRIX_SENDER_DIM',
 ]
 # Parameters:
 
@@ -426,7 +427,8 @@ class LearningProjection(ModulatoryProjection_Base):
         """
         value = Parameter(np.array([0]), read_only=True, aliases=['weight_change_matrix'], pnl_internal=True)
         function = Parameter(Linear, stateful=False, loggable=False)
-        error_function = Parameter(LinearCombination(weights=[[-1], [1]]), stateful=False, loggable=False, reference=True)
+        error_function = Parameter(LinearCombination(weights=[[-1], [1]]),
+                                   stateful=False, loggable=False, reference=True)
         learning_function = Parameter(BackPropagation, stateful=False, loggable=False, reference=True)
         learning_rate = Parameter(None, modulable=True)
         learning_signal = Parameter(None, read_only=True,
@@ -508,28 +510,27 @@ class LearningProjection(ModulatoryProjection_Base):
             sender = self.sender
             if isinstance(sender, LearningMechanism):
                 if len(sender.learning_signals) > 1:
-                    raise LearningProjectionError("PROGRAM ERROR: {} has more than one LearningSignal "
-                                                  "which is not currently supported".format(sender.name))
+                    raise LearningProjectionError(f"PROGRAM ERROR: {sender.name} has more than one LearningSignal "
+                                                  f"which is not currently supported")
                 sender = self.sender = sender.learning_signals[0]
 
             if any(s in {OutputPort, LearningSignal, LearningMechanism} for s in {sender, type(sender)}):
                 # If it is the outputPort of a LearningMechanism, check that it is a list or 1D np.array
                 if isinstance(sender, OutputPort):
                     if not isinstance(sender.value, (list, np.ndarray)):
-                        raise LearningProjectionError("Sender for \'{}\' (OutputPort of LearningMechanism \'{}\') "
-                                                      "must be a list or 1D np.array".format(self.name, sender.name))
+                        raise LearningProjectionError(f"Sender for '{self.name}' (OutputPort of LearningMechanism "
+                                                      f"'{sender.name}') must be a list or 1D np.array.")
                     if not np.array(sender.value).ndim >= 1:
-                        raise LearningProjectionError("OutputPort of \'{}\' (LearningMechanism for \'{}\') must be "
-                                                      "an ndarray with dim >= 1".format(sender.owner.name, self.name))
+                        raise LearningProjectionError(f"OutputPort of '{sender.owner.name}' (LearningMechanism for "
+                                                      f"'{self.name}') must be an ndarray with dim >= 1.")
                 # If specification is a LearningMechanism class, pass (it will be instantiated in _instantiate_sender)
                 elif inspect.isclass(sender) and issubclass(sender,  LearningMechanism):
                     pass
 
             else:
-                raise LearningProjectionError("The sender arg for {} ({}) must be a LearningMechanism, "
-                                              "the OutputPort or LearningSignal of one, or a reference to the class"
-                                              .format(self.name, sender.name))
-
+                raise LearningProjectionError(f"The sender arg for '{self.name}' ({sender.name}) must be a "
+                                              f"LearningMechanism, the OutputPort or LearningSignal of one, "
+                                              f"or a reference to the class.")
 
             # VALIDATE RECEIVER
             receiver = self.receiver
@@ -537,12 +538,11 @@ class LearningProjection(ModulatoryProjection_Base):
                 try:
                     receiver = self.receiver = receiver._parameter_ports[MATRIX]
                 except KeyError:
-                    raise LearningProjectionError("The MappingProjection {} specified as the receiver for {} "
-                                                  "has no MATRIX ParameterPort".format(receiver.name, self.name))
+                    raise LearningProjectionError(f"The MappingProjection '{receiver.name}' specified as the receiver "
+                                                  f"for '{self.name}' has no MATRIX ParameterPort.")
             if not any(s in {ParameterPort, MappingProjection} for s in {receiver, type(receiver)}):
-                raise LearningProjectionError("The receiver arg for {} must be a MappingProjection "
-                                              "or the MATRIX parameterPort of one."
-                                              .format(PROJECTION_SENDER, sender, self.name, ))
+                raise LearningProjectionError(f"The receiver arg for the '{PROJECTION_SENDER}' of '{self.name}' must "
+                                              f"be a MappingProjection or the MATRIX parameterPort of one.")
 
     def _instantiate_sender(self, sender, context=None):
         """Instantiate LearningMechanism
@@ -559,8 +559,8 @@ class LearningProjection(ModulatoryProjection_Base):
             warnings.warn("Instantiation of a LearningProjection outside of a Composition is tricky!")
 
         if isinstance(self.sender, OutputPort) and not isinstance(self.sender.owner, LearningMechanism):
-            raise LearningProjectionError("Sender specified for LearningProjection {} ({}) is not a LearningMechanism".
-                                          format(self.name, self.sender.owner.name))
+            raise LearningProjectionError(f"Sender specified for LearningProjection '{self.name}' "
+                                          f"({self.sender.owner.name}) is not a LearningMechanism.")
 
         # This assigns LearningProjection as an outgoing projection from the LearningMechanism's LearningSignal
         #    OutputPort and formats the LearningProjection's defaults.variable to be compatible with
@@ -582,12 +582,10 @@ class LearningProjection(ModulatoryProjection_Base):
 
         # Insure that the learning_signal is compatible with the receiver's weight matrix
         if not iscompatible(self.defaults.value, self.receiver.defaults.variable):
-            raise LearningProjectionError("The learning_signal of {} ({}) is not compatible with the matrix of "
-                                          "the MappingProjection ({}) to which it is being assigned ({})".
-                                          format(self.name,
-                                                 self.defaults.value,
-                                                 self.receiver.defaults.value,
-                                                 self.receiver.owner.name))
+            raise LearningProjectionError(f"The learning_signal of {self.name} ({self.defaults.value}) is not "
+                                          f"compatible with the matrix of the MappingProjection "
+                                          f"({self.receiver.defaults.value}) to which it is being assigned "
+                                          f"({self.receiver.owner.name}).")
 
         # Insure that learning_signal has the same shape as the receiver's weight matrix
         try:
@@ -637,8 +635,7 @@ class LearningProjection(ModulatoryProjection_Base):
         #        if the matrix being modified is a 2d array, then convert the learning_signal to a 2d diagonal matrix;
         #        if the matrix being modified is a 1d array, then expand it so that each item is a 1d array
         # NOTE: The current version is only guaranteed to work learning_signal.ndim =1 and matrix.ndim = 2
-        if (
-                (learning_signal.ndim < matrix.ndim) and
+        if ((learning_signal.ndim < matrix.ndim) and
                 np.allclose(matrix,np.diag(np.diag(matrix))) and
                 len(learning_signal)==len(np.diag(matrix))):
             learning_signal = np.diag(learning_signal)
@@ -646,10 +643,14 @@ class LearningProjection(ModulatoryProjection_Base):
             # Convert 1d array into 2d array to match format of a Projection.matrix
             learning_signal = np.expand_dims(learning_signal, axis=1)
             if learning_signal.shape != matrix.shape:
-                raise LearningProjectionError("Problem modifying learning_signal from {} ({}) "
-                                              "to match the matrix of {} it is attempting to modify ({})".
-                                              format(self.sender.owner.name, learning_signal,
-                                                     self.receiver.owner.name, matrix))
+                non_diag = np.count_nonzero(matrix - np.diag(np.diagonal(matrix)))
+                learning_fct = self.sender.owner.function
+                if isinstance(learning_fct, Reinforcement) and non_diag:
+                    learning_fct_msg = f"; for {learning_fct.componentName} it must be a diagonal matrix"
+                raise LearningProjectionError(f"Problem matching the shape of learning_signal from"
+                                              f" {self.sender.owner.name} ({learning_signal.shape}) to the shape "
+                                              f"of the matrix of {self.receiver.owner.name} "
+                                              f"it is attempting to modify ({matrix.shape}{learning_fct_msg}.")
 
         # IMPLEMENTATION NOTE:  skip Projection._execute, as that uses self.sender.value as variable,
         #                       which undermines formatting of it (as learning_signal) above

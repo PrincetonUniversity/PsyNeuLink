@@ -63,7 +63,7 @@ import typecheck as tc
 
 from collections.abc import Iterable
 
-from psyneulink.core.components.functions.transferfunctions import Identity
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort

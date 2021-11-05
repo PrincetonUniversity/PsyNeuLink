@@ -1,27 +1,27 @@
 import functools
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 Input_Layer = pnl.TransferMechanism(
     name='Input Layer',
-    function=psyneulink.core.components.functions.transferfunctions.Logistic,
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
     params={pnl.INPUT_LABELS_DICT:{'red': [-1, 30]}},
     default_variable=np.zeros((2,)))
 
 Hidden_Layer_1 = pnl.TransferMechanism(
     name='Hidden Layer_1',
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(),
     default_variable=np.zeros((5,)))
 
 Hidden_Layer_2 = pnl.TransferMechanism(
     name='Hidden Layer_2',
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(),
     default_variable=[0, 0, 0, 0])
 
 Output_Layer = pnl.TransferMechanism(
     name='Output Layer',
-    function=psyneulink.core.components.functions.transferfunctions.Logistic,
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic,
     default_variable=[0, 0, 0])
 
 Input_Weights_matrix = (np.arange(2 * 5).reshape((2, 5)) + 1) / (2 * 5)
@@ -72,8 +72,8 @@ z = pnl.Pathway(
 )
 
 
-def print_header(comp):
-    print("\n\n**** Time: ", comp.scheduler.clock.simple_time)
+def print_header(comp, context):
+    print("\n\n**** Time: ", comp.scheduler.get_clock(context).simple_time)
 
 
 def show_target(comp):

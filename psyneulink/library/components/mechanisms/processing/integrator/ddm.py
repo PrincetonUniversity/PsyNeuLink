@@ -366,19 +366,19 @@ from collections.abc import Iterable
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
-from psyneulink.core.components.functions.distributionfunctions import STARTING_VALUE, \
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import STARTING_VALUE, \
     DriftDiffusionAnalytical
-from psyneulink.core.components.functions.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import SEQUENTIAL, StandardOutputPorts
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OUTPUT_PORTS, OWNER_VALUE, \
+    ALLOCATION_SAMPLES, FUNCTION, FUNCTION_PARAMS, INPUT_PORT_VARIABLES, NAME, OWNER_VALUE, \
     THRESHOLD, VARIABLE, PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
@@ -729,7 +729,8 @@ class DDM(ProcessingMechanism):
         )
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
@@ -769,9 +770,6 @@ class DDM(ProcessingMechanism):
         # Override instantiation of StandardOutputPorts usually done in _instantiate_output_ports
         #    in order to use SEQUENTIAL indices
         self.standard_output_ports = StandardOutputPorts(self, self.standard_output_ports, indices=SEQUENTIAL)
-
-        if seed is None:
-            seed = get_global_seed()
 
         if input_format is not None and input_ports is not None:
             raise DDMError(
@@ -831,9 +829,6 @@ class DDM(ProcessingMechanism):
         if isinstance(output_ports, (str, tuple)):
             output_ports = list(output_ports)
 
-        # Instantiate RandomState
-        random_state = np.random.RandomState([seed])
-
         # IMPLEMENTATION NOTE: this manner of setting default_variable works but is idiosyncratic
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
@@ -862,7 +857,7 @@ class DDM(ProcessingMechanism):
         self.max_executions_before_finished = sys.maxsize
 
         super(DDM, self).__init__(default_variable=default_variable,
-                                  random_state=random_state,
+                                  seed=seed,
                                   input_ports=input_ports,
                                   output_ports=output_ports,
                                   function=function,
@@ -1155,7 +1150,7 @@ class DDM(ProcessingMechanism):
                                                                     threshold_ptr)
             # Load mechanism state to generate random numbers
             state = builder.function.args[1]
-            random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+            random_state = ctx.get_random_state_ptr(builder, self, state, params)
             random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
             builder.call(random_f, [random_state, random_val_ptr])
@@ -1177,7 +1172,7 @@ class DDM(ProcessingMechanism):
 
     @handle_external_context(fallback_most_recent=True)
     def reset(self, *args, force=False, context=None, **kwargs):
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 
         # (1) reset function, (2) update mechanism value, (3) update output ports
         if isinstance(self.function, IntegratorFunction):

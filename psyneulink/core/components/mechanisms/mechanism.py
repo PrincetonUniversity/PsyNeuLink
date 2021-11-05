@@ -1084,7 +1084,7 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.ports.inputport import DEFER_VARIABLE_SPEC_TO_MECH_MSG, InputPort
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -1109,7 +1109,8 @@ from psyneulink.core.globals.registry import register_category, remove_instance_
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
     iscompatible, kwCompatibilityNumeric, convert_to_list
-from psyneulink.core.scheduling.condition import Condition, TimeScale
+from psyneulink.core.scheduling.condition import Condition
+from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
     'Mechanism_Base', 'MechanismError', 'MechanismRegistry'
@@ -1782,11 +1783,9 @@ class Mechanism_Base(Mechanism):
                             default_variable = default_variable_from_input_ports
                         else:
                             raise MechanismError(
-                                'default variable determined from the specified input_ports spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_ports, size_variable,
-                                )
-                            )
+                                f'Default variable for {self.name} determined from the specified input_ports spec '
+                                f'({default_variable_from_input_ports}) is not compatible with the default variable '
+                                f'determined from size parameter ({size_variable}).')
                     else:
                         # do not pass input_ports variable as default_variable, fall back to size specification
                         pass
@@ -1794,11 +1793,9 @@ class Mechanism_Base(Mechanism):
                 if input_ports_variable_was_specified:
                     if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_ports):
                         raise MechanismError(
-                            'Default variable determined from the specified input_ports spec ({0}) for {1} '
-                            'is not compatible with its specified default variable ({2})'.format(
-                                default_variable_from_input_ports, self.name, default_variable
-                            )
-                        )
+                            f'Default variable for {self.name} determined from the specified input_ports spec '
+                            f'({default_variable_from_input_ports}) is not compatible with its specified '
+                            f'default variable ({default_variable}).')
                 else:
                     # do not pass input_ports variable as default_variable, fall back to default_variable specification
                     pass
@@ -1813,7 +1810,7 @@ class Mechanism_Base(Mechanism):
         Returns
         -------
             A, B where
-            A is an defaults.variable-like object
+            A is a defaults.variable-like object
             B is True if **input_ports** contained an explicit variable specification, False otherwise
         """
 
@@ -1839,8 +1836,8 @@ class Mechanism_Base(Mechanism):
                     default_variable_from_input_ports.append(InputPort.defaults.variable)
                     continue
                 else:
-                    raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
-                                         format(InputPort.__name__, s, self.name))
+                    raise MechanismError(f"PROGRAM ERROR: Problem parsing {InputPort.__name__} specification ({s}) "
+                                         f"for {self.name}.")
 
             mech_variable_item = None
 
@@ -2220,9 +2217,8 @@ class Mechanism_Base(Mechanism):
         If the mechanism's `function <Mechanism.function>` is an `IntegratorFunction`, or if the mechanism has and
         `integrator_function <TransferMechanism.integrator_function>` (see `TransferMechanism`), this method
         effectively begins the function's accumulation over again at the specified value, and updates related
-        attributes on the mechanism.  It also clears the
-        `value <Mechanism.value>` `history <Parameter.history`, thus
-        effectively setting the previous value to ``None``.
+        attributes on the mechanism.  It also clears the `value <Mechanism_Base.value>` `history <Parameter.history>`,
+        thus effectively setting the previous value to ``None``.
 
         If the mechanism's `function <Mechanism_Base.function>` is an `IntegratorFunction`, its `reset
         <Mechanism_Base.reset>` method:
@@ -2262,8 +2258,8 @@ class Mechanism_Base(Mechanism):
                 functions for details on their `stateful_attributes <IntegratorFunction.stateful_attributes>`,
                 as well as other reinitialization steps that the reset method may carry out.
         """
-        from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
-        from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import IntegratorFunction
+        from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
+        from psyneulink.core.components.functions.stateful.integratorfunctions import IntegratorFunction
 
         # If the primary function of the mechanism is stateful:
         # (1) reset it, (2) update value, (3) update output ports
@@ -2272,6 +2268,7 @@ class Mechanism_Base(Mechanism):
             self.parameters.value._set(convert_to_np_array(new_value, dimension=2), context=context)
             self._update_output_ports(context=context)
 
+        # FIX: SHOULD MOVE ALL OF THIS TO TransferMechanism SINCE NO OTHER MECH TYPES HAVE integrator_funtions/modes
         # If the mechanism has an auxiliary integrator function:
         # (1) reset it, (2) run the primary function with the new "previous_value" as input
         # (3) update value, (4) update output ports
@@ -2293,9 +2290,12 @@ class Mechanism_Base(Mechanism):
                 self._update_output_ports(context=context)
 
             elif hasattr(self, "integrator_mode"):
-                    raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
-                                         f"is not stateful; it does not have an integrator to reset. "
-                                         f"If it should be stateful, try setting the integrator_mode argument to True.")
+                # raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
+                #                      f"is not stateful; it does not have an integrator to reset. "
+                #                      f"If it should be stateful, try setting the integrator_mode argument to True.")
+                raise MechanismError(f"Resetting '{self.name}' is not allowed because its `integrator_mode` parameter "
+                                    f"is currently set to 'False'; try setting it to 'True'.")
+
             else:
                 raise MechanismError(f"Resetting '{self.name}' is not allowed because this Mechanism "
                                      f"is not stateful; it does not have an integrator to reset.")
@@ -2405,7 +2405,7 @@ class Mechanism_Base(Mechanism):
                                     for i in range(len(item.shape)))
                                 for item in return_value))):
 
-                        return return_value
+                    return return_value
                 else:
                     converted_to_2d = convert_to_np_array(return_value, dimension=2)
                 # If return_value is a list of heterogenous elements, return as is
@@ -2499,7 +2499,7 @@ class Mechanism_Base(Mechanism):
                                 all(item.shape[i]==value[0].shape[0]
                                     for i in range(len(item.shape)))
                                 for item in value))):
-                        pass
+                    pass
                 else:
                     converted_to_2d = convert_to_np_array(value, dimension=2)
                     # If return_value is a list of heterogenous elements, return as is
@@ -2911,24 +2911,26 @@ class Mechanism_Base(Mechanism):
         # Few extra copies will be eliminated by the compiler.
         builder.store(builder.load(params_in), params_out)
 
-        # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
+        # This should be faster than 'obj._get_compilation_params'
+        compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
+        # Filter out param ports without corresponding param for this function
+        param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
-                                              param_ports[i].name)
+                                              param_ports[i].source.name)
             return b, ptr
 
         def _fill_input(b, p_input, i):
-            param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                                       param_ports[i].name)
+            param_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
+                                                    param_ports[i].source.name)
             # Parameter port inputs are {original parameter, [modulations]},
-            # fill in the first one.
+            # here we fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            assert data_ptr.type == param_in_ptr.type, \
+            assert data_ptr.type == param_ptr.type, \
                 "Mishandled modulation type for: {} in '{}' in '{}'".format(
                     param_ports[i].name, obj.name, self.name)
-            b.store(b.load(param_in_ptr), data_ptr)
+            b.store(b.load(param_ptr), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
@@ -2938,20 +2940,20 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
-            port_spec = port._variable_spec
-            if port_spec == OWNER_VALUE:
-                return value
-            elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-                index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+        port_spec = port._variable_spec
+        if port_spec == OWNER_VALUE:
+            return value
+        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
+            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
 
-                assert index < len(value.type.pointee)
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
-            elif port_spec == OWNER_EXECUTION_COUNT:
-                execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
-                return execution_count
-            else:
-                #TODO: support more spec options
-                assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            assert index < len(value.type.pointee)
+            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
+        elif port_spec == OWNER_EXECUTION_COUNT:
+            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
+            return execution_count
+        else:
+            #TODO: support more spec options
+            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
@@ -3591,7 +3593,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for port in instantiated_input_ports:
                 if port.name is port.componentName or port.componentName + '-' in port.name:
-                        port._assign_default_port_Name()
+                    port._assign_default_port_Name()
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)

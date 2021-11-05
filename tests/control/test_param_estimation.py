@@ -10,7 +10,7 @@ from psyneulink.core.globals.sampleiterator import SampleSpec
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import OptimizationControlMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.globals.keywords import OVERRIDE
-from psyneulink.core.components.functions.optimizationfunctions import ParamEstimationFunction, GridSearch, MINIMIZE
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import ParamEstimationFunction, GridSearch, MINIMIZE
 
 @pytest.mark.parametrize("mode", ['elfi', 'GridSearch'])
 def test_moving_average(mode):

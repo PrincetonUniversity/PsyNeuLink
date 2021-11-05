@@ -33,9 +33,12 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
-from psyneulink.core.components.functions.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.function import FunctionError
-from psyneulink.core.components.functions.statefulfunctions.statefulfunction import StatefulFunction
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, FunctionError, _random_state_getter,
+    _seed_setter,
+)
+from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ACCUMULATOR_INTEGRATOR_FUNCTION, ADAPTIVE_INTEGRATOR_FUNCTION, ADDITIVE_PARAM, \
@@ -47,7 +50,7 @@ from psyneulink.core.globals.keywords import \
     RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
-from psyneulink.core.globals.utilities import parameter_spec, all_within_range, get_global_seed, \
+from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
     convert_all_elements_to_np_array
 
 __all__ = ['SimpleIntegrator', 'AdaptiveIntegrator', 'DriftDiffusionIntegrator', 'DriftOnASphereIntegrator',
@@ -107,8 +110,8 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         specifies the rate of integration.  If it is a list or array, it must be the same length as
         `variable <IntegratorFunction.variable>` (see `rate <IntegratorFunction.rate>` for details).
 
-    noise : float, function, list or 1d array : default 0.0
-        specifies random value added to integral in each call to `function <IntegratorFunction._function>`;
+    noise : float, list, array or function : default 0.0
+        specifies value added to integral in each call to `function <IntegratorFunction._function>`;
         if it is a list or array, it must be the same length as `variable <IntegratorFunction.variable>`
         (see `noise <IntegratorFunction.noise>` for additional details).
 
@@ -142,20 +145,18 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         (depending on the subclass);  if it has more than one element, each element is applied to the corresponding
         element of `variable <IntegratorFunction.variable>` and/or `previous_value <IntegratorFunction.previous_value>`.
 
-    noise : float, Function or 1d array
-        random value added to integral in each call to `function <IntegratorFunction._function>`. If `variable
-        <IntegratorFunction.variable>` is a list or array, and noise is a float or function, it is applied for each
-        element of `variable <IntegratorFunction.variable>`. If noise is a function, it is executed and applied
-        separately for each element of `variable <IntegratorFunction.variable>`.  If noise is a list or array, each
-        element is applied to each element of the integral corresponding that of `variable
+    noise : float, array or Function
+        value is added to integral in each call to `function <IntegratorFunction._function>`. If noise is a
+        float,  it is applied to all elements of `variable <IntegratorFunction.variable>`; if it is an array,
+        it is applied Hadamard (elementwise) to each element of `variable <IntegratorFunction.variable>`. If it is a
+        function, it is executed separately and applied independently to each element of `variable
         <IntegratorFunction.variable>`.
 
         .. hint::
-            To generate random noise that varies for every execution, a probability distribution function should be
-            used (see `Distribution Functions <DistributionFunction>` for details), that generates a new noise value
-            from its distribution on each execution. If noise is specified as a float, a function with a fixed
-            output, or a list or array of either of these, then noise is simply an offset that remains the same
-            across all executions.
+            To generate random noise that varies for every execution and across all elements of an array, a
+            `DistributionFunction` should be used, that generates a new value on each execution. If noise is
+            specified as a float, a function with a fixed output, or an array of either of these, then noise
+            is simply an offset that is the same across all elements and executions.
 
     initializer : float or 1d array
         determines the starting value(s) for integration (i.e., the value(s) to which `previous_value
@@ -1211,6 +1212,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # MODIFIED 6/21/19 NEW: [JDC]
         return self.convert_output_type(adjusted_value, variable)
         # MODIFIED 6/21/19 END
+
 
 S_MINUS_L = 's-l'
 L_MINUS_S = 'l-s'
@@ -2367,10 +2369,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         initializer = Parameter(np.array([0]), aliases=['starting_value'])
         non_decision_time = Parameter(0.0, modulable=True)
         threshold = Parameter(100.0, modulable=True)
-        time_step_size = Parameter(0.01, modulable=True)
+        time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='non_decision_time', pnl_internal=True)
-        seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2403,11 +2405,6 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         **kwargs
     ):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
@@ -2418,7 +2415,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             threshold=threshold,
             noise=noise,
             offset=offset,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2497,7 +2494,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
         rand_val_ptr = builder.alloca(ctx.float_ty)
         rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
         builder.call(rand_f, [random_state, rand_val_ptr])
@@ -2869,8 +2866,8 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         dimension = Parameter(2, stateful=False, read_only=True)
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
-        seed = Parameter(None, read_only=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2923,11 +2920,6 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
                  prefs: tc.optional(is_pref_set) = None,
                  **kwargs):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
@@ -2940,7 +2932,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
             noise=noise,
             offset=offset,
             dimension=dimension,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2993,7 +2985,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         initializers.remove('initializer')
         self._instantiate_stateful_attributes(self.stateful_attributes, initializers, context)
 
-        from psyneulink.core.components.functions.transferfunctions import Angle
+        from psyneulink.core.components.functions.nonstateful.transferfunctions import Angle
         angle_function = self.parameters.angle_function.default_value or Angle
         dimension = self.parameters.dimension.default_value
 
@@ -3407,7 +3399,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         initializer = Parameter(np.array([0]), aliases=['starting_value'])
         non_decision_time = Parameter(0.0, modulable=True)
         previous_time = Parameter(0.0, initializer='non_decision_time', pnl_internal=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3434,11 +3427,6 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         **kwargs
     ):
 
-        if seed is None:
-            seed = get_global_seed()
-
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             rate=rate,
@@ -3451,7 +3439,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             previous_value=starting_value,
             previous_time=non_decision_time,
             params=params,
-            random_state=random_state,
+            seed=seed,
             owner=owner,
             prefs=prefs,
             **kwargs

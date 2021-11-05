@@ -14,9 +14,9 @@ from ctypes import util
 from llvmlite import ir
 
 from .debug import debug_env
-from ..scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
+from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
     EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
-from ..scheduling.time import TimeScale
+from psyneulink.core.scheduling.time import TimeScale
 
 
 @contextmanager
@@ -136,6 +136,9 @@ def exp(ctx, builder, x):
     exp_f = ctx.get_builtin("exp", [x.type])
     return builder.call(exp_f, [x])
 
+def sqrt(ctx, builder, x):
+    sqrt_f = ctx.get_builtin("sqrt", [x.type])
+    return builder.call(sqrt_f, [x])
 
 def tanh(ctx, builder, x):
     tanh_f = ctx.get_builtin("tanh", [x.type])
@@ -207,8 +210,43 @@ def create_allocation(builder, allocation, search_space, idx):
         builder.store(val, slot_ptr)
 
 
+def convert_type(builder, val, t):
+    assert isinstance(t, ir.Type)
+    if val.type == t:
+        return val
+
+    if is_floating_point(val) and is_boolean(t):
+        # convert any scalar to bool by comparing to 0
+        # Python converts both 0.0 and -0.0 to False
+        return builder.fcmp_unordered("!=", val, val.type(0.0))
+
+    if is_boolean(val) and is_floating_point(t):
+        # float(True) == 1.0, float(False) == 0.0
+        return builder.select(val, t(1.0), t(0.0))
+
+    if is_integer(val) and is_integer(t):
+        if val.type.width > t.width:
+            return builder.trunc(val, t)
+        elif val.type.width < t.width:
+            # Python integers are signed
+            return builder.sext(val, t)
+        else:
+            assert False, "Unknown integer conversion: {} -> {}".format(val.type, t)
+
+    if is_integer(val) and is_floating_point(t):
+        # Python integers are signed
+        return builder.sitofp(val, t)
+
+    if is_floating_point(val) and is_integer(t):
+        # Python integers are signed
+        return builder.fptosi(val, t)
+
+    assert False, "Unknown type conversion: {} -> {}".format(val.type, t)
+
+
 def is_pointer(x):
     type_t = getattr(x, "type", x)
+    assert isinstance(type_t, ir.Type)
     return isinstance(type_t, ir.PointerType)
 
 def is_floating_point(x):

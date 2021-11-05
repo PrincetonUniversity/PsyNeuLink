@@ -6,12 +6,12 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination
-from psyneulink.core.components.functions.learningfunctions import Reinforcement, BackPropagation
-from psyneulink.core.components.functions.optimizationfunctions import GridSearch
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import \
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
+from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
     AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
-from psyneulink.core.components.functions.transferfunctions import \
+from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
@@ -32,9 +32,9 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
     LEARNED_PROJECTIONS, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
-from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never
+from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
-from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.modulatory.control.agt.lccontrolmechanism import LCControlMechanism
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
@@ -2259,6 +2259,23 @@ class TestExecutionOrder:
 
         assert np.allclose(comp1.results[:3], [[[0.52497918747894]], [[0.5719961329315186]], [[0.6366838893983633]]])
 
+    @pytest.mark.composition
+    def test_exact_time(self):
+        A = ProcessingMechanism(name="A")
+        B = ProcessingMechanism(name="B")
+
+        comp = Composition(name="comp")
+        comp.add_linear_processing_pathway([A, B])
+
+        # these cannot run at same execution set unless in EXACT_TIME
+        comp.scheduler.add_condition(A, TimeInterval(start=1))
+        comp.scheduler.add_condition(B, TimeInterval(start=1))
+
+        comp.run(inputs={A: [1.0]}, scheduling_mode=SchedulingMode.EXACT_TIME)
+
+        assert comp.scheduler.mode == SchedulingMode.EXACT_TIME
+        assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
+        assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
 class TestGetMechanismsByRole:
 
@@ -4281,82 +4298,82 @@ class TestNestedCompositions:
         assert myMech6 in terminals
 
     def test_combine_two_overlapping_trees(self):
-            # Goal:
+        # Goal:
 
-            # Mech1 --
-            #          --> Mech3 --
-            # Mech2 --              --> Mech5
-            #              Mech4 --
+        # Mech1 --
+        #          --> Mech3 --
+        # Mech2 --              --> Mech5
+        #              Mech4 --
 
-            # create first composition -----------------------------------------------
+        # create first composition -----------------------------------------------
 
-            # Mech1 --
-            #           --> Mech3
-            # Mech2 --
+        # Mech1 --
+        #           --> Mech3
+        # Mech2 --
 
-            tree1 = Composition()
+        tree1 = Composition()
 
-            myMech1 = TransferMechanism(name="myMech1")
-            myMech2 = TransferMechanism(name="myMech2")
-            myMech3 = TransferMechanism(name="myMech3")
-            myMech4 = TransferMechanism(name="myMech4")
-            myMech5 = TransferMechanism(name="myMech5")
+        myMech1 = TransferMechanism(name="myMech1")
+        myMech2 = TransferMechanism(name="myMech2")
+        myMech3 = TransferMechanism(name="myMech3")
+        myMech4 = TransferMechanism(name="myMech4")
+        myMech5 = TransferMechanism(name="myMech5")
 
-            tree1.add_node(myMech1)
-            tree1.add_node(myMech2)
-            tree1.add_node(myMech3)
-            tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
-            tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
+        tree1.add_node(myMech1)
+        tree1.add_node(myMech2)
+        tree1.add_node(myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
 
-            # validate first composition ---------------------------------------------
+        # validate first composition ---------------------------------------------
 
-            tree1._analyze_graph()
-            origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 2
-            assert myMech1 in origins
-            assert myMech2 in origins
-            terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech3 in terminals
+        tree1._analyze_graph()
+        origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 2
+        assert myMech1 in origins
+        assert myMech2 in origins
+        terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech3 in terminals
 
-            # create second composition ----------------------------------------------
+        # create second composition ----------------------------------------------
 
-            # Mech3 --
-            #           --> Mech5
-            # Mech4 --
+        # Mech3 --
+        #           --> Mech5
+        # Mech4 --
 
-            tree2 = Composition()
-            tree2.add_node(myMech3)
-            tree2.add_node(myMech4)
-            tree2.add_node(myMech5)
-            tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
-            tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
+        tree2 = Composition()
+        tree2.add_node(myMech3)
+        tree2.add_node(myMech4)
+        tree2.add_node(myMech5)
+        tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
+        tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
 
-            # validate second composition ----------------------------------------------
+        # validate second composition ----------------------------------------------
 
-            tree2._analyze_graph()
-            origins = tree2.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 2
-            assert myMech3 in origins
-            assert myMech4 in origins
-            terminals = tree2.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech5 in terminals
+        tree2._analyze_graph()
+        origins = tree2.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 2
+        assert myMech3 in origins
+        assert myMech4 in origins
+        terminals = tree2.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech5 in terminals
 
-            # combine the compositions -------------------------------------------------
+        # combine the compositions -------------------------------------------------
 
-            tree1.add_pathway(tree2)
-            tree1._analyze_graph()
-            # no need for a projection connecting the two compositions because they share myMech3
+        tree1.add_pathway(tree2)
+        tree1._analyze_graph()
+        # no need for a projection connecting the two compositions because they share myMech3
 
-            origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 3
-            assert myMech1 in origins
-            assert myMech2 in origins
-            assert myMech4 in origins
-            terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech5 in terminals
+        origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 3
+        assert myMech1 in origins
+        assert myMech2 in origins
+        assert myMech4 in origins
+        terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech5 in terminals
 
     # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM:
     # FIX SHOULD THESE BE RE-WRITTEN WITH STANDARD NESTED COMPOSITIONS AND PATHWAYS?

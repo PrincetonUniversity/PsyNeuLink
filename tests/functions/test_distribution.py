@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 import psyneulink.core.llvm as pnlvm
-import psyneulink.core.components.functions.distributionfunctions as Functions
+import psyneulink.core.components.functions.nonstateful.distributionfunctions as Functions
 
 np.random.seed(0)
 test_var = np.random.rand()
@@ -26,6 +26,8 @@ test_data = [
     # Two tests with different inputs to show that input is ignored.
     (Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
     (Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
+    (Functions.UniformDist, 1e14, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6879771504250405)),
+    (Functions.UniformDist, 1e-4, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6879771504250405)),
 ]
 
 # use list, naming function produces ugly names
@@ -36,6 +38,8 @@ names = [
 #    "DriftDiffusionAnalytical-SmallDriftRate",
     "NormalDist1",
     "NormalDist2",
+    "UniformDist1",
+    "UniformDist2",
 ]
 
 @pytest.mark.function
@@ -47,13 +51,9 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mo
     if func_mode != 'Python' and llvm_skip:
         pytest.skip(llvm_skip)
     f = func(default_variable=variable, **params)
-    if func_mode == 'Python':
-        ex = f
-    elif func_mode == 'LLVM':
-        ex = pnlvm.execution.FuncExecution(f).execute
-    elif func_mode == 'PTX':
-        ex = pnlvm.execution.FuncExecution(f).cuda_execute
+    ex = pytest.helpers.get_func_execution(f, func_mode)
     res = ex(variable)
+
     assert np.allclose(res, expected)
     if benchmark.enabled:
-        benchmark(f.function, variable)
+        benchmark(ex, variable)

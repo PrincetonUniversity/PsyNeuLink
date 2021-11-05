@@ -3,7 +3,7 @@ import numpy as np
 import psyneulink as pnl
 import pytest
 
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 import psyneulink.core.llvm as pnlvm
 
 class TestLCControlMechanism:
@@ -17,15 +17,15 @@ class TestLCControlMechanism:
         starting_value_LC = 2.0
         user_specified_gain = 1.0
 
-        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='A')
-        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=user_specified_gain), name='B')
+        A = pnl.TransferMechanism(function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=user_specified_gain), name='A')
+        B = pnl.TransferMechanism(function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=user_specified_gain), name='B')
         C = pnl.Composition()
         LC = pnl.LCControlMechanism(
             modulated_mechanisms=[A, B],
             base_level_gain=G,
             scaling_factor_gain=k,
             objective_mechanism=pnl.ObjectiveMechanism(
-                function=psyneulink.core.components.functions.transferfunctions.Linear,
+                function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear,
                 monitor=[B],
                 name='LC ObjectiveMechanism'
             )
@@ -81,16 +81,7 @@ class TestLCControlMechanism:
             scaling_factor_gain=0.5,
             default_variable = 10.0
         )
-        if mech_mode == 'Python':
-            def EX(variable):
-                LC.execute(variable)
-                return LC.output_values
-        elif mech_mode == 'LLVM':
-            e = pnlvm.execution.MechExecution(LC)
-            EX = e.execute
-        elif mech_mode == 'PTX':
-            e = pnlvm.execution.MechExecution(LC)
-            EX = e.cuda_execute
+        EX = pytest.helpers.get_mech_execution(LC, mech_mode)
 
         val = EX([10.0])
         # All values are the same because LCControlMechanism assigns all of its ControlSignals to the same value

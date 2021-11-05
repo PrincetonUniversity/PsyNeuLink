@@ -4,7 +4,7 @@ import pytest
 
 from collections import OrderedDict
 
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 
 class TestLog:
@@ -517,7 +517,7 @@ class TestLog:
         T1 = pnl.TransferMechanism(name='log_test_T1',
                                    size=2)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=2.0),
+                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=2.0),
                                    size=2)
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
@@ -777,7 +777,7 @@ class TestLog:
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
+                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=6.0))
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
         def pass_threshold(mech, thresh):
@@ -830,7 +830,7 @@ class TestLog:
                                    integrator_mode=True,
                                    integration_rate=0.5)
         T2 = pnl.TransferMechanism(name='log_test_T2',
-                                   function=psyneulink.core.components.functions.transferfunctions.Linear(slope=6.0))
+                                   function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=6.0))
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
         def pass_threshold(mech, thresh):

@@ -502,9 +502,7 @@ import typecheck as tc
 
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
-from psyneulink.core.components.functions.transferfunctions import Linear
-from psyneulink.core.components.functions.combinationfunctions import CombinationFunction, LinearCombination, Reduce
-from psyneulink.core.components.functions.statefulfunctions.memoryfunctions import Buffer
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port_list, port_type_keywords
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -1392,7 +1390,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
     return port_list
 
 def _parse_shadow_inputs(owner, input_ports):
-    """Parses any {SHADOW_INPUTS:[InputPort or Mechaism,...]} items in input_ports into InputPort specif. dict."""
+    """Parses any {SHADOW_INPUTS:[InputPort or Mechanism,...]} items in input_ports into InputPort specif. dict."""
 
     input_ports_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_ports):

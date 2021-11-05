@@ -1,7 +1,7 @@
 import numpy as np
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.function as Function
-import psyneulink.core.components.functions.objectivefunctions as Functions
+import psyneulink.core.components.functions.nonstateful.objectivefunctions as Functions
 import psyneulink.core.globals.keywords as kw
 import pytest
 
@@ -16,6 +16,7 @@ def correlation(v1,v2):
     v1_norm = v1 - np.mean(v1)
     v2_norm = v2 - np.mean(v2)
     return np.sum(v1_norm * v2_norm) / np.sqrt(np.sum(v1_norm**2) * np.sum(v2_norm**2))
+
 
 test_data = [
     (kw.MAX_ABS_DIFF, False, None, np.max(abs(v1 - v2))),
@@ -73,14 +74,7 @@ def test_basic(variable, metric, normalize, fail, expected, benchmark, func_mode
 
     benchmark.group = "DistanceFunction " + metric + ("-normalized" if normalize else "")
     f = Functions.Distance(default_variable=variable, metric=metric, normalize=normalize)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = benchmark(EX, variable)
 

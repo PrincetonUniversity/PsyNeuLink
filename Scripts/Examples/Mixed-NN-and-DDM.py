@@ -1,23 +1,22 @@
 import numpy as np
 import psyneulink as pnl
-import psyneulink.core.components.functions.distributionfunctions
-import psyneulink.core.components.functions.transferfunctions
+import psyneulink.core.components.functions.nonstateful.transferfunctions
 
 myInputLayer = pnl.TransferMechanism(
     name='Input Layer',
-    function=psyneulink.core.components.functions.transferfunctions.Linear(),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(),
     default_variable=[0, 0]
 )
 
 myHiddenLayer = pnl.TransferMechanism(
     name='Hidden Layer 1',
-    function=psyneulink.core.components.functions.transferfunctions.Logistic(gain=1.0, x_0=0),
+    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Logistic(gain=1.0, x_0=0),
     default_variable=np.zeros((5,))
 )
 
 myDDM = pnl.DDM(
     name='My_DDM',
-    function=psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical(
+    function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
         drift_rate=0.5,
         threshold=1,
         starting_value=0.0

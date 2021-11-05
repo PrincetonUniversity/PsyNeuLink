@@ -150,6 +150,7 @@ class TestReduce:
     #     # print("mech = ", R_mechanism.execute([[[1, 2], [3, 4, 5], [6, 7, 8, 9]]]))
     #
 
+
 SIZE=5
 np.random.seed(0)
 #This gives us the correct 2d array
@@ -213,15 +214,7 @@ def test_reduce_function(variable, operation, exponents, weights, scale, offset,
             pytest.xfail("vector offset is not supported")
         raise e from None
 
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
-
+    EX = pytest.helpers.get_func_execution(f, func_mode)
     res = benchmark(EX, variable)
 
     scale = 1.0 if scale is None else scale
@@ -259,15 +252,7 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
                               weights=weights,
                               scale=scale,
                               offset=offset)
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
-
+    EX = pytest.helpers.get_func_execution(f, func_mode)
     res = benchmark(EX, variable)
 
     scale = 1.0 if scale is None else scale
@@ -291,18 +276,11 @@ def test_linear_combination_function(variable, operation, exponents, weights, sc
 @pytest.mark.parametrize("input, input_ports", [ ([[1,2,3,4]], ["hi"]), ([[1,2,3,4], [5,6,7,8], [9,10,11,12]], ['1','2','3']), ([[1, 2, 3, 4], [5, 6, 7, 8], [0, 0, 1, 2]], ['1','2','3']) ], ids=["1S", "2S", "3S"])
 @pytest.mark.parametrize("scale", [None, 2.5, [1,2.5,0,0]], ids=["S_NONE", "S_SCALAR", "S_VECTOR"])
 @pytest.mark.parametrize("offset", [None, 1.5, [1,2.5,0,0]], ids=["O_NONE", "O_SCALAR", "O_VECTOR"])
-def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, func_mode):
+def test_linear_combination_function_in_mechanism(operation, input, input_ports, scale, offset, benchmark, mech_mode):
     f = pnl.LinearCombination(default_variable=input, operation=operation, scale=scale, offset=offset)
     p = pnl.ProcessingMechanism(size=[len(input[0])] * len(input), function=f, input_ports=input_ports)
 
-    if func_mode == 'Python':
-        EX = p.execute
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.MechExecution(p)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.MechExecution(p)
-        EX = e.cuda_execute
+    EX = pytest.helpers.get_mech_execution(p, mech_mode)
 
     res = benchmark(EX, input)
 

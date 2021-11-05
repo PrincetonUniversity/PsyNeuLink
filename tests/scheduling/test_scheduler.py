@@ -1,18 +1,18 @@
+import fractions
 import logging
 import numpy as np
 import psyneulink as pnl
 import pytest
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DriftDiffusionIntegrator
-from psyneulink.core.components.functions.transferfunctions import Linear
+from psyneulink import _unit_registry
+from psyneulink.core.components.functions.stateful.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, EdgeType
-from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import VALUE
-from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, \
-    EveryNCalls, EveryNPasses, JustRan, WhenFinished, Never
+from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
@@ -46,7 +46,7 @@ class TestScheduler:
         A = TransferMechanism(function=Linear(slope=5.0, intercept=2.0), name='scheduler-pytests-A')
         comp.add_node(A)
 
-        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.get_clock(comp.scheduler.default_execution_id)._increment_time(TimeScale.TRIAL)
 
         eid = 'eid'
         eid1 = 'eid1'
@@ -54,7 +54,7 @@ class TestScheduler:
 
         assert comp.scheduler.clocks[eid].time.trial == 0
 
-        comp.scheduler.clock._increment_time(TimeScale.TRIAL)
+        comp.scheduler.get_clock(comp.scheduler.default_execution_id)._increment_time(TimeScale.TRIAL)
 
         assert comp.scheduler.clocks[eid].time.trial == 0
 
@@ -1170,7 +1170,7 @@ class TestTermination:
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
         # reset the RUN because schedulers run TRIALs
-        sched.clock._increment_time(TimeScale.RUN)
+        sched.get_clock(sched.default_execution_id)._increment_time(TimeScale.RUN)
         sched._reset_counts_total(TimeScale.RUN, execution_id=sched.default_execution_id)
 
         output = list(sched.run())
@@ -1638,3 +1638,27 @@ class TestFeedback:
         r = comp.run(inputs=[1], num_trials=5, execution_mode=mode)
         assert np.allclose(r, expected_result[-1])
         assert np.allclose(comp.results, expected_result)
+
+
+class TestAbsoluteTime:
+
+    @pytest.mark.parametrize(
+        'conditions, interval',
+        [
+            ({'A': TimeInterval(repeat=8), 'B': TimeInterval(repeat=4)}, fractions.Fraction(4, 3) * _unit_registry.ms),
+            ({'A': TimeInterval(repeat=1), 'B': TimeInterval(repeat=3)}, fractions.Fraction(1, 3) * _unit_registry.ms),
+            ({'A': Any(TimeInterval(repeat=2), TimeInterval(repeat=3))}, fractions.Fraction(1, 3) * _unit_registry.ms),
+            ({'A': TimeInterval(repeat=6), 'B': TimeInterval(repeat=3)}, 1 * _unit_registry.ms),
+            ({'A': TimeInterval(repeat=100 * _unit_registry.us), 'B': TimeInterval(repeat=2)}, fractions.Fraction(100, 3) * _unit_registry.us),
+            ({'A': Any(TimeInterval(repeat=1000 * _unit_registry.us), TimeInterval(repeat=2))}, fractions.Fraction(1, 3) * _unit_registry.ms),
+            ({'A': TimeInterval(repeat=1000 * _unit_registry.us), 'B': TimeInterval(repeat=2)}, fractions.Fraction(1, 3) * _unit_registry.ms),
+            ({'A': Any(TimeInterval(repeat=1000), TimeInterval(repeat=1500)), 'B': TimeInterval(repeat=2000)}, fractions.Fraction(500, 3) * _unit_registry.ms),
+        ]
+    )
+    def test_absolute_interval_linear(self, three_node_linear_composition, conditions, interval):
+        [A, B, C], comp = three_node_linear_composition
+
+        for node in conditions:
+            comp.scheduler.add_condition(eval(node), conditions[node])
+
+        assert comp.scheduler._get_absolute_consideration_set_execution_unit() == interval

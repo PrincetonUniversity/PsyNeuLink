@@ -39,7 +39,10 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.function import Function_Base, is_function_type
+from psyneulink.core.components.functions.function import (
+    DEFAULT_SEED, Function_Base, _random_state_getter,
+    _seed_setter, is_function_type,
+)
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.defaults import MPI_IMPLEMENTATION
 from psyneulink.core.globals.keywords import \
@@ -47,7 +50,7 @@ from psyneulink.core.globals.keywords import \
     OPTIMIZATION_FUNCTION_TYPE, OWNER, VALUE, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.sampleiterator import SampleIterator
-from psyneulink.core.globals.utilities import call_with_pruned_args, get_global_seed
+from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess', 'ParamEstimationFunction',
            'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION',
@@ -143,18 +146,17 @@ class OptimizationFunction(Function_Base):
         the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
         relevant argument(s) as `NotImplemnted`.
 
-    COMMENT:
-    NOTES TO DEVELOPERS:
-    - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
-      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`) so
-      that subclasses can be used interchangeably by OptimizationMechanisms.
+    .. technical_note::
+       - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments
+         required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
+         `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
-    - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-      `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
-      reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
-      `NotImplemented` should be passed as the argument's value in the call to super (i.e., the OptimizationFunction's
-      constructor).
-    COMMENT
+       - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
+         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
+         `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
+         the OptimizationFunction's
+         constructor).
 
 
     Arguments
@@ -523,7 +525,6 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
-        from psyneulink.core.compositions.report import ReportOutput
         if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
             _show_progress = True
             _progress_bar_char = '.'
@@ -573,6 +574,29 @@ class OptimizationFunction(Function_Base):
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
+
+
+class GridBasedOptimizationFunction(OptimizationFunction):
+    """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
+
+    def _grid_evaluate(self, ocm, context):
+
+        assert ocm is ocm.agent_rep.controller
+        # Compiled evaluate expects the same variable as mech function
+        variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
+        num_evals = np.prod([d.num for d in self.search_space])
+
+        # Map allocations to values
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        execution_mode = ocm.parameters.comp_execution_mode._get(context)
+        if execution_mode == "PTX":
+            outcomes = comp_exec.cuda_evaluate(variable, num_evals)
+        elif execution_mode == "LLVM":
+            outcomes = comp_exec.thread_evaluate(variable, num_evals)
+        else:
+            assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
+
+        return outcomes, num_evals
 
 
 ASCENT = 'ascent'
@@ -1118,7 +1142,7 @@ MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
 
 
-class GridSearch(OptimizationFunction):
+class GridSearch(GridBasedOptimizationFunction):
     """
     GridSearch(                      \
         default_variable=None,       \
@@ -1149,7 +1173,7 @@ class GridSearch(OptimizationFunction):
     `search_space <GridSearch.search_space>2` is contained in `num_iterations <GridSearch.num_iterations>`).
     Iteration continues until all values in `search_space <GridSearch.search_space>` have been evaluated (i.e.,
     `num_iterations <GridSearch.num_iterations>` is reached), or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    exceeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
     is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
     <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
     samples evaluated and their values if either `save_samples <GridSearch.save_samples>` or `save_values
@@ -1271,7 +1295,8 @@ class GridSearch(OptimizationFunction):
         grid = Parameter(None)
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
@@ -1305,10 +1330,6 @@ class GridSearch(OptimizationFunction):
         self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
         # self.tolerance = tolerance
 
-        if seed is None:
-            seed = get_global_seed()
-        random_state = np.random.RandomState([seed])
-
         super().__init__(
             default_variable=default_variable,
             objective_function=objective_function,
@@ -1318,7 +1339,7 @@ class GridSearch(OptimizationFunction):
             select_randomly_from_optimal_values=select_randomly_from_optimal_values,
             save_samples=True,
             save_values=save_values,
-            random_state=random_state,
+            seed=seed,
             direction=direction,
             params=params,
             owner=owner,
@@ -1601,20 +1622,9 @@ class GridSearch(OptimizationFunction):
         return builder
 
     def _run_grid(self, ocm, variable, context):
-        assert ocm is ocm.agent_rep.controller
-        # Compiled evaluate expects the same variable as mech function
-        new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
-        num_evals = np.prod([d.num for d in self.search_space])
 
-        # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        variant = ocm.parameters.comp_execution_mode._get(context)
-        if variant == "PTX":
-            ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
-        elif variant == "LLVM":
-            ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
-        else:
-            assert False, "Unknown OCM execution variant: {}".format(variant)
+        # "ct" => c-type variables
+        ct_values, num_evals = self._grid_evaluate(ocm, context)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
@@ -1633,7 +1643,7 @@ class GridSearch(OptimizationFunction):
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                  ct_values, ct_opt_count, ct_start, ct_stop)
 
-        return ct_opt_sample, ct_opt_value, ct_values
+        return np.ctypeslib.as_array(ct_opt_sample), ct_opt_value.value, np.ctypeslib.as_array(ct_values)
 
     def _function(self,
                  variable=None,
@@ -1691,7 +1701,6 @@ class GridSearch(OptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
-            from psyneulink.core.compositions.report import ReportOutput
             if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
                 _show_progress = True
                 _progress_bar_char = '.'
@@ -1762,14 +1771,24 @@ class GridSearch(OptimizationFunction):
 
 
             ocm = self._get_optimized_controller()
-            if ocm is not None and \
-               (ocm.parameters.comp_execution_mode._get(context) == "PTX" or
-                ocm.parameters.comp_execution_mode._get(context) == "LLVM"):
-                    opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
-                    # This should not be evaluated unless needed
-                    all_samples = [itertools.product(*self.search_space)]
-                    value_optimal = opt_value
-                    sample_optimal = opt_sample
+
+            # Compiled version
+            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+                opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
+                # This should not be evaluated unless needed
+                all_samples = [s for s in itertools.product(*self.search_space)]
+                value_optimal = opt_value
+                sample_optimal = opt_sample
+
+                # These are normally stored in the parent function (OptimizationFunction).
+                # Since we didn't  call super()._function like the python path,
+                # save the values here
+                if self.parameters.save_samples._get(context):
+                    self.parameters.saved_samples._set(all_samples, context)
+                if self.parameters.save_values._get(context):
+                    self.parameters.saved_values._set(all_values, context)
+
+            # Python version
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
@@ -2240,7 +2259,8 @@ class ParamEstimationFunction(OptimizationFunction):
                     :type: ``bool``
         """
         variable = Parameter([[0], [0]], read_only=True)
-        random_state = Parameter(None, stateful=True, loggable=False)
+        random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
+        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
         save_samples = True
         save_values = True
 
@@ -2279,17 +2299,6 @@ class ParamEstimationFunction(OptimizationFunction):
                               'n_sim': self._n_sim,
                               'bar': False}
 
-        # If no seed is specified, generate a different random one for
-        # each instance
-        if seed is None:
-            self._seed = get_global_seed()
-        else:
-            self._seed = seed
-
-        # Setup a RNG for our stuff, we will also pass the seed to ELFI for
-        # its crap.
-        random_state = np.random.RandomState([seed])
-
         # Our instance of elfi model
         self._elfi_model = None
 
@@ -2305,7 +2314,7 @@ class ParamEstimationFunction(OptimizationFunction):
             search_termination_function=None,
             save_samples=True,
             save_values=True,
-            random_state=random_state,
+            seed=seed,
             params=params,
             owner=owner,
             prefs=prefs,
@@ -2387,7 +2396,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # FIXME: This doesn't work at the moment. Need to use for loop below.
             # The batch_size is the number of estimates/simulations, set it on the
             # optimization control mechanism.
-            # self.owner.parameters.num_estimates.set(batch_size, execution_id)
+            # self.owner.parameters.num_trials_per_estimate.set(batch_size, execution_id)
 
             # Run batch_size simulations of the PsyNeuLink composition
             results = []
@@ -2448,7 +2457,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # Create the discrepancy node.
             d = elfi.Distance('euclidean', *summary_nodes)
 
-            self._sampler = elfi.Rejection(d, batch_size=1, seed=self._seed)
+            self._sampler = elfi.Rejection(d, batch_size=1, seed=self.parameters.seed._get(context))
 
             # Store our new model
             self._elfi_model = my_elfi_model

@@ -470,6 +470,7 @@ class LogCondition(enum.IntFlag):
         except KeyError:
             raise LogError("\'{}\' is not a value of {}".format(s, LogCondition))
 
+
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 EXECUTION_CONDITION_NAMES = {LogCondition.PROCESSING.name,
                              LogCondition.LEARNING.name,
@@ -482,6 +483,8 @@ class LogTimeScaleIndices(AutoNumber):
     TRIAL = ()
     PASS = ()
     TIME_STEP = ()
+
+
 NUM_TIME_SCALES = len(LogTimeScaleIndices.__members__)
 TIME_SCALE_NAMES = list(LogTimeScaleIndices.__members__)
 
@@ -1886,9 +1889,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
     for mech in composition.mechanisms:
         for component in mech.log.loggable_components:
             if component.logPref & curr_condition:
-                # value = LogEntry((composition.scheduler.clock.time.run,
-                #                   composition.scheduler.clock.time.trial,
-                #                   composition.scheduler.clock.time.time_step),
+                # value = LogEntry((composition.scheduler.get_clock(context).time.run,
+                #                   composition.scheduler.get_clock(context).time.trial,
+                #                   composition.scheduler.get_clock(context).time.time_step),
                 #                  # context,
                 #                  curr_condition,
                 #                  component.value)
@@ -1898,9 +1901,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
         for proj in mech.afferents:
             for component in proj.log.loggable_components:
                 if component.logPref & curr_condition:
-                    # value = LogEntry((composition.scheduler.clock.time.run,
-                    #                   composition.scheduler.clock.time.trial,
-                    #                   composition.scheduler.clock.time.time_step),
+                    # value = LogEntry((composition.scheduler.get_clock(context).time.run,
+                    #                   composition.scheduler.get_clock(context).time.trial,
+                    #                   composition.scheduler.get_clock(context).time.time_step),
                     #                  context,
                     #                  component.value)
                     # component.log._log_value(value, context)
@@ -1910,9 +1913,9 @@ def _log_trials_and_runs(composition, curr_condition: tc.enum(LogCondition.TRIAL
     # for proj in composition.projections:
     #     for component in proj.log.loggable_components:
     #         if component.logPref & curr_condition:
-    #             value = LogEntry((composition.scheduler.clock.time.run,
-    #                               composition.scheduler.clock.time.trial,
-    #                               composition.scheduler.clock.time.time_step),
+    #             value = LogEntry((composition.scheduler.get_clock(context).time.run,
+    #                               composition.scheduler.get_clock(context).time.trial,
+    #                               composition.scheduler.get_clock(context).time.time_step),
     #                              context,
     #                              component.value)
     #             component.log._log_value(value, context)

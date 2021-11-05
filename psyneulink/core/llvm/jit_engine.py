@@ -9,32 +9,33 @@
 # ********************************************* LLVM bindings **************************************************************
 
 from llvmlite import binding
+import time
+import warnings
 
 from .builder_context import LLVMBuilderContext, _find_llvm_function, _gen_cuda_kernel_wrapper_module
 from .builtins import _generate_cpu_builtins_module
 from .debug import debug_env
 
 try:
-    if "cuda" in debug_env:
-        import pycuda
-        # Do not continue if the version is too old
-        if pycuda.VERSION[0] >= 2018:
-            import pycuda.driver
-            # pyCUDA needs to be built against 5.5+ to enable Linker
-            if pycuda.driver.get_version()[0] > 5:
-                from pycuda import autoinit as pycuda_default
-                import pycuda.compiler
-                assert pycuda_default.context is not None
-                pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
-                ptx_enabled = True
-            else:
-                raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
-        else:
-            raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
-    else:
-        ptx_enabled = False
+    import pycuda
+    # Do not continue if the version is too old
+    if pycuda.VERSION[0] < 2018:
+        raise UserWarning("pycuda too old (need 2018+): " + str(pycuda.VERSION))
+    import pycuda.driver
+    # pyCUDA needs to be built against 6+ to enable Linker
+    if pycuda.driver.get_version()[0] < 6:
+        raise UserWarning("CUDA driver too old (need 6+): " + str(pycuda.driver.get_version()))
+
+    from pycuda import autoinit as pycuda_default
+    import pycuda.compiler
+    assert pycuda_default.context is not None
+    pycuda_default.context.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+    ptx_enabled = True
+    if "cuda-check" in debug_env:
+        print("PsyNeuLink: CUDA backend enabled!")
 except Exception as e:
-    print("WARNING: Failed to enable CUDA/PTX:", e)
+    if "cuda-check" in debug_env:
+        warnings.warn("Failed to enable CUDA/PTX: {}".format(e))
     ptx_enabled = False
 
 
@@ -102,10 +103,8 @@ def _ptx_jit_constructor():
 
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.inlining_threshold = 99999  # Inline all function calls
-    __pass_manager_builder.loop_vectorize = True
-    __pass_manager_builder.slp_vectorize = True
-    __pass_manager_builder.opt_level = 3  # Most aggressive optimizations
+    __pass_manager_builder.opt_level = 1  # Basic optimizations
+    __pass_manager_builder.size_level = 1  # asic size optimizations
 
     # Use default device
     # TODO: Add support for multiple devices
@@ -113,11 +112,11 @@ def _ptx_jit_constructor():
     __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
     # Create compilation target, use 64bit triple
     __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
-    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=3, codemodel='small')
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm)
 
     __ptx_pass_manager = binding.ModulePassManager()
     __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
-#    __pass_manager_builder.populate(__ptx_pass_manager)
+    __pass_manager_builder.populate(__ptx_pass_manager)
 
     return __ptx_pass_manager, __ptx_target_machine
 
@@ -151,6 +150,9 @@ class jit_engine:
         # instances of jit_engine
         self.__debug_env = debug_env
 
+        self.staged_modules = set()
+        self.compiled_modules = set()
+
         # Track few statistics:
         self.__optimized_modules = 0
         self.__linked_modules = 0
@@ -164,7 +166,13 @@ class jit_engine:
             print("Total parsed modules in '{}': {}".format(s, self.__parsed_modules))
 
     def opt_and_add_bin_module(self, module):
+        start = time.perf_counter()
         self._pass_manager.run(module)
+        finish = time.perf_counter()
+
+        if "time_stat" in debug_env:
+            print("Time to optimize LLVM module bundle '{}': {}".format(module.name, finish - start))
+
         if "opt" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
@@ -174,8 +182,12 @@ class jit_engine:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
+        start = time.perf_counter()
         self._engine.add_module(module)
         self._engine.finalize_object()
+        finish = time.perf_counter()
+        if "time_stat" in debug_env:
+            print("Time to finalize LLVM module bundle '{}': {}".format(module.name, finish - start))
         self.__optimized_modules += 1
 
     def _remove_bin_module(self, module):
@@ -216,19 +228,30 @@ class jit_engine:
 
         return self._jit_pass_manager
 
+    def stage_compilation(self, modules):
+        self.staged_modules |= modules
+
     # Unfortunately, this needs to be done for every jit_engine.
     # Liking step in opt_and_add_bin_module invalidates 'mod_bundle',
     # so it can't be linked mutliple times (in multiple engines).
-    def compile_modules(self, modules, compiled_modules):
+    def compile_staged(self):
         # Parse generated modules and link them
         mod_bundle = binding.parse_assembly("")
-        for m in modules:
+        while self.staged_modules:
+            m = self.staged_modules.pop()
+
+            start = time.perf_counter()
             new_mod = _try_parse_module(m)
+            finish = time.perf_counter()
+
+            if "time_stat" in debug_env:
+                print("Time to parse LLVM modules '{}': {}".format(m.name, finish - start))
+
             self.__parsed_modules += 1
             if new_mod is not None:
                 mod_bundle.link_in(new_mod)
                 mod_bundle.name = m.name  # Set the name of the last module
-                compiled_modules.add(m)
+                self.compiled_modules.add(m)
 
         self.opt_and_append_bin_module(mod_bundle)
 
@@ -271,11 +294,20 @@ class ptx_jit_engine(jit_engine):
         def add_module(self, module):
             try:
                 # LLVM can't produce CUBIN for some reason
+                start_time = time.perf_counter()
                 ptx = self._target_machine.emit_assembly(module)
+                ptx_time = time.perf_counter()
                 mod = pycuda.compiler.DynamicModule()
                 mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
                 mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
+                module_time = time.perf_counter()
                 ptx_mod = mod.link()
+                finish_time = time.perf_counter()
+                if "time_stat" in debug_env:
+                    print("Time to emit PTX module bundle '{}'({} lines): {}".format(module.name, len(ptx.splitlines()), ptx_time - start_time))
+                    print("Time to add PTX module bundle '{}': {}".format(module.name, module_time - ptx_time))
+                    print("Time to link PTX module bundle '{}': {}".format(module.name, finish_time - module_time))
+                    print("Total time to process PTX module bundle '{}': {}".format(module.name, finish_time - start_time))
 
             except Exception as e:
                 print("FAILED to generate PTX module:", e)
@@ -316,7 +348,9 @@ class ptx_jit_engine(jit_engine):
         if kernel is None:
             function = _find_llvm_function(name)
             wrapper_mod = _gen_cuda_kernel_wrapper_module(function)
-            self.compile_modules([wrapper_mod], set())
+            self.stage_compilation({wrapper_mod})
+            self.compile_staged()
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
-        kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+
         return kernel

@@ -775,7 +775,7 @@ ProcessingMechanisms for a pathway are executed first, and then its `learning co
 
     **Composition with Learning**
 
-    .. figure:: _static/Composition_XOR_animation.gif
+    .. figure:: _images/Composition_XOR_animation.gif
        :alt: Animation of Composition with learning
        :scale: 50 %
 
@@ -921,9 +921,9 @@ the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
 executed;  if the **inputs** specifies more than one `TRIAL <TimeScale>`\\s worth of input, an error is generated.
 For the `run <Composition.run>` and `learn <Composition.learn>`, the **num_trials** argument can be used to specify
-the number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for each
-Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number of
-`TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
+an exact number of `TRIAL <TimeScale.TRIAL>`\\s to execute; if its value execeeds the number of inputs provided for
+each Node in the **inputs** argument, then the inputs are recycled from the beginning of the lists, until the number
+of `TRIAL <TimeScale.TRIAL>`\\s specified in **num_trials** has been executed.  If **num_trials** is not specified,
 then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of inputs provided for each `Node
 <Composition_Nodes>` in **inputs** argument.
 
@@ -1451,7 +1451,7 @@ COMMENT
 
 .. _Composition_Reset:
 
-*Resetting Parameters of StatefulFunctions*
+*Resetting Parameters of stateful*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
@@ -1475,7 +1475,7 @@ COMMENT:
 
 COMMENT
 
-`StatefulFunctions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
+`stateful <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
 `MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
 a record of the Function's `values <Parameter.values>` for each `execution context <Composition_Execution_Context>` in
 which it is executed, within and between calls to the Composition's `execute methods <Composition_Execution_Methods>`.
@@ -1504,9 +1504,9 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      <Component.reset_stateful_function_when>` of all Nodes are restored to their prior values upon completion.
 
      - **reset_stateful_functions_when** -- this specifies the `Condition(s) <Condition>` under which the `reset
-       <Component.reset>` method will be called for Nodes with `StatefulFunctions <StatefulFunctions>`. If a single
+       <Component.reset>` method will be called for Nodes with `stateful <stateful>`. If a single
        `Condition` is specified, it is applied to all of the Composition's `Nodes <Composition_Nodes>` that have
-       `StatefulFunctions <StatefulFunctions>`; a dictionary can also be specified, in which the key for each entry
+       `stateful <stateful>`; a dictionary can also be specified, in which the key for each entry
        is a Node, its value is a `Condition` under which that Node's `reset <Component.reset>` method should be called.
 
        .. note::
@@ -1554,7 +1554,8 @@ Compilation is supported for most CPUs (including x86, arm64, and powerpc64le). 
 that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
 `Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
 (e.g., used to specify the `function <Component.function>` of a Component) are not supported at present. Users who wish
-to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more information.  Users are strongly urged to report any other compilation failures to
+to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more
+information.  Users are strongly urged to report any other compilation failures to
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
 Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
@@ -2360,22 +2361,23 @@ import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
 
+import graph_scheduler
 import networkx
 import numpy as np
+import pint
 import typecheck as tc
 from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
-from psyneulink.core.components.functions.learningfunctions import \
+from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
-from psyneulink.core.components.functions.transferfunctions import Identity
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism, AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2418,7 +2420,7 @@ from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
-from psyneulink.core.scheduling.scheduler import Scheduler
+from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.library.components.mechanisms.modulatory.learning.autoassociativelearningmechanism import \
     AutoAssociativeLearningMechanism
@@ -2964,7 +2966,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
         `learning mode <Composition.learn>`.
 
-    controller : `OptimizationControlmechanism` : default None
+    controller : `OptimizationControlMechanism` : default None
         specifies the `OptimizationControlMechanism` to use as the Composition's `controller
         <Composition.controller>` (see `Composition_Controller` for details).
 
@@ -3185,7 +3187,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `OptimizationControlMechanism`.
 
     retain_old_simulation_data : bool
-        if True, all `Parameter` values generated during `simulations <OptimizationControlMechanism_Execution>` are saved;
+        if True, all `Parameter <Parameters>` values generated during `simulations
+        <OptimizationControlMechanism_Execution>` are saved;
         if False, simulation values are deleted unless otherwise specified by individual Parameters.
 
     recorded_reports : str
@@ -3325,7 +3328,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.disable_learning = disable_learning
 
-        # status attributes
+        # graph and scheduler status attributes
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
         self.needs_update_graph = True  # Tracks if Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
@@ -3362,6 +3365,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
         self.controller_condition.owner = self.controller
+        # This is set at runtime and may be used by the controller to assign its
+        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        self.num_trials = None
+
 
         self._update_parameter_components()
 
@@ -3415,7 +3422,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
-            self._scheduler = Scheduler(graph=self.graph_processing, default_execution_id=self.default_execution_id)
+            self._scheduler = Scheduler(composition=self)
 
             if old_scheduler is not None:
                 self._scheduler.add_condition_set(old_scheduler.conditions)
@@ -3441,6 +3448,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @termination_processing.setter
     def termination_processing(self, termination_conds):
         self.scheduler.termination_conds = termination_conds
+
+    @property
+    def scheduling_mode(self):
+        return self.scheduler.scheduling_mode
+
+    @scheduling_mode.setter
+    def scheduling_mode(self, scheduling_mode: SchedulingMode):
+        self.scheduler.scheduling_mode = scheduling_mode
 
     # ******************************************************************************************************************
     #                                              GRAPH
@@ -5499,6 +5514,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 )
             )
 
+    def _check_for_nesting_with_absolute_conditions(self, scheduler, termination_conds=None):
+        if any(isinstance(n, Composition) for n in self.nodes):
+            interval_conds = set()
+            fixed_point_conds = set()
+            for _, cond in scheduler.get_absolute_conditions(termination_conds).items():
+                if len(cond.absolute_intervals) > 0:
+                    interval_conds.add(cond)
+                if scheduler.mode == SchedulingMode.EXACT_TIME:
+                    if len(cond.absolute_fixed_points) > 0:
+                        fixed_point_conds.add(cond)
+
+            warn_str = f'{self} contains a nested Composition, which may cause unexpected behavior in absolute time conditions or failure to terminate execution.'
+            warn = False
+            if len(interval_conds) > 0:
+                warn_str += '\nFor repeating intervals:\n\t'
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tintervals: {cond.absolute_intervals}' for cond in interval_conds])
+                warn = True
+            if len(fixed_point_conds) > 0:
+                warn_str += '\nIn EXACT_TIME SchedulingMode, strict time points:\n\t'
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tstrict time points: {cond.absolute_fixed_points}' for cond in fixed_point_conds])
+                warn = True
+
+            if warn:
+                warnings.warn(warn_str)
+
     # ******************************************************************************************************************
     #                                            PATHWAYS
     # ******************************************************************************************************************
@@ -5720,8 +5760,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 raise ProjectionError(str(error.error_value))
 
                     except (InputPortError, ProjectionError, MappingError) as error:
-                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                                   f"{str(error.error_value)}")
+                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                               f"{str(error.error_value)}")
 
                     except DuplicateProjectionError:
                         # FIX: 7/22/19 ADD WARNING HERE??
@@ -7041,7 +7081,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `execution context <Composition_Execution_Context>` separate from the one used by the `execution method
         <Composition_Execution_Methods>` called by the user) to evaluate the influence of parameters on performance.
 
-        It also assigns a `ControlSignal` for any `Parameter` of a `Mechanism` `specified for control
+        It also assigns a `ControlSignal` for any `Parameters` of a `Mechanism` `specified for control
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
         The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
@@ -7142,8 +7182,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                     receiver = input_port)
                                     shadow_proj._activate_for_compositions(self)
                             else:
-                                    shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                                    shadow_proj._activate_for_compositions(self)
+                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
+                                shadow_proj._activate_for_compositions(self)
                     except DuplicateProjectionError:
                         continue
             for proj in input_port.path_afferents:
@@ -7221,26 +7261,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
+        if predicted_input is None:
+            warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
+
         nested_nodes = dict(self._get_nested_nodes())
-        for j in range(len(self.controller.input_ports) - 1):
-            input_port = self.controller.input_ports[j + 1]
+        shadow_inputs_start_index = self.controller.num_outcome_input_ports
+        for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
+            input_port = self.controller.input_ports[j + shadow_inputs_start_index]
+            if predicted_input is None:
+                shadowed_input = input_port.defaults.value
+            else:
+                shadowed_input = predicted_input[j]
+
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                owner = input_port.shadow_inputs.owner
+                shadow_input_owner = input_port.shadow_inputs.owner
                 if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
-                        and owner not in nested_nodes \
-                        and owner not in self.nodes:
+                        and shadow_input_owner not in nested_nodes \
+                        and shadow_input_owner not in self.nodes:
                     continue
-                if owner not in nested_nodes:
-                    shadow_input_owner = input_port.shadow_inputs.owner
+                if shadow_input_owner not in nested_nodes:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
-                    inputs[shadow_input_owner] = predicted_input[j]
+                    inputs[shadow_input_owner] = shadowed_input
                 else:
-                    comp = nested_nodes[owner]
+                    comp = nested_nodes[shadow_input_owner]
                     if comp not in inputs:
-                        inputs[comp]=[[predicted_input[j]]]
+                        inputs[comp]=[[shadowed_input]]
                     else:
-                        inputs[comp]=np.concatenate([[predicted_input[j]],inputs[comp][0]])
+                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
         return inputs
 
     def _get_invalid_aux_components(self, controller):
@@ -7395,11 +7443,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"or a composition nested within it."
                 )
 
+    @handle_external_context()
     def evaluate(
             self,
             predicted_input=None,
             control_allocation=None,
-            num_simulation_trials=None,
+            num_trials=1,
             runtime_params=None,
             base_context=Context(execution_id=None),
             context=None,
@@ -7407,23 +7456,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return_results=False,
             block_simulate=False
     ):
-        """Runs a simulation of the `Composition`, with the specified control_allocation, excluding its
-           `controller <Composition.controller>` in order to return the
-           `net_outcome <ControlMechanism.net_outcome>` of the Composition, according to its
-           `controller <Composition.controller>` under that control_allocation. All values are
-           reset to pre-simulation values at the end of the simulation.
+        """Run Composition and compute `net_outcomes <ControlMechanism.net_outcome>`
 
-           If `block_simulate` is set to True, the `controller <Composition.controller>` will attempt to use the
-           entire input set provided to the `run <Composition.run>` method of the `Composition` as input for the
-           simulated call to `run <Composition.run>`. If it is not, the `controller <Composition.controller>` will
-           use the inputs slated for its next or previous execution, depending on whether the `controller_mode` of the
-           `Composition` is set to `before` or `after`, respectively.
+        Runs the `Composition` in simulation mode (i.e., excluding its `controller <Composition.controller>`)
+        using the **predicted_input** and specified **control_allocation** for each run. The Composition is
+        run for ***num_trials**.
 
-           .. note::
-                Block simulation can not be used if the Composition's stimuli were specified as a generator. If
-                `block_simulate` is set to True and the input type for the Composition was a generator,
-                block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
+        If **predicted_input** is not specified, and `block_simulate` is set to True, the `controller
+        <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
+        method of the `Composition` as input for the call to `run <Composition.run>`. If it is not, the `controller
+        <Composition.controller>` uses the inputs slated for its next or previous execution, depending on whether the
+        `controller_mode` of the `Composition` is set to `before` or `after`, respectively.
+
+       .. note::
+            Block simulation can not be used if the Composition's stimuli were specified as a generator.
+            If `block_simulate` is set to True and the input type for the Composition was a generator,
+            block simulation will be disabled for the current execution of `evaluate <Composition.evaluate>`.
+
+        The `net_outcome <ControlMechanism.net_outcome>` for each run is calculated using the `controller
+        <Composition.controller>`'s <ControlMechanism.compute_net_outcome>` function.  Each run is executed
+        independently, using the same **predicted_inputs** and **control_allocation**, and a randomly and
+        independently sampled seed for the random number generator.  All values are reset to pre-simulation
+        values at the end of the simulation.
+
+        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of
+        the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
+        an array with the results of each run is also returned.
         """
+
         # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
         total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
@@ -7460,32 +7520,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Run Composition in "SIMULATION" context
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
+
+        # EXECUTE run of composition and aggregate results
+
         # Use reporting options from Report context created in initial (outer) call to run()
         with Report(self, context) as report:
-            results = self.run(inputs=inputs,
-                               context=context,
-                               runtime_params=runtime_params,
-                               num_trials=num_simulation_trials,
-                               animate=animate,
-                               execution_mode=execution_mode,
-                               skip_initialization=True,
-                               )
+            result = self.run(inputs=inputs,
+                                    context=context,
+                                    runtime_params=runtime_params,
+                                    num_trials=num_trials,
+                                    animate=animate,
+                                    execution_mode=execution_mode,
+                                    skip_initialization=True,
+                                    )
             context.remove_flag(ContextFlags.SIMULATION_MODE)
             context.execution_phase = ContextFlags.CONTROL
             if buffer_animate_state:
                 self._animate = buffer_animate_state
 
+        assert result == self.get_output_values(context)
+
         # Store simulation results on "base" composition
         if self.initialization_status != ContextFlags.INITIALIZING:
             try:
-                self.parameters.simulation_results._get(base_context).append(
-                    self.get_output_values(context))
+                self.parameters.simulation_results._get(base_context).append(result)
             except AttributeError:
-                self.parameters.simulation_results._set([self.get_output_values(context)], base_context)
+                self.parameters.simulation_results._set([result], base_context)
+
+        # COMPUTE net_outcome and aggregate in net_outcomes
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
         self.controller._update_input_ports(runtime_params, context)
-        outcome = self.controller.input_port.parameters.value._get(context)
+
+        # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
+        outcome_is_array = self.controller.num_outcome_input_ports > 1
+        if not outcome_is_array:
+            outcome = self.controller.input_port.parameters.value._get(context)
+        else:
+            outcome = []
+            for i in range(self.controller.num_outcome_input_ports):
+                outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
 
         if outcome is None:
             net_outcome = 0.0
@@ -7494,7 +7568,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
 
         if return_results:
-            return net_outcome, results
+            return net_outcome, result
         else:
             return net_outcome
 
@@ -8039,7 +8113,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             animate=False,
             log=False,
             scheduler=None,
+            scheduling_mode: typing.Optional[SchedulingMode] = None,
             execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+            default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
             context=None,
             base_context=Context(execution_id=None),
             ):
@@ -8060,7 +8136,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         num_trials : int : default 1
             typically, the composition will infer the number of trials from the length of its input specification.
-            To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
+            To reuse the same inputs across many trials, an input dictionary can be specified with lists of length 1,
             or use default inputs, and select a number of trials with num_trials.
 
         initialize_cycle_values : Dict { Node: Node Value } : default None
@@ -8076,7 +8152,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             of Mechanisms that have stateful functions. If a node's reset_stateful_function_when condition is set to
             Never, but they are listed in the reset_stateful_functions_to dict, then they will be reset once at the
             beginning of the run, using the provided values. For a more in depth explanation of this argument, see
-            `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
+            `Resetting Parameters of stateful <Composition_Reset>`.
 
         reset_stateful_functions_when :  Dict { Node: Condition } | Condition : default Never()
             if type is dict, sets the reset_stateful_function_when attribute for each key Node to its corresponding value
@@ -8084,7 +8160,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Composition that currently have their reset_stateful_function_when conditions set to `Never <Never>`.
             in either case, the specified Conditions persist only for the duration of the run, after which the nodes'
             reset_stateful_functions_when attributes are returned to their previous Conditions. For a more in depth
-            explanation of this argument, see `Resetting Parameters of StatefulFunctions <Composition_Reset>`.
+            explanation of this argument, see `Resetting Parameters of stateful <Composition_Reset>`.
 
         skip_initialization : bool : default False
 
@@ -8120,11 +8196,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies fuction to call after each `TRIAL <TimeScale.TRIAL>` is executed.
 
         termination_processing : Condition  : default None
-            specifies `Condition` under which execution of the run will occur.
-
-            COMMENT:
-               BETTER DESCRIPTION NEEDED
-            COMMENT
+            specifies
+            `termination Conditions <Scheduler_Termination_Conditions>`
+            to be used for the current `RUN <TimeScale.RUN>`. To change
+            these conditions for all future runs, use
+            `Composition.termination_processing` (or
+            `Scheduler.termination_conds`)
 
         skip_analyze_graph : bool : default False
             setting to True suppresses call to _analyze_graph()
@@ -8205,12 +8282,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             the scheduler object that owns the conditions that will instruct the execution of the Composition.
             If not specified, the Composition will use its automatically generated scheduler.
 
+        scheduling_mode : SchedulingMode[STANDARD|EXACT_TIME] : default None
+            if specified, sets the `scheduling mode <SchedulingMode>`
+            for the current and all future runs of the Composition. See
+            `Scheduler_Execution`
+
         execution_mode : enum.Enum[Auto|LLVM|LLVMexec|LLVMRun|Python|PTXExec|PTXRun] : default Python
             specifies whether to run using the Python interpreter or a `compiled mode <Composition_Compilation>`.
             False is the same as ``Python``;  True tries LLVM compilation modes, in order of power, progressively
             reverting to less powerful modes (in the order of the options listed), and to Python if no compilation
             mode succeeds (see `Composition_Compilation` for explanation of modes). PTX modes are used for
             CUDA compilation.
+
+        default_absolute_time_unit : ``pint.Quantity`` : ``1ms``
+            if not otherwise determined by any absolute **conditions**,
+            specifies the absolute duration of a `TIME_STEP`. See
+            `Scheduler.default_absolute_time_unit`
 
         context : `execution_id <Context.execution_id>` : default `default_execution_id`
             context in which the `Composition` will be executed;  set to self.default_execution_id ifunspecified.
@@ -8264,12 +8351,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if scheduler is None:
             scheduler = self.scheduler
 
-        if termination_processing is None:
-            termination_processing = self.termination_processing
-        else:
-            new_conds = self.termination_processing.copy()
-            new_conds.update(termination_processing)
-            termination_processing = new_conds
+        if scheduling_mode is not None:
+            scheduler.mode = scheduling_mode
+
+        if default_absolute_time_unit is not None:
+            scheduler.default_absolute_time_unit = default_absolute_time_unit
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8284,6 +8370,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except:
                 self.parameters.input_specification._set(inputs, context)
 
+        # May be used by controller for specifying num_trials_per_simulation
+        self.num_trials = num_trials
+
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
@@ -8294,6 +8383,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._analyze_graph(context=context)
 
         self._check_for_unnecessary_feedback_projections()
+        self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
@@ -8457,7 +8547,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if call_before_trial:
                     call_with_pruned_args(call_before_trial, context=context)
 
-                if termination_processing[TimeScale.RUN].is_satisfied(
+                try:
+                    run_term_cond = termination_processing[TimeScale.RUN]
+                except (TypeError, KeyError):
+                    run_term_cond = self.termination_processing[TimeScale.RUN]
+
+                if run_term_cond.is_satisfied(
                     scheduler=scheduler,
                     context=context
                 ):
@@ -8621,9 +8716,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 <Composition_Target_Inputs>` for additional details concerning the formatting of targets).
 
             num_trials : int (default=None)
-                typically, the composition will infer the number of trials from the length of its input specification.
-                To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-                or use default inputs, and select a number of trials with num_trials.
+                typically, the Composition infers the number of trials to execute from the length of its input
+                specification.  However, **num_trials** can be used to enforce an exact number of trials to execute;
+                if it is greater than there are inputs then inputs will be repeated (see `Composition_Execution_Inputs`
+                for additional information).
 
             epochs : int (default=1)
                 specifies the number of training epochs (that is, repetitions of the batched input set) to run with
@@ -8770,7 +8866,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Animate controller (before execution)
                 context.execution_phase = ContextFlags.CONTROL
-                if self._animate != False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
+                if self._animate is not False and SHOW_CONTROLLER in self._animate and self._animate[SHOW_CONTROLLER]:
                     self._animate_execution(self.controller, context)
                 context.remove_flag(ContextFlags.CONTROL)
 
@@ -8907,7 +9003,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # TODO: scheduler counts and clocks were not expected to be
             # used prior to Scheduler.run calls. Remove this hack when
             # accommodation is written
-            execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+            try:
+                execution_scheduler._init_counts(context.execution_id, base_context.execution_id)
+            except graph_scheduler.SchedulerError:
+                execution_scheduler._init_counts(context.execution_id)
 
             # If execute method is called directly, need to create Report object for reporting
             if not (context.source & ContextFlags.COMPOSITION) or report_num is None:
@@ -8946,9 +9045,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.composition = self
 
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-
-            if termination_processing is None:
-                termination_processing = self.termination_processing
 
             # if execute was called from command line and no inputs were specified, assign default inputs to highest level
             # composition (i.e. not on any nested Compositions)
@@ -9155,16 +9251,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
             # method, because there's no way to tell from within the execute method whether or not we are at the last trial
             # of the run.
-            if (self.controller_time_scale == TimeScale.RUN and
-                scheduler.get_clock(context).time.trial == 0):
-                    self._execute_controller(
-                        relative_order=BEFORE,
-                        execution_mode=execution_mode,
-                        _comp_ex=_comp_ex,
-                        report=report,
-                        report_num=report_num,
-                        context=context
-                    )
+            if self.controller_time_scale == TimeScale.RUN and scheduler.get_clock(context).time.trial == 0:
+                self._execute_controller(
+                    relative_order=BEFORE,
+                    execution_mode=execution_mode,
+                    _comp_ex=_comp_ex,
+                    report=report,
+                    report_num=report_num,
+                    context=context
+                )
             elif self.controller_time_scale == TimeScale.TRIAL:
                 self._execute_controller(
                     relative_order=BEFORE,
@@ -9306,6 +9401,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self._animate_execution(next_execution_set, context)
 
                 # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
+                if execution_scheduler.mode is SchedulingMode.EXACT_TIME:
+                    # sort flattened execution set by unflattened position
+                    next_execution_set = sorted(
+                        next_execution_set,
+                        key=lambda n: execution_scheduler.consideration_queue_indices[n]
+                    )
 
                 # execute each node with EXECUTING in context
                 for (node_idx, node) in enumerate(next_execution_set):
@@ -9369,21 +9470,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                              report_num=report_num,
                                              runtime_params=execution_runtime_params,
                                              )
-                            # Reset runtim_params
-                            # Reset any specified for Mechanism
-                            if context.execution_id in node._runtime_params_reset:
-                                for key in node._runtime_params_reset[context.execution_id]:
-                                    node._set_parameter_value(key, node._runtime_params_reset[context.execution_id][key],
-                                                              context)
-                            node._runtime_params_reset[context.execution_id] = {}
-                            # Reset any specified for Mechanism's function
-                            if context.execution_id in node.function._runtime_params_reset:
-                                for key in node.function._runtime_params_reset[context.execution_id]:
-                                    node.function._set_parameter_value(
-                                            key,
-                                            node.function._runtime_params_reset[context.execution_id][key],
-                                            context)
-                            node.function._runtime_params_reset[context.execution_id] = {}
 
                         # Set execution_phase for node's context back to IDLE
                         if self._is_learning(context):
@@ -9869,7 +9955,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         super()._delete_contexts(*contexts, check_simulation_storage=check_simulation_storage, visited=visited)
 
         for c in contexts:
-            self.scheduler._delete_counts(c.execution_id)
+            try:
+                self.scheduler._delete_counts(c.execution_id)
+            except AttributeError:
+                self.scheduler._delete_counts(c)
 
     # ******************************************************************************************************************
     #                                           LLVM

@@ -195,4 +195,5 @@ tests/*.pdf
 
 # mypy cache
 .mypy_cache
-/tests/json/model_backprop.json
+
+/tests/json/*.json

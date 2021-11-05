@@ -162,14 +162,13 @@ Class Reference
 """
 import typecheck as tc
 
-from psyneulink.core.components.functions.statefulfunctions.integratorfunctions import DualAdaptiveIntegrator
+from psyneulink.core.components.functions.stateful.integratorfunctions import DualAdaptiveIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import MONITORED_OUTPUT_PORTS, ObjectiveMechanism
-from psyneulink.core.components.shellclasses import Mechanism, System_Base
+from psyneulink.core.components.shellclasses import Mechanism
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTIONS, CONTROL_SIGNALS, INIT_EXECUTE_METHOD_ONLY, \
-    MECHANISM, MULTIPLICATIVE, OBJECTIVE_MECHANISM
+    INIT_EXECUTE_METHOD_ONLY, MECHANISM, OBJECTIVE_MECHANISM
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 

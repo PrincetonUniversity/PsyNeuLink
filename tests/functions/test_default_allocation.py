@@ -10,14 +10,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 def test_basic(benchmark, func_mode):
     variable = np.random.rand(1)
     f = DefaultAllocationFunction()
-    if func_mode == 'Python':
-        EX = f.function
-    elif func_mode == 'LLVM':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.execute
-    elif func_mode == 'PTX':
-        e = pnlvm.execution.FuncExecution(f)
-        EX = e.cuda_execute
+    EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = benchmark(EX, variable)
     assert np.allclose(res, variable)

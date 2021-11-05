@@ -12,6 +12,10 @@
 Welcome to PsyNeuLink |logo|
 ============================
 
+.. *(pronunciation:* **sī**//*nyoo/lingk)*
+*(pronunciation:* \\ **\'sī**\ *-nü-liŋk\\ )*
+
+
 * `Purpose`
 * `What PsyNeuLink IS <What_PsyNeuLink_IS>`
 * `What PsyNeuLink is NOT <What_PsyNeuLink_is_NOT>`
@@ -19,7 +23,7 @@ Welcome to PsyNeuLink |logo|
 * `Installation`
 * `Tutorial`
 * `Help and Issues <Help_and_Issues>`
-* `Contributors`
+* `Acknowledgements`
 * `Indices_and_Tables`
 
 
@@ -64,7 +68,10 @@ It is:
 
  ..
 
- - *integrative* -- it provides a standard and accessible environment for model comparison, sharing, and documentation;
+ - *integrative* -- it provides a standard and accessible environment suitable for model comparison, sharing, and
+   documentation, as well the integration into "system-level" models of components responsible for disparate forms
+   of computation (for example, a neural network capable of learning with components that rely on integration and/or
+   settling dynamics for decision making).
 
  ..
 
@@ -113,7 +120,7 @@ characteristics that are often (at least in the initial stages of development) i
 interpreted vs. compiled).
 
 That said, priorities for ongoing development of PsyNeuLink are:
-    i) acceleration, using just-in-time compilation methods and parallelization;
+    i) acceleration, using just-in-time compilation methods and parallelization (see `Compilation`);
     ii) enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
         environment (examples currently exist for Pytorch and Emergent);
     iii) integration of tools for parameter estimation, model comparison and data fitting; and
@@ -136,7 +143,8 @@ construction of models using PsyNeuLink.  `Core` contains the fundamental object
 Installation
 ------------
 
-PsyNeuLink is compatible with python versions >= 3.5, and is available through `PyPI <https://pypi.python.org/pypi/PsyNeuLink>`__:
+PsyNeuLink is compatible with python versions >= 3.6, and is available through
+`PyPI <https://pypi.python.org/pypi/PsyNeuLink>`__:
 
 ::
 
@@ -190,7 +198,7 @@ The tutorial can be run in a browser by clicking the badge below, or `this link 
 .. image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
 
-To run the tutorial locally, you must run python 3.5 and install additional packages:
+To run the tutorial locally, you must run python 3.6 and install additional packages:
 
 ::
 
@@ -226,10 +234,13 @@ Help is available at psyneulinkhelp@princeton.edu.
 Issues can be reported at https://github.com/PrincetonUniversity/PsyNeuLink/issues.
 
 
-.. _Contributors:
+.. _Acknowledgements:
 
-Contributors
-------------
+Acknowledgements
+----------------
+
+*Contributors*
+~~~~~~~~~~~~~~
 
 *(in alphabetical order)*
 
@@ -240,6 +251,7 @@ Contributors
 * **Abigail Hoskin**, Department of Psychology, Princeton University
 * **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
 * **Justin Junge**, Department of Psychology, Princeton University
+* **Jeremy Lee**, Princeton Neuroscience Institute, Princeton University
 * **Qihong Lu**, Department of Psychology, Princeton University
 * **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
@@ -264,6 +276,14 @@ With substantial and greatly appreciated assistance from:
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
 * **Ted Willke**, Intel Labs, Intel Corporation
 
+*Support*
+~~~~~~~~~
+
+The development of PsyNeuLink has benefited by generous support from the following agencies:
+
+* `The National Institute of Mental Health (R21-MH117548) <https://www.nimh.nih.gov/about/organization/dtr/adult-psychopathology-and-psychosocial-interventions-research-branch/computational-psychiatry-program.shtml>`_
+* `The John Templeton Foundation <https://www.templeton.org/funding-areas/science-big-questions>`_
+* `The Templeton World Charitable Foundation <https://www.templetonworldcharity.org/our-priorities/diverse-intelligences>`_
 
 Table of Contents
 -----------------

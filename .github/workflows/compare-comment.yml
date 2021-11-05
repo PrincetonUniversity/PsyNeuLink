@@ -1,0 +1,85 @@
+name: "Add doc diff to PR comment"
+
+on:
+  workflow_run:
+    workflows: ["PsyNeuLink Docs CI"]
+    types:
+      - completed
+
+jobs:
+  docs-compare:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.event == 'pull_request' &&
+        github.event.workflow_run.conclusion == 'success'
+
+    steps:
+
+    - name: 'Download docs artifacts'
+      id: docs-artifacts
+      uses: actions/github-script@v5
+      with:
+        script: |
+          var artifacts = await github.actions.listWorkflowRunArtifacts({
+             owner: context.repo.owner,
+             repo: context.repo.repo,
+             run_id: ${{ github.event.workflow_run.id }},
+          });
+          const docsPrefix = 'Documentation-base-'
+          const docsSuffix = artifacts.data.artifacts.filter((artifact) => {
+            return artifact.name.startsWith(docsPrefix)
+          }).slice(-1)[0].name.slice(docsPrefix.length);
+
+          core.setOutput('DOCS_GEN_ENV', docsSuffix);
+
+          var docsArtifacts = artifacts.data.artifacts.filter((artifact) => {
+            return (
+              (artifact.name.endsWith(docsSuffix) && artifact.name.startsWith('Documentation-'))
+              || artifact.name == 'pr_number'
+            )
+          });
+
+          // check that we got exactly 3 artifacts
+          console.assert(docsArtifacts.length == 3, docsSuffix, docsArtifacts, artifacts.data.artifacts);
+
+          var fs = require('fs');
+          for (artifact of docsArtifacts) {
+            console.log('Downloading: ' + artifact.name);
+            var download = await github.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: artifact.id,
+               archive_format: 'zip',
+            });
+            fs.writeFileSync('${{ github.workspace }}/' + artifact.name + '.zip', Buffer.from(download.data));
+          }
+
+    - name: Unzip artifacts
+      shell: bash
+      run: |
+        unzip Documentation-base-*.zip -d docs-base/
+        unzip Documentation-head-*.zip -d docs-head/
+        unzip pr_number.zip
+
+    - name: Compare
+      shell: bash
+      run: |
+        # Store the resulting diff, or 'No differences!' to and output file
+        # The 'or true' part is needed to workaround 'pipefail' flag used by github-actions
+        (diff -r docs-base docs-head && echo 'No differences!' || true) | tee ./result.diff
+
+    - name: Post comment with docs diff
+      uses: actions/github-script@v5
+      with:
+        script: |
+          var fs = require('fs');
+          var text = fs.readFileSync("./result.diff").slice(0,16384);
+          var issue_number = Number(fs.readFileSync('./pr_number.txt'));
+
+          console.log('Posting diff to PR: ' + issue_number);
+
+          github.issues.createComment({
+            issue_number: issue_number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: 'This PR causes the following changes to the html docs (${{ steps.docs-artifacts.outputs.DOCS_GEN_ENV }}):\n```\n' + text + '\n...\n```\nSee CI logs for the full diff.'
+          })
