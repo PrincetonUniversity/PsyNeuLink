@@ -7140,22 +7140,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # MODIFIED 11/3/21 OLD:
+        # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-        # # MODIFIED 11/3/21 NEW:
-        # if self.controller.objective_mechanism:
-        #     if self.controller.objective_mechanism not in invalid_aux_components:
-        #         self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-        # else:
-        #     # Controller gets the inputs it monitors directly (rather than from an ObjectiveMechanism):
-        #     # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED
-        #     for i in range(self.controller.num_outcome_input_ports):
-        #         for self.controller.input_ports[i]:
-        #             ZZZ for self.controller.inputs[OUTCOME].path_afferents:
-        #         assert True
-        # MODIFIED 11/3/21 END
-
 
         self.node_ordering.append(controller)
 
