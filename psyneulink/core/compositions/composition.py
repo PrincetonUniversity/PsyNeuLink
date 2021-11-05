@@ -7264,15 +7264,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
-        if predicted_input is None or not len(predicted_input):
+        no_predicted_input = (predicted_input is None or not len(predicted_input))
+        if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
+
 
         nested_nodes = dict(self._get_nested_nodes())
         # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED
         shadow_inputs_start_index = self.controller.num_outcome_input_ports
         for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
             input_port = self.controller.input_ports[j + shadow_inputs_start_index]
-            if predicted_input is None:
+            if no_predicted_input:
                 shadowed_input = input_port.defaults.value
             else:
                 shadowed_input = predicted_input[j]
