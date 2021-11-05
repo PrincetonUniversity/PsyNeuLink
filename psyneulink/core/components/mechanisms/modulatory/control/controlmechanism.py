@@ -574,8 +574,8 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import Function_Base, is_function_type
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
@@ -585,7 +585,7 @@ from psyneulink.core.components.ports.parameterport import ParameterPort
 from psyneulink.core.components.ports.port import Port, _parse_port_spec
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    AUTO_ASSIGN_MATRIX, COMBINE, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, CONCATENATE, \
+    AUTO_ASSIGN_MATRIX, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, CONCATENATE, \
     EID_SIMULATION, FUNCTION, GATING_SIGNAL, INIT_EXECUTE_METHOD_ONLY, INTERNAL_ONLY, NAME, \
     MECHANISM, MULTIPLICATIVE, MODULATORY_SIGNALS, MONITOR_FOR_CONTROL, MONITOR_FOR_MODULATION, \
     OBJECTIVE_MECHANISM, OUTCOME, OWNER_VALUE, PARAMS, PORT_TYPE, PRODUCT, PROJECTION_TYPE, PROJECTIONS, \
@@ -1501,15 +1501,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
-
             # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
             self.outcome_input_ports.extend(self.input_ports[:len(monitored_for_control_ports)])
-            assert True
             # FIX: 11/3/21 DELETE ONCE THIS IS A PROPERTY
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort
         else:
             super()._instantiate_input_ports(context=context)
+            self.outcome_input_ports.append(self.input_ports[OUTCOME])
 
     def _instantiate_montiored_for_control_input_ports(self, context):
         """Instantiate InputPorts for items specified in monitor_for_control.        
