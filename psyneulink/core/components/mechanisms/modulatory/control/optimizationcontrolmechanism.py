@@ -439,6 +439,7 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
@@ -452,7 +453,8 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, OPTIMIZATION_CONTROL_MECHANISM, PARAMS, PROJECTIONS
+    DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
+    NAME, OPTIMIZATION_CONTROL_MECHANISM, PARAMS, PORT_TYPE, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -836,7 +838,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         function = function or GridSearch
 
-        # FIX: MAKE SURE MOVE TO HERE FROM BELOW PASSES TESTS
         self.state_features = convert_to_list(state_features)
 
         # If agent_rep hasn't been specified, put into deferred init
@@ -858,8 +859,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super().__init__(
             function=function,
-            # input_ports=state_features,
-            # state_features=state_features,
             state_feature_function=state_feature_function,
             num_estimates=num_estimates,
             num_trials_per_estimate = num_trials_per_estimate,
@@ -912,6 +911,21 @@ class OptimizationControlMechanism(ControlMechanism):
                 raise OptimizationControlMechanismError(f"Invalid {type(port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
+
+    def _instantiate_montiored_for_control_input_ports(self, context):
+        """Override ControlMechanism to return standard *single* OUTCOOME InputPort that concatenates its inputs"""
+
+        monitor_for_control_specs = self.monitor_for_control
+        # FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
+        monitored_ports = _parse_monitor_specs(monitor_for_control_specs)
+        outcome_input_port = {PORT_TYPE: InputPort,
+                              NAME: 'OUTCOME',
+                              FUNCTION: Concatenate,
+                              # SIZE:  len(self._handle_arg_input_ports(monitor_for_control_specs)[0])
+                              PROJECTIONS: monitored_ports}
+        port_value_size, _ = self._handle_arg_input_ports(outcome_input_port)
+        return [outcome_input_port], [self._handle_arg_input_ports(monitor_for_control_specs)[0]]
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.

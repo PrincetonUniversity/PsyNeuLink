@@ -402,10 +402,10 @@ Controlling a Composition
       - `Composition_Controller_Execution`
 
 
-A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass of
-one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
-It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
-the Composition, and provides the result to the `controller <Composition.controller>`.
+A Composition can be assigned a `controller <Composition.controller>`.  This must be an `OptimizationControlMechanism`,
+or a subclass of one, that modulates the parameters of Components within the Composition (including Components of
+nested Compositions). It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value
+of other Mechanisms in the Composition, and provides the result to the `controller <Composition.controller>`.
 
 .. _Composition_Controller_Assignment:
 
@@ -7140,8 +7140,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
+        # MODIFIED 11/3/21 OLD:
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        # # MODIFIED 11/3/21 NEW:
+        # if self.controller.objective_mechanism:
+        #     if self.controller.objective_mechanism not in invalid_aux_components:
+        #         self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        # else:
+        #     # Controller gets the inputs it monitors directly (rather than from an ObjectiveMechanism):
+        #     # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED
+        #     for i in range(self.controller.num_outcome_input_ports):
+        #         for self.controller.input_ports[i]:
+        #             ZZZ for self.controller.inputs[OUTCOME].path_afferents:
+        #         assert True
+        # MODIFIED 11/3/21 END
+
 
         self.node_ordering.append(controller)
 
@@ -7159,6 +7173,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
+        # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
+        #               ALSO, IF Non-OCM IS USED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
         for input_port in controller.input_ports[1:]:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 for proj in input_port.shadow_inputs.path_afferents:
@@ -7189,7 +7205,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if proj.sender.owner not in nested_cims:
                     proj._activate_for_compositions(self)
 
-        # Check whether controller has input, and if not then disable
+        # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
                 and self.controller.input_ports):
             # If controller was enabled, warn that it has been disabled

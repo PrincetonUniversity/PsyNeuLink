@@ -1325,6 +1325,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         # GET OutputPorts to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_ports attribute
 
+        # FIX: 11/3/21:  put OUTCOME InputPort at the end rather than the beginning
+        # Other input_ports are those passed into this method, that are presumed to be for other purposes
+        #   (e.g., used by OptimizationControlMechanism for representing state_features as inputs)
+        #   those are appended after the OUTCOME InputPort # FIX <- change to prepend when refactored
         other_input_ports = input_ports or []
         monitored_output_ports = []
 
@@ -1386,6 +1390,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                          input_ports=input_ports,
                                          reference_value=input_port_value_sizes)
 
+        # FIX: 11/3/21: ISN'T THIS DONE IN super()_instantiate_input_ports BASED ON OUTCOME InputPort specification?
+        #               (or shouldn't it be?)  PRESUMABLY THE ONES FOR other_input_ports ARE
         # INSTANTIATE MappingProjection from ObjectiveMechanism to ControlMechanism
         projection_from_objective = MappingProjection(sender=self.objective_mechanism,
                                                       receiver=self.input_ports[OUTCOME],
@@ -1423,7 +1429,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         If nothing is specified, a default OUTCOME InputPort is instantiated with no projections to it
         """
 
-        input_ports = input_ports or []
+        other_input_ports = input_ports or []
         self.num_outcome_input_ports = 1 # the default (OUTCOME InputPort)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
@@ -1431,28 +1437,48 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # This instantiates an OUTCOME InputPort sized to match the ObjectiveMechanism's OUTCOME OutputPort
             self._instantiate_objective_mechanism(input_ports, context=context)
 
-        # If items to monitor are specified, instantiate InputPorts and projections to them from the specified senders
+        # If no ObjectiveMechanism is specified, but items to monitor are specified,
         elif self.monitor_for_control:
-            len_stim_input_ports = len(input_ports)
-            self.num_outcome_input_ports = len(self.monitor_for_control)
-            # Create one InputPort for each item in monitor_for_control
-            reference_value = []
-            for sender in self.monitor_for_control:
-                reference_value.append(sender.value)
-                # FIX: 11/3/21: NEED TO ADD SENDER TO PORT INPUT PORT SPECIFICATION DICT BELOW:
-                input_ports.append({PARAMS:{INTERNAL_ONLY:True}})
-            super()._instantiate_input_ports(context=context, input_ports=input_ports, reference_value=reference_value)
 
-            # FIX: MODIFY TO CONSTRUCT MAPPING PROJECTION FROM EACH MONITOR_FOR_CONTROL SPEC TO CORRESPONDING INPUTPORT
-            from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-            for i, sender in enumerate(convert_to_list(self.monitor_for_control)):
-                input_port = self.input_ports[len_stim_input_ports + i]
-                input_port.name = sender.name.upper()
-                self.aux_components.append(MappingProjection(sender=sender, receiver=input_port))
+            self.num_outcome_input_ports = len(self.monitor_for_control)
+            monitored_for_control_ports, \
+            monitor_for_control_value_sizes = self._instantiate_montiored_for_control_input_ports(context)
+
+            # Get sizes of input_ports passed in (that are presumably used for other purposes;
+            #   e.g., ones used by OptimizationControlMechanism for state_features)
+            other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
+
+            # Construct full list of InputPort specifications and sizes
+            input_ports = monitored_for_control_ports + other_input_ports
+            input_port_value_sizes = monitor_for_control_value_sizes + other_input_port_value_sizes
+            super()._instantiate_input_ports(context=context,
+                                             input_ports=input_ports,
+                                             reference_value=input_port_value_sizes)
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort
         else:
             super()._instantiate_input_ports(context=context)
+
+    def _instantiate_montiored_for_control_input_ports(self, context):
+        """Return sender ports for items specified in monitor_for_control and their value sizes"""
+
+        monitor_for_control_specs = self.monitor_for_control
+
+        port_value_sizes = self._handle_arg_input_ports(monitor_for_control_specs)[0]
+
+        # FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
+        monitored_ports = _parse_monitor_specs(monitor_for_control_specs)
+
+        # Construct port specification to assign its name
+        for i, monitored_port in enumerate(monitored_ports):
+            name = monitored_port.name
+            if isinstance(monitored_port, OutputPort):
+                name = f"{monitored_port.owner.name}[{name.upper()}]"
+            name = 'MONITOR ' + name
+            monitored_ports[i] = {PORT_TYPE: InputPort, name: monitored_port}
+
+        return monitored_ports, port_value_sizes
 
     def _instantiate_output_ports(self, context=None):
 
@@ -1711,6 +1737,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         """
         dependent_projections = set()
 
+        # MODIFIED 11/3/21 OLD:
         if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
             # Safe to add this, as it is already in the ControlMechanism's aux_components
             #    and will therefore be added to the Composition along with the ControlMechanism
@@ -1721,21 +1748,55 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             for aff in self.objective_mechanism.afferents:
                 dependent_projections.add(aff)
+        # MODIFIED 11/3/21 NEW:
+        if composition:
+            if self.objective_mechanism and self.objective_mechanism in composition.nodes:
+                 # Safe to add this, as it is already in the ControlMechanism's aux_components
+                #    and will therefore be added to the Composition along with the ControlMechanism
+                from psyneulink.core.compositions.composition import NodeRole
+                assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
+                    f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
+                dependent_projections.add(self._objective_projection)
+
+                for aff in self.objective_mechanism.afferents:
+                    dependent_projections.add(aff)
+
+            else:
+                # FIX: PUT HANDLING OF DIRECT PROJECTION TO OUTCOME InputPort HERE
+                # FIX: NOTE: This will apply if controller has an objective_mechanism but it is not in the Composition
+                pass
+
+        # MODIFIED 11/3/21 END
+
+
+        # FIX: 11/3/21: DEAL WITH NO objective_mechanism AND ONE OR MORE PROEJCTIONS TO OUTCOME InputPort
+                # # MODIFIED 11/3/21 NEW:
+        # FIX:  ?IS THE FOLLOWING BLOCK OLD OR NEW:
+        # if self.controller.objective_mechanism:
+        #     if self.controller.objective_mechanism not in invalid_aux_components:
+        #         self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        # else:
+        #     # Controller gets the inputs it monitors directly (rather than from an ObjectiveMechanism):
+        #     # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED
+        #     for i in range(self.controller.num_outcome_input_ports):
+        #         for self.controller.input_ports[i]:
+        #             ZZZ for self.controller.inputs[OUTCOME].path_afferents:
+        #         assert True
 
         for ms in self.control_signals:
             for eff in ms.efferents:
                 dependent_projections.add(eff)
 
         # ??ELIMINATE SYSTEM
-        # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
-        # assign any deferred init objective mech monitored OutputPort projections to this system
+        # FIX: 9/15/19 AND 11/3/21 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
+        # assign any deferred init objective mech monitored OutputPort projections to this Composition
         if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
             for output_port in self.objective_mechanism.monitored_output_ports:
                 for eff in output_port.efferents:
                     dependent_projections.add(eff)
 
         # ??ELIMINATE SYSTEM
-        # FIX: 9/15/19 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
+        # FIX: 9/15/19 AND 11/3/21 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
         for eff in self.efferents:
             dependent_projections.add(eff)
 
