@@ -1736,8 +1736,6 @@ class ShowGraph():
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-        # FIX: 11/3/21 NEED TO ADD HANDLING OF CASE IN WHICH THERE IS NO ObjectiveMechanism
-        #              BUT THE CONTROLLER DOES HAVE outcome_input_ports
         # If controller has no objective_mechanism but does have outcome_input_ports, add Projetions from them
         elif controller.num_outcome_input_ports:
             # incoming edges (from monitored mechs directly to controller)
@@ -1770,7 +1768,6 @@ class ShowGraph():
                             sender_visible = True
                         if sender_visible:
                             sndr_proj_label += ':' + controller._get_port_name(projection.sender)
-                        # FIX: 11/3/21: MAKE SURE ctlr_label IS CORRECT BELOW (WAS objmech_label)
                         ctlr_input_proj_label = ctlr_label + ':' + controller._get_port_name(input_port)
                     else:
                         sndr_proj_label = self._get_graph_node_label(composition,
