@@ -573,9 +573,10 @@ class OptimizationFunction(Function_Base):
             # Generate num_estimates of sample, then apply aggregation_function and return result
             estimates = []
             for i in range(num_estimates):
-                estimates.append(call_with_pruned_args(self.objective_function, new_sample, context=context))
-                self._report_value(new_value)
-            new_value = self.aggregation_function(estimates) if self.aggregation_function else estimates
+                estimate = call_with_pruned_args(self.objective_function, new_sample, context=context)
+                self._report_value(estimate)
+                estimates.append(estimate)
+            new_value = self.aggregation_function(estimates,num_estimates) if self.aggregation_function else estimates
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
