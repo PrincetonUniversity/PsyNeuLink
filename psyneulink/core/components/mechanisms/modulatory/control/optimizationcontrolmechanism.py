@@ -509,7 +509,7 @@ from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_arr
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
-    'AGENT_REP', 'STATE_FEATURES'
+    'AGENT_REP', 'STATE_FEATURES', 'RANDOMIZATION_CONTROL_SIGNAL_NAME'
 ]
 
 AGENT_REP = 'agent_rep'

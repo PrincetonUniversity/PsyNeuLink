@@ -148,7 +148,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.keywords import BEFORE
+from psyneulink.core.globals.keywords import BEFORE, CONCATENATE
 from psyneulink.core.globals.sampleiterator import SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list
 
@@ -520,9 +520,12 @@ class ParameterEstimationComposition(Composition):
                                             modulates=seed_param_ports,
                                             allocation_samples=random_seeds)
 
-        # FIX: WHAT iS THIS DOING?
-        if data:
-            objective_function = objective_function(data)
+        # # FIX: WHAT iS THIS DOING?
+        # if data:
+        #     objective_function = objective_function(data)
+
+        objective_mechanism = ObjectiveMechanism(monitor=outcome_variables,
+                                                 function=objective_function) if objective_function else None
 
         # Get ControlSignals for parameters to be searched
         control_signals = []
@@ -534,9 +537,8 @@ class ParameterEstimationComposition(Composition):
         # FIX: END OF MOVE
 
         return OptimizationControlMechanism(agent_rep=self,
-                                            # monitor_for_control=outcome_variables,
-                                            objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
-                                                                                   function=objective_function),
+                                            monitor_for_control=outcome_variables,
+                                            objective_mechanism=objective_mechanism,
                                             function=optimization_function,
                                             control_signals=control_signals,
                                             num_estimates=num_estimates,
