@@ -65,7 +65,6 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               tag_name: tag,
-              prerelease: true,
               name: 'Release ' + tag,
               body: 'New features and fixed bugs'
           });
