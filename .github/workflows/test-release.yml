@@ -135,7 +135,7 @@ jobs:
       run: |
         # Enter the PNL directory otherwise pytest won't pick up the configuration
         cd ${{ steps.get_release.outputs.release_dir }}
-        pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2 tests
+        pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests
 
     - name: Upload test results
       uses: actions/upload-artifact@v2.2.4
