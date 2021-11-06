@@ -712,7 +712,7 @@ def _outcome_getter(owning_component=None, context=None):
     """Return array of values of outcome_input_ports"""
     try:
         return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports])
-    except TypeError:
+    except (AttributeError, TypeError):
         return None
 
 def _net_outcome_getter(owning_component=None, context=None):

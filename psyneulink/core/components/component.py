@@ -1157,6 +1157,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
 
+        self.parameters.variable._set(
+            copy_parameter_value(default_variable),
+            context=context,
+            skip_log=True,
+            skip_history=True,
+            override=True
+        )
+
         # ASSIGN PREFS
         _assign_prefs(self, prefs, BasePreferenceSet)
 
@@ -2050,7 +2058,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             p.spec = copy_parameter_value(p.spec)
 
             # set default to None context to ensure it exists
-            if p.getter is None and p._get(context) is None:
+            if (
+                p._get(context) is None and p.getter is None
+                or context.execution_id not in p.values
+            ):
                 if p._user_specified:
                     val = param_defaults[p.name]
 
