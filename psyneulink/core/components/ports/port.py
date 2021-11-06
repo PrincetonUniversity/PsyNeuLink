@@ -3265,8 +3265,10 @@ def _parse_port_spec(port_type=None,
     #                                 port_dict[OWNER].name, spec_function_value, spec_function))
 
     if port_dict[REFERENCE_VALUE] is not None and not iscompatible(port_dict[VALUE], port_dict[REFERENCE_VALUE]):
-        raise PortError("Port value ({}) does not match reference_value ({}) for {} of {})".
-                         format(port_dict[VALUE], port_dict[REFERENCE_VALUE], port_type.__name__, owner.name))
+        port_name = f"the {port_dict[NAME]}" if NAME in port_dict else f"an"
+        raise PortError(f"The value ({port_dict[VALUE]}) for {port_name} {port_type.__name__} of "
+                        f"{owner.name} does not match the reference_value ({port_dict[REFERENCE_VALUE]}) "
+                        f"used for it at construction.")
 
     return port_dict
 
