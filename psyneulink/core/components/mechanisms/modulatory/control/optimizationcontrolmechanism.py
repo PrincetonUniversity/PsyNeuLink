@@ -73,7 +73,7 @@ each of the OptimizationControlMechanism's `control_signals <ControlMechanism.co
 `combine_costs <ControlMechanism.combine_costs>` function.  The EVC is determined by its `compute_net_outcome
 <ControlMechanism.compute_net_outcome>` function (assigned to its `net_outcome <ControlMechanism.net_outcome>`
 attribute), which is computed for a given `state <OptimizationControlMechanism_State>` by the
-OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evalutation_function>`.
+OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evaluation_function>`.
 
 COMMENT:
 The table `below <OptimizationControlMechanism_Examples>` lists different
@@ -217,9 +217,9 @@ like any ControlMechanism, the input it receives from this is handled in a more 
 are all assigned `MappingProjections <MappingProjections>` to a single *OUTCOME* InputPort.  This is assigned
 `Concatenate` as it `function <InputPort.function>`, which concatenates `values <Projection.value>` of its Projections
 into a single array (that is, it is automatically configured to use the *CONCATENATE* option of a ControlMechanism's
-`outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>` parameter). This ensures that its behavior
-parallels the case in which an `objective_mechanism <ControlMechanism.objective_mechanism>` has been specified,
-as described below.
+`outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>` Parameter). This ensures that the input
+to the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` has the same format as when
+an `objective_mechanism <ControlMechanism.objective_mechanism>` has been specified, as described below.
 
 .. _OptimizationControlMechanism_Input:
 
@@ -368,7 +368,7 @@ A custom function can be assigned as the OptimizationControlMechanism's `functio
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
   ..
   - It must execute the OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism>`
-    `num_estimates <OptimizationControlMechanism.num_estimates>` and aggregate the results in computing the
+    `num_estimates <OptimizationControlMechanism.num_estimates>` times, and aggregate the results in computing the
     `net_outcome <ControlMechanism.net_outcome` for a given `control_allocation <ControlMechanism.control_allocation>`.
   ..
   - It must implement a `reset` method that can accept as keyword arguments **objective_function**,
@@ -409,19 +409,21 @@ When an OptimizationControlMechanism is executed, it carries out the following s
     previous trial.
   ..
   * Calls `function <OptimizationControlMechanism.function>` to find the `control_allocation
-    <ControlMechanism.control_allocation>` that optimizes `net_outcome <ControlMechanism.net_outcome>`.  The
-    way in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
-    the type of `OptimizationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the way
-    that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function
-    <OptimizationControlMechanism.evalutation_function>`.  More specifically:
+    <ControlMechanism.control_allocation>` that optimizes `net_outcome <ControlMechanism.net_outcome>`. The way
+    in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
+    the type of `OptimizationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the
+    way that it evaluates each one is determined by the OptimizationControlMechanism's `evaluation_function
+    <OptimizationControlMechanism.evaluation_function>`.  More specifically:
 
     * The `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
       <ControlMechanism.control_allocation>` (using its `search_function <OptimizationFunction.search_function>`
       to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the predicted
       `net_outcome <ControlMechanism.net_outcome>` for that `control_allocation
       <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's `evaluation_function`
-      <OptimizationControlMechanism.evalutation_function>` and the current `state_feature_values
-      <OptimizationControlMechanism.state_feature_values>`.
+      <OptimizationControlMechanism.evaluation_function>` and the current `state_feature_values
+      <OptimizationControlMechanism.state_feature_values>` as it input, by calling it `num_estimates
+      <OptimizationControlMechanism>` times and aggregating the `agent_rep <OptimizationControlMechanism>`\\'s
+      `net_outcome <ControlMechanism.net_outcome>` over those.
     ..
     * It continues to evaluate the `net_outcome <ControlMechanism.net_outcome>` for `control_allocation
       <ControlMechanism.control_allocation>` samples until its `search_termination_function
@@ -581,8 +583,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     num_estimates : int : 1
         specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` used
-        to estimate the outcome for each `control_allocation <ControlMechanism.control_allocation>` sampled
-        (see `num_estimates <OptimizationControlMechanism.num_estimates>` for additional information).
+        to estimate its `net_outcome <ControlMechanism.net_outcome>` for each `control_allocation
+        <ControlMechanism.control_allocation>` sampled (see `num_estimates
+        <OptimizationControlMechanism.num_estimates>` for additional information).
 
     num_trials_per_estimate : int : default None
         specifies the number of trials to execute in each run of `agent_rep
@@ -636,10 +639,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to
-        `evaluation_function <OptimizationControlMechanism.evaluation_function>`) used to estimate the net_outcome of
-        each `control_allocation <ControlMechanism.control_allocation>` evaluated by the OptimizationControlMechanism's
-        `function <OptimizationControlMechanism.function>` (i.e., that are specified by its `search_space
-        <OptimizationFunction.search_space>`).
+        `evaluation_function <OptimizationControlMechanism.evaluation_function>`) used to estimate the `net_outcome
+        <ControlMechanism.net_outcome>` of each `control_allocation <ControlMechanism.control_allocation>` evaluated
+        by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` (i.e.,
+        that are specified by its `search_space <OptimizationFunction.search_space>`).
 
     num_trials_per_estimate : int or None
         imposes an exact number of trials to execute in each run of `agent_rep <OptimizationControlMechanism.agent_rep>`
@@ -672,9 +675,11 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.agent_rep>` for `num_trials_per_estimate
         <OptimizationControlMechanism.num_trials_per_estimate>` trials. It returns an array containing the
         `net_outcome <ControlMechanism.net_outcome>` of the run and, if the **return_results** argument is True,
-        an array containing the `results <Composition.results>` of the run.  This method should be run `num_estimates
+        an array containing the `results <Composition.results>` of the run. This method is `num_estimates
         <OptimizationControlMechanism>` times by the OptimizationControlMechanism's `function
-        <OptimizationControlMechanism.function>`.
+        <OptimizationControlMechanism.function>`, which aggregates the `net_outcome <ControlMechanism.net_outcome>`
+        over those in evaluating a given control_allocation <ControlMechanism.control_allocation>`
+        (see `OptimizationControlMechanism_Function` for additional details).
 
     COMMENT:
     search_function : function or method
@@ -1190,6 +1195,8 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 return ret_val
 
+        # FIX: 11/3/21 - ??REFACTOR CompositionFunctionApproximator TO NOT TAKE num_estimates
+        #                (i.e., LET OptimzationFunction._grid_evaluate HANDLE IT)
         # agent_rep is a CompositionFunctionApproximator (since runs_simuluations = False)
         else:
             return self.agent_rep.evaluate(self.parameters.state_feature_values._get(context),
