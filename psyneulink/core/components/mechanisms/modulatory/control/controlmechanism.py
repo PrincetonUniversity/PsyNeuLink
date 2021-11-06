@@ -144,8 +144,8 @@ specified (also see `ControlMechanism_Examples`):
 
   * **monitor_for_control** -- a list of `OutputPort specifications <OutputPort_Specification>`.  If the
     **objective_mechanism** argument is not specified (or is *False* or *None*) then, when the ControlMechanism is
-    added to a `Composition`, a `MappingProjection` is created for each OutputPort specified to the ControlMechanism's
-    *OUTCOME* `input_port <ControlMechanism_Input>`.  If the **objective_mechanism** `argument
+    added to a `Composition`, a `MappingProjection` is created from each OutputPort specified to InputPorts
+    created on the ControlMechanism (see `ControlMechanism_Input` for details). If the **objective_mechanism** `argument
     <ControlMechanism_Objective_Mechanism_Argument>` is specified, then the OutputPorts specified in
     **monitor_for_control** are assigned to the `ObjectiveMechanism` rather than the ControlMechanism itself (see
     `ControlMechanism_ObjectiveMechanism` for details).
@@ -342,18 +342,21 @@ Structure
 *Input*
 ~~~~~~~
 
-# FIX: 11/3/21 MODIFY TO INCLUDE POSSIBLITY OF MULTIPLE OUTCOME INPUTPORTS
-By default, a ControlMechanism has a single (`primary <InputPort_Primary>`) `input_port
-<Mechanism_Base.input_port>` that is named *OUTCOME*.  If the ControlMechanism has an `objective_mechanism
-<ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_port <ControlMechanism.outcome_input_ports>`
-receives a single `MappingProjection` from the `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s
-*OUTCOME* OutputPort (see `ControlMechanism_ObjectiveMechanism` for additional details). Otherwise,
-when the ControlMechanism is added to a `Composition`, MappingProjections are created that project to the
-ControlMechanism's *OUTCOME* `input_port <ControlMechanism.input_port>` from each of the OutputPorts specified in the **monitor_for_control** `argument
-<ControlMechanism_Monitor_for_Control_Argument>` of its constructor.  The `value <InputPort.value>` of the
-ControlMechanism's *OUTCOME* InputPort is assigned to its `outcome <ControlMechanism.outcome>` attribute),
-and is used as the input to the ControlMechanism's `function <ControlMechanism.function>` to determine its
-`control_allocation <ControlMechanism.control_allocation>`.
+By default, a ControlMechanism has a single `input_port <Mechanism_Base.input_port>` named *OUTCOME*. If it has an
+`objective_mechanism <ControlMechanism.objective_mechanism>`, then the *OUTCOME* `input_port
+<ControlMechanism.outcome_input_ports>` receives a single `MappingProjection` from the `objective_mechanism
+<ControlMechanism.objective_mechanism>`\\'s *OUTCOME* `OutputPort` (see `ControlMechanism_ObjectiveMechanism` for
+additional details). If the ControlMechanism has no `objective_mechanism <ControlMechanism.objective_mechanism>` then,
+when it is added to a `Composition`, MappingProjections are created from the items specified in `monitor_for_control
+<ControlMechanism.monitor_for_control>` directly to InputPorts on the ControlMechanism (see
+`ControlMechanism_Monitor_for_Control` for additional details). The number of InputPorts created, and how the items
+listed in `monitor_for_control <ControlMechanism.monitor_for_control>` project to them is deterimined by the
+ControlMechanism's `outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>`.  All of the Inports
+that receive Projections from those items, or the `objective_mechanism <ControlMechanism.objective_mechanism>` if
+the ControlMechanism has one, are listed in its `outcome_input_ports <ControlMechanism.outcome_input_ports>` attribute,
+and their values in the `outcome <ControlMechanism.outcome>` attribute.  The latter is used as the input to the
+ControlMechanism's `function <ControlMechanism.function>` to determine its `control_allocation
+<ControlMechanism.control_allocation>`.
 
 .. _ControlMechanism_Function:
 
@@ -693,8 +696,13 @@ def _control_mechanism_costs_getter(owning_component=None, context=None):
         return None
 
 def _outcome_getter(owning_component=None, context=None):
+    """Return array of values of outcome_input_ports"""
     try:
-        return owning_component.parameters.variable._get(context)[0]
+        # # MODIFIED 11/3/21 OLD:
+        # return owning_component.parameters.variable._get(context)[0]
+        # MODIFIED 11/3/21 NEW:
+        return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports])
+        # MODIFIED 11/3/21 END
     except TypeError:
         return None
 
@@ -824,9 +832,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
         <ControlMechanism_Monitor_for_Control_Argument>`.
 
     outcome_input_ports_option : COMBINE, CONCATENATE, SEPARATE : default SEPARATE
-        specifies whether `MappingProjections <MappingProjection>` from items specified in **monitor_for_control**
-        are each assigned their own `InputPort` (*SEPARATE*, the default) or a single (*CONCATENATE*, *COMBINE*);
-        (see `outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>` for additional details.
+        if **objective_mechanism** is not specified, this specifies whether `MappingProjections <MappingProjection>`
+        from items specified in **monitor_for_control** are each assigned their own `InputPort` (*SEPARATE*)
+        or to a single *OUTCOME* InputPort (*CONCATENATE*, *COMBINE*); (see `outcome_input_ports_option
+        <ControlMechanism.outcome_input_ports_option>` for additional details.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         specifies function used to combine values of monitored OutputPorts.
@@ -872,19 +881,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
         `input_port <Mechanism_Base.input_port>`.
 
-    outcome_input_ports_option : COMBINE, CONCATENATE, SEPARATE
-        determines whether `MappingProjections <MappingProjection>` from items specified in `monitor_for_control
-        <ControlMechanism.monitor_for_control>` are each assigned their own `InputPort` (*SEPARATE*, the default)
-        or a single one (*CONCATENATE*, *COMBINE*). In the latter case, the `InputPort` is named *OUTCOME*.  If
-        *COMBINE* is specified, a default `InputPort` is assigned as the *OUTCOME* InputPort, 
-        which uses `LinearCombination` as its `function <InputPort.function>`, which sums the `values 
-        <Projection.value>` of its `path_afferent <Port.path_afferents>` Projections to produce a single 
-        array (this is the default behavior for multiple Projections to a single InputPort;  see InputPort `function 
-        <InputPort.function>`). If *CONCATENATE* is specified, the *OUTCOME* InputPort is assigned `Concatenate` as
-        its `function <InputPort.function>`, which concatenates the `values <Projection.value>` of its `path_afferent 
-        <Port.path_afferents>` Projections into a single array (this is the default behavior for the *OUTCOME*
-        InputPort of an `OptimizationControlMechanism`).  In either case, all of the Inports are assigned to the list
-        in the ControlMechanism's  `outcome_input_ports <ControlMechanism.outcome_input_ports>` attribute.
+    outcome_input_ports_option : , SEPARATE, COMBINE, or CONCATENATE
+        determines how items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` project to
+        the ControlMechanism if not `objective_mechanism <ControlMechanism.objective_mechanism>` is specified.  If
+        *SEPARATE* is specified (the default), the `Projection` from each item specified in `monitor_for_control
+        <ControlMechanism.monitor_for_control>` is assigned its own `InputPort`.  All of the InputPorts are assigned
+        to a list in the ControlMechanism's `outcome_input_ports <ControlMechanism.outcome_input_ports>` attribute.
+        If *CONCATENATE* or *COMBINE* is specified, all of the projections are assigned to a single InputPort, named
+        *OUTCOME*.  If *COMBINE* is specified, the *OUTCOME* InputPort  is assigned `LinearCombination` as its
+        `function <InputPort.function>`, which sums the `values <Projection.value>` of the projections to it (all of
+        which must have the same dimension), to produce a single array (this is the default behavior for multiple
+        Projections to a single InputPort;  see InputPort `function <InputPort.function>`). If *CONCATENATE* is
+        specified, the *OUTCOME* InputPort is assigned `Concatenate` as its `function <InputPort.function>`, which
+        concatenates the `values <Projection.value>` of its Projections into a single array of length equal to the sum
+        of their lengths (which need not be the same).  In both cases, the *OUTCOME* InputPort is assigned as the only
+        item in the list of `outcome_input_ports <ControlMechanism.outcome_input_ports>`.
 
     monitored_output_ports_weights_and_exponents : List[Tuple(float, float)]
         each tuple in the list contains the weight and exponent associated with a corresponding OutputPort specified
@@ -909,10 +920,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
         list of the ControlMechanism's `InputPorts <InputPort>` that receive `Projections <Projection>` from
         either is `objective_mechanism <ControlMechanism.objective_mechanism>` (in which case the list contains
         only the ControlMechanism's *OUTCOME* `InputPort <ControlMechanism_Input>`), or the `OutputPorts <OutputPort>`
-        listed in its `monitor_for_control <ControlMechanism.monitor_for_control>` attribute.
+        of the items listed in its `monitor_for_control <ControlMechanism.monitor_for_control>` attribute.
 
     outcome : 1d array
-        the `value <InputPort.value>` of the ControlMechanism's *OUTCOME* `input_port <ControlMechanism.input_port>`.
+        an array containing the `value <InputPort.value>` of each of the ControlMechanism's `outcome_input_ports
+        <ControlMechanism.outcome_input_ports>`.
 
     function : TransferFunction : default Linear(slope=1, intercept=0)
         determines how the `value <OuputPort.value>`\\s of the `OutputPorts <OutputPort>` specified in the

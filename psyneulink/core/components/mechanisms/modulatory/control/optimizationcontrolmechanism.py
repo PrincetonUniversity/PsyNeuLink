@@ -11,6 +11,32 @@
 
 """
 
+Contents
+--------
+
+  * `OptimizationControlMechanism_Overview`
+     - `Expected Value of Control <OptimizationControlMechanism_EVC>`
+     - `Agent Representation and Types of Optimization <OptimizationControlMechanism_Agent_Representation_Types>`
+        - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
+        - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
+  * `OptimizationControlMechanism_Creation`
+     - `State Features <OptimizationControlMechanism_State_Features_Arg>`
+     - `State Feature Function <OptimizationControlMechanism_Feature_Function_Arg>`
+     - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
+  * `OptimizationControlMechanism_Structure`
+     - `Input <OptimizationControlMechanism_Input>`
+     - `ObjectiveMechanism <OptimizationControlMechanism_ObjectiveMechanism>`
+     - `State Features <OptimizationControlMechanism_State_Features>`
+     ` `State <OptimizationControlMechanism_State>`
+     - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
+     - `Function <OptimizationControlMechanism_Function>`
+        - `Search Function, Search Space and Search Termination Function<OptimizationControlMechanism_Search_Functions>`
+  * `OptimizationControlMechanism_Execution`
+  * `OptimizationControlMechanism_Class_Reference`
+
+
+.. _OptimizationControlMechanism_Overview:
+
 Overview
 --------
 
@@ -128,6 +154,8 @@ Creating an OptimizationControlMechanism
 An OptimizationControlMechanism is created in the same was as any `ControlMechanism <ControlMechanism>`.
 The following arguments of its constructor are specific to the OptimizationControlMechanism:
 
+.. _OptimizationControlMechanism_State_Features_Arg:
+
 * **state_features** -- takes the place of the standard **input_ports** argument in the constructor for a Mechanism`,
   and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
@@ -148,7 +176,7 @@ The following arguments of its constructor are specific to the OptimizationContr
   the last trial of its execution is used to predict the `net_outcome <ControlMechanism.net_outcome>` for the upcoming
   trial.
 
-.. _OptimizationControlMechanism_Feature_Function:
+.. _OptimizationControlMechanism_Feature_Function_Arg:
 
 * **state_feature_function** -- specifies `function <InputPort>` of the InputPort created for each item listed in
   **state_features**.  By default, this is the identity function, that assigns the current value of the feature to the
@@ -156,7 +184,9 @@ The following arguments of its constructor are specific to the OptimizationContr
   However, other functions can be assigned, for example to maintain a record of past values, integrate them over
   trials, and/or provide a generative model of the environment (for use in `model-based processing
   <OptimizationControlMechanism_Model_Based>`.
-..
+
+.. _OptimizationControlMechanism_Agent_Rep_Arg:
+
 * **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluation_function
   <OptimizationControlMechanism.evaluation_function>` to calculate the predicted `net_outcome
   <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` (see `below
@@ -174,10 +204,24 @@ The following arguments of its constructor are specific to the OptimizationContr
 Structure
 ---------
 
-In addition to the standard Components associated with a `ControlMechanism`, including a `Projection <Projection>`
-to its *OUTCOME* InputPort from its `objective_mechanism <ControlMechanism.objective_mechanism>`, and a
-`function <OptimizationControlMechanism.function>` used to carry out the optimization process, it has several
-other constiuents, as described below.
+An OptimizationControl Mechanism follows the structure of a `ControlMechanism`, with the following exceptions
+and additions.
+
+*Input*
+^^^^^^^
+
+While an OptimizationControlMechanism may be assigned a `objective_mechanism <ControlMechanism.objective_mechanism>`
+like any ControlMechanism, the input it receives from this is handled in a more specialized manner (see
+`OptimizationControlMechanism_ObjectiveMechanism` below).  If it is not assigned an `objective_mechanism
+<ControlMechanism.objective_mechanism>`, then the items specified by `monitor_for_control <Control.monitor_for_control>`
+are all assigned `MappingProjections <MappingProjections>` to a single *OUTCOME* InputPort.  This is assigned
+`Concatenate` as it `function <InputPort.function>`, which concatenates `values <Projection.value>` of its Projections
+into a single array (that is, it is automatically configured to use the *CONCATENATE* option of a ControlMechanism's
+`outcome_input_ports_option <ControlMechanism.outcome_input_ports_option>` parameter). This ensures that its behavior
+parallels the case in which an `objective_mechanism <ControlMechanism.objective_mechanism>` has been specified,
+as described below.
+
+.. _OptimizationControlMechanism_Input:
 
 .. _OptimizationControlMechanism_ObjectiveMechanism:
 
@@ -186,18 +230,20 @@ other constiuents, as described below.
 
 Like any `ControlMechanism`, an OptimizationControlMechanism may be assigned an `objective_mechanism
 <ControlMechanism.objective_mechanism>` that is used to evaluate the outcome of processing for a given trial (see
-`ControlMechanism_Objective_ObjectiveMechanism). This passes the result to the OptimizationControlMechanism, which it
-places in its `outcome <OptimizationControlMechanism.outcome>` attribute.  This is used by its `compute_net_outcome
-<ControlMechanism.compute_net_outcome>` function, together with the `costs <ControlMechanism.costs>` of its
-`control_signals <ControlMechanism.control_signals>`, to compute the `net_outcome <ControlMechanism.net_outcome>` of
-processing for a given `state <OptimizationControlMechanism_State>`, and that is returned by `evaluation` method of the
-OptimizationControlMechanism's `agent_rep <OptimizationControlMechanism.agent_rep>`.
+`ControlMechanism_Objective_ObjectiveMechanism). This passes the result to the OptimizationControlMechanism's
+*OUTCOME* InputPort, that is placed in its `outcome <OptimizationControlMechanism.outcome>` attribute. This is used by
+its `compute_net_outcome <ControlMechanism.compute_net_outcome>` function, together with the `costs
+<ControlMechanism.costs>` of its `control_signals <ControlMechanism.control_signals>`, to compute the `net_outcome
+<ControlMechanism.net_outcome>` of processing for a given `state <OptimizationControlMechanism_State>`, and that is
+returned by `evaluation` method of theOptimizationControlMechanism's `agent_rep
+<OptimizationControlMechanism.agent_rep>`.
 
 .. note::
-    The `objective_mechanism <ControlMechanism.objective_mechanism>` is distinct from, and should not be
-    confused with the `objective_function <OptimizationFunction.objective_function>` parameter of the
-    OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`.  The `objective_mechanism
-    <ControlMechanism.objective_mechanism>` evaluates the `outcome <ControlMechanism.outcome>` of processing
+    The `objective_mechanism <ControlMechanism.objective_mechanism>` and its `function <ObjectiveMechanism.function>`
+    are distinct from, and should not be confused with the `objective_function
+    <OptimizationFunction.objective_function>` parameter of the OptimizationControlMechanism's `function
+    <OptimizationControlMechanism.function>`.  The `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s
+    `function <ObjectiveMechanism.funtion>` evaluates the `outcome <ControlMechanism.outcome>` of processing
     without taking into account the `costs <ControlMechanism.costs>` of the OptimizationControlMechanism's
     `control_signals <ControlMechanism.control_signals>`.  In contrast, its `evaluation_function
     <OptimizationControlMechanism.evaluation_function>`, which is assigned as the
@@ -453,7 +499,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
-    OPTIMIZATION_CONTROL_MECHANISM, PARAMS, PROJECTIONS
+    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -470,7 +516,6 @@ STATE_FEATURES = 'state_features'
 
 def _parse_state_feature_values_from_variable(variable):
     return convert_to_np_array(np.array(variable[1:]).tolist())
-
 
 class OptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
