@@ -58,6 +58,7 @@ __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'Gaussi
            ]
 
 OBJECTIVE_FUNCTION = 'objective_function'
+AGGREGATION_FUNCTION = 'aggregation_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
@@ -330,6 +331,7 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x,n: sum(x)/n, stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
@@ -367,6 +369,9 @@ class OptimizationFunction(Function_Base):
         if objective_function is None:
             self._unspecified_args.append(OBJECTIVE_FUNCTION)
 
+        if aggregation_function is None:
+            self._unspecified_args.append(AGGREGATION_FUNCTION)
+
         if search_function is None:
             self._unspecified_args.append(SEARCH_FUNCTION)
 
@@ -399,6 +404,12 @@ class OptimizationFunction(Function_Base):
                 raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
                                                        request_set[OBJECTIVE_FUNCTION].__name__))
+
+        if AGGREGATION_FUNCTION in request_set and request_set[AGGREGATION_FUNCTION] is not None:
+            if not is_function_type(request_set[AGGREGATION_FUNCTION]):
+                raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
+                                                format(repr(AGGREGATION_FUNCTION), self.__class__.__name__,
+                                                       request_set[AGGREGATION_FUNCTION].__name__))
 
         if SEARCH_FUNCTION in request_set and request_set[SEARCH_FUNCTION] is not None:
             if not is_function_type(request_set[SEARCH_FUNCTION]):
@@ -438,6 +449,7 @@ class OptimizationFunction(Function_Base):
         self,
         default_variable=None,
         objective_function=None,
+        aggregation_function=None,
         search_function=None,
         search_termination_function=None,
         search_space=None,
@@ -458,6 +470,7 @@ class OptimizationFunction(Function_Base):
             request_set={
                 'default_variable': default_variable,
                 'objective_function': objective_function,
+                'aggregation_function': aggregation_function,
                 'search_function': search_function,
                 'search_termination_function': search_termination_function,
                 'search_space': search_space,
@@ -470,6 +483,10 @@ class OptimizationFunction(Function_Base):
             self.parameters.objective_function._set(objective_function, context)
             if OBJECTIVE_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(OBJECTIVE_FUNCTION)]
+        if aggregation_function is not None:
+            self.parameters.aggregation_function._set(aggregation_function, context)
+            if AGGREGATION_FUNCTION in self._unspecified_args:
+                del self._unspecified_args[self._unspecified_args.index(AGGREGATION_FUNCTION)]
         if search_function is not None:
             self.parameters.search_function._set(search_function, context)
             if SEARCH_FUNCTION in self._unspecified_args:
