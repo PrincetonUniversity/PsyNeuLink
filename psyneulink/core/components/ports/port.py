@@ -1766,7 +1766,12 @@ class Port_Base(Port):
                                                                                               context=context)
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
-                        mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                        try:
+                            mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                        except TypeError as error:
+                            raise PortError(f"The value for {self.name} of {self.owner.name} ({projection.value}) does "
+                                            f"not match the format ({mod_param_value}) of the Parameter it modulates "
+                                            f"({receiver.owner.name}[{mod_param_name}]).")
                         if (mod_param_value is not None
                             and not iscompatible(mod_param_value, mod_proj_spec_value)):
                             raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "

@@ -585,7 +585,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import Port, _parse_port_spec
+from psyneulink.core.components.ports.port import Port, _parse_port_spec, PortError
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, COMBINE, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, CONCATENATE, \
