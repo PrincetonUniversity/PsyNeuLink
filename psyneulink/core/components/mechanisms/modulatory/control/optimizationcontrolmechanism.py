@@ -1093,8 +1093,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
                                                 super(ControlMechanism,self)._execute(variable=control_allocation,
+                                                                                      num_estimates=self.parameters.num_estimates._get(context),
                                                                                       context=context,
-                                                                                      runtime_params=runtime_params,
+                                                                                      runtime_params=runtime_params
                                                                                       )
 
         # clean up frozen values after execution
@@ -1393,7 +1394,10 @@ class OptimizationControlMechanism(ControlMechanism):
             builder.store(builder.load(src), dst)
 
 
-        # FIX: 11/3/21 ??MAY NEED TO BE REFACTORED TO USE num_trials_per_estimate?? AS DISTINCT FROM num_estimates
+        # FIX: 11/3/21 ??REFACTOR EITHER:
+        #  - AROUND PASSING OF num_estimates IN CALL TO _execute
+        #  - OR TO USE num_trials_per_estimate RATHER THAN num_estimates IF THAT IS WHAT IS INTENDED
+                #
         # Determine simulation counts
         num_estimates_ptr = pnlvm.helpers.get_param_ptr(builder, self,
                                                         controller_params,

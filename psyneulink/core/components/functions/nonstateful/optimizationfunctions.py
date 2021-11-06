@@ -348,6 +348,7 @@ class OptimizationFunction(Function_Base):
         self,
         default_variable=None,
         objective_function:tc.optional(is_function_type)=None,
+        aggregation_function:tc.optional(is_function_type)=None,
         search_function:tc.optional(is_function_type)=None,
         search_space=None,
         search_termination_function:tc.optional(is_function_type)=None,
@@ -379,6 +380,7 @@ class OptimizationFunction(Function_Base):
             max_iterations=max_iterations,
             search_space=search_space,
             objective_function=objective_function,
+            aggregation_function=aggregation_function,
             search_function=search_function,
             search_termination_function=search_termination_function,
             params=params,
@@ -483,6 +485,7 @@ class OptimizationFunction(Function_Base):
 
     def _function(self,
                  variable=None,
+                 num_estimates=1,
                  context=None,
                  params=None,
                  **kwargs):
@@ -549,9 +552,13 @@ class OptimizationFunction(Function_Base):
 
             # Get next sample of sample
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
-            # Compute new value based on new sample
-            new_value = call_with_pruned_args(self.objective_function, new_sample, context=context)
-            self._report_value(new_value)
+
+            # Generate num_estimates of sample, then apply aggregation_function and return result
+            estimates = []
+            for i in range(num_estimates):
+                estimates.append(call_with_pruned_args(self.objective_function, new_sample, context=context))
+                self._report_value(new_value)
+            new_value = self.aggregation_function(estimates) if self.aggregation_function else estimates
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
