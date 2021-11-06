@@ -503,7 +503,6 @@ class OptimizationFunction(Function_Base):
             second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
-        assert True
         if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))

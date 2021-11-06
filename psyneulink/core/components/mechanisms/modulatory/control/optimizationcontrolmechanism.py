@@ -452,7 +452,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY,\
+    CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
     OPTIMIZATION_CONTROL_MECHANISM, PARAMS, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -770,8 +770,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
         """
+        outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         function = Parameter(GridSearch, stateful=False, loggable=False)
-        state_feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
+        state_feature_function = Parameter(None, referdence=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_space = Parameter(None, read_only=True)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
@@ -857,7 +858,6 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"in internal call to constructor for {self.name}."
 
         super().__init__(
-            outcome_input_ports_option=CONCATENATE,
             function=function,
             state_feature_function=state_feature_function,
             num_estimates=num_estimates,
