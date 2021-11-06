@@ -698,11 +698,7 @@ def _control_mechanism_costs_getter(owning_component=None, context=None):
 def _outcome_getter(owning_component=None, context=None):
     """Return array of values of outcome_input_ports"""
     try:
-        # # MODIFIED 11/3/21 OLD:
-        # return owning_component.parameters.variable._get(context)[0]
-        # MODIFIED 11/3/21 NEW:
         return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports])
-        # MODIFIED 11/3/21 END
     except TypeError:
         return None
 
@@ -1530,10 +1526,11 @@ class ControlMechanism(ModulatoryMechanism_Base):
         monitor_for_control_specs = self.monitor_for_control
         option = self.outcome_input_ports_option
 
-        port_value_sizes = self._handle_arg_input_ports(monitor_for_control_specs)[0]
         # FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
         from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
         monitored_ports = _parse_monitor_specs(monitor_for_control_specs)
+
+        port_value_sizes = self._handle_arg_input_ports(monitor_for_control_specs)[0]
 
         # Construct port specification to assign its name
         if option == SEPARATE:
@@ -1543,20 +1540,19 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     name = f"{monitored_port.owner.name}[{name.upper()}]"
                 name = 'MONITOR ' + name
                 monitored_ports[i] = {PORT_TYPE: InputPort, name: monitored_port}
-    
-                return monitored_ports, port_value_sizes
+            return monitored_ports, port_value_sizes
 
         if option == CONCATENATE:
             function = Concatenate
 
         elif option == COMBINE:
             function = LinearCombination
-            # Since LinearCombination is being used, all InputPorts must have the same size, so use one of them
-            port_value_sizes = [port_value_sizes[0]]
 
         else:
             assert False, f"PROGRAM ERROR:  Unrecognized option ({option}) passed to " \
                           f"ControlMechanism._instantiate_montiored_for_control_input_ports() for {self.name}"
+
+        port_value_sizes = [function().function(port_value_sizes)]
 
         outcome_input_port = {PORT_TYPE: InputPort,
                               NAME: 'OUTCOME',
