@@ -337,8 +337,8 @@ class ParameterEstimationComposition(Composition):
     num_trials_per_estimate : int or None
         imposes an exact number of trials to be executed in each run of `model <ParameterEstimationComposition.model>`
         used to evaluate its `net_outcome <ControlMechanism.net_outcome>` by a call to its
-        OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evaluation_function>`. If
-        it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
+        OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method.
+        If it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
         the ParameterEstimationComposition's `run <ParameterEstimationComposition.run>` method used to determine the
         number of trials executed (see `Composition_Execution_Num_Trials` for additional information).
 
@@ -366,12 +366,12 @@ class ParameterEstimationComposition(Composition):
         exclusively the influence of the *parameters* on the execution of the `model
         <ParameterEstimationComposition.model>`, and *not* any variability intrinsic to the execution of
         the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
-        executions of the OptimizationControlMechanism's `evaluation_function
-        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values (i.e.,
+        executions of the OptimizationControlMechanism's `evaluate_agent_rep
+        <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter values (i.e.,
         `control_allocation <ControlMechanism.control_allocation>`). If *same_seed_for_all_parameter_combinations* is
         False, then each time a combination of parameter values is estimated, it will use a different set of seeds.
         This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism's
-        `evaluation_function <OptimizationControlMechanism.evaluation_function>` with the same set of parameter
+        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter
         values (`control_allocation <ControlMechanism.control_allocation>`). Small differences in results suggest
         stability of the estimation process across combinations of parameter values, while substantial differences
         indicate instability, which may be helped by increasing `num_estimates
@@ -574,7 +574,7 @@ class ParameterEstimationComposition(Composition):
         """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
         **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
         """
-        # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluation_function AND/OR grid_evaluate
+        # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluate_agent_rep AND/OR grid_evaluate
         # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
         # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
         # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
