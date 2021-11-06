@@ -1548,14 +1548,22 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         if option == CONCATENATE:
             function = Concatenate
-        else:
+
+        elif option == COMBINE:
             function = LinearCombination
+            # Since LinearCombination is being used, all InputPorts must have the same size, so use one of them
+            port_value_sizes = [port_value_sizes[0]]
+
+        else:
+            assert False, f"PROGRAM ERROR:  Unrecognized option ({option}) passed to " \
+                          f"ControlMechanism._instantiate_montiored_for_control_input_ports() for {self.name}"
+
         outcome_input_port = {PORT_TYPE: InputPort,
                               NAME: 'OUTCOME',
                               FUNCTION: function,
                               # SIZE:  len(self._handle_arg_input_ports(monitor_for_control_specs)[0])
                               PROJECTIONS: monitored_ports}
-        return [outcome_input_port], [self._handle_arg_input_ports(monitor_for_control_specs)[0]]
+        return [outcome_input_port], port_value_sizes
 
 
     def _instantiate_output_ports(self, context=None):
