@@ -143,7 +143,7 @@ Class Reference
 import numpy as np
 
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism
+    OptimizationControlMechanism, RANDOMIZATION_CONTROL_SIGNAL_NAME
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
@@ -161,7 +161,7 @@ CONTROLLER_SPECIFICATION_ARGS = {'controller',
                                  'controller_time_scale',
                                  'controller_condition',
                                  'retain_old_simulation_data'}
-RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME = 'RANDOMIZATION SEEDS'
+
 
 class ParameterEstimationCompositionError(Exception):
     def __init__(self, error_value):
@@ -272,7 +272,7 @@ class ParameterEstimationComposition(Composition):
         .. technical_note::
             A `ControlSignal` is added to the `control_signals <ControlMechanism.control_signals>` of the
             ParameterEstimationComposition's `OptimizationControlMechanism`, named
-            *RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME*, to modulate the seeds used to randomize each estimate of the
+            *RANDOMIZATION_CONTROL_SIGNAL_NAME*, to modulate the seeds used to randomize each estimate of the
             `net_outcome <ControlMechanism.net_outcome>` for each run of the `model
             <ParameterEstimationComposition.model>` (i.e., call to its `evaluate <Composition.evaluate>`
             method). That ControlSignal sends a `ControlProjection` to every `Parameter` of every `Component` in the
@@ -515,7 +515,7 @@ class ParameterEstimationComposition(Composition):
         seed_param_ports = [param._port for param in self.all_dependent_parameters('seed').keys()]
 
         # Construct ControlSignal to modify seeds over estimates
-        seed_control_signal = ControlSignal(name=RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME,
+        seed_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL_NAME,
                                             modulates=seed_param_ports,
                                             allocation_samples=random_seeds)
 
@@ -532,37 +532,38 @@ class ParameterEstimationComposition(Composition):
         convert_to_list(control_signals).append(seed_control_signal)
 
         return OptimizationControlMechanism(agent_rep=self,
-                                            control_signals=control_signals,
+                                            # monitor_for_control=outcome_variables,
                                             objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
                                                                                    function=objective_function),
                                             function=optimization_function,
+                                            control_signals=control_signals,
                                             num_estimates=num_estimates,
                                             num_trials_per_estimate=num_trials_per_estimate
                                             )
 
-    def run(self):
-        # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
-        # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE model COMP FOR ITS RUN:
-        #     inputs=None,
-        #     initialize_cycle_values=None,
-        #     reset_stateful_functions_to=None,
-        #     reset_stateful_functions_when=Never(),
-        #     skip_initialization=False,
-        #     clamp_input=SOFT_CLAMP,
-        #     runtime_params=None,
-        #     call_before_time_step=None,
-        #     call_after_time_step=None,
-        #     call_before_pass=None,
-        #     call_after_pass=None,
-        #     call_before_trial=None,
-        #     call_after_trial=None,
-        #     termination_processing=None,
-        #     scheduler=None,
-        #     scheduling_mode: typing.Optional[SchedulingMode] = None,
-        #     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-        #     default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
-        # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
-        pass
+    # def run(self):
+    #     # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
+    #     # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE model COMP FOR ITS RUN:
+    #     #     inputs=None,
+    #     #     initialize_cycle_values=None,
+    #     #     reset_stateful_functions_to=None,
+    #     #     reset_stateful_functions_when=Never(),
+    #     #     skip_initialization=False,
+    #     #     clamp_input=SOFT_CLAMP,
+    #     #     runtime_params=None,
+    #     #     call_before_time_step=None,
+    #     #     call_after_time_step=None,
+    #     #     call_before_pass=None,
+    #     #     call_after_pass=None,
+    #     #     call_before_trial=None,
+    #     #     call_after_trial=None,
+    #     #     termination_processing=None,
+    #     #     scheduler=None,
+    #     #     scheduling_mode: typing.Optional[SchedulingMode] = None,
+    #     #     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+    #     #     default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
+    #     # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
+    #     pass
 
     def evaluate(self,
                  feature_values,
