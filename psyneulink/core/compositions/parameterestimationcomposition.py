@@ -501,6 +501,7 @@ class ParameterEstimationComposition(Composition):
                          same_seed_for_all_parameter_combinations
                          ):
 
+        # FIX: MOVE TO OCM: 11/3/21
         # Construct iterator for seeds used to randomize estimates
         def random_integer_generator():
             rng = np.random.RandomState()
@@ -530,6 +531,7 @@ class ParameterEstimationComposition(Composition):
                                                  allocation_samples=allocation))
         # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
         convert_to_list(control_signals).append(seed_control_signal)
+        # FIX: END OF MOVE
 
         return OptimizationControlMechanism(agent_rep=self,
                                             # monitor_for_control=outcome_variables,
