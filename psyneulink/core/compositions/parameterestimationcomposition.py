@@ -148,7 +148,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.context import Context
-from psyneulink.core.globals.keywords import BEFORE, CONCATENATE
+from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.sampleiterator import SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list
 
@@ -461,12 +461,14 @@ class ParameterEstimationComposition(Composition):
 
         # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
         if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+        # if not ((args['model'] or args['nodes']) for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS):
             raise ParameterEstimationCompositionError(f"Must specify either 'model' or the "
                                                       f"'nodes', 'pathways', and/or `projections` ars "
                                                       f"in the constructor for {pec_name}.")
 
         # Can't specify both model and COMPOSITION_SPECIFICATION_ARGUMENTS
-        if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+        # if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+        if args['model'] and kwargs.pop('nodes',None):
             raise ParameterEstimationCompositionError(f"Can't specify both 'model' and the "
                                                       f"'nodes', 'pathways', or 'projections' args "
                                                       f"in the constructor for {pec_name}.")

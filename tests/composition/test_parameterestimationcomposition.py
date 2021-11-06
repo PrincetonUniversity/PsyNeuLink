@@ -1,16 +1,13 @@
 import logging
-import timeit as timeit
 
 import numpy as np
-
 import pytest
 
 import psyneulink as pnl
-
-from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import \
     LinearCombination, Concatenate
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.compositions.parameterestimationcomposition import ParameterEstimationComposition
 
 logger = logging.getLogger(__name__)
 
@@ -22,15 +19,21 @@ logger = logging.getLogger(__name__)
 
 # objective_function = {None: 2, Concatenate: 2, LinearCombination: 1}
 # expected
-objective_function_args = [(None, 2), (Concatenate, 2), (LinearCombination, 1)]
+
+pec_test_args = [(None, 2, True, False),
+                 (None, 2, False, True),
+                 (Concatenate, 2, True, False),
+                 (LinearCombination, 1, True, False),
+                 # (None, 2, 'mode', 'nodes'),
+                 ]
 
 
 @pytest.mark.parametrize(
-    'objective_function_arg, expected_input_len',
-    objective_function_args,
-    ids=[str(x[0]) for x in objective_function_args]
+    'objective_function_arg, expected_input_len, model_spec, node_spec',
+    pec_test_args,
+    ids=[f"{x[0]}-{x[2]}-{x[3]})" for x in pec_test_args]
 )
-def test_parameter_estimation_composition(objective_function_arg, expected_input_len):
+def test_parameter_estimation_composition(objective_function_arg, expected_input_len, model_spec, node_spec):
     Input = pnl.TransferMechanism(name='Input')
     reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
                                    name='reward',
@@ -72,9 +75,11 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
     task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision, Decision2]
     comp.add_linear_processing_pathway(task_execution_pathway)
 
+
+
     pec = ParameterEstimationComposition(name='pec',
-                                         model=comp,
-                                         nodes = comp,      # For testing alternative
+                                         model = comp if model_spec else None,
+                                         nodes = comp if node_spec else None,
                                          # data = [1,2,3],    # For testing error
                                          parameters={('drift_rate',Decision):[1,2],
                                                      ('threshold',Decision2):[1,2],},
