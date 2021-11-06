@@ -1,8 +1,9 @@
-name: Test PNL pre-release
+name: Test and publish PNL release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 jobs:
   create-python-dist:
@@ -16,26 +17,18 @@ jobs:
       sdist: ${{ steps.create_dist.outputs.sdist }}
       wheel: ${{ steps.create_dist.outputs.wheel }}
     steps:
+    - name: Checkout sources
+      uses: actions/checkout@v2.4.0
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2.2.2
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Get release tarball
-      id: get_release
-      shell: bash
-      run: |
-        wget ${{ github.event.release.tarball_url }} -O psyneulink.tar.gz
-        export RELEASE_DIR=$(tar -tzf psyneulink.tar.gz | head -n1)
-        echo ::set-output name=release_dir::$RELEASE_DIR
-        tar -xzvf psyneulink.tar.gz
-
-
     - name: Create Python Dist files
       id: create_dist
       shell: bash
       run: |
-        cd ${{ steps.get_release.outputs.release_dir }}
         # We don't care about the python version used.
         pip install setuptools wheel
         python setup.py sdist
@@ -48,8 +41,8 @@ jobs:
       uses: actions/upload-artifact@v2.2.4
       with:
         name: Python-dist-files
+        path: dist/
         retention-days: 1
-        path: ${{ steps.get_release.outputs.release_dir }}/dist
 
     - name: Upload dist files to test PyPI
       shell: bash
@@ -84,16 +77,6 @@ jobs:
     needs: [create-python-dist]
 
     steps:
-
-    - name: Get tests from the release tarball
-      id: get_release
-      shell: bash
-      run: |
-        curl -L --retry 5 ${{ github.event.release.tarball_url }} --output psyneulink.tar.gz
-        export RELEASE_DIR=$(tar -tzf psyneulink.tar.gz | head -n1)
-        echo ::set-output name=release_dir::$RELEASE_DIR
-        tar -xzvf psyneulink.tar.gz
-
     - name: Download dist files
       uses: actions/download-artifact@v2
       with:
@@ -129,19 +112,24 @@ jobs:
       if: matrix.dist == 'sdist'
       run: pip install dist/${{ needs.create-python-dist.outputs.sdist }}[dev]
 
+    - name: Get tests from the repository
+      uses: actions/checkout@v2.4.0
+
     - name: Run tests
+      shell: bash
       # run only tests/. We don't care about codestyle/docstyle at this point
       timeout-minutes: 80
       run: |
-        # Enter the PNL directory otherwise pytest won't pick up the configuration
-        cd ${{ steps.get_release.outputs.release_dir }}
+        # remove sources to prevent conflict with the isntalled package
+        rm -r -f psyneulink/ docs/ bin/ Matlab/
+        # run tests
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests
 
     - name: Upload test results
       uses: actions/upload-artifact@v2.2.4
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
-        path: ${{ steps.get_release.outputs.release_dir }}/tests_out.xml
+        path: tests_out.xml
         retention-days: 30
       if: success() || failure()
 
@@ -197,7 +185,34 @@ jobs:
       with:
         script: |
           const fs = require('fs')
+          tag = context.ref.split('/').pop()
+          console.log('running on:' + context.ref);
+          console.log('Looking for release for tag:' + tag);
 
+          var release
+          try {
+            release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag
+            });
+            console.log('Release found at: ' + release.data.html_url); // '
+          } catch (err) {
+            if (err.status == 404) {
+              console.log('Release not found, creating a new one');
+              release = await github.rest.repos.createRelease({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  tag_name: tag,
+                  name: 'Release ' + tag,
+                  body: 'New features and fixed bugs'
+              });
+            } else {
+              throw err;
+            }
+          }
+
+          console.log('Using release upload url: ' + release['data']['upload_url']);
           // Determine content-length for header to upload asset
           for (asset of ['${{ needs.create-python-dist.outputs.wheel }}', '${{ needs.create-python-dist.outputs.sdist }}']) {
             const file_path = 'dist/' + asset;
@@ -210,7 +225,7 @@ jobs:
 
             // Upload a release asset
             const uploadAssetResponse = await github.rest.repos.uploadReleaseAsset({
-              url: '${{ github.event.release.upload_url }}',
+              url: release.data.upload_url,
               headers,
               name: asset,
               file: fs.readFileSync(file_path)
