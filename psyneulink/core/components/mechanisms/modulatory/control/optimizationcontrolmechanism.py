@@ -356,11 +356,12 @@ evaluate each `control_allocation <ControlMechanism.control_allocation>` sampled
 until the `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`. Each
 `control_allocation <ControlMechanism.control_allocation>` is evaluated `num_estimates
 <OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
-OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>`, the results of which are
-aggregated by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` in computing the
-`net_outcome <ControlMechanism.net_outcome` for that `control_allocation <ControlMechanism.control_allocation>`.
-A custom function can be assigned as the OptimizationControlMechanism's `function
-<OptimizationControlMechanism.function>`, however it must meet the following requirements:
+OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>` method, the results of which are
+aggregated by the `aggregation_function <OptimizationControlMechanism.aggregation_function>` of the
+`OptimizationFunction` assigned to the OptimizationControlMechanism's `function <OptimizationControlMechanism>`,
+to compute the `net_outcome <ControlMechanism.net_outcome` over the num_estimates for that `control_allocation
+<ControlMechanism.control_allocation>`.  A custom function can be assigned as the OptimizationControlMechanism's
+`function <OptimizationControlMechanism.function>`, however it must meet the following requirements:
 
 .. _OptimizationControlMechanism_Custom_Function:
 
@@ -370,6 +371,9 @@ A custom function can be assigned as the OptimizationControlMechanism's `functio
   - It must execute the OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>`
     `num_estimates <OptimizationControlMechanism.num_estimates>` times, and aggregate the results in computing the
     `net_outcome <ControlMechanism.net_outcome` for a given `control_allocation <ControlMechanism.control_allocation>`.
+    Randomization over estimates can be configured using the OptimizationControlMechanism's `initial_seed
+    <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
+    <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters.
   ..
   - It must implement a `reset` method that can accept as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
@@ -593,13 +597,12 @@ class OptimizationControlMechanism(ControlMechanism):
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
         If it is not specified then then the seed is set to a random value on construction (see `initial_seed
-        <ParameterEstimationComposition.initial_seed>` for additional information).
+        <OptimizationControlMechanism.initial_seed>` for additional information).
 
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
-        combination of `parameter <ParameterEstimationComposition.parameters>` values (see
-        `same_seed_for_all_parameter_combinations
-        <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>` for additional information).
+        `control_allocation <ControlMechanism.control_allocation>` (see `same_seed_for_all_parameter_combinations
+        <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional information).
 
     num_trials_per_estimate : int : default None
         specifies the number of trials to execute in each run of `agent_rep
@@ -661,29 +664,29 @@ class OptimizationControlMechanism(ControlMechanism):
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
         If it is not specified then then the seed is set to a random value on construction, and different runs of a
-        script containing the ParameterEstimationComposition will yield different results, which should be roughly
-        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the script
+        Composition containing the OptimizationControlMechanism will yield different results, which should be roughly
+        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the Composition
         should yield identical results for the estimation process, which can be useful for debugging.
 
     same_seed_for_all_allocations :  bool
-        determines whether the random number generator used to select seeds for each estimate of the `model
-        <ParameterEstimationComposition.model>`\\'s `net_outcome <ControlMechanism.net_outcome>` is
-        re-initialized to the same value for each combination of `parameter <ParameterEstimationComposition>` values
-        evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
-        of `net_outcome <ControlMechanism.net_outcome>` for each combination of parameter values will reflect
-        exclusively the influence of the *parameters* on the execution of the `model
-        <ParameterEstimationComposition.model>`, and *not* any variability intrinsic to the execution of
+        determines whether the random number generator used to select seeds for each estimate of the `agent_rep
+        <OptimizationControlMechanism.agent_rep>`\\'s `net_outcome <ControlMechanism.net_outcome>` is re-initialized
+        to the same value for each `control_allocation <ControlMechanism.control_allocation>` evaluated.
+        If same_seed_for_all_allocations is True, then any differences in the estimates made of `net_outcome
+        <ControlMechanism.net_outcome>` for each `control_allocation <ControlMechanism.control_allocation>` will reflect
+        exclusively the influence of the different control_allocations on the execution of the `agent_rep
+        <OptimizationControlMechanism.agent_rep>`, and *not* any variability intrinsic to the execution of
         the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
         executions of the OptimizationControlMechanism's `evaluate_agent_rep
-        <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter values (i.e.,
-        `control_allocation <ControlMechanism.control_allocation>`). If *same_seed_for_all_parameter_combinations* is
-        False, then each time a combination of parameter values is estimated, it will use a different set of seeds.
+        <OptimizationControlMechanism.evaluate_agent_rep>` method for the same `control_allocation
+        <ControlMechanism.control_allocation>`. If same_seed_for_all_allocations is False, then each time a
+        `control_allocation <ControlMechanism.control_allocation>` is estimated, it will use a different set of seeds.
         This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism's
-        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter
-        values (`control_allocation <ControlMechanism.control_allocation>`). Small differences in results suggest
-        stability of the estimation process across combinations of parameter values, while substantial differences
-        indicate instability, which may be helped by increasing `num_estimates
-        <ParameterEstimationComposition.num_estimates>`.
+        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method with the same `control_allocation
+        <ControlMechanism.control_allocation>`). Small differences in results suggest
+        stability of the estimation process across `control_allocations <ControlMechanism.control_allocation>`, while
+        substantial differences indicate instability, which may be helped by increasing `num_estimates
+        <OptimizationControlMechanism.num_estimates>`.
 
     num_trials_per_estimate : int or None
         imposes an exact number of trials to execute in each run of `agent_rep <OptimizationControlMechanism.agent_rep>`
