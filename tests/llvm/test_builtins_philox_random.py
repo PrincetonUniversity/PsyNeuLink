@@ -173,8 +173,7 @@ def test_random_float(benchmark, mode):
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-@pytest.mark.skip
-def test_random_normal(benchmark, mode):
+def test_random_normal_double(benchmark, mode):
     if mode == 'numpy':
         state = np.random.Philox([SEED])
         prng = np.random.Generator(state)
@@ -185,7 +184,7 @@ def test_random_normal(benchmark, mode):
         state = init_fun.byref_arg_types[0]()
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal_double')
         out = ctypes.c_double()
         def f():
             gen_fun(state, out)
@@ -194,15 +193,34 @@ def test_random_normal(benchmark, mode):
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
-        init_fun.cuda_call(gpu_state, np.int32(SEED))
+        init_fun.cuda_call(gpu_state, np.int64(SEED))
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal_double')
         out = np.asfarray([0.0], dtype=np.float64)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         def f():
             gen_fun.cuda_call(gpu_state, gpu_out)
             return out[0]
 
-    res = [f(), f()]
-    assert np.allclose(res, [-0.2059740286292238, -0.12884495093462758])
+    res = [f() for i in range(191000)]
+    assert np.allclose(res[0:2], [-0.2059740286292238, -0.12884495093462758])
+    # 208 doesn't take the fast path but wraps around the main loop
+    assert np.allclose(res[207:211], [-0.768690647997579, 0.4301874289485477,
+                                      -0.7803640491708955, -1.146089287628737])
+    # 450 doesn't take the fast path or wrap around the main loop,
+    # but takes the special condition at the end of the loop
+    assert np.allclose(res[449:453], [-0.7713655663874537, -0.5638348710823825,
+                                      -0.9415838853097869, 0.6212784278881248])
+    # 2013 takes the rare secondary loop and exists in the first iteration
+    # taking the positive value
+    assert np.allclose(res[2011:2015], [0.4201922976982861, 2.7021541445373916,
+                                        3.7809967764329375, 0.19919094793393655])
+    # 5136 takes the rare secondary loop and exists in the first iteration
+    # taking the negative value
+    assert np.allclose(res[5134:5138], [0.12317411414687844, -0.17846827974421134,
+                                        -3.6579887696059714, 0.2501530374224693])
+    # 190855 takes the rare secondary loop and needs more than one iteration
+    assert np.allclose(res[190853:190857], [-0.26418319904491194, 0.35889007879353746,
+                                            -3.843811523424439, -1.5256469840469997])
+    assert not any(np.isnan(res)), list(np.isnan(res)).index(True)
     benchmark(f)
