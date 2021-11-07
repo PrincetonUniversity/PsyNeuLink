@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0+untagged.16.gef014f5 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0+untagged.16.gc1927fb documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.gef014f5
+                  0+untagged.16.gc1927fb
                 </div>
               
             
@@ -626,10 +626,10 @@ of the Pathways in a Composition are listed in its <a class="reference internal"
 <li><p><a class="reference internal" href="#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a></p></li>
 </ul>
 </div></blockquote>
-<p>A Composition can be assigned a <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>.  This is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, or a subclass of
-one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
-It typically does this based on the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that evaluates the value of other Mechanisms in
-the Composition, and provides the result to the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>.</p>
+<p>A Composition can be assigned a <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>.  This must be an <a class="reference internal" href="OptimizationControlMechanism.html"><span class="doc">OptimizationControlMechanism</span></a>,
+or a subclass of one, that modulates the parameters of Components within the Composition (including Components of
+nested Compositions). It typically does this based on the output of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that evaluates the value
+of other Mechanisms in the Composition, and provides the result to the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>.</p>
 <section id="assigning-a-controller">
 <span id="composition-controller-assignment"></span><h3><em>Assigning a Controller</em><a class="headerlink" href="#assigning-a-controller" title="Permalink to this headline">¶</a></h3>
 <p>A <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> can be assigned either by specifying it in the <strong>controller</strong> argument of the
