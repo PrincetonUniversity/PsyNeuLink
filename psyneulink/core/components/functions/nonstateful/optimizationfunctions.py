@@ -366,7 +366,7 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
-        aggregation_function = Parameter(lambda x,n: sum(x)/n, stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x,n: sum(x) / n, stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
