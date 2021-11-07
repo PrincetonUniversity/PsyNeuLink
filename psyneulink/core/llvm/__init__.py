@@ -210,6 +210,8 @@ def cleanup():
 
     LLVMBinaryFunction.get.cache_clear()
     LLVMBinaryFunction.from_obj.cache_clear()
+
+    LLVMBuilderContext.clear_global()
     init_builtins()
 
 

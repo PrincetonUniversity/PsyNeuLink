@@ -126,6 +126,10 @@ class LLVMBuilderContext:
         return cls.__global_context
 
     @classmethod
+    def clear_global(cls):
+        cls.__global_context = None
+
+    @classmethod
     def get_unique_name(cls, name: str):
         cls.__uniq_counter += 1
         name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
