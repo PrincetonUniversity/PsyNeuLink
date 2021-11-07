@@ -2993,7 +2993,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.controller_time_scale>` for additional details).
 
     controller_condition: Condition : default Always()
-        specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is 
+        specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is
         executed  in a trial (see `controller_condition <Compositon.controller_condition>` for additional details).
 
     retain_old_simulation_data : bool : default False
@@ -3002,9 +3002,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
-        is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph` for
-        list of attributes and their values).
+        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
+        method is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph`
+        for list of attributes and their values).
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -3143,7 +3143,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     enable_controller : bool
         determines whether the Composition's `controller <Composition.controller>` is executed when the Composition
-        is run.  Set to True by default if `controller <Composition.controller>` is specified.  Setting it to False 
+        is run.  Set to True by default if `controller <Composition.controller>` is specified.  Setting it to False
         suppresses exectuion of the `controller <Composition.controller>` (see `Composition_Controller_Execution`
         for additional details, including timing of execution).
 
@@ -3158,7 +3158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `Composition_Controller_Execution` for additional details).
 
     controller_condition : Condition
-        determines whether the `controller <Composition.controller>` is executed in a given trial.  The 
+        determines whether the `controller <Composition.controller>` is executed in a given trial.  The
         default is `Always()`, which executes the controller on every trial (see `Composition_Controller_Execution`
         for additional details).
 
@@ -7490,7 +7490,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
         method of the `Composition` as input for the call to `run <Composition.run>`. If it is not, the `controller
         <Composition.controller>` uses the inputs slated for its next or previous execution, depending on whether the
-        `controller_mode <Composition.controller_mode>` of the `Composition` is set to `before` or `after`, 
+        `controller_mode <Composition.controller_mode>` of the `Composition` is set to `before` or `after`,
         respectively.
 
        .. note::
