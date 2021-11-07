@@ -43,7 +43,7 @@ def module_count():
     if "stat" in debug_env:
         print("Total LLVM modules: ", len(_all_modules))
         print("Total structures generated: ", _struct_count)
-        s = LLVMBuilderContext.get_global()
+        s = LLVMBuilderContext.get_current()
         print("Total generations by global context: {}".format(s._llvm_generation))
         print("Object cache in global context: {} hits, {} misses".format(s._stats["cache_requests"] - s._stats["cache_misses"], s._stats["cache_misses"]))
         for stat in ("input", "output", "param", "state", "data"):
@@ -89,10 +89,10 @@ class LLVMBuilderContext:
     __uniq_counter = 0
     _llvm_generation = 0
     int32_ty = ir.IntType(32)
-    float_ty = ir.DoubleType()
+    default_float_ty = ir.DoubleType()
     bool_ty = ir.IntType(1)
 
-    def __init__(self):
+    def __init__(self, float_ty):
         assert LLVMBuilderContext.__current_context is None
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
@@ -105,6 +105,7 @@ class LLVMBuilderContext:
                         "input_structs_generated":0,
                         "output_structs_generated":0,
                       }
+        self.float_ty = float_ty
         self.init_builtins()
         LLVMBuilderContext.__current_context = self
 
@@ -128,7 +129,7 @@ class LLVMBuilderContext:
     @classmethod
     def get_current(cls):
         if cls.__current_context is None:
-            return LLVMBuilderContext()
+            return LLVMBuilderContext(cls.default_float_ty)
         return cls.__current_context
 
     @classmethod
