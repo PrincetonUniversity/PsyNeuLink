@@ -78,6 +78,7 @@ class OptimizationFunction(Function_Base):
     objective_function=lambda x:0,                   \
     search_function=lambda x:x,                      \
     search_space=[0],                                \
+    randomization_dimension=None,                    \
     search_termination_function=lambda x,y,z:True,   \
     save_samples=False,                              \
     save_values=False,                               \
@@ -108,8 +109,7 @@ class OptimizationFunction(Function_Base):
         ..
         - estimate the value of `objective_function <OptimizationFunction.objective_function>` for the sample
           by calling `objective_function <OptimizationFunction.objective_function>` the number of times
-          specified in its `num_estimates <OptimizationFunction.num_estimates>` (note: this is determined
-          from the search_space;
+          specified in its `num_estimates <OptimizationFunction.num_estimates>` attribute;
         ..
         - aggregate value of the estimates using `aggregation_function <OptimizationFunction.aggregation_function>`
           (the default is to average the values; if `aggregation_function <OptimizationFunction.aggregation_function>`
@@ -174,14 +174,14 @@ class OptimizationFunction(Function_Base):
         `objective_function <OptimizationFunction.objective_function>`.
 
     objective_function : function or method : default None
-        specifies function used to make a single estimate for a sample, `num_estimates <_function.num_estimates>`
-         of which are made for a given sample in each iteration of the `optimization process
-        <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply returns
-        the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
+        specifies function used to make a single estimate for a sample, `num_estimates
+        <OptimizationFunction.num_estimates>` of which are made for a given sample in each iteration of the
+        `optimization process <OptimizationFunction_Procedure>`; if it is not specified, a default function is used
+        that simply returns the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
         <OptimizationFunction_Defaults>`).
 
     aggregation_function : function or method : default None
-        specifies function used to evaluate sample in each iteration of the `optimization process
+        specifies function used to evaluate samples in each iteration of the `optimization process
         <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply returns
         the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
         <OptimizationFunction_Defaults>`).
@@ -202,6 +202,10 @@ class OptimizationFunction(Function_Base):
         (e.g., as does `GradientOptimization`). If it is required and not specified, the optimization process
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
+
+    randomization_dimension : int
+        specifies the index of `search_space <OptimizationFunction.search_space>` containing the seeds for use in
+        randomization over each estimate of a sample (see `num_estimates <OptimizationFunction.num_estimates>`).
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
@@ -244,10 +248,23 @@ class OptimizationFunction(Function_Base):
         `objective_function <OptimizationFunction.objective_function>` in each iteration of the `optimization process
         <OptimizationFunction_Procedure>`.  The number of SampleIterators in the list determines the dimensionality
         of each sample:  in each iteration of the `optimization process <OptimizationFunction_Procedure>`, each
-        SampleIterator is called upon to provide the value for one of the dimensions of the sample.m`NotImplemented`
+        SampleIterator is called upon to provide the value for one of the dimensions of the sample
         if the `objective_function <OptimizationFunction.objective_function>` generates its own samples.  If it is
         required and not specified, the optimization process executes exactly once using the value passed as its
         `variable <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
+
+    randomization_dimension : int or None
+        the index of `search_space <OptimizationFunction.search_space>` containing the seeds for use in randomization
+        over each estimate of a sample (see `num_estimates <OptimizationFunction.num_estimates>`);  if num_estimates
+        is not specified, this is None, and only a single estimate is made for each sample.
+
+    num_estimates : int or None
+        the number of independent estimates evaluated (i.e., calls made to the OptimizationFunction's
+        `objective_function <OptimizationFunction.objective_function>` for each sample, and aggregated over
+        by its `aggregation_function <OptimizationFunction.aggregation_function>` to determine the estimated value
+        for a given sample.  This is determined from the `search_space <OptimizationFunction.search_space>` by
+        accessing its `randomization_dimension <OptimizationFunction.randomization_dimension>` and determining the
+        the length of (i.e., number of elements specified for) that dimension.
 
     search_termination_function : function or method that returns a boolean value
         used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`; if it is required

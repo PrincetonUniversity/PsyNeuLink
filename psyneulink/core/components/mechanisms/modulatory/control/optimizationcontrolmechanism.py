@@ -520,7 +520,7 @@ __all__ = [
 
 AGENT_REP = 'agent_rep'
 STATE_FEATURES = 'state_features'
-RANDOMIZATION_CONTROL_SIGNAL_NAME = 'RANDOMIZATION_CONTROL_SIGNAL_NAME'
+RANDOMIZATION_CONTROL_SIGNAL_NAME = 'RANDOMIZATION_CONTROL_SIGNAL'
 
 def _parse_state_feature_values_from_variable(variable):
     return convert_to_np_array(np.array(variable[1:]).tolist())
@@ -750,7 +750,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         .. technical_note::
             If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
-            a `ControlSignal` is added to control_signals, named *RANDOMIZATION_CONTROL_SIGNAL_NAME*, to modulate the
+            a `ControlSignal` is added to control_signals, named *RANDOMIZATION_CONTROL_SIGNAL*, to modulate the
             seeds used to randomize each estimate of the `net_outcome <ControlMechanism.net_outcome>` for each run of
             the `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., in each call to its `evaluate
             <Composition.evaluate>` method). That ControlSignal sends a `ControlProjection` to every `Parameter` of
@@ -758,9 +758,17 @@ class OptimizationControlMechanism(ControlMechanism):
             which corresponds to a Parameter that uses a random number generator to assign its value (i.e.,
             as its `function <ParameterPort.function>`.  This ControlSignal is used to change the seeds for all
             Parameters that use random values at the start of each run of the `agent
-             <OptimizationControlMechanism.agent_rep>` used to estimate a given `control_allocation
-             <ControlMechanism.control_allocation>` of the other ControlSignals (i.e., the ones for the parameters
-             being optimized). The `initial_seed <OptimizationControlMechanism.initial_seed>` and
+            <OptimizationControlMechanism.agent_rep>` used to estimate a given `control_allocation
+            <ControlMechanism.control_allocation>` of the other ControlSignals (i.e., the ones for the parameters
+            being optimized).  The *RANDOMIZATION_CONTROL_SIGNAL* is included when constructing the
+            `control_allocation_search_space <OptimizationFunction.control_allocation_search_space>` passed to the
+            OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` as its
+            `search_space <OptimizationFunction.search_space>`, along with the index of
+            the *RANDOMIZATION_CONTROL_SIGNAL* as its `randomization_dimension <>
+
+
+
+             The `initial_seed <OptimizationControlMechanism.initial_seed>` and
              `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`
              Parameters can be used to further refine this behavior.
 
