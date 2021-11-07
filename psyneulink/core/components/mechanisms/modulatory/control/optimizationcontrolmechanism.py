@@ -256,13 +256,14 @@ and that is returned by `evaluation` method of theOptimizationControlMechanism's
 *State Features*
 ^^^^^^^^^^^^^^^^
 
-In addition to its `primary InputPort <InputPort_Primary>` (which typically receives a projection from the
-*OUTCOME* OutputPort of the `objective_mechanism <ControlMechanism.objective_mechanism>`, an
-OptimizationControlMechanism also has an `InputPort` for each of its state_features. By default, these are the current
-`input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
-different values can be specified, as can a `state_feature_function <OptimizationControlMechanism_Feature_Function>`
-that transforms these.  For OptimizationControlMechanisms that implement `model-free
-<OptimizationControlMechanism_Model_Free>` optimization, its `state_feature_values
+In addition to its `outcome_input_ports <ControlMechanism.outcome_input_ports>` (that receive Projections from
+either the OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` or directly
+from the items in `monitor_for_control <Control.monitor_for_control>`), it also has an `InputPort` for each of its
+state_features, listed in its `feature_input_ports <OptimizationControlMechanism.feature_input_ports>` attribute.
+By default, these are the current `input <Composition.input_values>` for the Composition to which the
+OptimizationControlMechanism belongs.  However, different values can be specified, as can a `state_feature_function
+<OptimizationControlMechanism_Feature_Function>` that transforms these.  For OptimizationControlMechanisms that
+implement `model-free <OptimizationControlMechanism_Model_Free>` optimization, its `state_feature_value
 <OptimizationControlMechanism.state_feature_values>` are used by its `evaluate_agent_rep
 <OptimizationControlMechanism.evaluate_agent_rep>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
 for a given `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that
@@ -511,7 +512,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -649,6 +650,15 @@ class OptimizationControlMechanism(ControlMechanism):
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's `state_features
         <OptimizationControlMechanism_State_Features>` (each of which is a 1d array).
+
+    feature_input_ports : ContentAddressableList
+        lists the OptimizationControlMechanism's `InputPorts <InputPort>` that receive `Projections <Projection>`
+        from the items specified in the **state_features** argument in the OptimizationControlMechanism's constructor,
+        and provide its `state_feature_values <OptimizationControlMechanism.state_feature_values>` (see
+        `OptimizationControlMechanism_State_Features` for additional details).
+
+    num_feature_input_ports : int
+        cantains the number of `feature_input_ports <OptimizationControlMechanism.feature_input_ports>`.
 
     agent_rep : Composition
         determines the `Composition` used by the `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
@@ -1039,6 +1049,13 @@ class OptimizationControlMechanism(ControlMechanism):
             feature_input_ports = self._parse_state_feature_specs(self.state_features,
                                                                   self.state_feature_function)
         super()._instantiate_input_ports(feature_input_ports, context=context)
+
+
+        # Assign to self.feature_input_ports
+        start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
+        stop = start + len(feature_input_ports) if feature_input_ports else 0
+        self.feature_input_ports = ContentAddressableList(component_type=InputPort,
+                                                          list=self.input_ports[start:stop])
 
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
@@ -1663,6 +1680,13 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_features.extend(spec)
 
         return parsed_features
+
+    @property
+    def num_feature_input_ports(self):
+        try:
+            return len(self.feature_input_ports)
+        except:
+            return 0
 
     @property
     def _model_spec_parameter_blacklist(self):

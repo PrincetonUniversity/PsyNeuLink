@@ -1889,18 +1889,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
             return None
 
     @property
-    def num_outcome_input_ports(self):
-        try:
-            return len(self.outcome_input_ports)
-        except:
-            return 0
-
-    @property
     def monitored_output_ports_weights_and_exponents(self):
         try:
             return self.objective_mechanism.monitored_output_ports_weights_and_exponents
         except:
             return None
+
+    @property
+    def num_outcome_input_ports(self):
+        try:
+            return len(self.outcome_input_ports)
+        except:
+            return 0
 
     @property
     def control_signals(self):
