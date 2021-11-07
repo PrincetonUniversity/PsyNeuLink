@@ -1380,20 +1380,20 @@ class Mechanism_Base(Mechanism):
 
     projections : ContentAddressableList
         a list of all of the Mechanism's `Projections <Projection>`, composed from the
-        `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`,
         and the `efferents <Port.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
-        `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         and the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`.,
 
     path_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
-        `path_afferents <InputPorts.path_afferents>` attributes of all of its `input_ports
+        `path_afferents <Port.path_afferents>` attributes of all of its `input_ports
         <Mechanism_Base.input_ports>`.
 
     mod_afferents : ContentAddressableList

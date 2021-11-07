@@ -2168,7 +2168,8 @@ class TestModelBasedOptimizationControlMechanisms:
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               num_estimates=5,
+                                               # num_estimates=5,
+                                               num_estimates=None,
                                                control_signals=[control_signal])
 
         comp.add_controller(ocm)
