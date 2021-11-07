@@ -17,7 +17,6 @@ from typing import Set
 
 from llvmlite import ir
 
-from . import builtins
 from . import codegen
 from .builder_context import *
 from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
@@ -84,6 +83,12 @@ class LLVMBinaryFunction:
         self.__c_func = None
         self.__cuda_kernel = None
 
+        # Make sure builder context is initialized
+        LLVMBuilderContext.get_current()
+
+        # Compile any pending modules
+        _llvm_build(LLVMBuilderContext._llvm_generation)
+
         # Function signature
         # We could skip compilation if the function is in _compiled_models,
         # but that happens rarely
@@ -138,13 +143,12 @@ class LLVMBinaryFunction:
     @staticmethod
     @functools.lru_cache(maxsize=32)
     def from_obj(obj, *, tags:frozenset=frozenset()):
-        name = LLVMBuilderContext.get_global().gen_llvm_function(obj, tags=tags).name
+        name = LLVMBuilderContext.get_current().gen_llvm_function(obj, tags=tags).name
         return LLVMBinaryFunction.get(name)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
     def get(name: str):
-        _llvm_build(LLVMBuilderContext._llvm_generation)
         return LLVMBinaryFunction(name)
 
     def get_multi_run(self):
@@ -152,7 +156,7 @@ class LLVMBinaryFunction:
             multirun_llvm = _find_llvm_function(self.name + "_multirun")
         except ValueError:
             function = _find_llvm_function(self.name)
-            with LLVMBuilderContext.get_global() as ctx:
+            with LLVMBuilderContext.get_current() as ctx:
                 multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
 
         return LLVMBinaryFunction.get(multirun_llvm.name)
@@ -161,40 +165,6 @@ class LLVMBinaryFunction:
 _cpu_engine = cpu_jit_engine()
 if ptx_enabled:
     _ptx_engine = ptx_jit_engine()
-
-
-# Initialize builtins
-def init_builtins():
-    start = time.perf_counter()
-    with LLVMBuilderContext.get_global() as ctx:
-        # Numeric
-        builtins.setup_pnl_intrinsics(ctx)
-        builtins.setup_csch(ctx)
-        builtins.setup_coth(ctx)
-        builtins.setup_tanh(ctx)
-        builtins.setup_is_close(ctx)
-
-        # PRNG
-        builtins.setup_mersenne_twister(ctx)
-
-        # Matrix/Vector
-        builtins.setup_vxm(ctx)
-        builtins.setup_vxm_transposed(ctx)
-        builtins.setup_vec_add(ctx)
-        builtins.setup_vec_sum(ctx)
-        builtins.setup_mat_add(ctx)
-        builtins.setup_vec_sub(ctx)
-        builtins.setup_mat_sub(ctx)
-        builtins.setup_vec_hadamard(ctx)
-        builtins.setup_mat_hadamard(ctx)
-        builtins.setup_vec_scalar_mult(ctx)
-        builtins.setup_mat_scalar_mult(ctx)
-        builtins.setup_mat_scalar_add(ctx)
-
-    finish = time.perf_counter()
-
-    if "time_stat" in debug_env:
-        print("Time to setup PNL builtins: {}".format(finish - start))
 
 def cleanup():
     _cpu_engine.clean_module()
@@ -212,7 +182,3 @@ def cleanup():
     LLVMBinaryFunction.from_obj.cache_clear()
 
     LLVMBuilderContext.clear_global()
-    init_builtins()
-
-
-init_builtins()
