@@ -402,10 +402,10 @@ Controlling a Composition
       - `Composition_Controller_Execution`
 
 
-A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass of
-one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
-It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
-the Composition, and provides the result to the `controller <Composition.controller>`.
+A Composition can be assigned a `controller <Composition.controller>`.  This must be an `OptimizationControlMechanism`,
+or a subclass of one, that modulates the parameters of Components within the Composition (including Components of
+nested Compositions). It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value
+of other Mechanisms in the Composition, and provides the result to the `controller <Composition.controller>`.
 
 .. _Composition_Controller_Assignment:
 
@@ -2370,8 +2370,9 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
+    PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
@@ -7140,6 +7141,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
+        # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
 
@@ -7159,6 +7161,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
+        # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
+        #               ALSO, IF Non-OCM IS USED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
         for input_port in controller.input_ports[1:]:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 for proj in input_port.shadow_inputs.path_afferents:
@@ -7189,7 +7193,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if proj.sender.owner not in nested_cims:
                     proj._activate_for_compositions(self)
 
-        # Check whether controller has input, and if not then disable
+        # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
                 and self.controller.input_ports):
             # If controller was enabled, warn that it has been disabled
@@ -7260,14 +7264,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
-        if predicted_input is None:
+        no_predicted_input = (predicted_input is None or not len(predicted_input))
+        if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
+
         nested_nodes = dict(self._get_nested_nodes())
+        # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED
         shadow_inputs_start_index = self.controller.num_outcome_input_ports
         for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
             input_port = self.controller.input_ports[j + shadow_inputs_start_index]
-            if predicted_input is None:
+            if no_predicted_input:
                 shadowed_input = input_port.defaults.value
             else:
                 shadowed_input = predicted_input[j]

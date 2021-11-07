@@ -140,17 +140,13 @@ Class Reference
 
 """
 
-import numpy as np
-
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import BEFORE
-from psyneulink.core.globals.sampleiterator import SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list
+from psyneulink.core.globals.parameters import Parameter
 
 __all__ = ['ParameterEstimationComposition']
 
@@ -161,11 +157,59 @@ CONTROLLER_SPECIFICATION_ARGS = {'controller',
                                  'controller_time_scale',
                                  'controller_condition',
                                  'retain_old_simulation_data'}
-RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME = 'RANDOMIZATION SEEDS'
+
 
 class ParameterEstimationCompositionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+def _initial_seed_getter(owning_component, context=None):
+    try:
+        return owning_component.controler.parameters.initial_seed._get(context)
+    except:
+        return None
+
+def _initial_seed_setter(value, owning_component, context=None):
+    owning_component.controler.parameters.initial_seed.set(value, context)
+    return value
+
+def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
+    try:
+        return owning_component.controler.parameters.same_seed_for_all_allocations._get(context)
+    except:
+        return None
+
+def _same_seed_for_all_parameter_combinations_setter(value, owning_component, context=None):
+    owning_component.controler.parameters.same_seed_for_all_allocations.set(value, context)
+    return value
+
+
+class Parameters(Composition.Parameters):
+    """
+        Attributes
+        ----------
+
+            initial_seed
+                see `input_specification <ParameterEstimationComposition.initial_seed>`
+
+                :default value: None
+                :type: ``int``
+
+            same_seed_for_all_parameter_combinations
+                see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
+
+                :default value: False
+                :type: ``bool``
+
+    """
+    # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
+    initial_seed = Parameter(None, loggable=False, pnl_internal=True,
+                             getter=_initial_seed_getter,
+                             setter=_initial_seed_setter)
+    same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
+                                                         getter=_same_seed_for_all_parameter_combinations_getter,
+                                                         setter=_same_seed_for_all_parameter_combinations_setter)
 
 
 class ParameterEstimationComposition(Composition):
@@ -233,7 +277,9 @@ class ParameterEstimationComposition(Composition):
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
-        values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information).
+        values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information);
+        it is passed to the ParameterEstimationComposition's `controller <Composition.controller>` to set its
+        `num_estimates <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
 
     num_trials_per_estimate : int : default None
         specifies an exact number of trials to execute for each run of the `model
@@ -242,15 +288,15 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.num_trials_per_estimate>` for additional information).
 
     initial_seed : int : default None
-        specifies the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value on construction (see `initial_seed
-        <ParameterEstimationComposition.initial_seed>` for additional information).
+        specifies the seed used to initialize the random number generator at construction; it is passed to the
+        ParameterEstimationComposition's `controller <Composition.controller>` to set its `initial_seed
+        <OptimizationControlMechanism.initial_seed>` Parameter.
 
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
-        combination of `parameter <ParameterEstimationComposition.parameters>` values (see
-        `same_seed_for_all_parameter_combinations
-        <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>` for additional information).
+        combination of `parameter <ParameterEstimationComposition.parameters>` values; it is passed to the
+        ParameterEstimationComposition's `controller <Composition.controller>` to set its
+        `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
 
 
     Attributes
@@ -264,27 +310,8 @@ class ParameterEstimationComposition(Composition):
 
     parameters : list[Parameters]
         determines the parameters of the `model <ParameterEstimationComposition.model>` used for
-        `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`.
-        These are assigned to the **control** argument of the constructor for the ParameterEstimationComposition's
-        `OptimizationControlMechanism`, that is used to construct the `control_signals
-        <ControlMechanism.control_signals>` used to modulate each parameter that is being fit.
-
-        .. technical_note::
-            A `ControlSignal` is added to the `control_signals <ControlMechanism.control_signals>` of the
-            ParameterEstimationComposition's `OptimizationControlMechanism`, named
-            *RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME*, to modulate the seeds used to randomize each estimate of the
-            `net_outcome <ControlMechanism.net_outcome>` for each run of the `model
-            <ParameterEstimationComposition.model>` (i.e., call to its `evaluate <Composition.evaluate>`
-            method). That ControlSignal sends a `ControlProjection` to every `Parameter` of every `Component` in the
-            `model <ParameterEstimationComposition.model>` that is labelled "seed", each of which corresponds to a
-            Parameter that uses a random number generator to assign its value (i.e., as its `function
-            <ParameterPort.function>`.  This ControlSignal is used to change the seeds for all Parameters that use
-            random values at the start of each run of the `model <ParameterEstimationComposition.model>` used to
-            estimate a given `control_allocation <ControlMechanism.control_allocation>` of the other ControlSignals
-            (i.e., the ones for the `parameters <ParameterEstimationComposition.parameters>` being fit). The
-            `initial_seed <ParameterEstimationComposition.initial_seed>` `same_seed_for_all_parameter_combinations
-            <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>` attributes can be used to further
-            refine this behavior.
+        `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`
+        (see `control <OptimizationControlMechanism.control>` for additional details).
 
     parameter_ranges_or_priors : List[Union[Iterator, Function, ist or Value]
         determines the range of values evaluated for each `parameter <ParameterEstimationComposition.parameters>`.
@@ -337,8 +364,8 @@ class ParameterEstimationComposition(Composition):
     num_trials_per_estimate : int or None
         imposes an exact number of trials to be executed in each run of `model <ParameterEstimationComposition.model>`
         used to evaluate its `net_outcome <ControlMechanism.net_outcome>` by a call to its
-        OptimizationControlMechanism's `evaluation_function <OptimizationControlMechanism.evaluation_function>`. If
-        it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
+        OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method.
+        If it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
         the ParameterEstimationComposition's `run <ParameterEstimationComposition.run>` method used to determine the
         number of trials executed (see `Composition_Execution_Num_Trials` for additional information).
 
@@ -351,31 +378,18 @@ class ParameterEstimationComposition(Composition):
            *within* each fit.
 
     initial_seed : int or None
-        determines the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value on construction, and different runs of a
-        script containing the ParameterEstimationComposition will yield different results, which should be roughly
-        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the script
-        should yield identical results for the estimation process, which can be useful for debugging.
+        contains the seed used to initialize the random number generator at construction, that is stored on the
+        ParameterEstimationComposition's `controller <Composition.controller>`, and setting it sets the value
+        of that Parameter (see `initial_seed <OptimizationControlMechanism.initial_seed>` for additional details).
 
-    same_seed_for_all_parameter_combinations :  bool : default False
-        determines whether the random number generator used to select seeds for each estimate of the `model
-        <ParameterEstimationComposition.model>`\\'s `net_outcome <ControlMechanism.net_outcome>` is
-        re-initialized to the same value for each combination of `parameter <ParameterEstimationComposition>` values
-        evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
-        of `net_outcome <ControlMechanism.net_outcome>` for each combination of parameter values will reflect
-        exclusively the influence of the *parameters* on the execution of the `model
-        <ParameterEstimationComposition.model>`, and *not* any variability intrinsic to the execution of
-        the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
-        executions of the OptimizationControlMechanism's `evaluation_function
-        <OptimizationControlMechanism.evaluation_function>` with the same set of parameter values (i.e.,
-        `control_allocation <ControlMechanism.control_allocation>`). If *same_seed_for_all_parameter_combinations* is
-        False, then each time a combination of parameter values is estimated, it will use a different set of seeds.
-        This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism's
-        `evaluation_function <OptimizationControlMechanism.evaluation_function>` with the same set of parameter
-        values (`control_allocation <ControlMechanism.control_allocation>`). Small differences in results suggest
-        stability of the estimation process across combinations of parameter values, while substantial differences
-        indicate instability, which may be helped by increasing `num_estimates
-        <ParameterEstimationComposition.num_estimates>`.
+    same_seed_for_all_parameter_combinations :  bool
+        contains the setting for determining whether the random number generator used to select seeds for each
+        estimate of the `model <ParameterEstimationComposition.model>`\\'s `net_outcome
+        <ControlMechanism.net_outcome>` is re-initialized to the same value for each combination of `parameter
+        <ParameterEstimationComposition>` values evaluated.  Its values is stored on the
+        ParameterEstimationComposition's `controller <Composition.controller>`, and setting it sets the value
+        of that Parameter (see `same_seed_for_all_allocations
+        <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional details).
 
     optimized_parameter_values : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the `model
@@ -459,14 +473,18 @@ class ParameterEstimationComposition(Composition):
         kwargs = args.pop('kwargs')
         pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
 
+        # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameterestimationcomposition.py
+
         # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
         if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+        # if not ((args['model'] or args['nodes']) for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS):
             raise ParameterEstimationCompositionError(f"Must specify either 'model' or the "
                                                       f"'nodes', 'pathways', and/or `projections` ars "
                                                       f"in the constructor for {pec_name}.")
 
         # Can't specify both model and COMPOSITION_SPECIFICATION_ARGUMENTS
-        if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+        # if (args['model'] and [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
+        if args['model'] and kwargs.pop('nodes',None):
             raise ParameterEstimationCompositionError(f"Can't specify both 'model' and the "
                                                       f"'nodes', 'pathways', or 'projections' args "
                                                       f"in the constructor for {pec_name}.")
@@ -501,81 +519,69 @@ class ParameterEstimationComposition(Composition):
                          same_seed_for_all_parameter_combinations
                          ):
 
-        # Construct iterator for seeds used to randomize estimates
-        def random_integer_generator():
-            rng = np.random.RandomState()
-            rng.seed(initial_seed)
-            return rng.random_integers(num_estimates)
-        random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
-
-        # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
-        #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
-        #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
-        # Get ParameterPorts for seeds of parameters that use them (i.e., that return a random value)
-        seed_param_ports = [param._port for param in self.all_dependent_parameters('seed').keys()]
-
-        # Construct ControlSignal to modify seeds over estimates
-        seed_control_signal = ControlSignal(name=RANDOMIZATION_SEED_CONTROL_SIGNAL_NAME,
-                                            modulates=seed_param_ports,
-                                            allocation_samples=random_seeds)
-
-        # FIX: WHAT iS THIS DOING?
-        if data:
-            objective_function = objective_function(data)
-
-        # Get ControlSignals for parameters to be searched
+        # # Parse **parameters** into ControlSignals specs
         control_signals = []
         for param,allocation in parameters.items():
             control_signals.append(ControlSignal(modulates=param,
                                                  allocation_samples=allocation))
-        # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
-        convert_to_list(control_signals).append(seed_control_signal)
 
-        return OptimizationControlMechanism(agent_rep=self,
-                                            control_signals=control_signals,
-                                            objective_mechanism=ObjectiveMechanism(monitor=outcome_variables,
-                                                                                   function=objective_function),
-                                            function=optimization_function,
-                                            num_estimates=num_estimates,
-                                            num_trials_per_estimate=num_trials_per_estimate
-                                            )
+        # If objective_function has been specified, create and pass ObjectiveMechanism to ocm
+        objective_mechanism = ObjectiveMechanism(monitor=outcome_variables,
+                                                 function=objective_function) if objective_function else None
 
-    def run(self):
-        # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
-        # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE model COMP FOR ITS RUN:
-        #     inputs=None,
-        #     initialize_cycle_values=None,
-        #     reset_stateful_functions_to=None,
-        #     reset_stateful_functions_when=Never(),
-        #     skip_initialization=False,
-        #     clamp_input=SOFT_CLAMP,
-        #     runtime_params=None,
-        #     call_before_time_step=None,
-        #     call_after_time_step=None,
-        #     call_before_pass=None,
-        #     call_after_pass=None,
-        #     call_before_trial=None,
-        #     call_after_trial=None,
-        #     termination_processing=None,
-        #     scheduler=None,
-        #     scheduling_mode: typing.Optional[SchedulingMode] = None,
-        #     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
-        #     default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
-        # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
-        pass
+        # FIX: NEED TO BE SURE CONSTRUCTOR FOR MLE optimization_function HAS data ATTRIBUTE
+        if data:
+            optimization_function.data = data
 
-    def evaluate(self,
-                 feature_values,
-                 control_allocation,
-                 num_estimates,
-                 num_trials_per_estimate,
-                 base_context=Context(execution_id=None),
-                 context=None):
-        """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
-        **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
-        """
-        # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluation_function AND/OR grid_evaluate
-        # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
-        # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
-        # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
-        return self.function(feature_values, control_allocation, context=context)
+        return OptimizationControlMechanism(
+            agent_rep=self,
+            monitor_for_control=outcome_variables,
+            objective_mechanism=objective_mechanism,
+            function=optimization_function,
+            control_signals=control_signals,
+            num_estimates=num_estimates,
+            num_trials_per_estimate=num_trials_per_estimate,
+            initial_seed=initial_seed,
+            same_seed_for_all_allocations=same_seed_for_all_parameter_combinations
+        )
+
+    # def run(self):
+    #     # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
+    #     # FIX: THESE ARE THE PARAMS THAT SHOULD PROBABLY BE PASSED TO THE model COMP FOR ITS RUN:
+    #     #     inputs=None,
+    #     #     initialize_cycle_values=None,
+    #     #     reset_stateful_functions_to=None,
+    #     #     reset_stateful_functions_when=Never(),
+    #     #     skip_initialization=False,
+    #     #     clamp_input=SOFT_CLAMP,
+    #     #     runtime_params=None,
+    #     #     call_before_time_step=None,
+    #     #     call_after_time_step=None,
+    #     #     call_before_pass=None,
+    #     #     call_after_pass=None,
+    #     #     call_before_trial=None,
+    #     #     call_after_trial=None,
+    #     #     termination_processing=None,
+    #     #     scheduler=None,
+    #     #     scheduling_mode: typing.Optional[SchedulingMode] = None,
+    #     #     execution_mode:pnlvm.ExecutionMode = pnlvm.ExecutionMode.Python,
+    #     #     default_absolute_time_unit: typing.Optional[pint.Quantity] = None,
+    #     # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
+    #     pass
+
+    # def evaluate(self,
+    #              feature_values,
+    #              control_allocation,
+    #              num_estimates,
+    #              num_trials_per_estimate,
+    #              execution_mode=None,
+    #              base_context=Context(execution_id=None),
+    #              context=None):
+    #     """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
+    #     **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
+    #     """
+    #     # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluate_agent_rep AND/OR grid_evaluate
+    #     # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
+    #     # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
+    #     # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
+    #     return self.function(feature_values, control_allocation, context=context)
