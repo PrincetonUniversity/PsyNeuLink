@@ -46,15 +46,11 @@ _binary_generation = 0
 
 
 def _compiled_modules() -> Set[ir.Module]:
-    if ptx_enabled:
-        return _cpu_engine.compiled_modules | _ptx_engine.compiled_modules
-    return _cpu_engine.compiled_modules
+    return set().union(*(e.compiled_modules for e in _get_engines()))
 
 
 def _staged_modules() -> Set[ir.Module]:
-    if ptx_enabled:
-        return _cpu_engine.staged_modules | _ptx_engine.staged_modules
-    return _cpu_engine.staged_modules
+    return set().union(*(e.staged_modules for e in _get_engines()))
 
 
 def _llvm_build(target_generation=_binary_generation + 1):
@@ -67,9 +63,8 @@ def _llvm_build(target_generation=_binary_generation + 1):
     if "compile" in debug_env:
         print("STAGING GENERATION: {} -> {}".format(_binary_generation, target_generation))
 
-    _cpu_engine.stage_compilation(_modules)
-    if ptx_enabled:
-        _ptx_engine.stage_compilation(_modules)
+    for e in _get_engines():
+        e.stage_compilation(_modules)
     _modules.clear()
 
     # update binary generation
@@ -111,6 +106,9 @@ class LLVMBinaryFunction:
     @property
     def c_func(self):
         if self.__c_func is None:
+            # This assumes there are potential staged modules.
+            # The engine had to be instantiated to have staged modules,
+            # so it's safe to access it directly
             _cpu_engine.compile_staged()
             ptr = _cpu_engine._engine.get_function_address(self.name)
             self.__c_func = self.__c_func_type(ptr)
@@ -162,18 +160,29 @@ class LLVMBinaryFunction:
         return LLVMBinaryFunction.get(multirun_llvm.name)
 
 
-_cpu_engine = cpu_jit_engine()
-if ptx_enabled:
-    _ptx_engine = ptx_jit_engine()
+_cpu_engine = None
+_ptx_engine = None
+
+def _get_engines():
+    global _cpu_engine
+    if _cpu_engine is None:
+        _cpu_engine = cpu_jit_engine()
+
+    global _ptx_engine
+    if ptx_enabled:
+        if _ptx_engine is None:
+            _ptx_engine = ptx_jit_engine()
+        return [_cpu_engine, _ptx_engine]
+
+    return [_cpu_engine]
+
+
 
 def cleanup():
-    _cpu_engine.clean_module()
-    _cpu_engine.staged_modules.clear()
-    _cpu_engine.compiled_modules.clear()
-    if ptx_enabled:
-        _ptx_engine.clean_module()
-        _ptx_engine.staged_modules.clear()
-        _ptx_engine.compiled_modules.clear()
+    global _cpu_engine
+    _cpu_engine = None
+    global _ptx_engine
+    _ptx_engine = None
 
     _modules.clear()
     _all_modules.clear()
