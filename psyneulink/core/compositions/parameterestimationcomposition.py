@@ -146,6 +146,7 @@ from psyneulink.core.components.mechanisms.processing.objectivemechanism import 
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import BEFORE
+from psyneulink.core.globals.parameters import Parameter
 
 __all__ = ['ParameterEstimationComposition']
 
@@ -161,6 +162,54 @@ CONTROLLER_SPECIFICATION_ARGS = {'controller',
 class ParameterEstimationCompositionError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
+
+
+def _initial_seed_getter(owning_component, context=None):
+    try:
+        return owning_component.controler.parameters.initial_seed._get(context)
+    except:
+        return None
+
+def _initial_seed_setter(value, owning_component, context=None):
+    owning_component.controler.parameters.initial_seed.set(value, context)
+    return value
+
+def _same_seed_for_all_parameter_combinations_getter(owning_component, context=None):
+    try:
+        return owning_component.controler.parameters.same_seed_for_all_allocations._get(context)
+    except:
+        return None
+
+def _same_seed_for_all_parameter_combinations_setter(value, owning_component, context=None):
+    owning_component.controler.parameters.same_seed_for_all_allocations.set(value, context)
+    return value
+
+
+class Parameters(Composition.Parameters):
+    """
+        Attributes
+        ----------
+
+            initial_seed
+                see `input_specification <ParameterEstimationComposition.initial_seed>`
+
+                :default value: None
+                :type: ``int``
+
+            same_seed_for_all_parameter_combinations
+                see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
+
+                :default value: False
+                :type: ``bool``
+
+    """
+    # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
+    initial_seed = Parameter(None, loggable=False, pnl_internal=True,
+                             getter=_initial_seed_getter,
+                             setter=_initial_seed_setter)
+    same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
+                                                         getter=_same_seed_for_all_parameter_combinations_getter,
+                                                         setter=_same_seed_for_all_parameter_combinations_setter)
 
 
 class ParameterEstimationComposition(Composition):
@@ -228,7 +277,9 @@ class ParameterEstimationComposition(Composition):
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
-        values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information).
+        values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information);
+        it is passed to the ParameterEstimationComposition's `controller <Composition.controller>` to set its
+        `num_estimates <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
 
     num_trials_per_estimate : int : default None
         specifies an exact number of trials to execute for each run of the `model
@@ -239,13 +290,13 @@ class ParameterEstimationComposition(Composition):
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction; it is passed to the
         ParameterEstimationComposition's `controller <Composition.controller>` to set its `initial_seed
-        <ParameterEstimationComposition.initial_seed>` attribute.
+        <OptimizationControlMechanism.initial_seed>` Parameter.
 
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
         combination of `parameter <ParameterEstimationComposition.parameters>` values; it is passed to the
         ParameterEstimationComposition's `controller <Composition.controller>` to set its
-        `same_seed_for_all_allocations <ParameterEstimationComposition.same_seed_for_all_allocations>` attribute.
+        `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
 
 
     Attributes
@@ -259,27 +310,8 @@ class ParameterEstimationComposition(Composition):
 
     parameters : list[Parameters]
         determines the parameters of the `model <ParameterEstimationComposition.model>` used for
-        `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`.
-        These are assigned to the **control** argument of the constructor for the ParameterEstimationComposition's
-        `OptimizationControlMechanism`, that is used to construct the `control_signals
-        <ControlMechanism.control_signals>` used to modulate each parameter that is being fit.
-
-        .. technical_note::
-            A `ControlSignal` is added to the `control_signals <ControlMechanism.control_signals>` of the
-            ParameterEstimationComposition's `OptimizationControlMechanism`, named
-            *RANDOMIZATION_CONTROL_SIGNAL_NAME*, to modulate the seeds used to randomize each estimate of the
-            `net_outcome <ControlMechanism.net_outcome>` for each run of the `model
-            <ParameterEstimationComposition.model>` (i.e., call to its `evaluate <Composition.evaluate>`
-            method). That ControlSignal sends a `ControlProjection` to every `Parameter` of every `Component` in the
-            `model <ParameterEstimationComposition.model>` that is labelled "seed", each of which corresponds to a
-            Parameter that uses a random number generator to assign its value (i.e., as its `function
-            <ParameterPort.function>`.  This ControlSignal is used to change the seeds for all Parameters that use
-            random values at the start of each run of the `model <ParameterEstimationComposition.model>` used to
-            estimate a given `control_allocation <ControlMechanism.control_allocation>` of the other ControlSignals
-            (i.e., the ones for the `parameters <ParameterEstimationComposition.parameters>` being fit). The
-            `initial_seed <ParameterEstimationComposition.initial_seed>` `same_seed_for_all_parameter_combinations
-            <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>` attributes can be used to further
-            refine this behavior.
+        `ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`
+        (see `control <OptimizationControlMechanism.control>` for additional details).
 
     parameter_ranges_or_priors : List[Union[Iterator, Function, ist or Value]
         determines the range of values evaluated for each `parameter <ParameterEstimationComposition.parameters>`.
@@ -347,15 +379,16 @@ class ParameterEstimationComposition(Composition):
 
     initial_seed : int or None
         contains the seed used to initialize the random number generator at construction, that is stored on the
-        ParameterEstimationComposition's `controller <Composition.controller>` (see `initial_seed
-        <OptimizationControlMechanism.initial_seed>` for additional details).
+        ParameterEstimationComposition's `controller <Composition.controller>`, and setting it sets the value
+        of that Parameter (see `initial_seed <OptimizationControlMechanism.initial_seed>` for additional details).
 
     same_seed_for_all_parameter_combinations :  bool
         contains the setting for determining whether the random number generator used to select seeds for each
         estimate of the `model <ParameterEstimationComposition.model>`\\'s `net_outcome
         <ControlMechanism.net_outcome>` is re-initialized to the same value for each combination of `parameter
         <ParameterEstimationComposition>` values evaluated.  Its values is stored on the
-        ParameterEstimationComposition's `controller <Composition.controller>` (see `same_seed_for_all_allocations
+        ParameterEstimationComposition's `controller <Composition.controller>`, and setting it sets the value
+        of that Parameter (see `same_seed_for_all_allocations
         <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional details).
 
     optimized_parameter_values : list
@@ -552,17 +585,3 @@ class ParameterEstimationComposition(Composition):
     #     # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
     #     # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
     #     return self.function(feature_values, control_allocation, context=context)
-
-    @property
-    def initial_seed(self):
-        try:
-            return self.controler.initial_seed
-        except:
-            return None
-
-    @property
-    def same_seed_for_all_parameter_combinations(self):
-        try:
-            return self.controler.same_seed_for_all_allocations
-        except:
-            return None
