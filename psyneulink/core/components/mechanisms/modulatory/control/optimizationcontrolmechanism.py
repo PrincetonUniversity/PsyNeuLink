@@ -537,24 +537,26 @@ def _control_allocation_search_space_getter(owning_component=None, context=None)
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(         \
-        objective_mechanism=None,            \
-        monitor_for_control=None,            \
-        origin_objective_mechanism=False     \
-        terminal_objective_mechanism=False   \
-        state_features=None,                 \
-        state_feature_function=None,         \
-        function=GridSearch,                 \
-        agent_rep=None,                      \
-        num_estimates=1,                     \
-        num_trials_per_estimate=None,        \
-        search_function=None,                \
-        search_termination_function=None,    \
-        search_space=None,                   \
-        control_signals=None,                \
-        modulation=MULTIPLICATIVE,           \
-        combine_costs=np.sum,                \
-        compute_reconfiguration_cost=None,   \
+    """OptimizationControlMechanism(                    \
+        objective_mechanism=None,                       \
+        monitor_for_control=None,                       \
+        origin_objective_mechanism=False                \
+        terminal_objective_mechanism=False              \
+        state_features=None,                            \
+        state_feature_function=None,                    \
+        function=GridSearch,                            \
+        agent_rep=None,                                 \
+        num_estimates=1,                                \
+        initial_seed=None,                              \
+        same_seed_for_all_parameter_combinations=False  \
+        num_trials_per_estimate=None,                   \
+        search_function=None,                           \
+        search_termination_function=None,               \
+        search_space=None,                              \
+        control_signals=None,                           \
+        modulation=MULTIPLICATIVE,                      \
+        combine_costs=np.sum,                           \
+        compute_reconfiguration_cost=None,              \
         compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
@@ -587,6 +589,17 @@ class OptimizationControlMechanism(ControlMechanism):
         to estimate its `net_outcome <ControlMechanism.net_outcome>` for each `control_allocation
         <ControlMechanism.control_allocation>` sampled (see `num_estimates
         <OptimizationControlMechanism.num_estimates>` for additional information).
+
+    initial_seed : int : default None
+        specifies the seed used to initialize the random number generator at construction.
+        If it is not specified then then the seed is set to a random value on construction (see `initial_seed
+        <ParameterEstimationComposition.initial_seed>` for additional information).
+
+    same_seed_for_all_parameter_combinations :  bool : default False
+        specifies whether the random number generator is re-initialized to the same value when estimating each
+        combination of `parameter <ParameterEstimationComposition.parameters>` values (see
+        `same_seed_for_all_parameter_combinations
+        <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>` for additional information).
 
     num_trials_per_estimate : int : default None
         specifies the number of trials to execute in each run of `agent_rep
@@ -644,6 +657,33 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.net_outcome>` of each `control_allocation <ControlMechanism.control_allocation>` evaluated
         by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` (i.e.,
         that are specified by its `search_space <OptimizationFunction.search_space>`).
+
+    initial_seed : int or None
+        determines the seed used to initialize the random number generator at construction.
+        If it is not specified then then the seed is set to a random value on construction, and different runs of a
+        script containing the ParameterEstimationComposition will yield different results, which should be roughly
+        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the script
+        should yield identical results for the estimation process, which can be useful for debugging.
+
+    same_seed_for_all_allocations :  bool
+        determines whether the random number generator used to select seeds for each estimate of the `model
+        <ParameterEstimationComposition.model>`\\'s `net_outcome <ControlMechanism.net_outcome>` is
+        re-initialized to the same value for each combination of `parameter <ParameterEstimationComposition>` values
+        evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
+        of `net_outcome <ControlMechanism.net_outcome>` for each combination of parameter values will reflect
+        exclusively the influence of the *parameters* on the execution of the `model
+        <ParameterEstimationComposition.model>`, and *not* any variability intrinsic to the execution of
+        the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
+        executions of the OptimizationControlMechanism's `evaluate_agent_rep
+        <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter values (i.e.,
+        `control_allocation <ControlMechanism.control_allocation>`). If *same_seed_for_all_parameter_combinations* is
+        False, then each time a combination of parameter values is estimated, it will use a different set of seeds.
+        This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism's
+        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter
+        values (`control_allocation <ControlMechanism.control_allocation>`). Small differences in results suggest
+        stability of the estimation process across combinations of parameter values, while substantial differences
+        indicate instability, which may be helped by increasing `num_estimates
+        <ParameterEstimationComposition.num_estimates>`.
 
     num_trials_per_estimate : int or None
         imposes an exact number of trials to execute in each run of `agent_rep <OptimizationControlMechanism.agent_rep>`
@@ -836,6 +876,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                          user=False,
                                          pnl_internal=True)
 
+        # FIX: Should any of these be stateful?
+        initial_seed = None
+        same_seed_for_all_allocations = False
         num_estimates = None
         num_trials_per_estimate = None
 
@@ -854,7 +897,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  state_feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
                  initial_seed=None,
-                 same_seed_for_all_parameter_combinations=False,
+                 same_seed_for_all_allocations=None,
                  num_trials_per_estimate = None,
                  search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
@@ -890,9 +933,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 continue
         self.state_features = convert_to_list(state_features)
 
-        self.initial_seed = initial_seed
-        self.same_seed_for_all_parameter_combinations = same_seed_for_all_parameter_combinations
-
         function = function or GridSearch
 
         # If agent_rep hasn't been specified, put into deferred init
@@ -917,6 +957,8 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_function=state_feature_function,
             num_estimates=num_estimates,
             num_trials_per_estimate = num_trials_per_estimate,
+            initial_seed=initial_seed,
+            same_seed_for_all_allocations=same_seed_for_all_allocations,
             search_statefulness=search_statefulness,
             search_function=search_function,
             search_termination_function=search_termination_function,

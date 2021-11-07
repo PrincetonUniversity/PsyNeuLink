@@ -237,15 +237,15 @@ class ParameterEstimationComposition(Composition):
         <ParameterEstimationComposition.num_trials_per_estimate>` for additional information).
 
     initial_seed : int : default None
-        specifies the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value on construction (see `initial_seed
-        <ParameterEstimationComposition.initial_seed>` for additional information).
+        specifies the seed used to initialize the random number generator at construction; it is passed to the
+        ParameterEstimationComposition's `controller <Composition.controller>` to set its `initial_seed
+        <ParameterEstimationComposition.initial_seed>` attribute.
 
     same_seed_for_all_parameter_combinations :  bool : default False
         specifies whether the random number generator is re-initialized to the same value when estimating each
-        combination of `parameter <ParameterEstimationComposition.parameters>` values (see
-        `same_seed_for_all_parameter_combinations
-        <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>` for additional information).
+        combination of `parameter <ParameterEstimationComposition.parameters>` values; it is passed to the
+        ParameterEstimationComposition's `controller <Composition.controller>` to set its
+        `same_seed_for_all_allocations <ParameterEstimationComposition.same_seed_for_all_allocations>` attribute.
 
 
     Attributes
@@ -346,31 +346,17 @@ class ParameterEstimationComposition(Composition):
            *within* each fit.
 
     initial_seed : int or None
-        determines the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value on construction, and different runs of a
-        script containing the ParameterEstimationComposition will yield different results, which should be roughly
-        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the script
-        should yield identical results for the estimation process, which can be useful for debugging.
+        contains the seed used to initialize the random number generator at construction, that is stored on the
+        ParameterEstimationComposition's `controller <Composition.controller>` (see `initial_seed
+        <OptimizationControlMechanism.initial_seed>` for additional details).
 
-    same_seed_for_all_parameter_combinations :  bool : default False
-        determines whether the random number generator used to select seeds for each estimate of the `model
-        <ParameterEstimationComposition.model>`\\'s `net_outcome <ControlMechanism.net_outcome>` is
-        re-initialized to the same value for each combination of `parameter <ParameterEstimationComposition>` values
-        evaluated. If same_seed_for_all_parameter_combinations is True, then any differences in the estimates made
-        of `net_outcome <ControlMechanism.net_outcome>` for each combination of parameter values will reflect
-        exclusively the influence of the *parameters* on the execution of the `model
-        <ParameterEstimationComposition.model>`, and *not* any variability intrinsic to the execution of
-        the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
-        executions of the OptimizationControlMechanism's `evaluate_agent_rep
-        <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter values (i.e.,
-        `control_allocation <ControlMechanism.control_allocation>`). If *same_seed_for_all_parameter_combinations* is
-        False, then each time a combination of parameter values is estimated, it will use a different set of seeds.
-        This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism's
-        `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method with the same set of parameter
-        values (`control_allocation <ControlMechanism.control_allocation>`). Small differences in results suggest
-        stability of the estimation process across combinations of parameter values, while substantial differences
-        indicate instability, which may be helped by increasing `num_estimates
-        <ParameterEstimationComposition.num_estimates>`.
+    same_seed_for_all_parameter_combinations :  bool
+        contains the setting for determining whether the random number generator used to select seeds for each
+        estimate of the `model <ParameterEstimationComposition.model>`\\'s `net_outcome
+        <ControlMechanism.net_outcome>` is re-initialized to the same value for each combination of `parameter
+        <ParameterEstimationComposition>` values evaluated.  Its values is stored on the
+        ParameterEstimationComposition's `controller <Composition.controller>` (see `same_seed_for_all_allocations
+        <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional details).
 
     optimized_parameter_values : list
         contains the values of the `parameters <ParameterEstimationComposition.parameters>` of the `model
@@ -523,7 +509,7 @@ class ParameterEstimationComposition(Composition):
             num_estimates=num_estimates,
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
-            same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations
+            same_seed_for_all_allocations=same_seed_for_all_parameter_combinations
         )
 
     # def run(self):
@@ -566,3 +552,17 @@ class ParameterEstimationComposition(Composition):
     #     # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
     #     # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
     #     return self.function(feature_values, control_allocation, context=context)
+
+    @property
+    def initial_seed(self):
+        try:
+            return self.controler.initial_seed
+        except:
+            return None
+
+    @property
+    def same_seed_for_all_parameter_combinations(self):
+        try:
+            return self.controler.same_seed_for_all_allocations
+        except:
+            return None
