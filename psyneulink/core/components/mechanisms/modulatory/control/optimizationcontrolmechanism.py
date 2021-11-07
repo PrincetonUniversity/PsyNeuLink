@@ -1019,12 +1019,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                    modulates=seed_param_ports,
                                                    allocation_samples=random_seeds))
 
-        # # MODIFIED 11/3/21 OLD:
-        # output_port_specs = list(enumerate(self.output_ports))
-        # for i, spec in output_port_specs:
-        # MODIFIED 11/3/21 NEW:
         for i, spec in enumerate(self.output_ports):
-        # MODIFIED 11/3/21 END
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
             self.output_ports[i] = control_signal
