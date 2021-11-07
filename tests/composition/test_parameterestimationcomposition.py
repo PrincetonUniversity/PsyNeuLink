@@ -24,14 +24,14 @@ pec_test_args = [(None, 2, True, False),
                  (None, 2, False, True),
                  (Concatenate, 2, True, False),
                  (LinearCombination, 1, True, False),
-                 # (None, 2, 'mode', 'nodes'),
+                 # (None, 2, True, True), <- USE TO TEST ERROR
+                 # (None, 2, False, False), <- USE TO TEST ERROR
                  ]
-
 
 @pytest.mark.parametrize(
     'objective_function_arg, expected_input_len, model_spec, node_spec',
     pec_test_args,
-    ids=[f"{x[0]}-{x[2]}-{x[3]})" for x in pec_test_args]
+    ids=[f"{x[0]}-{'model' if x[2] else None}-{'nodes' if x[3] else None})" for x in pec_test_args]
 )
 def test_parameter_estimation_composition(objective_function_arg, expected_input_len, model_spec, node_spec):
     Input = pnl.TransferMechanism(name='Input')
@@ -74,8 +74,6 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
     comp.add_node(Decision2, required_roles=[pnl.NodeRole.OUTPUT])
     task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision, Decision2]
     comp.add_linear_processing_pathway(task_execution_pathway)
-
-
 
     pec = ParameterEstimationComposition(name='pec',
                                          model = comp if model_spec else None,
