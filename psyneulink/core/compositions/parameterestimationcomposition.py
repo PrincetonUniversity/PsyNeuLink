@@ -140,17 +140,12 @@ Class Reference
 
 """
 
-import numpy as np
-
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    OptimizationControlMechanism, RANDOMIZATION_CONTROL_SIGNAL_NAME
+    OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import BEFORE
-from psyneulink.core.globals.sampleiterator import SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list
 
 __all__ = ['ParameterEstimationComposition']
 
@@ -459,6 +454,8 @@ class ParameterEstimationComposition(Composition):
         kwargs = args.pop('kwargs')
         pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
 
+        # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameterestimationcomposition.py
+
         # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
         if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
         # if not ((args['model'] or args['nodes']) for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS):
@@ -503,49 +500,31 @@ class ParameterEstimationComposition(Composition):
                          same_seed_for_all_parameter_combinations
                          ):
 
-        # FIX: MOVE TO OCM: 11/3/21
-        # Construct iterator for seeds used to randomize estimates
-        def random_integer_generator():
-            rng = np.random.RandomState()
-            rng.seed(initial_seed)
-            return rng.random_integers(num_estimates)
-        random_seeds = SampleSpec(num=num_estimates, function=random_integer_generator)
-
-        # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
-        #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
-        #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
-        # Get ParameterPorts for seeds of parameters that use them (i.e., that return a random value)
-        seed_param_ports = [param._port for param in self.all_dependent_parameters('seed').keys()]
-
-        # Construct ControlSignal to modify seeds over estimates
-        seed_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL_NAME,
-                                            modulates=seed_param_ports,
-                                            allocation_samples=random_seeds)
-
-        # # FIX: WHAT iS THIS DOING?
-        # if data:
-        #     objective_function = objective_function(data)
-
-        objective_mechanism = ObjectiveMechanism(monitor=outcome_variables,
-                                                 function=objective_function) if objective_function else None
-
-        # Get ControlSignals for parameters to be searched
+        # # Parse **parameters** into ControlSignals specs
         control_signals = []
         for param,allocation in parameters.items():
             control_signals.append(ControlSignal(modulates=param,
                                                  allocation_samples=allocation))
-        # Add ControlSignal for seeds to end of list of parameters to be controlled by pem
-        convert_to_list(control_signals).append(seed_control_signal)
-        # FIX: END OF MOVE
 
-        return OptimizationControlMechanism(agent_rep=self,
-                                            monitor_for_control=outcome_variables,
-                                            objective_mechanism=objective_mechanism,
-                                            function=optimization_function,
-                                            control_signals=control_signals,
-                                            num_estimates=num_estimates,
-                                            num_trials_per_estimate=num_trials_per_estimate
-                                            )
+        # If objective_function has been specified, create and pass ObjectiveMechanism to ocm
+        objective_mechanism = ObjectiveMechanism(monitor=outcome_variables,
+                                                 function=objective_function) if objective_function else None
+
+        # FIX: NEED TO BE SURE CONSTRUCTOR FOR MLE optimization_function HAS data ATTRIBUTE
+        if data:
+            optimization_function.data = data
+
+        return OptimizationControlMechanism(
+            agent_rep=self,
+            monitor_for_control=outcome_variables,
+            objective_mechanism=objective_mechanism,
+            function=optimization_function,
+            control_signals=control_signals,
+            num_estimates=num_estimates,
+            num_trials_per_estimate=num_trials_per_estimate,
+            initial_seed=initial_seed,
+            same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations
+        )
 
     # def run(self):
     #     # FIX: IF DATA WAS SPECIFIED, CHECK THAT INPUTS ARE APPROPRIATE FOR THOSE DATA.
@@ -571,18 +550,19 @@ class ParameterEstimationComposition(Composition):
     #     # FIX: ADD DOCSTRING THAT EXPLAINS HOW TO RUN FOR DATA FITTING VS. OPTIMIZATION
     #     pass
 
-    def evaluate(self,
-                 feature_values,
-                 control_allocation,
-                 num_estimates,
-                 num_trials_per_estimate,
-                 base_context=Context(execution_id=None),
-                 context=None):
-        """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
-        **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
-        """
-        # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluate_agent_rep AND/OR grid_evaluate
-        # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
-        # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
-        # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
-        return self.function(feature_values, control_allocation, context=context)
+    # def evaluate(self,
+    #              feature_values,
+    #              control_allocation,
+    #              num_estimates,
+    #              num_trials_per_estimate,
+    #              execution_mode=None,
+    #              base_context=Context(execution_id=None),
+    #              context=None):
+    #     """Return `model <FunctionAppproximator.model>` predicted by `function <FunctionAppproximator.function> for
+    #     **input**, using current set of `prediction_parameters <FunctionAppproximator.prediction_parameters>`.
+    #     """
+    #     # FIX: THE FOLLOWING MOSTLY NEEDS TO BE HANDLED BY OptimizationFunction.evaluate_agent_rep AND/OR grid_evaluate
+    #     # FIX:   THIS NEEDS TO BE A DEQUE THAT TRACKS ALL THE CONTROL_SIGNAL VALUES OVER num_estimates FOR PARAM DISTRIB
+    #     # FIX:   AUGMENT TO USE num_estimates and num_trials_per_estimate
+    #     # FIX:   AUGMENT TO USE same_seed_for_all_parameter_combinations PARAMETER
+    #     return self.function(feature_values, control_allocation, context=context)

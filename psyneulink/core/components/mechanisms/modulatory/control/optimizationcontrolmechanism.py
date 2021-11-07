@@ -493,6 +493,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import C
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
+from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.components.shellclasses import Function
@@ -501,7 +502,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
-    OPTIMIZATION_CONTROL_MECHANISM, OUTCOME, PARAMS, PROJECTIONS
+    OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -852,6 +853,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
                  state_feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
+                 initial_seed=None,
+                 same_seed_for_all_parameter_combinations=False,
                  num_trials_per_estimate = None,
                  search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
@@ -885,10 +888,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     state_feature_function = kwargs['feature_function']
                 kwargs.pop('feature_function')
                 continue
+        self.state_features = convert_to_list(state_features)
+
+        self.initial_seed = initial_seed
+        self.same_seed_for_all_parameter_combinations = same_seed_for_all_parameter_combinations
 
         function = function or GridSearch
-
-        self.state_features = convert_to_list(state_features)
 
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
@@ -994,9 +999,32 @@ class OptimizationControlMechanism(ControlMechanism):
         Set size of control_allocation equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
-        from psyneulink.core.globals.keywords import OWNER_VALUE
-        output_port_specs = list(enumerate(self.output_ports))
-        for i, spec in output_port_specs:
+
+        if self.num_estimates:
+            # Construct iterator for seeds used to randomize estimates
+            def random_integer_generator():
+                rng = np.random.RandomState()
+                rng.seed(self.initial_seed)
+                return rng.random_integers(self.num_estimates)
+            random_seeds = SampleSpec(num=self.num_estimates, function=random_integer_generator)
+
+            # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
+            #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
+            #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
+            # Get ParameterPorts for seeds of parameters in agent_rep that use them (i.e., that return a random value)
+            seed_param_ports = [param._port for param in self.agent_rep.all_dependent_parameters('seed').keys()]
+
+            # Construct ControlSignal to modify seeds over estimates
+            self.output_ports.append(ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL_NAME,
+                                                   modulates=seed_param_ports,
+                                                   allocation_samples=random_seeds))
+
+        # # MODIFIED 11/3/21 OLD:
+        # output_port_specs = list(enumerate(self.output_ports))
+        # for i, spec in output_port_specs:
+        # MODIFIED 11/3/21 NEW:
+        for i, spec in enumerate(self.output_ports):
+        # MODIFIED 11/3/21 END
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
             self.output_ports[i] = control_signal
