@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 
 # objective_function = {None: 2, Concatenate: 2, LinearCombination: 1}
 # expected
-objective_function_args = [(None, 2), (Concatenate, 2), (LinearCombination, 1)]
-
+objective_function_args = [(None, 2),
+                           (Concatenate, 2),
+                           (LinearCombination, 1)]
 
 @pytest.mark.parametrize(
     'objective_function_arg, expected_input_len',
@@ -74,7 +75,7 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
 
     pec = ParameterEstimationComposition(name='pec',
                                          model=comp,
-                                         nodes = comp,      # For testing alternative
+                                         # nodes = comp,      # For testing alternative
                                          # data = [1,2,3],    # For testing error
                                          parameters={('drift_rate',Decision):[1,2],
                                                      ('threshold',Decision2):[1,2],},
