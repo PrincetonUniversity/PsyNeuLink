@@ -185,33 +185,6 @@ def _same_seed_for_all_parameter_combinations_setter(value, owning_component, co
     return value
 
 
-class Parameters(Composition.Parameters):
-    """
-        Attributes
-        ----------
-
-            initial_seed
-                see `input_specification <ParameterEstimationComposition.initial_seed>`
-
-                :default value: None
-                :type: ``int``
-
-            same_seed_for_all_parameter_combinations
-                see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
-
-                :default value: False
-                :type: ``bool``
-
-    """
-    # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
-    initial_seed = Parameter(None, loggable=False, pnl_internal=True,
-                             getter=_initial_seed_getter,
-                             setter=_initial_seed_setter)
-    same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
-                                                         getter=_same_seed_for_all_parameter_combinations_getter,
-                                                         setter=_same_seed_for_all_parameter_combinations_setter)
-
-
 class ParameterEstimationComposition(Composition):
     """
     Composition(                           \
@@ -422,6 +395,32 @@ class ParameterEstimationComposition(Composition):
         it is the *distribution* of those `parameter <ParameterEstimationComposition.parameters>` values that were
         found to best fit the data.
     """
+
+    class Parameters(Composition.Parameters):
+        """
+            Attributes
+            ----------
+
+                initial_seed
+                    see `input_specification <ParameterEstimationComposition.initial_seed>`
+
+                    :default value: None
+                    :type: ``int``
+
+                same_seed_for_all_parameter_combinations
+                    see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
+
+                    :default value: False
+                    :type: ``bool``
+
+        """
+        # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
+        initial_seed = Parameter(None, loggable=False, pnl_internal=True,
+                                 getter=_initial_seed_getter,
+                                 setter=_initial_seed_setter)
+        same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
+                                                             getter=_same_seed_for_all_parameter_combinations_getter,
+                                                             setter=_same_seed_for_all_parameter_combinations_setter)
 
     def __init__(self,
                  parameters, # OCM control_signals
