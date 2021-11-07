@@ -480,16 +480,20 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
-<Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
+<Composition.enable_controller>` attribute is True.  This is generally done automatically when the `controller
 <Composition.controller>` is `assigned <Composition_Controller_Assignment>`.  If enabled, the `controller
-<Composition.controller>` is generally executed either before or after all of the other Components in the Composition
-have been executed within a given `TimeScale <TimeScale>`, as determined by the Composition's
-`controller_time_scale` and `controller_mode <Composition.controller_mode>` attributes. The Composition's
-`controller_condition <Composition.controller_condition>` attribute can be used to further customize when it is
-executed. All three of these attributes can be specified in corresponding arguments of the
-Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
-corresponding attribute.
-
+<Composition.controller>` is executed either before or after all of the other Components in the Composition
+have been executed at a given `TimeScale <TimeScale>`, and if its specified condition for execution has been met,
+as determined by the Composition's `controller_mode <Composition.controller_mode>`, `controller_time_scale
+<Composition.controller_time_scale>`, and `controller_condition <Composition.controller_condition>` attributes.
+By default, if the `controller <Composition.controller>` is enabled, it will execute after the rest of the
+Composition at the end of every `TRIAL <TimeScale.TRIAL>`.  However, `controller_mode <Composition.controller_mode>`
+can be used to specify execution before the Composition; `controller_time_scale <Composition.controller_time_scale>`
+can be used to specify execution at the beginning or end of every `TIME_STEP <TimeScale.TIME_STEP>`, `PASS
+<TimeScale.PASS>, or `RUN <TimeScale.RUN>`;  and `controller_condition <Composition.controller_condition>` can be
+used to specify a particular `Condition` that must be satisified for the `controller <Composition.controller>` to
+exectue.  Arguments for all three of these attributes can be specified in the Composition's constructor,
+or programmatically after it is constructed by assigning the desired value to the corresponding attribute.
 
 .. _Composition_Learning:
 
@@ -2938,6 +2942,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
+        controller_time_scale=TRIAL        \
         controller_condition=Always,       \
         retain_old_simulation_data=None,   \
         show_graph_attributes=None,        \
@@ -2967,23 +2972,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `learning mode <Composition.learn>`.
 
     controller : `OptimizationControlMechanism` : default None
-        specifies the `OptimizationControlMechanism` to use as the Composition's `controller
-        <Composition.controller>` (see `Composition_Controller` for details).
+        specifies the `OptimizationControlMechanism` to use as the `Composition's controller
+        <Composition_Controller>`.
 
     enable_controller: bool : default None
         specifies whether the Composition's `controller <Composition.controller>` is executed when the
-        Composition is executed.  Set to True by default if **controller** specified;  if set to False,
-        the `controller <Composition.controller>` is ignored when the Composition is executed.
+        Composition is run.  Set to True by default if **controller** specified (see `enable_controller
+        <Composition.enable_controller>` for additional details).
 
     controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
-        specifies whether the controller is executed before or after the rest of the Composition
-        in each run, trial, pass, or time step.  Must be either the keyword *BEFORE* or *AFTER*.
+        specifies whether the `controller <Composition.controller>` is executed before or after the rest of the
+        Composition when it is run, at the `TimeScale` specified by **controller_time_scale**). Must be either the
+        keyword *BEFORE* or *AFTER* (see `controller_mode <Compositon.controller_mode>` for additional details).
 
     controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
-        specifies with what frequency the the controller should be executed.
+        specifies the frequency at which the `controller <Composition.controller>` is executed, either before or
+        after the Composition is run as specified by **controller_mode** (see `controller_time_scale
+        <Composition.controller_time_scale>` for additional details).
 
     controller_condition: Condition : default Always
-        specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
+        specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is 
+        executed  in a trial (see `controller_condition <Compositon.controller_condition>` for additional details).
 
     retain_old_simulation_data : bool : default False
         specifies whether or not to retain Parameter values generated during `simulations
@@ -3131,18 +3140,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         (see `Composition_Controller` for details).
 
     enable_controller : bool
-        determines whether the Composition's `controller <Composition.controller>` is executed in each trial
-        (see controller_mode <Composition.controller_mode>` for timing of execution).  Set to True by default
-        if `controller <Composition.controller>` is specified.  Setting it to False suppresses exectuion of the
-        `controller <Composition.controller>`.
+        determines whether the Composition's `controller <Composition.controller>` is executed when the Composition
+        is run.  Set to True by default if `controller <Composition.controller>` is specified.  Setting it to False 
+        suppresses exectuion of the `controller <Composition.controller>` (see `Composition_Controller_Execution`
+        for additional details, including timing of execution).
 
     controller_mode :  BEFORE or AFTER
-        determines whether the controller is executed before or after the rest of the `Composition`
-        is executed on each trial.
+        determines whether the `controller <Composition.controller>` is executed before or after the rest of the
+        `Composition` when it is run, at the `TimeScale` determined by `controller_time_scale
+        <Composition.controller_time_scale>` (see `Composition_Controller_Execution` for additional details).
+
+    controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
+        deterines the frequency at which the `controller <Composition.controller>` is executed, either before or
+        after the Composition as determined by `controller_mode <cComposition.ontroller_mode>` (see
+        `Composition_Controller_Execution` for additional details).
 
     controller_condition : Condition
-        specifies whether the controller is executed in a given trial.  The default is `Always`, which
-        executes the controller on every trial.
+        determines whether the `controller <Composition.controller>` is executed in a given trial.  The 
+        default is `Always`, which executes the controller on every trial (see `Composition_Controller_Execution`
+        for additional details).
 
     default_execution_id
         if no *context* is specified in a call to run, this *context* is used;  by default,
@@ -7472,7 +7488,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
         method of the `Composition` as input for the call to `run <Composition.run>`. If it is not, the `controller
         <Composition.controller>` uses the inputs slated for its next or previous execution, depending on whether the
-        `controller_mode` of the `Composition` is set to `before` or `after`, respectively.
+        `controller_mode <Composition.controller_mode>` of the `Composition` is set to `before` or `after`, 
+        respectively.
 
        .. note::
             Block simulation can not be used if the Composition's stimuli were specified as a generator.
