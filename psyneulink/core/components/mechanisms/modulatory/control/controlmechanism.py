@@ -1519,7 +1519,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
 
     def _instantiate_montiored_for_control_input_ports(self, context):
-        """Instantiate InputPorts for items specified in monitor_for_control.        
+        """Instantiate InputPorts for items specified in monitor_for_control.
 
         Return sender ports and their value sizes
         """
@@ -1822,7 +1822,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         if composition:
             if self.objective_mechanism and self.objective_mechanism in composition.nodes:
-                 # Safe to add this, as it is already in the ControlMechanism's aux_components
+                # Safe to add this, as it is already in the ControlMechanism's aux_components
                 #    and will therefore be added to the Composition along with the ControlMechanism
                 from psyneulink.core.compositions.composition import NodeRole
                 assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
