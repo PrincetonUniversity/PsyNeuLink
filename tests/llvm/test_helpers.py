@@ -396,6 +396,8 @@ class TestHelperTypegetters:
     (pnlvm.helpers.exp, 1.0, 2.718281828459045),
     (pnlvm.helpers.coth, 1.0, 1.3130352854993313),
     (pnlvm.helpers.csch, 1.0, 0.8509181282393215),
+    (pnlvm.helpers.log, 1.0, 0.0),
+    (pnlvm.helpers.log1p, 1.0, 0.6931471805599453),
 ])
 def test_helper_numerical(mode, op, var, expected):
     with pnlvm.LLVMBuilderContext() as ctx:

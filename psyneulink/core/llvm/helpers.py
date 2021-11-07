@@ -149,6 +149,15 @@ def exp(ctx, builder, x):
     exp_f = ctx.get_builtin("exp", [x.type])
     return builder.call(exp_f, [x])
 
+def log(ctx, builder, x):
+    log_f = ctx.get_builtin("log", [x.type])
+    return builder.call(log_f, [x])
+
+def log1p(ctx, builder, x):
+    log_f = ctx.get_builtin("log", [x.type])
+    x1p = builder.fadd(x, x.type(1))
+    return builder.call(log_f, [x1p])
+
 def sqrt(ctx, builder, x):
     sqrt_f = ctx.get_builtin("sqrt", [x.type])
     return builder.call(sqrt_f, [x])
