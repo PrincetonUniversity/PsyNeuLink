@@ -480,20 +480,22 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
-<Composition.enable_controller>` attribute is True.  This is generally done automatically when the `controller
-<Composition.controller>` is `assigned <Composition_Controller_Assignment>`.  If enabled, the `controller
-<Composition.controller>` is executed either before or after all of the other Components in the Composition
-have been executed at a given `TimeScale <TimeScale>`, and if its specified condition for execution has been met,
-as determined by the Composition's `controller_mode <Composition.controller_mode>`, `controller_time_scale
-<Composition.controller_time_scale>`, and `controller_condition <Composition.controller_condition>` attributes.
-By default, if the `controller <Composition.controller>` is enabled, it will execute after the rest of the
-Composition at the end of every `TRIAL <TimeScale.TRIAL>`.  However, `controller_mode <Composition.controller_mode>`
-can be used to specify execution before the Composition; `controller_time_scale <Composition.controller_time_scale>`
-can be used to specify execution at the beginning or end of every `TIME_STEP <TimeScale.TIME_STEP>`, `PASS
-<TimeScale.PASS>, or `RUN <TimeScale.RUN>`;  and `controller_condition <Composition.controller_condition>` can be
-used to specify a particular `Condition` that must be satisified for the `controller <Composition.controller>` to
-exectue.  Arguments for all three of these attributes can be specified in the Composition's constructor,
-or programmatically after it is constructed by assigning the desired value to the corresponding attribute.
+<Composition.enable_controller>` attribute is True.  This is generally done automatically when the controller is
+is `assigned <Composition_Controller_Assignment>`.  If `enabled <Composition.enable_controller>`, the controller is
+executed either before or after all of the other Components in the Composition have been executed at a given
+`TimeScale`, and if its specified `Condition <Composition.controller_condition>` has been met, as determined by the
+Composition's `controller_mode <Composition.controller_mode>`, `controller_time_scale
+<Composition.controller_time_scale>` and `controller_condition <Composition.controller_condition>` attributes. By
+default, a controller is enabled, and executes after the rest of the Composition (`controller_mode
+<Composition.controller_mode>`\\= *AFTER* at the end of every `TRIAL <TimeScale.TRIAL>` (`controller_time_scale
+<Composition.controller_time_scale>`\\=TimeScale.TRIAL and `controller_condition <Composition.controller_condition>`\\=
+`Always()`) However, `controller_mode <Composition.controller_mode>` can be used to specify execution before the
+Composition; `controller_time_scale <Composition.controller_time_scale>` can be used to specify execution at a
+particular `TimeScale` (that is at the beginning or end of every `TIME_STEP <TimeScale.TIME_STEP>`,
+`PASS <TimeScale._PASS>, or `RUN <TimeScale.RUN>`; and `controller_condition <Composition.controller_condition>` can
+be used to specify a particular `Condition` that must be satisified for the controller to exectue.  Arguments for all
+three of these attributes can be specified in the Composition's constructor, or programmatically after it is
+constructed by assigning the desired value to the corresponding attribute.
 
 .. _Composition_Learning:
 
@@ -1219,7 +1221,7 @@ placed in a tuple together with a `Condition` specifying when that value should 
        - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below) `Condition`
          specifies when the value is applied;  otherwise, its previously assigned value or `default
          <Parameter_Defaults>` is used;  if the parameter values appears alone in a tuple or outside of one,
-         then the Condtion `Always` is applied.
+         then the Condition `Always()` is applied.
 
     See `Runtime Parameter Specification Dictionary <Mechanism_Runtime_Param_Specification>` for additional details.
 
@@ -2108,7 +2110,7 @@ COMMENT
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
 
-If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always()`
 `Condition` will be assigned by default:
 
         >>> import psyneulink as pnl
@@ -2943,7 +2945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         enable_controller=None,            \
         controller_mode=AFTER,             \
         controller_time_scale=TRIAL        \
-        controller_condition=Always,       \
+        controller_condition=Always(),     \
         retain_old_simulation_data=None,   \
         show_graph_attributes=None,        \
         name=None,                         \
@@ -2990,7 +2992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         after the Composition is run as specified by **controller_mode** (see `controller_time_scale
         <Composition.controller_time_scale>` for additional details).
 
-    controller_condition: Condition : default Always
+    controller_condition: Condition : default Always()
         specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is 
         executed  in a trial (see `controller_condition <Compositon.controller_condition>` for additional details).
 
@@ -3157,7 +3159,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     controller_condition : Condition
         determines whether the `controller <Composition.controller>` is executed in a given trial.  The 
-        default is `Always`, which executes the controller on every trial (see `Composition_Controller_Execution`
+        default is `Always()`, which executes the controller on every trial (see `Composition_Controller_Execution`
         for additional details).
 
     default_execution_id
