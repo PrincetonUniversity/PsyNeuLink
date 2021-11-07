@@ -257,8 +257,8 @@ and that is returned by `evaluation` method of theOptimizationControlMechanism's
 ^^^^^^^^^^^^^^^^
 
 In addition to its `primary InputPort <InputPort_Primary>` (which typically receives a projection from the
-*OUTCOME* OutputPort of the `objective_mechanism <ControlMechanism.objective_mechanism>`,
-an OptimizationControlMechanism also has an `InputPort` for each of its state_features. By default, these are the current
+*OUTCOME* OutputPort of the `objective_mechanism <ControlMechanism.objective_mechanism>`, an
+OptimizationControlMechanism also has an `InputPort` for each of its state_features. By default, these are the current
 `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
 different values can be specified, as can a `state_feature_function <OptimizationControlMechanism_Feature_Function>`
 that transforms these.  For OptimizationControlMechanisms that implement `model-free
