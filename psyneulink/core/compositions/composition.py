@@ -487,13 +487,13 @@ executed either before or after all of the other Components in the Composition h
 Composition's `controller_mode <Composition.controller_mode>`, `controller_time_scale
 <Composition.controller_time_scale>` and `controller_condition <Composition.controller_condition>` attributes. By
 default, a controller is enabled, and executes after the rest of the Composition (`controller_mode
-<Composition.controller_mode>`\\= *AFTER* at the end of every `TRIAL <TimeScale.TRIAL>` (`controller_time_scale
-<Composition.controller_time_scale>`\\=TimeScale.TRIAL and `controller_condition <Composition.controller_condition>`\\=
-`Always()`) However, `controller_mode <Composition.controller_mode>` can be used to specify execution before the
-Composition; `controller_time_scale <Composition.controller_time_scale>` can be used to specify execution at a
-particular `TimeScale` (that is at the beginning or end of every `TIME_STEP <TimeScale.TIME_STEP>`,
-`PASS <TimeScale._PASS>, or `RUN <TimeScale.RUN>`; and `controller_condition <Composition.controller_condition>` can
-be used to specify a particular `Condition` that must be satisified for the controller to exectue.  Arguments for all
+<Composition.controller_mode>`\\= *AFTER*) at the end of every trial (`controller_time_scale
+<Composition.controller_time_scale>`\\= `TimeScale.TRIAL` and `controller_condition <Composition.controller_condition>`
+= `Always()`). However, `controller_mode <Composition.controller_mode>` can be used to specify execution of the
+controller before the Composition; `controller_time_scale <Composition.controller_time_scale>` can be used to specify
+execution at a particular `TimeScale` (that is at the beginning or end of every `TIME_STEP <TimeScale.TIME_STEP>`,
+`PASS <TimeScale._PASS>, or `RUN <TimeScale.RUN>`); and `controller_condition <Composition.controller_condition>` can
+be used to specify a particular `Condition` that must be satisified for the controller to execute.  Arguments for all
 three of these attributes can be specified in the Composition's constructor, or programmatically after it is
 constructed by assigning the desired value to the corresponding attribute.
 
