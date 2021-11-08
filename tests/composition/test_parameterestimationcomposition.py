@@ -103,6 +103,6 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
     assert len(ctlr.input_ports[pnl.OUTCOME].variable) == expected_input_len
     assert len(ctlr.control_signals) == 3
     assert ctlr.function.num_estimates == 3
-    assert pnl.RANDOMIZATION_CONTROL_SIGNAL_NAME in ctlr.control_signals.names
-    assert ctlr.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL_NAME].allocation_samples.base.num == 3
+    assert pnl.RANDOMIZATION_CONTROL_SIGNAL in ctlr.control_signals.names
+    assert ctlr.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].allocation_samples.base.num == 3
     # pec.run()

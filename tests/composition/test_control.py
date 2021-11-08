@@ -2168,8 +2168,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               # num_estimates=5,
-                                               num_estimates=None,
+                                               num_estimates=5, # <- Results are same as =1 since no noise parameters)
                                                control_signals=[control_signal])
 
         comp.add_controller(ocm)
@@ -2179,6 +2178,7 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.run(inputs=inputs,
                  num_trials=2)
 
+        assert not comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents # Confirm no noise
         assert np.allclose(comp.simulation_results,
                            [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
         assert np.allclose(comp.results,
