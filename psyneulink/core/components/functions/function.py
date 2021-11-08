@@ -355,8 +355,10 @@ def _random_state_getter(self, owning_component, context):
     assert seed_value != [DEFAULT_SEED], "Invalid seed for {} in context: {} ({})".format(owning_component, context.execution_id, seed_param)
 
     current_state = self.values.get(context.execution_id, None)
-    if current_state is None or current_state.used_seed != seed_value:
+    if current_state is None:
         return SeededRandomState(seed_value)
+    if current_state.used_seed != seed_value:
+        return type(current_state)(seed_value)
 
     return current_state
 
