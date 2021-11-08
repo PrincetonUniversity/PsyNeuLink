@@ -367,10 +367,11 @@ class ParameterEstimationComposition(Composition):
         OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method.
         If it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
         the ParameterEstimationComposition's `run <ParameterEstimationComposition.run>` method used to determine the
-        number of trials executed (see `Composition_Execution_Num_Trials` for additional information).
+        number of trials executed (see `number of trials <Composition_Execution_Num_Trials>` for additional
+        information).
 
         .. _note::
-           Note that **num_trials_per_estimate** is distinct from the **num_trials** argument of the
+           The **num_trials_per_estimate** is distinct from the **num_trials** argument of the
            ParameterEstimationComposition's `run <Composition.run>` method.  The latter determines how many full fits
            of the `model <ParameterEstimationComposition.model>` are carried out (that is, how many times the
            ParameterEstimationComposition *itself* is run), whereas **num_trials_per_estimate** determines how many
