@@ -397,8 +397,10 @@ class TestHelperTypegetters:
     (pnlvm.helpers.coth, 1.0, 1.3130352854993313),
     (pnlvm.helpers.csch, 1.0, 0.8509181282393215),
 ])
-def test_helper_numerical(mode, op, var, expected):
-    with pnlvm.LLVMBuilderContext.get_current() as ctx:
+@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
+                         ids=lambda x: str(x))
+def test_helper_numerical(mode, op, var, expected, fp_type):
+    with pnlvm.LLVMBuilderContext(fp_type) as ctx:
         func_ty = ir.FunctionType(ir.VoidType(), [ctx.float_ty.as_pointer()])
 
         custom_name = ctx.get_unique_name("numerical")
@@ -419,12 +421,10 @@ def test_helper_numerical(mode, op, var, expected):
         bin_f(ctypes.byref(res))
         res = res.value
     else:
-        # FIXME: this needs to consider ctx.float_ty
-        res = np.array([var], dtype=np.float64)
+        res = np.ctypeslib.as_array(bin_f.byref_arg_types[0](var))
         bin_f.cuda_wrap_call(res)
-        res = res[0]
 
-    assert res == expected
+    assert np.allclose(res, expected)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
