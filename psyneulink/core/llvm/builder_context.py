@@ -17,12 +17,15 @@ from llvmlite import ir
 import numpy as np
 import os
 import re
+import time
 from typing import Set
 import weakref
+
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
+
 from . import codegen
 from . import helpers
 from .debug import debug_env
@@ -40,7 +43,7 @@ def module_count():
     if "stat" in debug_env:
         print("Total LLVM modules: ", len(_all_modules))
         print("Total structures generated: ", _struct_count)
-        s = LLVMBuilderContext.get_global()
+        s = LLVMBuilderContext.get_current()
         print("Total generations by global context: {}".format(s._llvm_generation))
         print("Object cache in global context: {} hits, {} misses".format(s._stats["cache_requests"] - s._stats["cache_misses"], s._stats["cache_misses"]))
         for stat in ("input", "output", "param", "state", "data"):
@@ -82,14 +85,15 @@ def _comp_cached(func):
 
 
 class LLVMBuilderContext:
-    __global_context = None
+    __current_context = None
     __uniq_counter = 0
     _llvm_generation = 0
     int32_ty = ir.IntType(32)
-    float_ty = ir.DoubleType()
+    default_float_ty = ir.DoubleType()
     bool_ty = ir.IntType(1)
 
-    def __init__(self):
+    def __init__(self, float_ty):
+        assert LLVMBuilderContext.__current_context is None
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
         self._stats = { "cache_misses":0,
@@ -101,6 +105,9 @@ class LLVMBuilderContext:
                         "input_structs_generated":0,
                         "output_structs_generated":0,
                       }
+        self.float_ty = float_ty
+        self.init_builtins()
+        LLVMBuilderContext.__current_context = self
 
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
@@ -120,16 +127,53 @@ class LLVMBuilderContext:
         return self._modules[-1]
 
     @classmethod
-    def get_global(cls):
-        if cls.__global_context is None:
-            cls.__global_context = LLVMBuilderContext()
-        return cls.__global_context
+    def get_current(cls):
+        if cls.__current_context is None:
+            return LLVMBuilderContext(cls.default_float_ty)
+        return cls.__current_context
+
+    @classmethod
+    def clear_global(cls):
+        cls.__current_context = None
 
     @classmethod
     def get_unique_name(cls, name: str):
         cls.__uniq_counter += 1
         name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         return name + '_' + str(cls.__uniq_counter)
+
+    def init_builtins(self):
+        start = time.perf_counter()
+        with self as ctx:
+            # Numeric
+            pnlvm.builtins.setup_pnl_intrinsics(ctx)
+            pnlvm.builtins.setup_csch(ctx)
+            pnlvm.builtins.setup_coth(ctx)
+            pnlvm.builtins.setup_tanh(ctx)
+            pnlvm.builtins.setup_is_close(ctx)
+
+            # PRNG
+            pnlvm.builtins.setup_mersenne_twister(ctx)
+            pnlvm.builtins.setup_philox(ctx)
+
+            # Matrix/Vector
+            pnlvm.builtins.setup_vxm(ctx)
+            pnlvm.builtins.setup_vxm_transposed(ctx)
+            pnlvm.builtins.setup_vec_add(ctx)
+            pnlvm.builtins.setup_vec_sum(ctx)
+            pnlvm.builtins.setup_mat_add(ctx)
+            pnlvm.builtins.setup_vec_sub(ctx)
+            pnlvm.builtins.setup_mat_sub(ctx)
+            pnlvm.builtins.setup_vec_hadamard(ctx)
+            pnlvm.builtins.setup_mat_hadamard(ctx)
+            pnlvm.builtins.setup_vec_scalar_mult(ctx)
+            pnlvm.builtins.setup_mat_scalar_mult(ctx)
+            pnlvm.builtins.setup_mat_scalar_add(ctx)
+
+        finish = time.perf_counter()
+
+        if "time_stat" in debug_env:
+            print("Time to setup PNL builtins: {}".format(finish - start))
 
     def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:

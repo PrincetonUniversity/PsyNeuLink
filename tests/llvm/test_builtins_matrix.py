@@ -121,7 +121,7 @@ def test_dot(benchmark, func_mode):
 def test_dot_llvm_constant_dim(benchmark, mode):
     custom_name = None
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         custom_name = ctx.get_unique_name("vxsqm")
         double_ptr_ty = ctx.float_ty.as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
@@ -180,7 +180,7 @@ def test_dot_transposed(benchmark, func_mode):
 def test_dot_transposed_llvm_constant_dim(benchmark, mode):
     custom_name = None
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         custom_name = ctx.get_unique_name("vxsqm")
         double_ptr_ty = ctx.float_ty.as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))

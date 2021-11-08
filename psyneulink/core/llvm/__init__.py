@@ -17,7 +17,6 @@ from typing import Set
 
 from llvmlite import ir
 
-from . import builtins
 from . import codegen
 from .builder_context import *
 from .builder_context import _all_modules, _convert_llvm_ir_to_ctype
@@ -47,15 +46,11 @@ _binary_generation = 0
 
 
 def _compiled_modules() -> Set[ir.Module]:
-    if ptx_enabled:
-        return _cpu_engine.compiled_modules | _ptx_engine.compiled_modules
-    return _cpu_engine.compiled_modules
+    return set().union(*(e.compiled_modules for e in _get_engines()))
 
 
 def _staged_modules() -> Set[ir.Module]:
-    if ptx_enabled:
-        return _cpu_engine.staged_modules | _ptx_engine.staged_modules
-    return _cpu_engine.staged_modules
+    return set().union(*(e.staged_modules for e in _get_engines()))
 
 
 def _llvm_build(target_generation=_binary_generation + 1):
@@ -68,9 +63,8 @@ def _llvm_build(target_generation=_binary_generation + 1):
     if "compile" in debug_env:
         print("STAGING GENERATION: {} -> {}".format(_binary_generation, target_generation))
 
-    _cpu_engine.stage_compilation(_modules)
-    if ptx_enabled:
-        _ptx_engine.stage_compilation(_modules)
+    for e in _get_engines():
+        e.stage_compilation(_modules)
     _modules.clear()
 
     # update binary generation
@@ -83,6 +77,12 @@ class LLVMBinaryFunction:
 
         self.__c_func = None
         self.__cuda_kernel = None
+
+        # Make sure builder context is initialized
+        LLVMBuilderContext.get_current()
+
+        # Compile any pending modules
+        _llvm_build(LLVMBuilderContext._llvm_generation)
 
         # Function signature
         # We could skip compilation if the function is in _compiled_models,
@@ -106,6 +106,9 @@ class LLVMBinaryFunction:
     @property
     def c_func(self):
         if self.__c_func is None:
+            # This assumes there are potential staged modules.
+            # The engine had to be instantiated to have staged modules,
+            # so it's safe to access it directly
             _cpu_engine.compile_staged()
             ptr = _cpu_engine._engine.get_function_address(self.name)
             self.__c_func = self.__c_func_type(ptr)
@@ -138,13 +141,12 @@ class LLVMBinaryFunction:
     @staticmethod
     @functools.lru_cache(maxsize=32)
     def from_obj(obj, *, tags:frozenset=frozenset()):
-        name = LLVMBuilderContext.get_global().gen_llvm_function(obj, tags=tags).name
+        name = LLVMBuilderContext.get_current().gen_llvm_function(obj, tags=tags).name
         return LLVMBinaryFunction.get(name)
 
     @staticmethod
     @functools.lru_cache(maxsize=32)
     def get(name: str):
-        _llvm_build(LLVMBuilderContext._llvm_generation)
         return LLVMBinaryFunction(name)
 
     def get_multi_run(self):
@@ -152,66 +154,40 @@ class LLVMBinaryFunction:
             multirun_llvm = _find_llvm_function(self.name + "_multirun")
         except ValueError:
             function = _find_llvm_function(self.name)
-            with LLVMBuilderContext.get_global() as ctx:
+            with LLVMBuilderContext.get_current() as ctx:
                 multirun_llvm = codegen.gen_multirun_wrapper(ctx, function)
 
         return LLVMBinaryFunction.get(multirun_llvm.name)
 
 
-_cpu_engine = cpu_jit_engine()
-if ptx_enabled:
-    _ptx_engine = ptx_jit_engine()
+_cpu_engine = None
+_ptx_engine = None
+
+def _get_engines():
+    global _cpu_engine
+    if _cpu_engine is None:
+        _cpu_engine = cpu_jit_engine()
+
+    global _ptx_engine
+    if ptx_enabled:
+        if _ptx_engine is None:
+            _ptx_engine = ptx_jit_engine()
+        return [_cpu_engine, _ptx_engine]
+
+    return [_cpu_engine]
 
 
-# Initialize builtins
-def init_builtins():
-    start = time.perf_counter()
-    with LLVMBuilderContext.get_global() as ctx:
-        # Numeric
-        builtins.setup_pnl_intrinsics(ctx)
-        builtins.setup_csch(ctx)
-        builtins.setup_coth(ctx)
-        builtins.setup_tanh(ctx)
-        builtins.setup_is_close(ctx)
-
-        # PRNG
-        builtins.setup_mersenne_twister(ctx)
-        builtins.setup_philox(ctx)
-
-        # Matrix/Vector
-        builtins.setup_vxm(ctx)
-        builtins.setup_vxm_transposed(ctx)
-        builtins.setup_vec_add(ctx)
-        builtins.setup_vec_sum(ctx)
-        builtins.setup_mat_add(ctx)
-        builtins.setup_vec_sub(ctx)
-        builtins.setup_mat_sub(ctx)
-        builtins.setup_vec_hadamard(ctx)
-        builtins.setup_mat_hadamard(ctx)
-        builtins.setup_vec_scalar_mult(ctx)
-        builtins.setup_mat_scalar_mult(ctx)
-        builtins.setup_mat_scalar_add(ctx)
-
-    finish = time.perf_counter()
-
-    if "time_stat" in debug_env:
-        print("Time to setup PNL builtins: {}".format(finish - start))
 
 def cleanup():
-    _cpu_engine.clean_module()
-    _cpu_engine.staged_modules.clear()
-    _cpu_engine.compiled_modules.clear()
-    if ptx_enabled:
-        _ptx_engine.clean_module()
-        _ptx_engine.staged_modules.clear()
-        _ptx_engine.compiled_modules.clear()
+    global _cpu_engine
+    _cpu_engine = None
+    global _ptx_engine
+    _ptx_engine = None
 
     _modules.clear()
     _all_modules.clear()
 
     LLVMBinaryFunction.get.cache_clear()
     LLVMBinaryFunction.from_obj.cache_clear()
-    init_builtins()
 
-
-init_builtins()
+    LLVMBuilderContext.clear_global()

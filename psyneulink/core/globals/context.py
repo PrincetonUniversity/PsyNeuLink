@@ -391,7 +391,9 @@ class Context():
         # if isinstance(composition, Composition):
         if (
             composition is None
-            or composition.__class__.__name__ in {'Composition', 'AutodiffComposition'}
+            or composition.__class__.__name__ in {'Composition',
+                                                  'AutodiffComposition',
+                                                  'ParameterEstimationComposition'}
         ):
             self._composition = composition
         else:

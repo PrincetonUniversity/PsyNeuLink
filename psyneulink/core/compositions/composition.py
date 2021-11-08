@@ -402,10 +402,10 @@ Controlling a Composition
       - `Composition_Controller_Execution`
 
 
-A Composition can be assigned a `controller <Composition.controller>`.  This is a `ControlMechanism`, or a subclass of
-one, that modulates the parameters of Components within the Composition (including Components of nested Compositions).
-It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value of other Mechanisms in
-the Composition, and provides the result to the `controller <Composition.controller>`.
+A Composition can be assigned a `controller <Composition.controller>`.  This must be an `OptimizationControlMechanism`,
+or a subclass of one, that modulates the parameters of Components within the Composition (including Components of
+nested Compositions). It typically does this based on the output of an `ObjectiveMechanism` that evaluates the value
+of other Mechanisms in the Composition, and provides the result to the `controller <Composition.controller>`.
 
 .. _Composition_Controller_Assignment:
 
@@ -480,16 +480,22 @@ COMMENT
 ~~~~~~~~~~~~~~~~~~~~~~
 
 The `controller <Composition.controller>` is executed only if the Composition's `enable_controller
-<Composition.enable_controller>` attribute is True.  This generally done automatically when the `controller
-<Composition.controller>` is `assigned <Composition_Controller_Assignment>`.  If enabled, the `controller
-<Composition.controller>` is generally executed either before or after all of the other Components in the Composition
-have been executed within a given `TimeScale <TimeScale>`, as determined by the Composition's
-`controller_time_scale` and `controller_mode <Composition.controller_mode>` attributes. The Composition's
-`controller_condition <Composition.controller_condition>` attribute can be used to further customize when it is
-executed. All three of these attributes can be specified in corresponding arguments of the
-Composition's constructor, or programmatically after it is constructed by assigning the desired value to the
-corresponding attribute.
-
+<Composition.enable_controller>` attribute is True.  This is generally done automatically when the controller is
+is `assigned <Composition_Controller_Assignment>`.  If `enabled <Composition.enable_controller>`, the controller is
+executed either before or after all of the other Components in the Composition have been executed at a given
+`TimeScale`, and if its specified `Condition <Composition.controller_condition>` has been met, as determined by the
+Composition's `controller_mode <Composition.controller_mode>`, `controller_time_scale
+<Composition.controller_time_scale>` and `controller_condition <Composition.controller_condition>` attributes. By
+default, a controller is enabled, and executes after the rest of the Composition (`controller_mode
+<Composition.controller_mode>`\\= *AFTER*) at the end of every trial (`controller_time_scale
+<Composition.controller_time_scale>`\\= `TimeScale.TRIAL` and `controller_condition <Composition.controller_condition>`
+= `Always()`). However, `controller_mode <Composition.controller_mode>` can be used to specify execution of the
+controller before the Composition; `controller_time_scale <Composition.controller_time_scale>` can be used to specify
+execution at a particular `TimeScale` (that is at the beginning or end of every `TIME_STEP <TimeScale.TIME_STEP>`,
+`PASS <TimeScale._PASS>, or `RUN <TimeScale.RUN>`); and `controller_condition <Composition.controller_condition>` can
+be used to specify a particular `Condition` that must be satisified for the controller to execute.  Arguments for all
+three of these attributes can be specified in the Composition's constructor, or programmatically after it is
+constructed by assigning the desired value to the corresponding attribute.
 
 .. _Composition_Learning:
 
@@ -1215,7 +1221,7 @@ placed in a tuple together with a `Condition` specifying when that value should 
        - *value* - (<parameter value>, `Condition`), <parameter value>, or subdictionary (see below) `Condition`
          specifies when the value is applied;  otherwise, its previously assigned value or `default
          <Parameter_Defaults>` is used;  if the parameter values appears alone in a tuple or outside of one,
-         then the Condtion `Always` is applied.
+         then the Condition `Always()` is applied.
 
     See `Runtime Parameter Specification Dictionary <Mechanism_Runtime_Param_Specification>` for additional details.
 
@@ -2104,7 +2110,7 @@ COMMENT
 *Runtime Parameters*
 ~~~~~~~~~~~~~~~~~~~~
 
-If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always`
+If a runtime parameter is meant to be used throughout the `Run`, then the `Condition` may be omitted and the `Always()`
 `Condition` will be assigned by default:
 
         >>> import psyneulink as pnl
@@ -2370,8 +2376,9 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
+    PredictionErrorDeltaFunction
 from psyneulink.core.components.functions.nonstateful.learningfunctions import \
     LearningFunction, Reinforcement, BackPropagation, TDLearning
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
@@ -2937,7 +2944,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller=None,                   \
         enable_controller=None,            \
         controller_mode=AFTER,             \
-        controller_condition=Always,       \
+        controller_time_scale=TRIAL        \
+        controller_condition=Always(),     \
         retain_old_simulation_data=None,   \
         show_graph_attributes=None,        \
         name=None,                         \
@@ -2966,23 +2974,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `learning mode <Composition.learn>`.
 
     controller : `OptimizationControlMechanism` : default None
-        specifies the `OptimizationControlMechanism` to use as the Composition's `controller
-        <Composition.controller>` (see `Composition_Controller` for details).
+        specifies the `OptimizationControlMechanism` to use as the `Composition's controller
+        <Composition_Controller>`.
 
     enable_controller: bool : default None
         specifies whether the Composition's `controller <Composition.controller>` is executed when the
-        Composition is executed.  Set to True by default if **controller** specified;  if set to False,
-        the `controller <Composition.controller>` is ignored when the Composition is executed.
+        Composition is run.  Set to True by default if **controller** specified (see `enable_controller
+        <Composition.enable_controller>` for additional details).
 
     controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
-        specifies whether the controller is executed before or after the rest of the Composition
-        in each run, trial, pass, or time step.  Must be either the keyword *BEFORE* or *AFTER*.
+        specifies whether the `controller <Composition.controller>` is executed before or after the rest of the
+        Composition when it is run, at the `TimeScale` specified by **controller_time_scale**). Must be either the
+        keyword *BEFORE* or *AFTER* (see `controller_mode <Compositon.controller_mode>` for additional details).
 
     controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
-        specifies with what frequency the the controller should be executed.
+        specifies the frequency at which the `controller <Composition.controller>` is executed, either before or
+        after the Composition is run as specified by **controller_mode** (see `controller_time_scale
+        <Composition.controller_time_scale>` for additional details).
 
-    controller_condition: Condition : default Always
-        specifies when the Composition's `controller <Composition.controller>` is executed in a trial.
+    controller_condition: Condition : default Always()
+        specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is
+        executed  in a trial (see `controller_condition <Compositon.controller_condition>` for additional details).
 
     retain_old_simulation_data : bool : default False
         specifies whether or not to retain Parameter values generated during `simulations
@@ -2990,9 +3002,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>` method
-        is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph` for
-        list of attributes and their values).
+        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
+        method is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph`
+        for list of attributes and their values).
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -3130,18 +3142,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         (see `Composition_Controller` for details).
 
     enable_controller : bool
-        determines whether the Composition's `controller <Composition.controller>` is executed in each trial
-        (see controller_mode <Composition.controller_mode>` for timing of execution).  Set to True by default
-        if `controller <Composition.controller>` is specified.  Setting it to False suppresses exectuion of the
-        `controller <Composition.controller>`.
+        determines whether the Composition's `controller <Composition.controller>` is executed when the Composition
+        is run.  Set to True by default if `controller <Composition.controller>` is specified.  Setting it to False
+        suppresses exectuion of the `controller <Composition.controller>` (see `Composition_Controller_Execution`
+        for additional details, including timing of execution).
 
     controller_mode :  BEFORE or AFTER
-        determines whether the controller is executed before or after the rest of the `Composition`
-        is executed on each trial.
+        determines whether the `controller <Composition.controller>` is executed before or after the rest of the
+        `Composition` when it is run, at the `TimeScale` determined by `controller_time_scale
+        <Composition.controller_time_scale>` (see `Composition_Controller_Execution` for additional details).
+
+    controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
+        deterines the frequency at which the `controller <Composition.controller>` is executed, either before or
+        after the Composition as determined by `controller_mode <cComposition.ontroller_mode>` (see
+        `Composition_Controller_Execution` for additional details).
 
     controller_condition : Condition
-        specifies whether the controller is executed in a given trial.  The default is `Always`, which
-        executes the controller on every trial.
+        determines whether the `controller <Composition.controller>` is executed in a given trial.  The
+        default is `Always()`, which executes the controller on every trial (see `Composition_Controller_Execution`
+        for additional details).
 
     default_execution_id
         if no *context* is specified in a call to run, this *context* is used;  by default,
@@ -7140,6 +7159,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
+        # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
 
@@ -7159,6 +7179,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
+        # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
+        #               ALSO, IF Non-OCM IS USED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
         for input_port in controller.input_ports[1:]:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 for proj in input_port.shadow_inputs.path_afferents:
@@ -7189,7 +7211,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if proj.sender.owner not in nested_cims:
                     proj._activate_for_compositions(self)
 
-        # Check whether controller has input, and if not then disable
+        # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
                 and self.controller.input_ports):
             # If controller was enabled, warn that it has been disabled
@@ -7260,14 +7282,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
 
-        if predicted_input is None:
+        no_predicted_input = (predicted_input is None or not len(predicted_input))
+        if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
+
         nested_nodes = dict(self._get_nested_nodes())
+        # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED
         shadow_inputs_start_index = self.controller.num_outcome_input_ports
         for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
             input_port = self.controller.input_ports[j + shadow_inputs_start_index]
-            if predicted_input is None:
+            if no_predicted_input:
                 shadowed_input = input_port.defaults.value
             else:
                 shadowed_input = predicted_input[j]
@@ -7465,7 +7490,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.controller>` attempts to use the entire input set provided to the `run <Composition.run>`
         method of the `Composition` as input for the call to `run <Composition.run>`. If it is not, the `controller
         <Composition.controller>` uses the inputs slated for its next or previous execution, depending on whether the
-        `controller_mode` of the `Composition` is set to `before` or `after`, respectively.
+        `controller_mode <Composition.controller_mode>` of the `Composition` is set to `before` or `after`,
+        respectively.
 
        .. note::
             Block simulation can not be used if the Composition's stimuli were specified as a generator.
