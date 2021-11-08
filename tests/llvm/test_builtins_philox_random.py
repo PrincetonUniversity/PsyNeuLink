@@ -184,7 +184,7 @@ def test_random_normal_double(benchmark, mode):
         state = init_fun.byref_arg_types[0]()
         init_fun(state, SEED)
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal_double')
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
         out = ctypes.c_double()
         def f():
             gen_fun(state, out)
@@ -195,7 +195,7 @@ def test_random_normal_double(benchmark, mode):
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
         init_fun.cuda_call(gpu_state, np.int64(SEED))
 
-        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal_double')
+        gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_normal')
         out = np.asfarray([0.0], dtype=np.float64)
         gpu_out = pnlvm.jit_engine.pycuda.driver.Out(out)
         def f():

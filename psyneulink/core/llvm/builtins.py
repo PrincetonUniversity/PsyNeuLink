@@ -1553,7 +1553,7 @@ def _load_fi(builder, idx, fptype):
 def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int):
     fptype = gen_float.args[1].type.pointee
     itype = gen_int.args[1].type.pointee
-    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal_{}".format(fptype),
+    builder = _setup_builtin_func_builder(ctx, "philox_rand_normal",
                                          (state_ty.as_pointer(), fptype.as_pointer()))
     state, out = builder.function.args
 
