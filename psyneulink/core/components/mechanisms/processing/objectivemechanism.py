@@ -833,6 +833,8 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     def monitored_output_ports_weights_and_exponents(self, weights_and_exponents_tuples):
         self.monitor_weights_and_exponents = weights_and_exponents_tuples
 
+# FIX: 11/3/21 -- MOVE THIS TO ControlMechanism, AND INTEGRATE WITH ControlMechanism.validate_monitored_port_spec()
+#                 OR MOVE THAT METHOD TO HERE??
 def _parse_monitor_specs(monitor_specs):
     spec_tuple = namedtuple('SpecTuple', 'index spec')
     parsed_specs = []

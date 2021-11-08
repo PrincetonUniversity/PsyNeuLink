@@ -132,7 +132,7 @@ class TestInputPortSpec:
                 default_variable=[[0], [0]],
                 input_ports=[[[32],[24]],'HELLO']
             )
-        assert 'Port value' in str(error_text.value) and 'does not match reference_value' in str(error_text.value)
+        assert 'The value' in str(error_text.value) and 'does not match the reference_value' in str(error_text.value)
 
     # ------------------------------------------------------------------------------------------------
     # TEST 3
