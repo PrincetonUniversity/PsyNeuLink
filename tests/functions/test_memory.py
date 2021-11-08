@@ -6,6 +6,7 @@ import pytest
 import psyneulink.core.components.functions.stateful.memoryfunctions as Functions
 import psyneulink.core.llvm as pnlvm
 from psyneulink import *
+from psyneulink.core.globals.utilities import _SeededPhilox
 
 # **********************************************************************************************************************
 # OMINBUS TEST *********************************************************************************************************
@@ -23,6 +24,10 @@ test_noise_arr = np.random.rand(SIZE)
 
 RAND1 = np.random.random(1)
 RAND2 = np.random.random()
+
+philox_var = np.random.rand(2, SIZE)
+#TODO: Initializer should use different values to test recall
+philox_initializer = np.array([[philox_var[0], philox_var[1]]])
 
 test_data = [
 # Default initializer does not work
@@ -79,6 +84,55 @@ test_data = [
                  [[0.5488135039273248, 0.7151893663724195, 0.6027633760716439, 0.5448831829968969, 0.4236547993389047, 0.6458941130666561, 0.4375872112626925, 0.8917730007820798, 0.9636627605010293, 0.3834415188257777],
                   [0.7917250380826646, 0.5288949197529045, 0.5680445610939323, 0.925596638292661, 0.07103605819788694, 0.08712929970154071, 0.02021839744032572, 0.832619845547938, 0.7781567509498505, 0.8700121482468192]],
                  id="ContentAddressableMemory Initializer"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'seed': module_seed},
+                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
+                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 id="DictionaryMemory (Philox)"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'seed': module_seed},
+                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
+                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 id="DictionaryMemory Rate (Philox)"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
+                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
+                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 id="DictionaryMemory Initializer (Philox)"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
+                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 id="DictionaryMemory Low Retrieval (Philox)"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
+                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 id="DictionaryMemory Low Storage (Philox)"),
+    pytest.param(Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
+                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
+                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 id="DictionaryMemory High Storage/Retrieve (Philox)"),
+# Disable noise tests for now as they trigger failure in DictionaryMemory lookup
+#    (Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'noise':RAND2}, [[
+#       0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606, 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215 ],[
+#       1.3230471933615413, 1.4894230558066361, 1.3769970655058605, 1.3191168724311135, 1.1978884887731214, 1.4201278025008728, 1.2118209006969092, 1.6660066902162964, 1.737896449935246, 1.1576752082599944
+#]]),
+#    (Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'noise':[RAND2], 'retrieval_prob':0.5},
+#       [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
+#    (Functions.DictionaryMemory, philox_var, {'rate':RAND1, 'noise':RAND2, 'storage_prob':0.5},
+#       [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]]),
+#    (Functions.DictionaryMemory, philox_var, {'initializer':test_initializer, 'rate':RAND1, 'noise':RAND2}, [[
+#       0.79172504, 0.52889492, 0.56804456, 0.92559664, 0.07103606, 0.0871293 , 0.0202184 , 0.83261985, 0.77815675, 0.87001215 ],[
+#       1.3230471933615413, 1.4894230558066361, 1.3769970655058605, 1.3191168724311135, 1.1978884887731214, 1.4201278025008728, 1.2118209006969092, 1.6660066902162964, 1.737896449935246, 1.1576752082599944
+#]]),
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.1, 'seed': module_seed},
+                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 id="ContentAddressableMemory Low Retrieval (Philox)"),
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'storage_prob':0.01, 'seed': module_seed},
+                 [[ 0. for i in range(SIZE) ],[ 0. for i in range(SIZE) ]],
+                 id="ContentAddressableMemory Low Storage (Philox)"),
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'rate':RAND1, 'retrieval_prob':0.9, 'storage_prob':0.9, 'seed': module_seed},
+                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
+                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 id="ContentAddressableMemory High Storage/Retrieval (Philox)"),
+    pytest.param(Functions.ContentAddressableMemory, philox_var, {'initializer':test_initializer, 'rate':RAND1, 'seed': module_seed},
+                 [[0.45615033221654855, 0.5684339488686485, 0.018789800436355142, 0.6176354970758771, 0.6120957227224214, 0.6169339968747569, 0.9437480785146242, 0.6818202991034834, 0.359507900573786, 0.43703195379934145],
+                  [0.6976311959272649, 0.06022547162926983, 0.6667667154456677, 0.6706378696181594, 0.2103825610738409, 0.1289262976548533, 0.31542835092418386, 0.3637107709426226, 0.5701967704178796, 0.43860151346232035]],
+                 id="ContentAddressableMemory Initializer (Philox)"),
 ]
 
 @pytest.mark.function
@@ -93,6 +147,8 @@ def test_basic(func, variable, params, expected, benchmark, func_mode):
 
     benchmark.group = func.componentName
     f = func(default_variable=variable, **params)
+    if variable is philox_var:
+        f.parameters.random_state.set(_SeededPhilox([module_seed]))
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
     EX(variable)

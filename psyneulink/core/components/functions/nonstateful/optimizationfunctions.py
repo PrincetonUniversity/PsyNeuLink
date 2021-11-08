@@ -1583,7 +1583,7 @@ class GridSearch(GridBasedOptimizationFunction):
 
                         # Roll a dice to see if we should replace the current min
                         prob = b.fdiv(opt_count.type(1), opt_count)
-                        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+                        rand_f = ctx.get_uniform_dist_function_by_state(random_state)
                         b.call(rand_f, [random_state, rand_out_ptr])
                         rand_out = b.load(rand_out_ptr)
                         replace = b.fcmp_ordered("<", rand_out, prob)

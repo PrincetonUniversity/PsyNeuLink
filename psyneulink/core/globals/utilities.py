@@ -1559,6 +1559,24 @@ class SeededRandomState(np.random.RandomState):
         assert False, "Use 'seed' parameter instead of seeding the random state directly"
 
 
+class _SeededPhilox(np.random.Generator):
+    def __init__(self, *args, **kwargs):
+        # Extract seed
+        self.used_seed = (kwargs.get('seed', None) or args[0])[:]
+        state = np.random.Philox([self.used_seed])
+        super().__init__(state)
+
+    def __deepcopy__(self, memo):
+        # There's no easy way to deepcopy parent first.
+        # Create new instance and rewrite the state.
+        dup = type(self)(seed=self.used_seed)
+        dup.bit_generator.state = self.bit_generator.state
+        return dup
+
+    def seed(self, seed):
+        assert False, "Use 'seed' parameter instead of seeding the random state directly"
+
+
 _seed = np.int32((time.time() * 1000) % 2**31)
 def get_global_seed(offset=1):
     global _seed
