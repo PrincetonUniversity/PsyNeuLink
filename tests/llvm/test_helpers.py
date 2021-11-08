@@ -20,7 +20,7 @@ VECTOR = np.random.rand(DIM_X)
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_helper_fclamp(mode):
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty,
                                                   double_ptr_ty))
@@ -65,7 +65,7 @@ def test_helper_fclamp(mode):
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_helper_fclamp_const(mode):
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, ctx.int32_ty))
 
@@ -104,7 +104,7 @@ def test_helper_fclamp_const(mode):
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_helper_is_close(mode):
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [double_ptr_ty, double_ptr_ty,
                                                   double_ptr_ty, ctx.int32_ty])
@@ -158,7 +158,7 @@ def test_helper_is_close(mode):
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
 def test_helper_all_close(mode):
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         arr_ptr_ty = ir.ArrayType(ir.DoubleType(), DIM_X).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty,
                                                   ir.IntType(32).as_pointer()])
@@ -202,7 +202,7 @@ def test_helper_all_close(mode):
 @pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
     format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         func_ty = ir.FunctionType(ir.VoidType(), [])
         ir_values_to_check = [ir_argtype(i) for i in values_to_check]
         custom_name = ctx.get_unique_name("test_printf")
@@ -397,8 +397,10 @@ class TestHelperTypegetters:
     (pnlvm.helpers.coth, 1.0, 1.3130352854993313),
     (pnlvm.helpers.csch, 1.0, 0.8509181282393215),
 ])
-def test_helper_numerical(mode, op, var, expected):
-    with pnlvm.LLVMBuilderContext() as ctx:
+@pytest.mark.parametrize('fp_type', [pnlvm.ir.DoubleType(), pnlvm.ir.FloatType()],
+                         ids=lambda x: str(x))
+def test_helper_numerical(mode, op, var, expected, fp_type):
+    with pnlvm.LLVMBuilderContext(fp_type) as ctx:
         func_ty = ir.FunctionType(ir.VoidType(), [ctx.float_ty.as_pointer()])
 
         custom_name = ctx.get_unique_name("numerical")
@@ -419,12 +421,10 @@ def test_helper_numerical(mode, op, var, expected):
         bin_f(ctypes.byref(res))
         res = res.value
     else:
-        # FIXME: this needs to consider ctx.float_ty
-        res = np.array([var], dtype=np.float64)
+        res = np.ctypeslib.as_array(bin_f.byref_arg_types[0](var))
         bin_f.cuda_wrap_call(res)
-        res = res[0]
 
-    assert res == expected
+    assert np.allclose(res, expected)
 
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
@@ -434,7 +434,7 @@ def test_helper_numerical(mode, op, var, expected):
     (np.array([[1,2],[3,4]], dtype=np.float64), np.array([[2,3],[4,5]], dtype=np.float64)),
 ], ids=["vector", "matrix"])
 def test_helper_elementwise_op(mode, var, expected):
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         arr_ptr_ty = ctx.convert_python_struct_to_llvm_ir(var).as_pointer()
 
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty])
@@ -477,7 +477,7 @@ def test_helper_elementwise_op(mode, var, expected):
                [23.,25.,27.]])),
 ])
 def test_helper_recursive_iterate_arrays(mode, var1, var2, expected):
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         arr_ptr_ty = ctx.convert_python_struct_to_llvm_ir(var1).as_pointer()
 
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty, arr_ptr_ty])
