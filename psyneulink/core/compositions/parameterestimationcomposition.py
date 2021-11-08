@@ -117,7 +117,10 @@ Parameter Optimization
 
     * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
-      `parameters <ParameterEstimationComposition.parameters>` are assessed.
+      `parameters <ParameterEstimationComposition.parameters>` are assessed.  The shape of the `variable
+      <Component.variable>` of the `objective_function (i.e., its first positional argument) must be the same as an
+      array containing the `value <OutputPort.value>` of the OutputPort corresponding to each item specified in
+      `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
     * **optimization_function** - specifies the function used to search over values of the `parameters
       <ParameterEstimationComposition.parameters>` in order to optimize the **objective_function**.  It can be any
@@ -246,7 +249,10 @@ class ParameterEstimationComposition(Composition):
         specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>`
         or `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `model
         <ParameterEstimationComposition.model>` according to a specified `objective_function
-        <ParameterEstimationComposition.objective_function>`.
+        <ParameterEstimationComposition.objective_function>`; the shape of its `variable <Component.variable>` of the
+        `objective_function (i.e., its first positional argument) must be the same as an array containing the `value
+        <OutputPort.value>` of the OutputPort corresponding to each item specified in `outcome_variables
+        <ParameterEstimationComposition.outcome_variables>`.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
