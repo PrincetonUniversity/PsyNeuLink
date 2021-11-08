@@ -161,20 +161,33 @@ The following arguments of its constructor are specific to the OptimizationContr
   <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
   `model-based optimization <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
   Composition (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
-  method is called (see `OptimizationControlMechanism_State_Features` below).  Features can be specified using
-  any of the following, singly or combined in a list:
+  method is called (see `OptimizationControlMechanism_State_Features` below). By default, these are the current
+  `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
+  other values can be specified using either or both of the following, either singly or in a list:
 
   * *InputPort specification* -- this can be any form of `InputPort specification <InputPort_Specification>`
     that resolves to an OutputPort from which the InputPort receives a Projection;  the `value
     <OutputPort.value>` of that OutputPort is used as one of the `state_feature_values
     <OptimizationControlMechanism.state_feature_values>` for the `state_features
-    <OptimizationControlMechanism.state_features>` of the OptimizationControlMechanism. Each of these InputPorts is
-    marked as `internal_only <InputPorts.internal_only>` = `True`.
+    <OptimizationControlMechanism.state_features>` of the OptimizationControlMechanism.
+
+    .. technical_note::
+       The InputPorts specified as state_features are  marked as `internal_only <InputPorts.internal_only>` = `True`;
+
+  * *Output specification* -- this can be any form of `OutputPort specification <OutputPort_Specification>`
+    for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition; the `value <OutputPort.value>`
+    of the specified OutputPort is used as one of the `state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` for the `state_features
+    <OptimizationControlMechanism.state_features>` of the OptimizationControlMechanism.
 
   Features can also be added to an existing OptimizationControlMechanism using its `add_state_features` method.  If the
   **state_features** argument is not specified, then the `input <Composition.input_values>` to the `Composition` on
-  the last trial of its execution is used to predict the `net_outcome <ControlMechanism.net_outcome>` for the upcoming
-  trial.
+  the last trial executed is used to predict the `net_outcome <ControlMechanism.net_outcome>` for the upcoming trial;
+  COMMENT:
+      FIX: CONFIRM THE FOLLOWING
+  COMMENT
+  if `controller_mode <OptimizationControlMechanism.controller_mode>` = *AFTER*, the input used is from the trial just
+  executed; if it is *BEFORE*, then it is from the previous trial.
 
 .. _OptimizationControlMechanism_Feature_Function_Arg:
 
@@ -262,7 +275,8 @@ from the items in `monitor_for_control <Control.monitor_for_control>`), it also 
 state_features, listed in its `feature_input_ports <OptimizationControlMechanism.feature_input_ports>` attribute.
 By default, these are the current `input <Composition.input_values>` for the Composition to which the
 OptimizationControlMechanism belongs.  However, different values can be specified, as can a `state_feature_function
-<OptimizationControlMechanism_Feature_Function>` that transforms these.  For OptimizationControlMechanisms that
+<OptimizationControlMechanism_Feature_Function>` that transforms these (see `above
+<OptimizationControlMechanism_State_Features_Arg>`).  For OptimizationControlMechanisms that
 implement `model-free <OptimizationControlMechanism_Model_Free>` optimization, its `state_feature_value
 <OptimizationControlMechanism.state_feature_values>` are used by its `evaluate_agent_rep
 <OptimizationControlMechanism.evaluate_agent_rep>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
