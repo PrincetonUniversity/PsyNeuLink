@@ -1117,7 +1117,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 rng = np.random.RandomState()
                 rng.seed(self.initial_seed)
                 return rng.random_integers(self.num_estimates)
-            random_seeds = SampleSpec(num=self.num_estimates, function=random_integer_generator)
+            random_seed_modulation_values = SampleSpec(num=self.num_estimates, function=random_integer_generator)
 
             # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -1128,7 +1128,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # Construct ControlSignal to modify seeds over estimates
             self.output_ports.append(ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
                                                    modulates=seed_param_ports,
-                                                   allocation_samples=random_seeds))
+                                                   allocation_samples=random_seed_modulation_values))
 
         for i, spec in enumerate(self.output_ports):
             control_signal = self._instantiate_control_signal(spec, context=context)

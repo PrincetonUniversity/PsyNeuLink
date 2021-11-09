@@ -84,8 +84,6 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                              model = comp if model_spec else None,
                                              nodes = comp if node_spec else None,
                                              # data = [1,2,3],    # For testing error
-                                             state_features=[Input.input_port, reward.input_port],
-                                             state_feature_function=pnl.AdaptiveIntegrator(rate=0.1),
                                              parameters={('drift_rate',Decision):[1,2],
                                                          ('threshold',Decision2):[1,2],},
                                              # parameters={('shrimp_boo',Decision):[1,2],   # For testing error

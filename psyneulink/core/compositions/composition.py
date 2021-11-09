@@ -7276,8 +7276,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
+    # FIX: 11/3/21 GET RID OF THIS ANC CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
+    #      CHECK WHETHER feture_inputs ADD TO OR REPLACE shadowed_inputs
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
+        # FIX: 11/3/21:  outcome_input_ports is now the assumption;
+        #                and feature_input_ports should be assigned for inputs for shadow_inputs
         # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are state_features
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
