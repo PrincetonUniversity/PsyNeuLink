@@ -430,6 +430,7 @@ class TestControlSpecification:
         assert result == [[5]]
         assert internal_mech.mod_afferents[0].sender.owner == inner_comp.controller
 
+
 class TestControlMechanisms:
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):

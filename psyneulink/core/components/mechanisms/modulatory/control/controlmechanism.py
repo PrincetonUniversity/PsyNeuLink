@@ -1485,7 +1485,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         other_input_ports = input_ports or []
 
-        # FIX 11/3/21: THIS SHOULD BE MODIFIED TO BE A LIST, THAT CONTAINS REFERENCES TO THE OUTCOME InputPorts
+        # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
         self.outcome_input_ports = ContentAddressableList(component_type=OutputPort)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it

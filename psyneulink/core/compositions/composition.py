@@ -3134,8 +3134,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         single call to `run <Composition.run>`.
 
     shadows : dict
-        a dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
-        `shadow <InputPort_Shadow_Inputs>` the original Node's input.
+        a dictionary in which the keys are all `Nodes <Composition_Nodes>` in the Composition,
+        and the values of each is a list of any Nodes that `shadow <InputPort_Shadow_Inputs>` it's input.
 
     controller : OptimizationControlMechanism
         identifies the `OptimizationControlMechanism` used as the Composition's controller
@@ -7146,6 +7146,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.remove_projection(proj)
                 self.controller.composition=None
 
+        # Assign mutual references between Composition and controller
         controller.composition = self
         self.controller = controller
         # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
@@ -7158,6 +7159,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
+
+        # If the controller doesn't have any feature_input_ports, add ones from Composition's INPUT Nodes
+        if not controller.feature_input_ports:
+            # FIX: 11/3/21: NEED TO ENSURE THAT ADDED INPUTPORTS HAVE shadow_inputs ATTRIBUTE SET TO True
+            shadow_inputs = controller._parse_state_feature_specs(self.get_nodes_by_role(NodeRole.INPUT),
+                                                                  None, context=context)
+            controller.add_ports(shadow_inputs, update_variable=False, context=context)
+            controller.feature_input_ports.append(shadow_inputs)
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
@@ -7174,14 +7183,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadows_dict(controller)
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
-        # Skip controller's first (OUTCOME) input_port (that receives the Projection from its objective_mechanism
         nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
         input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
         # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
-        #               ALSO, IF Non-OCM IS USED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
-        for input_port in controller.input_ports[1:]:
+        #               ALSO, IF Non-OCM IS ALLOWED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
+        # Skip controller's outcome_input_ports
+        #    (that receive Projections from its objective_mechanism and/or directed from items in monitor_for_control
+        for input_port in controller.input_ports[controller.num_outcome_input_ports:]:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 for proj in input_port.shadow_inputs.path_afferents:
                     try:
@@ -7508,8 +7518,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         independently sampled seed for the random number generator.  All values are reset to pre-simulation
         values at the end of the simulation.
 
-        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of
-        the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
+        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of the `agent_rep
+        <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
         an array with the results of each run is also returned.
         """
 

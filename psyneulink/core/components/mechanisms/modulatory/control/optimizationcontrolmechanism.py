@@ -269,15 +269,15 @@ and that is returned by `evaluation` method of theOptimizationControlMechanism's
 *State Features*
 ^^^^^^^^^^^^^^^^
 
-In addition to its `outcome_input_ports <ControlMechanism.outcome_input_ports>` (that receive Projections from
+In addition to its `outcome_input_ports <ControlMechanism.outcome_input_ports>`, that receive Projections from
 either the OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` or directly
-from the items in `monitor_for_control <Control.monitor_for_control>`), it also has an `InputPort` for each of its
-state_features, listed in its `feature_input_ports <OptimizationControlMechanism.feature_input_ports>` attribute.
+from the items in `monitor_for_control <Control.monitor_for_control>`, it also has `InputPorts <InputPort>` for any
+state_features listed in its `feature_input_ports <OptimizationControlMechanism.feature_input_ports>` attribute.
 By default, these are the current `input <Composition.input_values>` for the Composition to which the
 OptimizationControlMechanism belongs.  However, different values can be specified, as can a `state_feature_function
 <OptimizationControlMechanism_Feature_Function>` that transforms these (see `above
 <OptimizationControlMechanism_State_Features_Arg>`).  For OptimizationControlMechanisms that
-implement `model-free <OptimizationControlMechanism_Model_Free>` optimization, its `state_feature_value
+implement `model-free <OptimizationControlMechanism_Model_Free>` optimization, its `state_feature_values
 <OptimizationControlMechanism.state_feature_values>` are used by its `evaluate_agent_rep
 <OptimizationControlMechanism.evaluate_agent_rep>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
 for a given `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that
@@ -613,7 +613,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value on construction (see `initial_seed
+        If it is not specified then then the seed is set to a random value (see `initial_seed
         <OptimizationControlMechanism.initial_seed>` for additional information).
 
     same_seed_for_all_parameter_combinations :  bool : default False
@@ -690,7 +690,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value on construction, and different runs of a
+        If it is not specified then then the seed is set to a random value, and different runs of a
         Composition containing the OptimizationControlMechanism will yield different results, which should be roughly
         comparable if the estimation process is stable.  If **initial_seed** is specified, then running the Composition
         should yield identical results for the estimation process, which can be useful for debugging.
@@ -772,6 +772,8 @@ class OptimizationControlMechanism(ControlMechanism):
         <Mechanism_Base.output_ports>` attribute. Each sends a `ControlProjection` to the `ParameterPort` for the
         Parameter it controls when evaluating a `control_allocation <ControlMechanism.control_allocation>`.
 
+        .. _OptimizationControlMechanism_Randomization:
+
         .. technical_note::
             If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
             a `ControlSignal` is added to control_signals, named *RANDOMIZATION_CONTROL_SIGNAL*, to modulate the
@@ -786,25 +788,22 @@ class OptimizationControlMechanism(ControlMechanism):
             <ControlMechanism.control_allocation>` of the other ControlSignals (i.e., the ones for the parameters
             being optimized).  The *RANDOMIZATION_CONTROL_SIGNAL* is included when constructing the
             `control_allocation_search_space <OptimizationFunction.control_allocation_search_space>` passed to the
-            OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` as its
-            `search_space <OptimizationFunction.search_space>`, along with the index of
-            the *RANDOMIZATION_CONTROL_SIGNAL* as its `randomization_dimension <>
-
-
-
-             The `initial_seed <OptimizationControlMechanism.initial_seed>` and
+            OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` constructor as its
+            **search_space** argument, along with the index of the *RANDOMIZATION_CONTROL_SIGNAL* as its
+            **randomization_dimension** argument. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
              `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`
              Parameters can be used to further refine this behavior.
 
     control_allocation_search_space : list of SampleIterators
-        `search_space <OptimizationFunction.search_space>` assigned by default to `function
-        <OptimizationControlMechanism.function>`, that determines the samples of
-        `control_allocation <ControlMechanism.control_allocation>` evaluated by the `evaluate_agent_rep
+        `search_space <OptimizationFunction.search_space>` assigned by default to the
+        OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`, that determines the
+        samples of `control_allocation <ControlMechanism.control_allocation>` evaluated by the `evaluate_agent_rep
         <OptimizationControlMechanism.evaluate_agent_rep>` method.  This is a proprety that, unless overridden,
         returns a list of the `SampleIterators <SampleIterator>` generated from the `allocation_sample
         <ControlSignal.allocation_sample>` specifications for each of the OptimizationControlMechanism's
-        `control_signals <OptimizationControlMechanism.control_signals>`.
-        # FIX: 11/3/21 ADD MENTION OF RANDOMIZATION CONTROL SIGNAL AND RAND DIM PASSED TO OPTIMIZAITON FUNCTION
+        `control_signals <OptimizationControlMechanism.control_signals>`, and includes the
+        *RANDOMIZATION_CONTROL_SIGNAL* used to randomize estimates of each `control_allocation
+        <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization>` above).
 
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
@@ -1068,6 +1067,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Assign to self.feature_input_ports
         start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         stop = start + len(feature_input_ports) if feature_input_ports else 0
+        # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
         self.feature_input_ports = ContentAddressableList(component_type=InputPort,
                                                           list=self.input_ports[start:stop])
 
@@ -1113,11 +1113,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if self.num_estimates:
             # Construct iterator for seeds used to randomize estimates
-            def random_integer_generator():
-                rng = np.random.RandomState()
-                rng.seed(self.initial_seed)
-                return rng.random_integers(self.num_estimates)
-            random_seed_modulation_values = SampleSpec(num=self.num_estimates, function=random_integer_generator)
+            # if seed_randomization:
+            #     def random_integer_generator():
+            #         rng = np.random.RandomState()
+            #         rng.seed(self.initial_seed)
+            #         return rng.random_integers(self.num_estimates)
+            #     randomization_seed_mod_values = SampleSpec(num=self.num_estimates, function=random_integer_generator)
+            # else:
+            #     randomization_seed_mod_values = SampleSpec(start=1,stop=self.num_estimates,step=1)
+
+            randomization_seed_mod_values = SampleSpec(start=1,stop=self.num_estimates,step=1)
 
             # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
@@ -1128,7 +1133,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # Construct ControlSignal to modify seeds over estimates
             self.output_ports.append(ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
                                                    modulates=seed_param_ports,
-                                                   allocation_samples=random_seed_modulation_values))
+                                                   allocation_samples=randomization_seed_mod_values))
 
         for i, spec in enumerate(self.output_ports):
             control_signal = self._instantiate_control_signal(spec, context=context)

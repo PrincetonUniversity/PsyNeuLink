@@ -98,10 +98,6 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                              )
     ctlr = pec.controller
 
-    assert comp.controller.num_feature_input_ports == 2
-    assert comp.controller.feature_input_ports[0].function.name == pnl.AdaptiveIntegrator.__class__.__name__
-    assert comp.controller.feature_input_ports[1].function.name == pnl.AdaptiveIntegrator.__class__.__name__
-
     assert ctlr.num_outcome_input_ports == 1
     if objective_function_arg:
         assert ctlr.objective_mechanism                         # For objective_function specified
