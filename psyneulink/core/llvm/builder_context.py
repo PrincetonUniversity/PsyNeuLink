@@ -55,7 +55,8 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close', 'mt_rand_init'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close', 'mt_rand_init',
+                                 'philox_rand_init'))
 
 
 class _node_wrapper():
@@ -154,6 +155,7 @@ class LLVMBuilderContext:
 
             # PRNG
             pnlvm.builtins.setup_mersenne_twister(ctx)
+            pnlvm.builtins.setup_philox(ctx)
 
             # Matrix/Vector
             pnlvm.builtins.setup_vxm(ctx)
@@ -173,6 +175,19 @@ class LLVMBuilderContext:
 
         if "time_stat" in debug_env:
             print("Time to setup PNL builtins: {}".format(finish - start))
+
+    def get_uniform_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_double")
+        if len(state.type.pointee) == 7:
+            return self.import_llvm_function("__pnl_builtin_philox_rand_{}".format(str(self.float_ty)))
+
+    def get_normal_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        if len(state.type.pointee) == 7:
+            # Normal exists only for self.float_ty
+            return self.import_llvm_function("__pnl_builtin_philox_rand_normal")
 
     def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:
@@ -234,7 +249,11 @@ class LLVMBuilderContext:
 
     def get_random_state_ptr(self, builder, component, state, params):
         random_state_ptr = helpers.get_state_ptr(builder, component, state, "random_state")
-        used_seed_ptr = builder.gep(random_state_ptr, [self.int32_ty(0), self.int32_ty(4)])
+
+
+        # Used seed is the last member of both MT state and Philox state
+        seed_idx = len(random_state_ptr.type.pointee) - 1
+        used_seed_ptr = builder.gep(random_state_ptr, [self.int32_ty(0), self.int32_ty(seed_idx)])
         used_seed = builder.load(used_seed_ptr)
 
         seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
@@ -247,7 +266,11 @@ class LLVMBuilderContext:
 
         seeds_cmp = builder.icmp_unsigned("!=", used_seed, new_seed)
         with builder.if_then(seeds_cmp, likely=False):
-            reseed_f = self.get_builtin("mt_rand_init")
+            if seed_idx == 4:
+                reseed_f = self.get_builtin("mt_rand_init")
+            elif seed_idx == 6:
+                reseed_f = self.get_builtin("philox_rand_init")
+
             builder.call(reseed_f, [random_state_ptr, new_seed])
 
         return random_state_ptr
@@ -401,6 +424,9 @@ class LLVMBuilderContext:
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
+        elif isinstance(t, np.random.Generator):
+            assert isinstance(t.bit_generator, np.random.Philox)
+            return pnlvm.builtins.get_philox_state_struct(self)
         elif isinstance(t, Time):
             return ir.ArrayType(self.int32_ty, len(TimeScale))
         elif isinstance(t, SampleIterator):
@@ -514,7 +540,9 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        if t.width == 8:
+        if t.width == 1:
+            return ctypes.c_bool
+        elif t.width == 8:
             return ctypes.c_int8
         elif t.width == 16:
             return ctypes.c_int16

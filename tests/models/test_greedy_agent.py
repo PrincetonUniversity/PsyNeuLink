@@ -13,6 +13,7 @@ from psyneulink.core.components.ports.inputport import SHADOW_INPUTS
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition, NodeRole
 from psyneulink.core.globals.keywords import VARIANCE, NORMED_L0_SIMILARITY
+from psyneulink.core.globals.utilities import _SeededPhilox
 from psyneulink.library.components.mechanisms.processing.objective.comparatormechanism import ComparatorMechanism
 
 
@@ -117,7 +118,8 @@ def test_simplified_greedy_agent_random(benchmark, comp_mode):
     pytest.param([0,2,4,6,8,10], marks=pytest.mark.stress),
     pytest.param([a / 10.0 for a in range(0, 101)]),
 ], ids=lambda x: len(x))
-def test_predator_prey(benchmark, mode, samples):
+@pytest.mark.parametrize('prng', ['Default', 'Philox'])
+def test_predator_prey(benchmark, mode, prng, samples):
     if len(samples) > 10 and mode not in {pnl.ExecutionMode.LLVM,
                                           pnl.ExecutionMode.LLVMExec,
                                           pnl.ExecutionMode.LLVMRun,
@@ -214,6 +216,12 @@ def test_predator_prey(benchmark, mode, samples):
     agent_comp.add_controller(ocm)
     agent_comp.enable_controller = True
     ocm.comp_execution_mode = ocm_mode
+
+    if prng == 'Philox':
+        player_obs.function.parameters.random_state.set(_SeededPhilox([0]))
+        prey_obs.function.parameters.random_state.set(_SeededPhilox([0]))
+        predator_obs.function.parameters.random_state.set(_SeededPhilox([0]))
+        ocm.function.parameters.random_state.set(_SeededPhilox([0]))
 
     input_dict = {player_pos:[[1.1576537,  0.60782117]],
                   predator_pos:[[-0.03479106, -0.47666293]],

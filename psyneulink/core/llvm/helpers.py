@@ -128,6 +128,19 @@ def load_extract_scalar_array_one(builder, ptr):
     return val
 
 
+def umul_lo_hi(builder, a, b):
+    assert a.type.width == b.type.width
+
+    a_val = builder.zext(a, ir.IntType(a.type.width * 2))
+    b_val = builder.zext(b, ir.IntType(b.type.width * 2))
+    res = builder.mul(a_val, b_val)
+
+    lo = builder.trunc(res, a.type)
+    hi = builder.lshr(res, res.type(a.type.width))
+    hi = builder.trunc(hi, a.type)
+    return lo, hi
+
+
 def fneg(builder, val, name=""):
     return builder.fsub(val.type(-0.0), val, name)
 
@@ -135,6 +148,15 @@ def fneg(builder, val, name=""):
 def exp(ctx, builder, x):
     exp_f = ctx.get_builtin("exp", [x.type])
     return builder.call(exp_f, [x])
+
+def log(ctx, builder, x):
+    log_f = ctx.get_builtin("log", [x.type])
+    return builder.call(log_f, [x])
+
+def log1p(ctx, builder, x):
+    log_f = ctx.get_builtin("log", [x.type])
+    x1p = builder.fadd(x, x.type(1))
+    return builder.call(log_f, [x1p])
 
 def sqrt(ctx, builder, x):
     sqrt_f = ctx.get_builtin("sqrt", [x.type])

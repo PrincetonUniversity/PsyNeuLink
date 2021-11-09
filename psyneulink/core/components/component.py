@@ -1335,6 +1335,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
+            elif isinstance(x, np.random.Generator):
+                state = x.bit_generator.state
+                val = pnlvm._tupleize((state['state']['counter'], state['state']['key'],
+                                       state['buffer'], state['uinteger'], state['buffer_pos'],
+                                       state['has_uint32'], x.used_seed[0]))
             elif isinstance(x, Time):
                 val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
