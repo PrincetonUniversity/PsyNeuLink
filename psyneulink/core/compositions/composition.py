@@ -7162,11 +7162,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # If the controller doesn't have any feature_input_ports, add ones from Composition's INPUT Nodes
         if not controller.feature_input_ports:
-            # FIX: 11/3/21: NEED TO ENSURE THAT ADDED INPUTPORTS HAVE shadow_inputs ATTRIBUTE SET TO True
-            shadow_inputs = controller._parse_state_feature_specs(self.get_nodes_by_role(NodeRole.INPUT),
-                                                                  None, context=context)
-            controller.add_ports(shadow_inputs, update_variable=False, context=context)
-            controller.feature_input_ports.append(shadow_inputs)
+            input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+            for node in input_nodes:
+                # FIX: 11/3/21 NEED TO DEAL WITH NESTED COMP AS INPUT NODE [MAKE METHOD THAT DOES ALL THIS]
+                feature_input_ports = []
+                for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
+                    feature_input_ports.append(input_port)
+            # controller._parse_state_feature_specs(controller, feature_input_ports)
+            controller.add_ports(feature_input_ports, update_variable=False, context=context)
+            controller.feature_input_ports.append(feature_input_ports)
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
@@ -7248,7 +7252,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
                                                    context=context)
             controller.control.append(ctl_signal)
-            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
+            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
             #                ?DON'T ASSIGN ControlProjection?
             #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
             #                ?PUT IT IN aux_components FOR NODE?
