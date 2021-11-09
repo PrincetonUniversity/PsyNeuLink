@@ -620,11 +620,20 @@ class OptimizationFunction(Function_Base):
              BASED ON LOGIC OF GRID: IF EVERY DIMENSION IS SimpleIterator (I.E., STATIC)
         PUT IN search_space_evalute: IF SAME_SEED, BREAK UP GRID INTO ONES FOR EACH SEEDED SET
 
+        self.search_space_evalute()
+
+        CALL AGGREGRATE_FUNCTION WITH ARRAY RETURNED BY search_space_evalute AND RETURN PROCESSED ARRAY OF RESULTS
+        new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
+
+        return new_sample, new_value, samples, values
+
+    def search_space_evaluate()
+
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
                                         context=context):
-            if _show_progress:
+            if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
                 if increment_progress_bar:
                     print(_progress_bar_char, end='', flush=True)
@@ -652,10 +661,6 @@ class OptimizationFunction(Function_Base):
                 values.append(current_value)
                 self.parameters.saved_values._set(values, context)
 
-        CALL AGGREGRATE_FUNCTION WITH ARRAY RETURNED BY search_space_evalute AND RETURN PROCESSED ARRAY OF RESULTS
-        new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
-
-        return new_sample, new_value, samples, values
 
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
