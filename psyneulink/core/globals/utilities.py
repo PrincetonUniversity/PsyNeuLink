@@ -1540,6 +1540,25 @@ def flatten_list(l):
     return [item for sublist in l for item in sublist]
 
 
+# Seeds and randomness
+
+class SeededRandomState(np.random.RandomState):
+    def __init__(self, *args, **kwargs):
+        # Extract seed
+        self.used_seed = (kwargs.get('seed', None) or args[0])[:]
+        super().__init__(*args, **kwargs)
+
+    def __deepcopy__(self, memo):
+        # There's no easy way to deepcopy parent first.
+        # Create new instance and rewrite the state.
+        dup = type(self)(seed=self.used_seed)
+        dup.set_state(self.get_state())
+        return dup
+
+    def seed(self, seed):
+        assert False, "Use 'seed' parameter instead of seeding the random state directly"
+
+
 _seed = np.int32((time.time() * 1000) % 2**31)
 def get_global_seed(offset=1):
     global _seed
