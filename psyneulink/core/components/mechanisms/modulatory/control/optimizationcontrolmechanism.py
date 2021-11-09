@@ -156,14 +156,15 @@ The following arguments of its constructor are specific to the OptimizationContr
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
-* **state_features** -- takes the place of the standard **input_ports** argument in the constructor for a Mechanism`,
-  and specifies the values used by the OptimizationControlMechanism, together with a `control_allocation
-  <ControlMechanism.control_allocation>`, to calculate a `net_outcome <ControlMechanism.net_outcome>`.  For
-  `model-based optimization <OptimizationControlMechanism_Model_Based>` these are also used as the inputs to the
-  Composition (i.e., `agent_rep <OptimizationControlMechanism.agent_rep>`) when it's `evaluate <Composition.evaluate>`
-  method is called (see `OptimizationControlMechanism_State_Features` below). By default, these are the current
-  `input <Composition.input_values>` for the Composition to which the OptimizationControlMechanism belongs.  However,
-  other values can be specified using either or both of the following, either singly or in a list:
+* **state_features** -- specifies the values used by the OptimizationControlMechanism, together with a
+  `control_allocation <ControlMechanism.control_allocation>`, to calculate a `net_outcome
+  <ControlMechanism.net_outcome>`.  By default, these are the current `input <Composition.input_values>` for the
+  Composition to which the OptimizationControlMechanism belongs.  However, other values can be specified, in which
+  case those replace the inputs to the Composition which, if still desired, must be explicitly specified.  If all
+  of the inputs to the Composition are still required, these can be specified using the keyword *INPUTS*, in which
+  case they are retained along with any others specified.  Individual inputs to the Composition can be specified,
+  as well as the inputs to or outputs of any of its `Nodes <Composition_Nodes>`, using any of the following, either
+  singly or in a list:
 
   * *InputPort specification* -- this can be any form of `InputPort specification <InputPort_Specification>`
     that resolves to an OutputPort from which the InputPort receives a Projection;  the `value

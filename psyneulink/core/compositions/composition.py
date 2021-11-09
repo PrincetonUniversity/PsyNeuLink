@@ -3002,7 +3002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
         method is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph`
         for list of attributes and their values).
 
