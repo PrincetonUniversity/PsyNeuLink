@@ -90,8 +90,8 @@ jobs:
     - name: Add git tag
       # The generated docs include PNL version,
       # set it to a fixed value to prevent polluting the diff
-      if: ${{ github.event_name == 'pull_request' }}
-      run: git tag 'v999.999.999.999'
+      if: github.event_name == 'pull_request'
+      run: git tag --force 'v999.999.999.999'
 
     - name: Build Documentation
       run: make -C docs/ html -e SPHINXOPTS="-aE -j auto"
@@ -99,7 +99,7 @@ jobs:
     - name: Remove git tag
       # The generated docs include PNL version,
       # This was set to a fixed value to prevent polluting the diff
-      if: ${{ github.event_name == 'pull_request' }}
+      if: github.event_name == 'pull_request' && always()
       run: git tag -d 'v999.999.999.999'
 
     - name: Upload Documentation
