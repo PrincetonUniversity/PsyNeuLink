@@ -1074,7 +1074,6 @@ class TestControlMechanisms:
         comp.add_controller(
             pnl.OptimizationControlMechanism(
                 objective_mechanism=obj,
-                # state_features=mech.input_port,
                 control_signals=pnl.ControlSignal(
                     modulates=('intercept', mech),
                     modulation=pnl.OVERRIDE,

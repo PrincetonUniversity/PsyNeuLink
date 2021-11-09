@@ -615,6 +615,11 @@ class OptimizationFunction(Function_Base):
             _progress_bar_count = 0
         # Iterate optimization process
 
+        REPLACE THE WHILE LOOP WITH search_space_evalute() THAT USES num_estimates: \
+             BRANCH ON generic or _grid_evalue;  RETURN ARRAY OF RESULTS
+             BASED ON LOGIC OF GRID: IF EVERY DIMENSION IS SimpleIterator (I.E., STATIC)
+        PUT IN search_space_evalute: IF SAME_SEED, BREAK UP GRID INTO ONES FOR EACH SEEDED SET
+
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
@@ -629,13 +634,8 @@ class OptimizationFunction(Function_Base):
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
 
             # Generate num_estimates of sample, then apply aggregation_function and return result
-            estimates = []
-            num_estimates = self.num_estimates
-            for i in range(num_estimates):
-                estimate = call_with_pruned_args(self.objective_function, new_sample, context=context)
-                estimates.append(estimate)
-            new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
-            self._report_value(new_value)
+            estimate = call_with_pruned_args(self.objective_function, new_sample, context=context)
+            self._report_value(estimate)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
@@ -652,6 +652,9 @@ class OptimizationFunction(Function_Base):
                 values.append(current_value)
                 self.parameters.saved_values._set(values, context)
 
+        CALL AGGREGRATE_FUNCTION WITH ARRAY RETURNED BY search_space_evalute AND RETURN PROCESSED ARRAY OF RESULTS
+        new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
+
         return new_sample, new_value, samples, values
 
     def _report_value(self, new_value):
@@ -659,7 +662,7 @@ class OptimizationFunction(Function_Base):
         pass
 
 
-class GridBasedOptimizationFunction(OptimizationFunction):
+class  (OptimizationFunction):
     """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
 
     def _grid_evaluate(self, ocm, context):
