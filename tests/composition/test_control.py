@@ -1052,6 +1052,7 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.parametrize("cost, expected, exp_values", [
+        # FIX: 11/3/21: NEED TO CHANGE expected (and exp_values?) NOW THAT feature_input_ports IS IMPLEMENTED
         (pnl.CostFunctions.NONE, 7.0, [1, 2, 3, 4, 5]),
         (pnl.CostFunctions.INTENSITY, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591]),
         (pnl.CostFunctions.ADJUSTMENT, 3, [1, 1, 1, 1, 1] ),
