@@ -372,9 +372,8 @@ until the `search_termination_function <OptimizationFunction.search_termination_
 `control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
 <OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>` method. Randomization over
-estimates can be configured using the OptimizationControlMechanism's `initial_seed
-<OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
-<OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters; see `control_signals
+estimates can be configured using the OptimizationControlMechanism's `same_randomization_for_all_allocations
+<OptimizationControlMechanism.same_randomization_for_all_allocations>` Parameter; see `control_signals
 <OptimizationControlMechanism.control_signals>` for additional information.  The results of the independent
 estimates are aggregated by the `aggregation_function <OptimizationControlMechanism.aggregation_function>` of the
 `OptimizationFunction` assigned to the OptimizationControlMechanism's `function <OptimizationControlMechanism>`,
@@ -557,26 +556,25 @@ def _control_allocation_search_space_getter(owning_component=None, context=None)
 
 
 class OptimizationControlMechanism(ControlMechanism):
-    """OptimizationControlMechanism(                    \
-        objective_mechanism=None,                       \
-        monitor_for_control=None,                       \
-        origin_objective_mechanism=False                \
-        terminal_objective_mechanism=False              \
-        state_features=None,                            \
-        state_feature_function=None,                    \
-        function=GridSearch,                            \
-        agent_rep=None,                                 \
-        num_estimates=1,                                \
-        initial_seed=None,                              \
-        same_seed_for_all_parameter_combinations=False  \
-        num_trials_per_estimate=None,                   \
-        search_function=None,                           \
-        search_termination_function=None,               \
-        search_space=None,                              \
-        control_signals=None,                           \
-        modulation=MULTIPLICATIVE,                      \
-        combine_costs=np.sum,                           \
-        compute_reconfiguration_cost=None,              \
+    """OptimizationControlMechanism(                             \
+        objective_mechanism=None,                                \
+        monitor_for_control=None,                                \
+        origin_objective_mechanism=False                         \
+        terminal_objective_mechanism=False                       \
+        state_features=None,                                     \
+        state_feature_function=None,                             \
+        function=GridSearch,                                     \
+        agent_rep=None,                                          \
+        num_estimates=1,                                         \
+        same_randomization_for_all_parameter_combinations=True   \
+        num_trials_per_estimate=None,                            \
+        search_function=None,                                    \
+        search_termination_function=None,                        \
+        search_space=None,                                       \
+        control_signals=None,                                    \
+        modulation=MULTIPLICATIVE,                               \
+        combine_costs=np.sum,                                    \
+        compute_reconfiguration_cost=None,                       \
         compute_net_outcome=lambda x,y:x-y)
 
     Subclass of `ControlMechanism <ControlMechanism>` that adjusts its `ControlSignals <ControlSignal>` to optimize
@@ -611,15 +609,11 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.control_allocation>` sampled (see `num_estimates
         <OptimizationControlMechanism.num_estimates>` for additional information).
 
-    initial_seed : int : default None
-        specifies the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value (see `initial_seed
-        <OptimizationControlMechanism.initial_seed>` for additional information).
-
-    same_seed_for_all_parameter_combinations :  bool : default False
-        specifies whether the random number generator is re-initialized to the same value when estimating each
-        `control_allocation <ControlMechanism.control_allocation>` (see `same_seed_for_all_parameter_combinations
-        <OptimizationControlMechanism.same_seed_for_all_allocations>` for additional information).
+    same_randomization_for_all_parameter_combinations :  bool : default False
+        specifies whether the random number generator is re-initialized to the
+        same value at the start of estimating each `control_allocation <ControlMechanism.control_allocation>`
+        (see `same_randomization_for_all_parameter_combinations
+        <OptimizationControlMechanism.same_randomization_for_all_allocations>` for additional information).
 
     num_trials_per_estimate : int : default None
         specifies the number of trials to execute in each run of `agent_rep
@@ -688,25 +682,18 @@ class OptimizationControlMechanism(ControlMechanism):
         that are specified by its `search_space <OptimizationFunction.search_space>`).
         # FIX: 11/3/21 ADD POINTER TO DESCRIPTINO OF RAONDIMZATION CONTROL SIGNAL
 
-    initial_seed : int or None
-        determines the seed used to initialize the random number generator at construction.
-        If it is not specified then then the seed is set to a random value, and different runs of a
-        Composition containing the OptimizationControlMechanism will yield different results, which should be roughly
-        comparable if the estimation process is stable.  If **initial_seed** is specified, then running the Composition
-        should yield identical results for the estimation process, which can be useful for debugging.
-
-    same_seed_for_all_allocations :  bool
+    same_randomization_for_all_allocations :  bool
         determines whether the random number generator used to select seeds for each estimate of the `agent_rep
         <OptimizationControlMechanism.agent_rep>`\\'s `net_outcome <ControlMechanism.net_outcome>` is re-initialized
         to the same value for each `control_allocation <ControlMechanism.control_allocation>` evaluated.
-        If same_seed_for_all_allocations is True, then any differences in the estimates made of `net_outcome
-        <ControlMechanism.net_outcome>` for each `control_allocation <ControlMechanism.control_allocation>` will reflect
-        exclusively the influence of the different control_allocations on the execution of the `agent_rep
+        If same_randomization_for_all_allocations is True, then any differences in the estimates made of `net_outcome
+        <ControlMechanism.net_outcome>` for each `control_allocation <ControlMechanism.control_allocation>` will
+        reflect exclusively the influence of the different control_allocations on the execution of the `agent_rep
         <OptimizationControlMechanism.agent_rep>`, and *not* any variability intrinsic to the execution of
         the Composition itself (e.g., any of its Components). This can be confirmed by identical results for repeated
         executions of the OptimizationControlMechanism's `evaluate_agent_rep
         <OptimizationControlMechanism.evaluate_agent_rep>` method for the same `control_allocation
-        <ControlMechanism.control_allocation>`. If same_seed_for_all_allocations is False, then each time a
+        <ControlMechanism.control_allocation>`. If same_randomization_for_all_allocations is False, then each time a
         `control_allocation <ControlMechanism.control_allocation>` is estimated, it will use a different set of seeds.
         This can be confirmed by differing results for repeated executions of the OptimizationControlMechanism's
         `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method with the same `control_allocation
@@ -790,9 +777,9 @@ class OptimizationControlMechanism(ControlMechanism):
             `control_allocation_search_space <OptimizationFunction.control_allocation_search_space>` passed to the
             OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` constructor as its
             **search_space** argument, along with the index of the *RANDOMIZATION_CONTROL_SIGNAL* as its
-            **randomization_dimension** argument. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
-             `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`
-             Parameters can be used to further refine this behavior.
+            **randomization_dimension** argument. The`same_randomization_for_all_allocations
+            <OptimizationControlMechanism.same_randomization_for_all_allocations>`  Parameter
+            can be used to further refine this behavior.
 
     control_allocation_search_space : list of SampleIterators
         `search_space <OptimizationFunction.search_space>` assigned by default to the
@@ -937,9 +924,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                          user=False,
                                          pnl_internal=True)
 
-        # FIX: Should any of these be stateful?
-        initial_seed = None
-        same_seed_for_all_allocations = False
+        same_randomization_for_all_allocations = True
         num_estimates = None
         num_trials_per_estimate = None
 
@@ -957,8 +942,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
                  state_feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
-                 initial_seed=None,
-                 same_seed_for_all_allocations=None,
+                 same_randomization_for_all_allocations=None,
                  num_trials_per_estimate = None,
                  search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
@@ -1018,8 +1002,7 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_function=state_feature_function,
             num_estimates=num_estimates,
             num_trials_per_estimate = num_trials_per_estimate,
-            initial_seed=initial_seed,
-            same_seed_for_all_allocations=same_seed_for_all_allocations,
+            same_randomization_for_all_allocations=same_randomization_for_all_allocations,
             search_statefulness=search_statefulness,
             search_function=search_function,
             search_termination_function=search_termination_function,
@@ -1112,15 +1095,6 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         if self.num_estimates:
-            # Construct iterator for seeds used to randomize estimates
-            # if seed_randomization:
-            #     def random_integer_generator():
-            #         rng = np.random.RandomState()
-            #         rng.seed(self.initial_seed)
-            #         return rng.random_integers(self.num_estimates)
-            #     randomization_seed_mod_values = SampleSpec(num=self.num_estimates, function=random_integer_generator)
-            # else:
-            #     randomization_seed_mod_values = SampleSpec(start=1,stop=self.num_estimates,step=1)
 
             randomization_seed_mod_values = SampleSpec(start=1,stop=self.num_estimates,step=1)
 
