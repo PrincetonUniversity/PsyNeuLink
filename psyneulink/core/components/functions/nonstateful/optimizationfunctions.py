@@ -379,7 +379,7 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
-        aggregation_function = Parameter(lambda x,n: sum(x) / n, stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x: np.mean(x,axis=x.ndim-1), stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
@@ -435,6 +435,7 @@ class OptimizationFunction(Function_Base):
         if self.search_space:
             # Make randomization dimension of search_space last for standardization of treatment
             self.search_space.append(self.search_space.pop(self.search_space.index(self.randomization_dimension)))
+            self.randomization_dimension = len(self.search_space)
 
         super().__init__(
             default_variable=default_variable,
@@ -603,9 +604,10 @@ class OptimizationFunction(Function_Base):
 
         # If execution mode is not Python and search_space is static, use parallelized evaluation:
         if (self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
-                all(isinstance(sample_iterator.start, int) and isinstance(sample_iterator.stop, int)
+                all(isinstance(sample_iterator.start, Number) and isinstance(sample_iterator.stop, Number)
                     for sample_iterator in self.search_space)):
-            last_sample, last_value, all_samples, all_values = self._grid_evaluate(self.owner, context)
+            all_samples, all_values = self._grid_evaluate(self.owner, context)
+            last_sample = last_value = None
         # Otherwise, default sequential sampling
         else:
             last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
@@ -613,15 +615,14 @@ class OptimizationFunction(Function_Base):
                                                                                          context)
 
         # If  aggregation_function is specified, use it to aggregate over randomization dimension
-        if self.aggregation_function is not None:
-            randomization_dim = self.parameters.randomization_dimension._get(context)
-            all_values = np.apply_along_axis(self.aggregation_function,
-                                             randomization_dim,
-                                             all_values,
-                                             self.num_estimates)
+        if self.aggregation_function:
+            aggregated_values = self.aggregation_function(all_values)
+            returned_values = aggregated_values
+        else:
+            returned_values = all_values
 
         # Return list of unique samples and aggregated values over them
-        return last_sample, last_value, all_samples, all_values
+        return last_sample, last_value, all_samples, returned_values
 
     def _sequential_evaluate(self, initial_sample, initial_value, context):
         """Sequentially evaluate every sample in search_space.
@@ -650,8 +651,8 @@ class OptimizationFunction(Function_Base):
             _progress_bar_count = 0
 
         # Iterate over samples until search_termination_function returns True
-        samples = []
-        values = []
+        evaluated_samples = []
+        estimated_values = []
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
@@ -667,8 +668,8 @@ class OptimizationFunction(Function_Base):
             # Get value of sample
             current_value = call_with_pruned_args(self.objective_function, current_sample, context=context)
 
-            samples.append(current_sample)
-            values.append(current_value)
+            evaluated_samples.append(current_sample)
+            estimated_values.append(current_value)
 
             self._report_value(current_value)
             iteration += 1
@@ -688,7 +689,8 @@ class OptimizationFunction(Function_Base):
             self.parameters.saved_values._set(all_values, context)
 
         # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
-        return current_sample, current_value, samples, values
+        # return current_sample, current_value, evaluated_samples, estimated_values
+        return current_sample, current_value, evaluated_samples, estimated_values
 
     def _grid_evaluate(self, ocm, context):
         """Helper method for parallelizing evaluation of samples from search space.
@@ -708,6 +710,7 @@ class OptimizationFunction(Function_Base):
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
+        # FIX: RETURN SHOULD BE: outcomes, all_samples
         return outcomes, num_evals
 
     def _report_value(self, new_value):
