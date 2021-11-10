@@ -587,18 +587,35 @@ class OptimizationFunction(Function_Base):
             assert all([not getattr(self.parameters, x)._user_specified for x in self._unspecified_args])
             self._unspecified_args = []
 
-        current_sample = self._check_args(variable=variable, context=context, params=params)
-
+        # Get initial sample in case it is needed by _search_space_evaluate (e.g., for gradient initialization)
+        initial_sample = self._check_args(variable=variable, context=context, params=params)
         try:
-            current_value = self.owner.objective_mechanism.parameters.value._get(context)
+            initial_value = self.owner.objective_mechanism.parameters.value._get(context)
         except AttributeError:
-            current_value = 0
+            initial_value = 0
 
-        samples = []
-        values = []
+        # EVALUATE ALL SAMPLES IN SEARCH SPACE
+        # Evaluate all estimates of all samples in search_space
+
+        # Grid is static, so use parallelized evaluation
+        if all(isinstance(sample_iterator.start, int) and isinstance(sample_iterator.stop, int)
+               for sample_iterator in self.search_space):
+            return self._grid_evaluate(self.owner, context)
+        # Use default sequential sampling
+        else:
+            return self._default_search_space_evaluate(initial_sample, initial_value, context)
+
+    def _default_search_space_evaluate(self, initial_sample, initial_value, context):
+        """Sequentially evaluate every sample in search_space.
+        Return last sample, last value, arrays with all samples evaluated, and array with all values of those samples.
+        """
 
         # Initialize variables used in while loop
         iteration = 0
+        current_sample = initial_sample
+        current_value = initial_value
+        all_samples = []
+        all_values = []
 
         # Set up progress bar
         _show_progress = False
@@ -613,53 +630,45 @@ class OptimizationFunction(Function_Base):
             print("\n{} executing optimization process (one {} for each {}of {} samples): ".
                   format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
             _progress_bar_count = 0
-        # Iterate optimization process
 
-        REPLACE THE WHILE LOOP WITH search_space_evalute() THAT USES num_estimates: \
-             BRANCH ON generic or _grid_evalue;  RETURN ARRAY OF RESULTS
-             BASED ON LOGIC OF GRID: IF EVERY DIMENSION IS SimpleIterator (I.E., STATIC)
-        PUT IN search_space_evalute: IF SAME_SEED, BREAK UP GRID INTO ONES FOR EACH SEEDED SET
-
-        self.search_space_evalute()
-
-        CALL AGGREGRATE_FUNCTION WITH ARRAY RETURNED BY search_space_evalute AND RETURN PROCESSED ARRAY OF RESULTS
-        new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
-
-        return new_sample, new_value, samples, values
-
-    def search_space_evaluate()
-
+        # Iterate over samples until search_termination_function returns True
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
                                         context=context):
-            if _show_progress:
+            if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
                 if increment_progress_bar:
                     print(_progress_bar_char, end='', flush=True)
                 _progress_bar_count +=1
 
             # Get next sample of sample
-            new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
-
-            # Generate num_estimates of sample, then apply aggregation_function and return result
-            estimate = call_with_pruned_args(self.objective_function, new_sample, context=context)
-            self._report_value(estimate)
+            current_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
+            current_value = call_with_pruned_args(self.objective_function, sample, context=context)
+            self._report_value(current_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
                 warnings.warn("{} failed to converge after {} iterations".format(self.name, max_iterations))
                 break
 
-            current_sample = new_sample
-            current_value = new_value
+            all_values.append(current_value)
 
-            if self.parameters.save_samples._get(context):
-                samples.append(new_sample)
-                self.parameters.saved_samples._set(samples, context)
-            if self.parameters.save_values._get(context):
-                values.append(current_value)
-                self.parameters.saved_values._set(values, context)
+        # FIX: 11/3/21 CULL SAMPLES TO ONLY ONE OF EACH NON-SEED VALUE (OR GENERATE DE NOVE USING iter.tools)
+        all_samples = XXX
+        last_sample = current_sample
+        aggregated_values = self._aggregrate_values(all_values)
+        last_value = aggregated_values[-1]
+
+        if self.parameters.save_samples._get(context):
+            self.parameters.saved_samples._set(all_samples, context)
+        if self.parameters.save_values._get(context):
+            self.parameters.saved_values._set(aggregated_values, context)
+
+        return last_sample, last_value, all_samples, aggregated_values
+
+    def _aggregate_values(self, all_values):
+        # FIX: 11/3/21 GET SEED DIMENSION AND COLLAPSE ALONG THAT USEING self.agregation_function
 
 
     def _report_value(self, new_value):
@@ -667,7 +676,7 @@ class OptimizationFunction(Function_Base):
         pass
 
 
-class  (OptimizationFunction):
+class GridBasedOptimizationFunction(OptimizationFunction):
     """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
 
     def _grid_evaluate(self, ocm, context):
@@ -1233,7 +1242,7 @@ MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
 
 
-class GridSearch(GridBasedOptimizationFunction):
+class GridSearch(OptimizationFunction):
     """
     GridSearch(                      \
         default_variable=None,       \
@@ -1624,7 +1633,7 @@ class GridSearch(GridBasedOptimizationFunction):
                 with b_true:
                     search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                                self.parameters.search_space.name)
-                    pnlvm.helpers.create_allocation(b, min_sample_ptr, search_space, min_idx)
+                    pnlvm.helpers.create_sample(b, min_sample_ptr, search_space, min_idx)
                 with b_false:
                     sample_ptr = builder.gep(samples_ptr, [min_idx])
                     builder.store(b.load(sample_ptr), min_sample_ptr)
@@ -1859,7 +1868,6 @@ class GridSearch(GridBasedOptimizationFunction):
             assert direction == MAXIMIZE or direction == MINIMIZE, \
                 "PROGRAM ERROR: bad value for {} arg of {}: {}, {}". \
                     format(repr(DIRECTION), self.name, direction)
-
 
             ocm = self._get_optimized_controller()
 
