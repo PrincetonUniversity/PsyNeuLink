@@ -432,8 +432,9 @@ class OptimizationFunction(Function_Base):
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
 
         self.randomization_dimension = randomization_dimension
-        # Max randomization dimension of search_space last for standardization of treatment
-        self.search_space.append(self.search_space.pop(self.search_space.index(self.randomization_dimension)))
+        if self.search_space:
+            # Make randomization dimension of search_space last for standardization of treatment
+            self.search_space.append(self.search_space.pop(self.search_space.index(self.randomization_dimension)))
 
         super().__init__(
             default_variable=default_variable,
@@ -644,34 +645,39 @@ class OptimizationFunction(Function_Base):
                     print(_progress_bar_char, end='', flush=True)
                 _progress_bar_count +=1
 
-            # Get next sample of sample
-            current_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
-            current_value = call_with_pruned_args(self.objective_function, sample, context=context)
+            # Assumes randomizaton dimension is last dimension (set in __init__), with length num_estimates
+            #   so should be able to loop over it for num_estimates
+            # aggregation
+            estimates_for_sample = []
+            for i in range(self.num_estimates):
+                # Get next sample
+                current_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
+                # Get value of sample
+                estimate = call_with_pruned_args(self.objective_function, current_sample, context=context)
+                estimates_for_sample.append(estimate)
+
+            # Get aggregated value of num_estimates for sample
+            aggregated_value = (self.aggregration_function(estimates_for_sample, self.num_estimates))
+
+            all_values.append(aggregated_value)
+            all_samples.append(current_sample)
+
             self._report_value(current_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, max_iterations))
+                warnings.warn(f"{self.name} of {self.owner.name} exceeded max iterations {max_iterations}.")
                 break
 
-            all_values.append(current_value)
-
-        # FIX: 11/3/21 CULL SAMPLES TO ONLY ONE OF EACH NON-SEED VALUE (OR GENERATE DE NOVE USING iter.tools)
-        all_samples = XXX
         last_sample = current_sample
-        aggregated_values = self._aggregrate_values(all_values)
-        last_value = aggregated_values[-1]
+        last_value = aggregated_value
 
         if self.parameters.save_samples._get(context):
             self.parameters.saved_samples._set(all_samples, context)
         if self.parameters.save_values._get(context):
-            self.parameters.saved_values._set(aggregated_values, context)
+            self.parameters.saved_values._set(all_values, context)
 
-        return last_sample, last_value, all_samples, aggregated_values
-
-    def _aggregate_values(self, all_values):
-        # FIX: 11/3/21 GET SEED DIMENSION AND COLLAPSE ALONG THAT USEING self.agregation_function
-
+        return last_sample, last_value, all_samples, all_values
 
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
