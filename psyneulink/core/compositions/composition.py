@@ -3003,8 +3003,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     show_graph_attributes : dict : None
         specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
-        method is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph`
-        for list of attributes and their values).
+        method is called or **animate** is specified in a call to its `run <Composition.run>` method
+        (see `ShowGraph` for list of attributes and their values).
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -7160,17 +7160,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # If the controller doesn't have any feature_input_ports, add ones from Composition's INPUT Nodes
-        if not controller.feature_input_ports:
+        # FIX: 11/3/21 ADD simulation_input_ports ATTTRIBUTE TO OCM, AND MAKE IT AN ALIAS TO feature_input_ports
+        # FIX: 11/3/21 CONSIDER MAKING THIS METHOD OF OCM THAT IS CALLED HERE WITH Compositoin AS ARGUMENT?
+        # If controller.agent_rep is Composition, insure that no state_features have been specified
+        if controller.agent_rep is self and controller.simulation_input_ports:
+                raise CompositionError(f"{controller.name} being assigned as controller for {self.name}"
+                                       f"has 'state_features' specified, which is not allowed when the"
+                                       f"'agent_rep' of an OptimizationControlMechanism is a Composition"
+                                       f"(i.e., it is being used for full 'model-based' optimization.")
+        # If there are no simulation_input_ports (agent_rep=Composition) or feature_input_ports (agent_rep=CFA)
+        #    assign simulation_input_ports for all INPUT Nodes of the Compositon
+        if not controller.simulation_input_ports:
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
             for node in input_nodes:
                 # FIX: 11/3/21 NEED TO DEAL WITH NESTED COMP AS INPUT NODE [MAKE METHOD THAT DOES ALL THIS]
-                feature_input_ports = []
+                simulation_input_ports = []
                 for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-                    feature_input_ports.append(input_port)
-            # controller._parse_state_feature_specs(controller, feature_input_ports)
-            controller.add_ports(feature_input_ports, update_variable=False, context=context)
-            controller.feature_input_ports.append(feature_input_ports)
+                    simulation_input_ports.append(input_port)
+            controller.add_ports(simulation_input_ports, update_variable=False, context=context)
+            controller.simulation_input_ports.append(simulation_input_ports)
+        # If controller.agent_rep is Composition, insure that no feature_input_ports have been assigned
+        #    and that shadow_input_ports have been assigned to all INPUT Nodes of the Compositon
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
