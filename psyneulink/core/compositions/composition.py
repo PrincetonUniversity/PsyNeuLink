@@ -7160,7 +7160,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # FIX: 11/3/21 CONSIDER MAKING THIS METHOD OF OCM THAT IS CALLED HERE WITH Compositoin AS ARGUMENT?
+        # FIX: 11/3/21 ??DEAL WITH MODEL-FREE (AGENT_REP != SELF) AND NO STATE_FEATURE,
+        #              AND DO DOUBLE CHECK THAT FOR MODEL-FREE ALL INPUT NODES PROJECT TO OCM STATE_INPUT_PORTS
+        #              (IN CASE ANY HAVE BEEN ADDED SINCE CONTOLLER WAS ADDED -- WRITE TEST FOR THAT!)
+        #      SO DEFAULTS MUST BE ASSIGNED FROM SELF
         # If there are no state_input_ports specified assign them for all INPUT Nodes of the Composition
         # (note: this should be the case if controller.agent_rep is either af Composition [model-based optimization]
         #   or it is a CompositionFunctionApproximator [model-free optimization] but not state_features were specified)
