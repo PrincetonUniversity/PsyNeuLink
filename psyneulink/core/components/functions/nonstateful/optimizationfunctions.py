@@ -671,6 +671,11 @@ class OptimizationFunction(Function_Base):
                 warnings.warn(f"{self.name} of {self.owner.name} exceeded max iterations {max_iterations}.")
                 break
 
+            # Change randomization for next sample if specified
+            if self.owner.parameters.same_randomization_for_all_allocations._get(context) is False:
+                self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
+                self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
+
         last_sample = current_sample
         last_value = aggregated_value
 
