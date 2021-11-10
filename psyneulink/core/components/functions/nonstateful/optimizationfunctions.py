@@ -605,14 +605,27 @@ class OptimizationFunction(Function_Base):
         if (self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
                 all(isinstance(sample_iterator.start, int) and isinstance(sample_iterator.stop, int)
                     for sample_iterator in self.search_space)):
-            return self._grid_evaluate(self.owner, context)
+            last_sample, last_value, all_samples, all_values = self._grid_evaluate(self.owner, context)
         # Otherwise, default sequential sampling
         else:
-            return self._sequential_evaluate(initial_sample, initial_value, context)
+            last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
+                                                                                         initial_value,
+                                                                                         context)
+
+        # If  aggregation_function is specified, use it to aggregate over randomization dimension
+        if self.aggregation_function is not None:
+            randomization_dim = self.parameters.randomization_dimension._get(context)
+            all_values = np.apply_along_axis(self.aggregation_function,
+                                             randomization_dim,
+                                             all_values,
+                                             self.num_estimates)
+
+        # Return list of unique samples and aggregated values over them
+        return last_sample, last_value, all_samples, all_values
 
     def _sequential_evaluate(self, initial_sample, initial_value, context):
         """Sequentially evaluate every sample in search_space.
-        Return last sample, last value, arrays with all samples evaluated, and array with all values of those samples.
+        Return arrays with all samples evaluated, and array with all values of those samples.
         """
 
         # Initialize variables used in while loop
@@ -637,6 +650,8 @@ class OptimizationFunction(Function_Base):
             _progress_bar_count = 0
 
         # Iterate over samples until search_termination_function returns True
+        samples = []
+        values = []
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
@@ -647,22 +662,13 @@ class OptimizationFunction(Function_Base):
                     print(_progress_bar_char, end='', flush=True)
                 _progress_bar_count +=1
 
-            # Assumes randomizaton dimension is last dimension (set in __init__), with length num_estimates
-            #   so should be able to loop over it for num_estimates
-            # aggregation
-            estimates_for_sample = []
-            for i in range(self.num_estimates):
-                # Get next sample
-                current_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
-                # Get value of sample
-                estimate = call_with_pruned_args(self.objective_function, current_sample, context=context)
-                estimates_for_sample.append(estimate)
+            # Get next sample
+            current_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
+            # Get value of sample
+            current_value = call_with_pruned_args(self.objective_function, current_sample, context=context)
 
-            # Get aggregated value of num_estimates for sample
-            aggregated_value = (self.aggregation_function(estimates_for_sample, self.num_estimates))
-
-            all_values.append(aggregated_value)
-            all_samples.append(current_sample)
+            samples.append(current_sample)
+            values.append(current_value)
 
             self._report_value(current_value)
             iteration += 1
@@ -671,20 +677,18 @@ class OptimizationFunction(Function_Base):
                 warnings.warn(f"{self.name} of {self.owner.name} exceeded max iterations {max_iterations}.")
                 break
 
-            # Change randomization for next sample if specified
+            # Change randomization for next sample if specified (relies on randomization being last dimension)
             if self.owner.parameters.same_randomization_for_all_allocations is False:
                 self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
                 self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
-
-        last_sample = current_sample
-        last_value = aggregated_value
 
         if self.parameters.save_samples._get(context):
             self.parameters.saved_samples._set(all_samples, context)
         if self.parameters.save_values._get(context):
             self.parameters.saved_values._set(all_values, context)
 
-        return last_sample, last_value, all_samples, all_values
+        # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
+        return current_sample, current_value, samples, values
 
     def _grid_evaluate(self, ocm, context):
         """Helper method for parallelizing evaluation of samples from search space.
