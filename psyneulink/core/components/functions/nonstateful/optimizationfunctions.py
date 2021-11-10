@@ -606,7 +606,9 @@ class OptimizationFunction(Function_Base):
         if (self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
                 all(isinstance(sample_iterator.start, Number) and isinstance(sample_iterator.stop, Number)
                     for sample_iterator in self.search_space)):
-            all_samples, all_values = self._grid_evaluate(self.owner, context)
+            # FIX: NEED TO FIX THIS ONCE _grid_evaluate RETURNS all_samples
+            all_samples = []
+            all_values, num_evals = self._grid_evaluate(self.owner, context)
             last_sample = last_value = None
         # Otherwise, default sequential sampling
         else:
@@ -710,7 +712,7 @@ class OptimizationFunction(Function_Base):
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
-        # FIX: RETURN SHOULD BE: outcomes, all_samples
+        # FIX: RETURN SHOULD BE: outcomes, all_samples (THEN FIX CALL IN _function)
         return outcomes, num_evals
 
     def _report_value(self, new_value):
