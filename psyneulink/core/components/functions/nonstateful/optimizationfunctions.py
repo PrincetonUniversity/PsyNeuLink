@@ -379,7 +379,7 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
-        aggregation_function = Parameter(lambda x: np.mean(x,axis=x.ndim-1), stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x: np.mean(x,axis=len(x)-1), stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
@@ -618,7 +618,7 @@ class OptimizationFunction(Function_Base):
 
         # If  aggregation_function is specified, use it to aggregate over randomization dimension
         if self.aggregation_function:
-            aggregated_values = self.aggregation_function(all_values)
+            aggregated_values = np.atleast_1d(self.aggregation_function(all_values))
             returned_values = aggregated_values
         else:
             returned_values = all_values
