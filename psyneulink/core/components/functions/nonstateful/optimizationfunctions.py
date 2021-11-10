@@ -603,7 +603,7 @@ class OptimizationFunction(Function_Base):
         # Evaluate all estimates of all samples in search_space
 
         # If execution mode is not Python and search_space is static, use parallelized evaluation:
-        if (self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
+        if (self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
                 all(isinstance(sample_iterator.start, Number) and isinstance(sample_iterator.stop, Number)
                     for sample_iterator in self.search_space)):
             # FIX: NEED TO FIX THIS ONCE _grid_evaluate RETURNS all_samples
@@ -681,7 +681,7 @@ class OptimizationFunction(Function_Base):
                 break
 
             # Change randomization for next sample if specified (relies on randomization being last dimension)
-            if self.owner.parameters.same_randomization_for_all_allocations is False:
+            if self.owner and self.owner.parameters.same_randomization_for_all_allocations is False:
                 self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
                 self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
 
