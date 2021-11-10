@@ -432,6 +432,8 @@ class OptimizationFunction(Function_Base):
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
 
         self.randomization_dimension = randomization_dimension
+        # Max randomization dimension of search_space last for standardization of treatment
+        self.search_space.append(self.search_space.pop(self.search_space.index(self.randomization_dimension)))
 
         super().__init__(
             default_variable=default_variable,
@@ -603,9 +605,9 @@ class OptimizationFunction(Function_Base):
             return self._grid_evaluate(self.owner, context)
         # Use default sequential sampling
         else:
-            return self._default_search_space_evaluate(initial_sample, initial_value, context)
+            return self._sequential_evaluate(initial_sample, initial_value, context)
 
-    def _default_search_space_evaluate(self, initial_sample, initial_value, context):
+    def _sequential_evaluate(self, initial_sample, initial_value, context):
         """Sequentially evaluate every sample in search_space.
         Return last sample, last value, arrays with all samples evaluated, and array with all values of those samples.
         """
