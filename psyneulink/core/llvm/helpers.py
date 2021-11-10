@@ -81,12 +81,18 @@ def uint_min(builder, val, other):
 
 
 def get_param_ptr(builder, component, params_ptr, param_name):
+    # check if the passed location matches expected size
+    assert len(params_ptr.type.pointee) == len(component.llvm_param_ids)
+
     idx = ir.IntType(32)(component.llvm_param_ids.index(param_name))
     return builder.gep(params_ptr, [ir.IntType(32)(0), idx],
                        name="ptr_param_{}_{}".format(param_name, component.name))
 
 
 def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
+    # check if the passed location matches expected size
+    assert len(state_ptr.type.pointee) == len(component.llvm_state_ids)
+
     idx = ir.IntType(32)(component.llvm_state_ids.index(stateful_name))
     ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx],
                       name="ptr_state_{}_{}".format(stateful_name,
