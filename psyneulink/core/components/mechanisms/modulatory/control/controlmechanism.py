@@ -1500,7 +1500,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             monitor_for_control_value_sizes = self._instantiate_montiored_for_control_input_ports(context)
 
             # Get sizes of input_ports passed in (that are presumably used for other purposes;
-            #   e.g., ones used by OptimizationControlMechanism for state_features)
+            #   e.g., ones used by OptimizationControlMechanism for simulated inputs or state_features)
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
 
             # Construct full list of InputPort specifications and sizes

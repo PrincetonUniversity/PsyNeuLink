@@ -151,11 +151,16 @@ in order to find the `control_allocation <ControlMechanism.control_allocation>` 
 Creating an OptimizationControlMechanism
 ----------------------------------------
 
-An OptimizationControlMechanism is created in the same was as any `ControlMechanism <ControlMechanism>`.
-The following arguments of its constructor are specific to the OptimizationControlMechanism:
+The constructor for an OptimizationControlMechanism has the same arguments as a `ControlMechanism <ControlMechanism>`,
+with the following exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
+# FIX: 11/3/21: REWORK TO EXPLAIN DIFFERENCES IN USE FOR MODEL-FREE VS. MODEL-BASED OPTIMIZATION
+                INCLUDING PROHIBITION FROM SPECIFYING THESE FOR THE LATTER
+                AND THAT IF SPECIFIED FOR THE FORMER, THEN ANY INPUT NODES MUST BE EXPLICILTY SPECIFIED
+                IF A RESTRICTION OF INPUT NODES ISUSED FOR MODEL-BASED, THAT SHOULD BE IMPLEMENTED INTERNALLY
+                IN THE MODEL THOUGH THE USE OF "ATTENTIONAL CONTROL"
 * **state_features** -- specifies the values used by the OptimizationControlMechanism, together with a
   `control_allocation <ControlMechanism.control_allocation>`, to calculate a `net_outcome
   <ControlMechanism.net_outcome>`.  By default, these are the current `input <Composition.input_values>` for the
@@ -273,7 +278,7 @@ and that is returned by `evaluation` method of theOptimizationControlMechanism's
 In addition to its `outcome_input_ports <ControlMechanism.outcome_input_ports>`, that receive Projections from
 either the OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` or directly
 from the items in `monitor_for_control <Control.monitor_for_control>`, it also has `InputPorts <InputPort>` for any
-state_features listed in its `feature_input_ports <OptimizationControlMechanism.feature_input_ports>` attribute.
+state_features listed in its `state_input_ports <OptimizationControlMechanism.state_input_ports>` attribute.
 By default, these are the current `input <Composition.input_values>` for the Composition to which the
 OptimizationControlMechanism belongs.  However, different values can be specified, as can a `state_feature_function
 <OptimizationControlMechanism_Feature_Function>` that transforms these (see `above
@@ -666,14 +671,19 @@ class OptimizationControlMechanism(ControlMechanism):
         the current value of each item of the OptimizationControlMechanism's `state_features
         <OptimizationControlMechanism_State_Features>` (each of which is a 1d array).
 
-    feature_input_ports : ContentAddressableList
+    state_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `InputPorts <InputPort>` that receive `Projections <Projection>`
-        from the items specified in the **state_features** argument in the OptimizationControlMechanism's constructor,
-        and provide its `state_feature_values <OptimizationControlMechanism.state_feature_values>` (see
+        either from the items specified in the **state_features** argument in the OptimizationControlMechanism's
+        constructor that provide the `state_feature_values <OptimizationControlMechanism.state_feature_values>` to
+        the `CompositionFunctionApproximator` used as its `agent_rep <OptimizationControlMechanism.agent_rep>` in
+        `model-free optimization <OptimizationControlMechanism_Model_Free>`; or that shadow the inputs of the
+        Composition assigned as its `agent_rep <OptimizationControlMechanism.agent_rep>` and that provide the inputs
+        to the `run <Composition.run>` method of the Composition when it is used to simulate performance  in
+        `model-based optimization <OptimizationControlMechanism_Model_Based>` (see
         `OptimizationControlMechanism_State_Features` for additional details).
 
-    num_feature_input_ports : int
-        cantains the number of `feature_input_ports <OptimizationControlMechanism.feature_input_ports>`.
+    num_state_input_ports : int
+        cantains the number of `state_input_ports <OptimizationControlMechanism.state_input_ports>`.
 
     agent_rep : Composition
         determines the `Composition` used by the `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
@@ -1047,9 +1057,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """Instantiate InputPorts for state_features (with state_feature_function) if specified.
 
         If **state_features** are specified in the constructor:
+          - Check that agent_rep is a CompositionFunctionApproximator (that is model-free optimization is being used;
+              note: state_features are not allowed to be specified for model-based optimization -- the inputs to the
+              INPUT Nodes of the Composition are used for that.
           - InputPorts are constructed for them by calling _parse_state_feature_specs with **state_features** and
             **state_feature_function** arguments of the OptimizationControlMechanism constructor.
-          - The constructed feature_input_ports  are passed to ControlMechanism_instantiate_input_ports(),
+          - The constructed state_input_ports  are passed to ControlMechanism_instantiate_input_ports(),
              which appends them to the InputPort(s) that receive input from the **objective_mechanism* (if specified)
              or **monitor_for_control** ports (if **objective_mechanism** is not specified).
 
@@ -1057,19 +1070,28 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
-        feature_input_ports = None
+        state_input_ports = None
+
+        # Disallow state_features if agent_rep is Composition (see `OptimizationControlMechanism_State_Features_Arg`)
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+        if self.state_features and not isinstance(self.agent_rep, CompositionFunctionApproximator):
+                raise OptimizationControlMechanismError(
+                    f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
+                    f"specified, which is not allowed if the 'agent_rep' for the controller is not a "
+                    f"CompositionFunctionApproximator (i.e., it is not being used for full 'model-free' optimization.")
+
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
-            feature_input_ports = self._parse_state_feature_specs(self.state_features,
+            state_input_ports = self._parse_state_feature_specs(self.state_features,
                                                                   self.state_feature_function)
-        super()._instantiate_input_ports(feature_input_ports, context=context)
+        super()._instantiate_input_ports(state_input_ports, context=context)
 
 
-        # Assign to self.feature_input_ports
+        # Assign to self.state_input_ports
         start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        stop = start + len(feature_input_ports) if feature_input_ports else 0
+        stop = start + len(state_input_ports) if state_input_ports else 0
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
-        self.feature_input_ports = ContentAddressableList(component_type=InputPort,
+        self.state_input_ports = ContentAddressableList(component_type=InputPort,
                                                           list=self.input_ports[start:stop])
 
         for i in range(1, len(self.input_ports)):
@@ -1652,7 +1674,7 @@ class OptimizationControlMechanism(ControlMechanism):
     #         return np.array(np.array(self.variable[1:]).tolist())
 
     @tc.typecheck
-    def _parse_state_feature_specs(self, feature_input_ports, feature_function, context=None):
+    def _parse_state_feature_specs(self, state_input_ports, feature_function, context=None):
         """Parse entries of state_features into InputPort spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
@@ -1660,15 +1682,15 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries
         """
 
-        feature_input_ports = _parse_shadow_inputs(self, convert_to_list(feature_input_ports))
+        state_input_ports = _parse_shadow_inputs(self, convert_to_list(state_input_ports))
 
         parsed_features = []
 
         # # FIX: 11/3/21: input_ports IS IGNORED;  DELETE??
-        # if not isinstance(feature_input_ports, list):
-        #     input_ports = [feature_input_ports]
+        # if not isinstance(state_input_ports, list):
+        #     input_ports = [state_input_ports]
 
-        for spec in feature_input_ports:
+        for spec in state_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             spec[PARAMS][INTERNAL_ONLY] = True
             spec[PARAMS][PROJECTIONS] = None
@@ -1685,9 +1707,9 @@ class OptimizationControlMechanism(ControlMechanism):
         return parsed_features
 
     @property
-    def num_feature_input_ports(self):
+    def num_state_input_ports(self):
         try:
-            return len(self.feature_input_ports)
+            return len(self.state_input_ports)
         except:
             return 0
 

@@ -7160,15 +7160,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # FIX: 11/3/21 ADD simulation_input_ports ATTTRIBUTE TO OCM, AND MAKE IT AN ALIAS TO feature_input_ports
+        # FIX: 11/3/21 ADD simulation_input_ports ATTTRIBUTE TO OCM, AND MAKE IT AN ALIAS TO state_input_ports
         # FIX: 11/3/21 CONSIDER MAKING THIS METHOD OF OCM THAT IS CALLED HERE WITH Compositoin AS ARGUMENT?
-        # If controller.agent_rep is Composition, insure that no state_features have been specified
-        if controller.agent_rep is self and controller.simulation_input_ports:
-                raise CompositionError(f"{controller.name} being assigned as controller for {self.name}"
-                                       f"has 'state_features' specified, which is not allowed when the"
-                                       f"'agent_rep' for the controller is the Composition"
-                                       f"(i.e., it is being used for full 'model-based' optimization.")
-        # If there are no simulation_input_ports (agent_rep = Composition) or feature_input_ports (agent_rep = CFA)
+        # If there are no simulation_input_ports (agent_rep = Composition) or state_input_ports (agent_rep = CFA)
         #    assign them for all INPUT Nodes of the Composition
         if not controller.simulation_input_ports:
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
@@ -7179,7 +7173,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     simulation_input_ports.append(input_port)
             controller.add_ports(simulation_input_ports, update_variable=False, context=context)
             controller.simulation_input_ports.append(simulation_input_ports)
-        # If controller.agent_rep is Composition, insure that no feature_input_ports have been assigned
+        # If controller.agent_rep is Composition, insure that no state_input_ports have been assigned
         #    and that shadow_input_ports have been assigned to all INPUT Nodes of the Compositon
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
@@ -7305,7 +7299,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _build_predicted_inputs_dict(self, predicted_input):
         inputs = {}
         # FIX: 11/3/21:  outcome_input_ports is now the assumption;
-        #                and feature_input_ports should be assigned for inputs for shadow_inputs
+        #                and state_input_ports should be assigned for inputs for shadow_inputs
         # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are state_features
         # If this is not a good assumption, we need another way to look up the feature InputPorts
         # of the OCM and know which InputPort maps to which predicted_input value
