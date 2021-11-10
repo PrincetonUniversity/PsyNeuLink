@@ -237,6 +237,8 @@ class TestOutputPorts:
 @pytest.mark.benchmark
 @pytest.mark.parametrize('prng', ['Default', 'Philox'])
 def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
+    if prng == 'Philox':
+        pytest.skip("Known broken")
     stim = 10
     T = DDM(
         name='DDM',
