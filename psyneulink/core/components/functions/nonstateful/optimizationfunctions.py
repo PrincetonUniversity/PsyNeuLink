@@ -584,6 +584,7 @@ class OptimizationFunction(Function_Base):
             second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
+
         if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
@@ -600,11 +601,12 @@ class OptimizationFunction(Function_Base):
         # EVALUATE ALL SAMPLES IN SEARCH SPACE
         # Evaluate all estimates of all samples in search_space
 
-        # Grid is static, so use parallelized evaluation
-        if all(isinstance(sample_iterator.start, int) and isinstance(sample_iterator.stop, int)
-               for sample_iterator in self.search_space):
+        # If execution mode is not Python and search_space is static, use parallelized evaluation:
+        if (self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
+                all(isinstance(sample_iterator.start, int) and isinstance(sample_iterator.stop, int)
+                    for sample_iterator in self.search_space)):
             return self._grid_evaluate(self.owner, context)
-        # Use default sequential sampling
+        # Otherwise, default sequential sampling
         else:
             return self._sequential_evaluate(initial_sample, initial_value, context)
 
@@ -657,7 +659,7 @@ class OptimizationFunction(Function_Base):
                 estimates_for_sample.append(estimate)
 
             # Get aggregated value of num_estimates for sample
-            aggregated_value = (self.aggregration_function(estimates_for_sample, self.num_estimates))
+            aggregated_value = (self.aggregation_function(estimates_for_sample, self.num_estimates))
 
             all_values.append(aggregated_value)
             all_samples.append(current_sample)
@@ -679,16 +681,9 @@ class OptimizationFunction(Function_Base):
 
         return last_sample, last_value, all_samples, all_values
 
-    def _report_value(self, new_value):
-        """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
-        pass
-
-
-class GridBasedOptimizationFunction(OptimizationFunction):
-    """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
-
     def _grid_evaluate(self, ocm, context):
-
+        """Helper method for parallelizing evaluation of samples from search space.
+        """
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
@@ -705,6 +700,10 @@ class GridBasedOptimizationFunction(OptimizationFunction):
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
         return outcomes, num_evals
+
+    def _report_value(self, new_value):
+        """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
+        pass
 
 
 ASCENT = 'ascent'
