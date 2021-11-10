@@ -1081,18 +1081,12 @@ class OptimizationControlMechanism(ControlMechanism):
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
         state_input_ports = None
 
-        # Disallow state_features if agent_rep is Composition (see `OptimizationControlMechanism_State_Features_Arg`)
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        if self.state_features and not isinstance(self.agent_rep, CompositionFunctionApproximator):
-                raise OptimizationControlMechanismError(
-                    f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
-                    f"specified, which is not allowed if the 'agent_rep' for the controller is not a "
-                    f"CompositionFunctionApproximator (i.e., it is not being used for full 'model-free' optimization.")
 
         # If any state_features were specified (assigned to self.input_ports in __init__):
         if self.state_features:
             state_input_ports = self._parse_state_feature_specs(self.state_features,
                                                                   self.state_feature_function)
+
         super()._instantiate_input_ports(state_input_ports, context=context)
 
 
@@ -1103,29 +1097,26 @@ class OptimizationControlMechanism(ControlMechanism):
         self.state_input_ports = ContentAddressableList(component_type=InputPort,
                                                           list=self.input_ports[start:stop])
 
+        # Check that if agent_rep is not a CompositionFunctionApproximator
+        #     (i.e., not being used for model-free optimization),
+        #     then any state_features specified are INPUT Nodes (see `OptimizationControlMechanism_State_Features_Arg`)
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+        from psyneulink.core.compositions.composition import NodeRole
+        if self.state_input_ports and not isinstance(self.agent_rep, CompositionFunctionApproximator):
+            disallowed_state_features = [state_input_port.name for state_input_port in self.state_input_ports
+                                         if not state_input_port.shadow_inputs.owner
+                                                in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+            if disallowed_state_features:
+                raise OptimizationControlMechanismError(
+                    f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
+                    f"specified ({disallowed_state_features}) that are not INPUT nodes of its 'agent_rep'.")
+
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
             if len(port.path_afferents) > 1:
                 raise OptimizationControlMechanismError(f"Invalid {type(port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
-
-    # def _instantiate_montiored_for_control_input_ports(self, context):
-    #     """Override ControlMechanism to return standard *single* OUTCOOME InputPort that concatenates its inputs"""
-    #
-    #     monitor_for_control_specs = self.monitor_for_control
-    #     # FIX: 11/3/21 - MOVE THIS BACK TO ControlMechanism ONCE IT HAS THE OPTION TO CONCATENATE OR COMBINE
-    #     #                MULTIPLE monitor_for_control InpuPorts
-    #     # FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
-    #     from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
-    #     monitored_ports = _parse_monitor_specs(monitor_for_control_specs)
-    #     outcome_input_port = {PORT_TYPE: InputPort,
-    #                           NAME: 'OUTCOME',
-    #                           FUNCTION: Concatenate,
-    #                           # SIZE:  len(self._handle_arg_input_ports(monitor_for_control_specs)[0])
-    #                           PROJECTIONS: monitored_ports}
-    # #     port_value_size, _ = self._handle_arg_input_ports(outcome_input_port)
-    #     return [outcome_input_port], [self._handle_arg_input_ports(monitor_for_control_specs)[0]]
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
