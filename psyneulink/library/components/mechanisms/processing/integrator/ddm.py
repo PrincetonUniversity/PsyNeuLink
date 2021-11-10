@@ -1127,8 +1127,9 @@ class DDM(ProcessingMechanism):
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
             # Load mechanism state to generate random numbers
-            state = builder.function.args[1]
-            random_state = ctx.get_random_state_ptr(builder, self, state, params)
+            mech_params = builder.function.args[0]
+            mech_state = builder.function.args[1]
+            random_state = ctx.get_random_state_ptr(builder, self, mech_state, mech_params)
             random_f = ctx.get_uniform_dist_function_by_state(random_state)
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
             builder.call(random_f, [random_state, random_val_ptr])
