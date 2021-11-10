@@ -1097,12 +1097,11 @@ class OptimizationControlMechanism(ControlMechanism):
         self.state_input_ports = ContentAddressableList(component_type=InputPort,
                                                           list=self.input_ports[start:stop])
 
-        # Check that if agent_rep is not a CompositionFunctionApproximator
-        #     (i.e., not being used for model-free optimization),
-        #     then any state_features specified are INPUT Nodes (see `OptimizationControlMechanism_State_Features_Arg`)
+        # if agent_rep is being used for model-based optimization (i.e., it is not a CompositionFunctionApproximator)
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         from psyneulink.core.compositions.composition import NodeRole
         if self.state_input_ports and not isinstance(self.agent_rep, CompositionFunctionApproximator):
+            # Ensure all state_features specified are INPUT Nodes (see`OptimizationControlMechanism_State_Features_Arg`)
             disallowed_state_features = [state_input_port.name for state_input_port in self.state_input_ports
                                          if not state_input_port.shadow_inputs.owner
                                                 in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
@@ -1110,6 +1109,19 @@ class OptimizationControlMechanism(ControlMechanism):
                 raise OptimizationControlMechanismError(
                     f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
                     f"specified ({disallowed_state_features}) that are not INPUT nodes of its 'agent_rep'.")
+
+            # Warn that all INPUT Nodes will be include even if only some are specified
+            if self.verbosePref:
+                # Get names of INPUT Nodes of agent_rep that were not specified in **state_features** arg
+                input_nodes_not_specified = set([input_node.name for input_node
+                                                 in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]) \
+                                            - set([state_input_port.shadow_inputs.owner.name
+                                                   for state_input_port in self.state_input_ports])
+                if input_nodes_not_specified:
+                    warnings.warn(f"Even though 'state features' ({self.state_features}) in constructor for {self.name}" 
+                                  f"referenced only some of the INPUT Nodes of its agent_rep {self.agent_rep.name}, "
+                                  f"all of its INPUT Nodes (i.e., including {input_nodes_not_specified}) "
+                                  f"will be included as inputs to its evaluate method.")
 
         for i in range(1, len(self.input_ports)):
             port = self.input_ports[i]
