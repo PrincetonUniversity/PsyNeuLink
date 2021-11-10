@@ -7166,15 +7166,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if controller.agent_rep is self and controller.simulation_input_ports:
                 raise CompositionError(f"{controller.name} being assigned as controller for {self.name}"
                                        f"has 'state_features' specified, which is not allowed when the"
-                                       f"'agent_rep' of an OptimizationControlMechanism is a Composition"
+                                       f"'agent_rep' for the controller is the Composition"
                                        f"(i.e., it is being used for full 'model-based' optimization.")
-        # If there are no simulation_input_ports (agent_rep=Composition) or feature_input_ports (agent_rep=CFA)
-        #    assign simulation_input_ports for all INPUT Nodes of the Compositon
+        # If there are no simulation_input_ports (agent_rep = Composition) or feature_input_ports (agent_rep = CFA)
+        #    assign them for all INPUT Nodes of the Composition
         if not controller.simulation_input_ports:
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+            simulation_input_ports = []
             for node in input_nodes:
-                # FIX: 11/3/21 NEED TO DEAL WITH NESTED COMP AS INPUT NODE [MAKE METHOD THAT DOES ALL THIS]
-                simulation_input_ports = []
+                # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
                 for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
                     simulation_input_ports.append(input_port)
             controller.add_ports(simulation_input_ports, update_variable=False, context=context)
