@@ -672,7 +672,7 @@ class OptimizationFunction(Function_Base):
                 break
 
             # Change randomization for next sample if specified
-            if self.owner.parameters.same_randomization_for_all_allocations._get(context) is False:
+            if self.owner.parameters.same_randomization_for_all_allocations is False:
                 self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
                 self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
 
