@@ -7160,21 +7160,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # FIX: 11/3/21 ADD simulation_input_ports ATTTRIBUTE TO OCM, AND MAKE IT AN ALIAS TO state_input_ports
         # FIX: 11/3/21 CONSIDER MAKING THIS METHOD OF OCM THAT IS CALLED HERE WITH Compositoin AS ARGUMENT?
-        # If there are no simulation_input_ports (agent_rep = Composition) or state_input_ports (agent_rep = CFA)
-        #    assign them for all INPUT Nodes of the Composition
-        if not controller.simulation_input_ports:
+        # If there are no state_input_ports specified assign them for all INPUT Nodes of the Composition
+        # (note: this should be the case if controller.agent_rep is either af Composition [model-based optimization]
+        #   or it is a CompositionFunctionApproximator [model-free optimization] but not state_features were specified)
+        if not controller.state_input_ports:
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-            simulation_input_ports = []
+            state_input_ports = []
             for node in input_nodes:
                 # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
                 for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-                    simulation_input_ports.append(input_port)
-            controller.add_ports(simulation_input_ports, update_variable=False, context=context)
-            controller.simulation_input_ports.append(simulation_input_ports)
-        # If controller.agent_rep is Composition, insure that no state_input_ports have been assigned
-        #    and that shadow_input_ports have been assigned to all INPUT Nodes of the Compositon
+                    state_input_ports.append(input_port)
+            controller.add_ports(state_input_ports, update_variable=False, context=context)
+            controller.state_input_ports.append(state_input_ports)
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
@@ -7294,20 +7292,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
-    # FIX: 11/3/21 GET RID OF THIS ANC CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
-    #      CHECK WHETHER feture_inputs ADD TO OR REPLACE shadowed_inputs
+    # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
+    #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
     def _build_predicted_inputs_dict(self, predicted_input):
-        inputs = {}
-        # FIX: 11/3/21:  outcome_input_ports is now the assumption;
-        #                and state_input_ports should be assigned for inputs for shadow_inputs
-        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are state_features
-        # If this is not a good assumption, we need another way to look up the feature InputPorts
-        # of the OCM and know which InputPort maps to which predicted_input value
+        """Get inputs for evaluate method used to execute simulations of Composition.
 
+        Get values of state_input_ports which receive projections from items providing relevant input (and any
+        processing of those values specified
+        """
+        inputs = {}
         no_predicted_input = (predicted_input is None or not len(predicted_input))
         if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
-
 
         nested_nodes = dict(self._get_nested_nodes())
         # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED

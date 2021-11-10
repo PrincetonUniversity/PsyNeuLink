@@ -156,11 +156,20 @@ with the following exceptions/additions, which are specific to the OptimizationC
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
-# FIX: 11/3/21: REWORK TO EXPLAIN DIFFERENCES IN USE FOR MODEL-FREE VS. MODEL-BASED OPTIMIZATION
-                INCLUDING PROHIBITION FROM SPECIFYING THESE FOR THE LATTER
-                AND THAT IF SPECIFIED FOR THE FORMER, THEN ANY INPUT NODES MUST BE EXPLICILTY SPECIFIED
-                IF A RESTRICTION OF INPUT NODES ISUSED FOR MODEL-BASED, THAT SHOULD BE IMPLEMENTED INTERNALLY
-                IN THE MODEL THOUGH THE USE OF "ATTENTIONAL CONTROL"
+# FIX: 11/3/21: * REWORK TO EXPLAIN DIFFERENCES IN USE FOR MODEL-FREE VS. MODEL-BASED OPTIMIZATION
+                  RE: state_feature SPECIFICADTION:  FOR MODEL-FREE, NEED TO SPECIFY INPUTS TO FUNCTION;
+                  FOR MODEL-BASED, INFERRED FROM (AND MUST ALIGN WITH) INPUT Nodes OF COMPOSITION USED AS
+                  agent_rep.  FOR THE LATTER, state_features CAN BE SPECIFIED IN ORDER TO SPECIFIY
+                  state_feature_functions (OR MAYBE ALLOW THE LATTER DIRECTLY?), BUT THEY MUST BE
+                  AN INPUT Node OF agent_rep.  ALL OTHER INPUT Nodes ARE STILL ASSIGNED shadow INPUTS TO OCM.
+                  HINTS:
+                  1) IF ONLY SOME INPUTS ARE DESIRED FOR MODEL-BASED, USE Control FOR ATTENTIONAL REGULATION
+                  (SEE PREDATOR PREY AS EXAMPLE?)
+                  2) IF A RESTRICTED PART OF THE NETWORK IS TO BE USED FOR MODEL-BASED, SIMPLY MAKE THAT
+                  A NESTED COMPOSITION, AND ASSIGN THAT AS THE agent_rep;  THEN *ITS* INPUT Nodes WILL BE USED
+                  AS THE state_features, AND JUST THAT NESTED COMPOSITION WILL BE USED FOR SIMULATIONS
+                  (CONSTRUCT EXAMPLES)
+
 * **state_features** -- specifies the values used by the OptimizationControlMechanism, together with a
   `control_allocation <ControlMechanism.control_allocation>`, to calculate a `net_outcome
   <ControlMechanism.net_outcome>`.  By default, these are the current `input <Composition.input_values>` for the
@@ -678,7 +687,7 @@ class OptimizationControlMechanism(ControlMechanism):
         the `CompositionFunctionApproximator` used as its `agent_rep <OptimizationControlMechanism.agent_rep>` in
         `model-free optimization <OptimizationControlMechanism_Model_Free>`; or that shadow the inputs of the
         Composition assigned as its `agent_rep <OptimizationControlMechanism.agent_rep>` and that provide the inputs
-        to the `run <Composition.run>` method of the Composition when it is used to simulate performance  in
+        to the `evaluate <Composition.evaluate>` method of the Composition when it is used to simulate performance in
         `model-based optimization <OptimizationControlMechanism_Model_Based>` (see
         `OptimizationControlMechanism_State_Features` for additional details).
 
