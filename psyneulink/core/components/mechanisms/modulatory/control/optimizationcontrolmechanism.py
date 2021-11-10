@@ -1636,17 +1636,17 @@ class OptimizationControlMechanism(ControlMechanism):
         #  - OR TO USE num_trials_per_estimate RATHER THAN num_estimates IF THAT IS WHAT IS INTENDED
                 #
         # Determine simulation counts
-        num_estimates_ptr = pnlvm.helpers.get_param_ptr(builder, self,
+        num_estimates_per_trial_ptr = pnlvm.helpers.get_param_ptr(builder, self,
                                                         controller_params,
-                                                        "num_estimates")
+                                                        "num_estimates_per_trial")
 
-        num_estimates = builder.load(num_estimates_ptr, "num_estimates")
+        num_estimates_per_trial_ptr = builder.load(num_estimates_per_trial_ptr, "num_estimates_per_trial")
 
-        # if num_estimates is 0, run 1 trial
-        param_is_zero = builder.icmp_unsigned("==", num_estimates,
+        # if num_estimates_per_trial_ptr is 0, run 1 trial
+        param_is_zero = builder.icmp_unsigned("==", num_estimates_per_trial_ptr,
                                                     ctx.int32_ty(0))
         num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
-                                  num_estimates, "corrected_estimates")
+                                  num_estimates_per_trial_ptr, "corrected_estimates")
 
         num_runs = builder.alloca(ctx.int32_ty, name="num_runs")
         builder.store(num_sims, num_runs)
