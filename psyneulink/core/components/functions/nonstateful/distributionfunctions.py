@@ -199,7 +199,7 @@ class NormalDist(DistributionFunction):
         mean_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "mean")
         std_dev_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "standard_deviation")
         ret_val_ptr = builder.alloca(ctx.float_ty)
-        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        norm_rand_f = ctx.get_normal_dist_function_by_state(random_state)
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
 
         ret_val = builder.load(ret_val_ptr)
@@ -624,7 +624,7 @@ class UniformDist(DistributionFunction):
         low_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, LOW)
         high_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, HIGH)
         ret_val_ptr = builder.alloca(ctx.float_ty)
-        norm_rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+        norm_rand_f = ctx.get_uniform_dist_function_by_state(random_state)
         builder.call(norm_rand_f, [random_state, ret_val_ptr])
 
         ret_val = builder.load(ret_val_ptr)

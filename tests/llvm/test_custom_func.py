@@ -36,7 +36,7 @@ def test_fixed_dimensions__pnl_builtin_vxm(mode):
 
     custom_name = None
 
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         custom_name = ctx.get_unique_name("vxsqm")
         double_ptr_ty = ctx.convert_python_struct_to_llvm_ir(1.0).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), (double_ptr_ty, double_ptr_ty, double_ptr_ty))
@@ -76,7 +76,7 @@ def test_fixed_dimensions__pnl_builtin_vxm(mode):
                                 ], ids=lambda x: str(x.dtype))
 def test_integer_broadcast(mode, val):
     custom_name = None
-    with pnlvm.LLVMBuilderContext() as ctx:
+    with pnlvm.LLVMBuilderContext.get_current() as ctx:
         custom_name = ctx.get_unique_name("broadcast")
         int_ty = ctx.convert_python_struct_to_llvm_ir(val)
         int_array_ty = ir.ArrayType(int_ty, 8)

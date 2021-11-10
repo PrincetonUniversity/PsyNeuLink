@@ -2487,7 +2487,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         random_state = ctx.get_random_state_ptr(builder, self, state, params)
         rand_val_ptr = builder.alloca(ctx.float_ty)
-        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        rand_f = ctx.get_normal_dist_function_by_state(random_state)
         builder.call(rand_f, [random_state, rand_val_ptr])
         rand_val = builder.load(rand_val_ptr)
 

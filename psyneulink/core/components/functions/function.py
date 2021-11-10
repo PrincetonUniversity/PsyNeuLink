@@ -162,7 +162,8 @@ from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len
+    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len,
+    SeededRandomState
 )
 
 __all__ = [
@@ -338,23 +339,6 @@ def _seed_setter(value, owning_component, context):
     return int(value)
 
 
-class SeededRandomState(np.random.RandomState):
-    def __init__(self, *args, **kwargs):
-        # Extract seed
-        self.used_seed = (kwargs.get('seed', None) or args[0])[:]
-        super().__init__(*args, **kwargs)
-
-    def __deepcopy__(self, memo):
-        # There's no easy way to deepcopy parent first.
-        # Create new instance and rewrite the state.
-        dup = type(self)(seed=self.used_seed)
-        dup.set_state(self.get_state())
-        return dup
-
-    def seed(self, seed):
-        assert False, "Use 'seed' parameter instead of seeding the random state directly"
-
-
 def _random_state_getter(self, owning_component, context):
 
     seed_param = owning_component.parameters.seed
@@ -371,8 +355,10 @@ def _random_state_getter(self, owning_component, context):
     assert seed_value != [DEFAULT_SEED], "Invalid seed for {} in context: {} ({})".format(owning_component, context.execution_id, seed_param)
 
     current_state = self.values.get(context.execution_id, None)
-    if current_state is None or current_state.used_seed != seed_value:
+    if current_state is None:
         return SeededRandomState(seed_value)
+    if current_state.used_seed != seed_value:
+        return type(current_state)(seed_value)
 
     return current_state
 
