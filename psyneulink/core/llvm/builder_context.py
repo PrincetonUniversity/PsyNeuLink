@@ -354,7 +354,7 @@ class LLVMBuilderContext:
             elif p.name == 'matrix':   # Flatten matrix
                 val = np.asfarray(val).flatten()
             # FIX: NEED TO ADD num_trials_per_estimate HERE
-            elif p.name == 'num_estimates':  # Should always be int
+            elif p.name == 'num_trials_per_estimate':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
             elif np.ndim(val) == 0 and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
