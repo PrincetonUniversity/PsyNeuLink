@@ -1136,13 +1136,14 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Get referenced INPUT Nodes of agent_rep
                 referenced_input_nodes = [spec[PARAMS][SHADOW_INPUTS].owner for spec in state_input_ports_specs]
 
+                # FIX 11/3/21 - PUT THIS TEST IN Composition.add_controller
                 # Ensure all state_features specified are INPUT Nodes
                 disallowed_state_features = [input_node.name for input_node in referenced_input_nodes
                                              if not input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
-                if disallowed_state_features:
-                    raise OptimizationControlMechanismError(
-                        f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
-                        f"specified ({disallowed_state_features}) that are not INPUT nodes of its 'agent_rep'.")
+                # if disallowed_state_features:
+                #     raise OptimizationControlMechanismError(
+                #         f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
+                #         f"specified ({disallowed_state_features}) that are not INPUT nodes of its 'agent_rep'.")
 
                 # Add any specs for INPUT Nodes of agent_rep that were not specified in **state_features**
                 input_nodes_not_specified = set([agent_rep_input_node.name for agent_rep_input_node
@@ -1161,7 +1162,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         assert state_input_ports_specs, f"PROGRAM ERROR: Failed to construct 'state_input_ports_specs' " \
-                                        f"for {self.same} as controller of {self.agent_rep.name}"
+                                        f"for {self.name} as controller of {self.agent_rep.name}"
 
         # Pass state_input_ports_sepcs to ControlMechanism for instantiation and addition to OCM's input_ports
         super()._instantiate_input_ports(state_input_ports_specs, context=context)

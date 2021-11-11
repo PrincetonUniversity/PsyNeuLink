@@ -3372,21 +3372,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
-        # MODIFIED 11/3/21 OLD:
-        # # Controller
+        # Controller
         self.controller = None
-        # self._controller_initialization_status = ContextFlags.INITIALIZED
-        # if controller:
-        #     self.add_controller(controller)
-        # else:
-        #     self.enable_controller = enable_controller
-        # self.controller_mode = controller_mode
-        # self.controller_time_scale = controller_time_scale
-        # self.controller_condition = controller_condition
-        # self.controller_condition.owner = self.controller
-        # # This is set at runtime and may be used by the controller to assign its
-        # #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
-        # self.num_trials = None
+        # MODIFIED 11/3/21 OLD:
+        self._controller_initialization_status = ContextFlags.INITIALIZED
+        if controller:
+            self.add_controller(controller)
+        else:
+            self.enable_controller = enable_controller
+        self.controller_mode = controller_mode
+        self.controller_time_scale = controller_time_scale
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
+        # This is set at runtime and may be used by the controller to assign its
+        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        self.num_trials = None
         # MODIFIED 11/3/21 END
 
         self._update_parameter_components()
@@ -3413,25 +3413,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.add_pathways(pathways, context=context)
 
-        # MODIFIED 11/3/21 NEW:
-        # Call with context = COMPOSITION to avoid calling _check_initialization_status again
-        # Need here so that controller can see nodes (for assigning state_features)
-        self._analyze_graph(context=context)
-
-        # self.controller = None
-        self._controller_initialization_status = ContextFlags.INITIALIZED
-        if controller:
-            self.add_controller(controller)
-        else:
-            self.enable_controller = enable_controller
-        self.controller_mode = controller_mode
-        self.controller_time_scale = controller_time_scale
-        self.controller_condition = controller_condition
-        self.controller_condition.owner = self.controller
-        # This is set at runtime and may be used by the controller to assign its
-        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
-        self.num_trials = None
-        # Controller
+        # # MODIFIED 11/3/21 NEW:
+        # # Call with context = COMPOSITION to avoid calling _check_initialization_status again
+        # # Need here so that controller can see nodes (for assigning state_features)
+        # self._analyze_graph(context=context)
+        #
+        # # self.controller = None
+        # self._controller_initialization_status = ContextFlags.INITIALIZED
+        # if controller:
+        #     self.add_controller(controller)
+        # else:
+        #     self.enable_controller = enable_controller
+        # self.controller_mode = controller_mode
+        # self.controller_time_scale = controller_time_scale
+        # self.controller_condition = controller_condition
+        # self.controller_condition.owner = self.controller
+        # # This is set at runtime and may be used by the controller to assign its
+        # #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        # self.num_trials = None
+        # # Controller
         # MODIFIED 11/3/21 END
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
