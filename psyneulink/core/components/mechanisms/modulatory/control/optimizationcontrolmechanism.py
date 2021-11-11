@@ -161,7 +161,7 @@ with the following exceptions/additions, which are specific to the OptimizationC
                   - FOR MODEL-FREE, NEED TO SPECIFY INPUTS TO FUNCTION;
                       BY DEFAULT, THESE ARE THE THE INPUT TO THE INPUT NODES OF THE COMPOSITION FOR WHICH THE OCM IS
                       THE CONTROLLER, BUT THEY CAN BE ANY VAUES;  HOWEVER, THEY HAVE TO MATCH THE INPUT TO THE
-                      AGENT_REPS' EVALUATE METHOD
+                      **feature_values** ARGUMENT OF THE AGENT_REPS' EVALUATE METHOD
                   - FOR MODEL-BASED, THESE ARE THE INPUTS TO THE INPUT NODES OF THE AGENT_REP COMPOSITION.
                       state_features CAN BE SPECIFIED IN ORDER TO SPECIFIY state_feature_functions
                       BUT THEY MUST BE AN INPUT Node OF agent_rep.  ALL OTHER INPUT Nodes ARE STILL ASSIGNED shadow
@@ -1097,6 +1097,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for additional details.
         """
 
+        from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         from psyneulink.core.compositions.composition import NodeRole
 
@@ -1111,37 +1112,29 @@ class OptimizationControlMechanism(ControlMechanism):
         #    ADD TESTS FOR ALL OF THIS AND CHECKS BELOW
 
         if not self.state_features:
-            # Assign as state_features all INPUT Nodes of Composition for which OptimizationControlMechanism is the
-            #    controller (default for model-free and required for model-based optimzation)
             if isinstance(self.agent_rep, CompositionFunctionApproximator):
-                # FIX: 11/3/21: SINCE AGENT_REP IS NOT OCM'S AGENT_REP, THE COMPOSITION TO WHICH IT BELONGS MAY NOT
-                #                YET BE KNOWN / ACCESSIBLE SO CAN'T GET ITS INPUT NODES.
-                #                ???DEFER HANDLING OF THIS ON COMPOSITION.ADD_CONTROLLER?
-                #                ALSO, IF ASSIGNED BY DEFAULT, STILL NEED TO CHECK AGAINST evaluate(inputs)
-                #                OR RAISE EXCEPTION AFTER CHEKCING THAT evaluate(inputs) EXPECTS *SOMETHING*?
-                pass
+                # Warn if no state_features specified for model-free (agent_rep = CompositionFunctionApproximator)
+                warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
             else:
+                # Assign as state_features all INPUT Nodes of Composition for which OptimizationControlMechanism
+                #    is the controller (required for model-based optimization)
                 state_input_ports_specs = [input_node.input_port
-                                           for input_node in self.agent_rep.get_nodes_by_role]
+                                           for input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
 
-        # State_features were specified
         else:
-            # agent_rep is being used for model-free optimization (i.e., it is a CompositionFunctionApproximator),
-            # so check that values of state_features are consistent with the inputs to the agent_rep's evaluate method
-            if isinstance(self.agent_rep, CompositionFunctionApproximator):
-                # FIX: 11/3/21 -- CHECK THAT VALUE OF ITEMS IN **state_features** IS CONSISTENT WITH
-                #  agent_rep.evaluate(inputs)
-                pass
+            state_input_ports_specs = self._parse_state_feature_specs(self.state_features,
+                                                                  self.state_feature_function)
 
-            # agent_rep is being used for model-based optimization (i.e., it is NOT a CompositionFunctionApproximator),
-            # - so check that all state_features are references to INPUT Nodes of agent_rep,
-            # - and add references for any INPUT Nodes that are not referenced.
-            else:
-                state_input_ports_specs = self._parse_state_feature_specs(self.state_features,
-                                                                      self.state_feature_function)
+            # If state_features were specified for model-free (i.e., agent_rep IS a CompositionFunctionApproximator),
+            #   assume they are OK (no way to check their validity for agent_rep.evaluate() method
+
+            if isinstance(self.agent_rep, Composition):
+                # state_features were specified and agent_rep is being used for model-based optimization
+                # - so check that all state_features are references to INPUT Nodes of agent_rep,
+                # - and add references for any INPUT Nodes that are not referenced.
+
                 # Get referenced INPUT Nodes of agent_rep
                 referenced_input_nodes = [spec[PARAMS][SHADOW_INPUTS].owner for spec in state_input_ports_specs]
-
 
                 # Ensure all state_features specified are INPUT Nodes
                 disallowed_state_features = [input_node.name for input_node in referenced_input_nodes
@@ -1157,15 +1150,15 @@ class OptimizationControlMechanism(ControlMechanism):
                                             - set([referenced_input_node.name
                                                    for referenced_input_node in referenced_input_nodes])
 
-
                 # Warn if any INPUT Nodes are included that were not specified
                 if self.verbosePref:
                     # Get names of INPUT Nodes of agent_rep that were not specified in **state_features** arg
                     if input_nodes_not_specified:
-                        warnings.warn(f"Even though 'state features' ({self.state_features}) in constructor for"
+                        warnings.warn(f"Even though 'state features' ({self.state_features}) in constructor for "
                                       f"{self.name} reference only some of the INPUT Nodes of its agent_rep' "
                                       f"({self.agent_rep.name}), the values of all of its INPUT Nodes (i.e., including "
-                                      f"{input_nodes_not_specified}) will be included as inputs to its evaluate method.")
+                                      f"{input_nodes_not_specified}) will be used as inputs to its evaluate method.")
+
 
         assert state_input_ports_specs, f"PROGRAM ERROR: Failed to construct 'state_input_ports_specs' " \
                                         f"for {self.same} as controller of {self.agent_rep.name}"

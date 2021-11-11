@@ -3372,21 +3372,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
-        # Controller
+        # MODIFIED 11/3/21 OLD:
+        # # Controller
         self.controller = None
-        self._controller_initialization_status = ContextFlags.INITIALIZED
-        if controller:
-            self.add_controller(controller)
-        else:
-            self.enable_controller = enable_controller
-        self.controller_mode = controller_mode
-        self.controller_time_scale = controller_time_scale
-        self.controller_condition = controller_condition
-        self.controller_condition.owner = self.controller
-        # This is set at runtime and may be used by the controller to assign its
-        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
-        self.num_trials = None
-
+        # self._controller_initialization_status = ContextFlags.INITIALIZED
+        # if controller:
+        #     self.add_controller(controller)
+        # else:
+        #     self.enable_controller = enable_controller
+        # self.controller_mode = controller_mode
+        # self.controller_time_scale = controller_time_scale
+        # self.controller_condition = controller_condition
+        # self.controller_condition.owner = self.controller
+        # # This is set at runtime and may be used by the controller to assign its
+        # #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        # self.num_trials = None
+        # MODIFIED 11/3/21 END
 
         self._update_parameter_components()
 
@@ -3411,6 +3412,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_projections(projections)
 
         self.add_pathways(pathways, context=context)
+
+        # MODIFIED 11/3/21 NEW:
+        # Call with context = COMPOSITION to avoid calling _check_initialization_status again
+        # Need here so that controller can see nodes (for assigning state_features)
+        self._analyze_graph(context=context)
+
+        # self.controller = None
+        self._controller_initialization_status = ContextFlags.INITIALIZED
+        if controller:
+            self.add_controller(controller)
+        else:
+            self.enable_controller = enable_controller
+        self.controller_mode = controller_mode
+        self.controller_time_scale = controller_time_scale
+        self.controller_condition = controller_condition
+        self.controller_condition.owner = self.controller
+        # This is set at runtime and may be used by the controller to assign its
+        #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        self.num_trials = None
+        # Controller
+        # MODIFIED 11/3/21 END
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
@@ -7160,22 +7182,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # FIX: 11/3/21 ??DEAL WITH MODEL-FREE (AGENT_REP != SELF) AND NO STATE_FEATURE,
-        #              AND DO DOUBLE CHECK THAT FOR MODEL-FREE ALL INPUT NODES PROJECT TO OCM STATE_INPUT_PORTS
-        #              (IN CASE ANY HAVE BEEN ADDED SINCE CONTOLLER WAS ADDED -- WRITE TEST FOR THAT!)
-        #      SO DEFAULTS MUST BE ASSIGNED FROM SELF
-        # If there are no state_input_ports specified assign them for all INPUT Nodes of the Composition
-        # (note: this should be the case if controller.agent_rep is either af Composition [model-based optimization]
-        #   or it is a CompositionFunctionApproximator [model-free optimization] but not state_features were specified)
-        if not controller.state_input_ports:
-            input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-            state_input_ports = []
-            for node in input_nodes:
-                # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
-                for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-                    state_input_ports.append(input_port)
-            controller.add_ports(state_input_ports, update_variable=False, context=context)
-            controller.state_input_ports.append(state_input_ports)
+        # # FIX: 11/3/21 ??DEAL WITH MODEL-FREE (AGENT_REP != SELF) AND NO STATE_FEATURE,
+        # #              AND DO DOUBLE CHECK THAT FOR MODEL-FREE ALL INPUT NODES PROJECT TO OCM STATE_INPUT_PORTS
+        # #              (IN CASE ANY HAVE BEEN ADDED SINCE CONTOLLER WAS ADDED -- WRITE TEST FOR THAT!)
+        # #      SO DEFAULTS MUST BE ASSIGNED FROM SELF
+        # # If there are no state_input_ports specified assign them for all INPUT Nodes of the Composition
+        # # (note: this should be the case if controller.agent_rep is either af Composition [model-based optimization]
+        # #   or it is a CompositionFunctionApproximator [model-free optimization] but not state_features were specified)
+        # if not controller.state_input_ports:
+        #     input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        #     state_input_ports = []
+        #     for node in input_nodes:
+        #         # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
+        #         for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
+        #             state_input_ports.append(input_port)
+        #     controller.add_ports(state_input_ports, update_variable=False, context=context)
+        #     controller.state_input_ports.append(state_input_ports)
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:

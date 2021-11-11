@@ -1589,7 +1589,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                           )
 
     def _instantiate_control_signals(self, context):
-        """Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)"""
+        """Subclassess can override for class-specific implementation (see OptimizationControlMechanism for example)"""
         output_port_specs = list(enumerate(self.output_ports))
 
         for i, control_signal in output_port_specs:
