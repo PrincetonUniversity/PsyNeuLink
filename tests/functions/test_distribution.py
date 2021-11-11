@@ -3,6 +3,7 @@ import pytest
 
 import psyneulink.core.llvm as pnlvm
 import psyneulink.core.components.functions.nonstateful.distributionfunctions as Functions
+from psyneulink.core.globals.utilities import _SeededPhilox
 
 np.random.seed(0)
 test_var = np.random.rand()
@@ -28,6 +29,11 @@ test_data = [
     (Functions.NormalDist, 1e-4, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),
     (Functions.UniformDist, 1e14, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6879771504250405)),
     (Functions.UniformDist, 1e-4, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6879771504250405)),
+    # Inf inputs select Philox PRNG, test_var should never be inf
+    (Functions.NormalDist, np.inf, {"mean": RAND1, "standard_deviation": RAND2}, None, (0.5910357654927911)),
+    (Functions.NormalDist, -np.inf, {"mean": RAND1, "standard_deviation": RAND2}, None, (0.5910357654927911)),
+    (Functions.UniformDist, np.inf, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6043448764869507)),
+    (Functions.UniformDist, -np.inf, {"low": min(RAND1, RAND2), "high": max(RAND1, RAND2)}, None, (0.6043448764869507)),
 ]
 
 # use list, naming function produces ugly names
@@ -40,7 +46,12 @@ names = [
     "NormalDist2",
     "UniformDist1",
     "UniformDist2",
+    "NormalDist1 Philox",
+    "NormalDist2 Philox",
+    "UniformDist1 Philox",
+    "UniformDist2 Philox",
 ]
+
 
 @pytest.mark.function
 @pytest.mark.transfer_function
@@ -50,7 +61,11 @@ def test_execute(func, variable, params, llvm_skip, expected, benchmark, func_mo
     benchmark.group = "TransferFunction " + func.componentName
     if func_mode != 'Python' and llvm_skip:
         pytest.skip(llvm_skip)
+
     f = func(default_variable=variable, **params)
+    if np.isinf(variable):
+        f.parameters.random_state.set(_SeededPhilox([0]))
+
     ex = pytest.helpers.get_func_execution(f, func_mode)
     res = ex(variable)
 

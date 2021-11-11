@@ -7,6 +7,7 @@ import psyneulink as pnl
 from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
+from psyneulink.core.globals.utilities import _SeededPhilox
 
 
 class TestControlSpecification:
@@ -1090,9 +1091,12 @@ class TestControlMechanisms:
     @pytest.mark.benchmark
     @pytest.mark.control
     @pytest.mark.composition
-    def test_modulation_of_random_state_direct(self, comp_mode, benchmark):
+    @pytest.mark.parametrize('prng', ['Default', 'Philox'])
+    def test_modulation_of_random_state_direct(self, comp_mode, benchmark, prng):
         # set explicit seed to make sure modulation is different
         mech = pnl.ProcessingMechanism(function=pnl.UniformDist(seed=0))
+        if prng == 'Philox':
+            mech.function.parameters.random_state.set(_SeededPhilox([0]))
         ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed', mech),
                                                                           modulation=pnl.OVERRIDE))
         comp = pnl.Composition()
@@ -1100,11 +1104,15 @@ class TestControlMechanisms:
         comp.add_node(ctl_mech)
 
         seeds = [13, 13, 14]
-        prngs = {s:np.random.RandomState([s]) for s in seeds}
-        expected = [prngs[s].uniform() for s in seeds] * 2
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
+        if prng == 'Default':
+            prngs = {s:np.random.RandomState([s]) for s in seeds}
+        elif prng == 'Philox':
+            prngs = {s:_SeededPhilox([s]) for s in seeds}
+
+        expected = [prngs[s].uniform() for s in seeds] * 2
         assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), expected)
 
     @pytest.mark.benchmark
@@ -1113,11 +1121,14 @@ class TestControlMechanisms:
     # 'LLVM' mode is not supported, because synchronization of compiler and
     # python values during execution is not implemented.
     @pytest.mark.usefixtures("comp_mode_no_llvm")
-    def test_modulation_of_random_state_DDM(self, comp_mode, benchmark):
+    @pytest.mark.parametrize('prng', ['Default', 'Philox'])
+    def test_modulation_of_random_state_DDM(self, comp_mode, benchmark, prng):
         # set explicit seed to make sure modulation is different
         mech = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=5.),
                        reset_stateful_function_when=pnl.AtPass(0),
                        execute_until_finished=True)
+        if prng == 'Philox':
+            mech.function.parameters.random_state.set(_SeededPhilox([0]))
         ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed-function', mech),
                                                                           modulation=pnl.OVERRIDE))
         comp = pnl.Composition()
@@ -1128,7 +1139,10 @@ class TestControlMechanisms:
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
-        assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
+        if prng == 'Default':
+            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
+        elif prng == 'Philox':
+            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
 
     @pytest.mark.control
     @pytest.mark.composition
