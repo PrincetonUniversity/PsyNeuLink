@@ -557,6 +557,9 @@ class AutodiffComposition(Composition):
                                                         report_num=report_num
                                                         )
 
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["optimizer"]
+
     def _get_state_struct_type(self, ctx):
         comp_state_type_list = ctx.get_state_struct_type(super())
         pytorch_representation = self._build_pytorch_representation()

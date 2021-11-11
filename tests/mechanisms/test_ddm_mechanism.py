@@ -14,6 +14,7 @@ from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.core.globals.keywords import IDENTITY_MATRIX, FULL_CONNECTIVITY_MATRIX
+from psyneulink.core.globals.utilities import _SeededPhilox
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
     ARRAY, DDM, DDMError, DECISION_VARIABLE_ARRAY, SELECTED_INPUT_ARRAY
 
@@ -234,12 +235,15 @@ class TestOutputPorts:
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
 @pytest.mark.benchmark
-def test_DDM_Integrator_Bogacz(benchmark, mech_mode):
+@pytest.mark.parametrize('prng', ['Default', 'Philox'])
+def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
     stim = 10
     T = DDM(
         name='DDM',
         function=DriftDiffusionAnalytical()
     )
+    if prng == 'Philox':
+        T.parameters.random_state.set(_SeededPhilox([0]))
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
     val = ex(stim)[0]

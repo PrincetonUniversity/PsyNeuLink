@@ -1419,7 +1419,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.parameters.memory_field_shapes.set([item.shape for item in variable], context=context, override=True)
 
         # Retrieve entry from memory that best matches variable
-        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
             entry = self.get_memory(variable, distance_field_weights, context).copy()
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
@@ -1428,7 +1428,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             entry = self.uniform_entry(0, context)
 
         # Store variable in memory
-        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.uniform()):
             self._store_memory(variable, context)
 
         return entry
@@ -2244,7 +2244,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
         rand_struct = ctx.get_random_state_ptr(builder, self, state, params)
-        uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+        uniform_f = ctx.get_uniform_dist_function_by_state(rand_struct)
 
         # Ring buffer
         buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
@@ -2575,7 +2575,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             self.parameters.val_size._set(len(val), context)
 
         # Retrieve value from current dict with key that best matches key
-        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
             memory = self.get_memory(key, context)
         else:
             # QUESTION: SHOULD IT RETURN 0's VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE & OutputPort FROM LAST TRIAL)?
@@ -2592,7 +2592,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 # TODO: does val need noise?
                 key += noise[KEYS]
 
-        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.uniform()):
             self._store_memory(variable, context)
 
         # Return 3d array with keys and vals as lists
