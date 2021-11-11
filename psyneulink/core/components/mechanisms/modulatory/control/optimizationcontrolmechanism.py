@@ -1161,6 +1161,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                       f"{input_nodes_not_specified}) will be used as inputs to its evaluate method.")
 
 
+        # FIX: 11/3/21 - FAILS ON test_agent_rep_assignement_as_controller_and_replacement
         assert state_input_ports_specs, f"PROGRAM ERROR: Failed to construct 'state_input_ports_specs' " \
                                         f"for {self.name} as controller of {self.agent_rep.name}"
 
