@@ -7322,6 +7322,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #         #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
             #         # MODIFIED 11/3/21 END
             # MODIFIED 11/3/21 NEW:
+            # FIX: CHECK THAT THIS GENERATES SAME CONFIGURATION AS OLD ABOVE
             comp_input_node_input_ports = set()
             for input_node in self.get_nodes_by_role(NodeRole.INPUT):
                 for input_port in input_node.input_ports:
