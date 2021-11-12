@@ -1497,11 +1497,21 @@ class OptimizationControlMechanism(ControlMechanism):
         # Construct input
         comp_input = builder.alloca(sim_f.args[3].type.pointee, name="sim_input")
 
+        input_initialized = [False] * len(comp_input.type.pointee)
         for src_idx, ip in enumerate(self.input_ports):
             if ip.shadow_inputs is None:
                 continue
+
+            # shadow inputs point to an input port of of a node.
+            # If that node takes direct input, it will have an associated
+            # (input_port, output_port) in the input_CIM.
+            # Take the former as an index to composition input variable.
             cim_in_port = self.agent_rep.input_CIM_ports[ip.shadow_inputs][0]
             dst_idx = self.agent_rep.input_CIM.input_ports.index(cim_in_port)
+
+            # Check that all inputs are unique
+            assert not input_initialized[dst_idx], "Double initialization of input {}".format(dst_idx)
+            input_initialized[dst_idx] = True
 
             src = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(src_idx)])
             # Destination is a struct of 2d arrays
@@ -1509,6 +1519,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                            ctx.int32_ty(dst_idx),
                                            ctx.int32_ty(0)])
             builder.store(builder.load(src), dst)
+
+        # Assert that we have populated all inputs
+        assert all(input_initialized), \
+          "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
 
 
         # FIX: 11/3/21 ??REFACTOR EITHER:
