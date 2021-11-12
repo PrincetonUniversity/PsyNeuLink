@@ -7299,34 +7299,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Ensure all INPUT Nodes are assigned shadow projections to the controller's state_input_ports
             # FIX: 11/3/21 -- SHOULD THIS BE FOR ALL INPUTPORT ON NODES RATHER THAN JUST NODES?
-            # MODIFIED 11/3/21 OLD:
+            # # MODIFIED 11/3/21 OLD:
             # comp_input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
             # already_specified_nodes = set([state_input_port.shadow_inputs.owner
             #                                for state_input_port in controller.state_input_ports])
             # input_nodes_not_specified = comp_input_nodes - already_specified_nodes
+            # state_input_ports_to_add = []
+            # local_context = Context(source=ContextFlags.METHOD)
+            # for node in input_nodes_not_specified:
+            #     # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
+            #     for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
+            #         # MODIFIED 11/3/21 OLD:
+            #         state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
+            #                                                           port_type=InputPort,
+            #                                                           owner=controller,
+            #                                                           reference_value=input_port.value,
+            #                                                           params={SHADOW_INPUTS: input_port,
+            #                                                                   INTERNAL_ONLY:True},
+            #                                                           context=local_context))
+            #         # # MODIFIED 11/3/21 NEW:
+            #         # state_input_ports_to_add.append(_instantiate_port(
+            #         #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
+            #         # MODIFIED 11/3/21 END
             # MODIFIED 11/3/21 NEW:
-            comp_input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
-            already_specified_nodes = set([state_input_port.shadow_inputs.owner
+            comp_input_node_input_ports = set()
+            for input_node in self.get_nodes_by_role(NodeRole.INPUT):
+                for input_port in input_node.input_ports:
+                    if not input_port.internal_only:
+                        comp_input_node_input_ports.add(input_port)
+
+            already_specified_ports = set([state_input_port.shadow_inputs
                                            for state_input_port in controller.state_input_ports])
-            input_nodes_not_specified = comp_input_nodes - already_specified_nodes
-            # MODIFIED 11/3/21 END
-            state_input_ports_to_add = []
+            input_nodes_not_specified = comp_input_node_input_ports - already_specified_ports
             local_context = Context(source=ContextFlags.METHOD)
+            state_input_ports_to_add = []
             for node in input_nodes_not_specified:
-                # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
-                for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-                    # MODIFIED 11/3/21 OLD:
-                    state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
-                                                                      port_type=InputPort,
-                                                                      owner=controller,
-                                                                      reference_value=input_port.value,
-                                                                      params={SHADOW_INPUTS: input_port,
-                                                                              INTERNAL_ONLY:True},
-                                                                      context=local_context))
-                    # # MODIFIED 11/3/21 NEW:
-                    # state_input_ports_to_add.append(_instantiate_port(
-                    #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
-                    # MODIFIED 11/3/21 END
+                # MODIFIED 11/3/21 OLD:
+                state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
+                                                                  port_type=InputPort,
+                                                                  owner=controller,
+                                                                  reference_value=input_port.value,
+                                                                  params={SHADOW_INPUTS: input_port,
+                                                                          INTERNAL_ONLY:True},
+                                                                  context=local_context))
+                # # MODIFIED 11/3/21 NEW:
+                # state_input_ports_to_add.append(_instantiate_port(
+                #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
+                # MODIFIED 11/3/21 END
+            # MODIFIED 11/3/21 END
 
             controller.add_ports(state_input_ports_to_add,
                                  update_variable=False,
