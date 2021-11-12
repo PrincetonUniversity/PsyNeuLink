@@ -1736,7 +1736,7 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries
         """
 
-        state_input_ports = _parse_shadow_inputs(self, convert_to_list(state_input_ports))
+        state_input_ports = _parse_shadow_inputs(self, state_input_ports)
 
         parsed_features = []
 
@@ -1746,8 +1746,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         for spec in state_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
-            spec[PARAMS][INTERNAL_ONLY] = True
-            spec[PARAMS][PROJECTIONS] = None
+            # # MODIFIED 11/3/21 OLD:
+            # spec[PARAMS][INTERNAL_ONLY] = True
+            # spec[PARAMS][PROJECTIONS] = None
+            # MODIFIED 11/3/21 NEW:
+            spec[PARAMS].update({INTERNAL_ONLY:True,
+                                 PROJECTIONS:None})
+            # MODIFIED 11/3/21 END
             if feature_function:
                 if isinstance(feature_function, Function):
                     feat_fct = copy.deepcopy(feature_function)

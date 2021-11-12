@@ -2410,14 +2410,14 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
-    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
-    LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INTERNAL_ONLY, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, \
     MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PARAMS, PORT_TYPE, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
-    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
+    SAMPLE, SHADOW_INPUTS, SHADOW_INPUT_NAME, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -7280,7 +7280,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: 11/3/21: MOVE THIS METHOD TO OCM
     def _update_controller(self, context=None):
-        """Check and update state_input_ports for controller"""
+        """Check and update state_input_ports for controller
+        Ensures that controller has state_input_ports for InputPorts of any INPUT nodes added to Compositoin
+        """
 
         controller = self.controller
 
@@ -7297,20 +7299,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Ensure all INPUT Nodes are assigned shadow projections to the controller's state_input_ports
             # FIX: 11/3/21 -- SHOULD THIS BE FOR ALL INPUTPORT ON NODES RATHER THAN JUST NODES?
-            input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
-            specified_nodes = set([state_input_port.shadow_inputs.owner
-                                   for state_input_port in controller.state_input_ports])
-            input_nodes_not_specified = input_nodes - specified_nodes
+            # MODIFIED 11/3/21 OLD:
+            # comp_input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
+            # already_specified_nodes = set([state_input_port.shadow_inputs.owner
+            #                                for state_input_port in controller.state_input_ports])
+            # input_nodes_not_specified = comp_input_nodes - already_specified_nodes
+            # MODIFIED 11/3/21 NEW:
+            comp_input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
+            already_specified_nodes = set([state_input_port.shadow_inputs.owner
+                                           for state_input_port in controller.state_input_ports])
+            input_nodes_not_specified = comp_input_nodes - already_specified_nodes
+            # MODIFIED 11/3/21 END
             state_input_ports_to_add = []
             local_context = Context(source=ContextFlags.METHOD)
             for node in input_nodes_not_specified:
                 # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
                 for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-                    state_input_ports_to_add.append(_instantiate_port(port_type=InputPort,
+                    # MODIFIED 11/3/21 OLD:
+                    state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
+                                                                      port_type=InputPort,
                                                                       owner=controller,
                                                                       reference_value=input_port.value,
-                                                                      params={SHADOW_INPUTS: input_port},
+                                                                      params={SHADOW_INPUTS: input_port,
+                                                                              INTERNAL_ONLY:True},
                                                                       context=local_context))
+                    # # MODIFIED 11/3/21 NEW:
+                    # state_input_ports_to_add.append(_instantiate_port(
+                    #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
+                    # MODIFIED 11/3/21 END
+
             controller.add_ports(state_input_ports_to_add,
                                  update_variable=False,
                                  context=local_context)

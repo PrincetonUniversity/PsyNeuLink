@@ -514,7 +514,8 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength
+from psyneulink.core.globals.utilities import \
+    append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -1211,11 +1212,11 @@ class InputPort(Port_Base):
 
         sender_output_ports = [p.sender for p in input_port.path_afferents]
         port_spec = {NAME: SHADOW_INPUT_NAME + input_port.owner.name,
-                      VARIABLE: np.zeros_like(input_port.variable),
-                      PORT_TYPE: InputPort,
-                      PROJECTIONS: sender_output_ports,
-                      PARAMS: {SHADOW_INPUTS: input_port},
-                      OWNER: owner}
+                     VARIABLE: np.zeros_like(input_port.variable),
+                     PORT_TYPE: InputPort,
+                     PROJECTIONS: sender_output_ports,
+                     PARAMS: {SHADOW_INPUTS: input_port},
+                     OWNER: owner}
         return port_spec
 
     @staticmethod
@@ -1392,6 +1393,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 def _parse_shadow_inputs(owner, input_ports):
     """Parses any {SHADOW_INPUTS:[InputPort or Mechanism,...]} items in input_ports into InputPort specif. dict."""
 
+    input_ports = convert_to_list(input_ports)
     input_ports_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_ports):
         # If {SHADOW_INPUTS:[InputPort or Mechaism,...]} is found:
