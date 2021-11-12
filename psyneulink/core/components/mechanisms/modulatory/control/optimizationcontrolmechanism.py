@@ -1137,9 +1137,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 referenced_input_nodes = [spec[PARAMS][SHADOW_INPUTS].owner for spec in state_input_ports_specs]
 
                 # FIX 11/3/21 - PUT THIS TEST IN Composition.add_controller
-                # Ensure all state_features specified are INPUT Nodes
-                disallowed_state_features = [input_node.name for input_node in referenced_input_nodes
-                                             if not input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+                # # Ensure all state_features specified are INPUT Nodes
+                # disallowed_state_features = [input_node.name for input_node in referenced_input_nodes
+                #                              if not input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
                 # if disallowed_state_features:
                 #     raise OptimizationControlMechanismError(
                 #         f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
@@ -1161,7 +1161,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                       f"{input_nodes_not_specified}) will be used as inputs to its evaluate method.")
 
 
-        # FIX: 11/3/21 - FAILS ON test_agent_rep_assignement_as_controller_and_replacement
+        # # FIX: 11/3/21 - FAILS ON test_agent_rep_assignement_as_controller_and_replacement
         # assert state_input_ports_specs, f"PROGRAM ERROR: Failed to construct 'state_input_ports_specs' " \
         #                                 f"for {self.name} as controller of {self.agent_rep.name}"
 
@@ -1736,7 +1736,7 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries
         """
 
-        state_input_ports = _parse_shadow_inputs(self, convert_to_list(state_input_ports))
+        state_input_ports = _parse_shadow_inputs(self, state_input_ports)
 
         parsed_features = []
 
@@ -1746,8 +1746,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         for spec in state_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
-            spec[PARAMS][INTERNAL_ONLY] = True
-            spec[PARAMS][PROJECTIONS] = None
+            # # MODIFIED 11/3/21 OLD:
+            # spec[PARAMS][INTERNAL_ONLY] = True
+            # spec[PARAMS][PROJECTIONS] = None
+            # MODIFIED 11/3/21 NEW:
+            spec[PARAMS].update({INTERNAL_ONLY:True,
+                                 PROJECTIONS:None})
+            # MODIFIED 11/3/21 END
             if feature_function:
                 if isinstance(feature_function, Function):
                     feat_fct = copy.deepcopy(feature_function)
