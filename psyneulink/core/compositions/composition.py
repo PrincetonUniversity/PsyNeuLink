@@ -2395,12 +2395,12 @@ from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import Port
+from psyneulink.core.components.ports.port import Port, _instantiate_port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
-from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -2416,7 +2416,7 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
+    PARAMETER, PARAMETER_CIM_NAME, PARAMS, PORT_TYPE, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -3534,6 +3534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
+        self._update_controller(context=context)
 
     def _update_processing_graph(self):
         """
@@ -7158,14 +7159,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
                 return
 
-            # Warn if current one is being replaced, and remove Projections for old one
+            # Remove existing controller if there is one
             if self.controller:
+                # Warn if current one is being replaced
                 if self.prefs.verbosePref:
                     warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
                                   f"is being replaced by {controller.name}.")
+                # Remove Projections for old one
                 for proj in self.projections:
                     if (proj in self.controller.afferents or proj in self.controller.efferents):
                         self.remove_projection(proj)
+                        Projection_Base._delete_projection(proj)
                 self.controller.composition=None
 
         # Assign mutual references between Composition and controller
@@ -7182,22 +7186,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
-        # # FIX: 11/3/21 ??DEAL WITH MODEL-FREE (AGENT_REP != SELF) AND NO STATE_FEATURE,
-        # #              AND DO DOUBLE CHECK THAT FOR MODEL-FREE ALL INPUT NODES PROJECT TO OCM STATE_INPUT_PORTS
-        # #              (IN CASE ANY HAVE BEEN ADDED SINCE CONTOLLER WAS ADDED -- WRITE TEST FOR THAT!)
-        # #      SO DEFAULTS MUST BE ASSIGNED FROM SELF
-        # # If there are no state_input_ports specified assign them for all INPUT Nodes of the Composition
-        # # (note: this should be the case if controller.agent_rep is either af Composition [model-based optimization]
-        # #   or it is a CompositionFunctionApproximator [model-free optimization] but not state_features were specified)
-        # if not controller.state_input_ports:
-        #     input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
-        #     state_input_ports = []
-        #     for node in input_nodes:
-        #         # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
-        #         for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-        #             state_input_ports.append(input_port)
-        #     controller.add_ports(state_input_ports, update_variable=False, context=context)
-        #     controller.state_input_ports.append(state_input_ports)
+        self._update_controller(context=context)
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
@@ -7288,6 +7277,44 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
         self._analyze_graph(context=context)
+
+    # FIX: 11/3/21: MOVE THIS METHOD TO OCM
+    def _update_controller(self, context=None):
+        """Check and update state_input_ports for controller"""
+
+        controller = self.controller
+
+        # If controller is being used for model-based optimization (see OptimizationControlMechanism_Model_Based):
+        if self is controller.agent_rep:
+            # Ensure all of the controller's state_input_ports specified correspond to INPUT nodes of the Composition
+            disallowed_state_features = [input_port.shadow_inputs for input_port in controller.state_input_ports
+                                         if input_port.shadow_inputs.owner not in self.get_nodes_by_role(NodeRole.INPUT)]
+            if any(disallowed_state_features):
+                raise CompositionError(f"{controller.name} being used as controller for model-based optimization "
+                                       f"of {self.name} has 'state_features' specified "
+                                       f"({[d.name for d in disallowed_state_features]}) "
+                                       f"that are not INPUT nodes of the the Composition.")
+
+            # Ensure all INPUT Nodes are assigned shadow projections to the controller's state_input_ports
+            # FIX: 11/3/21 -- SHOULD THIS BE FOR ALL INPUTPORT ON NODES RATHER THAN JUST NODES?
+            input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
+            specified_nodes = set([state_input_port.shadow_inputs.owner
+                                   for state_input_port in controller.state_input_ports])
+            input_nodes_not_specified = input_nodes - specified_nodes
+            state_input_ports_to_add = []
+            local_context = Context(source=ContextFlags.METHOD)
+            for node in input_nodes_not_specified:
+                # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
+                for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
+                    state_input_ports_to_add.append(_instantiate_port(port_type=InputPort,
+                                                                      owner=controller,
+                                                                      reference_value=input_port.value,
+                                                                      params={SHADOW_INPUTS: input_port},
+                                                                      context=local_context))
+            controller.add_ports(state_input_ports_to_add,
+                                 update_variable=False,
+                                 context=local_context)
+            controller.state_input_ports.extend(state_input_ports_to_add)
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition

@@ -353,21 +353,25 @@ class TestControlSpecification:
     def test_agent_rep_assignement_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
         comp = pnl.Composition(name='comp',
-                           pathways=[mech],
-                           controller=pnl.OptimizationControlMechanism(agent_rep=None,
-                                                                       control_signals=(pnl.SLOPE, mech),
-                                                                       search_space=[1]))
+                               pathways=[mech],
+                               controller=pnl.OptimizationControlMechanism(name="old_ocm",
+                                                                           agent_rep=None,
+                                                                           control_signals=(pnl.SLOPE, mech),
+                                                                           search_space=[1]))
         assert comp.controller.composition == comp
+        assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
 
-        new_ocm = pnl.OptimizationControlMechanism(agent_rep=None,
+        new_ocm = pnl.OptimizationControlMechanism(name='new_ocm',
+                                                   agent_rep=None,
                                                    control_signals=(pnl.INTERCEPT, mech),
                                                    search_space=[1])
         old_ocm = comp.controller
         comp.add_controller(new_ocm)
 
         assert comp.controller == new_ocm
+        assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
         assert old_ocm.composition is None
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
