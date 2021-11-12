@@ -261,7 +261,9 @@ class LLVMBuilderContext:
             # Modulated params are usually single element arrays
             seed_ptr = builder.gep(seed_ptr, [self.int32_ty(0), self.int32_ty(0)])
         new_seed = builder.load(seed_ptr)
-        # FIXME: the seed should ideally be integer already
+        # FIXME: The seed should ideally be integer already.
+        #        However, it can be modulated and we don't support,
+        #        passing integer values as computed results.
         new_seed = builder.fptoui(new_seed, used_seed.type)
 
         seeds_cmp = builder.icmp_unsigned("!=", used_seed, new_seed)

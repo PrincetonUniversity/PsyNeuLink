@@ -722,7 +722,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
+        nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
 
         # Allocate temporary output storage
         output_storage = builder.alloca(data.type.pointee, name="output_storage")
