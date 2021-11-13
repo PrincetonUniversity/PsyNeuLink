@@ -3534,7 +3534,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
+
+        # FIX: MOVE THIS TO add_nodes TO CREATE PROJECTIONS FROM TO CONTROLLER WHEN INPUT NODES ARE ADDED
+        # MODIFIED 11/3/21 NEW: -
         self._update_controller(context=context)
+        # MODIFIED 11/3/21 END
 
     def _update_processing_graph(self):
         """
@@ -7287,8 +7291,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller = self.controller
 
         # If controller is being used for model-based optimization (see OptimizationControlMechanism_Model_Based):
-        if self is controller.agent_rep:
-            # Ensure all of the controller's state_input_ports specified correspond to INPUT nodes of the Composition
+        if controller and hasattr(controller, AGENT_REP) and controller.agent_rep is self:
+
+            # FIX: 11/3/21 - MOVE TO RUN, TO ALLOW CONTROLLER TO BE ADDED BEFORE INPUT NODES
+            # Ensure all state_input_ports specified for the controller correspond to INPUT nodes of the Composition
             disallowed_state_features = [input_port.shadow_inputs for input_port in controller.state_input_ports
                                          if input_port.shadow_inputs.owner not in self.get_nodes_by_role(NodeRole.INPUT)]
             if any(disallowed_state_features):
@@ -7296,33 +7302,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"of {self.name} has 'state_features' specified "
                                        f"({[d.name for d in disallowed_state_features]}) "
                                        f"that are not INPUT nodes of the the Composition.")
+            # FIX: END MOVE
 
             # Ensure all INPUT Nodes are assigned shadow projections to the controller's state_input_ports
-            # FIX: 11/3/21 -- SHOULD THIS BE FOR ALL INPUTPORT ON NODES RATHER THAN JUST NODES?
-            # # MODIFIED 11/3/21 OLD:
-            # comp_input_nodes = set([input_node for input_node in self.get_nodes_by_role(NodeRole.INPUT)])
-            # already_specified_nodes = set([state_input_port.shadow_inputs.owner
-            #                                for state_input_port in controller.state_input_ports])
-            # input_nodes_not_specified = comp_input_nodes - already_specified_nodes
-            # state_input_ports_to_add = []
-            # local_context = Context(source=ContextFlags.METHOD)
-            # for node in input_nodes_not_specified:
-            #     # FIX: 11/3/21 ??NEED TO DEAL WITH NESTED COMP AS INPUT NODE [IF SO, MAKE METHOD THAT DOES ALL THIS]??
-            #     for input_port in [input_port for input_port in node.input_ports if not input_port.internal_only]:
-            #         # MODIFIED 11/3/21 OLD:
-            #         state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
-            #                                                           port_type=InputPort,
-            #                                                           owner=controller,
-            #                                                           reference_value=input_port.value,
-            #                                                           params={SHADOW_INPUTS: input_port,
-            #                                                                   INTERNAL_ONLY:True},
-            #                                                           context=local_context))
-            #         # # MODIFIED 11/3/21 NEW:
-            #         # state_input_ports_to_add.append(_instantiate_port(
-            #         #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
-            #         # MODIFIED 11/3/21 END
-            # MODIFIED 11/3/21 NEW:
-            # FIX: CHECK THAT THIS GENERATES SAME CONFIGURATION AS OLD ABOVE
             comp_input_node_input_ports = set()
             for input_node in self.get_nodes_by_role(NodeRole.INPUT):
                 for input_port in input_node.input_ports:
@@ -7347,7 +7329,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # state_input_ports_to_add.append(_instantiate_port(
                 #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
                 # MODIFIED 11/3/21 END
-            # MODIFIED 11/3/21 END
 
             controller.add_ports(state_input_ports_to_add,
                                  update_variable=False,
