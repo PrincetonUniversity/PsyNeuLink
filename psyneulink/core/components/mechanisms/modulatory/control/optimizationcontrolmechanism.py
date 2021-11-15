@@ -1288,6 +1288,55 @@ class OptimizationControlMechanism(ControlMechanism):
         if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
             self._initialize_composition_function_approximator(context)
 
+    # FIX: 11/3/21: MOVE THIS METHOD TO OCM
+    def _update_state_input_ports(self, context=None):
+        """Check and update state_input_ports for controller
+        Ensures that controller has state_input_ports for InputPorts of any INPUT nodes added to Compositoin
+        """
+
+        controller = self
+
+        # If controller is being used for model-based optimization (see OptimizationControlMechanism_Model_Based):
+        if controller and hasattr(controller, AGENT_REP) and controller.agent_rep is self:
+
+            # Note: test that controller has shadow Projections from all InputPorts of all INPUT nodes is done in run()
+
+            comp_input_node_input_ports = set()
+            # MODIFIED 11/3/21 OLD:
+            # for input_node in self.get_nodes_by_role(NodeRole.INPUT):
+            #     for input_port in input_node.input_ports:
+            #         if not input_port.internal_only:
+            #             comp_input_node_input_ports.add(input_port)
+            # MODIFIED 11/3/21 NEW:
+            for input_port in [input_port for node in self.get_nodes_by_role(NodeRole.INPUT)
+                               for input_port in node.input_ports if not input_port.internal_only]:
+                        comp_input_node_input_ports.add(input_port)
+            # MODIFIED 11/3/21 END
+
+            already_specified_ports = set([state_input_port.shadow_inputs
+                                           for state_input_port in controller.state_input_ports])
+            input_nodes_not_specified = comp_input_node_input_ports - already_specified_ports
+            local_context = Context(source=ContextFlags.METHOD)
+            state_input_ports_to_add = []
+            for node in input_nodes_not_specified:
+                # MODIFIED 11/3/21 OLD:
+                state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
+                                                                  port_type=InputPort,
+                                                                  owner=controller,
+                                                                  reference_value=input_port.value,
+                                                                  params={SHADOW_INPUTS: input_port,
+                                                                          INTERNAL_ONLY:True},
+                                                                  context=local_context))
+                # # MODIFIED 11/3/21 NEW:
+                # state_input_ports_to_add.append(_instantiate_port(
+                #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
+                # MODIFIED 11/3/21 END
+
+            controller.add_ports(state_input_ports_to_add,
+                                 update_variable=False,
+                                 context=local_context)
+            controller.state_input_ports.extend(state_input_ports_to_add)
+
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of agent_rep.evaluate().
         """

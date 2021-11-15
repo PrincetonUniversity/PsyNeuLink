@@ -3535,10 +3535,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
-        # # FIX: MOVE THIS TO add_nodes TO CREATE PROJECTIONS TO CONTROLLER WHEN INPUT NODES ARE ADDED
-        # MODIFIED 11/3/21 NEW: -
-        self._update_controller(context=context)
-        # # MODIFIED 11/3/21 END
+        # # # FIX: MOVE THIS TO add_nodes TO CREATE PROJECTIONS TO CONTROLLER WHEN INPUT NODES ARE ADDED
+        # # MODIFIED 11/15/21 NEW: MOVED TO _complete_init_of_partially_initialized_nodes
+        # # MODIFIED 11/3/21 NEW: -
+        # self._update_controller(context=context)
+        # # # MODIFIED 11/3/21 END
+        # MODIFIED 11/15/21 END
 
     def _update_processing_graph(self):
         """
@@ -3639,14 +3641,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             sender=proj.sender.owner,
                                             receiver=node)
 
-        # Add ControlSignals to controller and ControlProjections
-        #     to any parameter_ports specified for control in node's constructor
-        if self.controller:
-            self._instantiate_deferred_init_control(node, context=context)
-            # MODIFIED 11/3/21 NEW:
-            if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
-                self._update_controller(context=context)
-            # MODIFIED 11/3/21 END
+        # # MODIFIED 11/15/21 OLD:  MOVED _complete_init_of_partially_initialized_nodes
+        # # Add ControlSignals to controller and ControlProjections
+        # #     to any parameter_ports specified for control in node's constructor
+        # if self.controller:
+        #     self._instantiate_deferred_init_control(node, context=context)
+        #     # MODIFIED 11/3/21 NEW:
+        #     if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
+        #         self._update_controller(context=context)
+        #     # MODIFIED 11/3/21 END
+        # # MODIFIED 11/15/21 END
 
         try:
             if len(invalid_aux_components) > 0:
@@ -4100,6 +4104,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not invalid_aux_components:
                 completed_nodes.append(node)
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
+
+        # MODIFIED 11/15/21 NEW:
+        # Add ControlSignals to controller and ControlProjections
+        #     to any parameter_ports specified for control in node's constructor
+        if self.controller:
+            self._instantiate_deferred_init_control(node, context=context)
+            # MODIFIED 11/3/21 NEW:
+            if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
+                self.controller._update_state_input_ports(context=context)
+            # MODIFIED 11/3/21 END
+        # MODIFIED 11/15/21 END
+
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -7197,7 +7213,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 11/3/21 NEW:
         # self._analyze_graph(context=context) <- FIX: CAUSES INFINITE RECURSION FOR ...add_node_with_control_specified
         # MODIFIED 11/3/21 END
-        self._update_controller(context=context) # FIX: ADDS EXTRANEOUS state_input_ports FOR ...ocm_gridsearch_min...
+        # # MODIFIED 11/15/21 OLD:
+        # self._update_controller(context=context) # FIX: ADDS EXTRANEOUS state_input_ports FOR ...ocm_gridsearch_min...
+        # MODIFIED 11/15/21 END
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
@@ -7289,54 +7307,56 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._controller_initialization_status = ContextFlags.INITIALIZED
         self._analyze_graph(context=context)
 
-    # FIX: 11/3/21: MOVE THIS METHOD TO OCM
-    def _update_controller(self, context=None):
-        """Check and update state_input_ports for controller
-        Ensures that controller has state_input_ports for InputPorts of any INPUT nodes added to Compositoin
-        """
-
-        controller = self.controller
-
-        # If controller is being used for model-based optimization (see OptimizationControlMechanism_Model_Based):
-        if controller and hasattr(controller, AGENT_REP) and controller.agent_rep is self:
-
-            # Note: test that controller has shadow Projections from all InputPorts of all INPUT nodes is done in run()
-
-            comp_input_node_input_ports = set()
-            # MODIFIED 11/3/21 OLD:
-            # for input_node in self.get_nodes_by_role(NodeRole.INPUT):
-            #     for input_port in input_node.input_ports:
-            #         if not input_port.internal_only:
-            #             comp_input_node_input_ports.add(input_port)
-            # MODIFIED 11/3/21 NEW:
-            for input_port in [input_port for node in self.get_nodes_by_role(NodeRole.INPUT)
-                               for input_port in node.input_ports if not input_port.internal_only]:
-                        comp_input_node_input_ports.add(input_port)
-            # MODIFIED 11/3/21 END
-
-            already_specified_ports = set([state_input_port.shadow_inputs
-                                           for state_input_port in controller.state_input_ports])
-            input_nodes_not_specified = comp_input_node_input_ports - already_specified_ports
-            local_context = Context(source=ContextFlags.METHOD)
-            state_input_ports_to_add = []
-            for node in input_nodes_not_specified:
-                # MODIFIED 11/3/21 OLD:
-                state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
-                                                                  port_type=InputPort,
-                                                                  owner=controller,
-                                                                  reference_value=input_port.value,
-                                                                  params={SHADOW_INPUTS: input_port,
-                                                                          INTERNAL_ONLY:True},
-                                                                  context=local_context))
-                # # MODIFIED 11/3/21 NEW:
-                # state_input_ports_to_add.append(_instantiate_port(
-                #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
-                # MODIFIED 11/3/21 END
-
-            controller.add_ports(state_input_ports_to_add,
-                                 update_variable=False,
-                                 context=local_context)
-            controller.state_input_ports.extend(state_input_ports_to_add)
+    # # MODIFIED 11/15/21 OLD:
+    # # FIX: 11/3/21: MOVE THIS METHOD TO OCM
+    # def _update_controller(self, context=None):
+    #     """Check and update state_input_ports for controller
+    #     Ensures that controller has state_input_ports for InputPorts of any INPUT nodes added to Compositoin
+    #     """
+    #
+    #     controller = self.controller
+    #
+    #     # If controller is being used for model-based optimization (see OptimizationControlMechanism_Model_Based):
+    #     if controller and hasattr(controller, AGENT_REP) and controller.agent_rep is self:
+    #
+    #         # Note: test that controller has shadow Projections from all InputPorts of all INPUT nodes is done in run()
+    #
+    #         comp_input_node_input_ports = set()
+    #         # MODIFIED 11/3/21 OLD:
+    #         # for input_node in self.get_nodes_by_role(NodeRole.INPUT):
+    #         #     for input_port in input_node.input_ports:
+    #         #         if not input_port.internal_only:
+    #         #             comp_input_node_input_ports.add(input_port)
+    #         # MODIFIED 11/3/21 NEW:
+    #         for input_port in [input_port for node in self.get_nodes_by_role(NodeRole.INPUT)
+    #                            for input_port in node.input_ports if not input_port.internal_only]:
+    #                     comp_input_node_input_ports.add(input_port)
+    #         # MODIFIED 11/3/21 END
+    #
+    #         already_specified_ports = set([state_input_port.shadow_inputs
+    #                                        for state_input_port in controller.state_input_ports])
+    #         input_nodes_not_specified = comp_input_node_input_ports - already_specified_ports
+    #         local_context = Context(source=ContextFlags.METHOD)
+    #         state_input_ports_to_add = []
+    #         for node in input_nodes_not_specified:
+    #             # MODIFIED 11/3/21 OLD:
+    #             state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
+    #                                                               port_type=InputPort,
+    #                                                               owner=controller,
+    #                                                               reference_value=input_port.value,
+    #                                                               params={SHADOW_INPUTS: input_port,
+    #                                                                       INTERNAL_ONLY:True},
+    #                                                               context=local_context))
+    #             # # MODIFIED 11/3/21 NEW:
+    #             # state_input_ports_to_add.append(_instantiate_port(
+    #             #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
+    #             # MODIFIED 11/3/21 END
+    #
+    #         controller.add_ports(state_input_ports_to_add,
+    #                              update_variable=False,
+    #                              context=local_context)
+    #         controller.state_input_ports.extend(state_input_ports_to_add)
+    # # MODIFIED 11/15/21 END
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
