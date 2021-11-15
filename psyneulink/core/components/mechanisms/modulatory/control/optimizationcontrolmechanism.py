@@ -1093,6 +1093,8 @@ class OptimizationControlMechanism(ControlMechanism):
             - they reference INPUT Nodes of the agent_rep Composition (presumably used to assign state_feature_function)
             - add state_input_ports for any that are not referenced (model-based requires state_input_ports for
 
+        Note: tests for validity of state_input_ports are made Composition._check_for_invalid_controller_state_features
+
         See`OptimizationControlMechanism_State_Features_Arg` and `OptimizationControlMechanism_State_Features`
         for additional details.
         """
@@ -1107,44 +1109,42 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # FIX: 11/3/21 :
         #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN INPUTPORT IS SPECIFIED, ITS PRIMARY IS USED
-        #    AND CAST SINGLE COMPONENTS SPECIFIED FOR "SHADOW_INPUTS" DICT AS LIST FOR FURTHER PROCESSING
         #    (SEE SCRATCH PAD FOR EXAMPLES)
-        #    ADD TESTS FOR ALL OF THIS AND CHECKS BELOW
 
         if not self.state_features:
             if isinstance(self.agent_rep, CompositionFunctionApproximator):
                 # Warn if no state_features specified for model-free (agent_rep = CompositionFunctionApproximator)
                 warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
             else:
-                # Assign as state_features all INPUT Nodes of Composition for which OptimizationControlMechanism
-                #    is the controller (required for model-based optimization)
-                state_input_ports_specs = [input_node.input_port
-                                           for input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+                # Assign as state_features all input_ports of INPUT Nodes of Composition for which
+                #    OptimizationControlMechanism is the controller (required for model-based optimization)
+                # # MODIFIED 11/3/21 OLD:
+                # state_input_ports_specs = [input_node.input_port
+                #                            for input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+                # MODIFIED 11/3/21 NEW:
+                state_input_ports_specs = [input_port for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
+                                           for input_port in node.input_ports if not input_port.internal_only]
+                # MODIFIED 11/3/21 END
 
         else:
             state_input_ports_specs = self._parse_state_feature_specs(self.state_features,
-                                                                  self.state_feature_function)
+                                                                      self.state_feature_function)
 
-            # If state_features were specified for model-free (i.e., agent_rep IS a CompositionFunctionApproximator),
-            #   assume they are OK (no way to check their validity for agent_rep.evaluate() method
+            # Note:
+            #   if state_features were specified for model-free (i.e., agent_rep is a CompositionFunctionApproximator),
+            #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
 
             if isinstance(self.agent_rep, Composition):
                 # state_features were specified and agent_rep is being used for model-based optimization
                 # - so check that all state_features are references to INPUT Nodes of agent_rep,
                 # - and add references for any INPUT Nodes that are not referenced.
 
+                # FIX: 11/3/21 - NEED TO REWRITE BELOW AROUND InputPorts RATHER THAN JUST INPUT NODES:
+
                 # Get referenced INPUT Nodes of agent_rep
                 referenced_input_nodes = [spec[PARAMS][SHADOW_INPUTS].owner for spec in state_input_ports_specs]
 
-                # FIX 11/3/21 - PUT THIS TEST IN Composition.add_controller
-                # # Ensure all state_features specified are INPUT Nodes
-                # disallowed_state_features = [input_node.name for input_node in referenced_input_nodes
-                #                              if not input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
-                # if disallowed_state_features:
-                #     raise OptimizationControlMechanismError(
-                #         f"{self.name} being assigned as controller for {self.agent_rep.name} has 'state_features' "
-                #         f"specified ({disallowed_state_features}) that are not INPUT nodes of its 'agent_rep'.")
-
+                # FIX: 11/3/21 - IS THIS NEEDED HERE;  CAN JUST DO IN ADD_CONTROLLER
                 # Add any specs for INPUT Nodes of agent_rep that were not specified in **state_features**
                 input_nodes_not_specified = set([agent_rep_input_node.name for agent_rep_input_node
                                                  in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]) \
@@ -1644,9 +1644,6 @@ class OptimizationControlMechanism(ControlMechanism):
         assert all(input_initialized), \
           "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
 
-
-        # FIX: 11/3/21 ??REFACTOR TO USE num_trials_per_estimate RATHER THAN num_estimates
-        # MODIFIED 11/3/21 OLD:
         # Determine simulation counts
         num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
                                                         controller_params,
@@ -1759,19 +1756,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         parsed_features = []
 
-        # # FIX: 11/3/21: input_ports IS IGNORED;  DELETE??
-        # if not isinstance(state_input_ports, list):
-        #     input_ports = [state_input_ports]
-
         for spec in state_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
-            # # MODIFIED 11/3/21 OLD:
-            # spec[PARAMS][INTERNAL_ONLY] = True
-            # spec[PARAMS][PROJECTIONS] = None
-            # MODIFIED 11/3/21 NEW:
             spec[PARAMS].update({INTERNAL_ONLY:True,
                                  PROJECTIONS:None})
-            # MODIFIED 11/3/21 END
             if feature_function:
                 if isinstance(feature_function, Function):
                     feat_fct = copy.deepcopy(feature_function)

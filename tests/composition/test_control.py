@@ -273,13 +273,26 @@ class TestControlSpecification:
         with pytest.warns(UserWarning, match=text):
             # ocomp.show_graph(show_controller=True, show_cim=True)
             # results = ocomp.run([5])
-            result = ocomp.run({initial_node_a: [1]})
+            expected_text_1 = f"{ocomp.controller.name}, being used as controller for " \
+                              f"model-based optimization of {ocomp.name}, has 'state_features' specified "
+            expected_text_2 = f"that are either not INPUT nodes or are missing from the the Composition."
+            with pytest.raises(pnl.CompositionError) as error_text:
+                ocomp.run({initial_node_a: [1]})
+            error_text = error_text.value.error_value
+            assert expected_text_1 in error_text and expected_text_2 in error_text
+
+            # result = ocomp.run({initial_node_a: [1]})
 
             # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
             # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
             # Control Signal "deferred_node": disabled
 
-        assert result == [[5]]
+        # assert result == [[5]]
+
+
+            # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
+            # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+            # Control Signal "deferred_node": disabled
 
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
 
@@ -737,7 +750,7 @@ class TestControlMechanisms:
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
                 # state_feature_function=pnl.Buffer(history=2),
-                name="Controller",
+                name="oController",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
                     function=pnl.SimpleIntegrator,
@@ -756,11 +769,11 @@ class TestControlMechanisms:
                 agent_rep=icomp,
                 state_features=[ia.input_port],
                 # state_feature_function=pnl.Buffer(history=2),
-                name="Controller",
+                name="iController",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
                     function=pnl.SimpleIntegrator,
-                    name="oController Objective Mechanism"
+                    name="iController Objective Mechanism"
                 ),
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
                 control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
