@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 # objective_function = {None: 2, Concatenate: 2, LinearCombination: 1}
 # expected
 
-pec_test_args = [(None, 2, True, False),
-                 (None, 2, False, True),
-                 (Concatenate, 2, True, False),
-                 (LinearCombination, 1, True, False),
+pec_test_args = [(None, 2, True, False),               # No ObjectiveMechanism (2 inputs), model arg
+                 (None, 2, False, True),               # No ObjectiveMechanism (2 inputs), nodes arg
+                 (Concatenate, 2, True, False),        # ObjectiveMechanism (2 inputs), model arg
+                 (LinearCombination, 1, True, False),  # ObjectiveMechanism (1 input), model arg
                  # (None, 2, True, True), <- USE TO TEST ERROR
                  # (None, 2, False, False), <- USE TO TEST ERROR
                  ]
@@ -37,6 +37,7 @@ pec_test_args = [(None, 2, True, False),
     ids=[f"{x[0]}-{'model' if x[2] else None}-{'nodes' if x[3] else None})" for x in pec_test_args]
 )
 def test_parameter_estimation_composition(objective_function_arg, expected_input_len, model_spec, node_spec):
+    """Test with and without ObjectiveMechanism specified, and use of model vs. nodes arg of constructor"""
     samples = np.arange(0.1, 1.01, 0.3)
     Input = pnl.TransferMechanism(name='Input')
     reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
@@ -96,12 +97,15 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                              # enable_controller=False  # For testing error
                                              )
     ctlr = pec.controller
+
+    assert ctlr.num_outcome_input_ports == 1
     if objective_function_arg:
         assert ctlr.objective_mechanism                         # For objective_function specified
     else:
         assert not ctlr.objective_mechanism                         # For objective_function specified
     assert len(ctlr.input_ports[pnl.OUTCOME].variable) == expected_input_len
     assert len(ctlr.control_signals) == 3
-    assert pnl.RANDOMIZATION_CONTROL_SIGNAL_NAME in ctlr.control_signals.names
-    assert ctlr.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL_NAME].allocation_samples.base.num == 3
+    assert ctlr.function.num_estimates == 3
+    assert pnl.RANDOMIZATION_CONTROL_SIGNAL in ctlr.control_signals.names
+    assert ctlr.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].allocation_samples.base.num == 3
     # pec.run()

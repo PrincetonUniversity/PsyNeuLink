@@ -71,6 +71,13 @@ class OptimizationFunctionError(Exception):
         self.error_value = error_value
 
 
+def _num_estimates_getter(owning_component, context):
+    if owning_component.parameters.randomization_dimension._get(context) is None:
+        return 1
+    else:
+        return owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+
+
 class OptimizationFunction(Function_Base):
     """
     OptimizationFunction(                            \
@@ -308,6 +315,12 @@ class OptimizationFunction(Function_Base):
                     :default value: None
                     :type:
 
+                num_estimates
+                    see `num_estimates <OptimizationFunction.num_estimates>`
+
+                    :default value: None
+                    :type: ``int``
+
                 objective_function
                     see `objective_function <OptimizationFunction.objective_function>`
 
@@ -366,11 +379,14 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
-        aggregation_function = Parameter(lambda x,n: sum(x) / n, stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x: np.mean(x,axis=len(x)-1), stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
         randomization_dimension = Parameter(None, stateful=False, loggable=False)
+        num_estimates = Parameter(None, stateful=True, loggable=True, read_only=True,
+                                  dependencies=[randomization_dimension, search_space],
+                                  getter=_num_estimates_getter)
 
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
@@ -416,6 +432,10 @@ class OptimizationFunction(Function_Base):
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
 
         self.randomization_dimension = randomization_dimension
+        if self.search_space:
+            # Make randomization dimension of search_space last for standardization of treatment
+            self.search_space.append(self.search_space.pop(self.search_space.index(self.randomization_dimension)))
+            self.randomization_dimension = len(self.search_space)
 
         super().__init__(
             default_variable=default_variable,
@@ -565,24 +585,58 @@ class OptimizationFunction(Function_Base):
             second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
+
         if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
             assert all([not getattr(self.parameters, x)._user_specified for x in self._unspecified_args])
             self._unspecified_args = []
 
-        current_sample = self._check_args(variable=variable, context=context, params=params)
-
+        # Get initial sample in case it is needed by _search_space_evaluate (e.g., for gradient initialization)
+        initial_sample = self._check_args(variable=variable, context=context, params=params)
         try:
-            current_value = self.owner.objective_mechanism.parameters.value._get(context)
+            initial_value = self.owner.objective_mechanism.parameters.value._get(context)
         except AttributeError:
-            current_value = 0
+            initial_value = 0
 
-        samples = []
-        values = []
+        # EVALUATE ALL SAMPLES IN SEARCH SPACE
+        # Evaluate all estimates of all samples in search_space
+
+        # If execution mode is not Python and search_space is static, use parallelized evaluation:
+        if (self.owner and self.owner.parameters.comp_execution_mode._get(context) != 'Python' and
+                all(isinstance(sample_iterator.start, Number) and isinstance(sample_iterator.stop, Number)
+                    for sample_iterator in self.search_space)):
+            # FIX: NEED TO FIX THIS ONCE _grid_evaluate RETURNS all_samples
+            all_samples = []
+            all_values, num_evals = self._grid_evaluate(self.owner, context)
+            last_sample = last_value = None
+        # Otherwise, default sequential sampling
+        else:
+            last_sample, last_value, all_samples, all_values = self._sequential_evaluate(initial_sample,
+                                                                                         initial_value,
+                                                                                         context)
+
+        # If  aggregation_function is specified, use it to aggregate over randomization dimension
+        if self.aggregation_function:
+            aggregated_values = np.atleast_1d(self.aggregation_function(all_values))
+            returned_values = aggregated_values
+        else:
+            returned_values = all_values
+
+        # Return list of unique samples and aggregated values over them
+        return last_sample, last_value, all_samples, returned_values
+
+    def _sequential_evaluate(self, initial_sample, initial_value, context):
+        """Sequentially evaluate every sample in search_space.
+        Return arrays with all samples evaluated, and array with all values of those samples.
+        """
 
         # Initialize variables used in while loop
         iteration = 0
+        current_sample = initial_sample
+        current_value = initial_value
+        all_samples = []
+        all_values = []
 
         # Set up progress bar
         _show_progress = False
@@ -597,8 +651,10 @@ class OptimizationFunction(Function_Base):
             print("\n{} executing optimization process (one {} for each {}of {} samples): ".
                   format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
             _progress_bar_count = 0
-        # Iterate optimization process
 
+        # Iterate over samples until search_termination_function returns True
+        evaluated_samples = []
+        estimated_values = []
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
@@ -609,51 +665,38 @@ class OptimizationFunction(Function_Base):
                     print(_progress_bar_char, end='', flush=True)
                 _progress_bar_count +=1
 
-            # Get next sample of sample
-            new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
+            # Get next sample
+            current_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
+            # Get value of sample
+            current_value = call_with_pruned_args(self.objective_function, current_sample, context=context)
 
-            # Generate num_estimates of sample, then apply aggregation_function and return result
-            estimates = []
-            num_estimates = self.num_estimates
-            for i in range(num_estimates):
-                estimate = call_with_pruned_args(self.objective_function, new_sample, context=context)
-                estimates.append(estimate)
-            new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
-            self._report_value(new_value)
+            evaluated_samples.append(current_sample)
+            estimated_values.append(current_value)
+
+            self._report_value(current_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
             if max_iterations and iteration > max_iterations:
-                warnings.warn("{} failed to converge after {} iterations".format(self.name, max_iterations))
+                warnings.warn(f"{self.name} of {self.owner.name} exceeded max iterations {max_iterations}.")
                 break
 
-            current_sample = new_sample
-            current_value = new_value
+            # Change randomization for next sample if specified (relies on randomization being last dimension)
+            if self.owner and self.owner.parameters.same_randomization_for_all_allocations is False:
+                self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
+                self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
 
-            if self.parameters.save_samples._get(context):
-                samples.append(new_sample)
-                self.parameters.saved_samples._set(samples, context)
-            if self.parameters.save_values._get(context):
-                values.append(current_value)
-                self.parameters.saved_values._set(values, context)
+        if self.parameters.save_samples._get(context):
+            self.parameters.saved_samples._set(all_samples, context)
+        if self.parameters.save_values._get(context):
+            self.parameters.saved_values._set(all_values, context)
 
-        return new_sample, new_value, samples, values
-
-    def _report_value(self, new_value):
-        """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
-        pass
-
-    @property
-    def num_estimates(self):
-        if self.randomization_dimension is None:
-            return 1
-        else:
-            return self.search_space[self.randomization_dimension].num
-
-class GridBasedOptimizationFunction(OptimizationFunction):
-    """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
+        # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
+        # return current_sample, current_value, evaluated_samples, estimated_values
+        return current_sample, current_value, evaluated_samples, estimated_values
 
     def _grid_evaluate(self, ocm, context):
-
+        """Helper method for parallelizing evaluation of samples from search space.
+        """
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
@@ -669,7 +712,12 @@ class GridBasedOptimizationFunction(OptimizationFunction):
         else:
             assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
 
+        # FIX: RETURN SHOULD BE: outcomes, all_samples (THEN FIX CALL IN _function)
         return outcomes, num_evals
+
+    def _report_value(self, new_value):
+        """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
+        pass
 
 
 ASCENT = 'ascent'
@@ -1215,7 +1263,7 @@ MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
 
 
-class GridSearch(GridBasedOptimizationFunction):
+class GridSearch(OptimizationFunction):
     """
     GridSearch(                      \
         default_variable=None,       \
@@ -1606,7 +1654,7 @@ class GridSearch(GridBasedOptimizationFunction):
                 with b_true:
                     search_space = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                                self.parameters.search_space.name)
-                    pnlvm.helpers.create_allocation(b, min_sample_ptr, search_space, min_idx)
+                    pnlvm.helpers.create_sample(b, min_sample_ptr, search_space, min_idx)
                 with b_false:
                     sample_ptr = builder.gep(samples_ptr, [min_idx])
                     builder.store(b.load(sample_ptr), min_sample_ptr)
@@ -1841,7 +1889,6 @@ class GridSearch(GridBasedOptimizationFunction):
             assert direction == MAXIMIZE or direction == MINIMIZE, \
                 "PROGRAM ERROR: bad value for {} arg of {}: {}, {}". \
                     format(repr(DIRECTION), self.name, direction)
-
 
             ocm = self._get_optimized_controller()
 
