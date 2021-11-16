@@ -999,7 +999,7 @@ class Report:
             in the output report.
 
         node : Composition or Mechanism : default None
-            specifies `node <Composition_Nodes>` for which output is being reported.
+            specifies `Node <Composition_Nodes>` for which output is being reported.
         """
 
         if self._report_output is ReportOutput.OFF:
@@ -1328,7 +1328,7 @@ class Report:
                               is_controller=False
                               ) -> Panel:
         """
-        Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
+        Generates formatted output report for the `Node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
         Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
         <Mechanism_Base>` method of a `Mechanism` when executed on its own.
 
@@ -1347,7 +1347,7 @@ class Report:
             if it is not specified, it is resolved by calling the node's get_input_values() method.
 
         params : 'params' or 'parameters' : default None
-            specifies whether to report the values of the `Parameters` of the `node <Composition_Nodes>` being executed
+            specifies whether to report the values of the `Parameters` of the `Node <Composition_Nodes>` being executed
             together with its input and output.
 
         output_val : 2d array : default None

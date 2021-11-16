@@ -3520,6 +3520,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Instantiate any deferred init components
         self._check_projection_initialization_status(context=context)
 
+        # FIX: SHOULDN'T THIS TEST MORE EXPLICITLY IF NODE IS A Composition?
         # Call _analzye_graph() for any nested Compositions
         for n in self.nodes:
             try:
@@ -3641,16 +3642,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                             sender=proj.sender.owner,
                                             receiver=node)
 
-        # # MODIFIED 11/15/21 OLD:  MOVED _complete_init_of_partially_initialized_nodes
-        # # Add ControlSignals to controller and ControlProjections
-        # #     to any parameter_ports specified for control in node's constructor
-        # if self.controller:
-        #     self._instantiate_deferred_init_control(node, context=context)
-        #     # MODIFIED 11/3/21 NEW:
-        #     if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
-        #         self._update_controller(context=context)
-        #     # MODIFIED 11/3/21 END
-        # # MODIFIED 11/15/21 END
+        # Add ControlSignals to controller and ControlProjections
+        #     to any parameter_ports specified for control in node's constructor
+        if self.controller:
+            self._instantiate_deferred_init_control(node, context=context)
+            # # MODIFIED 11/15/21 OLD:  MOVED _complete_init_of_partially_initialized_nodes
+            # # MODIFIED 11/3/21 NEW:
+            # if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
+            #     self._update_controller(context=context)
+            # # MODIFIED 11/3/21 END
+            # # MODIFIED 11/15/21 END
 
         try:
             if len(invalid_aux_components) > 0:
@@ -4106,14 +4107,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
 
         # MODIFIED 11/15/21 NEW:
-        # Add ControlSignals to controller and ControlProjections
-        #     to any parameter_ports specified for control in node's constructor
-        if self.controller:
-            self._instantiate_deferred_init_control(node, context=context)
-            # MODIFIED 11/3/21 NEW:
-            if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
-                self.controller._update_state_input_ports(context=context)
-            # MODIFIED 11/3/21 END
+        if hasattr(self.controller, 'state_input_ports'):
+            self.controller._update_state_input_ports(context=context)
         # MODIFIED 11/15/21 END
 
 
@@ -7231,6 +7226,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
 
+        # FIX: 11/15/21: ADD:
+        # self._instantiate_controller_shadow_projections()
+
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
         nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
         input_cims= [self.input_CIM] + nested_cims
@@ -7239,13 +7237,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
         #               ALSO, IF Non-OCM IS ALLOWED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
         # Skip controller's outcome_input_ports
-        #    (that receive Projections from its objective_mechanism and/or directed from items in monitor_for_control
+        #    (they receive Projections from its objective_mechanism and/or directly from items in monitor_for_control
         for input_port in controller.input_ports[controller.num_outcome_input_ports:]:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 for proj in input_port.shadow_inputs.path_afferents:
                     try:
                         sender = proj.sender
                         if sender.owner not in input_cims:
+                            # FIX: 11/15/21:  NEVER SEEMS TO MAKE IT HERE IN test/composition/test_control
+                            assert False, 'FAILED AT show_proj'
                             self.add_projection(projection=MappingProjection(sender=sender, receiver=input_port),
                                                 sender=sender.owner,
                                                 receiver=controller)
@@ -7475,20 +7475,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return []
 
-    def _check_for_invalid_controller_state_features(self):
-        # If controller is used for model-based optimization (OptimizationControlMechanism_Model_Based)
-        #    ensure all state_input_ports specified for the controller
-        #    correspond to InputPorts of INPUT nodes of the Composition
-        if self.controller and hasattr(self.controller, AGENT_REP) and self.controller.agent_rep==self:
-            invalid_state_features = [input_port.shadow_inputs
-                                         for input_port in self.controller.state_input_ports
-                                         if input_port.shadow_inputs.owner
-                                         not in self.get_nodes_by_role(NodeRole.INPUT)]
-            if any(invalid_state_features):
-                raise CompositionError(f"{self.controller.name}, being used as controller for "
-                                       f"model-based optimization of {self.name}, has 'state_features' specified "
-                                       f"({[d.name for d in invalid_state_features]}) that are either not INPUT "
-                                       f"nodes or are missing from the the Composition.")
+    # # MODIFIED 11/15/21 OLD:  FIX MOVED TO OCM._update_state_input_ports
+    # def _check_for_invalid_controller_state_features(self):
+    #     # If controller is used for model-based optimization (OptimizationControlMechanism_Model_Based)
+    #     #    ensure all state_input_ports specified for the controller
+    #     #    correspond to InputPorts of INPUT nodes of the Composition
+    #     if self.controller and hasattr(self.controller, AGENT_REP) and self.controller.agent_rep==self:
+    #         invalid_state_features = [input_port.shadow_inputs
+    #                                      for input_port in self.controller.state_input_ports
+    #                                      if input_port.shadow_inputs.owner
+    #                                      not in self.get_nodes_by_role(NodeRole.INPUT)]
+    #         if any(invalid_state_features):
+    #             raise CompositionError(f"{self.controller.name}, being used as controller for "
+    #                                    f"model-based optimization of {self.name}, has 'state_features' specified "
+    #                                    f"({[d.name for d in invalid_state_features]}) that are either not INPUT "
+    #                                    f"nodes or are missing from the the Composition.")
+    # # MODIFIED 11/15/21 END
 
     def reshape_control_signal(self, arr):
 
@@ -8538,7 +8540,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._check_for_unnecessary_feedback_projections()
         self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
 
-        self._check_for_invalid_controller_state_features()
+        # # MODIFIED 11/15/21 OLD: # MOVED TO _update_state_input_ports in _complete_init_of_partially_initialized_nodes
+        # self._check_for_invalid_controller_state_features()
+        # MODIFIED 11/15/21 END
 
         # set auto logging if it's not already set, and if log argument is True
         if log:

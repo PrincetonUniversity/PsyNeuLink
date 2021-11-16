@@ -296,7 +296,7 @@ class Pathway(object):
     ---------
 
     pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...]
-        specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
+        specifies list of `Nodes <Composition_Nodes>` and intercolated `Projections <Projection>` to be
         created for the Pathway.
 
     name : str : default see `name <Pathway.name>`
