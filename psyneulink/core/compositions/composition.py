@@ -4109,10 +4109,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
 
         # MODIFIED 11/15/21 NEW:
-        if hasattr(self.controller, 'state_input_ports'):
-            self.controller._update_state_input_ports(context=context)
+        # Don't instantiate unless flagged for updating (if nodes have been added to the graph)
+        # This avoids unnecessary calls on repeated runs
+        if hasattr(self.controller, 'state_input_ports') and self.needs_update_controller:
+            self.controller._update_state_input_ports_for_controller(context=context)
+            # FIX: NEED TO ADD THIS (INCLUDE CONTROL SIGNALS?
+            self.controller._update_projections_for_controller(context=context)
+            self.needs_update_controller = False
         # MODIFIED 11/15/21 END
-
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -7430,7 +7434,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             return []
 
-    # # MODIFIED 11/15/21 OLD:  FIX MOVED TO OCM._update_state_input_ports
+    # # MODIFIED 11/15/21 OLD:  FIX MOVED TO OCM._update_state_input_ports_for_controller
     # def _check_for_invalid_controller_state_features(self):
     #     # If controller is used for model-based optimization (OptimizationControlMechanism_Model_Based)
     #     #    ensure all state_input_ports specified for the controller
@@ -8495,7 +8499,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._check_for_unnecessary_feedback_projections()
         self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
 
-        # # MODIFIED 11/15/21 OLD: # MOVED TO _update_state_input_ports in _complete_init_of_partially_initialized_nodes
+        # # MODIFIED 11/15/21 OLD:
+        #   FIX: MOVED TO _update_state_input_ports_for_controller in _complete_init_of_partially_initialized_nodes
         # self._check_for_invalid_controller_state_features()
         # MODIFIED 11/15/21 END
 

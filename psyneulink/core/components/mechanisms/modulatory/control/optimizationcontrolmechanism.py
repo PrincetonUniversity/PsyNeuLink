@@ -1159,7 +1159,7 @@ class OptimizationControlMechanism(ControlMechanism):
         If no **state_features** are specified in the constructor, assign ones for INPUT Nodes of owner.
           - warn for model-free `model-free optimization <<OptimizationControlMechanism_Model_Based>`.
           - ignore here for `model-based optimization <<OptimizationControlMechanism_Model_Based>`
-            (handled in _update_state_input_ports)
+            (handled in _update_state_input_ports_for_controller)
 
         See`state_features <OptimizationControlMechanism_State_Features_Arg>` and
         `OptimizationControlMechanism_State_Features` for additional details.
@@ -1181,7 +1181,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if not self.state_features:
             # Warn if there are no state_features specified for model-free (agent_rep = CompositionFunctionApproximator)
-            # For model-based optimization, assignment of state_input_ports is done in _update_state_input_ports()
+            # For model-based optimization,
+            #       assignment of state_input_ports is done in _update_state_input_ports_for_controller()
             if isinstance(self.agent_rep, CompositionFunctionApproximator):
                 warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
             # # MODIFIED 11/15/21 OLD:
@@ -1206,7 +1207,7 @@ class OptimizationControlMechanism(ControlMechanism):
             #   if state_features were specified for model-free (i.e., agent_rep is a CompositionFunctionApproximator),
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
 
-            # # MODIFIED 11/15/21 OLD:  MOVED TO _update_state_input_ports
+            # # MODIFIED 11/15/21 OLD:  MOVED TO _update_state_input_ports_for_controller
             # if isinstance(self.agent_rep, Composition):
             #     # state_features were specified and agent_rep is being used for model-based optimization
             #     # - so check that all state_features are references to INPUT Nodes of agent_rep,
@@ -1258,7 +1259,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     # MODIFIED 11/15/21 NEW:
     # FIX: 11/15/21: MOVED FROM COMPOSITION
-    def _update_state_input_ports(self, context=None):
+    def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
 
         Ensure that all existing state_input_ports are for InputPorts of INPUT Nodes of agent_rep;
@@ -1276,10 +1277,12 @@ class OptimizationControlMechanism(ControlMechanism):
         Note: tests for validity of state_input_ports are made Composition._check_for_invalid_controller_state_features
         """
 
+        # MODIFIED 11/15/21 OLD:  FIX: REPLACE WITH ContextFlags.PROCESSING ??
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete
         if context.flags & ContextFlags.METHOD:
             return
+        # MODIFIED 11/15/21 END
 
         # Don't bother for model-free optimization (see OptimizationControlMechanism_Model_Free)
         #    since state_input_ports specified or model-free optimization are entirely the user's responsibility;
