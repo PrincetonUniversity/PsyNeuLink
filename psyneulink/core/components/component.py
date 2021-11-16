@@ -1335,6 +1335,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
                 val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
+            elif isinstance(x, np.random.Generator):
+                state = x.bit_generator.state
+                val = pnlvm._tupleize((state['state']['counter'], state['state']['key'],
+                                       state['buffer'], state['uinteger'], state['buffer_pos'],
+                                       state['has_uint32'], x.used_seed[0]))
             elif isinstance(x, Time):
                 val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
@@ -1697,15 +1702,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self._init_args.update(kwargs)
 
             # Complete initialization
-            # MODIFIED 10/27/18 OLD:
             super(self.__class__,self).__init__(**self._init_args)
-
-            # MODIFIED 10/27/18 NEW:  FOLLOWING IS NEEDED TO HANDLE FUNCTION DEFERRED INIT (JDC)
-            # try:
-            #     super(self.__class__,self).__init__(**self._init_args)
-            # except:
-            #     self.__init__(**self._init_args)
-            # MODIFIED 10/27/18 END
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
             if DEFERRED_INITIALIZATION in self.name:

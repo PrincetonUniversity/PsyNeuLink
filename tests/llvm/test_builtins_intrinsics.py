@@ -23,7 +23,7 @@ def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
         f = pnlvm.LLVMBinaryFunction.get(builtin)
     elif func_mode == 'PTX':
         wrap_name = builtin + "_test_wrapper"
-        with pnlvm.LLVMBuilderContext.get_global() as ctx:
+        with pnlvm.LLVMBuilderContext.get_current() as ctx:
             intrin = ctx.import_llvm_function(builtin)
             wrap_args = (*intrin.type.pointee.args,
                           intrin.type.pointee.return_type.as_pointer())

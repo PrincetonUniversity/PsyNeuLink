@@ -2254,7 +2254,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
 
         rvalp = builder.alloca(ptri.type.pointee)
         rand_state_ptr = ctx.get_random_state_ptr(builder, self, state, params)
-        normal_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        normal_f = ctx.get_normal_dist_function_by_state(rand_state_ptr)
         builder.call(normal_f, [rand_state_ptr, rvalp])
 
         rval = builder.load(rvalp)
