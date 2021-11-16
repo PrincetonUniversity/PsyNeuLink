@@ -10,9 +10,6 @@ on:
     tags-ignore:
       - 'v**'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'doc_requirements.txt'
 
 jobs:
   build:
