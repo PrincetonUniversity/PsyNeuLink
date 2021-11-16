@@ -400,6 +400,7 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
@@ -1104,8 +1105,9 @@ class ControlSignal(ModulatorySignal):
                                                  "function")
         func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                  "function")
-        # FIXME: Add support for other cost types
-        assert self.cost_options == CostFunctions.INTENSITY
+
+        # FIXME: This allows INTENSITY and NONE
+        assert self.cost_options & ~CostFunctions.INTENSITY == 0
 
         cfunc = ctx.import_llvm_function(self.function.combine_costs_fct)
         cfunc_in = builder.alloca(cfunc.args[2].type.pointee)
@@ -1126,9 +1128,14 @@ class ControlSignal(ModulatorySignal):
             # Port input is always struct { data input, modulations }
             ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
             # point output to the proper slot in comb func input
-            ifunc_comb_slot = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
+            assert cost_funcs == 0, "Intensity should eb the first cost function!"
+            ifunc_out = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
+            if ifunc_out.type != ifunc.args[3].type:
+                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(cost_funcs, self.function.combine_costs_fct.defaults.variable, self.function.intensity_cost_fct.defaults.value))
+                assert self.cost_options == CostFunctions.INTENSITY
+                ifunc_out = cfunc_in
 
-            builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_comb_slot])
+            builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_out])
 
             cost_funcs += 1
 

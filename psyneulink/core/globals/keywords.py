@@ -389,6 +389,7 @@ FINAL = 'FINAL'
 
 #region ----------------------------------------------   COMPOSITION   -------------------------------------------------
 
+# 11/15/21: FIX - CHANGE TO LOWER CASE FOR USE WITH componentCategory (OR CHANGE THAT?);  MAY NEED TO CHANGE TESTS
 COMPOSITION = 'COMPOSITION'
 INPUT_CIM_NAME = 'INPUT_CIM'
 OUTPUT_CIM_NAME = 'OUTPUT_CIM'
