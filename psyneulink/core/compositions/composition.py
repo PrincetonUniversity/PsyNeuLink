@@ -7278,7 +7278,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     controller._activate_projections_for_compositions(self)
         # MODIFIED 11/15/21 END
 
-
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
         self._analyze_graph(context=context)
