@@ -4112,7 +4112,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 11/15/21 NEW:
         # Don't instantiate unless flagged for updating (if nodes have been added to the graph)
         # This avoids unnecessary calls on repeated calls to run()
-        if (self.needs_update_controller and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
+        if (self.controller
+                and self.needs_update_controller
+                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
             if hasattr(self.controller, 'state_input_ports'):
                 self.controller._update_state_input_ports_for_controller(context=context)
                 self._instantiate_controller_shadow_projections(context=context)
