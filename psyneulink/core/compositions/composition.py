@@ -7253,12 +7253,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
+        # Get rid of default ControlSignal if it has no ControlProjections
+        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+
         # # MODIFIED 11/15/21 OLD: FIX: MOVED TO ITS OWN METHOD BELOW: _instantiate_control_projections
         # # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
-        #
-        # # Get rid of default ControlSignal if it has no ControlProjections
-        # controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-        #
         # # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
         # control_signal_specs = self._get_control_signals_for_composition()
         # for ctl_sig_spec in control_signal_specs:
@@ -7329,7 +7328,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _instantiate_control_projections(self, context):
         # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
         # Get rid of default ControlSignal if it has no ControlProjections
-        self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
 
         # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
