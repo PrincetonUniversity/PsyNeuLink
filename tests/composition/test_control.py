@@ -58,6 +58,7 @@ class TestControlSpecification:
         ctl_mech = pnl.ControlMechanism()
         comp = pnl.Composition(controller=ctl_mech)
         comp.add_node(ddm)
+        comp._analyze_graph()
         assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control[0].allocation_samples.base(),
@@ -365,8 +366,9 @@ class TestControlSpecification:
                                                                            search_space=[1]))
         assert comp.controller.composition == comp
         comp._analyze_graph()
+        # FIX: WHY IS THIS ASSIGNED HERE BUT NOT THE SAME FOR new_ocm?
         assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
-        # FIX:  11/15/21 RESTORE
+        # FIX:  11/15/21 ADD run() FOLLOWED BY RESTORING BELOW
         # assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
@@ -380,8 +382,9 @@ class TestControlSpecification:
 
         comp._analyze_graph()
         assert comp.controller == new_ocm
+        # FIX:  11/15/21 WHY DOES THIS CRASH, BUT NOT ABOVE FOR old_ocm??
         assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
-        # FIX:  11/15/21 RESTORE
+        # FIX:  11/15/21 ADD run() ABOVE FOLLOWED BY RESTORING BELOW
         # assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
         assert old_ocm.composition is None
         assert old_ocm.state_input_ports[0].path_afferents == []

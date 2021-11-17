@@ -4111,14 +4111,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # MODIFIED 11/15/21 NEW:
         # Don't instantiate unless flagged for updating (if nodes have been added to the graph)
-        # This avoids unnecessary calls on repeated runs
-        if hasattr(self.controller, 'state_input_ports') and self.needs_update_controller:
-        # if hasattr(self.controller, 'state_input_ports'):
-            self.controller._update_state_input_ports_for_controller(context=context)
-            # FIX: NEED TO ADD THIS (INCLUDE CONTROL SIGNALS?
-            self._instantiate_controller_shadow_projections(context=context)
+        # This avoids unnecessary calls on repeated calls to run()
+        if (self.needs_update_controller and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
+            if hasattr(self.controller, 'state_input_ports'):
+                self.controller._update_state_input_ports_for_controller(context=context)
+                self._instantiate_controller_shadow_projections(context=context)
             self._instantiate_control_projections(context=context)
-            # self.needs_update_controller = False
+            # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
+            #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
+            self.needs_update_controller = False
         # MODIFIED 11/15/21 END
 
     def _determine_node_roles(self, context=None):
@@ -7224,6 +7225,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        else:
+            # This is set by add_node() automatically;  but should be set either way
+            self.needs_update_controller = True
 
         self.node_ordering.append(controller)
 
