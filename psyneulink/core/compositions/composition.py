@@ -7253,7 +7253,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
-        # # MODIFIED 11/15/21 OLD: FIX: MOVED TO ITS OWN METHOD BELOW: _instantiate_control_projections
+        # # MODIFIED 11/15/21 OLD/NEW:
         # # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
         self._instantiate_control_projections(context=context)
