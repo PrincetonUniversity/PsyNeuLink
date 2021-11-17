@@ -2186,7 +2186,8 @@ class TestModelBasedOptimizationControlMechanisms:
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
 
-    def test_model_based_num_estimates(self):
+    @pytest.mark.parametrize('num_estimates',[None, 1] )
+    def test_model_based_num_estimates(self, num_estimates):
 
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B',
@@ -2206,8 +2207,7 @@ class TestModelBasedOptimizationControlMechanisms:
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
-                                               # num_estimates=5,
-                                               num_estimates=None,
+                                               num_estimates=num_estimates,
                                                control_signals=[control_signal])
 
         comp.add_controller(ocm)
@@ -2218,7 +2218,10 @@ class TestModelBasedOptimizationControlMechanisms:
                  num_trials=2)
 
         # FIX: 11/15/21 FAILING HERE:
-        assert not comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents # Confirm no noise
+        if num_estimates is None:
+            assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates
+        elif num_estimates==1:
+            assert comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents == []# Confirm no noise
         assert np.allclose(comp.simulation_results,
                            [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
         assert np.allclose(comp.results,
