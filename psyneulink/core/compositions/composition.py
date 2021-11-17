@@ -7221,7 +7221,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # MODIFIED 11/15/21 OLD:
         # self._update_controller(context=context) # FIX: ADDS EXTRANEOUS state_input_ports FOR ...ocm_gridsearch_min...
         # MODIFIED 11/15/21 END
-        self._instantiate_control_projections(context=context)
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
@@ -7257,6 +7256,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # MODIFIED 11/15/21 OLD: FIX: MOVED TO ITS OWN METHOD BELOW: _instantiate_control_projections
         # # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        self._instantiate_control_projections(context=context)
         # MODIFIED 11/15/21 END
 
         # # MODIFIED 11/15/21 OLD: FIX: MOVED TO ITS OWN METHOD BELOW: _instantiate_control_projections
