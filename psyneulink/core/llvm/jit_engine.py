@@ -296,12 +296,13 @@ class ptx_jit_engine(jit_engine):
             pass
 
         def add_module(self, module):
+            max_regs = int(debug_env.get("cuda_max_regs", 256))
             try:
                 # LLVM can't produce CUBIN for some reason
                 start_time = time.perf_counter()
                 ptx = self._target_machine.emit_assembly(module)
                 ptx_time = time.perf_counter()
-                mod = pycuda.compiler.DynamicModule()
+                mod = pycuda.compiler.DynamicModule(link_options=[(pycuda.driver.jit_option.MAX_REGISTERS, max_regs)])
                 mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
                 mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
                 module_time = time.perf_counter()
