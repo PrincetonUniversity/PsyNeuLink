@@ -67,11 +67,13 @@ def _binding_initialize():
 def _cpu_jit_constructor():
     _binding_initialize()
 
+    opt_level = int(debug_env.get('opt', 2))
+
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.loop_vectorize = True
-    __pass_manager_builder.slp_vectorize = True
-    __pass_manager_builder.opt_level = 2
+    __pass_manager_builder.loop_vectorize = opt_level != 0
+    __pass_manager_builder.slp_vectorize = opt_level != 0
+    __pass_manager_builder.opt_level = opt_level
 
     __cpu_features = binding.get_host_cpu_features().flatten()
     __cpu_name = binding.get_host_cpu_name()
@@ -80,7 +82,7 @@ def _cpu_jit_constructor():
     __cpu_target = binding.Target.from_default_triple()
     # FIXME: reloc='static' is needed to avoid crashes on win64
     # see: https://github.com/numba/llvmlite/issues/457
-    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=2, reloc='static')
+    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=opt_level, reloc='static')
 
     __cpu_pass_manager = binding.ModulePassManager()
     __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
@@ -101,10 +103,12 @@ def _cpu_jit_constructor():
 def _ptx_jit_constructor():
     _binding_initialize()
 
+    opt_level = int(debug_env.get('opt', 0))
+
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.opt_level = 1  # Basic optimizations
-    __pass_manager_builder.size_level = 1  # asic size optimizations
+    __pass_manager_builder.opt_level = opt_level
+    __pass_manager_builder.size_level = 1 # Try to reduce size to reduce PTX parsing time
 
     # Use default device
     # TODO: Add support for multiple devices
