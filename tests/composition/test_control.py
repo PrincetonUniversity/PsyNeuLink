@@ -2217,7 +2217,6 @@ class TestModelBasedOptimizationControlMechanisms:
         comp.run(inputs=inputs,
                  num_trials=2)
 
-        # FIX: 11/15/21 FAILING HERE:
         if num_estimates is None:
             assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates
         elif num_estimates==1:
