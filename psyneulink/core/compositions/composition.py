@@ -3540,7 +3540,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # # FIX: MOVE THIS TO add_nodes TO CREATE PROJECTIONS TO CONTROLLER WHEN INPUT NODES ARE ADDED
         # # MODIFIED 11/15/21 NEW: MOVED TO _complete_init_of_partially_initialized_nodes
         # # MODIFIED 11/3/21 NEW: -
-        # self._update_controller(context=context)
+        # self.controller._update_controller(context=context)
         # # # MODIFIED 11/3/21 END
         # MODIFIED 11/15/21 END
 
@@ -3650,8 +3650,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._instantiate_deferred_init_control(node, context=context)
             # # MODIFIED 11/15/21 OLD:  MOVED _complete_init_of_partially_initialized_nodes
             # # MODIFIED 11/3/21 NEW:
-            # if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
-            #     self._update_controller(context=context)
+            # # if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
+            # if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep.componentCategory=='Composition':
+            #     self.controller._update_state_input_ports_for_controller(context=context)
             # # MODIFIED 11/3/21 END
             # # MODIFIED 11/15/21 END
 
@@ -4112,10 +4113,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Don't instantiate unless flagged for updating (if nodes have been added to the graph)
         # This avoids unnecessary calls on repeated runs
         if hasattr(self.controller, 'state_input_ports') and self.needs_update_controller:
+        # if hasattr(self.controller, 'state_input_ports'):
             self.controller._update_state_input_ports_for_controller(context=context)
             # FIX: NEED TO ADD THIS (INCLUDE CONTROL SIGNALS?
-            self.controller._update_projections_for_controller(context=context)
-            self.needs_update_controller = False
+            self._instantiate_controller_shadow_projections(context=context)
+            self._instantiate_control_projections(context=context)
+            # self.needs_update_controller = False
         # MODIFIED 11/15/21 END
 
     def _determine_node_roles(self, context=None):
@@ -7232,8 +7235,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
 
-        # MODIFIED 11/15/21 NEW:
-        self._instantiate_controller_shadow_projections()
+        # # MODIFIED 11/15/21 NEW:
+        # self._instantiate_controller_shadow_projections(context=context)
         # MODIFIED 11/15/21 END
 
         # Confirm that controller has input, and if not then disable it
@@ -7246,35 +7249,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
-        # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
+        # # MODIFIED 11/15/21 OLD: FIX: MOVED TO ITS OWN METHOD BELOW: _instantiate_control_projections
+        # # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
+        #
+        # # Get rid of default ControlSignal if it has no ControlProjections
+        # controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        #
+        # # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
+        # control_signal_specs = self._get_control_signals_for_composition()
+        # for ctl_sig_spec in control_signal_specs:
+        #     # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
+        #     #               CALLED FROM _instantiate_control_signal
+        #     #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
+        #     # Don't add any that are already on the ControlMechanism
+        #
+        #     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+        #     ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+        #                                            context=context)
+        #     controller.control.append(ctl_signal)
+        #     # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
+        #     #                ?DON'T ASSIGN ControlProjection?
+        #     #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+        #     #                ?PUT IT IN aux_components FOR NODE?
+        #     #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
+        #     controller._activate_projections_for_compositions(self)
+        # MODIFIED 11/15/21 END
 
-        # Get rid of default ControlSignal if it has no ControlProjections
-        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-
-        # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
-        control_signal_specs = self._get_control_signals_for_composition()
-        for ctl_sig_spec in control_signal_specs:
-            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
-            #               CALLED FROM _instantiate_control_signal
-            #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
-            # Don't add any that are already on the ControlMechanism
-
-            # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=context)
-            controller.control.append(ctl_signal)
-            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
-            #                ?DON'T ASSIGN ControlProjection?
-            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
-            #                ?PUT IT IN aux_components FOR NODE?
-            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
-            controller._activate_projections_for_compositions(self)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
         self._analyze_graph(context=context)
 
-
-    def _instantiate_controller_shadow_projections(self):
+    def _instantiate_controller_shadow_projections(self, context):
 
         # INSTANTIATE SHADOW_INPUT PROJECTIONS
         nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
@@ -7316,6 +7321,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for proj in input_port.path_afferents:
                 if proj.sender.owner not in nested_cims:
                     proj._activate_for_compositions(self)
+
+    def _instantiate_control_projections(self, context):
+        # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
+        # Get rid of default ControlSignal if it has no ControlProjections
+        self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+
+        # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
+        control_signal_specs = self._get_control_signals_for_composition()
+        for ctl_sig_spec in control_signal_specs:
+            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
+            #               CALLED FROM _instantiate_control_signal
+            #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
+            # Don't add any that are already on the ControlMechanism
+
+            # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+            ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
+                                                   context=context)
+            self.controller.control.append(ctl_signal)
+            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
+            #                ?DON'T ASSIGN ControlProjection?
+            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+            #                ?PUT IT IN aux_components FOR NODE?
+            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
+            self.controller._activate_projections_for_compositions(self)
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
