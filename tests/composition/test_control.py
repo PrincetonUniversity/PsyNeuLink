@@ -283,14 +283,7 @@ class TestControlSpecification:
         error_text = error_text.value.error_value
         assert expected_text_1 in error_text and expected_text_2 in error_text
 
-        # result = ocomp.run({initial_node_a: [1]})
-        # assert result == [[5]]
-        # # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
-        # # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
-        # # Control Signal "deferred_node": disabled
-
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
-
         result = ocomp.run({
             initial_node_a: [1],
             deferred_node: [1]
@@ -449,6 +442,35 @@ class TestControlSpecification:
         result = outer_comp.run([1])
         assert result == [[5]]
         assert internal_mech.mod_afferents[0].sender.owner == inner_comp.controller
+
+
+    def test_state_input_ports_for_two_input_nodes(self):
+        # Inner Composition
+        ia = pnl.TransferMechanism(name='ia')
+        icomp = pnl.Composition(name='icomp', pathways=[ia])
+
+        # Outer Composition
+        oa = pnl.TransferMechanism(name='oa')
+        ob = pnl.TransferMechanism(name='ob')
+        oc = pnl.TransferMechanism(name='oc')
+        ctl_mech = pnl.ControlMechanism(name='ctl_mech',
+                                    control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)])])
+        ocomp = pnl.Composition(name='ocomp', pathways=[[ob],[oa, icomp, oc, ctl_mech]])
+        # ocomp.add_nodes(ob)
+        ocm = pnl.OptimizationControlMechanism(name='ocm',
+                                           agent_rep=ocomp,
+                                           control_signals=[
+                                               pnl.ControlSignal(projections=[(pnl.NOISE, ia)]),
+                                               pnl.ControlSignal(projections=[(pnl.INTERCEPT, ia)]),
+                                               pnl.ControlSignal(projections=[(pnl.SLOPE, oa)]),
+                                           ],
+                                           search_space=[[1],[1],[1]])
+        ocomp.add_controller(ocm)
+        result = ocomp.run({oa: [[1]], ob: [[2]]})
+        assert result == [[2.], [1.]]
+        assert len(ocomp.controller.state_input_ports) == 2
+        assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
+                    for node in {oa, ob}])
 
 
 class TestControlMechanisms:
@@ -1222,7 +1244,7 @@ class TestControlMechanisms:
         assert np.allclose(best_second, comp.results[1])
 
 
-class TestModelBasedOptimizationControlMechanisms:
+class TestModelBasedOptimizationControlMechanisms_Execution:
     def test_ocm_default_function(self):
         a = pnl.ProcessingMechanism()
         comp = pnl.Composition(

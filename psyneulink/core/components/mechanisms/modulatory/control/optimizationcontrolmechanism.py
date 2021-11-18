@@ -1282,18 +1282,18 @@ class OptimizationControlMechanism(ControlMechanism):
                                                     f"are either not INPUT nodes or missing from the Composition.")
 
         # Ensure that a state_input_port is assigned for every InputPort of every INPUT node of agent_rep
-        comp_input_node_input_ports = set()
+        comp_input_nodes_input_ports = []
         for input_port in [input_port for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
                            for input_port in node.input_ports if not input_port.internal_only]:
-                    comp_input_node_input_ports.add(input_port)
+                    comp_input_nodes_input_ports.append(input_port)
+        already_specified_state_input_ports = [state_input_port.shadow_inputs
+                                               for state_input_port in self.state_input_ports]
+        input_ports_not_specified = [node for node in comp_input_nodes_input_ports
+                                     if node not in already_specified_state_input_ports]
 
-        already_specified_state_input_ports = set([state_input_port.shadow_inputs
-                                       for state_input_port in self.state_input_ports])
-        input_ports_not_specified = comp_input_node_input_ports - already_specified_state_input_ports
         local_context = Context(source=ContextFlags.METHOD)
         state_input_ports_to_add = []
-        for node in input_ports_not_specified:
-            # MODIFIED 11/3/21 OLD:
+        for input_port in input_ports_not_specified:
             state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
                                                               port_type=InputPort,
                                                               owner=self,
@@ -1301,10 +1301,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                               params={SHADOW_INPUTS: input_port,
                                                                       INTERNAL_ONLY:True},
                                                               context=local_context))
-            # # MODIFIED 11/3/21 NEW:
-            # state_input_ports_to_add.append(_instantiate_port(
-            #     InputPort._parse_self_port_type_spec(InputPort,controller,input_port,local_context)))
-            # MODIFIED 11/3/21 END
 
         self.add_ports(state_input_ports_to_add,
                              update_variable=False,
