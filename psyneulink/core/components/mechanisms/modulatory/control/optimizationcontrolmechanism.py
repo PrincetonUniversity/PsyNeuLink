@@ -1207,34 +1207,6 @@ class OptimizationControlMechanism(ControlMechanism):
             #   if state_features were specified for model-free (i.e., agent_rep is a CompositionFunctionApproximator),
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
 
-            # # MODIFIED 11/15/21 OLD:  MOVED TO _update_state_input_ports_for_controller
-            # if isinstance(self.agent_rep, Composition):
-            #     # state_features were specified and agent_rep is being used for model-based optimization
-            #     # - so check that all state_features are references to INPUT Nodes of agent_rep,
-            #     # - and add references for any INPUT Nodes that are not referenced.
-            #
-            #     # FIX: 11/3/21 - NEED TO REWRITE BELOW AROUND InputPorts RATHER THAN JUST INPUT NODES:
-            #
-            #     # Get referenced INPUT Nodes of agent_rep
-            #     referenced_input_nodes = [spec[PARAMS][SHADOW_INPUTS].owner for spec in state_input_ports_specs]
-            #
-            #     # FIX: 11/3/21 - IS THIS NEEDED HERE;  CAN JUST DO IN ADD_CONTROLLER
-            #     # Add any specs for INPUT Nodes of agent_rep that were not specified in **state_features**
-            #     input_nodes_not_specified = set([agent_rep_input_node.name for agent_rep_input_node
-            #                                      in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]) \
-            #                                 - set([referenced_input_node.name
-            #                                        for referenced_input_node in referenced_input_nodes])
-            #
-            #     # Warn if any INPUT Nodes are included that were not specified
-            #     if self.verbosePref:
-            #         # Get names of INPUT Nodes of agent_rep that were not specified in **state_features** arg
-            #         if input_nodes_not_specified:
-            #             warnings.warn(f"Even though 'state features' ({self.state_features}) in constructor for "
-            #                           f"{self.name} reference only some of the INPUT Nodes of its agent_rep' "
-            #                           f"({self.agent_rep.name}), the values of all of its INPUT Nodes (i.e., including "
-            #                           f"{input_nodes_not_specified}) will be used as inputs to its evaluate method.")
-            # MODIFIED 11/15/21 END
-
         # # FIX: 11/3/21 - FAILS ON test_agent_rep_assignement_as_controller_and_replacement
         # assert state_input_ports_specs, f"PROGRAM ERROR: Failed to construct 'state_input_ports_specs' " \
         #                                 f"for {self.name} as controller of {self.agent_rep.name}"
@@ -1257,8 +1229,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
-    # MODIFIED 11/15/21 NEW:
-    # FIX: 11/15/21: MOVED FROM COMPOSITION
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
 
@@ -1292,21 +1262,8 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep.componentCategory!='Composition':
             return
 
+        # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep and/or any nested Compositions
         from psyneulink.core.compositions.composition import Composition, NodeRole
-
-        # Ensure that all existing state_input_ports correspond to InputPorts of INPUT nodes of agent_rep
-        # # MODIFIED 11/15/21 OLD:
-        # invalid_state_features = [input_port.shadow_inputs for input_port in self.state_input_ports
-        #                           if input_port.shadow_inputs.owner
-        #                           not in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
-        # # MODIFIED 11/15/21 NEW:
-        # invalid_state_features = []
-        # for input_port in self.state_input_ports:
-        #     nodes = [node.input_CIM if isinstance(node, Composition) else node
-        #              for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
-        #     if not input_port.shadow_inputs.owner in nodes:
-        #         invalid_state_features.append(input_port)
-        # MODIFIED 11/15/21 NEWER:
         def _get_all_input_nodes(comp):
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             for node in input_nodes:
@@ -1317,7 +1274,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         invalid_state_features = [input_port for input_port in self.state_input_ports
                                   if not input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep)]
-        # MODIFIED 11/15/21 END
 
         if any(invalid_state_features):
             raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
