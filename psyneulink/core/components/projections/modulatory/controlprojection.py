@@ -120,7 +120,7 @@ from psyneulink.core.components.shellclasses import Mechanism, Process_Base
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, INPUT_PORT, OUTPUT_PORT, PARAMETER_PORT
-from psyneulink.core.globals.parameters import Parameter
+from psyneulink.core.globals.parameters import Parameter, SharedParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
@@ -139,15 +139,6 @@ class ControlProjectionError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
-
-
-def _control_signal_getter(owning_component=None, context=None):
-    return owning_component.sender.parameters.value._get(context)
-
-
-def _control_signal_setter(value, owning_component=None, context=None):
-    owning_component.sender.parameters.value._set(value, context, override)
-    return value
 
 
 class ControlProjection(ModulatoryProjection_Base):
@@ -232,7 +223,7 @@ class ControlProjection(ModulatoryProjection_Base):
                     :type: `Function`
         """
         function = Parameter(Linear, stateful=False, loggable=False)
-        control_signal = Parameter(None, read_only=True, getter=_control_signal_getter, setter=_control_signal_setter, pnl_internal=True)
+        control_signal = SharedParameter(None, attribute_name='sender', shared_parameter_name='value')
 
         control_signal_params = Parameter(
             None,
