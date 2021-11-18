@@ -439,7 +439,7 @@ class ParameterEstimationComposition(Composition):
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
                  num_trials_per_estimate=None, # num trials per run of model for each combination of parameters
                  initial_seed=None,
-                 same_seed_for_all_parameter_combinations=False,
+                 same_seed_for_all_parameter_combinations=None,
                  name=None,
                  **kwargs):
 

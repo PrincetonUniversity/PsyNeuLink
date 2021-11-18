@@ -1292,12 +1292,33 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep.componentCategory!='Composition':
             return
 
-        from psyneulink.core.compositions.composition import NodeRole
+        from psyneulink.core.compositions.composition import Composition, NodeRole
 
         # Ensure that all existing state_input_ports correspond to InputPorts of INPUT nodes of agent_rep
-        invalid_state_features = [input_port.shadow_inputs for input_port in self.state_input_ports
-                                  if input_port.shadow_inputs.owner
-                                  not in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+        # # MODIFIED 11/15/21 OLD:
+        # invalid_state_features = [input_port.shadow_inputs for input_port in self.state_input_ports
+        #                           if input_port.shadow_inputs.owner
+        #                           not in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+        # # MODIFIED 11/15/21 NEW:
+        # invalid_state_features = []
+        # for input_port in self.state_input_ports:
+        #     nodes = [node.input_CIM if isinstance(node, Composition) else node
+        #              for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
+        #     if not input_port.shadow_inputs.owner in nodes:
+        #         invalid_state_features.append(input_port)
+        # MODIFIED 11/15/21 NEWER:
+        def _get_all_input_nodes(comp):
+            input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            for node in input_nodes:
+                if isinstance(node, Composition):
+                    input_nodes.append(node.input_CIM)
+                    input_nodes.extend(_get_all_input_nodes(node))
+            return input_nodes
+
+        invalid_state_features = [input_port for input_port in self.state_input_ports
+                                  if not input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep)]
+        # MODIFIED 11/15/21 END
+
         if any(invalid_state_features):
             raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                     f"optimization of {self.agent_rep.name}, has 'state_features' "
