@@ -1736,11 +1736,11 @@ class ShowGraph():
                     g.edge(sndr_proj_label, objmech_proj_label, label=edge_label,
                            color=proj_color, penwidth=proj_width)
 
-        # If controller has no objective_mechanism but does have outcome_input_ports, add Projetions from them
+        # If controller has no objective_mechanism but does have outcome_input_ports, add Projections from them
         elif controller.num_outcome_input_ports:
             # incoming edges (from monitored mechs directly to controller)
-            for input_port in controller.outcome_input_ports:
-                for projection in input_port.path_afferents:
+            for outcome_input_port in controller.outcome_input_ports:
+                for projection in outcome_input_port.path_afferents:
                     if controller in active_items:
                         if self.active_color == BOLD:
                             proj_color = self.controller_color
@@ -1768,7 +1768,7 @@ class ShowGraph():
                             sender_visible = True
                         if sender_visible:
                             sndr_proj_label += ':' + controller._get_port_name(projection.sender)
-                        ctlr_input_proj_label = ctlr_label + ':' + controller._get_port_name(input_port)
+                        ctlr_input_proj_label = ctlr_label + ':' + controller._get_port_name(outcome_input_port)
                     else:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                 projection.sender.owner,

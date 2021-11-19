@@ -479,7 +479,7 @@ class ParameterEstimationComposition(Composition):
         kwargs = args.pop('kwargs')
         pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
 
-        # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameterestimationcomposition.py
+        # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameter_estimation_composition.py
 
         # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
         if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):

@@ -37,7 +37,7 @@ pec_test_args = [(None, 2, True, False),               # No ObjectiveMechanism (
     ids=[f"{x[0]}-{'model' if x[2] else None}-{'nodes' if x[3] else None})" for x in pec_test_args]
 )
 def test_parameter_estimation_composition(objective_function_arg, expected_input_len, model_spec, node_spec):
-    """Test with and without ObjectiveMechanism specified, and use of model vs. nodes arg of constructor"""
+    """Test with and without ObjectiveMechanism specified, and use of model vs. nodes arg of PEC constructor"""
     samples = np.arange(0.1, 1.01, 0.3)
     Input = pnl.TransferMechanism(name='Input')
     reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
@@ -97,11 +97,13 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                              # enable_controller=False  # For testing error
                                              )
     ctlr = pec.controller
-
+    # pec.show_graph(show_node_structure=pnl.ALL)
     assert ctlr.num_outcome_input_ports == 1
     if objective_function_arg:
+        # pec.show_graph(show_cim=True)
         assert ctlr.objective_mechanism                         # For objective_function specified
     else:
+        pec.show_graph(show_cim=True)
         assert not ctlr.objective_mechanism                         # For objective_function specified
     assert len(ctlr.input_ports[pnl.OUTCOME].variable) == expected_input_len
     assert len(ctlr.control_signals) == 3
