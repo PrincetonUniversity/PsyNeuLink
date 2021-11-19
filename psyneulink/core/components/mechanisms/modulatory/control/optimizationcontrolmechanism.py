@@ -1263,17 +1263,24 @@ class OptimizationControlMechanism(ControlMechanism):
             #     and remove their specs from aux_components (where they would either be passed through CIMs or fail)
             # Note:  assumes self.aux_components has *only* monitored_port specifications and, for SEPARATE option,
             #        the same number and in the same order as the corresponding outcome_input_port_specs
+            # FIX: 11/19/21 - FILTER aux_components FOR WHAT IS NEEDED HERE, IN CASE THERE ARE OTHERS IN THERE
 
             # Add specs to to each outcome_input_port_spec (so that a Projection is specified directly to each
+            proj_specs = []
             if self.outcome_input_ports_option == SEPARATE:
                 for i, spec in enumerate(outcome_input_port_specs):
-                    outcome_input_port_specs[i].update({PROJECTIONS: self.aux_components[i]})
+                    proj_spec = self.aux_components[i]
+                    outcome_input_port_specs[i].update({PROJECTIONS: proj_spec})
+                    # Aggregate for deletion
+                    proj_specs.append(proj_spec)
+
             else:
-                outcome_input_port_specs[0].update({PROJECTIONS: self.aux_components})
+                outcome_input_port_specs[0].update({PROJECTIONS: [c for c in self.aux_components]})
+                proj_specs = self.aux_components.copy()
 
             # Remove specs from self.aux_components (that would otherwise be used for instantiating Projections)
-            for spec in outcome_input_port_specs:
-                del self.aux_components[self.aux_components.index(spec)]
+            for proj_spec in proj_specs:
+                del self.aux_components[self.aux_components.index(proj_spec)]
 
         return outcome_input_port_specs, outcome_value_sizes
 
