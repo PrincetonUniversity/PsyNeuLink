@@ -1252,21 +1252,30 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
     def _parse_monitor_for_control_input_ports(self, context):
-        """Override ControlMechanism to implement probe option
+        """Override ControlMechanism to implement allow_direct_probes option
+
+        If allow_direct_probes option is True:
+
+            Projection specifications are added to Port specification dictionaries, so that call to
+            super()._instantiate_input_ports in ControlMechanism instantiates Projections from
+            monitored node to OptimizationControlMechanism.
+
+            This allows *direct* Projections from monitored nodes in nested Compositions to the
+            OptimizationControlMechanism, bypassing output_CIMs and preventing inclusion of their values
+            in the results attribute of those Compositions.
+
+        If is False, simply passes results of super()._parse_monitor_for_control_input_ports(context)
+
+        Return port specification dictionaries (*with* Projection specifications), their value sizes and null list
+        (to suppress Projection assignment to aux_components in ControlMechanism._instantiate_input_ports)
         """
 
-        outcome_input_port_specs, \
-        outcome_value_sizes = super()._parse_monitor_for_control_input_ports(context)
+        outcome_input_port_specs, outcome_value_sizes, monitored_ports \
+            = super()._parse_monitor_for_control_input_ports(context)
 
         if self.allow_direct_probes:
-            # Instantiate direct MappingProjections from items in monitor_for_control to outcome_input_ports
-            #     and remove their specs from aux_components (where they would either be passed through CIMs or fail)
-            # Note:  assumes self.aux_components has *only* monitored_port specifications and, for SEPARATE option,
-            #        the same number and in the same order as the corresponding outcome_input_port_specs
-            # FIX: 11/19/21 - FILTER aux_components FOR WHAT IS NEEDED HERE, IN CASE THERE ARE OTHERS IN THERE
-
-            from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
-            monitored_ports = _parse_monitor_specs(self.monitor_for_control)
+            # Add Projection specifications to port specification dictionaries for outcome_input_ports
+            #    and return monitored_ports = []
 
             if self.outcome_input_ports_option == SEPARATE:
                 # Add port spec to to each outcome_input_port_spec (so that a Projection is specified directly to each)
@@ -1276,11 +1285,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Add all ports specs as list to single outcome_input_port
                 outcome_input_port_specs[0].update({PROJECTIONS: monitored_ports})
 
-            # Suppress creation of Projections in _instantiate_input_ports
-            self.monitored_ports = []
+            # Return [] for ports to suppress creation of Projections in _instantiate_input_ports
+            monitored_ports = []
 
-
-        return outcome_input_port_specs, outcome_value_sizes
+        return outcome_input_port_specs, outcome_value_sizes, monitored_ports
 
 
     def _update_state_input_ports_for_controller(self, context=None):
