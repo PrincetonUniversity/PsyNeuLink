@@ -542,6 +542,7 @@ class ParameterEstimationComposition(Composition):
         return OptimizationControlMechanism(
             agent_rep=self,
             monitor_for_control=outcome_variables,
+            allow_direct_probes=True,
             objective_mechanism=objective_mechanism,
             function=optimization_function,
             control_signals=control_signals,

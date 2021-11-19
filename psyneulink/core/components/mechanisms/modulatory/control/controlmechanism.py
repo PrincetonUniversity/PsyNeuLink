@@ -1499,70 +1499,114 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #    assign an outcome_input_port for each item specified
         elif self.monitor_for_control:
 
-            monitored_for_control_ports, \
-            monitor_for_control_value_sizes = self._parse_montiored_for_control_input_ports(context)
+            outcome_input_port_specs, \
+            outcome_value_sizes = self._parse_monitor_for_control_input_ports(context)
 
             # Get sizes of input_ports passed in (that are presumably used for other purposes;
             #   e.g., ones used by OptimizationControlMechanism for simulated inputs or state_features)
             other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
 
             # Construct full list of InputPort specifications and sizes
-            input_ports = monitored_for_control_ports + other_input_ports
-            input_port_value_sizes = monitor_for_control_value_sizes + other_input_port_value_sizes
+            input_ports = outcome_input_port_specs + other_input_ports
+            input_port_value_sizes = outcome_value_sizes + other_input_port_value_sizes
             super()._instantiate_input_ports(context=context,
                                              input_ports=input_ports,
                                              reference_value=input_port_value_sizes)
             # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
-            self.outcome_input_ports.extend(self.input_ports[:len(monitored_for_control_ports)])
+            self.outcome_input_ports.extend(self.input_ports[:len(outcome_input_port_specs)])
             # FIX: 11/3/21 DELETE ONCE THIS IS A PROPERTY
+
+            # Instantiate Projections to outcome_input_ports from items specified in monitor_for_control
+            #   (list of which were placed in self.aux_components by _parse_monitor_for_control_input_ports)
+            option = self.outcome_input_ports_option
+            from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+
+            # for i, entry in enumerate(self.aux_components):
+            for i, entry in enumerate(self.outcome_input_ports):
+                if  option == SEPARATE:
+                    # Each outcome_input_port get its own Projection
+                    self.aux_components[i] = MappingProjection(sender=self.aux_components[i],
+                                                               receiver=entry)
+                else:
+                    # The single outcome_input_port gets all the Projections
+                    for p in self.aux_components:
+                        self.aux_components[i] = MappingProjection(sender=self.aux_components[i],
+                                                                   receiver=entry)
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort
         else:
             super()._instantiate_input_ports(context=context)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
 
-    def _parse_montiored_for_control_input_ports(self, context):
-        """Get InputPort specification dictionaries for items specified in monitor_for_control.
+
+    def _parse_monitor_for_control_input_ports(self, context):
+        """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
 
         Return sender ports and their value sizes
         """
+        from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
+        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+
         monitor_for_control_specs = self.monitor_for_control
         option = self.outcome_input_ports_option
 
         # FIX: 11/3/21 - MOVE _parse_monitor_specs TO HERE FROM ObjectiveMechanism
-        from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
         monitored_ports = _parse_monitor_specs(monitor_for_control_specs)
 
+        outcome_input_port_specs = []
         port_value_sizes = self._handle_arg_input_ports(monitor_for_control_specs)[0]
 
-        # Construct port specification to assign its name
+        # SEPARATE outcome_input_ports OPTION:
+        #     Assign separate outcome_input_ports for each item in monitored_ports
         if option == SEPARATE:
+
+            # Construct port specification to assign its name
             for i, monitored_port in enumerate(monitored_ports):
                 name = monitored_port.name
                 if isinstance(monitored_port, OutputPort):
                     name = f"{monitored_port.owner.name}[{name.upper()}]"
                 name = 'MONITOR ' + name
-                monitored_ports[i] = {PORT_TYPE: InputPort, name: monitored_port}
-            return monitored_ports, port_value_sizes
+                outcome_input_port_specs.append({PORT_TYPE: InputPort,
+                                                 name: monitored_port})
+            # Return list of outcome_input_port specifications (and their sizes) for each monitored item
 
-        if option == CONCATENATE:
-            function = Concatenate
-
-        elif option == COMBINE:
-            function = LinearCombination
-
+        # SINGLE outcome_input_port OPTIONS:
+        #     Either combine or concatenate inputs from all items specified in monitor_for_control
+        #     as input to a single outcome_input_port
         else:
-            assert False, f"PROGRAM ERROR:  Unrecognized option ({option}) passed to " \
-                          f"ControlMechanism._parse_montiored_for_control_input_ports() for {self.name}"
 
-        port_value_sizes = [function().function(port_value_sizes)]
+            if option == CONCATENATE:
+                function = Concatenate
 
-        outcome_input_port = {PORT_TYPE: InputPort,
-                              NAME: 'OUTCOME',
-                              FUNCTION: function,
-                              # SIZE:  len(self._handle_arg_input_ports(monitor_for_control_specs)[0])
-                              PROJECTIONS: monitored_ports}
-        return [outcome_input_port], port_value_sizes
+            elif option == COMBINE:
+                function = LinearCombination
+
+            else:
+                assert False, f"PROGRAM ERROR:  Unrecognized option ({option}) passed to " \
+                              f"ControlMechanism._parse_monitor_for_control_input_ports() for {self.name}"
+
+            port_value_sizes = [function().function(port_value_sizes)]
+
+            # # MODIFIED 11/15/21 OLD:  FIX: INSTANTIATES DIRECT PROJECTION FROM INNER COMP(S)
+            # outcome_input_port = {PORT_TYPE: InputPort,
+            #                       NAME: 'OUTCOME',
+            #                       FUNCTION: function,
+            #                       # SIZE:  len(self._handle_arg_input_ports(monitor_for_control_specs)[0])
+            #                       PROJECTIONS: monitored_ports}
+            # outcome_input_port_specs = [outcome_input_port]
+            # MODIFIED 11/15/21 NEW:   FIX: INSTANTIATES PROJECTIONS VIA output_CIM OF NESTED COMP(S)
+            #                          (NOTE: OVERRIDE BY OCM CAN INSTANTIATE DIRECT PROJECTIONS USING PROBE OPTION)
+            # Return single outcome_input_port specification
+            outcome_input_port_specs.append({PORT_TYPE: InputPort,
+                                             NAME: 'OUTCOME',
+                                             FUNCTION: function})
+            # Add monitored_ports to aux_components for instantiation of Projections by Composition
+            #   (conversion to Projection specification happens in _instantiate_input_ports,
+            #   after outcome_input_port has been instantiated, which is required for Projection constructor)
+            self.aux_components.extend(monitored_ports)
+            # MODIFIED 11/15/21 END
+
+        return outcome_input_port_specs, port_value_sizes
 
     def _instantiate_output_ports(self, context=None):
 

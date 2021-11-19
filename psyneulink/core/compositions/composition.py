@@ -3944,13 +3944,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
-        """
+        """Add specified aux_components for node to Composition
+
         Returns
         -------
-
         list containing references to all invalid aux components
-
         """
+
         # Implement any components specified in node's aux_components attribute
         invalid_aux_components = []
         if hasattr(node, "aux_components"):
@@ -4002,6 +4002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            .format(component.name, node.name))
 
             invalid_aux_components.extend(self._get_invalid_aux_components(node))
+
             # Add all Projections to the Composition
             for proj_spec in [i for i in projections if not i[0] in invalid_aux_components]:
                 # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
@@ -7066,9 +7067,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                if proj.receiver.owner not in self.nodes and \
-                        proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes]:
+                # # MODIFIED 11/19/21 OLD:
+                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
+                # if proj.receiver.owner not in self.nodes and \
+                #         proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes]:
+                #     deeply_nested_projections[spec] = proj
+                # MODIFIED 11/19/21 NEW:  FIX - ADD TEST FOR SENDERS AS WELL AS RECEIVERS
+                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
+                #      REMOVING "if not i[1] in self.nodes" crashes in test_multilevel_control
+                if ((proj.sender.owner not in self.nodes
+                     and proj.sender.owner in [i[0] for i in nested_nodes])
+                        or (proj.receiver.owner not in self.nodes
+                            and proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes])):
                     deeply_nested_projections[spec] = proj
+                # MODIFIED 11/19/21 END
         return deeply_nested_projections
 
     # endregion

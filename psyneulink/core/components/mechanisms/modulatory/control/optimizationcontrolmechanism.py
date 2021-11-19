@@ -616,7 +616,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     COMPOSITION, CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
-    OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, SHADOW_INPUTS, SHADOW_INPUT_NAME
+    OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -654,6 +654,7 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                    \
         objective_mechanism=None,                       \
         monitor_for_control=None,                       \
+        allow_probes=False,                             \
         origin_objective_mechanism=False                \
         terminal_objective_mechanism=False              \
         state_features=None,                            \
@@ -679,6 +680,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     Arguments
     ---------
+
+    allow_direct_probes : bool : default False
+        specifies whether direct `Projections <Projection>` are permitted to the ControlMechanism from items
+        `being monitored <ControlMechanism_Monitor_for_Control_Argument>` that are in a `nested Composition
+        <Composition_Nested>` (see `allow_probes <OptimizationControlMechanism.allow_direct_probes>` for addition
+        information).
 
     state_features : Mechanism, InputPort, OutputPort, Projection, dict, or list containing any of these
         specifies Components for which `state_input_ports <OptimizationControlMechanism.state_input_ports>`
@@ -757,6 +764,19 @@ class OptimizationControlMechanism(ControlMechanism):
 
     Attributes
     ----------
+
+    allow_direct_probes : bool
+        this is a feature that is unique to OptimizationControlMechanism and any subclasses;  it determines whether
+        direct `Projections <Projection>` are permitted to the ControlMechanism from items being `monitored
+        <ControlMechanism_Monitor_for_Control_Argument>` that are in a `nested Composition <Composition_Nested>`.
+        This option only applies if an `objective_mechanism<ControlMechanism.objective_mechanism>` is not used.
+        If *allow_direct_probes* is False (the default), then items specified in `monitor_for_control
+        <ControlMechanism.monitor_for_control>` that are in nested Composition must be *OUTPUT* `Nodes
+        <Composition_Nodes>` of that Composition, and their Projections will pass through that (and any intervening)
+        Composition's `output_CIM <Composition.output_CIM>`.  If *allow_direct_probes* is True, then any node of a
+        nested Composition can be specified in `monitor_for_control <ControlMechanism.monitor_for_control>`, and it
+        will project *directly* to one of the OptimizationControlMechanism's `outcome_input_ports
+        <ControlMechanism.outcome_input_ports>`.
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's
@@ -1052,6 +1072,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def __init__(self,
                  agent_rep=None,
                  function=None,
+                 allow_direct_probes:bool = False,   # FIX: MAKE THIS A PARAMETER AND THEN SET TO None
                  state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
                  state_feature_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
                  num_estimates = None,
@@ -1091,6 +1112,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 kwargs.pop('feature_function')
                 continue
         self.state_features = convert_to_list(state_features)
+        self.allow_direct_probes = allow_direct_probes
 
         function = function or GridSearch
 
@@ -1228,6 +1250,33 @@ class OptimizationControlMechanism(ControlMechanism):
                 raise OptimizationControlMechanismError(f"Invalid {type(port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
+
+    def _parse_monitor_for_control_input_ports(self, context):
+        """Override ControlMechanism to implement probe option
+        """
+
+        outcome_input_port_specs, \
+        outcome_value_sizes = super()._parse_monitor_for_control_input_ports(context)
+
+        if self.allow_direct_probes:
+            # Instantiate direct MappingProjections from items in monitor_for_control to outcome_input_ports
+            #     and remove their specs from aux_components (where they would either be passed through CIMs or fail)
+            # Note:  assumes self.aux_components has *only* monitored_port specifications and, for SEPARATE option,
+            #        the same number and in the same order as the corresponding outcome_input_port_specs
+
+            # Add specs to to each outcome_input_port_spec (so that a Projection is specified directly to each
+            if self.outcome_input_ports_option == SEPARATE:
+                for i, spec in enumerate(outcome_input_port_specs):
+                    outcome_input_port_specs[i].update({PROJECTIONS: self.aux_components[i]})
+            else:
+                outcome_input_port_specs[0].update({PROJECTIONS: self.aux_components})
+
+            # Remove specs from self.aux_components (that would otherwise be used for instantiating Projections)
+            for spec in outcome_input_port_specs:
+                del self.aux_components[self.aux_components.index(spec)]
+
+        return outcome_input_port_specs, outcome_value_sizes
+
 
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
