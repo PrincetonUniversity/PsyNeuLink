@@ -580,6 +580,7 @@ from psyneulink.core.components.functions.function import Function_Base, is_func
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Concatenate
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.mechanism import Mechanism, Mechanism_Base
+from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
@@ -1499,6 +1500,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         #    assign an outcome_input_port for each item specified
         elif self.monitor_for_control:
 
+            # Get outcome_input_port_specs without including specifications of Projections to them, as those need to
+            #     be constructed and specified as aux_components (below) for validation and activation by Composition
             outcome_input_port_specs, \
             outcome_value_sizes = self._parse_monitor_for_control_input_ports(context)
 
@@ -1521,17 +1524,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
             option = self.outcome_input_ports_option
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
+            monitored_ports = _parse_monitor_specs(self.monitor_for_control)
             # for i, entry in enumerate(self.aux_components):
             for i, entry in enumerate(self.outcome_input_ports):
                 if  option == SEPARATE:
                     # Each outcome_input_port get its own Projection
-                    self.aux_components[i] = MappingProjection(sender=self.aux_components[i],
-                                                               receiver=entry)
+                    self.aux_components[i] = MappingProjection(sender=p, receiver=entry)
                 else:
                     # The single outcome_input_port gets all the Projections
-                    for p in self.aux_components:
-                        self.aux_components[i] = MappingProjection(sender=self.aux_components[i],
-                                                                   receiver=entry)
+                    for p in monitored_ports:
+                        self.aux_components[i] = MappingProjection(sender=p, receiver=entry)
 
         # Nothing has been specified, so just instantiate the default OUTCOME InputPort
         else:
@@ -1544,8 +1546,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         Return sender ports and their value sizes
         """
-        from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
-        from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 
         monitor_for_control_specs = self.monitor_for_control
         option = self.outcome_input_ports_option
@@ -1603,7 +1603,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # Add monitored_ports to aux_components for instantiation of Projections by Composition
             #   (conversion to Projection specification happens in _instantiate_input_ports,
             #   after outcome_input_port has been instantiated, which is required for Projection constructor)
-            self.aux_components.extend(monitored_ports)
+            # self.aux_components.extend(monitored_ports)
             # MODIFIED 11/15/21 END
 
         return outcome_input_port_specs, port_value_sizes
