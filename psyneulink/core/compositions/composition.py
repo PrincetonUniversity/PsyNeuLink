@@ -2395,7 +2395,7 @@ from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import Port, _instantiate_port
+from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -2410,14 +2410,14 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
-    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, INTERNAL_ONLY, \
-    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
+    LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, \
     MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PARAMS, PORT_TYPE, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
-    SAMPLE, SHADOW_INPUTS, SHADOW_INPUT_NAME, SOFT_CLAMP, SSE, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
+    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -3375,7 +3375,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Controller
         self.controller = None
-        # MODIFIED 11/3/21 OLD:
         self._controller_initialization_status = ContextFlags.INITIALIZED
         if controller:
             self.add_controller(controller)
@@ -3388,7 +3387,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # This is set at runtime and may be used by the controller to assign its
         #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
         self.num_trials = None
-        # MODIFIED 11/3/21 END
 
         self._update_parameter_components()
 
@@ -3413,27 +3411,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.add_projections(projections)
 
         self.add_pathways(pathways, context=context)
-
-        # # MODIFIED 11/3/21 NEW:
-        # # Call with context = COMPOSITION to avoid calling _check_initialization_status again
-        # # Need here so that controller can see nodes (for assigning state_features)
-        # self._analyze_graph(context=context)
-        #
-        # # self.controller = None
-        # self._controller_initialization_status = ContextFlags.INITIALIZED
-        # if controller:
-        #     self.add_controller(controller)
-        # else:
-        #     self.enable_controller = enable_controller
-        # self.controller_mode = controller_mode
-        # self.controller_time_scale = controller_time_scale
-        # self.controller_condition = controller_condition
-        # self.controller_condition.owner = self.controller
-        # # This is set at runtime and may be used by the controller to assign its
-        # #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
-        # self.num_trials = None
-        # # Controller
-        # MODIFIED 11/3/21 END
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
@@ -3536,13 +3513,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._update_shadow_projections(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
-
-        # # # FIX: MOVE THIS TO add_nodes TO CREATE PROJECTIONS TO CONTROLLER WHEN INPUT NODES ARE ADDED
-        # # MODIFIED 11/15/21 NEW: MOVED TO _complete_init_of_partially_initialized_nodes
-        # # MODIFIED 11/3/21 NEW: -
-        # self.controller._update_controller(context=context)
-        # # # MODIFIED 11/3/21 END
-        # MODIFIED 11/15/21 END
 
     def _update_processing_graph(self):
         """
@@ -3648,13 +3618,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
             self._instantiate_deferred_init_control(node, context=context)
-            # # MODIFIED 11/15/21 OLD:  MOVED _complete_init_of_partially_initialized_nodes
-            # # MODIFIED 11/3/21 NEW:
-            # # if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep is self:
-            # if hasattr(self.controller, AGENT_REP) and self.controller.agent_rep.componentCategory=='Composition':
-            #     self.controller._update_state_input_ports_for_controller(context=context)
-            # # MODIFIED 11/3/21 END
-            # # MODIFIED 11/15/21 END
 
         try:
             if len(invalid_aux_components) > 0:
@@ -7216,13 +7179,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
-
-        # MODIFIED 11/3/21 NEW:
-        # self._analyze_graph(context=context) <- FIX: CAUSES INFINITE RECURSION FOR ...add_node_with_control_specified
-        # MODIFIED 11/3/21 END
-        # # MODIFIED 11/15/21 OLD:
-        # self._update_controller(context=context) # FIX: ADDS EXTRANEOUS state_input_ports FOR ...ocm_gridsearch_min...
-        # MODIFIED 11/15/21 END
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
