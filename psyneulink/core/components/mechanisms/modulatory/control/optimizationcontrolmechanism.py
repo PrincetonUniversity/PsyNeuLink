@@ -1243,13 +1243,11 @@ class OptimizationControlMechanism(ControlMechanism):
                 (presumably used to assign a state_feature_function).
             Any state_input_ports created here (i.e., not specified by **state_features** in the constructor)
                 are assigned the default state_feature_function.
-
-        Note: tests for validity of state_input_ports are made Composition._check_for_invalid_controller_state_features
         """
 
         # MODIFIED 11/15/21 OLD:  FIX: REPLACE WITH ContextFlags.PROCESSING ??
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
-        # This avoids error messages if called prematurely (i.e., before run is complete
+        # This avoids error messages if called prematurely (i.e., before run is complete)
         if context.flags & ContextFlags.METHOD:
             return
         # MODIFIED 11/15/21 END

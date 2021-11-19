@@ -1491,13 +1491,16 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:
             # This instantiates an OUTCOME InputPort sized to match the ObjectiveMechanism's OUTCOME OutputPort
+            # Note: in this case, any items specified in monitor_for_control are passed to the **monitor** argument
+            #       of the objective_mechanism's constructor
             self._instantiate_objective_mechanism(input_ports, context=context)
 
         # If no ObjectiveMechanism is specified, but items to monitor are specified,
+        #    assign an outcome_input_port for each item specified
         elif self.monitor_for_control:
 
             monitored_for_control_ports, \
-            monitor_for_control_value_sizes = self._instantiate_montiored_for_control_input_ports(context)
+            monitor_for_control_value_sizes = self._parse_montiored_for_control_input_ports(context)
 
             # Get sizes of input_ports passed in (that are presumably used for other purposes;
             #   e.g., ones used by OptimizationControlMechanism for simulated inputs or state_features)
@@ -1518,8 +1521,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             super()._instantiate_input_ports(context=context)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
 
-    def _instantiate_montiored_for_control_input_ports(self, context):
-        """Instantiate InputPorts for items specified in monitor_for_control.
+    def _parse_montiored_for_control_input_ports(self, context):
+        """Get InputPort specification dictionaries for items specified in monitor_for_control.
 
         Return sender ports and their value sizes
         """
@@ -1550,7 +1553,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         else:
             assert False, f"PROGRAM ERROR:  Unrecognized option ({option}) passed to " \
-                          f"ControlMechanism._instantiate_montiored_for_control_input_ports() for {self.name}"
+                          f"ControlMechanism._parse_montiored_for_control_input_ports() for {self.name}"
 
         port_value_sizes = [function().function(port_value_sizes)]
 
@@ -1560,7 +1563,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               # SIZE:  len(self._handle_arg_input_ports(monitor_for_control_specs)[0])
                               PROJECTIONS: monitored_ports}
         return [outcome_input_port], port_value_sizes
-
 
     def _instantiate_output_ports(self, context=None):
 
@@ -1792,6 +1794,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         output_ports = self.objective_mechanism.add_to_monitor(monitor_specs=monitor_specs, context=context)
 
     def _add_process(self, process, role:str):
+        assert False
         super()._add_process(process, role)
         if self.objective_mechanism:
             self.objective_mechanism._add_process(process, role)
@@ -1812,7 +1815,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 and not ctl_sig_attribute[0].efferents):
             self.remove_ports(ctl_sig_attribute[0])
 
-    # FIX: 11/3/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
+    # FIX: 11/15/21 SHOULDN'T THIS BE PUT ON COMPOSITION??
     def _activate_projections_for_compositions(self, composition=None):
         """Activate eligible Projections to or from Nodes in Composition.
         If Projection is to or from a node NOT (yet) in the Composition,

@@ -7164,15 +7164,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.enable_controller = True
 
+        # FIX: 11/15/21 - THIS SHOULD BE MOVED TO COMPOSITION FROM CONTROL MECHANISM
         controller._activate_projections_for_compositions(self)
+
         # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
         context.source = ContextFlags.METHOD
         self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
-
-        # # MODIFIED 11/15/21 NEW:
-        # self._instantiate_controller_shadow_projections(context=context)
-        # MODIFIED 11/15/21 END
 
         # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
@@ -7184,33 +7182,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
-        # # MODIFIED 11/15/21 OLD/NEW:
         # # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
         self._instantiate_control_projections(context=context)
-        # MODIFIED 11/15/21 END
-
-        # # MODIFIED 11/15/21 OLD: FIX: MOVED TO ITS OWN METHOD BELOW: _instantiate_control_projections
-        # # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
-        # # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
-        # control_signal_specs = self._get_control_signals_for_composition()
-        # for ctl_sig_spec in control_signal_specs:
-        #     # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
-        #     #               CALLED FROM _instantiate_control_signal
-        #     #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
-        #     # Don't add any that are already on the ControlMechanism
-        #
-        #     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-        #     ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-        #                                            context=context)
-        #     controller.control.append(ctl_signal)
-        #     # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
-        #     #                ?DON'T ASSIGN ControlProjection?
-        #     #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
-        #     #                ?PUT IT IN aux_components FOR NODE?
-        #     #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
-        #     controller._activate_projections_for_compositions(self)
-        # MODIFIED 11/15/21 END
 
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
