@@ -7489,8 +7489,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context and context.source == ContextFlags.METHOD:
             return
 
-        # Check if controller is in deferred init
-        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
+        # Check if controller is in deferred init        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller, context=context)
 
             # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
