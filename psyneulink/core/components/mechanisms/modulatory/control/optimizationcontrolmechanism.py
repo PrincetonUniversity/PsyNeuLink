@@ -1265,22 +1265,20 @@ class OptimizationControlMechanism(ControlMechanism):
             #        the same number and in the same order as the corresponding outcome_input_port_specs
             # FIX: 11/19/21 - FILTER aux_components FOR WHAT IS NEEDED HERE, IN CASE THERE ARE OTHERS IN THERE
 
-            # Add specs to to each outcome_input_port_spec (so that a Projection is specified directly to each
-            proj_specs = []
+            from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
+            monitored_ports = _parse_monitor_specs(self.monitor_for_control)
+
             if self.outcome_input_ports_option == SEPARATE:
-                for i, spec in enumerate(outcome_input_port_specs):
-                    proj_spec = self.aux_components[i]
-                    outcome_input_port_specs[i].update({PROJECTIONS: proj_spec})
-                    # Aggregate for deletion
-                    proj_specs.append(proj_spec)
-
+                # Add port spec to to each outcome_input_port_spec (so that a Projection is specified directly to each)
+                for i in range(self.num_outcome_input_ports):
+                    outcome_input_port_specs[i].update({PROJECTIONS: monitored_ports[i]})
             else:
-                outcome_input_port_specs[0].update({PROJECTIONS: [c for c in self.aux_components]})
-                proj_specs = self.aux_components.copy()
+                # Add all ports specs as list to single outcome_input_port
+                outcome_input_port_specs[0].update({PROJECTIONS: monitored_ports})
 
-            # Remove specs from self.aux_components (that would otherwise be used for instantiating Projections)
-            for proj_spec in proj_specs:
-                del self.aux_components[self.aux_components.index(proj_spec)]
+            # Suppress creation of Projections in _instantiate_input_ports
+            self.monitored_ports = []
+
 
         return outcome_input_port_specs, outcome_value_sizes
 
