@@ -15,7 +15,7 @@ from llvmlite import ir
 
 from .debug import debug_env
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
-    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll, Threshold
 from psyneulink.core.scheduling.time import TimeScale
 
 
@@ -570,8 +570,10 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_trial, global_trial)
 
+    # TODO: replace num_exec_locs use with equivalent from nodes_states
     def generate_sched_condition(self, builder, condition, cond_ptr, node,
-                                 is_finished_callbacks, num_exec_locs):
+                                 is_finished_callbacks, num_exec_locs,
+                                 nodes_states):
 
 
         if isinstance(condition, Always):
@@ -581,13 +583,13 @@ class ConditionGenerator:
             return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
-            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs)
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
             agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -611,7 +613,7 @@ class ConditionGenerator:
         elif isinstance(condition, Any):
             agg_cond = self.ctx.bool_ty(0)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
                 agg_cond = builder.or_(agg_cond, cond_res)
             return agg_cond
 
@@ -698,5 +700,35 @@ class ConditionGenerator:
                 run_cond = builder.and_(run_cond, node_is_finished)
 
             return run_cond
+
+        elif isinstance(condition, Threshold):
+            target = condition.dependency
+            param = condition.parameter
+            threshold = condition.threshold
+            comparator = condition.comparator
+            indices = condition.indices
+
+            assert param in target.llvm_state_ids, (
+                f"Threshold for {target} only supports items in llvm_state_ids"
+                f" ({target.llvm_state_ids})"
+            )
+
+            node_idx = self.composition._get_node_index(target)
+            node_state = builder.gep(nodes_states, [self.ctx.int32_ty(0), self.ctx.int32_ty(node_idx)])
+            param_ptr = get_state_ptr(builder, target, node_state, param)
+
+            if isinstance(param_ptr.type.pointee, ir.ArrayType):
+                if indices is None:
+                    indices = [0, 0]
+                elif isinstance(indices, TimeScale):
+                    indices = [indices.value]
+
+                indices = [self.ctx.int32_ty(x) for x in [0] + list(indices)]
+                param_ptr = builder.gep(param_ptr, indices)
+
+            val = builder.load(param_ptr)
+            val = convert_type(builder, val, ir.DoubleType())
+
+            return builder.fcmp_ordered(comparator, val, val.type(threshold))
 
         assert False, "Unsupported scheduling condition: {}".format(condition)

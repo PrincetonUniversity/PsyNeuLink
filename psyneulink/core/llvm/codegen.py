@@ -782,7 +782,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                 continue
 
             reinit_cond = cond_gen.generate_sched_condition(
-                builder, when, cond, node, is_finished_callbacks, num_exec_locs)
+                builder, when, cond, node, is_finished_callbacks, num_exec_locs, nodes_states)
             with builder.if_then(reinit_cond):
                 node_w = ctx.get_node_wrapper(composition, node)
                 node_reinit_f = ctx.import_llvm_function(node_w, tags=node_tags.union({"reset"}))
@@ -816,7 +816,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
         trial_term_cond = cond_gen.generate_sched_condition(
             builder, composition.termination_processing[TimeScale.TRIAL],
-            cond, None, is_finished_callbacks, num_exec_locs)
+            cond, None, is_finished_callbacks, num_exec_locs, nodes_states)
         trial_cond = builder.not_(trial_term_cond, name="not_trial_term_cond")
 
         loop_body = builder.append_basic_block(name="scheduling_loop_body")
@@ -835,7 +835,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
                                            name="run_cond_ptr_" + node.name)
             node_cond = cond_gen.generate_sched_condition(
                 builder, composition._get_processing_condition_set(node),
-                cond, node, is_finished_callbacks, num_exec_locs)
+                cond, node, is_finished_callbacks, num_exec_locs, nodes_states)
             ran = cond_gen.generate_ran_this_pass(builder, cond, node)
             node_cond = builder.and_(node_cond, builder.not_(ran),
                                      name="run_cond_" + node.name)
@@ -947,6 +947,9 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         a.attributes.add('noalias')
 
     state, params, data, data_in, data_out, trials_ptr, inputs_ptr = llvm_func.args
+
+    nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
+
     # simulation does not care about the output
     # it extracts results of the controller objective mechanism
     if simulation:
@@ -994,7 +997,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
     run_term_cond = cond_gen.generate_sched_condition(
         builder, composition.termination_processing[TimeScale.RUN],
-        cond, None, None, None)
+        cond, None, None, None, nodes_states)
     run_cond = builder.not_(run_term_cond, name="not_run_term_cond")
 
     # Iter cond
