@@ -85,7 +85,7 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                              nodes = comp if node_spec else None,
                                              # data = [1,2,3],    # For testing error
                                              parameters={('drift_rate',Decision):[1,2],
-                                                         ('threshold',Decision2):[1,2],},
+                                                         ('threshold',Decision):[1,2],},
                                              # parameters={('shrimp_boo',Decision):[1,2],   # For testing error
                                              #             ('scripblat',Decision2):[1,2],}, # For testing error
                                              outcome_variables=[Decision.output_ports[DECISION_VARIABLE],
