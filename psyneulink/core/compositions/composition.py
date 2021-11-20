@@ -7389,9 +7389,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
             # Don't add any that are already on the ControlMechanism
 
-            # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=context)
+            # MODIFIED 11/20/21 NEW:
+            try:
+                # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+                ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
+            except:
+                ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
+            # MODIFIED 11/20/21 END
+
             self.controller.control.append(ctl_signal)
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
             #                ?DON'T ASSIGN ControlProjection?
