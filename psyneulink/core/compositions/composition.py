@@ -7202,7 +7202,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 11/20/21 NEW: MOVED FROM BELOW
         # # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-        self._complete_init_of_partially_initialized_nodes(context=context)
         self._instantiate_control_projections(context=context)
         # MODIFIED 11/20/21 END
 

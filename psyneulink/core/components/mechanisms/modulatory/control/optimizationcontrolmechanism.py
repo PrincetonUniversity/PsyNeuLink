@@ -1335,6 +1335,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                   if not input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep)]
 
         if any(invalid_state_features):
+
             raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                     f"optimization of {self.agent_rep.name}, has 'state_features' "
                                                     f"specified ({[d.name for d in invalid_state_features]}) that "
