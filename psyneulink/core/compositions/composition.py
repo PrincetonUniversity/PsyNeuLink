@@ -7180,7 +7180,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
                                   f"is being replaced by {controller.name}.")
                 # Remove Projections for old one
-                for proj in self.projections:
+                for proj in self.projections.copy():
                     if (proj in self.controller.afferents or proj in self.controller.efferents):
                         self.remove_projection(proj)
                         Projection_Base._delete_projection(proj)
@@ -7524,7 +7524,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context and context.source == ContextFlags.METHOD:
             return
 
-            # Check if controller is in deferred init        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
+        # FIX: 11/20/21:  CALLING THIS FIXES test_deferred_objective_mech (ADDS ObjectiveMechanism AS Node)
+        #                 BUT BREAKS OTHER STUFF: XXX
+        #                 PUT THE FOLLOWING SOMEWHERE OTHER THAN add_controller:
+            # # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
+            # if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
+            #     self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+            # else:
+            #     # This is set by add_node() automatically;  but should be set either way
+            #     self.needs_update_controller = True
+
+        # Check if controller is in deferred init
+        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller, context=context)
 
         # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
