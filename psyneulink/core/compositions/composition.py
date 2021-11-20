@@ -7200,11 +7200,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
+        # MODIFIED 11/20/21 NEW: MOVED FROM BELOW
+        # # Get rid of default ControlSignal if it has no ControlProjections
+        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        self._instantiate_control_projections(context=context)
+        # MODIFIED 11/20/21 END
+
+        # MODIFIED 11/20/21 NEW:
+        for node in self.nodes:
+            self._instantiate_deferred_init_control(node, context)
+        # MODIFIED 11/20/21 END
+
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
         else:
-            # This is set by add_node() automatically;  but should be set either way
+            # This is set by add_node() automatically above, but should be set either way
+            #    to insure call at run time (to catch any new nodes that have been added)
             self.needs_update_controller = True
 
         self.node_ordering.append(controller)
@@ -7229,9 +7241,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
+        # MODIFIED 11/20/21 OLD: MOVED TO ABOVE
         # # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
         self._instantiate_control_projections(context=context)
+        # MODIFIED 11/20/21 END
 
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
