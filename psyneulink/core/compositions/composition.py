@@ -5886,7 +5886,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #                   but need to implement proper behavior wrt call to analyze_graph()
         #                   _check_initalization_state()
         # 10/22/20 [KDM]: Pass no context instead of setting to None
-        self._analyze_graph()
+        # # MODIFIED 11/20/21 OLD:
+        # self._analyze_graph()
+        # MODIFIED 11/20/21 NEW:
+        self._analyze_graph(context)
+        # MODIFIED 11/20/21 END
 
         return pathway
 
@@ -7520,35 +7524,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context and context.source == ContextFlags.METHOD:
             return
 
-        # Check if controller is in deferred init        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
+            # Check if controller is in deferred init        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller, context=context)
 
-            # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
-            #    since no need to detect deferred_init and generate errors until runtime
-            if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
-                return
+        # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
+        #    since no need to detect deferred_init and generate errors until runtime
+        if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
+            return
 
-            if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-                invalid_aux_components = self._get_invalid_aux_components(self.controller)
-                for component in invalid_aux_components:
-                    if isinstance(component, Projection):
-                        if hasattr(component.receiver, OWNER_MECH):
-                            owner = component.receiver.owner_mech
-                        else:
-                            owner = component.receiver.owner
-                        warnings.warn(
-                                f"The controller of {self.name} has been specified to project to {owner.name}, "
-                                f"but {owner.name} is not in {self.name} or any of its nested Compositions. "
-                                f"This projection will be deactivated until {owner.name} is added to {self.name} "
-                                f"in a compatible way."
-                        )
-                    elif isinstance(component, Mechanism):
-                        warnings.warn(
-                                f"The controller of {self.name} has a specification that includes the Mechanism "
-                                f"{component.name}, but {component.name} is not in {self.name} or any of its "
-                                f"nested Compositions. This Mechanism will be deactivated until {component.name} is "
-                                f"added to {self.name} or one of its nested Compositions in a compatible way."
-                        )
+        if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
+            invalid_aux_components = self._get_invalid_aux_components(self.controller)
+            for component in invalid_aux_components:
+                if isinstance(component, Projection):
+                    if hasattr(component.receiver, OWNER_MECH):
+                        owner = component.receiver.owner_mech
+                    else:
+                        owner = component.receiver.owner
+                    warnings.warn(
+                            f"The controller of {self.name} has been specified to project to {owner.name}, "
+                            f"but {owner.name} is not in {self.name} or any of its nested Compositions. "
+                            f"This projection will be deactivated until {owner.name} is added to {self.name} "
+                            f"in a compatible way."
+                    )
+                elif isinstance(component, Mechanism):
+                    warnings.warn(
+                            f"The controller of {self.name} has a specification that includes the Mechanism "
+                            f"{component.name}, but {component.name} is not in {self.name} or any of its "
+                            f"nested Compositions. This Mechanism will be deactivated until {component.name} is "
+                            f"added to {self.name} or one of its nested Compositions in a compatible way."
+                    )
 
         # If Composition is not preparing to execute, allow deferred_inits to persist without warning
         if context and ContextFlags.PREPARING not in context.execution_phase:
