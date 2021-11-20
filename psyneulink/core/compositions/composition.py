@@ -7241,10 +7241,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
-        # MODIFIED 11/20/21 OLD: MOVED TO ABOVE
-        # # Get rid of default ControlSignal if it has no ControlProjections
-        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-        self._instantiate_control_projections(context=context)
+        # # MODIFIED 11/20/21 OLD: MOVED TO ABOVE
+        # # # Get rid of default ControlSignal if it has no ControlProjections
+        # controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        # self._instantiate_control_projections(context=context)
         # MODIFIED 11/20/21 END
 
         if not invalid_aux_components:
@@ -7259,16 +7259,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         If node is a Node that has deferred init control specs and self has a controller, activate the deferred init
         control specs for self's controller.
 
+        Called recursively on nodes that are nested Compositions.
+
         Returns
         -------
 
-        list of hanging control specs that were not able to be assigned for a controller at any level.
+        list of hanging control specs that were not able to be assigned for a controller at any level of nesting.
 
         """
         hanging_control_specs = []
         if node.componentCategory == 'Composition':
             for nested_node in node.nodes:
                 hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node, context=context))
+                assert True
         else:
             hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
         if not self.controller:
@@ -7690,7 +7693,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # EXECUTE run of composition and aggregate results
 
         # Use reporting options from Report context created in initial (outer) call to run()
-        with Report(self, context) as report:
+        with Report(self, context=context) as report:
             result = self.run(inputs=inputs,
                                     context=context,
                                     runtime_params=runtime_params,

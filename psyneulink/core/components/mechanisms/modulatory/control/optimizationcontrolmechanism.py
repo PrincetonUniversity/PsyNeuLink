@@ -615,7 +615,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    COMPOSITION, CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
+    CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
     OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -1187,7 +1187,6 @@ class OptimizationControlMechanism(ControlMechanism):
         `OptimizationControlMechanism_State_Features` for additional details.
         """
 
-        from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         # # MODIFIED 11/15/21 NEW:
         # from psyneulink.core.compositions.composition import NodeRole
@@ -1402,10 +1401,14 @@ class OptimizationControlMechanism(ControlMechanism):
                                                    modulates=seed_param_ports,
                                                    allocation_samples=randomization_seed_mod_values))
 
-        for i, spec in enumerate(self.output_ports):
+        for i, spec in list(enumerate(self.output_ports)):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
+            # # MODIFIED 11/20/21 OLD:
+            # self.output_ports[i] = control_signal
+            # MODIFIED 11/20/21 NEW:
             self.output_ports[i] = control_signal
+            # MODIFIED 11/20/21 END
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 

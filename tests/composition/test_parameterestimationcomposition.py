@@ -61,7 +61,7 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                    output_ports=[DECISION_VARIABLE,
                                  RESPONSE_TIME,
                                  PROBABILITY_UPPER_THRESHOLD],
-                   name='Decision')
+                   name='Decision1')
     Decision2 = DDM(function=DriftDiffusionAnalytical(drift_rate=1.0,
                                                       threshold=1.0,
                                                       noise=0.5,
@@ -70,7 +70,7 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                     output_ports=[DECISION_VARIABLE,
                                   RESPONSE_TIME,
                                   PROBABILITY_UPPER_THRESHOLD],
-                    name='Decision')
+                    name='Decision2')
 
 
     comp = pnl.Composition(name="evc", retain_old_simulation_data=True)

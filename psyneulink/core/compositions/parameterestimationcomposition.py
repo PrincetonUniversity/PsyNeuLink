@@ -148,6 +148,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.parameters import Parameter
 
@@ -429,6 +430,7 @@ class ParameterEstimationComposition(Composition):
                                                              getter=_same_seed_for_all_parameter_combinations_getter,
                                                              setter=_same_seed_for_all_parameter_combinations_setter)
 
+    @handle_external_context()
     def __init__(self,
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control
@@ -441,6 +443,7 @@ class ParameterEstimationComposition(Composition):
                  initial_seed=None,
                  same_seed_for_all_parameter_combinations=None,
                  name=None,
+                 context=None,
                  **kwargs):
 
         self._validate_params(locals())
@@ -472,7 +475,7 @@ class ParameterEstimationComposition(Composition):
                                     num_trials_per_estimate=num_trials_per_estimate,
                                     initial_seed=initial_seed,
                                     same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
-        self.add_controller(ocm)
+        self.add_controller(ocm, context=Context(source=ContextFlags.COMPOSITION))
 
     def _validate_params(self, args):
 
@@ -527,7 +530,7 @@ class ParameterEstimationComposition(Composition):
 
         # # Parse **parameters** into ControlSignals specs
         control_signals = []
-        for param,allocation in parameters.items():
+        for param, allocation in parameters.items():
             control_signals.append(ControlSignal(modulates=param,
                                                  allocation_samples=allocation))
 
