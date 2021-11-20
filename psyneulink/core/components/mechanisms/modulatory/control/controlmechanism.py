@@ -1572,7 +1572,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     name = f"{monitored_port.owner.name}[{name.upper()}]"
                 name = 'MONITOR ' + name
                 outcome_input_port_specs.append({PORT_TYPE: InputPort,
-                                                 name: monitored_port})
+                                                 NAME: name})
             # Return list of outcome_input_port specifications (and their sizes) for each monitored item
 
         # SINGLE outcome_input_port OPTIONS:
