@@ -3373,6 +3373,50 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
+        # # MODIFIED 11/19/21 OLD:
+        # # Controller
+        # self.controller = None
+        # self._controller_initialization_status = ContextFlags.INITIALIZED
+        # if controller:
+        #     self.add_controller(controller)
+        # else:
+        #     self.enable_controller = enable_controller
+        # self.controller_mode = controller_mode
+        # self.controller_time_scale = controller_time_scale
+        # self.controller_condition = controller_condition
+        # self.controller_condition.owner = self.controller
+        # # This is set at runtime and may be used by the controller to assign its
+        # #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
+        # self.num_trials = None
+        #
+        # self._update_parameter_components()
+        #
+        # self.initialization_status = ContextFlags.INITIALIZED
+        # #FIXME: This removes `composition.parameters.values`, as it was not being
+        # # populated correctly in the first place. `composition.parameters.results`
+        # # should be used instead - in the long run, we should look into possibly
+        # # populating both values and results, as it would be more consistent with
+        # # the behavior of components
+        # del self.parameters.value
+        # MODIFIED 11/19/21 NEW:
+        self.controller = None
+        # MODIFIED 11/19/21 END
+
+        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
+        # Nodes, Projections, and Pathways
+        if nodes is not None:
+            nodes = convert_to_list(nodes)
+            for node in nodes:
+                self.add_node(node)
+
+        # FIX 4/8/20 [JDC]: TEST THIS
+        if projections is not None:
+            projections = convert_to_list(projections)
+            self.add_projections(projections)
+
+        self.add_pathways(pathways, context=context)
+
+        # MODIFIED 11/19/21 NEW:
         # Controller
         self.controller = None
         self._controller_initialization_status = ContextFlags.INITIALIZED
@@ -3397,20 +3441,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # populating both values and results, as it would be more consistent with
         # the behavior of components
         del self.parameters.value
-
-        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
-        # Nodes, Projections, and Pathways
-        if nodes is not None:
-            nodes = convert_to_list(nodes)
-            for node in nodes:
-                self.add_node(node)
-
-        # FIX 4/8/20 [JDC]: TEST THIS
-        if projections is not None:
-            projections = convert_to_list(projections)
-            self.add_projections(projections)
-
-        self.add_pathways(pathways, context=context)
+        # MODIFIED 11/19/21 END
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
