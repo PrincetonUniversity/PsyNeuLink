@@ -1404,11 +1404,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i, spec in list(enumerate(self.output_ports)):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
-            # # MODIFIED 11/20/21 OLD:
-            # self.output_ports[i] = control_signal
-            # MODIFIED 11/20/21 NEW:
             self.output_ports[i] = control_signal
-            # MODIFIED 11/20/21 END
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
