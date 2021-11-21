@@ -3965,7 +3965,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
-        """Add specified aux_components for node to Composition
+        """Add aux_components of node to Composition.
 
         Returns
         -------
@@ -3975,9 +3975,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Implement any components specified in node's aux_components attribute
         invalid_aux_components = []
         if hasattr(node, "aux_components"):
-            # Collect the node's aux components that are not currently able to be added to the Composition
-            # we'll ignore these for now and try to activate them again during every call to _analyze_graph
-            # at runtime if there are still any invalid aux components left, we will issue a warning
+            # Collect the node's aux components that are not currently able to be added to the Composition;
+            # ignore these for now and try to activate them again during every call to _analyze_graph
+            # and, at runtime, if there are still any invalid aux_components left, issue a warning
             projections = []
             # Add all "nodes" to the composition first (in case projections reference them)
             for component in node.aux_components:
@@ -4047,17 +4047,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         feedback=proj_spec[1])
         return invalid_aux_components
 
-    def _get_invalid_aux_components(self, controller):
-        valid_nodes = \
-            [node for node in self.nodes.data] + \
-            [node for node, composition in self._get_nested_nodes()] + \
-            [self]
+    def _get_invalid_aux_components(self, node):
+        """
+        Return any Components in aux_components for a node that references items not in this Composition
+        """
+        # FIX 11/20/21: THIS APPEARS TO ONLY HANDLE PROJECTIONS AND NOT COMPOSITIONS OR MECHANISMS
+        #  (OTHER THAN THE COMPOSITION'S controller AND ITS objective_mechanism)
+
+        # First get all valid nodes:
+        # - nodes in Composition
+        # - nodes in any nested Compositions
+        # - controller and associated objective_mechanism
+        valid_nodes = [node for node in self.nodes.data] + \
+                      [node for node, composition in self._get_nested_nodes()] + \
+                      [self]
         if self.controller:
             valid_nodes.append(self.controller)
             if hasattr(self.controller,'objective_mechanism'):
                 valid_nodes.append(self.controller.objective_mechanism)
+
+        # Then get invalid components:
+        #   - Projections that have senders or receivers not in the Composition
+        #     (this includes any in aux_components of node, or associated with any Mechanism listed in aux_components)
         invalid_components = []
-        for aux in controller.aux_components:
+        for aux in node.aux_components:
             component = None
             if isinstance(aux, Projection):
                 component = aux
@@ -4097,8 +4110,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _complete_init_of_partially_initialized_nodes(self, context=None):
         """
-        Attempt to complete initialization of aux components for any nodes with
-            aux components that were not previously compatible with Composition
+        Attempt to complete initialization of aux_components for any nodes with
+            aux_components that were not previously compatible with Composition
         """
         completed_nodes = []
         for node in self._partially_added_nodes:
@@ -4108,8 +4121,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
 
         # MODIFIED 11/15/21 NEW:
-        # Don't instantiate unless flagged for updating (if nodes have been added to the graph)
-        # This avoids unnecessary calls on repeated calls to run()
+        # Don't instantiate unless flagged for updating (if nodes have been added to the graph);
+        #    this avoids unnecessary calls on repeated calls to run().
         if (self.controller
                 and self.needs_update_controller
                 and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
@@ -7110,7 +7123,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context()
     def add_controller(self, controller:ControlMechanism, context=None):
         """
-        Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
+        Add a `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
         This gives the ControlMechanism access to the `Composition`'s `evaluate <Composition.evaluate>` method. This
         allows subclasses of ControlMechanism that can use this (such as `OptimizationControlMechanism`) to execute
