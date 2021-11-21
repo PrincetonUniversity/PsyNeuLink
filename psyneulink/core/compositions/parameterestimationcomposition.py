@@ -462,6 +462,8 @@ class ParameterEstimationComposition(Composition):
                          enable_controller=True,
                          **kwargs)
 
+        context=Context(source=ContextFlags.COMPOSITION)
+
         # Implement OptimizationControlMechanism and assign as PEC controller
         # (Note: Implement after Composition itself, so that:
         #     - Composition's components are all available (limits need for deferred_inits)
@@ -474,8 +476,10 @@ class ParameterEstimationComposition(Composition):
                                     num_estimates=num_estimates,
                                     num_trials_per_estimate=num_trials_per_estimate,
                                     initial_seed=initial_seed,
-                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
-        self.add_controller(ocm, context=Context(source=ContextFlags.COMPOSITION))
+                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+                                    context=context)
+
+        self.add_controller(ocm, context)
 
     def _validate_params(self, args):
 
@@ -525,7 +529,8 @@ class ParameterEstimationComposition(Composition):
                          num_estimates,
                          num_trials_per_estimate,
                          initial_seed,
-                         same_seed_for_all_parameter_combinations
+                         same_seed_for_all_parameter_combinations,
+                         context=None
                          ):
 
         # # Parse **parameters** into ControlSignals specs
@@ -552,7 +557,8 @@ class ParameterEstimationComposition(Composition):
             num_estimates=num_estimates,
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
-            same_seed_for_all_allocations=same_seed_for_all_parameter_combinations
+            same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
+            context=context
         )
 
     # def run(self):

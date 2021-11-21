@@ -1741,8 +1741,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
             and also in the ControlMechanism's **control** arg
 
         control_signals arg passed in to allow override by subclasses
-        """
 
+        Warn if control_signal shares any ControlProjections with others in control_signals.
+        Warn if control_signal is a duplicate of any in control_signals.
+
+        Return True if control_signal is a duplicate
+        """
+        duplicates = []
         for existing_ctl_sig in control_signals:
             # OK if control_signal is one already assigned to ControlMechanism (i.e., let it get processed below);
             # this can happen if it was in deferred_init status and initalized in call to _instantiate_port above.
@@ -1755,16 +1760,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     # A Projection in control_signal is not in this existing one: it is different,
                     #    so break and move on to next existing_mod_sig
                     break
-                return
+                warnings.warn(f"{control_signal.name} for {self.name} duplicates another one specified "
+                              f"({existing_ctl_sig.name}); it will be ignored.")
+                return True
 
             # Warn if *any* projections from control_signal are identical to ones in an existing control_signal
             projection_type = existing_ctl_sig.projection_type
-            if any(
-                    any(new_p.receiver == existing_p.receiver
-                        for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
+            if any(any(new_p.receiver == existing_p.receiver
+                                for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
                 warnings.warn(f"Specification of {control_signal.name} for {self.name} "
                               f"has one or more {projection_type}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
+
 
     def show(self):
         """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism

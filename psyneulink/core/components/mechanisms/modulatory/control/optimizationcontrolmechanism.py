@@ -1387,11 +1387,17 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
 
+        # MODIFIED 11/20/21 NEW: FIX - WITHOUT THIS, GET THE mod param ERROR
+        if self.agent_rep and self.agent_rep.componentCategory=='Composition':
+            control_signals_from_composition = self.agent_rep._get_control_signals_for_composition()
+        self.output_ports.extend(control_signals_from_composition)
+        # MODIFIED 11/20/21 END
+
         if self.num_estimates:
 
             randomization_seed_mod_values = SampleSpec(start=1,stop=self.num_estimates,step=1)
 
-            # FIX: noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
+            # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
             #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
             # Get ParameterPorts for seeds of parameters in agent_rep that use them (i.e., that return a random value)
@@ -1402,10 +1408,15 @@ class OptimizationControlMechanism(ControlMechanism):
                                                    modulates=seed_param_ports,
                                                    allocation_samples=randomization_seed_mod_values))
 
+        control_signals = []
         for i, spec in list(enumerate(self.output_ports)):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
+            if self._check_for_duplicates(control_signal, control_signals, context):
+                continue
+            control_signals.append(control_signal)
             self.output_ports[i] = control_signal
+
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
