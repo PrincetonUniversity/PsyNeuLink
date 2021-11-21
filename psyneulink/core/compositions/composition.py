@@ -3507,7 +3507,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.scheduler.scheduling_mode = scheduling_mode
 
     # ******************************************************************************************************************
-    # region ------------------------------------- GRAPH  --------------------------------------------------------------
+    # region -------------------------------------- GRAPH  -------------------------------------------------------------
     # ******************************************************************************************************************
 
     @handle_external_context(source=ContextFlags.COMPOSITION)
@@ -3890,9 +3890,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           nested_nodes=NotImplemented,
                           root_composition=NotImplemented,
                           visited_compositions=NotImplemented):
-        """Recursive search that returns all nodes of all nested compositions in a tuple with the composition they are
-            embedded in.
-
+        """Recursively search and return all nodes of all nested Compositions
+           in a tuple with Composition in which they are nested.
         :return
 
         A list of tuples in format (node, composition) containing all nodes of all nested compositions.
@@ -3917,7 +3916,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_compositions(self,
                                  nested_compositions=NotImplemented,
                                  visited_compositions=NotImplemented):
-        """Recursive search that returns all nested compositions.
+        """Recursive search for and return all nested compositions.
 
         :return
 
@@ -5579,7 +5578,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # endregion
 
     # ******************************************************************************************************************
-    # region ------------------------------------ PATHWAYS -------------------------------------------------------------
+    # region ------------------------------------- PATHWAYS ------------------------------------------------------------
     # ******************************************************************************************************************
 
     # region ----------------------------------  PROCESSING  -----------------------------------------------------------
@@ -7625,6 +7624,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # endregion
 
+    # ******************************************************************************************************************
+    # region ------------------------------------ EXECUTION ------------------------------------------------------------
+    # ******************************************************************************************************************
+
     @handle_external_context()
     def evaluate(
             self,
@@ -7754,7 +7757,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return net_outcome, result
         else:
             return net_outcome
-
 
     def _infer_target_nodes(self, targets: dict):
         """
@@ -10149,8 +10151,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.scheduler._delete_counts(c)
 
+    # endregion
+
     # ******************************************************************************************************************
-    #                                           LLVM
+    # region -------------------------------------- LLVM ---------------------------------------------------------------
     # ******************************************************************************************************************
 
     @property
@@ -10314,8 +10318,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             }]
         }
 
+    # endregion
+
     # ******************************************************************************************************************
-    #                                           PROPERTIES
+    # region ----------------------------------- PROPERTIES ------------------------------------------------------------
     # ******************************************************************************************************************
 
     @property
@@ -10496,6 +10502,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
+    # endregion
+
+    # ******************************************************************************************************************
+    # region ----------------------------------- SHOW_GRAPH ------------------------------------------------------------
+    # ******************************************************************************************************************
+
     def show_graph(self,
                    show_node_structure=False,
                    show_nested=NESTED,
@@ -10530,6 +10542,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _animate_execution(self, active_items, context):
         self._show_graph._animate_execution(active_items, context)
 
+    # endregion
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
