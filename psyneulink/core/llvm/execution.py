@@ -230,7 +230,7 @@ class FuncExecution(CUDAExecution):
 
     def execute(self, variable):
         # Make sure function inputs are 2d.
-        # Mechanism inptus are already 3d so the first part is nop.
+        # Mechanism inputs are already 3d so the first part is nop.
         new_variable = np.asfarray(np.atleast_2d(variable),
                                    dtype=self._vi_dty)
 
@@ -411,11 +411,14 @@ class CompExecution(CUDAExecution):
         #   followed by a list of projection parameters; get the first one
         # output structure consists of a list of node outputs,
         #   followed by a list of nested data structures; get the first one
-        field = data._fields_[0][0]
-        res_struct = getattr(data, field)
+        field_name = data._fields_[0][0]
+        res_struct = getattr(data, field_name)
+
+        # Get the index into the array of all nodes
         index = self._composition._get_node_index(node)
-        field = res_struct._fields_[index][0]
-        res_struct = getattr(res_struct, field)
+        field_name = res_struct._fields_[index][0]
+        res_struct = getattr(res_struct, field_name)
+
         return _convert_ctype_to_python(res_struct)
 
     def extract_node_struct(self, node, struct):
@@ -663,11 +666,11 @@ class CompExecution(CUDAExecution):
 
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
         self.__bin_func = bin_func
-        assert len(bin_func.byref_arg_types) == 7
 
         # There are 7 arguments to evaluate_alloc_range:
         # comp_param, comp_state, from, to, results, input, comp_data
         # all but #4 are shared
+        assert len(bin_func.byref_arg_types) == 7
 
         # Directly initialized structures
         assert ocm.agent_rep is self._composition
@@ -690,8 +693,7 @@ class CompExecution(CUDAExecution):
             self._prepare_evaluate(variable, num_evaluations)
         self._uploaded_bytes['input'] += converted_variable.nbytes
 
-        # Ouput is allocated on device, but we need the ctype.
-
+        # Output is allocated on device, but we need the ctype (out_ty).
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),
