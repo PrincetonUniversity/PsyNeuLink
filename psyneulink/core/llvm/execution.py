@@ -650,7 +650,6 @@ class CompExecution(CUDAExecution):
     def _prepare_evaluate(self, variable, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
-        context = self._execution_contexts[0]
 
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
         self.__bin_func = bin_func
@@ -661,9 +660,10 @@ class CompExecution(CUDAExecution):
         # all but #4 are shared
 
         # Directly initialized structures
-        ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
-        ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
-        ct_comp_data = bin_func.byref_arg_types[6](*ocm.agent_rep._get_data_initializer(context))
+        assert ocm.agent_rep is self._composition
+        ct_comp_param = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
+        ct_comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
+        ct_comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
         # Construct input variable
         var_dty = _element_dtype(bin_func.byref_arg_types[5])
@@ -672,6 +672,7 @@ class CompExecution(CUDAExecution):
         # Output ctype
         out_ty = bin_func.byref_arg_types[4] * num_evaluations
 
+        # return variable as numpy array. pycuda can use it directly
         return ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty
 
     def cuda_evaluate(self, variable, num_evaluations):
