@@ -3526,7 +3526,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
 
-        self._check_projection_initialization_status(context=context)
+        self._check_controller_initialization_status(context=context)
+        self._check_nodes_initialization_status(context=context)
 
         # FIX: SHOULDN'T THIS TEST MORE EXPLICITLY IF NODE IS A Composition?
         # Call _analzye_graph() for any nested Compositions
@@ -3569,7 +3570,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing.prune_feedback_edges()
         self.needs_update_graph_processing = False
 
-    # endregion
+    # endregion GRAPH
 
     # ******************************************************************************************************************
     # region ---------------------------------------NODES  -------------------------------------------------------------
@@ -4904,7 +4905,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if node not in self.shadows[owner]:
                     self.shadows[owner].append(node)
 
-    # endregion
+    # endregion NODES
 
     # ******************************************************************************************************************
     # region ----------------------------------- PROJECTIONS -----------------------------------------------------------
@@ -5574,7 +5575,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if warn:
                 warnings.warn(warn_str)
 
-    # endregion
+    # endregion PROJECTIONS
 
     # ******************************************************************************************************************
     # region ------------------------------------- PATHWAYS ------------------------------------------------------------
@@ -6039,7 +6040,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return added_pathways
 
-    # endregion
+    # endregion PROCESSING PATHWAYS
 
     # region ------------------------------------ LEARNING -------------------------------------------------------------
 
@@ -7111,8 +7112,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # MODIFIED 11/19/21 END
         return deeply_nested_projections
 
-    # endregion
-    # endregion
+    # endregion LEARNING PATHWAYS
+
+    # endregion PATHWAYS
 
     # ******************************************************************************************************************
     # region ------------------------------------- CONTROL -------------------------------------------------------------
@@ -7466,7 +7468,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver = interface_input_port
         return MappingProjection(sender=sender, receiver=receiver)
 
-    def _check_projection_initialization_status(self, context=None):
+    def _check_controller_initialization_status(self, context=None):
         """Checks initialization status of controller (if applicable) all Projections or Ports in the Composition
         """
 
@@ -7474,17 +7476,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context and context.source == ContextFlags.METHOD:
             return
 
-        # FIX: 11/20/21:  CALLING THIS FIXES test_deferred_objective_mech (ADDS ObjectiveMechanism AS Node)
-        #                 BUT BREAKS OTHER STUFF: XXX
-        #                 PUT THE FOLLOWING SOMEWHERE OTHER THAN add_controller:
-            # # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
-            # if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
-            #     self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-            # else:
-            #     # This is set by add_node() automatically;  but should be set either way
-            #     self.needs_update_controller = True
-
-        # Check if controller is in deferred init
+        # If controller is in deferred init, try to instantiate and add it to Composition
         if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             self.add_controller(self.controller, context=context)
 
@@ -7493,6 +7485,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
             return
 
+        # Check for Mechanisms and Projections in aux_components
         if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
             invalid_aux_components = self._get_invalid_aux_components(self.controller)
             for component in invalid_aux_components:
@@ -7519,18 +7512,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if context and ContextFlags.PREPARING not in context.execution_phase:
             return
 
+        # Check for deferred init ControlProjections
         for node in self.nodes:
-            # Check for deferred init projections
             for projection in node.projections:
                 if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                    # NOTE:
-                    #   May want to add other conditions and warnings here. Currently
-                    #   just checking for unresolved control projections.
                     if isinstance(projection, ControlProjection):
                         warnings.warn(f"The {projection.receiver.name} parameter of {projection.receiver.owner.name} \n"
                                       f"is specified for control, but {self.name} does not have a controller. Please \n"
                                       f"add a controller to {self.name} or the control specification will be \n"
                                       f"ignored.")
+
+    def _check_nodes_initialization_status(self, context=None):
+
+        # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below.
+        # Don't bother checking if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
+        #    since no need to detect deferred_init and generate errors until runtime.
+        # If Composition is not preparing to execute, allow deferred_inits to persist without warning
+        if context and (context.source in {ContextFlags.METHOD, ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}
+                        or ContextFlags.PREPARING not in context.execution_phase):
+            return
+
+        # NOTE:
+        #   May want to add other conditions and warnings here.
+        #   Currently just checking for unresolved projections.
 
         for node in self._partially_added_nodes:
             for proj in self._get_invalid_aux_components(node):
@@ -7611,7 +7615,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
 
-    # endregion
+    # endregion CONTROL
 
     # ******************************************************************************************************************
     # region ------------------------------------ EXECUTION ------------------------------------------------------------
@@ -8552,7 +8556,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._complete_init_of_partially_initialized_nodes(context=context)
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
-            self._check_projection_initialization_status()
+            self._check_controller_initialization_status()
+            self._check_nodes_initialization_status()
 
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
@@ -10140,7 +10145,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.scheduler._delete_counts(c)
 
-    # endregion
+    # endregion EXECUTION
 
     # ******************************************************************************************************************
     # region -------------------------------------- LLVM ---------------------------------------------------------------
@@ -10307,7 +10312,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             }]
         }
 
-    # endregion
+    # endregion LLVM
 
     # ******************************************************************************************************************
     # region ----------------------------------- PROPERTIES ------------------------------------------------------------
@@ -10491,7 +10496,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
-    # endregion
+    # endregion PROPERTIES
 
     # ******************************************************************************************************************
     # region ----------------------------------- SHOW_GRAPH ------------------------------------------------------------
@@ -10531,7 +10536,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _animate_execution(self, active_items, context):
         self._show_graph._animate_execution(active_items, context)
 
-    # endregion
+    # endregion SHOW_GRAPH
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
