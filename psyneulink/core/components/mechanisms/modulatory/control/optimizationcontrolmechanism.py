@@ -1197,33 +1197,19 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         # FIX: 11/3/21 :
-        #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN INPUTPORT IS SPECIFIED, ITS PRIMARY IS USED
-        #    (SEE SCRATCH PAD FOR EXAMPLES)
+        #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN INPUTPORT IS SPECIFIED,
+        #    ITS PRIMARY IS USED (SEE SCRATCH PAD FOR EXAMPLES)
 
         if not self.state_features:
             # Warn if there are no state_features specified for model-free (agent_rep = CompositionFunctionApproximator)
-            # For model-based optimization,
-            #       assignment of state_input_ports is done in _update_state_input_ports_for_controller()
+            # (for model-based optimization, state_input_ports are assigned in _update_state_input_ports_for_controller)
             if isinstance(self.agent_rep, CompositionFunctionApproximator):
                 warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
-            # # MODIFIED 11/15/21 OLD:
-            # else:
-            #     # Assign as state_features all input_ports of INPUT Nodes of Composition for which
-            #     #    OptimizationControlMechanism is the controller (required for model-based optimization)
-            #     # # MODIFIED 11/3/21 OLD:
-            #     # state_input_ports_specs = [input_node.input_port
-            #     #                            for input_node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)]
-            #     # MODIFIED 11/3/21 NEW:
-            #     state_input_ports_specs = [input_port for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
-            #                                for input_port in node.input_ports if not input_port.internal_only]
-            #     # MODIFIED 11/3/21 END
-            # MODIFIED 11/15/21 END
 
         else:
             # Implement any specified state_features
             state_input_ports_specs = self._parse_state_feature_specs(self.state_features,
                                                                       self.state_feature_function)
-
             # Note:
             #   if state_features were specified for model-free (i.e., agent_rep is a CompositionFunctionApproximator),
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
@@ -1367,8 +1353,9 @@ class OptimizationControlMechanism(ControlMechanism):
                              context=local_context)
         self.state_input_ports.extend(state_input_ports_to_add)
 
-        # FIX: 11/15/21 NEED TO ADD THE PROJECTIONS AS SHADOW_PROJECTIONS
-        #      -- SEE Composition.add_controller() AND add_node?? AND ACTIVATE THEM FOR COMPOSITION
+        # FIX: 11/15/21 ??NEED TO ADD THE PROJECTIONS AS SHADOW_PROJECTIONS
+        #      -- SEE Composition.add_controller() AND add_node??
+        #         (ALTHOUGH THEY SHOULD BE ACTIVATED FOR COMPOSITION IN _activate_projections_for_compositions)
     # MODIFIED 11/15/21 END
 
     def _instantiate_output_ports(self, context=None):
