@@ -3882,15 +3882,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
            corresponding InputPorts on Composition's `input_CIM <Composition.input_CIM>`.
         """
-        # input_nodes = []
-        # for i, port in enumerate(self.input_CIM.input_ports):
-        #     output_port = next((o for o in self.input_CIM.output_ports
-        #                        if o.function.corresponding_input_port.position_in_mechanism == i), None)
-        #     assert output_port
-        #     node = next((p.receiver.owner for p in output_port.efferents if not SHADOW_INPUT_NAME in p.name), None)
-        #     assert node
-        #     input_nodes.append(node)
-        # return input_nodes
 
         return [{cim[0]:n for n, cim in self.input_CIM_ports.items()}[input_port].owner
                 for input_port in self.input_CIM.input_ports]
@@ -5947,12 +5938,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = convert_to_list(pathways)
 
         # Possibility 2 (list is a single pathway spec):
-        # # MODIFIED 5/17/20 OLD:
-        # if isinstance(pathways, list) and all(_is_node_spec(p) for p in pathways):
-        # MODIFIED 5/17/20 NEW:
         if (isinstance(pathways, list)
                 and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
-        # MODIFIED 5/17/20 END
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
@@ -6052,11 +6039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination,
-                                    # # MODIFIED 5/25/20 OLD:
-                                    # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
-                                    # MODIFIED 5/25/20 NEW:
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
-                                    # MODIFIED 5/25/20 END
                                     name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
