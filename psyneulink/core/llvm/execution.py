@@ -69,7 +69,7 @@ class Execution:
         self._debug_env = debug_env
 
     def _get_compilation_param(self, name, init_method, arg):
-        struct = getattr(self, name)
+        struct = getattr(self, name, None)
         if struct is None:
             struct_ty = self._bin_func.byref_arg_types[arg]
             init_f = getattr(self._obj, init_method)
@@ -188,9 +188,6 @@ class FuncExecution(CUDAExecution):
         ]
         self._component = component
 
-        self._param = None
-        self._state = None
-
         par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
@@ -271,9 +268,6 @@ class CompExecution(CUDAExecution):
         self.__tags = frozenset(additional_tags)
 
         self.__conds = None
-        self._state = None
-        self._param = None
-        self._data = None
 
         if len(execution_ids) > 1:
             self._ct_len = ctypes.c_int(len(execution_ids))
