@@ -1866,39 +1866,36 @@ class ControlMechanism(ModulatoryMechanism_Base):
         dependent_projections = set()
 
         if composition:
+            # Ensure that objective_mechanism has been included in the ControlMechanism's aux_components
+            #    and then add all Projections to and from the objective_mechanism to it
             if self.objective_mechanism and self.objective_mechanism in composition.nodes:
-                # Safe to add this, as it is already in the ControlMechanism's aux_components
+                # Safe to assert this, as it is already in the ControlMechanism's aux_components
                 #    and will therefore be added to the Composition along with the ControlMechanism
                 from psyneulink.core.compositions.composition import NodeRole
                 assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
                     f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
                 dependent_projections.add(self._objective_projection)
-
+                # Add all Projections to and from objective_mechanism
                 for aff in self.objective_mechanism.afferents:
                     dependent_projections.add(aff)
+                # for output_port in self.objective_mechanism.monitored_output_ports:
+                #     for eff in output_port.efferents:
+                #         dependent_projections.add(eff)
+                for eff in self.objective_mechanism.efferents:
+                    dependent_projections.add(eff)
             else:
-                # FIX: NOTE: This will apply if controller has an objective_mechanism but it is not in the Composition
-                # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED ZZZ
+                # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED
                 # Add Projections to controller's OUTCOME InputPorts
+                # Note: this applies if ControlMechanism has an objective_mechanism that is not in the Composition
                 for i in range(self.num_outcome_input_ports):
                     for proj in self.outcome_input_ports[i].path_afferents:
                         dependent_projections.add(proj)
 
-        for ms in self.control_signals:
-            for eff in ms.efferents:
-                dependent_projections.add(eff)
-
-        # ??ELIMINATE SYSTEM
-        # FIX: 9/15/19 AND 11/3/21 - HOW IS THIS DIFFERENT THAN objective_mechanism's AFFERENTS ABOVE?
-        # assign any deferred init objective mech monitored OutputPort projections to this Composition
-        if self.objective_mechanism and composition and self.objective_mechanism in composition.nodes:
-            for output_port in self.objective_mechanism.monitored_output_ports:
-                for eff in output_port.efferents:
-                    dependent_projections.add(eff)
-
-        # # FIX: 9/15/19 AND 11/3/21 - HOW IS THIS DIFFERENT THAN control_signal's EFFERENTS ABOVE?
-        # for eff in self.efferents:
-        #     dependent_projections.add(eff)
+        # Warn if any efferents have been added to the ContolMechanism that are not ControlSignals
+        if len(self.control_projections) != len(self.efferents):
+            warnings.warn(f"Projections from {self.name} have been added to {composition} that are not ControlSignals.")
+        for eff in self.efferents:
+            dependent_projections.add(eff)
 
         if composition:
             deeply_nested_aux_components = composition._get_deeply_nested_aux_projections(self)
