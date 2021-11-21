@@ -1388,7 +1388,10 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # # MODIFIED 11/21/21 NEW:
-        # #  FIX - WITHOUT THIS, GET THE mod param ERROR;  WITH IT, GET FAILURES IN test_control:
+        # #  FIX - PURPOSE OF THE FOLLOWING IS TO "CAPTURE" CONTROL SPECS MADE LOCALLY ON MECHANISMS IN THE COMP
+        # #        AND INSTANTIATE ControlSignals FOR THEM HERE, ALONG WITH THOSE SPECIFIED IN THE CONSTRUCTOR
+        ##         FOR THE OCM. ALSO CAPTURES DUPLICATES (SEE MOD BELOW).
+        # # FIX: WITHOUT THIS, GET THE mod param ERROR;  WITH IT, GET FAILURES IN test_control:
         # #        TestModelBasedOptimizationControlMechanisms_Execution
         # #            test_evc
         # #            test_stateful_mechanism_in_simulation
@@ -1420,8 +1423,10 @@ class OptimizationControlMechanism(ControlMechanism):
         for i, spec in list(enumerate(self.output_ports)):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
+            # MODIFIED 11/20/21 NEW:
             if self._check_for_duplicates(control_signal, control_signals, context):
                 continue
+            # MODIFIED 11/20/21 END
             control_signals.append(control_signal)
             self.output_ports[i] = control_signal
 

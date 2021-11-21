@@ -7363,7 +7363,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     node_control_signals = node._get_control_signals_for_composition()
                     if node_control_signals:
                         control_signal_specs.append(node._get_control_signals_for_composition())
-                # # MODIFIED 11/21/21 NEW:  FIX:  ADDS "not" FOR LOOP, BUT CAUSES FAILURES IN:
+                # # MODIFIED 11/21/21 NEW:  FIX:  ADDS "not" FOR LOOP, AND extend VS. append, BUT CAUSES FAILURES IN:
                 # #        TestModelBasedOptimizationControlMechanisms_Execution
                 # #            test_evc
                 # #            test_stateful_mechanism_in_simulation
@@ -7403,21 +7403,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
             # Don't add any that are already on the ControlMechanism
 
-            # MODIFIED 11/21/21 OLD:
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
 
-            # # MODIFIED 11/21/21 NEW:
-            # try:
-            #     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            #     ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
-            # except:
-            #     ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
-            # MODIFIED 11/21/21 END
-
             self.controller.control.append(ctl_signal)
 
-        # MODIFIED 11/21/21 OLD:
+        # MODIFIED 11/21/21 OLD: FIX: WHY IS THIS INDENTED?  WON'T CALL OUTSIDE LOOP ACTIVATE ALL PROJECTIONS?
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
             #                ?DON'T ASSIGN ControlProjection?
             #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
@@ -7425,11 +7416,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
             self.controller._activate_projections_for_compositions(self)
         # # MODIFIED 11/21/21 NEW:  FIX: CAUSES FAILURES IN pytests GENERALLY BUT NOT test_control
-        # # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
-        # #                ?DON'T ASSIGN ControlProjection?
-        # #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
-        # #                ?PUT IT IN aux_components FOR NODE?
-        # #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
         # self.controller._activate_projections_for_compositions(self)
         # MODIFIED 11/21/21 END
 
