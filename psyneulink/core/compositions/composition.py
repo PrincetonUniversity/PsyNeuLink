@@ -7358,17 +7358,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if isinstance(node, Composition):
                 # Get control signal specifications for nested composition if it does not have its own controller
-                # MODIFIED 11/20/21 OLD:
+                # MODIFIED 11/21/21 OLD:
                 if node.controller:
                     node_control_signals = node._get_control_signals_for_composition()
                     if node_control_signals:
                         control_signal_specs.append(node._get_control_signals_for_composition())
-                # # MODIFIED 11/20/21 NEW:
+                # # MODIFIED 11/21/21 NEW:  FIX:  ADDS "not" FOR LOOP, BUT CAUSES FAILURES IN:
+                # #        TestModelBasedOptimizationControlMechanisms_Execution
+                # #            test_evc
+                # #            test_stateful_mechanism_in_simulation
+                # #        TestControlMechanisms:
+                # #            test_lvoc
+                # #            test_lvoc_both_prediction_specs
+                # #            test_lvoc_features_function
                 # if not node.controller:
                 #     node_control_signals = node._get_control_signals_for_composition()
                 #     if node_control_signals:
                 #         control_signal_specs.extend(node._get_control_signals_for_composition())
-                # MODIFIED 11/20/21 END
+                # MODIFIED 11/21/21 END
             elif isinstance(node, Mechanism):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
@@ -7396,26 +7403,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
             # Don't add any that are already on the ControlMechanism
 
-            # MODIFIED 11/20/21 NEW:
+            # MODIFIED 11/21/21 OLD:
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
 
-            # # MODIFIED 11/20/21 NEW:
+            # # MODIFIED 11/21/21 NEW:
             # try:
             #     # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             #     ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
             # except:
             #     ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
-            # MODIFIED 11/20/21 END
+            # MODIFIED 11/21/21 END
 
             self.controller.control.append(ctl_signal)
 
-        # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
-        #                ?DON'T ASSIGN ControlProjection?
-        #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
-        #                ?PUT IT IN aux_components FOR NODE?
-        #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
-        self.controller._activate_projections_for_compositions(self)
+        # MODIFIED 11/21/21 OLD:
+            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
+            #                ?DON'T ASSIGN ControlProjection?
+            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+            #                ?PUT IT IN aux_components FOR NODE?
+            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
+            self.controller._activate_projections_for_compositions(self)
+        # # MODIFIED 11/21/21 NEW:  FIX: CAUSES FAILURES IN pytests GENERALLY BUT NOT test_control
+        # # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
+        # #                ?DON'T ASSIGN ControlProjection?
+        # #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+        # #                ?PUT IT IN aux_components FOR NODE?
+        # #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
+        # self.controller._activate_projections_for_compositions(self)
+        # MODIFIED 11/21/21 END
 
     def _route_control_projection_through_intermediary_pcims(self, projection, sender, sender_mechanism, receiver, graph_receiver, context):
         """

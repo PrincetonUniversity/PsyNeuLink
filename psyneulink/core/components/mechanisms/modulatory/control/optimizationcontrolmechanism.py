@@ -1387,11 +1387,19 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
 
-        # MODIFIED 11/20/21 NEW: FIX - WITHOUT THIS, GET THE mod param ERROR
-        if self.agent_rep and self.agent_rep.componentCategory=='Composition':
-            control_signals_from_composition = self.agent_rep._get_control_signals_for_composition()
-        self.output_ports.extend(control_signals_from_composition)
-        # MODIFIED 11/20/21 END
+        # # MODIFIED 11/21/21 NEW:
+        #  FIX - WITHOUT THIS, GET THE mod param ERROR;  WITH IT, GET FAILURES IN test_control:
+        #        TestModelBasedOptimizationControlMechanisms_Execution
+        #            test_evc
+        #            test_stateful_mechanism_in_simulation
+        #        TestControlMechanisms:
+        #            test_lvoc
+        #            test_lvoc_both_prediction_specs
+        #            test_lvoc_features_function
+        # if self.agent_rep and self.agent_rep.componentCategory=='Composition':
+        #     control_signals_from_composition = self.agent_rep._get_control_signals_for_composition()
+        # self.output_ports.extend(control_signals_from_composition)
+        # MODIFIED 11/21/21 END
 
         if self.num_estimates:
 
