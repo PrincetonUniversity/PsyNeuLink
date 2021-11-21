@@ -170,7 +170,7 @@ class CUDAExecution(Execution):
     @property
     def _cuda_out(self):
         if self._buffer_cuda_out is None:
-            size = ctypes.sizeof(self._vo_ty)
+            size = ctypes.sizeof(self._ct_vo)
             self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
         return self._buffer_cuda_out
 
@@ -186,7 +186,7 @@ class CUDAExecution(Execution):
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out, self._vo_ty, 'result')
+        ct_res = self.download_ctype(self._cuda_out, type(self._ct_vo), 'result')
         return _convert_ctype_to_python(ct_res)
 
 
@@ -200,7 +200,7 @@ class FuncExecution(CUDAExecution):
         ]
         self._component = component
 
-        par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
+        _, _, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
             self._bin_multirun = self._bin_func.get_multi_run()
@@ -208,9 +208,7 @@ class FuncExecution(CUDAExecution):
             vo_ty = vo_ty * len(execution_ids)
             vi_ty = vi_ty * len(execution_ids)
 
-        self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
-        self._vi_ty = vi_ty
         self._vi_dty = _element_dtype(vi_ty)
         if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
