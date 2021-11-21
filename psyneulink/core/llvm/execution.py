@@ -18,6 +18,7 @@ import numpy as np
 from inspect import isgenerator
 import os
 import sys
+import time
 
 
 from psyneulink.core import llvm as pnlvm
@@ -75,11 +76,22 @@ class Execution:
             init_f = getattr(self._obj, init_method)
             if len(self._execution_contexts) > 1:
                 struct_ty = struct_ty * len(self._execution_contexts)
+                init_start = time.time()
                 initializer = (init_f(ex) for ex in self._execution_contexts)
             else:
+                init_start = time.time()
                 initializer = init_f(self._execution_contexts[0])
 
+            init_end = time.time()
             struct = struct_ty(*initializer)
+            struct_end = time.time()
+
+
+            if "time_stat" in self._debug_env:
+                print("Time to get initializer for struct:", name,
+                      "for", self._obj.name, ":", init_end - init_start)
+                print("Time to instantiate struct:", name,
+                      "for", self._obj.name, ":", struct_end - init_end)
             setattr(self, name, struct)
             if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
