@@ -4654,6 +4654,63 @@ class TestNestedCompositions:
         assert result == [4500]
 
 
+    def test_partially_overlapping_control_specs(self):
+        samples = np.arange(0.1, 1.01, 0.3)
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
+                                       name='reward',
+                                       )
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
+                                                                             pnl.ControlProjection(function=pnl.Linear,
+                                                                                                   control_signal_params={
+                                                                                                       pnl.ALLOCATION_SAMPLES: samples,
+                                                                                                   })),
+                                                                 threshold=(1.0,
+                                                                            pnl.ControlProjection(function=pnl.Linear,
+                                                                                                  control_signal_params={
+                                                                                                      pnl.ALLOCATION_SAMPLES: samples,
+                                                                                                  })),
+                                                                 noise=0.5,
+                                                                 starting_point=0,
+                                                                 t0=0.45),
+                           output_ports=[pnl.DECISION_VARIABLE,
+                                         pnl.RESPONSE_TIME,
+                                         pnl.PROBABILITY_UPPER_THRESHOLD],
+                           name='Decision1')
+        Decision2 = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=1.0,
+                                                                  threshold=1.0,
+                                                                  noise=0.5,
+                                                                  starting_point=0,
+                                                                  t0=0.45),
+                            output_ports=[pnl.DECISION_VARIABLE,
+                                          pnl.RESPONSE_TIME,
+                                          pnl.PROBABILITY_UPPER_THRESHOLD],
+                        name='Decision2')
+
+
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
+        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        comp.add_node(Decision2, required_roles=[pnl.NodeRole.OUTPUT])
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision, Decision2]
+        comp.add_linear_processing_pathway(task_execution_pathway)
+        ocm=OptimizationControlMechanism(
+            agent_rep=comp,
+            monitor_for_control=[Decision.output_ports[pnl.DECISION_VARIABLE],
+                                 Decision.output_ports[pnl.RESPONSE_TIME]],
+            # objective_function=Concatenate,
+            num_estimates=1,
+            function=GridSearch,
+            control_signals=[ControlSignal(modulates=('drift_rate',Decision),
+                                           allocation_samples=[1,2]),
+                             ControlSignal(modulates=('threshold',Decision2),
+                                           allocation_samples=[1,2]),
+                             ]
+        )
+        comp.add_controller(ocm)
+        ctlr = comp.controller
+        assert ctlr.control_signals
+
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
         a = TransferMechanism(name='a', function=Linear(slope=2))
