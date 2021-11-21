@@ -4910,7 +4910,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # region ----------------------------------- PROJECTIONS -----------------------------------------------------------
     # ******************************************************************************************************************
 
-
     def add_projections(self, projections=None):
         """
             Calls `add_projection <Composition.add_projection>` for each Projection in the *projections* list. Each
@@ -7414,7 +7413,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # self.controller._activate_projections_for_compositions(self)
         # MODIFIED 11/21/21 END
 
-    def _route_control_projection_through_intermediary_pcims(self, projection, sender, sender_mechanism, receiver, graph_receiver, context):
+    def _route_control_projection_through_intermediary_pcims(self,
+                                                             projection,
+                                                             sender,
+                                                             sender_mechanism,
+                                                             receiver,
+                                                             graph_receiver,
+                                                             context):
         """
         Takes as input a specification for a projection to a parameter port that is nested n-levels below its sender,
         instantiates and activates ports and projections on intermediary pcims, and returns a new
@@ -7437,7 +7442,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # control signal for parameter CIM that will project directly to inner Composition's parameter
         control_signal = ControlSignal(
             modulation=modulation,
-            variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position, interface_input_port)),
+            variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position,
+                                                     interface_input_port)),
             transfer_function=Identity,
             modulates=receiver,
             name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
@@ -7460,94 +7466,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         receiver = interface_input_port
         return MappingProjection(sender=sender, receiver=receiver)
 
-    # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
-    #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
-    def _build_predicted_inputs_dict(self, predicted_input):
-        """Get inputs for evaluate method used to execute simulations of Composition.
-
-        Get values of state_input_ports which receive projections from items providing relevant input (and any
-        processing of those values specified
-        """
-        inputs = {}
-        no_predicted_input = (predicted_input is None or not len(predicted_input))
-        if no_predicted_input:
-            warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
-
-        nested_nodes = dict(self._get_nested_nodes())
-        # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED
-        shadow_inputs_start_index = self.controller.num_outcome_input_ports
-        for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
-            input_port = self.controller.input_ports[j + shadow_inputs_start_index]
-            if no_predicted_input:
-                shadowed_input = input_port.defaults.value
-            else:
-                shadowed_input = predicted_input[j]
-
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                shadow_input_owner = input_port.shadow_inputs.owner
-                if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
-                        and shadow_input_owner not in nested_nodes \
-                        and shadow_input_owner not in self.nodes:
-                    continue
-                if shadow_input_owner not in nested_nodes:
-                    if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
-                        shadow_input_owner = shadow_input_owner.composition
-                    inputs[shadow_input_owner] = shadowed_input
-                else:
-                    comp = nested_nodes[shadow_input_owner]
-                    if comp not in inputs:
-                        inputs[comp]=[[shadowed_input]]
-                    else:
-                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
-        return inputs
-
-    # # MODIFIED 11/15/21 OLD:  FIX MOVED TO OCM._update_state_input_ports_for_controller
-    # def _check_for_invalid_controller_state_features(self):
-    #     # If controller is used for model-based optimization (OptimizationControlMechanism_Model_Based)
-    #     #    ensure all state_input_ports specified for the controller
-    #     #    correspond to InputPorts of INPUT nodes of the Composition
-    #     if self.controller and hasattr(self.controller, AGENT_REP) and self.controller.agent_rep==self:
-    #         invalid_state_features = [input_port.shadow_inputs
-    #                                      for input_port in self.controller.state_input_ports
-    #                                      if input_port.shadow_inputs.owner
-    #                                      not in self.get_nodes_by_role(NodeRole.INPUT)]
-    #         if any(invalid_state_features):
-    #             raise CompositionError(f"{self.controller.name}, being used as controller for "
-    #                                    f"model-based optimization of {self.name}, has 'state_features' specified "
-    #                                    f"({[d.name for d in invalid_state_features]}) that are either not INPUT "
-    #                                    f"nodes or are missing from the the Composition.")
-    # # MODIFIED 11/15/21 END
-
-    def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
-        total_cost = 0.
-        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
-
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(context))
-
-            candidate_control_allocation = self.reshape_control_signal(control_allocation)
-
-            # Get reconfiguration cost for candidate control signal
-            reconfiguration_cost = 0.
-            if callable(self.controller.compute_reconfiguration_cost):
-                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
-                                                                                     base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
-
-            # Apply candidate control signal
-            self.controller._apply_control_allocation(candidate_control_allocation,
-                                                                context=context,
-                                                                runtime_params=runtime_params,
-                                                                )
-
-            # Get control signal costs
-            other_costs = self.controller.parameters.costs._get(context) or []
-            all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
-            # Compute a total for the candidate control signal(s)
-            total_cost = self.controller.combine_costs(all_costs)
-        return total_cost
-
     def _check_projection_initialization_status(self, context=None):
-        """Checks initialization status of controller (if applicable) and any projections or ports
+        """Checks initialization status of controller (if applicable) all Projections or Ports in the Composition
         """
 
         # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below
@@ -7621,6 +7541,75 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"This projection will be deactivated until {receiver.name} is added to {self.name} "
                     f"or a composition nested within it."
                 )
+
+    # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
+    #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
+    def _build_predicted_inputs_dict(self, predicted_input):
+        """Get inputs for evaluate method used to execute simulations of Composition.
+
+        Get values of state_input_ports which receive projections from items providing relevant input (and any
+        processing of those values specified
+        """
+        inputs = {}
+        no_predicted_input = (predicted_input is None or not len(predicted_input))
+        if no_predicted_input:
+            warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
+
+        nested_nodes = dict(self._get_nested_nodes())
+        # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED
+        shadow_inputs_start_index = self.controller.num_outcome_input_ports
+        for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
+            input_port = self.controller.input_ports[j + shadow_inputs_start_index]
+            if no_predicted_input:
+                shadowed_input = input_port.defaults.value
+            else:
+                shadowed_input = predicted_input[j]
+
+            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
+                shadow_input_owner = input_port.shadow_inputs.owner
+                if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
+                        and shadow_input_owner not in nested_nodes \
+                        and shadow_input_owner not in self.nodes:
+                    continue
+                if shadow_input_owner not in nested_nodes:
+                    if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
+                        shadow_input_owner = shadow_input_owner.composition
+                    inputs[shadow_input_owner] = shadowed_input
+                else:
+                    comp = nested_nodes[shadow_input_owner]
+                    if comp not in inputs:
+                        inputs[comp]=[[shadowed_input]]
+                    else:
+                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
+        return inputs
+
+    def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
+        total_cost = 0.
+        if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
+
+            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(context))
+
+            candidate_control_allocation = self.reshape_control_signal(control_allocation)
+
+            # Get reconfiguration cost for candidate control signal
+            reconfiguration_cost = 0.
+            if callable(self.controller.compute_reconfiguration_cost):
+                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+                                                                                     base_control_allocation])
+                self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
+
+            # Apply candidate control signal
+            self.controller._apply_control_allocation(candidate_control_allocation,
+                                                                context=context,
+                                                                runtime_params=runtime_params,
+                                                                )
+
+            # Get control signal costs
+            other_costs = self.controller.parameters.costs._get(context) or []
+            all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
+            # Compute a total for the candidate control signal(s)
+            total_cost = self.controller.combine_costs(all_costs)
+        return total_cost
 
     # endregion
 
