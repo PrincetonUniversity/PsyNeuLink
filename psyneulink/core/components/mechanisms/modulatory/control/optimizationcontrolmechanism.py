@@ -1249,7 +1249,8 @@ class OptimizationControlMechanism(ControlMechanism):
             OptimizationControlMechanism, bypassing output_CIMs and preventing inclusion of their values
             in the results attribute of those Compositions.
 
-        If is False, simply passes results of super()._parse_monitor_for_control_input_ports(context)
+        If is False, simply passes results of super()._parse_monitor_for_control_input_ports(context);
+            in that case, routes Projections from nodes in nested Compositions through their respective output_CIMs
 
         Return port specification dictionaries (*with* Projection specifications), their value sizes and null list
         (to suppress Projection assignment to aux_components in ControlMechanism._instantiate_input_ports)
