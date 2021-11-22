@@ -1412,6 +1412,7 @@ class OptimizationControlMechanism(ControlMechanism):
             control_signal = self._instantiate_control_signal(spec, context=context)
             control_signal._variable_spec = (OWNER_VALUE, i)
             # MODIFIED 11/20/21 NEW:
+            #  FIX - SHOULD MOVE THIS TO WHERE IT IS CALLED IN ControlSignal._instantiate_control_signal
             if self._check_for_duplicates(control_signal, control_signals, context):
                 continue
             # MODIFIED 11/20/21 END
