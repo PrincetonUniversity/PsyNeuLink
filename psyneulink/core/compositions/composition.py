@@ -7142,6 +7142,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
                                    f"must be a {repr(ControlMechanism.__name__)} ")
 
+        # Call with context to avoid recursion by analyze_graph -> _check_initialization_status -> add_controller
+        context.source = ContextFlags.METHOD
+
         # VALIDATE AND ADD CONTROLLER
 
         # Note:  initialization_status here pertains to controller's own initialization status
@@ -7221,8 +7224,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: 11/15/21 - THIS SHOULD BE MOVED TO COMPOSITION FROM CONTROL MECHANISM
         controller._activate_projections_for_compositions(self)
 
-        # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
-        context.source = ContextFlags.METHOD
         self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
 
