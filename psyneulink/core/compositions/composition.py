@@ -7264,8 +7264,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         hanging_control_specs = []
         if node.componentCategory == 'Composition':
-            for nested_node in node.nodes:
-                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node, context=context))
+            nested_comp = node  # For readability
+            for node_in_nested_comp in nested_comp.nodes:
+                hanging_control_specs.extend(nested_comp._instantiate_deferred_init_control(node_in_nested_comp,
+                                                                                            context=context))
                 assert True
         else:
             hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
@@ -7387,9 +7389,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return np.array(arr)
 
     def _instantiate_control_projections(self, context):
-        # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
-        # Get rid of default ControlSignal if it has no ControlProjections
-        # self.controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        """
+        Add any ControlProjections for control specified locally on nodes in Composition
+        """
 
         # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
         control_signal_specs = self._get_control_signals_for_composition()
@@ -7402,7 +7404,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
 
-            self.controller.control.append(ctl_signal)
+            # # MODIFIED 11/22/21 OLD:  CAUSES DUPLICATES SINCE _instantiate_control_signal ALREADY ADDS IT
+            # self.controller.control.append(ctl_signal)
+            # MODIFIED 11/22/21 END
 
         # MODIFIED 11/21/21 OLD: FIX: WHY IS THIS INDENTED?  WON'T CALL OUTSIDE LOOP ACTIVATE ALL PROJECTIONS?
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
