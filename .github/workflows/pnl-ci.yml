@@ -10,9 +10,6 @@ on:
     tags-ignore:
       - 'v**'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'doc_requirements.txt'
 
 jobs:
   build:
@@ -49,7 +46,7 @@ jobs:
         fetch-depth: 10
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.2.2
+      uses: actions/setup-python@v2.3.0
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
