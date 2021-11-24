@@ -4653,59 +4653,61 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [4500]
 
-
-    def test_partially_overlapping_control_specs(self):
+    @pytest.mark.parametrize('nesting', ("unnested", "nested"))
+    def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
         samples = np.arange(0.1, 1.01, 0.3)
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
                                        name='reward',
                                        )
         Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
-                                                                             pnl.ControlProjection(function=pnl.Linear,
-                                                                                                   control_signal_params={
-                                                                                                       pnl.ALLOCATION_SAMPLES: samples,
-                                                                                                   })),
-                                                                 threshold=(1.0,
-                                                                            pnl.ControlProjection(function=pnl.Linear,
-                                                                                                  control_signal_params={
-                                                                                                      pnl.ALLOCATION_SAMPLES: samples,
-                                                                                                  })),
-                                                                 noise=0.5,
-                                                                 starting_point=0,
-                                                                 t0=0.45),
-                           output_ports=[pnl.DECISION_VARIABLE,
-                                         pnl.RESPONSE_TIME,
-                                         pnl.PROBABILITY_UPPER_THRESHOLD],
-                           name='Decision')
+                                                                     pnl.ControlProjection(function=pnl.Linear,
+                                                                                       control_signal_params={
+                                                                                           pnl.ALLOCATION_SAMPLES: samples,
+                                                                                       })),
+                                                         threshold=(1.0,
+                                                                    pnl.ControlProjection(function=pnl.Linear,
+                                                                                      control_signal_params={
+                                                                                          pnl.ALLOCATION_SAMPLES: samples,
+                                                                                      })),
+                                                         noise=0.5,
+                                                         starting_point=0,
+                                                         t0=0.45),
+                       output_ports=[pnl.DECISION_VARIABLE,
+                                     pnl.RESPONSE_TIME,
+                                     pnl.PROBABILITY_UPPER_THRESHOLD],
+                       name='Decision')
         Response = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=1.0,
-                                                                  threshold=1.0,
-                                                                  noise=0.5,
-                                                                  starting_point=0,
-                                                                  t0=0.45),
-                            output_ports=[pnl.DECISION_VARIABLE,
-                                          pnl.RESPONSE_TIME,
-                                          pnl.PROBABILITY_UPPER_THRESHOLD],
+                                                          threshold=1.0,
+                                                          noise=0.5,
+                                                          starting_point=0,
+                                                          t0=0.45),
+                        output_ports=[pnl.DECISION_VARIABLE,
+                                      pnl.RESPONSE_TIME,
+                                      pnl.PROBABILITY_UPPER_THRESHOLD],
                         name='Response')
 
-
-        comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
-        comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
-        comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
-        comp.add_node(Response, required_roles=[pnl.NodeRole.OUTPUT])
-        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision, Response]
-        comp.add_linear_processing_pathway(task_execution_pathway)
+        icomp = pnl.Composition(name="EVC (inner comp)", retain_old_simulation_data=True)
+        icomp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_node(Response, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_linear_processing_pathway([Input, pnl.IDENTITY_MATRIX, Decision, Response])
+        if nesting == 'nested':
+            comp = Composition(nodes=icomp, name="Outer Composition")
+        else:
+            comp = icomp
         ocm=OptimizationControlMechanism(
             agent_rep=comp,
             monitor_for_control=[Decision.output_ports[pnl.DECISION_VARIABLE],
                                  Decision.output_ports[pnl.RESPONSE_TIME]],
-            # objective_function=Concatenate,
             num_estimates=1,
             function=GridSearch,
-            control_signals=[ControlSignal(modulates=('drift_rate',Decision), # OVERLAPS WITH CONTROL SPEC ON Decision
-                                           allocation_samples=[1,2]),
-                             ControlSignal(modulates=('threshold',Response), # ADDS CONTROL SPEC FOR Response
-                                           allocation_samples=[1,2]),
-                             ]
+            control_signals=[
+                ControlSignal(modulates=('drift_rate',Decision), # OVERLAPS WITH CONTROL SPEC ON Decision
+                              allocation_samples=[1,2]),
+                ControlSignal(modulates=('threshold',Response), # ADDS CONTROL SPEC FOR Response
+                              allocation_samples=[1,2]),
+            ]
         )
         comp.add_controller(ocm)
         assert len(comp.controller.control_signals) == 4  # Should be 4:  Decision threshold (spec'd locally on mech)
@@ -4715,9 +4717,10 @@ class TestNestedCompositions:
         ctl_sig_names = ['Decision[drift_rate] ControlSignal', 'Decision[threshold] ControlSignal',
                          'Response[threshold] ControlSignal', 'RANDOMIZATION_CONTROL_SIGNAL']
         assert all([name in ctl_sig_names for name in comp.controller.control_signals.names])
-        # FIX: THE FOLLOWING SHOULD BE MOVED TO A VERSION WITH A NESTED COMPOSITION
-        assert isinstance(comp.controller.control_signals[0].efferents[0].receiver.owner, # ControlProjections should
-                          pnl.CompositionInterfaceMechanism)                           # pass through parameter_CIM's
+        if nesting == 'nested':
+            # ControlProjections should pass through parameter_CIM's
+            assert isinstance(comp.controller.control_signals[0].efferents[0].receiver.owner,
+                                  pnl.CompositionInterfaceMechanism)
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
