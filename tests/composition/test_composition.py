@@ -4716,8 +4716,8 @@ class TestNestedCompositions:
                          'Response[threshold] ControlSignal', 'RANDOMIZATION_CONTROL_SIGNAL']
         assert all([name in ctl_sig_names for name in comp.controller.control_signals.names])
         # FIX: THE FOLLOWING SHOULD BE MOVED TO A VERSION WITH A NESTED COMPOSITION
-        # assert isinstance(comp.controller.control_signals[0].efferents[0].receiver.owner, # ControlProjections should
-        #                   pnl.CompositionInterfaceMechanism)                           # pass through parameter_CIM's
+        assert isinstance(comp.controller.control_signals[0].efferents[0].receiver.owner, # ControlProjections should
+                          pnl.CompositionInterfaceMechanism)                           # pass through parameter_CIM's
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):

@@ -1416,7 +1416,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if self._check_for_duplicates(control_signal, control_signals, context):
                 continue
             # MODIFIED 11/20/21 END
-            control_signals.append(control_signal)
+            # control_signals.append(control_signal)
             self.output_ports[i] = control_signal
 
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))

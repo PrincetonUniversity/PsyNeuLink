@@ -7405,8 +7405,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
 
-            # # MODIFIED 11/22/21 OLD:  CAUSES DUPLICATES SINCE _instantiate_control_signal ALREADY ADDS IT
-            # self.controller.control.append(ctl_signal)
+            # MODIFIED 11/22/21 OLD:  CAUSES DUPLICATES SINCE _instantiate_control_signal ALREADY ADDS IT
+            self.controller.control.append(ctl_signal)
             # MODIFIED 11/22/21 END
 
         # MODIFIED 11/21/21 OLD: FIX: WHY IS THIS INDENTED?  WON'T CALL OUTSIDE LOOP ACTIVATE ALL PROJECTIONS?
