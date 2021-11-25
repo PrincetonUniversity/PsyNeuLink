@@ -9,10 +9,10 @@ import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
-from psyneulink.core.components.functions.stateful.integratorfunctions import \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
@@ -4655,6 +4655,7 @@ class TestNestedCompositions:
 
     @pytest.mark.parametrize('nesting', ("unnested", "nested"))
     def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
+        pnl.clear_registry()
         samples = np.arange(0.1, 1.01, 0.3)
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],

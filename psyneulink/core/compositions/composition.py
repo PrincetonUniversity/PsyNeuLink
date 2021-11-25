@@ -5318,8 +5318,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if projection.sender.owner != sender and \
                     projection.sender.owner != graph_sender and \
                     projection.sender.owner != sender_mechanism:
-                raise CompositionError("The position of {} in {} conflicts with its sender attribute."
-                                       .format(projection.name, self.name))
+                raise CompositionError(f"The position of {projection.name} in {self.name} "
+                                       f"conflicts with its sender ({sender.name}).")
 
         return sender, sender_mechanism, graph_sender, nested_compositions
 
