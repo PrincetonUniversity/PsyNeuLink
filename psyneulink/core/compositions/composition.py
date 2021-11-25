@@ -3055,6 +3055,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
         Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
 
+    projections : ContentAddressableList[`Projection`]
+        a list of all of the `Projections <Projection>` activated for the Composition;  this includes all of
+        the Projections among `Nodes <Composition_Nodes>` within the Composition, as well as from its `input_CIM
+        <Composition.input_CIM>` to it *INPUT* Nodes;from its `parameter_CIM <Composition.parameter_CIM>` to
+        the corresponding `ParameterPorts <ParameterPorts>`; from its *OUTPUT* Nodes to its `output_CIM
+        <Composition.output_CIM>`; and, if it is `nested <Composition_Nested>` in another Composition, then the
+        Projections to its `input_CIM <Composition.input_CIM>` and from its `output_CIM <Composition.output_CIM>`
+        to other Nodes in the Comopsition within which it is nested.
+
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the `INPUT` `Nodes <Composition_Nodes>` of the Composition. If the Composition is
         `nested <Composition_Nested>`, then the input_CIM and its `InputPorts <InputPort> serve as proxies for the
@@ -7205,6 +7214,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 11/20/21 END
 
         # MODIFIED 11/20/21 NEW:
+        self._add_node_aux_components(controller, context)
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
         # MODIFIED 11/20/21 END
