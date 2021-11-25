@@ -33,7 +33,6 @@ Compilation modifiers:
                   instead of loading them from the param argument
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
- * "no_ref_pass" -- Don't pass arguments to llvm functions by reference
 
 Compiled code dump:
  * "llvm" -- dumps LLVM IR into a file (named after the dumped module).
