@@ -7149,7 +7149,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
         The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
-
         """
 
         if not isinstance(controller, ControlMechanism):
@@ -7209,51 +7208,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         invalid_aux_components = self._get_invalid_aux_components(controller)
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
-            # FIX: 11/24/21: CHECK IF ADDING THIS WORKS (since in deferred_init status anyhow):
-            # return
+            return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
 
-        # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
-        # If controller has objective_mechanism, then add it and all associated Projections to Composition
         if self.controller.objective_mechanism:
+            # If controller has objective_mechanism, then add it and all associated Projections to Composition
             if self.controller.objective_mechanism not in invalid_aux_components:
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-        # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
-        elif self.controller.input_ports and self.controller.input_port.path_afferents:
-            # # MODIFIED 11/24/21 NEW:
-            self._add_node_aux_components(controller, context)
-            # MODIFIED 11/20/21 END
-            # This is set by add_node() automatically above
-            #    needs to be set here to insure call at run time (to catch any new nodes that have been added)
-            self.needs_update_controller = True
         else:
+            # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
+            if self.controller.input_ports and self.controller.input_port.path_afferents:
+                # # MODIFIED 11/24/21 NEW:
+                self._add_node_aux_components(controller, context)
+                # MODIFIED 11/20/21 END
+            # This is set by add_node() automatically if there is an objective_mechanism;
+            #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
             self.needs_update_controller = True
 
-        # ADD MODULATORY COMPONENTS -----------------------------------------------------
-
-        # MODIFIED 11/20/21 NEW: MOVED FROM BELOW
-        # # Get rid of default ControlSignal if it has no ControlProjections
-        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-        self._instantiate_control_projections(context=context)
-        # MODIFIED 11/20/21 NEW:
-        for node in self.nodes:
-            self._instantiate_deferred_init_control(node, context)
-        # MODIFIED 11/20/21 END
-
-        # ACTIVATE FOR COMPOSITION -----------------------------------------------------
-
-        self.node_ordering.append(controller)
-
-        self.enable_controller = True
-
-        # FIX: 11/15/21 - THIS SHOULD BE MOVED TO COMPOSITION FROM CONTROL MECHANISM
-        controller._activate_projections_for_compositions(self)
-
-        self._analyze_graph(context=context)
-        self._update_shadows_dict(controller)
-
-        # FIX: 11/24/21 MOVE THIS EARLIER??
         # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
                 and self.controller.input_ports):
@@ -7264,15 +7236,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
-        # # MODIFIED 11/20/21 OLD: MOVED TO ABOVE
-        # # # Get rid of default ControlSignal if it has no ControlProjections
-        # controller._remove_default_control_signal(type=CONTROL_SIGNAL)
-        # self._instantiate_control_projections(context=context)
-        # MODIFIED 11/20/21 END
+        # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
+        # Get rid of default ControlSignal if it has no ControlProjections
+        controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        # Instantiate control specifications locally (on nodes) and/or on controller
+        self._instantiate_control_projections(context=context)
+        # Instantiate any
+        for node in self.nodes:
+            self._instantiate_deferred_init_control(node, context)
+
+        # ACTIVATE FOR COMPOSITION -----------------------------------------------------
+
+        self.node_ordering.append(controller)
+        self.enable_controller = True
+        # FIX: 11/15/21 - SHOULD THIS METHOD BE MOVED HERE (TO COMPOSITION) FROM ControlMechanism
+        controller._activate_projections_for_compositions(self)
+        self._analyze_graph(context=context)
+        self._update_shadows_dict(controller)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
-        self._analyze_graph(context=context)
 
     def _instantiate_deferred_init_control(self, node, context=None):
         """
