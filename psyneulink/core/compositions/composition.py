@@ -7215,15 +7215,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # ADD MONITORING COMPONENTS -----------------------------------------------------
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
+        # If controller has objective_mechanism, then add it and all associated Projections to Composition
         if self.controller.objective_mechanism:
             if self.controller.objective_mechanism not in invalid_aux_components:
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
         elif self.controller.input_ports and self.controller.input_port.path_afferents:
             # # MODIFIED 11/24/21 NEW:
             self._add_node_aux_components(controller, context)
             # MODIFIED 11/20/21 END
             # This is set by add_node() automatically above
             #    needs to be set here to insure call at run time (to catch any new nodes that have been added)
+            self.needs_update_controller = True
+        else:
             self.needs_update_controller = True
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------

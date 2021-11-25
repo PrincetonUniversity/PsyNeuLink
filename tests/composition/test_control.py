@@ -359,20 +359,17 @@ class TestControlSpecification:
                                                                            search_space=[1]))
         assert comp.controller.composition == comp
         comp._analyze_graph()
-        # FIX: WHY IS THIS ASSIGNED HERE BUT NOT THE SAME FOR new_ocm?
         assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
-        # FIX:  11/15/21 ADD run() FOLLOWED BY RESTORING BELOW
-        # assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
+        assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
         assert any(pnl.SLOPE in p_name for p_name in comp.projections.names)
         assert not any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
+        old_ocm = comp.controller
 
         new_ocm = pnl.OptimizationControlMechanism(name='new_ocm',
                                                    agent_rep=None,
                                                    control_signals=(pnl.INTERCEPT, mech),
                                                    search_space=[1])
-        old_ocm = comp.controller
         comp.add_controller(new_ocm)
-
         comp._analyze_graph()
 
         #Confirm that components of new_ocm have been added
@@ -380,6 +377,7 @@ class TestControlSpecification:
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
         # FIX:  11/15/21 WHY DOES THIS CRASH, BUT NOT ABOVE FOR old_ocm??
         # FIX:  11/24/21 ??ACTUALLY, SHOULD THIS PASS?
+        assert True
         # assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
         # FIX:  11/15/21 ADD run() ABOVE FOLLOWED BY RESTORING BELOW
         # assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
