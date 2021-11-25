@@ -4711,6 +4711,12 @@ class TestNestedCompositions:
             ]
         )
         comp.add_controller(ocm)
+
+        assert len(comp.controller.input_ports[pnl.OUTCOME].path_afferents) == 2
+        # All Projections to controller's OUTCOME InputPort should be from input_CIM
+        assert all(isinstance(comp.controller.input_ports[pnl.OUTCOME].path_afferents[i].sender.owner,
+                              pnl.CompositionInterfaceMechanism) for i in range(2))
+
         assert len(comp.controller.control_signals) == 4  # Should be 4:  Decision threshold (spec'd locally on mech)
                                                           #               Decision drift_rate (spec'd on mech and OCM)
                                                           #               Response threshold (spec'd on OCM)
@@ -4719,9 +4725,9 @@ class TestNestedCompositions:
                          'Response[threshold] ControlSignal', 'RANDOMIZATION_CONTROL_SIGNAL']
         assert all([name in ctl_sig_names for name in comp.controller.control_signals.names])
         if nesting == 'nested':
-            # ControlProjections should pass through parameter_CIM's
-            assert isinstance(comp.controller.control_signals[0].efferents[0].receiver.owner,
-                                  pnl.CompositionInterfaceMechanism)
+            # All of the controller's ControlSignals should project to the ParameterCIM for the nested comp
+            assert all(isinstance(comp.controller.control_signals[i].efferents[0].receiver.owner,
+                                  pnl.CompositionInterfaceMechanism) for i in range(4))
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):

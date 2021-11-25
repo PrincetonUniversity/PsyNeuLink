@@ -3989,13 +3989,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # and, at runtime, if there are still any invalid aux_components left, issue a warning
             projections = []
             # Add all "nodes" to the composition first (in case projections reference them)
-            for component in node.aux_components:
+            for i, component in enumerate(node.aux_components):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
                         component._analyze_graph()
                     self.add_node(component)
                 elif isinstance(component, Projection):
-                    projections.append((component, False))
+                    proj_tuple = (component, False)
+                    projections.append(proj_tuple)
+                    node.aux_components[i] = proj_tuple
                 elif isinstance(component, tuple):
                     if isinstance(component[0], Projection):
                         if (isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}):
@@ -4054,6 +4056,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.add_projection(sender=proj_spec[0].sender,
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
+                del node.aux_components[node.aux_components.index(proj_spec)]
         return invalid_aux_components
 
     def _get_invalid_aux_components(self, node):
