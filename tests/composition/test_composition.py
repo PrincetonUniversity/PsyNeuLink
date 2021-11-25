@@ -4713,9 +4713,10 @@ class TestNestedCompositions:
         comp.add_controller(ocm)
 
         assert len(comp.controller.input_ports[pnl.OUTCOME].path_afferents) == 2
-        # All Projections to controller's OUTCOME InputPort should be from input_CIM
-        assert all(isinstance(comp.controller.input_ports[pnl.OUTCOME].path_afferents[i].sender.owner,
-                              pnl.CompositionInterfaceMechanism) for i in range(2))
+        if nesting == 'nested':
+            # All Projections to controller's OUTCOME InputPort should be from input_CIM
+            assert all(isinstance(comp.controller.input_ports[pnl.OUTCOME].path_afferents[i].sender.owner,
+                                  pnl.CompositionInterfaceMechanism) for i in range(2))
 
         assert len(comp.controller.control_signals) == 4  # Should be 4:  Decision threshold (spec'd locally on mech)
                                                           #               Decision drift_rate (spec'd on mech and OCM)
