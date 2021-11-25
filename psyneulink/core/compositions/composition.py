@@ -7219,9 +7219,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
             if self.controller.input_ports and self.controller.input_port.path_afferents:
-                # # MODIFIED 11/24/21 NEW:
                 self._add_node_aux_components(controller, context)
-                # MODIFIED 11/20/21 END
             # This is set by add_node() automatically if there is an objective_mechanism;
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
             self.needs_update_controller = True
