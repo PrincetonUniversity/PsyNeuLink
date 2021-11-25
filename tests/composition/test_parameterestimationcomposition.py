@@ -105,7 +105,7 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
         assert ctlr.objective_mechanism                         # For objective_function specified
     else:
         # pec.show_graph(show_cim=True)
-        pec.show_graph(show_node_structure=pnl.ALL)
+        # pec.show_graph(show_node_structure=pnl.ALL)
         assert not ctlr.objective_mechanism                         # For objective_function specified
     assert len(ctlr.input_ports[pnl.OUTCOME].variable) == expected_input_len
     assert len(ctlr.control_signals) == 3

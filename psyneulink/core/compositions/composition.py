@@ -7212,6 +7212,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
 
+        # ADD MONITORING COMPONENTS -----------------------------------------------------
+
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
         if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
             self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
@@ -7223,6 +7225,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    to insure call at run time (to catch any new nodes that have been added)
             self.needs_update_controller = True
 
+        # ADD MODULATORY COMPONENTS -----------------------------------------------------
+
         # MODIFIED 11/20/21 NEW: MOVED FROM BELOW
         # # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
@@ -7231,6 +7235,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
         # MODIFIED 11/20/21 END
+
+        # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
         self.node_ordering.append(controller)
 
@@ -7242,6 +7248,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._analyze_graph(context=context)
         self._update_shadows_dict(controller)
 
+        # FIX: 11/24/21 MOVE THIS EARLIER??
         # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
                 and self.controller.input_ports):
