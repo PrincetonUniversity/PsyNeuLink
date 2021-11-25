@@ -7205,24 +7205,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
         # self._add_node_role(controller, NodeRole.CONTROLLER)
 
-        # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
-
+        # Check aux_components relevant to controller
         invalid_aux_components = self._get_invalid_aux_components(controller)
-
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
+            # FIX: 11/24/21: CHECK IF ADDING THIS WORKS (since in deferred_init status anyhow):
+            # return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
 
         # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
-        if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
-            self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
-        else:
+        if self.controller.objective_mechanism:
+            if self.controller.objective_mechanism not in invalid_aux_components:
+                self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        elif self.controller.input_ports and self.controller.input_port.path_afferents:
             # # MODIFIED 11/24/21 NEW:
-            # self._add_node_aux_components(controller, context)
+            self._add_node_aux_components(controller, context)
             # MODIFIED 11/20/21 END
-            # This is set by add_node() automatically above, but should be set either way
-            #    to insure call at run time (to catch any new nodes that have been added)
+            # This is set by add_node() automatically above
+            #    needs to be set here to insure call at run time (to catch any new nodes that have been added)
             self.needs_update_controller = True
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
