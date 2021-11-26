@@ -375,12 +375,8 @@ class TestControlSpecification:
         #Confirm that components of new_ocm have been added
         assert comp.controller == new_ocm
         assert any(pnl.INTERCEPT in p_name for p_name in comp.projections.names)
-        # FIX:  11/15/21 WHY DOES THIS CRASH, BUT NOT ABOVE FOR old_ocm??
-        # FIX:  11/24/21 ??ACTUALLY, SHOULD THIS PASS?
-        assert True
-        # assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
-        # FIX:  11/15/21 ADD run() ABOVE FOLLOWED BY RESTORING BELOW
-        # assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
+        assert comp.controller.state_input_ports[0].shadow_inputs == mech.input_port
+        assert comp.controller.state_input_ports[0].path_afferents[0].sender == mech.input_port.path_afferents[0].sender
 
         # Confirm all components of old_ocm have been removed
         assert old_ocm.composition is None
