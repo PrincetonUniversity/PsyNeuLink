@@ -1254,20 +1254,42 @@ class ControlMechanism(ModulatoryMechanism_Base):
         monitor_for_control = convert_to_list(monitor_for_control) or []
         control = convert_to_list(control) or []
 
+
         # For backward compatibility:
         if kwargs:
             if MONITOR_FOR_MODULATION in kwargs:
                 args = kwargs.pop(MONITOR_FOR_MODULATION)
                 if args:
                     monitor_for_control.extend(convert_to_list(args))
+
+            # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
+            # These are synonyms, but allowing several to be specified and trying to combine the specifications
+            # can cause problems if different forms of specification are used to refer to the same Component(s)
+            control_specified = "'control'" if control else ''
+            modulatory_signals_specified = ''
             if MODULATORY_SIGNALS in kwargs:
                 args = kwargs.pop(MODULATORY_SIGNALS)
                 if args:
-                    control.extend(convert_to_list(args))
+                    if control:
+                        modulatory_signals_specified = f"'{MODULATORY_SIGNALS}'"
+                        raise ControlMechanismError(f"Both {control_specified} and {modulatory_signals_specified} "
+                                                    f"arguments have been specified for {self.name}. "
+                                                    f"These are synonyms, but only one should be used to avoid "
+                                                    f"creating unnecessary and/or duplicated Components.")
+                    control = convert_to_list(args)
             if CONTROL_SIGNALS in kwargs:
                 args = kwargs.pop(CONTROL_SIGNALS)
                 if args:
-                    control.extend(convert_to_list(args))
+                    if control:
+                        if control_specified and modulatory_signals_specified:
+                            prev_spec = ", ".join([control_specified, modulatory_signals_specified])
+                        else:
+                            prev_spec = control_specified or modulatory_signals_specified
+                        raise ControlMechanismError(f"Both {prev_spec} and '{CONTROL_SIGNALS}' arguments "
+                                                    f"have been specified for {self.name}. "
+                                                    f"These are synonyms, but only one should be used to avoid "
+                                                    f"creating unnecessary and/or duplicated Components.")
+                    control = convert_to_list(args)
 
         function = function or DefaultAllocationFunction
 
