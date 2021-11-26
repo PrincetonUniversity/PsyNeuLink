@@ -10,10 +10,16 @@ SEED = 0
 @pytest.mark.parametrize('mode', ['numpy',
                                   pytest.param('LLVM', marks=pytest.mark.llvm),
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-def test_random_int64(benchmark, mode):
+@pytest.mark.parametrize('seed, expected', [
+    (0, [259491006799949737,  4754966410622352325,  8698845897610382596, 1686395276220330909, 18061843536446043542, 4723914225006068263]),
+    (-5, [4936860362606747269, 11611290354192475889, 2015254117581537576, 4620074701282684350, 9574602527017877750, 2811009141214824706]),
+    (15, [322160557315224026, 10187298772616605914, 11130303561932346278, 3540317624683947565, 245468466731153020, 17669502083357198575]),
+    (0xfeedcafe, [14360762734736817955, 5188080951818105836, 1417692977344505657, 15919241602363537044, 11006348070701344872, 12539562470140893435]),
+])
+def test_random_int64(benchmark, mode, seed, expected):
     res = []
     if mode == 'numpy':
-        state = np.random.Philox([SEED])
+        state = np.random.Philox([np.uint64(seed)])
         prng = np.random.Generator(state)
         def f():
             # Get uint range [0, MAX] to avoid any intermediate caching of random bits
@@ -22,7 +28,7 @@ def test_random_int64(benchmark, mode):
     elif mode == 'LLVM':
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state = init_fun.byref_arg_types[0]()
-        init_fun(state, SEED)
+        init_fun(state, seed)
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
         out = ctypes.c_longlong()
@@ -33,7 +39,7 @@ def test_random_int64(benchmark, mode):
         init_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_init')
         state_size = ctypes.sizeof(init_fun.byref_arg_types[0])
         gpu_state = pnlvm.jit_engine.pycuda.driver.mem_alloc(state_size)
-        init_fun.cuda_call(gpu_state, np.int64(SEED))
+        init_fun.cuda_call(gpu_state, np.int64(seed))
 
         gen_fun = pnlvm.LLVMBinaryFunction.get('__pnl_builtin_philox_rand_int64')
         out = np.asarray([0], dtype=np.uint64)
@@ -44,8 +50,7 @@ def test_random_int64(benchmark, mode):
 
     # Get >4 samples to force regeneration of Philox buffer
     res = [f(), f(), f(), f(), f(), f()]
-    assert np.allclose(res, [259491006799949737,  4754966410622352325,  8698845897610382596,
-                             1686395276220330909, 18061843536446043542, 4723914225006068263])
+    assert np.allclose(res, expected)
     benchmark(f)
 
 
