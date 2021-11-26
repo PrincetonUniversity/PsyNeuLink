@@ -1399,6 +1399,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         # GET OutputPorts to Monitor (to specify as or add to ObjectiveMechanism's monitored_output_ports attribute
 
         # FIX: 11/3/21:  put OUTCOME InputPort at the end rather than the beginning
+        #                THEN SEE ALL INSTANCES IN COMMENTS OF: "NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED"
         # Other input_ports are those passed into this method, that are presumed to be for other purposes
         #   (e.g., used by OptimizationControlMechanism for representing state_features as inputs)
         #   those are appended after the OUTCOME InputPort # FIX <- change to prepend when refactored
@@ -1906,7 +1907,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 for eff in self.objective_mechanism.efferents:
                     dependent_projections.add(eff)
             else:
-                # FIX: 11/3/21: THIS NEEDS TO BE ADJUSTED IF OUTCOME InputPorts ARE MOVED
+                # FIX: 11/3/21: NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
                 # Add Projections to controller's OUTCOME InputPorts
                 # Note: this applies if ControlMechanism has an objective_mechanism that is not in the Composition
                 for i in range(self.num_outcome_input_ports):

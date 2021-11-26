@@ -7297,7 +7297,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
-        # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
+        # FIX: 11/3/21 - BELOW: NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         #               ALSO, IF Non-OCM IS ALLOWED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
         # Skip controller's outcome_input_ports
         #    (they receive Projections from its objective_mechanism and/or directly from items in monitor_for_control

@@ -1814,7 +1814,12 @@ class ShowGraph():
 
         # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
         senders = set()
-        for i in controller.input_ports[1:]:
+        # FIX: 11/3/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
+        # # MODIFIED 11/24/21 OLD:
+        # for i in controller.input_ports[1:]:
+        # MODIFIED 11/24/21 END
+        for i in controller.input_ports[controller.num_outcome_input_ports:]:
+        # MODIFIED 11/24/21 NEW:
             for p in i.path_afferents:
                 senders.add(p.sender.owner)
         self._assign_incoming_edges(g,

@@ -1222,7 +1222,7 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_input_ports(state_input_ports_specs, context=context)
 
         # Assign to self.state_input_ports attribute
-        start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
+        start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         stop = start + len(state_input_ports_specs) if state_input_ports_specs else 0
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
         self.state_input_ports = ContentAddressableList(component_type=InputPort,
