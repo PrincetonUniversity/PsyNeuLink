@@ -1769,7 +1769,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             if any(any(new_p.receiver == existing_p.receiver
                                 for existing_p in existing_ctl_sig.efferents) for new_p in control_signal.efferents):
                 warnings.warn(f"Specification of {control_signal.name} for {self.name} "
-                              f"has one or more {projection_type}s redundant with ones already on "
+                              f"has one or more {projection_type.__name__}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
 
 
