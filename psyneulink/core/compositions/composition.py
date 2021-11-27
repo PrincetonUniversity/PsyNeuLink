@@ -5421,9 +5421,60 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         original_senders = set()
         for original_projection in projections:
+            # # MODIFIED 11/26/21 OLD:
+            # if original_projection in self.projections:
+            #     original_senders.add(original_projection.sender)
+            #     correct_sender = original_projection.sender
+            #     shadow_found = False
+            #     for shadow_projection in input_port.path_afferents:
+            #         if shadow_projection.sender == correct_sender:
+            #             shadow_found = True
+            #             break
+            #     if not shadow_found:
+            #         # TBI - Shadow projection type? Matrix value?
+            #         new_projection = MappingProjection(sender=correct_sender,
+            #                                            receiver=input_port)
+            #         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+            # else:
+            #     nested_input_comps = [comp for comp in self._get_nested_compositions()
+            #                     if comp in self.get_nodes_by_role(NodeRole.INPUT)]
+            #     # FIX: 11/26/21 - MAKE THIS RECURSIVE USING ABOVE
+            #     for comp in nested_input_comps:
+            #         for original_projection in projections:
+            #             if original_projection in comp.projections:
+            #                 # Find sender in outer Composition
+            #                 #      MAP ENTRIES:  [SHADOWED PORT, [input_CIM InputPort, input_CIM OutputPort]]
+            #                 correct_sender = [item[1][0]
+            #                                   for item in list(original_projection.sender.owner.port_map.items())
+            #                                   if item[1][1] is original_projection.sender][0].path_afferents[0].sender
+            #                 original_senders.add(correct_sender)
+            #                 shadow_found = False
+            #                 if input_port.path_afferents:
+            #                     for shadow_projection in input_port.path_afferents:
+            #                         if shadow_projection.sender == correct_sender:
+            #                             shadow_found = True
+            #                             break
+            #                 if not shadow_found:
+            #                     new_projection = MappingProjection(sender=correct_sender,
+            #                                                        receiver=input_port)
+            #                     self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+            # MODIFIED 11/26/21 NEW:
+            correct_sender = None
             if original_projection in self.projections:
-                original_senders.add(original_projection.sender)
                 correct_sender = original_projection.sender
+            else:
+                # Search for sender in INPUT Nodes of nested Compositions that are
+                nested_input_comps = [comp for comp in self._get_nested_compositions()
+                                if comp in self.get_nodes_by_role(NodeRole.INPUT)]
+                for comp in nested_input_comps:
+                    if original_projection in comp.projections:
+                        # Find sender in outer Composition
+                        #      MAP ENTRIES:  [SHADOWED PORT, [input_CIM InputPort, input_CIM OutputPort]]
+                        correct_sender = [item[1][0]
+                                          for item in list(original_projection.sender.owner.port_map.items())
+                                          if item[1][1] is original_projection.sender][0].path_afferents[0].sender
+            if correct_sender:
+                original_senders.add(correct_sender)
                 shadow_found = False
                 for shadow_projection in input_port.path_afferents:
                     if shadow_projection.sender == correct_sender:
@@ -5434,57 +5485,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     new_projection = MappingProjection(sender=correct_sender,
                                                        receiver=input_port)
                     self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
-            # MODIFIED 11/26/21 NEW:
-            else:
-                nested_input_comps = [comp for comp in self._get_nested_compositions()
-                                if comp in self.get_nodes_by_role(NodeRole.INPUT)]
-                # FIX: 11/26/21 - MAKE THIS RECURSIVE USING ABOVE
-                for comp in nested_input_comps:
-                    for original_projection in projections:
-                        if original_projection in comp.projections:
-                            # Find sender in outer Composition
-                            #      MAP ENTRIES:  [SHADOWED PORT, [input_CIM InputPort, input_CIM OutputPort]]
-                            correct_sender = [item[1][0]
-                                              for item in list(original_projection.sender.owner.port_map.items())
-                                              if item[1][1] is original_projection.sender][0].path_afferents[0].sender
-                            original_senders.add(correct_sender)
-                            shadow_found = False
-                            if input_port.path_afferents:
-                                for shadow_projection in input_port.path_afferents:
-                                    if shadow_projection.sender == correct_sender:
-                                        shadow_found = True
-                                        break
-                            if not shadow_found:
-                                new_projection = MappingProjection(sender=correct_sender,
-                                                                   receiver=input_port)
-                                self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
             # MODIFIED 11/26/21 END
         return original_senders
 
     def _update_shadow_projections(self, context=None):
-        for node in self.nodes:
-            for input_port in node.input_ports:
-                if input_port.shadow_inputs:
-                    original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
-                    for shadow_projection in input_port.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
+        # # MODIFIED 11/26/21 OLD:
+        # for node in self.nodes:
+        #     for input_port in node.input_ports:
+        #         if input_port.shadow_inputs:
+        #             original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
+        #             for shadow_projection in input_port.path_afferents:
+        #                 if shadow_projection.sender not in original_senders:
+        #                     self.remove_projection(shadow_projection)
+        # if self.controller:
+        #     # FIX: 11/26/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
+        #     for input_port in self.controller.input_ports[self.controller.num_outcome_input_ports:]:
+        #         if input_port.shadow_inputs:
+        #             original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
+        #             for shadow_projection in input_port.path_afferents:
+        #                 if shadow_projection.sender not in original_senders:
+        #                     self.remove_projection(shadow_projection)
         # MODIFIED 11/26/21 NEW:
+        shadowed_ports = [port for node in self.nodes for port in node.input_ports if port.shadow_inputs]
         if self.controller:
-            # FIX: 11/26/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
-            for input_port in self.controller.input_ports[self.controller.num_outcome_input_ports:]:
-                if input_port.shadow_inputs:
-                    original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
-                    for shadow_projection in input_port.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
+            shadowed_ports.extend([input_port for input_port
+                                   in self.controller.input_ports[self.controller.num_outcome_input_ports:]
+                                   if input_port.shadow_inputs])
+        for input_port in shadowed_ports:
+            original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
+            for shadow_projection in input_port.path_afferents:
+                if shadow_projection.sender not in original_senders:
+                    self.remove_projection(shadow_projection)
         # MODIFIED 11/26/21 END
-
-            # MODIFIED 4/4/20 OLD:
-            # # If the node does not have any roles, it is internal
-            # if len(self.get_roles_by_node(node)) == 0:
-            #     self._add_node_role(node, NodeRole.INTERNAL)
-            # MODIFIED 4/4/20 END
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
