@@ -1341,7 +1341,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep and/or any nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if not input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep)]
+                                      if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
+                                          and not any([input_port.shadow_inputs.owner in
+                                                       [nested_comp.input_CIM for nested_comp in
+                                                        self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
+                                                        if isinstance(nested_comp, Composition)]]))]
             if any(invalid_state_features):
                 raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                         f"optimization of {self.agent_rep.name}, has 'state_features' "
