@@ -585,7 +585,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import Port, _parse_port_spec, PortError
+from psyneulink.core.components.ports.port import Port, _parse_port_spec
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     AUTO_ASSIGN_MATRIX, COMBINE, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, CONTROL_SIGNALS, CONCATENATE, \
@@ -1539,7 +1539,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                              reference_value=input_port_value_sizes)
             # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
             self.outcome_input_ports.extend(self.input_ports[:len(outcome_input_port_specs)])
-            # FIX: 11/3/21 DELETE ONCE THIS IS A PROPERTY
 
             # Instantiate Projections to outcome_input_ports from items specified in monitor_for_control
             #   (list of which were placed in self.aux_components by _parse_monitor_for_control_input_ports)

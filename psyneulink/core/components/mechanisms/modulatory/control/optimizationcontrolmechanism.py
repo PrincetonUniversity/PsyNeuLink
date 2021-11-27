@@ -1188,16 +1188,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        # # MODIFIED 11/15/21 NEW:
-        # from psyneulink.core.compositions.composition import NodeRole
-        # MODIFIED 11/15/21 END
 
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
         state_input_ports_specs = None
 
-
         # FIX: 11/3/21 :
-        #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN INPUTPORT IS SPECIFIED,
+        #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
         #    ITS PRIMARY IS USED (SEE SCRATCH PAD FOR EXAMPLES)
 
         if not self.state_features:
@@ -1213,10 +1209,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # Note:
             #   if state_features were specified for model-free (i.e., agent_rep is a CompositionFunctionApproximator),
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
-
-        # # FIX: 11/3/21 - FAILS ON test_agent_rep_assignement_as_controller_and_replacement
-        # assert state_input_ports_specs, f"PROGRAM ERROR: Failed to construct 'state_input_ports_specs' " \
-        #                                 f"for {self.name} as controller of {self.agent_rep.name}"
 
         # Pass state_input_ports_sepcs to ControlMechanism for instantiation and addition to OCM's input_ports
         super()._instantiate_input_ports(state_input_ports_specs, context=context)
@@ -1293,13 +1285,12 @@ class OptimizationControlMechanism(ControlMechanism):
                 are assigned the default state_feature_function.
         """
 
-        # MODIFIED 11/15/21 OLD:  FIX: REPLACE WITH ContextFlags.PROCESSING ??
-        #                         TRY TESTS WITHOUT THIS
+        # FIX: 11/15/21 - REPLACE WITH ContextFlags.PROCESSING ??
+        #               TRY TESTS WITHOUT THIS
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete)
         if context.flags & ContextFlags.METHOD:
             return
-        # MODIFIED 11/15/21 END
 
         # Don't bother for model-free optimization (see OptimizationControlMechanism_Model_Free)
         #    since state_input_ports specified or model-free optimization are entirely the user's responsibility;
@@ -1310,14 +1301,11 @@ class OptimizationControlMechanism(ControlMechanism):
             return
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import \
-            CompositionInterfaceMechanism
 
         def _get_all_input_nodes(comp):
             """Return all input_nodes, including those for any Composition nested one level down.
             Note: more deeply nested Compositions will either be served by their containing one(s) or own controllers
             """
-            # MODIFIED 11/26 OLD:
             _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             input_nodes = []
             for node in _input_nodes:
@@ -1326,10 +1314,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     input_nodes.append(node)
             return input_nodes
-        # MODIFIED 11/26 NEW:
-        # MODIFIED 11/26 END
 
-        # MODIFIED 11/26/21 NEW:
         if self.state_features:
             # FIX: 11/26/21 - EXPLAIN THIS BEHAVIOR IN DOSCSTRING;
             warnings.warn(f"The 'state_features' argument has been specified for {self.name}, which is being "
@@ -1352,19 +1337,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
                                                         f"are either not INPUT nodes or missing from the Composition.")
             return
-        # MODIFIED 11/26/21 END
 
         # Assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
-        # # # MODIFIED 11/26/21 OLD:
-        # comp_input_nodes_input_ports = []
-        # for input_port in [input_port for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
-        #                    for input_port in node.input_ports if not input_port.internal_only]:
-        #             comp_input_nodes_input_ports.append(input_port)
-        # already_specified_state_input_ports = [state_input_port.shadow_inputs
-        #                                        for state_input_port in self.state_input_ports]
-        # input_ports_not_specified = [node for node in comp_input_nodes_input_ports
-        #                              if node not in already_specified_state_input_ports]
-        # MODIFIED 11/26/21 NEW:
         # FIX: 11/24/21 - ONLY ADD IF MODEL-BASED AND NOTHING HAS BEEN SPECIFIED BY USER;  OTHERWISE, LEAVE AS-IS
         #                 ADD PROPERTY THAT RETURNS 'model-free' or 'model-based' THAT CAN BE USED HERE.
         shadow_input_ports = []
@@ -1375,7 +1349,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 # if isinstance(input_port.owner, CompositionInterfaceMechanism):
                 #     input_port = input_port.
                 shadow_input_ports.append(input_port)
-        # MODIFIED 11/26/21 END
 
         local_context = Context(source=ContextFlags.METHOD)
         state_input_ports_to_add = []
@@ -1389,16 +1362,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                               params={SHADOW_INPUTS: input_port,
                                                                       INTERNAL_ONLY:True},
                                                               context=local_context))
-
         self.add_ports(state_input_ports_to_add,
                              update_variable=False,
                              context=local_context)
         self.state_input_ports.extend(state_input_ports_to_add)
-
-        # FIX: 11/15/21 ??NEED TO ADD THE PROJECTIONS AS SHADOW_PROJECTIONS
-        #      -- SEE Composition.add_controller() AND add_node??
-        #         (ALTHOUGH THEY SHOULD BE ACTIVATED FOR COMPOSITION IN _activate_projections_for_compositions)
-    # MODIFIED 11/15/21 END
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.

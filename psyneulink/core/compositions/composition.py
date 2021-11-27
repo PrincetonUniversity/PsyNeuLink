@@ -3382,34 +3382,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
-        # # MODIFIED 11/19/21 OLD:
-        # # Controller
-        # self.controller = None
-        # self._controller_initialization_status = ContextFlags.INITIALIZED
-        # if controller:
-        #     self.add_controller(controller)
-        # else:
-        #     self.enable_controller = enable_controller
-        # self.controller_mode = controller_mode
-        # self.controller_time_scale = controller_time_scale
-        # self.controller_condition = controller_condition
-        # self.controller_condition.owner = self.controller
-        # # This is set at runtime and may be used by the controller to assign its
-        # #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
-        # self.num_trials = None
-        #
-        # self._update_parameter_components()
-        #
-        # self.initialization_status = ContextFlags.INITIALIZED
-        # #FIXME: This removes `composition.parameters.values`, as it was not being
-        # # populated correctly in the first place. `composition.parameters.results`
-        # # should be used instead - in the long run, we should look into possibly
-        # # populating both values and results, as it would be more consistent with
-        # # the behavior of components
-        # del self.parameters.value
-        # MODIFIED 11/19/21 NEW:
         self.controller = None
-        # MODIFIED 11/19/21 END
 
         # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
         # Nodes, Projections, and Pathways
@@ -3425,7 +3398,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self.add_pathways(pathways, context=context)
 
-        # MODIFIED 11/19/21 NEW:
         # Controller
         self.controller = None
         self._controller_initialization_status = ContextFlags.INITIALIZED
@@ -3450,7 +3422,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # populating both values and results, as it would be more consistent with
         # the behavior of components
         del self.parameters.value
-        # MODIFIED 11/19/21 END
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
@@ -4056,9 +4027,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.add_projection(sender=proj_spec[0].sender,
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
-                # MODIFIED 11/24/21 NEW:
                 del node.aux_components[node.aux_components.index(proj_spec)]
-                # MODIFIED 11/24/21 END
+
         return invalid_aux_components
 
     def _get_invalid_aux_components(self, node):
@@ -4134,7 +4104,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 completed_nodes.append(node)
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
 
-        # MODIFIED 11/15/21 NEW:
         # Don't instantiate unless flagged for updating (if nodes have been added to the graph);
         #    this avoids unnecessary calls on repeated calls to run().
         if (self.controller
@@ -4147,7 +4116,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
             #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
             self.needs_update_controller = False
-        # MODIFIED 11/15/21 END
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -5927,15 +5895,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           context=context)
         self.pathways.append(pathway)
 
-        # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
-        #                   but need to implement proper behavior wrt call to analyze_graph()
-        #                   _check_initalization_state()
-        # 10/22/20 [KDM]: Pass no context instead of setting to None
-        # # MODIFIED 11/20/21 OLD:
-        # self._analyze_graph()
-        # MODIFIED 11/20/21 NEW:
         self._analyze_graph(context)
-        # MODIFIED 11/20/21 END
 
         return pathway
 
@@ -7139,12 +7099,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                # # MODIFIED 11/19/21 OLD:
-                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
-                # if proj.receiver.owner not in self.nodes and \
-                #         proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes]:
-                #     deeply_nested_projections[spec] = proj
-                # MODIFIED 11/19/21 NEW:  FIX - ADD TEST FOR SENDERS AS WELL AS RECEIVERS
                 # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
                 #      REMOVING "if not i[1] in self.nodes" crashes in test_multilevel_control
                 if ((proj.sender.owner not in self.nodes
@@ -7152,7 +7106,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         or (proj.receiver.owner not in self.nodes
                             and proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes])):
                     deeply_nested_projections[spec] = proj
-                # MODIFIED 11/19/21 END
         return deeply_nested_projections
 
     # endregion LEARNING PATHWAYS
@@ -7350,23 +7303,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     sender_input_cim.input_ports[proj_index].path_afferents[0]
                                 input_projection_sender = sender_corresponding_input_projection.sender
                                 if input_projection_sender.owner == self.input_CIM:
-                                    # MODIFIED 11/15/21 OLD:
                                     shadow_proj = MappingProjection(sender=input_projection_sender,
                                                                  receiver = input_port)
                                     shadow_proj._activate_for_compositions(self)
-                                    # # MODIFIED 11/15/21 NEW:
-                                    # #  FIX: CAUSES ERRORS IN test_grid_search_random_selection
-                                    # #                        AND test_model_based_ocm_with_buffer
-                                    # self.add_projection(sender=input_projection_sender, receiver=input_port)
-                                    # MODIFIED 11/15/21 END
                             else:
-                                # MODIFIED 11/15/21 OLD:
                                 shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
                                 shadow_proj._activate_for_compositions(self)
-                                # # MODIFIED 11/15/21 NEW:
-                                # #  FIX: CAUSES ERRORS IN test_grid_search_random_selection
-                                # #                        AND test_model_based_ocm_with_buffer
-                                # self.add_projection(sender=proj.sender, receiver=input_port)
                                 # MODIFIED 11/15/21 END
                     except DuplicateProjectionError:
                         continue
@@ -7394,24 +7336,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if isinstance(node, Composition):
                 # Get control signal specifications for nested composition if it does not have its own controller
-                # MODIFIED 11/21/21 OLD:
                 if node.controller:
                     node_control_signals = node._get_control_signals_for_composition()
                     if node_control_signals:
                         control_signal_specs.append(node._get_control_signals_for_composition())
-                # # MODIFIED 11/21/21 NEW:  FIX:  ADDS "not" FOR LOOP, AND extend VS. append, BUT CAUSES FAILURES IN:
-                # #        TestModelBasedOptimizationControlMechanisms_Execution
-                # #            test_evc
-                # #            test_stateful_mechanism_in_simulation
-                # #        TestControlMechanisms:
-                # #            test_lvoc
-                # #            test_lvoc_both_prediction_specs
-                # #            test_lvoc_features_function
-                # if not node.controller:
-                #     node_control_signals = node._get_control_signals_for_composition()
-                #     if node_control_signals:
-                #         control_signal_specs.extend(node._get_control_signals_for_composition())
-                # MODIFIED 11/21/21 END
             elif isinstance(node, Mechanism):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
@@ -7442,9 +7370,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
             ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
 
-            # MODIFIED 11/22/21 OLD:  CAUSES DUPLICATES SINCE _instantiate_control_signal ALREADY ADDS IT
             self.controller.control.append(ctl_signal)
-            # MODIFIED 11/22/21 END
 
         # MODIFIED 11/21/21 OLD: FIX: WHY IS THIS INDENTED?  WON'T CALL OUTSIDE LOOP ACTIVATE ALL PROJECTIONS?
             # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
@@ -7453,9 +7379,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #                ?PUT IT IN aux_components FOR NODE?
             #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
             self.controller._activate_projections_for_compositions(self)
-        # # MODIFIED 11/21/21 NEW:  FIX: CAUSES FAILURES IN pytests GENERALLY BUT NOT test_control
-        # self.controller._activate_projections_for_compositions(self)
-        # MODIFIED 11/21/21 END
 
     def _route_control_projection_through_intermediary_pcims(self,
                                                              projection,
@@ -8606,11 +8529,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._check_for_unnecessary_feedback_projections()
         self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
-
-        # # MODIFIED 11/15/21 OLD:
-        #   FIX: MOVED TO _update_state_input_ports_for_controller in _complete_init_of_partially_initialized_nodes
-        # self._check_for_invalid_controller_state_features()
-        # MODIFIED 11/15/21 END
 
         # set auto logging if it's not already set, and if log argument is True
         if log:
