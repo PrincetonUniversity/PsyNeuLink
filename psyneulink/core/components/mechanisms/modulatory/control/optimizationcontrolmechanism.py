@@ -1294,6 +1294,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # MODIFIED 11/15/21 OLD:  FIX: REPLACE WITH ContextFlags.PROCESSING ??
+        #                         TRY TESTS WITHOUT THIS
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete)
         if context.flags & ContextFlags.METHOD:
@@ -1308,40 +1309,76 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep.componentCategory!='Composition':
             return
 
-        # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep and/or any nested Compositions
         from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import \
+            CompositionInterfaceMechanism
+
         def _get_all_input_nodes(comp):
-            input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
-            for node in input_nodes:
+            """Return all input_nodes, including those for any Composition nested one level down.
+            Note: more deeply nested Compositions will either be served by their containing one(s) or own controllers
+            """
+            # MODIFIED 11/26 OLD:
+            _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            input_nodes = []
+            for node in _input_nodes:
                 if isinstance(node, Composition):
-                    input_nodes.append(node.input_CIM)
                     input_nodes.extend(_get_all_input_nodes(node))
+                else:
+                    input_nodes.append(node)
             return input_nodes
+        # MODIFIED 11/26 NEW:
+        # MODIFIED 11/26 END
 
-        invalid_state_features = [input_port for input_port in self.state_input_ports
-                                  if not input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep)]
+        # MODIFIED 11/26/21 NEW:
+        if self.state_features:
+            # FIX: 11/26/21 - EXPLAIN THIS BEHAVIOR IN DOSCSTRING;
+            warnings.warn(f"The 'state_features' argument has been specified for {self.name}, which is being "
+                          f"configured as a model-based {self.__class__.__name__} (i.e, one that uses a "
+                          f"{Composition.componentType} as its agent_rep).  This overrides automatic assignment of "
+                          f"all inputs to its agent_rep ({self.agent_rep.name}) as the 'state_features'; only the "
+                          f"ones specified will be used ({self.state_features}).  Remove this specification from the "
+                          f"consructor for {self.name} if the automatic behavior is desired.")
 
-        if any(invalid_state_features):
+            # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep and/or any nested Compositions
+            invalid_state_features = [input_port for input_port in self.state_input_ports
+                                      if not input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep)]
+            if any(invalid_state_features):
+                raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
+                                                        f"optimization of {self.agent_rep.name}, has 'state_features' "
+                                                        f"specified ({[d.name for d in invalid_state_features]}) that "
+                                                        f"are either not INPUT nodes or missing from the Composition.")
+            return
+        # MODIFIED 11/26/21 END
 
-            raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
-                                                    f"optimization of {self.agent_rep.name}, has 'state_features' "
-                                                    f"specified ({[d.name for d in invalid_state_features]}) that "
-                                                    f"are either not INPUT nodes or missing from the Composition.")
-
-        # Ensure that a state_input_port is assigned for every InputPort of every INPUT node of agent_rep
-        comp_input_nodes_input_ports = []
-        for input_port in [input_port for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
-                           for input_port in node.input_ports if not input_port.internal_only]:
-                    comp_input_nodes_input_ports.append(input_port)
-        already_specified_state_input_ports = [state_input_port.shadow_inputs
-                                               for state_input_port in self.state_input_ports]
-        input_ports_not_specified = [node for node in comp_input_nodes_input_ports
-                                     if node not in already_specified_state_input_ports]
+        # Assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
+        # # # MODIFIED 11/26/21 OLD:
+        # comp_input_nodes_input_ports = []
+        # for input_port in [input_port for node in self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
+        #                    for input_port in node.input_ports if not input_port.internal_only]:
+        #             comp_input_nodes_input_ports.append(input_port)
+        # already_specified_state_input_ports = [state_input_port.shadow_inputs
+        #                                        for state_input_port in self.state_input_ports]
+        # input_ports_not_specified = [node for node in comp_input_nodes_input_ports
+        #                              if node not in already_specified_state_input_ports]
+        # MODIFIED 11/26/21 NEW:
+        # FIX: 11/24/21 - ONLY ADD IF MODEL-BASED AND NOTHING HAS BEEN SPECIFIED BY USER;  OTHERWISE, LEAVE AS-IS
+        #                 ADD PROPERTY THAT RETURNS 'model-free' or 'model-based' THAT CAN BE USED HERE.
+        shadow_input_ports = []
+        for node in _get_all_input_nodes(self.agent_rep):
+            for input_port in node.input_ports:
+                if input_port.internal_only:
+                    continue
+                # if isinstance(input_port.owner, CompositionInterfaceMechanism):
+                #     input_port = input_port.
+                shadow_input_ports.append(input_port)
+        # MODIFIED 11/26/21 END
 
         local_context = Context(source=ContextFlags.METHOD)
         state_input_ports_to_add = []
-        for input_port in input_ports_not_specified:
-            state_input_ports_to_add.append(_instantiate_port(name=SHADOW_INPUT_NAME + input_port.owner.name,
+        # for input_port in input_ports_not_specified:
+        for input_port in shadow_input_ports:
+            input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
+            state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
                                                               port_type=InputPort,
                                                               owner=self,
                                                               reference_value=input_port.value,
@@ -1953,11 +1990,11 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries
         """
 
-        state_input_ports = _parse_shadow_inputs(self, state_input_ports)
+        _state_input_ports = _parse_shadow_inputs(self, state_input_ports)
 
         parsed_features = []
 
-        for spec in state_input_ports:
+        for spec in _state_input_ports:
             spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             spec[PARAMS].update({INTERNAL_ONLY:True,
                                  PROJECTIONS:None})

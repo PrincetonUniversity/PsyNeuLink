@@ -4142,7 +4142,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
             if hasattr(self.controller, 'state_input_ports'):
                 self.controller._update_state_input_ports_for_controller(context=context)
-                self._instantiate_controller_shadow_projections(context=context)
+                # self._instantiate_controller_shadow_projections(context=context)
             self._instantiate_control_projections(context=context)
             # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
             #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
@@ -5431,6 +5431,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     new_projection = MappingProjection(sender=correct_sender,
                                                        receiver=input_port)
                     self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+            # MODIFIED 11/26/21 NEW:
+            else:
+                nested_input_comps = [comp for comp in self._get_nested_compositions()
+                                if comp in self.get_nodes_by_role(NodeRole.INPUT)]
+                for comp in nested_input_comps:
+                    original_senders = comp._get_original_senders(input_port, projecctions)
+                    assert True
+
+            # MODIFIED 11/26/21 END
         return original_senders
 
     def _update_shadow_projections(self, context=None):
@@ -5441,6 +5450,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for shadow_projection in input_port.path_afferents:
                         if shadow_projection.sender not in original_senders:
                             self.remove_projection(shadow_projection)
+        # MODIFIED 11/26/21 NEW:
+        if self.controller:
+            # FIX: 11/26/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
+            for input_port in self.controller.input_ports[self.controller.num_outcome_input_ports:]:
+                if input_port.shadow_inputs:
+                    original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
+                    for shadow_projection in input_port.path_afferents:
+                        if shadow_projection.sender not in original_senders:
+                            self.remove_projection(shadow_projection)
+        # MODIFIED 11/26/21 END
 
             # MODIFIED 4/4/20 OLD:
             # # If the node does not have any roles, it is internal
@@ -7297,10 +7316,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_cims= [self.input_CIM] + nested_cims
         # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
         #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
-        # FIX: 11/3/21 - BELOW: NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
-        #               ALSO, IF Non-OCM IS ALLOWED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
+        # FIX: 11/3/21 - IF Non-OCM IS ALLOWED AS CONTROLLER, MAY HAVE MORE THAN ONE InputPort FOR MONITORING
         # Skip controller's outcome_input_ports
         #    (they receive Projections from its objective_mechanism and/or directly from items in monitor_for_control
+        # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         for input_port in self.controller.input_ports[self.controller.num_outcome_input_ports:]:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 for proj in input_port.shadow_inputs.path_afferents:
@@ -7317,8 +7336,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if not sender.owner.composition == self:
                                 sender_input_cim = sender.owner
                                 proj_index = sender_input_cim.output_ports.index(sender)
-                                sender_corresponding_input_projection = sender_input_cim.input_ports[
-                                    proj_index].path_afferents[0]
+                                sender_corresponding_input_projection =\
+                                    sender_input_cim.input_ports[proj_index].path_afferents[0]
                                 input_projection_sender = sender_corresponding_input_projection.sender
                                 if input_projection_sender.owner == self.input_CIM:
                                     # MODIFIED 11/15/21 OLD:

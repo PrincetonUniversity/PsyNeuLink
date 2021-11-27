@@ -1837,6 +1837,7 @@ class ShowGraph():
                                     proj_color=ctl_proj_color,
                                     comp_hierarchy=comp_hierarchy,
                                     nesting_level=nesting_level)
+        assert True
 
     def _assign_learning_components(self,
                                     g,
