@@ -5416,6 +5416,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                nested_compositions, learning_projection
 
     def _get_original_senders(self, input_port, projections):
+        """Identify original senders for Projections for shadowed InputPorts, and instantiate if they don't exist.
+        Searches recursively for references to items in nested Compositions
+        """
         original_senders = set()
         for original_projection in projections:
             if original_projection in self.projections:
@@ -5435,10 +5438,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 nested_input_comps = [comp for comp in self._get_nested_compositions()
                                 if comp in self.get_nodes_by_role(NodeRole.INPUT)]
+                # FIX: 11/26/21 - MAKE THIS RECURSIVE USING ABOVE
                 for comp in nested_input_comps:
-                    original_senders = comp._get_original_senders(input_port, projecctions)
-                    assert True
-
+                    for original_projection in projections:
+                        if original_projection in comp.projections:
+                            # Find sender in outer Composition
+                            #      MAP ENTRIES:  [SHADOWED PORT, [input_CIM InputPort, input_CIM OutputPort]]
+                            correct_sender = [item[1][0]
+                                              for item in list(original_projection.sender.owner.port_map.items())
+                                              if item[1][1] is original_projection.sender][0].path_afferents[0].sender
+                            original_senders.add(correct_sender)
+                            shadow_found = False
+                            if input_port.path_afferents:
+                                for shadow_projection in input_port.path_afferents:
+                                    if shadow_projection.sender == correct_sender:
+                                        shadow_found = True
+                                        break
+                            if not shadow_found:
+                                new_projection = MappingProjection(sender=correct_sender,
+                                                                   receiver=input_port)
+                                self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
             # MODIFIED 11/26/21 END
         return original_senders
 
