@@ -2412,9 +2412,10 @@ from psyneulink.core.globals.keywords import \
     AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
     FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, \
-    MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MESSAGE, \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK,\
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH,\
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
@@ -2450,8 +2451,9 @@ CompositionRegistry = {}
 
 class CompositionError(Exception):
 
-    def __init__(self, error_value):
+    def __init__(self, error_value, **kwargs):
         self.error_value = error_value
+        self.return_items = kwargs
 
     def __str__(self):
         return repr(self.error_value)
@@ -4822,8 +4824,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes.
                 if not isinstance(node_port, ParameterPort):
                     if role not in owning_composition.nodes_to_roles[node]:
+                        # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
+                        #                        f"({nc.name}) but without required {role}.")
                         raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                                               f"({nc.name}) but without required {role}.")
+                                               f"({nc.name}) but without required {role}.",
+                                               MESSAGE='NOT_OUTPUT_NODE',
+                                               COMPOSITION=owning_composition,
+                                               NODE=node)
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
                 # FIX: 11/15/21:  ??WHY IS THIS COMMENTED OUT:
@@ -5281,7 +5288,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 sender_name = sender.name
 
-            # if the sender is IN a nested Composition AND sender is an OUTPUT Node
+            # if the sender is in a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
             sender, sender_output_port, graph_sender, sender_mechanism = \
                 self._get_nested_node_CIM_port(sender_mechanism,
@@ -7201,7 +7208,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
             if self.controller.input_ports and self.controller.input_port.path_afferents:
-                self._add_node_aux_components(controller, context)
+                # FIX 11/27/21: THIS IS A HACK TO MAKE INTERNAL NODES OF NESTED COMPOSITIONS AVAILABLE FOR MONITORING
+                #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
+                keep_checking = True
+                while(keep_checking):
+                    try:
+                        self._add_node_aux_components(controller, context)
+                        keep_checking = False
+                    except CompositionError as e:
+                        # If error is because INTERNAL Node has been specified as monitor_for_control on controller
+                        if e.return_items.pop(MESSAGE,None) == 'NOT_OUTPUT_NODE':
+                            # If controller.allow_probes has also been specified, assign node NodeRole.OUTPUT
+                            if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes:
+                                nested_comp = e.return_items.pop(COMPOSITION, None)
+                                node = e.return_items.pop(NODE, None)
+                                nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
+                                self._analyze_graph(context)
+                                keep_checking = True
+                            # Otherwise, return usual error
+                            else:
+                                raise CompositionError(e.error_value)
+                        else:
+                            assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} " \
+                                          f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
+                    # else:
+                    #     raise CompositionError(e.error_value)
+
             # This is set by add_node() automatically if there is an objective_mechanism;
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
             self.needs_update_controller = True
@@ -10497,6 +10529,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._show_graph._animate_execution(active_items, context)
 
     # endregion SHOW_GRAPH
+
 
 def get_compositions():
     """Return list of Compositions in caller's namespace."""
