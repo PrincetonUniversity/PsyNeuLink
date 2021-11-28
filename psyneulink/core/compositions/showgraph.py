@@ -1757,7 +1757,7 @@ class ShowGraph():
                                                                      show_types,
                                                                      show_dimensions)
                         if (projection.sender.owner not in composition.nodes
-                                and not controller.allow_direct_probes):
+                                and not controller.allow_probes):
                             num_nesting_levels = self.num_nesting_levels or 0
                             nested_comp = projection.sender.owner.composition
                             try:

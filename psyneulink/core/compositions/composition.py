@@ -2409,12 +2409,12 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
+    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, ERROR, \
     FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MESSAGE, \
-    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK,\
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH,\
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
@@ -4828,7 +4828,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         #                        f"({nc.name}) but without required {role}.")
                         raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
                                                f"({nc.name}) but without required {role}.",
-                                               MESSAGE='NOT_OUTPUT_NODE',
+                                               ERROR='NOT_OUTPUT_NODE',
                                                COMPOSITION=owning_composition,
                                                NODE=node)
                 # With the current implementation, there should never be multiple nested compositions that contain the
@@ -7217,9 +7217,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         keep_checking = False
                     except CompositionError as e:
                         # If error is because INTERNAL Node has been specified as monitor_for_control on controller
-                        if e.return_items.pop(MESSAGE,None) == 'NOT_OUTPUT_NODE':
-                            # If controller.allow_probes has also been specified, assign node NodeRole.OUTPUT
-                            if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes:
+                        if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
+                            # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
+                            if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes is True:
                                 nested_comp = e.return_items.pop(COMPOSITION, None)
                                 node = e.return_items.pop(NODE, None)
                                 nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
@@ -7229,7 +7229,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 raise CompositionError(e.error_value)
                         else:
-                            assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} " \
+                            assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
                                           f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
                     # else:
                     #     raise CompositionError(e.error_value)
