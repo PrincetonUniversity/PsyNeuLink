@@ -5405,27 +5405,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Return actual senders of all shadow Projections.
             """
 
-            original_senders = set()
-            for original_projection in projections:
-                def _get_correct_sender(comp):
-                    if original_projection in comp.projections:
-                        return original_projection.sender
-                    else:
-                        # Search for sender in INPUT Nodes of nested Compositions that are
-                        nested_input_comps = [nested_comp for nested_comp in comp._get_nested_compositions()
-                                        if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)]
-                        for comp in nested_input_comps:
-                            if original_projection in comp.projections:
-                                # Find sender in outer Composition
-                                #      MAP ENTRIES:  [SHADOWED PORT, [input_CIM InputPort, input_CIM OutputPort]]
-                                return [item[1][0]
-                                        for item in list(original_projection.sender.owner.port_map.items())
-                                        if item[1][1] is original_projection.sender][0].path_afferents[0].sender
-                            else:
-                                return _get_correct_sender(comp)
-                        return None
+            def _get_correct_sender(comp, shadowed_projection):
+                """Search down the hierarchy of nested Compositions for Projection to shadow"""
+                if shadowed_projection in comp.projections:
+                    return shadowed_projection.sender
+                else:
+                    # Search for sender in INPUT Nodes of nested Compositions that are themselves INPUT Nodes
+                    nested_input_comps = [nested_comp for nested_comp in comp._get_nested_compositions()
+                                    if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)]
+                    for comp in nested_input_comps:
+                        if shadowed_projection in comp.projections:
+                            return _get_sender_at_right_level(shadowed_projection)
+                        else:
+                            return _get_correct_sender(comp, shadowed_projection)
+                    return None
 
-                correct_sender = _get_correct_sender(self)
+            def _get_sender_at_right_level(proj):
+                """Search back up hierarchy of nested Compositions for sender at same level as **input_port**"""
+                #                                    WANT THIS ONE'S SENDER
+                #                       item[0]           item[1,0]            item[1,1]
+                #  CIM MAP ENTRIES:  [SHADOWED PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
+                sender_proj = [entry[1][0]
+                               for entry in list(proj.sender.owner.port_map.items())
+                               if entry[1][1] is proj.sender][0].path_afferents[0]
+                if input_port.owner in sender_proj.sender.owner.composition._all_nodes:
+                    return sender_proj.sender
+                else:
+                    return _get_sender_at_right_level(sender_proj)
+
+            original_senders = set()
+            for shadowed_projection in projections:
+                correct_sender = _get_correct_sender(self, shadowed_projection)
                 if correct_sender:
                     original_senders.add(correct_sender)
                     shadow_found = False
