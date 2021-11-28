@@ -3843,21 +3843,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:
+            param_value = p._get(context)
             try:
-                param_value = p._get(context)
-                try:
-                    param_value = param_value.__self__
-                except AttributeError:
-                    pass
+                param_value = param_value.__self__
+            except AttributeError:
+                pass
 
-                if isinstance(param_value, Component) and param_value is not self:
-                    self._parameter_components.add(param_value)
-            # ControlMechanism and GatingMechanism have Parameters that only
-            # throw these errors
-            except Exception as e:
-                # cannot import the specific exceptions due to circularity
-                if 'attribute is not implemented on' not in str(e):
-                    raise
+            if isinstance(param_value, Component) and param_value is not self:
+                self._parameter_components.add(param_value)
 
     @property
     def _dependent_components(self):
