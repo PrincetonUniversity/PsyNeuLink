@@ -195,7 +195,7 @@ class PredatorPreySimulator:
         # **************************************  CONOTROL APPARATUS ***********************************************************
         self.ocm = OptimizationControlMechanism(name='EVC',
                                                 state_features=[self.prey_pred_trial_input_mech, self.single_prey_trial_input_mech, self.double_prey_trial_input_mech],
-                                                # state_feature_function=FEATURE_FUNCTION,
+                                                # state_feature_functions=FEATURE_FUNCTION,
                                                 agent_rep=RegressionCFA(
                                update_weights=BayesGLM(mu_0=-0.0, sigma_0=0.0001),
                                prediction_terms=[PV.F, PV.C, PV.COST]
