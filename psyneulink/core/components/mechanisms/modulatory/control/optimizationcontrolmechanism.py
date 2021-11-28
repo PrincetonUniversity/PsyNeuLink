@@ -80,7 +80,7 @@ The table `below <OptimizationControlMechanism_Examples>` lists different
 parameterizations of OptimizationControlMechanism that implement various models of EVC Optimization.
 
 ### FIX: THROUGHOUT DOCUMENT, REWORD AS "optimizing control_allocation" RATHER THAN "maximizing" / "greatest"
-### FIX: RESTORE agent_rep from agent_rep
+### FIX: ADD REFERENCE TO agent_rep_type ATTRIBUTE
 
 COMMENT
 
@@ -171,6 +171,7 @@ with the following exceptions/additions, which are specific to the OptimizationC
                        ANY SPECIFIED THAT ARE NOT AN InputPort TO AN INPUT Node OF THE agent_rep COMPOSITION
                           WILL CAUSE AND ERROR TO BE GENERATED
                        ALL ARE ASSIGNED SHADOW_PROJECTIONS
+                  - ADD REFERENCE TO agent_rep_type ATTRIBUTE
 
                   HINTS:
                   1) IF ONLY SOME INPUTS ARE DESIRED FOR MODEL-BASED, USE Control FOR ATTENTIONAL REGULATION
@@ -272,8 +273,11 @@ ORIGINAL:
 .. _OptimizationControlMechanism_Feature_Function_Arg:
 
 COMMENT:
-    FIX: EXPLAIN THAT THIS WILL ONLY BE ASSIGNED TO state_input_ports FOR WHICH **state_features** ARE SPECIFIED
-         OTHERS WILL GET ASSIGNED DEFAULT InputPort FUNCTION
+    FIX: 11/26/21 EXPLAIN WHAT IS ACTUALLY FINALLY IMPLEMENTED:
+         PRESUMABLY THAT IF A SINGLE FUNCTION IS SPECIFIED, IT WILL BE APPLIED TO ALL state_input_ports
+         OTHERWISE A DICTIONARY MUST BE PROVIDED WITH A KEY FOR EACH state_input_port AND ITS FUNCTION AS THE VALUE
+         AND THIS CAN ONLY INCLUDE SPECIFIED state_features OR, IF THEY WERE AUTOMATICALY GENERATED, THEN
+         THE InputPorts OF ANY INPUT NODES ON THE agent_rep AND/OR ANY NESTED COMPOSITIONS WITHIN IT.
 COMMENT
 * **state_feature_function** -- specifies `function <InputPort>` of the InputPort created for each item listed in
   **state_features**.  By default, this is the identity function, that assigns the current value of the feature to the
@@ -555,7 +559,7 @@ COMMENT:
 Examples
 --------
 
-The table below lists `model-free <ModelFreeOptimizationControlMechanism>` and `model-based
+The table below lists `model-free <OptimizationControlMechanism_Model_Free>` and `model-based
 <ModelBasedOptimizationControlMechanism` subclasses of OptimizationControlMechanisms.
 
 .. table:: **Model-Free and Model-Based OptimizationControlMechanisms**
@@ -615,7 +619,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN, FUNCTION, INTERNAL_ONLY, \
+    CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN, FUNCTION, INTERNAL_ONLY, MODEL_FREE, MODEL_BASED,\
     OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -700,13 +704,15 @@ class OptimizationControlMechanism(ControlMechanism):
         of a `nested Composition <Composition_Nested>` (see `allow_probes <OptimizationControlMechanism.allow_probes>`
         for addition information).
 
-    agent_rep : None  : default Composition to which the OptimizationControlMechanism is assigned
+    agent_rep : None or Composition  : default None or Composition to which OptimizationControlMechanism is assigned
         specifies the `Composition` used by `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
         to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
         <OptimizationControlMechanism_State>`.  If a Composition is specified, it must be suitably configured
-        (see `above <OptimizationControlMechanism_Agent_Rep>` for additional details). If it is not specified, the
+        (see `agent_rep <OptimizationControlMechanism_Agent_Rep_Arg>` for additional details).  It can also be a
+        `CompositionFunctionApproximator`, or subclass of one, used for `model-free
+        <OptimizationControlMechanism_Model_Free>` optimization. If **agent_rep** is not specified, the
         OptimizationControlMechanism is placed in `deferred_init` status until it is assigned as the `controller
-        <Composition.controller>` of a Composition, at which that Composition is assigned as the `agent_rep
+        <Composition.controller>` of a Composition, at which time that Composition is assigned as the `agent_rep
         <agent_rep <OptimizationControlMechanism.agent_rep`.
 
     num_estimates : int : 1
@@ -807,8 +813,13 @@ class OptimizationControlMechanism(ControlMechanism):
     agent_rep : Composition
         determines the `Composition` used by the `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
         method to predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
-        <OptimizationControlMechanism_State>` (see `above <OptimizationControlMechanism_Agent_Rep>`for additional
-        details).
+        <OptimizationControlMechanism_State>`; see `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
+        for additional details.
+
+    agent_rep_type : None, MODEL_FREE or _MODEL_BASED
+        identifies whether the agent_rep is a `Composition` (*MODEL_BASED*), a `CompositionFunctionApproximator` or
+        one of its subclasses (*MODEL_FREE*), or it has not been assigned (None); see `Agent Representation and Types
+        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details.
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to
@@ -1310,7 +1321,11 @@ class OptimizationControlMechanism(ControlMechanism):
         #    this is because they can't be programmatically validated against the agent_rep's evaluate() method.
         #    (This contrast with model-based optimization, for which there must be a state_input_port for every
         #    InputPort of every INPUT node of the agent_rep (see OptimizationControlMechanism_Model_Based).
-        if self.agent_rep.componentCategory!='Composition':
+        # # MODIFIED 11/27/21 OLD:
+        # if self.agent_rep.componentCategory!='Composition':
+        # MODIFIED 11/27/21 NEW:
+        if self.agent_rep_type != MODEL_BASED:
+        # MODIFIED 11/27/21 END
             return
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
@@ -1456,7 +1471,7 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_function(function, function_params, context)
 
     def _instantiate_attributes_after_function(self, context=None):
-        """Instantiate OptimizationControlMechanism's OptimizatonFunction attributes"""
+        """Instantiate OptimizationControlMechanism's OptimizationFunction attributes"""
 
         super()._instantiate_attributes_after_function(context=context)
 
@@ -1507,7 +1522,11 @@ class OptimizationControlMechanism(ControlMechanism):
             self.agent_rep = self.agent_rep()
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
+        # # MODIFIED 11/27/21 OLD:
+        # if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
+        # MODIFIED 11/27/21 NEW:
+        if self.agent_rep_type == MODEL_FREE:
+        # MODIFIED 11/27/21 END
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
@@ -1964,6 +1983,16 @@ class OptimizationControlMechanism(ControlMechanism):
     #         return self.agent_rep._get_predicted_input()
     #     else:
     #         return np.array(np.array(self.variable[1:]).tolist())
+
+    @property
+    def agent_rep_type(self):
+        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
+        if isinstance(self.agent_rep, CompositionFunctionApproximator):
+            return MODEL_FREE
+        elif self.agent_rep.componentCategory=='Composition':
+            return MODEL_BASED
+        else:
+            return None
 
     @tc.typecheck
     def _parse_state_feature_specs(self, state_input_ports, feature_function, context=None):

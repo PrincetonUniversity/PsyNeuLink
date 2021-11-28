@@ -54,6 +54,7 @@ Class Reference
 """
 
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.keywords import COMPOSITION_FUNCTION_APPROXIMATOR
 from psyneulink.core.globals.context import Context
 
 __all__ = ['CompositionFunctionApproximator']
@@ -101,6 +102,8 @@ class CompositionFunctionApproximator(Composition):
         <ControlMechanism.control_allocation>`.
 
     """
+
+    componentCategory = COMPOSITION_FUNCTION_APPROXIMATOR
 
     def __init__(self, name=None, **param_defaults):
        # self.function = function
