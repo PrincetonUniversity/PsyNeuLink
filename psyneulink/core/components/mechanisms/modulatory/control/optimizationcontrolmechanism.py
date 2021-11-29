@@ -1205,9 +1205,10 @@ class OptimizationControlMechanism(ControlMechanism):
             if len(convert_to_list(state_feat_fcts))>1:
                 invalid_fct_specs = [fct_spec for fct_spec in state_feat_fcts if not fct_spec in state_feats]
                 if invalid_fct_specs:
-                    raise OptimizationControlMechanismError(f"The following specifications for the "
-                                                            f"'{STATE_FEATURE_FUNCTIONS}' arg of {self.name} do not "
-                                                            f"correspond to entries in its '{STATE_FEATURES}' arg.")
+                    raise OptimizationControlMechanismError(f"The following entries of the dict specified for "
+                                                            f"'{STATE_FEATURE_FUNCTIONS} of {self.name} have keys that "
+                                                            f"do not match any InputPorts specified in its "
+                                                            f"{STATE_FEATURES} arg: {invalid_fct_specs}.")
 
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts for state_features (with state_feature_functions if specified).
@@ -1407,18 +1408,13 @@ class OptimizationControlMechanism(ControlMechanism):
         # for input_port in input_ports_not_specified:
         for input_port in shadow_input_ports:
             input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
-            # FIX: 11/28/21:  NEED TO ADD state_feature_function(s) HERE
             # MODIFIED 11/28/21 NEW:
             params = {SHADOW_INPUTS: input_port,
                       INTERNAL_ONLY:True}
-            # Note: state_feature_functions is validated to have only a single function in _validate_params
+            # Note: state_feature_functions has been validated _validate_params
+            #       to have only a single function in for model-based agent_rep
             if self.state_feature_functions:
-                feature_function = self.state_feature_functions
-                if isinstance(feature_function, Function):
-                    feat_fct = copy.deepcopy(feature_function)
-                else:
-                    feat_fct = feature_function
-                params.update({FUNCTION: feat_fct})
+                params.update({FUNCTION: self._parse_state_feature_function(self.state_feature_functions)})
             # MODIFIED 11/28/21 END
             state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
                                                               port_type=InputPort,
@@ -2026,8 +2022,14 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             return None
 
+    def _parse_state_feature_function(self, feature_function):
+        if isinstance(feature_function, Function):
+            return copy.deepcopy(feature_function)
+        else:
+            return feature_function
+
     @tc.typecheck
-    def _parse_state_feature_specs(self, state_input_ports, feature_function, context=None):
+    def _parse_state_feature_specs(self, state_input_ports, feature_functions, context=None):
         """Parse entries of state_features into InputPort spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
@@ -2040,18 +2042,20 @@ class OptimizationControlMechanism(ControlMechanism):
         parsed_features = []
 
         for spec in _state_input_ports:
-            spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
-            spec[PARAMS].update({INTERNAL_ONLY:True,
+            parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
+            parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
                                  PROJECTIONS:None})
-            if feature_function:
-                if isinstance(feature_function, Function):
-                    feat_fct = copy.deepcopy(feature_function)
+            # MODIFIED 11/28/21 NEW:
+            if feature_functions:
+                if isinstance(feature_functions, dict) and spec in feature_functions:
+                    feat_fct = feature_functions.pop(spec)
                 else:
-                    feat_fct = feature_function
-                spec.update({FUNCTION: feat_fct})
-            spec = [spec]   # so that extend works below
+                    feat_fct = feature_functions
+                parsed_spec.update({FUNCTION: self._parse_state_feature_function(feat_fct)})
+            # MODIFIED 11/28/21 END
+            parsed_spec = [parsed_spec] # so that extend works below
 
-            parsed_features.extend(spec)
+            parsed_features.extend(parsed_spec)
 
         return parsed_features
 
