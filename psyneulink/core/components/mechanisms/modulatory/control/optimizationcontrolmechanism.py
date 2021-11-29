@@ -1408,11 +1408,18 @@ class OptimizationControlMechanism(ControlMechanism):
         for input_port in shadow_input_ports:
             input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
             # FIX: 11/28/21:  NEED TO ADD state_feature_function(s) HERE
+            # MODIFIED 11/28/21 NEW:
             params = {SHADOW_INPUTS: input_port,
                       INTERNAL_ONLY:True}
             # Note: state_feature_functions is validated to have only a single function in _validate_params
             if self.state_feature_functions:
-                params.update({FUNCTION: self.state_feature_functions})
+                feature_function = self.state_feature_functions
+                if isinstance(feature_function, Function):
+                    feat_fct = copy.deepcopy(feature_function)
+                else:
+                    feat_fct = feature_function
+                params.update({FUNCTION: feat_fct})
+            # MODIFIED 11/28/21 END
             state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
                                                               port_type=InputPort,
                                                               owner=self,
