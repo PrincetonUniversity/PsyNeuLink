@@ -628,11 +628,12 @@ from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_arr
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
-    'AGENT_REP', 'STATE_FEATURES', 'RANDOMIZATION_CONTROL_SIGNAL'
+    'AGENT_REP', 'STATE_FEATURES', 'STATE_FEATURE_FUNCTIONS', 'RANDOMIZATION_CONTROL_SIGNAL'
 ]
 
 AGENT_REP = 'agent_rep'
 STATE_FEATURES = 'state_features'
+STATE_FEATURE_FUNCTIONS = 'state_feature_functions'
 RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
 
 def _parse_state_feature_values_from_variable(variable):
@@ -658,7 +659,7 @@ class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                    \
         agent_rep=None,                                 \
         state_features=None,                            \
-        state_feature_functions=None,                    \
+        state_feature_functions=None,                   \
         monitor_for_control=None,                       \
         allow_probes=False,                             \
         objective_mechanism=None,                       \
@@ -1095,7 +1096,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def __init__(self,
                  agent_rep=None,
                  state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
-                 state_feature_functions: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 state_feature_functions: tc.optional(tc.optional(tc.any(dict, is_function_type))) = None,
                  allow_probes:tc.any(bool, tc.enum(DIRECT)) = False,  # FIX: MAKE THIS A PARAMETER AND THEN SET TO None
                  function=None,
                  num_estimates = None,
@@ -1177,13 +1178,36 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.composition import Composition
         if request_set[AGENT_REP] is None:
-            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} must "
+            raise OptimizationControlMechanismError(f"The '{AGENT_REP}' arg of an {self.__class__.__name__} must "
                                                     f"be specified and be a {Composition.__name__}")
 
         elif not (isinstance(request_set[AGENT_REP], Composition)
                   or (isinstance(request_set[AGENT_REP], type) and issubclass(request_set[AGENT_REP], Composition))):
-            raise OptimizationControlMechanismError(f"The {repr(AGENT_REP)} arg of an {self.__class__.__name__} "
+            raise OptimizationControlMechanismError(f"The '{AGENT_REP}' arg of an {self.__class__.__name__} "
                                                     f"must be either a {Composition.__name__} or a sublcass of one")
+
+        elif request_set[STATE_FEATURE_FUNCTIONS]:
+            state_feats = request_set.pop(STATE_FEATURES, None)
+            state_feat_fcts = request_set.pop(STATE_FEATURE_FUNCTIONS, None)
+            # If no or only one item is specified in state_features, only one state_function is allowed
+            if ((not state_feats or len(convert_to_list(state_feats))==1)
+                    and len(convert_to_list(state_feat_fcts))!=1):
+                raise OptimizationControlMechanismError(f"Only one function is allowed to be specified for "
+                                                        f"the '{STATE_FEATURE_FUNCTIONS}' arg of {self.name} "
+                                                        f"if either no only one items is specified for its "
+                                                        f"'{STATE_FEATURES}' arg.")
+            if len(convert_to_list(state_feat_fcts))>1 and not isinstance(state_feat_fcts, dict):
+                raise OptimizationControlMechanismError(f"The '{STATE_FEATURES}' arg of {self.name} contains more "
+                                                        f"than one item, so its '{STATE_FEATURE_FUNCTIONS}' arg "
+                                                        f"must be either only a single function (applied to all "
+                                                        f"{STATE_FEATURES}) or a dict with entries of the form "
+                                                        f"<state_feature>:<function>.")
+            if len(convert_to_list(state_feat_fcts))>1:
+                invalid_fct_specs = [fct_spec for fct_spec in state_feat_fcts if not fct_spec in state_feats]
+                if invalid_fct_specs:
+                    raise OptimizationControlMechanismError(f"The following specifications for the "
+                                                            f"'{STATE_FEATURE_FUNCTIONS}' arg of {self.name} do not "
+                                                            f"correspond to entries in its '{STATE_FEATURES}' arg.")
 
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts for state_features (with state_feature_functions if specified).
@@ -1218,11 +1242,11 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 11/3/21 :
         #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
         #    ITS PRIMARY IS USED (SEE SCRATCH PAD FOR EXAMPLES)
-
         if not self.state_features:
-            # Warn if there are no state_features specified for model-free (agent_rep = CompositionFunctionApproximator)
-            # (for model-based optimization, state_input_ports are assigned in _update_state_input_ports_for_controller)
-            if isinstance(self.agent_rep, CompositionFunctionApproximator):
+            # For model-free (agent_rep = CompositionFunctionApproximator), warn if no state_features specified.
+            # Note: for model-based optimization, state_input_ports and any state_feature_functions specified
+            #       are assigned in _update_state_input_ports_for_controller.
+            if self.agent_rep_type == MODEL_FREE:
                 warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
 
         else:
@@ -1296,21 +1320,26 @@ class OptimizationControlMechanism(ControlMechanism):
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
 
-        Ensure that all existing state_input_ports are for InputPorts of INPUT Nodes of agent_rep;
-            raises an error if any receive a Projection that is not a shadow Projection from an INPUT Node of agent_rep.
-        Ensure that there is a state_input_port for every InputPort of every INPUT Node of agent_rep,
-            with corresponding Projections; any necessary state_input_ports or Projections that don't exist are created.
-        Call agent_rep._instantiate_controller_shadow_projections() to instantiate Projections to state_input_ports
+        If no agent_rep has been specified or it is model-free, return
+            (note: validation of state_features specified for model-free optimization is up to the
+            CompositionFunctionApproximator)
 
-        Note:
-            There should already be state_input_ports for any **state_features** specified in the constructor,
-                (presumably used to assign a state_feature_functions).
-            Any state_input_ports created here (i.e., not specified by **state_features** in the constructor)
-                are assigned the default state_feature_functions.
+        For model-based optimization (agent_rep is a Composition):
+
+        - ensure that state_input_ports for all specified state_features are for InputPorts of INPUT Nodes of agent_rep;
+          raises an error if any receive a Projection that is not a shadow Projection from an INPUT Node of agent_rep
+          (note: there should already be state_input_ports for any **state_features** specified in the constructor).
+
+        - if no state_features specified, assign a state_input_port for every InputPort of every INPUT Node of agent_rep
+          (note: shadow Projections for all state_input_ports are created in Composition._update_shadow_projections()).
+
+        - assign state_feature_functions to relevant state_input_ports (same function for all if no state_features
+          are specified or only one state_function is specified;  otherwise, use dict for specifications).
         """
 
         # FIX: 11/15/21 - REPLACE WITH ContextFlags.PROCESSING ??
         #               TRY TESTS WITHOUT THIS
+        # FIX: 11/28/21 - NEED TO ADD ASSIGNMENT OF state_feature_functions HERE
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete)
         if context.flags & ContextFlags.METHOD:
@@ -1321,11 +1350,7 @@ class OptimizationControlMechanism(ControlMechanism):
         #    this is because they can't be programmatically validated against the agent_rep's evaluate() method.
         #    (This contrast with model-based optimization, for which there must be a state_input_port for every
         #    InputPort of every INPUT node of the agent_rep (see OptimizationControlMechanism_Model_Based).
-        # # MODIFIED 11/27/21 OLD:
-        # if self.agent_rep.componentCategory!='Composition':
-        # MODIFIED 11/27/21 NEW:
         if self.agent_rep_type != MODEL_BASED:
-        # MODIFIED 11/27/21 END
             return
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
@@ -1366,9 +1391,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"are either not INPUT nodes or missing from the Composition.")
             return
 
-        # Assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
-        # FIX: 11/24/21 - ONLY ADD IF MODEL-BASED AND NOTHING HAS BEEN SPECIFIED BY USER;  OTHERWISE, LEAVE AS-IS
-        #                 ADD PROPERTY THAT RETURNS 'model-free' or 'model-based' THAT CAN BE USED HERE.
+        # Model-based agent_rep, but no state_features have been specified,
+        #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
         shadow_input_ports = []
         for node in _get_all_input_nodes(self.agent_rep):
             for input_port in node.input_ports:
@@ -1383,12 +1407,17 @@ class OptimizationControlMechanism(ControlMechanism):
         # for input_port in input_ports_not_specified:
         for input_port in shadow_input_ports:
             input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
+            # FIX: 11/28/21:  NEED TO ADD state_feature_function(s) HERE
+            params = {SHADOW_INPUTS: input_port,
+                      INTERNAL_ONLY:True}
+            # Note: state_feature_functions is validated to have only a single function in _validate_params
+            if self.state_feature_functions:
+                params.update({FUNCTION: self.state_feature_functions})
             state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
                                                               port_type=InputPort,
                                                               owner=self,
                                                               reference_value=input_port.value,
-                                                              params={SHADOW_INPUTS: input_port,
-                                                                      INTERNAL_ONLY:True},
+                                                              params=params,
                                                               context=local_context))
         self.add_ports(state_input_ports_to_add,
                              update_variable=False,
@@ -1522,11 +1551,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.agent_rep = self.agent_rep()
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        # # MODIFIED 11/27/21 OLD:
-        # if (isinstance(self.agent_rep, CompositionFunctionApproximator)):
-        # MODIFIED 11/27/21 NEW:
         if self.agent_rep_type == MODEL_FREE:
-        # MODIFIED 11/27/21 END
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
