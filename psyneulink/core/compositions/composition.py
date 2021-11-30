@@ -3580,8 +3580,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway_arg_str = " in " + context.string
             raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
 
-        # self._update_shadows_dict(node)
-
         try:
             node._analyze_graph(context = context)
         except AttributeError:
@@ -4876,54 +4874,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 break
         return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
-    def _update_shadows_dict(self, node):
-        """Update Composition's shadows dict with status of node as shadowed or shadower.
-
-        Shadows dict has entries each key of which is a node being shadowed,
-        and its value is a list of its shadower nodes:
-           {shadowed node : [shadower node, shadower node...]}
-
-        Method adds entry for node if it doesn't exist (as a shadowed node),
-            and adds it to the entry of any node it shadows.
-        """
-
-        # Create entry (as shadowed node) if it doesn't exist
-        if node not in self.shadows:
-            self.shadows[node] = []
-
-        # FIX: 11/29/21 - NEEDS TO SHADOW CIM AT LEVEL OF CONTROLLER FOR NESTED NODES
-        #                 GET FROM _update_shadow_projections
-        # MAY NOT BE NEEDED IF add_projections
-        # Get dict of nested nodes, with entries of the form {nested_node:Composition}
-        nested_nodes = dict(self._get_nested_nodes())
-
-        # Assign node as shadower to entries of nodes it shadows
-        shadower = node
-        for input_port in shadower.input_ports:
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                shadowed = input_port.shadow_inputs.owner
-                # If shadowing a CIM, assign Composition as the shadowed node
-                if isinstance(shadowed, CompositionInterfaceMechanism):
-                    shadowed = shadowed.composition
-                # If shadowed node is in a nested Composition, assign it to the shadows dict of the nested Composition
-                if shadowed in nested_nodes:
-                    shadowed = nested_nodes[shadowed]
-                    # MODIFIED 11/29/21 NEW:
-                    # while (shadowed not in self.nodes):
-                    #     for nested_comp in comp.nodes if isinstance(nested_comp, Composition):
-                    #         if shadowed in nested_comp.nodes:
-                    #             shadowed = nested_comp
-                    # MODIFIED 11/29/21 END
-                # Ignore if the node being shadowed is not yet in the Composition,
-                #     and it is being shadowed by a controller that is in deferred_init
-                if (shadower is self.controller
-                        and self._controller_initialization_status == ContextFlags.DEFERRED_INIT):
-                    if shadowed not in self.nodes:
-                        continue
-                # Add shadower to entry for shadowed
-                if shadower not in self.shadows[shadowed]:
-                    self.shadows[shadowed].append(shadower)
-
     # endregion NODES
 
     # ******************************************************************************************************************
@@ -5485,17 +5435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
             return original_senders
 
-        # # # MODIFIED 11/29/21 OLD:
-        # shadowed_ports = [port for node in self.nodes for port in node.input_ports if port.shadow_inputs]
-        # if self.controller:
-        #     # FIX: 11/29/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        #     shadowed_ports.extend([input_port for input_port
-        #                            in self.controller.input_ports[self.controller.num_outcome_input_ports:]
-        #                            if input_port.shadow_inputs])
-        # MODIFIED 11/29/21 NEW:
-        # Use ._all_nodes to include controller if the Composition has one
         shadowed_ports = [port for node in self._all_nodes for port in node.input_ports if port.shadow_inputs]
-        # MODIFIED 11/29/21 END
 
         for input_port in shadowed_ports:
             senders = _instantiate_missing_shadow_projections(input_port,
@@ -7317,7 +7257,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: 11/15/21 - SHOULD THIS METHOD BE MOVED HERE (TO COMPOSITION) FROM ControlMechanism
         controller._activate_projections_for_compositions(self)
         self._analyze_graph(context=context)
-        # self._update_shadows_dict(controller)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
 

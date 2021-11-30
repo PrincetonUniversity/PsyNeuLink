@@ -5781,6 +5781,7 @@ class TestShadowInputs:
 
         assert A.value == [[1.0]]
         assert B.value == [[1.0]]
+        # FIX: 11/29/21 - REPLACE WITH TEST FOR PROJECTIONS
         assert comp.shadows[A] == [B]
 
         C = ProcessingMechanism(name='C')
@@ -5808,6 +5809,7 @@ class TestShadowInputs:
 
         assert A.value == [[2.0]]
         assert np.allclose(B.value, [[1.0], [2.0]])
+        # FIX: 11/29/21 - REPLACE WITH TEST FOR PROJECTIONS
         assert comp.shadows[A] == [B]
 
         C = ProcessingMechanism(name='C')
