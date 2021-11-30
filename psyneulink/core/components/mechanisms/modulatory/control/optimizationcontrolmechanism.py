@@ -2048,6 +2048,7 @@ class OptimizationControlMechanism(ControlMechanism):
         parsed_features = []
 
         for spec in _state_input_ports:
+            # MODIFIED 11/29/21 NEW:
             # If optimization is model-free, assume that shadowing of a Mechanism spec is for its primary InputPort
             if isinstance(spec, Mechanism) and self.agent_rep_type == MODEL_BASED:
                 # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
@@ -2058,6 +2059,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                             f"more than one InputPort; a specific one or subset "
                                                             f"of them must be specified.")
                 spec = spec.input_port
+            # MODIFIED 11/29/21 END
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
                                         PROJECTIONS:None})

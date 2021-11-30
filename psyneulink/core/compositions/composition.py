@@ -4110,10 +4110,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    this avoids unnecessary calls on repeated calls to run().
         if (self.controller
                 and self.needs_update_controller
-                # # MODIFIED 11/29/21 OLD:
-                # and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
-                # MODIFIED 11/29/21 NEW:
-                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
+                # MODIFIED 11/29/21 OLD:
+                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
+                # # MODIFIED 11/29/21 NEW:
+                # and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
                 # MODIFIED 11/29/21 END
             if hasattr(self.controller, 'state_input_ports'):
                 self.controller._update_state_input_ports_for_controller(context=context)
@@ -4893,6 +4893,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # FIX: 11/29/21 - NEEDS TO SHADOW CIM AT LEVEL OF CONTROLLER FOR NESTED NODES
         #                 GET FROM _update_shadow_projections
+        # MAY NOT BE NEEDED IF add_projections
         # Get dict of nested nodes, with entries of the form {nested_node:Composition}
         nested_nodes = dict(self._get_nested_nodes())
 
@@ -5209,18 +5210,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
 
-        # FIX: 11/29/21 - THIS NEEDS TO BE ADAPTED TO DEAL WITH NESTED COMOPSITIONS -- SEE _update_shadow_projections
-        # MAYBE JSUT CALL IT RATHER THAN TRYING TO DUPLICATE IT HERE??
-        # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
-        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
-        if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
-            for shadow in self.shadows[receiver_mechanism]:
-                for input_port in shadow.input_ports:
-                    if input_port.shadow_inputs is not None:
-                        if input_port.shadow_inputs.owner == receiver:
-                            # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                            self.add_projection(MappingProjection(sender=sender, receiver=input_port),
-                                                sender_mechanism, shadow)
+        # MODIFIED 11/29/21 OLD:
+        # # FIX: 11/29/21 - THIS NEEDS TO BE ADAPTED TO DEAL WITH NESTED COMOPSITIONS -- SEE _update_shadow_projections
+        # #                 TRY REMOVING: ??COVERED BY _update_shadow_projections??
+        # # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
+        # # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
+        # if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
+        #     for shadow in self.shadows[receiver_mechanism]:
+        #         for input_port in shadow.input_ports:
+        #             if input_port.shadow_inputs is not None:
+        #                 if input_port.shadow_inputs.owner == receiver:
+        #                     # TBI: Copy the projection type/matrix value of the projection that is being shadowed
+        #                     self.add_projection(MappingProjection(sender=sender, receiver=input_port),
+        #                                         sender_mechanism, shadow)
+        # MODIFIED 11/29/21 END
+
         # if feedback in {True, FEEDBACK}:
         #     self.feedback_senders.add(sender_mechanism)
         #     self.feedback_receivers.add(receiver_mechanism)
@@ -5481,16 +5485,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
             return original_senders
 
-        # # MODIFIED 11/29/21 OLD:
-        shadowed_ports = [port for node in self.nodes for port in node.input_ports if port.shadow_inputs]
-        if self.controller:
-            # FIX: 11/29/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-            shadowed_ports.extend([input_port for input_port
-                                   in self.controller.input_ports[self.controller.num_outcome_input_ports:]
-                                   if input_port.shadow_inputs])
-        # # MODIFIED 11/29/21 NEW:
-        # # Use ._all_nodes to include controller if the Composition has one
-        # shadowed_ports = [port for node in self._all_nodes for port in node.input_ports if port.shadow_inputs]
+        # # # MODIFIED 11/29/21 OLD:
+        # shadowed_ports = [port for node in self.nodes for port in node.input_ports if port.shadow_inputs]
+        # if self.controller:
+        #     # FIX: 11/29/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
+        #     shadowed_ports.extend([input_port for input_port
+        #                            in self.controller.input_ports[self.controller.num_outcome_input_ports:]
+        #                            if input_port.shadow_inputs])
+        # MODIFIED 11/29/21 NEW:
+        # Use ._all_nodes to include controller if the Composition has one
+        shadowed_ports = [port for node in self._all_nodes for port in node.input_ports if port.shadow_inputs]
         # MODIFIED 11/29/21 END
 
         for input_port in shadowed_ports:
