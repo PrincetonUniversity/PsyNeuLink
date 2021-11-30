@@ -1211,10 +1211,12 @@ class OptimizationControlMechanism(ControlMechanism):
                                                             f"do not match any InputPorts specified in its "
                                                             f"{STATE_FEATURES} arg: {invalid_fct_specs}.")
 
+    # FIX: CONSIDER GETTING RID OF THIS METHOD ENTIRELY, AND LETTING state_input_ports
+    #      BE HANDLED ENTIRELY BY _update_state_input_ports_for_controller
     def _instantiate_input_ports(self, context=None):
         """Instantiate InputPorts for state_features (with state_feature_functions if specified).
 
-        This instantiates the OptimizationCOntrolMechanism's `state_input_ports;
+        This instantiates the OptimizationControlMechanism's `state_input_ports;
              these are used to provide input to the agent_rep when its evaluate method is called
              (see Composition._build_predicted_inputs_dict).
         The OptimizationCOntrolMechanism's outcome_input_ports are instantiated by
@@ -1252,6 +1254,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
 
         else:
+            # FIX: 11/29/21: DISALLOW FOR MODEL_BASED
             # Implement any specified state_features
             state_input_ports_specs = self._parse_state_feature_specs(self.state_features,
                                                                       self.state_feature_functions)
@@ -1263,7 +1266,7 @@ class OptimizationControlMechanism(ControlMechanism):
         super()._instantiate_input_ports(state_input_ports_specs, context=context)
 
         # Assign to self.state_input_ports attribute
-        start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
+        start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         stop = start + len(state_input_ports_specs) if state_input_ports_specs else 0
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
         self.state_input_ports = ContentAddressableList(component_type=InputPort,
@@ -1341,11 +1344,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # FIX: 11/15/21 - REPLACE WITH ContextFlags.PROCESSING ??
         #               TRY TESTS WITHOUT THIS
-        # FIX: 11/28/21 - NEED TO ADD ASSIGNMENT OF state_feature_functions HERE
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete)
+        # MODIFIED 11/29/21 OLD:
         if context.flags & ContextFlags.METHOD:
             return
+        # MODIFIED 11/29/21 END
 
         # Don't bother for model-free optimization (see OptimizationControlMechanism_Model_Free)
         #    since state_input_ports specified or model-free optimization are entirely the user's responsibility;
@@ -1376,8 +1380,9 @@ class OptimizationControlMechanism(ControlMechanism):
                           f"configured as a model-based {self.__class__.__name__} (i.e, one that uses a "
                           f"{Composition.componentType} as its agent_rep).  This overrides automatic assignment of "
                           f"all inputs to its agent_rep ({self.agent_rep.name}) as the 'state_features'; only the "
-                          f"ones specified will be used ({self.state_features}).  Remove this specification from the "
-                          f"consructor for {self.name} if the automatic behavior is desired.")
+                          f"ones specified will be used ({self.state_features}), and they must match the shape of the "
+                          f"input to {self.agent_rep.name} when it is run.  Remove this specification from the "
+                          f"constructor for {self.name} if automatic assignment is preferred.")
 
             # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep and/or any nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
@@ -2030,7 +2035,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return feature_function
 
     @tc.typecheck
-    def _parse_state_feature_specs(self, state_input_ports, feature_functions, context=None):
+    def _parse_state_feature_specs(self, state_features, feature_functions, context=None):
         """Parse entries of state_features into InputPort spec dictionaries
         Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
@@ -2038,14 +2043,24 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries
         """
 
-        _state_input_ports = _parse_shadow_inputs(self, state_input_ports)
+        _state_input_ports = _parse_shadow_inputs(self, state_features)
 
         parsed_features = []
 
         for spec in _state_input_ports:
+            # If optimization is model-free, assume that shadowing of a Mechanism spec is for its primary InputPort
+            if isinstance(spec, Mechanism) and self.agent_rep_type == MODEL_BASED:
+                # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
+                #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
+                if len(spec.input_ports)!=1:
+                    raise OptimizationControlMechanismError(f"A Mechanism ({spec.name}) is specified in the "
+                                                            f"'{STATE_FEATURES}' arg for {self.name} that has "
+                                                            f"more than one InputPort; a specific one or subset "
+                                                            f"of them must be specified.")
+                spec = spec.input_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
-                                 PROJECTIONS:None})
+                                        PROJECTIONS:None})
             # MODIFIED 11/28/21 NEW:
             if feature_functions:
                 if isinstance(feature_functions, dict) and spec in feature_functions:
