@@ -3580,7 +3580,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway_arg_str = " in " + context.string
             raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
 
-        self._update_shadows_dict(node)
+        # self._update_shadows_dict(node)
 
         try:
             node._analyze_graph(context = context)
@@ -7317,7 +7317,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # FIX: 11/15/21 - SHOULD THIS METHOD BE MOVED HERE (TO COMPOSITION) FROM ControlMechanism
         controller._activate_projections_for_compositions(self)
         self._analyze_graph(context=context)
-        self._update_shadows_dict(controller)
+        # self._update_shadows_dict(controller)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
 
