@@ -3345,8 +3345,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         port_map=self.output_CIM_ports)
         self.cims = [self.input_CIM, self.parameter_CIM, self.output_CIM]
 
-        self.shadows = {}
-
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
 

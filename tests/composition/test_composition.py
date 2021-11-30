@@ -5782,7 +5782,9 @@ class TestShadowInputs:
         assert A.value == [[1.0]]
         assert B.value == [[1.0]]
         # FIX: 11/29/21 - REPLACE WITH TEST FOR PROJECTIONS
-        assert comp.shadows[A] == [B]
+        # assert comp.shadows[A] == [B]
+
+
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
