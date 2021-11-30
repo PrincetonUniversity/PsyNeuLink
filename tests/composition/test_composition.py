@@ -5781,10 +5781,11 @@ class TestShadowInputs:
 
         assert A.value == [[1.0]]
         assert B.value == [[1.0]]
-        # FIX: 11/29/21 - REPLACE WITH TEST FOR PROJECTIONS
-        # assert comp.shadows[A] == [B]
 
-
+        # Since B is both an INPUT Node and also shadows A, it should have two afferent Projections,
+        #   one from it own OutputPort of the Composition's input_CIM, and another from the one for A
+        assert len(B.path_afferents)==2
+        assert B.input_port.path_afferents[1].sender is A.input_port.path_afferents[0].sender
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
@@ -5811,16 +5812,20 @@ class TestShadowInputs:
 
         assert A.value == [[2.0]]
         assert np.allclose(B.value, [[1.0], [2.0]])
-        # FIX: 11/29/21 - REPLACE WITH TEST FOR PROJECTIONS
-        assert comp.shadows[A] == [B]
+
+        assert len(B.input_ports)==2
+        assert len(B.input_ports[0].path_afferents)==1
+        assert len(B.input_ports[1].path_afferents)==1
+        assert B.input_ports[0].path_afferents[0].sender is A.input_ports[0].path_afferents[0].sender
+        assert B.input_ports[1].path_afferents[0].sender is A.output_ports[0]
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
 
         comp.run(inputs={C: 1.5})
         assert A.value == [[3.0]]
-        assert np.allclose(B.value, [[1.5], [3.0]])
         assert C.value == [[1.5]]
+        assert np.allclose(B.value, [[1.5], [3.0]])
 
         # Since B is shadowing A, its old projection from the CIM should be deleted,
         # and a new projection from C should be added
