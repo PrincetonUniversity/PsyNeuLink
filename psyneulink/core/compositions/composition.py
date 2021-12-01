@@ -4031,7 +4031,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_invalid_aux_components(self, node):
         """
-        Return any Components in aux_components for a node that references items not in this Composition
+        Return any Components in aux_components for a node that references items not (yet) in this Composition
         """
         # FIX 11/20/21: THIS APPEARS TO ONLY HANDLE PROJECTIONS AND NOT COMPOSITIONS OR MECHANISMS
         #  (OTHER THAN THE COMPOSITION'S controller AND ITS objective_mechanism)
@@ -4083,7 +4083,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver_node = component.receiver.owner.composition
                     else:
                         receiver_node = component.receiver.owner
-                if not all([sender_node in valid_nodes, receiver_node in valid_nodes]):
+                # Defer instantiation of all shadow Projections until call to _update_shadow_projections()
+                if (not all([sender_node in valid_nodes, receiver_node in valid_nodes])
+                        or (hasattr(component, SHADOW_INPUTS) and component.receiver.shadow_inputs)):
                     invalid_components.append(component)
         if invalid_components:
             return invalid_components
