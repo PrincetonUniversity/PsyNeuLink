@@ -4085,7 +4085,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver_node = component.receiver.owner
                 # Defer instantiation of all shadow Projections until call to _update_shadow_projections()
                 if (not all([sender_node in valid_nodes, receiver_node in valid_nodes])
-                        or (hasattr(component, SHADOW_INPUTS) and component.receiver.shadow_inputs)):
+                        or (hasattr(component.receiver, SHADOW_INPUTS) and component.receiver.shadow_inputs)):
                     invalid_components.append(component)
         if invalid_components:
             return invalid_components
