@@ -5433,12 +5433,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
             return original_senders
 
-        shadowed_ports = [port for node in self._all_nodes for port in node.input_ports if port.shadow_inputs]
-
-        for input_port in shadowed_ports:
-            senders = _instantiate_missing_shadow_projections(input_port,
-                                                              input_port.shadow_inputs.path_afferents)
-            for shadow_projection in input_port.path_afferents:
+        for shadowing_port, shadowed_port in self.shadowing_dict.items():
+            senders = _instantiate_missing_shadow_projections(shadowing_port,
+                                                              shadowed_port.path_afferents)
+            for shadow_projection in shadowing_port.path_afferents:
                 if shadow_projection.sender not in senders:
                     self.remove_projection(shadow_projection)
 
@@ -10301,17 +10299,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def input_ports(self):
-        """Returns all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return all InputPorts that belong to the Input CompositionInterfaceMechanism"""
         return self.input_CIM.input_ports
 
     @property
     def input_port(self):
-        """Returns the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
+        """Return the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
         return self.input_CIM.input_ports[0]
 
     @property
     def input_values(self):
-        """Returns values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
         return self.get_input_values()
 
     def get_input_values(self, context=None):
@@ -10319,21 +10317,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def output_ports(self):
-        """Returns all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
+        """Return all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports
 
     @property
     def output_values(self):
-        """Returns values of all OutputPorts that belong to the Output CompositionInterfaceMechanism in the most recently executed context"""
+        """Return values of all OutputPorts that belong to the Output CompositionInterfaceMechanism in the most recently executed context"""
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
 
-    # @property
-    # def mechanisms(self):
-    #     return MechanismList(self, [mech for mech in self.nodes
-    #                                 if isinstance(mech, Mechanism)])
+    @property
+    def shadowing_dict(self):
+        """Return dict with shadowing ports as the keys and the ports they shadow as values."""
+        return {port:port.shadow_inputs for node in self._all_nodes for port in node.input_ports if port.shadow_inputs}
 
     @property
     def mechanisms(self):
@@ -10369,7 +10367,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def default_external_input_values(self):
-        """Returns the default values of all external InputPorts that belong to the
+        """Return the default values of all external InputPorts that belong to the
         Input CompositionInterfaceMechanism
         """
 
@@ -10404,7 +10402,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def output_port(self):
-        """Returns the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
+        """Return the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports[0]
 
     @property
