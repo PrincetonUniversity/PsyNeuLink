@@ -1384,43 +1384,31 @@ class OptimizationControlMechanism(ControlMechanism):
                           f"input to {self.agent_rep.name} when it is run.  Remove this specification from the "
                           f"constructor for {self.name} if automatic assignment is preferred.")
 
-            # MODIFIED 12/1/21 OLD:
-            # invalid_state_features = [input_port for input_port in self.state_input_ports
-            #                           if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
-            #                               and not any([input_port.shadow_inputs.owner in
-            #                                            [nested_comp.input_CIM for nested_comp in
-            #                                             self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
-            #                                             if isinstance(nested_comp, Composition)]]))]
-            # MODIFIED 12/1/21 NEW:
-            # invalid_state_features = [input_port for input_port in self.state_input_ports
-            #                           if (not (input_port.shadow_inputs.owner in
-            #                                   [n[0] for n in self.agent_rep._get_nested_nodes()])
-            #                               and not any([input_port.shadow_inputs.owner in
-            #                                            [nested_comp.input_CIM for nested_comp in
-            #                                             self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
-            #                                             if isinstance(nested_comp, Composition)]]))]
             comp = self.agent_rep
-            # Ensure that all specified state_input_ports are in agent_rep or one of its nested Compositions
+            # Ensure that all InputPorts shadowed by specified state_input_ports
+            #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
                                       if (not (input_port.shadow_inputs.owner in
-                                               [n[0] for n in comp._get_nested_nodes()])
-                                          or (isinstance(input_port.shadow_inputs.owner,
-                                                         CompositionInterfaceMechanism)
-                                              and not input_port.shadow_inputs.owner.composition in
-                                                      comp._get_nested_compositions()))]
+                                                list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
+                                          and (not [input_port.shadow_inputs.owner.composition is x for x in
+                                                      comp._get_nested_compositions()
+                                               if isinstance(input_port.shadow_inputs.owner,
+                                                         CompositionInterfaceMechanism)]))]
             if any(invalid_state_features):
                 raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                         f"optimization of {self.agent_rep.name}, has 'state_features' "
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
                                                         f"are missing from the Composition or any nested within it.")
 
-            # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep or of a nested Composition
+            # Ensure that all  InputPorts shadowed by specified state_input_ports
+            #    reference INPUT Nodes of agent_rep or of a nested Composition
             invalid_state_features = [input_port for input_port in self.state_input_ports
                                       if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
-                                          and not (input_port.shadow_inputs.owner.composition in
-                                                   [nested_comp for nested_comp in comp._get_nested_compositions()
-                                                    if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])
-                                          )]
+                                          and (isinstance(input_port.shadow_inputs.owner,
+                                                         CompositionInterfaceMechanism)
+                                               and not (input_port.shadow_inputs.owner.composition in
+                                                        [nested_comp for nested_comp in comp._get_nested_compositions()
+                                                         if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])))]
             if any(invalid_state_features):
                 raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                         f"optimization of {self.agent_rep.name}, has 'state_features' "

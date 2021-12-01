@@ -268,16 +268,9 @@ class TestControlSpecification:
                 ])
         )
 
-        # text = 'The controller of ocomp has been specified to project to deferred, but deferred is ' \
-        #        'not in ocomp or any of its nested Compositions. This projection will be deactivated ' \
-        #        'until deferred is added to ocomp in a compatible way.'
-        # with pytest.warns(UserWarning, match=text):
-        # ocomp.show_graph(show_controller=True, show_cim=True)
-        # results = ocomp.run([5])
-
         expected_text_1 = f"{ocomp.controller.name}, being used as controller for " \
                           f"model-based optimization of {ocomp.name}, has 'state_features' specified "
-        expected_text_2 = f"that are either not INPUT nodes or missing from the Composition."
+        expected_text_2 = f"that are missing from the Composition or any nested within it"
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
             ocomp.run({initial_node_a: [1]})
         error_text = error_text.value.error_value

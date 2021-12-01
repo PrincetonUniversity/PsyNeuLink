@@ -5864,20 +5864,20 @@ class TestShadowInputs:
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
 
-    def test_shadow_nested_nodes(self):
-
-        I = ProcessingMechanism(name='I')
-        icomp = Composition(nodes=I, name='INNER COMP')
-
-        A = ProcessingMechanism(name='A')
-        B = ProcessingMechanism(name='B')
-        C = ProcessingMechanism(name='C')
-        mcomp = Composition(pathways=[[A,B,C],icomp], name='MIDDLE COMP')
-
-        O = ProcessingMechanism(name='O',
-                                input_ports=[I,B])  # Shadow node nested two deep and internal node nested one deep
-        ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
-        ocomp.show_graph(show_cim=True)
+    # def test_shadow_nested_nodes(self):
+    #
+    #     I = ProcessingMechanism(name='I')
+    #     icomp = Composition(nodes=I, name='INNER COMP')
+    #
+    #     A = ProcessingMechanism(name='A')
+    #     B = ProcessingMechanism(name='B')
+    #     C = ProcessingMechanism(name='C')
+    #     mcomp = Composition(pathways=[[A,B,C],icomp], name='MIDDLE COMP')
+    #
+    #     O = ProcessingMechanism(name='O',
+    #                             input_ports=[I,B])  # Shadow node nested two deep and internal node nested one deep
+    #     ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+    #     ocomp.show_graph(show_cim=True)
 
     def test_monitor_input_ports(self):
         comp = Composition(name='comp')
