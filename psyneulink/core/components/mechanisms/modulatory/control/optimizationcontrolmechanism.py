@@ -1359,7 +1359,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type != MODEL_BASED:
             return
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+        from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionInterfaceMechanism
 
         def _get_all_input_nodes(comp):
             """Return all input_nodes, including those for any Composition nested one level down.
@@ -1376,7 +1376,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if self.state_features:
             # FIX: 11/26/21 - EXPLAIN THIS BEHAVIOR IN DOSCSTRING;
-            warnings.warn(f"The 'state_features' argument has been specified for {self.name}, which is being "
+            warnings.warn(f"The 'state_features' argument has been specified for {self.name}, that is being "
                           f"configured as a model-based {self.__class__.__name__} (i.e, one that uses a "
                           f"{Composition.componentType} as its agent_rep).  This overrides automatic assignment of "
                           f"all inputs to its agent_rep ({self.agent_rep.name}) as the 'state_features'; only the "
@@ -1384,18 +1384,50 @@ class OptimizationControlMechanism(ControlMechanism):
                           f"input to {self.agent_rep.name} when it is run.  Remove this specification from the "
                           f"constructor for {self.name} if automatic assignment is preferred.")
 
-            # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep and/or any nested Compositions
+            # MODIFIED 12/1/21 OLD:
+            # invalid_state_features = [input_port for input_port in self.state_input_ports
+            #                           if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
+            #                               and not any([input_port.shadow_inputs.owner in
+            #                                            [nested_comp.input_CIM for nested_comp in
+            #                                             self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
+            #                                             if isinstance(nested_comp, Composition)]]))]
+            # MODIFIED 12/1/21 NEW:
+            # invalid_state_features = [input_port for input_port in self.state_input_ports
+            #                           if (not (input_port.shadow_inputs.owner in
+            #                                   [n[0] for n in self.agent_rep._get_nested_nodes()])
+            #                               and not any([input_port.shadow_inputs.owner in
+            #                                            [nested_comp.input_CIM for nested_comp in
+            #                                             self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
+            #                                             if isinstance(nested_comp, Composition)]]))]
+            comp = self.agent_rep
+            # Ensure that all specified state_input_ports are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
-                                          and not any([input_port.shadow_inputs.owner in
-                                                       [nested_comp.input_CIM for nested_comp in
-                                                        self.agent_rep.get_nodes_by_role(NodeRole.INPUT)
-                                                        if isinstance(nested_comp, Composition)]]))]
+                                      if (not (input_port.shadow_inputs.owner in
+                                               [n[0] for n in comp._get_nested_nodes()])
+                                          or (isinstance(input_port.shadow_inputs.owner,
+                                                         CompositionInterfaceMechanism)
+                                              and not input_port.shadow_inputs.owner.composition in
+                                                      comp._get_nested_compositions()))]
             if any(invalid_state_features):
                 raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                         f"optimization of {self.agent_rep.name}, has 'state_features' "
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
-                                                        f"are either not INPUT nodes or missing from the Composition.")
+                                                        f"are missing from the Composition or any nested within it.")
+
+            # Ensure that all specified state_input_ports reference INPUT Nodes of agent_rep or of a nested Composition
+            invalid_state_features = [input_port for input_port in self.state_input_ports
+                                      if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
+                                          and not (input_port.shadow_inputs.owner.composition in
+                                                   [nested_comp for nested_comp in comp._get_nested_compositions()
+                                                    if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])
+                                          )]
+            if any(invalid_state_features):
+                raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
+                                                        f"optimization of {self.agent_rep.name}, has 'state_features' "
+                                                        f"specified ({[d.name for d in invalid_state_features]}) that "
+                                                        f"are not INPUT nodes for the Composition or any nested "
+                                                        f"within it.")
+            # MODIFIED 12/1/21 END
             return
 
         # Model-based agent_rep, but no state_features have been specified,
