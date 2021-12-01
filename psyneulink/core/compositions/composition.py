@@ -3608,6 +3608,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for required_role in required_roles:
                 self._add_required_node_role(node, required_role, context)
 
+        # MODIFIED 12/1/21 OLD:  REDUNDANT WITH _update_shadow_projections()
         # Add projections to node from sender of any shadowed InputPorts
         for input_port in node.input_ports:
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
@@ -3617,6 +3618,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_port),
                                             sender=proj.sender.owner,
                                             receiver=node)
+        # MODIFIED 12/1/21 END
 
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
@@ -5379,6 +5381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Instantiate any missing shadow_projections that have been specified in Composition
         """
 
+        # FIX 12/2/21: RENAME input_port -> shadowing_input_port
         def _instantiate_missing_shadow_projections(input_port, projections):
             """Instantiate shadow Projections that don't yet exist.
 

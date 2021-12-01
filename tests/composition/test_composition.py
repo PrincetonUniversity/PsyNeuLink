@@ -5876,6 +5876,10 @@ class TestShadowInputs:
     #
     #     O = ProcessingMechanism(name='O',
     #                             input_ports=[I,B])  # Shadow node nested two deep and internal node nested one deep
+    #                             # input_ports=[I.input_port])
+    #                             # input_ports=[A.input_port]) # <-SHOULD GENERATE shadow Projection FROM ocomp.input_CIM
+    #                             # input_ports=[B.input_port]) # <-SHOULD GENERATE ERROR SAYING NOT INPUT Node OF mcomp
+    #                             # input_ports=[I.input_port, A.input_port]) <- DUPLICATE PROJECTION?
     #     ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
     #     ocomp.show_graph(show_cim=True)
 
