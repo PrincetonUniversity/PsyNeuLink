@@ -5779,7 +5779,6 @@ class TestShadowInputs:
         comp.add_node(B)
         comp.run(inputs={A: [[1.0]]})
 
-        comp.show_graph()
         assert A.value == [[1.0]]
         assert B.value == [[1.0]]
 
