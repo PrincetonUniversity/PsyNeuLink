@@ -5858,7 +5858,6 @@ class TestShadowInputs:
         comp.add_linear_processing_pathway([A2, B])
         comp.run(inputs={A: [[1.0]],
                          A2: [[1.0]]})
-
         assert A.value == [[1.0]]
         assert A2.value == [[1.0]]
         assert B.value == [[2.0]]

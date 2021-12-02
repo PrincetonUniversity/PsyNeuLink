@@ -1114,6 +1114,10 @@ class ShowGraph():
                 # But if any Projection to it is from a controller, use controller_color
                 for input_port in cim.input_ports:
                     for proj in input_port.path_afferents:
+                        # MODIFIED 12/2/21 NEW:
+                        if proj not in composition.projections:
+                            continue
+                        # MODIFIED 12/2/21 END
                         if self._trace_senders_for_controller(proj, enclosing_comp):
                             cim_type_color = self.controller_color
             elif cim is composition.output_CIM:
@@ -1167,6 +1171,11 @@ class ShowGraph():
                 for input_port in composition.input_CIM.input_ports:
                     projs = input_port.path_afferents
                     for proj in projs:
+
+                        # MODIFIED 12/2/21 NEW:
+                        if proj not in composition.projections:
+                            continue
+                        # MODIFIED 12/2/21 END
 
                         # Get label for Node that sends the input (sndr_label)
                         sndr_node_output_port = proj.sender
@@ -1269,6 +1278,11 @@ class ShowGraph():
                     projs = input_port.path_afferents
                     for proj in projs:
 
+                        # MODIFIED 12/2/21 NEW:
+                        if proj not in composition.projections:
+                            continue
+                        # MODIFIED 12/2/21 END
+
                         # Get label for Node that sends the ControlProjection (sndr label)
                         ctl_mech_output_port = proj.sender
                         # Skip if sender is cim (handled by enclosing Composition's call to this method)
@@ -1311,6 +1325,11 @@ class ShowGraph():
                 for output_port in composition.parameter_CIM.output_ports:
                     projs = output_port.efferents
                     for proj in projs:
+
+                        # MODIFIED 12/2/21 NEW:
+                        if proj not in composition.projections:
+                            continue
+                        # MODIFIED 12/2/21 END
 
                         # Get label for Node that receives modulation (modulated_mech_label)
                         rcvr_modulated_mech_proj = proj.receiver
@@ -1368,6 +1387,11 @@ class ShowGraph():
                     projs = input_port.path_afferents
                     for proj in projs:
 
+                        # MODIFIED 12/2/21 NEW:
+                        if proj not in composition.projections:
+                            continue
+                        # MODIFIED 12/2/21 END
+
                         sndr_output_node_proj = proj.sender
                         if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
                                 and show_nested is not NESTED):
@@ -1413,6 +1437,12 @@ class ShowGraph():
                 for output_port in composition.output_CIM.output_ports:
                     projs = output_port.efferents
                     for proj in projs:
+
+                        # MODIFIED 12/2/21 NEW:
+                        if proj not in composition.projections:
+                            continue
+                        # MODIFIED 12/2/21 END
+
                         rcvr_node_input_port = proj.receiver
 
                         # Skip if receiver is controller of enclosing_comp (handled by _assign_controller_components)
@@ -2038,14 +2068,16 @@ class ShowGraph():
             if show_nested is NESTED:
                 # Add output_CIMs for nested Comps to find sender nodes
                 cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                            if (proj in composition.projection
+                                and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and (proj.sender.owner is proj.sender.owner.composition.output_CIM))])
                 senders.update(cims)
             # Get sender Node from outer Composition (enclosing_g)
             if enclosing_g and show_nested is not INSET:
                 # Add input_CIM for current Composition to find senders from enclosing_g
                 cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if (isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                            if (proj in composition.projection
+                                and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
             # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMOSITION (NOT IN processing_graph)
@@ -2191,13 +2223,12 @@ class ShowGraph():
             for output_port in sender.output_ports:
                 for proj in output_port.efferents:
 
-                    proj_color = proj_color_default
-                    proj_arrowhead = proj_arrow_default
-
-
                     # Skip Projections not in the Composition
                     if proj not in composition.projections:
                         continue
+
+                    proj_color = proj_color_default
+                    proj_arrowhead = proj_arrow_default
 
                     assign_proj_to_enclosing_comp = False
 

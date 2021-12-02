@@ -3522,6 +3522,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
         self._update_shadow_projections(context=context)
+        # MODIFIED 12/2/21 NEW:
+        self._determine_node_roles(context=context)
+        # MODIFIED 12/2/21 END
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
@@ -5444,6 +5447,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for shadow_projection in shadowing_port.path_afferents:
                 if shadow_projection.sender not in senders:
                     self.remove_projection(shadow_projection)
+                    # # MODIFIED 12/2/21 NEW:
+                    # Projection_Base._delete_projection(shadow_projection)
+                    # if not shadow_projection.sender.path_afferents:
+                    #     shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
+                    # MODIFIED 12/2/21 END
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
@@ -8515,14 +8523,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # context.execution_phase = ContextFlags.PREPARING
         # context.replace_flag(ContextFlags.IDLE, ContextFlags.PREPARING)
 
-        if scheduler is None:
-            scheduler = self.scheduler
-
-        if scheduling_mode is not None:
-            scheduler.mode = scheduling_mode
-
-        if default_absolute_time_unit is not None:
-            scheduler.default_absolute_time_unit = default_absolute_time_unit
+        # # MODIFIED 12/2/21 OLD: MOVE TO BELOW
+        # if scheduler is None:
+        #     scheduler = self.scheduler
+        #
+        # if scheduling_mode is not None:
+        #     scheduler.mode = scheduling_mode
+        #
+        # if default_absolute_time_unit is not None:
+        #     scheduler.default_absolute_time_unit = default_absolute_time_unit
+        # MODIFIED 12/2/21 END
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8550,6 +8560,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
+
+        # MODIFIED 12/2/21 NEW:  MOVED FROM ABOVE
+        if scheduler is None:
+            scheduler = self.scheduler
+
+        if scheduling_mode is not None:
+            scheduler.mode = scheduling_mode
+
+        if default_absolute_time_unit is not None:
+            scheduler.default_absolute_time_unit = default_absolute_time_unit
+        # MODIFIED 12/2/21 OLD
 
         self._check_for_unnecessary_feedback_projections()
         self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
