@@ -5863,24 +5863,52 @@ class TestShadowInputs:
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
 
-    # def test_shadow_nested_nodes(self):
-    #
-    #     I = ProcessingMechanism(name='I')
-    #     icomp = Composition(nodes=I, name='INNER COMP')
-    #
-    #     A = ProcessingMechanism(name='A')
-    #     B = ProcessingMechanism(name='B')
-    #     C = ProcessingMechanism(name='C')
-    #     mcomp = Composition(pathways=[[A,B,C],icomp], name='MIDDLE COMP')
-    #
-    #     O = ProcessingMechanism(name='O',
-    #                             input_ports=[I,B])  # Shadow node nested two deep and internal node nested one deep
-    #                             # input_ports=[I.input_port])
-    #                             # input_ports=[A.input_port]) # <-SHOULD GENERATE shadow Projection FROM ocomp.input_CIM
-    #                             # input_ports=[B.input_port]) # <-SHOULD GENERATE ERROR SAYING NOT INPUT Node OF mcomp
-    #                             # input_ports=[I.input_port, A.input_port]) <- DUPLICATE PROJECTION?
-    #     ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
-    #     ocomp.show_graph(show_cim=True)
+
+    _test_shadow_nested_nodes_arg =\
+        [
+            ('shadow_nodes_one_and_two_levels_deep', 0),
+            ('shadow_nested_internal_node', 1),
+         ],
+
+    @pytest.mark.parametrize(
+        'condition',
+        ['shadow_nodes_one_and_two_levels_deep',
+         'shadow_nested_internal_node'],
+    )
+    def test_shadow_nested_nodes(self, condition):
+
+        I = ProcessingMechanism(name='I')
+        icomp = Composition(nodes=I, name='INNER COMP')
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        mcomp = Composition(pathways=[[A,B,C],icomp], name='MIDDLE COMP')
+
+        if condition == 'shadow_nodes_one_and_two_levels_deep':
+
+            # Confirm that B's shadow of I comes from the same ocomp_input_CIM that serves I
+            O = ProcessingMechanism(name='O',input_ports=[I.input_port, A.input_port])
+            ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+            ocomp._analyze_graph()
+            assert len(O.afferents)==2
+            assert O.input_ports[0].shadow_inputs.owner is I
+            receiver = icomp.input_CIM.port_map[I.input_port][0]
+            receiver = receiver.path_afferents[0].sender.owner.port_map[receiver][0]
+            assert O.input_ports[0].path_afferents[0].sender is \
+                   ocomp.input_CIM.port_map[receiver][1]
+
+            # Confirm that B's shadow of A comes from the same ocomp_input_CIM that serves A
+            assert O.input_ports[1].shadow_inputs.owner is A
+            assert O.input_ports[1].path_afferents[0].sender is \
+                   mcomp.input_CIM.port_map[A.input_port][0].path_afferents[0].sender
+
+        elif condition == 'shadow_nested_internal_node':
+            with pytest.raises(CompositionError) as err:
+                O = ProcessingMechanism(name='O',input_ports=[B.input_port])
+                ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+            assert 'Attempt to shadow the input(s) to a node (B) in a nested Composition ' \
+                   '(of OUTER COMP) is not currently supported.' in err.value.error_value
 
     def test_monitor_input_ports(self):
         comp = Composition(name='comp')
