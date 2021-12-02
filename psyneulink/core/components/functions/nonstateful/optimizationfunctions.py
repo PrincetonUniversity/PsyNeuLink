@@ -379,7 +379,7 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
-        aggregation_function = Parameter(lambda x: np.mean(x,axis=len(x)-1), stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x: np.mean(x, axis=x.ndim-1), stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
@@ -586,6 +586,30 @@ class OptimizationFunction(Function_Base):
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
 
+        raise NotImplementedError("OptimizationFunction._function is not implemented and "
+                                  "should be overridden by subclasses.")
+
+    def _evaluate(self, variable=None, context=None, params=None):
+        """
+        Evaluate all the sample in a `search_space <OptimizationFunction.search_space>` with the agent_rep. The
+        evaluation is done either serially (_sequential_evaluate) or in parallel (_grid_evaluate). This method should
+        be invoked by subclasses in their `_function` method to evaluate the samples before searching for the optimal
+        value.
+
+        Returns
+        -------
+
+        optimal sample, optimal value, saved_samples, saved_values : array, array, list, list
+            first array contains sample that yields the optimal value of the `optimization process
+            <OptimizationFunction_Procedure>`, and second array contains the value of `objective_function
+            <OptimizationFunction.objective_function>` for that sample.  If `save_samples
+            <OptimizationFunction.save_samples>` is `True`, first list contains all the values sampled in the order
+            they were evaluated; otherwise it is empty.  If `save_values <OptimizationFunction.save_values>` is `True`,
+            second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
+            for all the samples in the order they were evaluated; otherwise it is empty.
+
+        """
+
         if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
@@ -625,6 +649,7 @@ class OptimizationFunction(Function_Base):
 
         # Return list of unique samples and aggregated values over them
         return last_sample, last_value, all_samples, returned_values
+
 
     def _sequential_evaluate(self, initial_sample, initial_value, context):
         """Sequentially evaluate every sample in search_space.
@@ -670,6 +695,10 @@ class OptimizationFunction(Function_Base):
             # Get value of sample
             current_value = call_with_pruned_args(self.objective_function, current_sample, context=context)
 
+            # Convert the sample and values to numpy arrays even if they are scalars
+            current_sample = np.atleast_1d(current_sample)
+            current_value = np.atleast_1d(current_value)
+
             evaluated_samples.append(current_sample)
             estimated_values.append(current_value)
 
@@ -689,6 +718,10 @@ class OptimizationFunction(Function_Base):
             self.parameters.saved_samples._set(all_samples, context)
         if self.parameters.save_values._get(context):
             self.parameters.saved_values._set(all_values, context)
+
+        # Convert evaluated_samples and estimated_values to numpy arrays, stack along the last dimension
+        estimated_values = np.stack(estimated_values, axis=estimated_values[0].ndim)
+        evaluated_samples = np.stack(evaluated_samples, axis=evaluated_samples[0].ndim)
 
         # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
         # return current_sample, current_value, evaluated_samples, estimated_values
@@ -1910,7 +1943,7 @@ class GridSearch(OptimizationFunction):
 
             # Python version
             else:
-                last_sample, last_value, all_samples, all_values = super()._function(
+                last_sample, last_value, all_samples, all_values = self._evaluate(
                     variable=variable,
                     context=context,
                     params=params,
