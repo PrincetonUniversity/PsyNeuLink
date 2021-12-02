@@ -1136,7 +1136,7 @@ class ShowGraph():
                 for input_port in cim.input_ports:
                     for proj in input_port.path_afferents:
                         # MODIFIED 12/2/21 NEW:
-                        if proj not in composition.projections and not show_projections_not_in_composition:
+                        if proj not in enclosing_comp.projections and not show_projections_not_in_composition:
                             continue
                         # MODIFIED 12/2/21 END
                         if self._trace_senders_for_controller(proj, enclosing_comp):
@@ -1195,7 +1195,7 @@ class ShowGraph():
 
                         # MODIFIED 12/2/21 NEW:
                         proj_color=self.default_node_color
-                        if proj not in composition.projections:
+                        if proj not in enclosing_comp.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1312,7 +1312,7 @@ class ShowGraph():
 
                         # MODIFIED 12/2/21 NEW:
                         proj_color = self.control_color
-                        if proj not in composition.projections:
+                        if proj not in enclosing_comp.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
@@ -1490,7 +1490,7 @@ class ShowGraph():
 
                         # MODIFIED 12/2/21 NEW:
                         proj_color = self.default_node_color
-                        if proj not in composition.projections:
+                        if proj not in enclosing_comp.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
