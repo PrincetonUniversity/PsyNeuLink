@@ -2,10 +2,9 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
+from psyneulink.core.components.functions.stateful.memoryfunctions import STORAGE_PROB
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.functions.stateful.memoryfunctions import DictionaryMemory
-from psyneulink.core.components.functions.stateful.memoryfunctions import \
-    STORAGE_PROB
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
@@ -106,7 +105,7 @@ class TestNested:
         assert np.allclose(results,expected)
 
         gv = comp.show_graph(output_fmt='source')
-        assert gv == 'digraph "Composition-0" {\n\tgraph [label="Composition-0" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\tCONTEXT [color=green penwidth=3 rank=source shape=oval]\n\tSTIM [color=green penwidth=3 rank=source shape=oval]\n\tEM -> "STIM INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tSTIM -> "STIM INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tCONTEXT -> "CONTEXT INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tEM -> "CONTEXT INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tEM [color=black penwidth=1 rank=same shape=oval]\n\tCONTEXT -> EM [label="" arrowhead=normal color=black penwidth=1]\n\t"ControlMechanism-0" -> EM [label="" arrowhead=box color=blue penwidth=1]\n\tSTIM -> EM [label="" arrowhead=normal color=black penwidth=1]\n\t"MATCH LAYER" -> DECISION [label="" arrowhead=normal color=black penwidth=1]\n\tDECISION -> "ControlMechanism-0" [label="" arrowhead=normal color=black penwidth=1]\n\tDECISION [color=red penwidth=3 rank=max shape=oval]\n\t"ControlMechanism-0" [color=blue penwidth=3 rank=max shape=octagon]\n\tsubgraph cluster_FFN {\n\t\tgraph [label=FFN overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"CONTEXT INPUT LAYER" [color=green penwidth=3 rank=source shape=oval]\n\t\t"STIM INPUT LAYER" [color=green penwidth=3 rank=source shape=oval]\n\t\t"CONTEXT INPUT LAYER" -> "MATCH LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\t\t"STIM INPUT LAYER" -> "MATCH LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\t\t"MATCH LAYER" [color=red penwidth=3 rank=max shape=oval]\n\t\tlabel=FFN\n\t}\n}'
+        assert gv.strip() == 'digraph "Composition-0" {\n\tgraph [label="Composition-0" overlap=False rankdir=BT]\n\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\tedge [fontname=arial fontsize=10]\n\tCONTEXT [color=green penwidth=3 rank=source shape=oval]\n\tSTIM [color=green penwidth=3 rank=source shape=oval]\n\tEM -> "STIM INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tSTIM -> "STIM INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tCONTEXT -> "CONTEXT INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tEM -> "CONTEXT INPUT LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\tEM [color=black penwidth=1 rank=same shape=oval]\n\tCONTEXT -> EM [label="" arrowhead=normal color=black penwidth=1]\n\t"ControlMechanism-0" -> EM [label="" arrowhead=box color=blue penwidth=1]\n\tSTIM -> EM [label="" arrowhead=normal color=black penwidth=1]\n\t"MATCH LAYER" -> DECISION [label="" arrowhead=normal color=black penwidth=1]\n\tDECISION -> "ControlMechanism-0" [label="" arrowhead=normal color=black penwidth=1]\n\tDECISION [color=red penwidth=3 rank=max shape=oval]\n\t"ControlMechanism-0" [color=blue penwidth=3 rank=max shape=octagon]\n\tsubgraph cluster_FFN {\n\t\tgraph [label=FFN overlap=False rankdir=BT]\n\t\tnode [color=black fontname=arial fontsize=12 penwidth=1 shape=record]\n\t\tedge [fontname=arial fontsize=10]\n\t\t"CONTEXT INPUT LAYER" [color=green penwidth=3 rank=source shape=oval]\n\t\t"STIM INPUT LAYER" [color=green penwidth=3 rank=source shape=oval]\n\t\t"CONTEXT INPUT LAYER" -> "MATCH LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\t\t"STIM INPUT LAYER" -> "MATCH LAYER" [label="" arrowhead=normal color=black penwidth=1]\n\t\t"MATCH LAYER" [color=red penwidth=3 rank=max shape=oval]\n\t\tlabel=FFN\n\t}\n}'
 
         # # FIX: ORDERING PROBLEM WITH SLOPE AND INTERCEPT ENTRIES
         # gv = comp.show_graph(show_cim=True, show_node_structure=ALL, output_fmt='source')
@@ -270,7 +269,7 @@ class TestControl:
                                            search_space=[[1],[1],[1]])
         comp = Composition(name='ocomp', pathways=[ia, ib], controller=ocm)
         gv = comp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv == expected_output
+        assert gv.strip() == expected_output
 
     _multiple_nesting_levels_with_control_mech_projection_one_level_deep_data = [
         (
@@ -325,7 +324,7 @@ class TestControl:
                                     control_signals=[ControlSignal(projections=[(SLOPE, ma)])])
         ocomp = Composition(name='ocomp', pathways=[oa, mcomp, ob, ctl_mech])
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv == expected_output
+        assert gv.strip() == expected_output
 
     _nested_learning_data = [
         (
@@ -377,7 +376,7 @@ class TestControl:
         ocomp = Composition(name='COMPOSITION', pathways=[input_mech, internal_mech, icomp, output_mech])
 
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv == expected_output
+        assert gv.strip() == expected_output
 
     _nested_learning_test_with_user_specified_target_in_outer_composition_data = [
         (
@@ -449,7 +448,7 @@ class TestControl:
         assert icomp.input_CIM.output_ports['INPUT_CIM_Target_InputPort-0'].efferents[0].receiver.owner == p.target
 
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv == expected_output
+        assert gv.strip() == expected_output
 
     # def test_nested_learning_test_with_user_specified_target_in_outer_composition_using_pathway_notation(self):
     #     ia = ProcessingMechanism(name='INNER INPUT')
@@ -552,7 +551,7 @@ class TestControl:
         ocomp.add_controller(ocm)
 
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv == expected_output
+        assert gv.strip() == expected_output
 
     # each item corresponds to the same item in _nested_show_graph_kwargs above
     _of_show_3_level_nested_show_cim_and_show_node_structure_outputs = [
@@ -611,7 +610,7 @@ class TestControl:
         assert len(ocomp.controller.state_input_ports) == 2
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
-        assert gv == expected_output
+        assert gv.srip() == expected_output
 
     # each item corresponds to the same item in _nested_show_graph_kwargs above
     _of_show_nested_show_cim_and_show_node_structure_with_singleton_in_outer_comp_added_last_outputs = [
@@ -665,4 +664,4 @@ class TestControl:
                                            search_space=[[1],[1],[1]])
         ocomp.add_controller(ocm)
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv == expected_output
+        assert gv.strip() == expected_output
