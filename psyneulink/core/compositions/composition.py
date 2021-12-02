@@ -3608,16 +3608,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for required_role in required_roles:
                 self._add_required_node_role(node, required_role, context)
 
-        # MODIFIED 12/1/21 OLD:  REDUNDANT WITH _update_shadow_projections()
-        # Add projections to node from sender of any shadowed InputPorts
-        for input_port in node.input_ports:
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                for proj in input_port.shadow_inputs.path_afferents:
-                    sender = proj.sender
-                    if sender.owner != self.input_CIM:
-                        self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_port),
-                                            sender=proj.sender.owner,
-                                            receiver=node)
+        # # MODIFIED 12/1/21 OLD:  REDUNDANT WITH _update_shadow_projections()
+        # # Add projections to node from sender of any shadowed InputPorts
+        # for input_port in node.input_ports:
+        #     if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
+        #         for proj in input_port.shadow_inputs.path_afferents:
+        #             sender = proj.sender
+        #             if sender.owner != self.input_CIM:
+        #                 self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_port),
+        #                                     sender=proj.sender.owner,
+        #                                     receiver=node)
         # MODIFIED 12/1/21 END
 
         # Add ControlSignals to controller and ControlProjections
@@ -5408,14 +5408,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             return _get_correct_sender(comp, shadowed_projection)
                     return None
 
-            def _get_sender_at_right_level(proj):
+            def _get_sender_at_right_level(shadowed_proj):
                 """Search back up hierarchy of nested Compositions for sender at same level as **input_port**"""
                 #                                    WANT THIS ONE'S SENDER
                 #                       item[0]           item[1,0]            item[1,1]
                 #  CIM MAP ENTRIES:  [SHADOWED PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
                 sender_proj = [entry[1][0]
-                               for entry in list(proj.sender.owner.port_map.items())
-                               if entry[1][1] is proj.sender][0].path_afferents[0]
+                               for entry in list(shadowed_proj.sender.owner.port_map.items())
+                               if entry[1][1] is shadowed_proj.sender][0].path_afferents[0]
                 if input_port.owner in sender_proj.sender.owner.composition._all_nodes:
                     return sender_proj.sender
                 else:

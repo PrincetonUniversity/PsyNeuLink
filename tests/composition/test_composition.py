@@ -5800,7 +5800,7 @@ class TestShadowInputs:
         assert len(B.path_afferents) == 1
         assert B.path_afferents[0].sender.owner == C
 
-    def test_two_origins_two_input_ports(self):
+    def test_shadow_internal_projectionstest_two_origins_two_input_ports(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A',
                                 function=Linear(slope=2.0))

@@ -1209,6 +1209,9 @@ class ShowGraph():
                     projs = output_port.efferents
                     for proj in projs:
 
+                        if proj not in composition.projections:
+                            continue
+
                         # Get label for Node that receives the input (rcvr_label)
                         rcvr_input_node_proj = proj.receiver
                         if (isinstance(rcvr_input_node_proj.owner, CompositionInterfaceMechanism)
