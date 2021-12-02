@@ -3518,13 +3518,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
 
         self._complete_init_of_partially_initialized_nodes(context=context)
+        # Call before _determine_pathway and _create_CIM_ports so they have updated roles
         self._determine_node_roles(context=context)
         self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
+        # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
-        # MODIFIED 12/2/21 NEW:
+        # Call again to accomodate any changes from _update_shadow_projections
         self._determine_node_roles(context=context)
-        # MODIFIED 12/2/21 END
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
@@ -5447,11 +5448,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for shadow_projection in shadowing_port.path_afferents:
                 if shadow_projection.sender not in senders:
                     self.remove_projection(shadow_projection)
-                    # # MODIFIED 12/2/21 NEW:
-                    # Projection_Base._delete_projection(shadow_projection)
-                    # if not shadow_projection.sender.path_afferents:
-                    #     shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
-                    # MODIFIED 12/2/21 END
+                    Projection_Base._delete_projection(shadow_projection)
+                    if not shadow_projection.sender.efferents:
+                        shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
@@ -10518,6 +10517,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_types=False,
                    show_dimensions=False,
                    show_projection_labels=False,
+                   show_projections_not_in_composition=False,
                    active_items=None,
                    output_fmt='pdf',
                    context=None):
@@ -10531,6 +10531,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 show_types=show_types,
                                 show_dimensions=show_dimensions,
                                 show_projection_labels=show_projection_labels,
+                                show_projections_not_in_composition=show_projections_not_in_composition,
                                 active_items=active_items,
                                 output_fmt=output_fmt,
                                 context=context)

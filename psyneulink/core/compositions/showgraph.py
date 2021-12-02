@@ -2132,7 +2132,7 @@ class ShowGraph():
             if show_nested is NESTED:
                 # Add output_CIMs for nested Comps to find sender nodes
                 cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if (proj in composition.projection
+                            if (proj in composition.projections
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and (proj.sender.owner is proj.sender.owner.composition.output_CIM))])
                 senders.update(cims)
@@ -2140,7 +2140,7 @@ class ShowGraph():
             if enclosing_g and show_nested is not INSET:
                 # Add input_CIM for current Composition to find senders from enclosing_g
                 cims = set([proj.sender.owner for proj in rcvr.afferents
-                            if (proj in composition.projection
+                            if (proj in composition.projections
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
