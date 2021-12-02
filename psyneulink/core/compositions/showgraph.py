@@ -1135,10 +1135,8 @@ class ShowGraph():
                 # But if any Projection to it is from a controller, use controller_color
                 for input_port in cim.input_ports:
                     for proj in input_port.path_afferents:
-                        # MODIFIED 12/2/21 NEW:
                         if proj not in enclosing_comp.projections and not show_projections_not_in_composition:
                             continue
-                        # MODIFIED 12/2/21 END
                         if self._trace_senders_for_controller(proj, enclosing_comp):
                             cim_type_color = self.controller_color
             elif cim is composition.output_CIM:
@@ -1193,14 +1191,12 @@ class ShowGraph():
                     projs = input_port.path_afferents
                     for proj in projs:
 
-                        # MODIFIED 12/2/21 NEW:
                         proj_color=self.default_node_color
                         if proj not in enclosing_comp.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-                        # MODIFIED 12/2/21 END
 
                         # Get label for Node that sends the input (sndr_label)
                         sndr_node_output_port = proj.sender
@@ -1244,14 +1240,12 @@ class ShowGraph():
                     projs = output_port.efferents
                     for proj in projs:
 
-                        # MODIFIED 12/2/21 NEW:
                         proj_color = self.default_node_color
                         if proj not in composition.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-                        # MODIFIED 12/2/21 END
 
                         # Get label for Node that receives the input (rcvr_label)
                         rcvr_input_node_proj = proj.receiver
@@ -1310,14 +1304,12 @@ class ShowGraph():
                     projs = input_port.path_afferents
                     for proj in projs:
 
-                        # MODIFIED 12/2/21 NEW:
                         proj_color = self.control_color
                         if proj not in enclosing_comp.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-                        # MODIFIED 12/2/21 END
 
                         # Get label for Node that sends the ControlProjection (sndr label)
                         ctl_mech_output_port = proj.sender
@@ -1364,14 +1356,12 @@ class ShowGraph():
                     projs = output_port.efferents
                     for proj in projs:
 
-                        # MODIFIED 12/2/21 NEW:
                         proj_color = None
                         if proj not in composition.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-                        # MODIFIED 12/2/21 END
 
                         # Get label for Node that receives modulation (modulated_mech_label)
                         rcvr_modulated_mech_proj = proj.receiver
@@ -1429,14 +1419,12 @@ class ShowGraph():
                     projs = input_port.path_afferents
                     for proj in projs:
 
-                        # MODIFIED 12/2/21 NEW:
                         proj_color = self.default_node_color
                         if proj not in composition.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-                        # MODIFIED 12/2/21 END
 
                         sndr_output_node_proj = proj.sender
                         if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
@@ -1488,14 +1476,12 @@ class ShowGraph():
                     projs = output_port.efferents
                     for proj in projs:
 
-                        # MODIFIED 12/2/21 NEW:
                         proj_color = self.default_node_color
                         if proj not in enclosing_comp.projections:
                             if not show_projections_not_in_composition:
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-                        # MODIFIED 12/2/21 END
 
                         rcvr_node_input_port = proj.receiver
 
@@ -2291,13 +2277,11 @@ class ShowGraph():
                     proj_color = proj_color_default
                     proj_arrowhead = proj_arrow_default
 
-                    # MODIFIED 12/2/21 NEW:
                     if proj not in composition.projections:
                         if not show_projections_not_in_composition:
                             continue
                         else:
                             proj_color=self.inactive_projection_color
-                    # MODIFIED 12/2/21 END
 
                     assign_proj_to_enclosing_comp = False
 

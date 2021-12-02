@@ -3612,18 +3612,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for required_role in required_roles:
                 self._add_required_node_role(node, required_role, context)
 
-        # # MODIFIED 12/1/21 OLD:  REDUNDANT WITH _update_shadow_projections()
-        # # Add projections to node from sender of any shadowed InputPorts
-        # for input_port in node.input_ports:
-        #     if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-        #         for proj in input_port.shadow_inputs.path_afferents:
-        #             sender = proj.sender
-        #             if sender.owner != self.input_CIM:
-        #                 self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_port),
-        #                                     sender=proj.sender.owner,
-        #                                     receiver=node)
-        # MODIFIED 12/1/21 END
-
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
         if self.controller:
@@ -4114,11 +4102,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    this avoids unnecessary calls on repeated calls to run().
         if (self.controller
                 and self.needs_update_controller
-                # MODIFIED 11/29/21 OLD:
                 and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
-                # # MODIFIED 11/29/21 NEW:
-                # and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
-                # MODIFIED 11/29/21 END
             if hasattr(self.controller, 'state_input_ports'):
                 self.controller._update_state_input_ports_for_controller(context=context)
                 # self._instantiate_controller_shadow_projections(context=context)
@@ -5166,21 +5150,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
 
-        # MODIFIED 11/29/21 OLD:
-        # # FIX: 11/29/21 - THIS NEEDS TO BE ADAPTED TO DEAL WITH NESTED COMOPSITIONS -- SEE _update_shadow_projections
-        # #                 TRY REMOVING: ??COVERED BY _update_shadow_projections??
-        # # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
-        # # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
-        # if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
-        #     for shadow in self.shadows[receiver_mechanism]:
-        #         for input_port in shadow.input_ports:
-        #             if input_port.shadow_inputs is not None:
-        #                 if input_port.shadow_inputs.owner == receiver:
-        #                     # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-        #                     self.add_projection(MappingProjection(sender=sender, receiver=input_port),
-        #                                         sender_mechanism, shadow)
-        # MODIFIED 11/29/21 END
-
         # if feedback in {True, FEEDBACK}:
         #     self.feedback_senders.add(sender_mechanism)
         #     self.feedback_receivers.add(receiver_mechanism)
@@ -5458,15 +5427,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.remove_projection(shadow_projection)
                     Projection_Base._delete_projection(shadow_projection)
                     if not shadow_projection.sender.efferents:
-                        # # MODIFIED 12/2/21 OLD:
-                        # shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
-                        # MODIFIED 12/2/21 NEW:
                         if isinstance(shadow_projection.sender.owner, CompositionInterfaceMechanism):
                             ports = shadow_projection.sender.owner.port_map.pop(shadow_projection.receiver)
                             shadow_projection.sender.owner.remove_ports(list(ports))
                         else:
                             shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
-                        # MODIFIED 12/2/21 END
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
@@ -7356,7 +7321,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             else:
                                 shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
                                 shadow_proj._activate_for_compositions(self)
-                                # MODIFIED 11/15/21 END
                     except DuplicateProjectionError:
                         continue
             for proj in input_port.path_afferents:
@@ -8534,20 +8498,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
-        # FIX 5/28/20
-        # context.execution_phase = ContextFlags.PREPARING
-        # context.replace_flag(ContextFlags.IDLE, ContextFlags.PREPARING)
-
-        # # MODIFIED 12/2/21 OLD: MOVE TO BELOW
-        # if scheduler is None:
-        #     scheduler = self.scheduler
-        #
-        # if scheduling_mode is not None:
-        #     scheduler.mode = scheduling_mode
-        #
-        # if default_absolute_time_unit is not None:
-        #     scheduler.default_absolute_time_unit = default_absolute_time_unit
-        # MODIFIED 12/2/21 END
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8576,7 +8526,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
 
-        # MODIFIED 12/2/21 NEW:  MOVED FROM ABOVE
         if scheduler is None:
             scheduler = self.scheduler
 
@@ -8585,7 +8534,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if default_absolute_time_unit is not None:
             scheduler.default_absolute_time_unit = default_absolute_time_unit
-        # MODIFIED 12/2/21 OLD
 
         self._check_for_unnecessary_feedback_projections()
         self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)

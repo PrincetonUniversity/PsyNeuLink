@@ -610,7 +610,7 @@ class TestControl:
         assert len(ocomp.controller.state_input_ports) == 2
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
-        assert gv.srip() == expected_output
+        assert gv.strip() == expected_output
 
     # each item corresponds to the same item in _nested_show_graph_kwargs above
     _of_show_nested_show_cim_and_show_node_structure_with_singleton_in_outer_comp_added_last_outputs = [

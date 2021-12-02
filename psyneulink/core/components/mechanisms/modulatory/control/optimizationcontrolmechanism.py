@@ -1415,7 +1415,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
                                                         f"are not INPUT nodes for the Composition or any nested "
                                                         f"within it.")
-            # MODIFIED 12/1/21 END
             return
 
         # Model-based agent_rep, but no state_features have been specified,
