@@ -5414,16 +5414,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             def _get_sender_at_right_level(shadowed_proj):
                 """Search back up hierarchy of nested Compositions for sender at same level as **input_port**"""
-                #                                    WANT THIS ONE'S SENDER
-                #                       item[0]           item[1,0]            item[1,1]
-                #  CIM MAP ENTRIES:  [SHADOWED PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
-                sender_proj = [entry[1][0]
-                               for entry in list(shadowed_proj.sender.owner.port_map.items())
-                               if entry[1][1] is shadowed_proj.sender][0].path_afferents[0]
-                if input_port.owner in sender_proj.sender.owner.composition._all_nodes:
-                    return sender_proj.sender
+                if not isinstance(shadowed_proj.sender.owner, CompositionInterfaceMechanism):
+                    # raise CompositionError(f"Attempt to shadow Projection to {shadowed_proj.receiver.owner.name} "
+                    #                        f"(from {shadowed_proj.sender.owner.name}) that is an INTERNAL Node "
+                    #                        f"in nested Composition of {self.name} is not currently supported.")
+                    raise CompositionError(f"Attempt to shadow the input(s) to a node "
+                                           f"({shadowed_proj.receiver.owner.name}) in a nested Composition "
+                                           f"(of {self.name}) is not currently supported.")
                 else:
-                    return _get_sender_at_right_level(sender_proj)
+                    #                                    WANT THIS ONE'S SENDER
+                    #                       item[0]           item[1,0]            item[1,1]
+                    #  CIM MAP ENTRIES:  [SHADOWED PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
+                    sender_proj = [entry[1][0]
+                                   for entry in list(shadowed_proj.sender.owner.port_map.items())
+                                   if entry[1][1] is shadowed_proj.sender][0].path_afferents[0]
+                    if input_port.owner in sender_proj.sender.owner.composition._all_nodes:
+                        return sender_proj.sender
+                    else:
+                        return _get_sender_at_right_level(sender_proj)
 
             original_senders = set()
             for shadowed_projection in projections:
