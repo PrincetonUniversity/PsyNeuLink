@@ -5450,7 +5450,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.remove_projection(shadow_projection)
                     Projection_Base._delete_projection(shadow_projection)
                     if not shadow_projection.sender.efferents:
-                        shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
+                        # # MODIFIED 12/2/21 OLD:
+                        # shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
+                        # MODIFIED 12/2/21 NEW:
+                        if isinstance(shadow_projection.sender.owner, CompositionInterfaceMechanism):
+                            ports = shadow_projection.sender.owner.port_map.pop(shadow_projection.receiver)
+                            shadow_projection.sender.owner.remove_ports(list(ports))
+                        else:
+                            shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
+                        # MODIFIED 12/2/21 END
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
