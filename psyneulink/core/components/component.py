@@ -1363,7 +1363,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
-                     "input_labels_dict", "output_labels_dict",
+                     "input_labels_dict", "output_labels_dict", "num_estimates",
                      "modulated_mechanisms", "grid", "control_signal_params",
                      "activation_derivative_fct", "input_specification",
                      # Reference to other components
@@ -1448,9 +1448,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # Modulated parameters change shape to array
             if np.ndim(param) == 0 and self._is_param_modulated(p):
                 return (param,)
-            elif p.name == 'num_estimates':
-                return 0 if param is None else param
-            # FIX: ADD num_trials_per_estimate HERE  11/3/21
+            elif p.name == 'num_trials_per_estimate': # Should always be int
+                return 0 if param is None else int(param)
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
