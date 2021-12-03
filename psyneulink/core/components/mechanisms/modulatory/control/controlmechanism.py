@@ -1562,7 +1562,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             super()._instantiate_input_ports(context=context)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
 
-
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
 
