@@ -10,16 +10,19 @@ import psyneulink as pnl
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--no-plot', action='store_false', help='Disable plotting', dest='enable_plot')
-parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.55)
-parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=50)
+parser.add_argument('--threshold', type=float, help='Termination threshold for response output (default: %(default)f)', default=0.60)
+parser.add_argument('--settle-trials', type=int, help='Number of trials for composition to initialize and settle (default: %(default)d)', default=200)
 args = parser.parse_args()
 
 # Define Variables ----------------------------------------------------------------------------------------------------
-rate = 0.1          # modified from the original code from 0.01 to 0.1
+rate = 0.01          # integration rate
 inhibition = -2.0   # lateral inhibition
 bias = 4.0          # bias is positive since Logistic equation has - sing already implemented
-threshold = args.threshold    # modified from thr original code from 0.6 to 0.55 because incongruent condition won't reach 0.6
+threshold = args.threshold    # response threshold
 settle_trials = args.settle_trials  # cycles until model settles
+
+slope = 0.98  # original slope value
+intercept = 298  # original intercept value
 
 # Create mechanisms ---------------------------------------------------------------------------------------------------
 #   Linear input units, colors: ('red', 'green'), words: ('RED','GREEN')
@@ -93,7 +96,7 @@ color_input_weights = pnl.MappingProjection(
     matrix=np.array([
         [1.0, 0.0, 0.0],
         [0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0]
+        [0.0, 0.0, 1.0]
     ])
 )
 
@@ -101,7 +104,7 @@ word_input_weights = pnl.MappingProjection(
     matrix=np.array([
         [1.0, 0.0, 0.0],
         [0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.0]
+        [0.0, 0.0, 1.0]
     ])
 )
 
@@ -327,32 +330,66 @@ response_all2 = []
 
 # Run color naming trials ----------------------------------------------------------------------------------------------
 for cond in range(conditions):
-    response_color_weights = pnl.MappingProjection(
-        matrix=np.array([
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0]
-        ])
-    )
-    response_word_weights = pnl.MappingProjection(
-        matrix=np.array([
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0]
-        ])
+    color_response_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
     )
 
+    word_response_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+    
+        response_word_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+
+    response_color_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+    
     Bidirectional_Stroop.run(inputs=Stimulus[cond][0], num_trials=settle_trials)
-    response_color_weights = pnl.MappingProjection(
-        matrix=np.array([
+    
+    color_response_weights.parameters.matrix.set(
+        np.array([
+            [1.5, 0.0],
+            [0.0, 1.5],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+    word_response_weights.parameters.matrix.set(
+        np.array([
+            [2.5, 0.0],
+            [0.0, 2.5],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
+ 
+    response_word_weights.parameters.matrix.set(
+        np.array([
             [1.5, 0.0, 0.0],
             [0.0, 1.5, 0.0]
-        ])
+        ]), Bidirectional_Stroop
     )
-    response_word_weights = pnl.MappingProjection(
-        matrix=np.array([
+
+    response_color_weights.parameters.matrix.set(
+        np.array([
             [2.5, 0.0, 0.0],
             [0.0, 2.5, 0.0]
-        ])
+        ]), Bidirectional_Stroop
     )
+        
     Bidirectional_Stroop.run(inputs=Stimulus[cond][1], termination_processing=terminate_trial)
 
     # Store values from run -----------------------------------------------------------------------------------------------
@@ -375,36 +412,71 @@ for cond in range(conditions):
     task_layer.reset([[0, 0]])
     print('response_all: ', response_all)
 
-# Run color naming trials ----------------------------------------------------------------------------------------------
+# Run word reading trials ----------------------------------------------------------------------------------------------
 response_all3 = []
 response_all4 = []
 for cond in range(conditions):
-    response_color_weights = pnl.MappingProjection(
-        matrix=np.array([
-            [0.0, 0.0, 0.0],
-            [0.0, 0.0, 0.0]
-        ])
+    color_response_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
     )
-    response_word_weights = pnl.MappingProjection(
-        matrix=np.array([
+        
+    word_response_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+    
+    response_word_weights.parameters.matrix.set(
+        np.array([
             [0.0, 0.0, 0.0],
             [0.0, 0.0, 0.0]
-        ])
+        ]), Bidirectional_Stroop
+    )
+
+    response_color_weights.parameters.matrix.set(
+        np.array([
+            [0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0]
+        ]), Bidirectional_Stroop
     )
 
     Bidirectional_Stroop.run(inputs=Stimulus2[cond][0], num_trials=settle_trials)
-    response_color_weights = pnl.MappingProjection(
-        matrix=np.array([
+        
+    color_response_weights.parameters.matrix.set(
+        np.array([
+            [1.5, 0.0],
+            [0.0, 1.5],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+    word_response_weights.parameters.matrix.set(
+        np.array([
+            [2.5, 0.0],
+            [0.0, 2.5],
+            [0.0, 0.0]
+        ]), Bidirectional_Stroop
+    )
+        
+    response_word_weights.parameters.matrix.set(
+        np.array([
             [1.5, 0.0, 0.0],
             [0.0, 1.5, 0.0]
-        ])
+        ]), Bidirectional_Stroop
     )
-    response_word_weights = pnl.MappingProjection(
-        matrix=np.array([
+
+    response_color_weights.parameters.matrix.set(
+        np.array([
             [2.5, 0.0, 0.0],
             [0.0, 2.5, 0.0]
-        ])
+        ]), Bidirectional_Stroop
     )
+        
     Bidirectional_Stroop.run(inputs=Stimulus2[cond][1], termination_processing=terminate_trial)
 
     # Store values from run -----------------------------------------------------------------------------------------------
@@ -444,8 +516,8 @@ if args.enable_plot:
     plt.show(block=not pnl._called_from_pytest)
     # Second, plot regression plot
     # regression
-    reg = np.dot(response_all2, 5) + 115
-    reg2 = np.dot(response_all4, 5) + 115
+    reg = np.dot(response_all2, slope) + intercept - settle_trials
+    reg2 = np.dot(response_all4, slope) + intercept - settle_trials
     plt.figure()
 
     plt.plot(reg, '-s')  # plot color naming
