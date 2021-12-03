@@ -71,6 +71,13 @@ class OptimizationFunctionError(Exception):
         self.error_value = error_value
 
 
+def _num_estimates_getter(owning_component, context):
+    if owning_component.parameters.randomization_dimension._get(context) is None:
+        return 1
+    else:
+        return owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+
+
 class OptimizationFunction(Function_Base):
     """
     OptimizationFunction(                            \
@@ -308,6 +315,12 @@ class OptimizationFunction(Function_Base):
                     :default value: None
                     :type:
 
+                num_estimates
+                    see `num_estimates <OptimizationFunction.num_estimates>`
+
+                    :default value: None
+                    :type: ``int``
+
                 objective_function
                     see `objective_function <OptimizationFunction.objective_function>`
 
@@ -371,6 +384,9 @@ class OptimizationFunction(Function_Base):
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
         randomization_dimension = Parameter(None, stateful=False, loggable=False)
+        num_estimates = Parameter(None, stateful=True, loggable=True, read_only=True,
+                                  dependencies=[randomization_dimension, search_space],
+                                  getter=_num_estimates_getter)
 
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
@@ -642,12 +658,6 @@ class OptimizationFunction(Function_Base):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
 
-    @property
-    def num_estimates(self):
-        if self.randomization_dimension is None:
-            return 1
-        else:
-            return self.search_space[self.randomization_dimension].num
 
 class GridBasedOptimizationFunction(OptimizationFunction):
     """Implement helper method for parallelizing instantiation for evaluating samples from search space."""

@@ -2400,7 +2400,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
-from psyneulink.core.components.projections.projection import ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -2409,12 +2409,13 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, \
+    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, ERROR, \
     FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, \
-    MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
+    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, \
     OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
@@ -2450,8 +2451,9 @@ CompositionRegistry = {}
 
 class CompositionError(Exception):
 
-    def __init__(self, error_value):
+    def __init__(self, error_value, **kwargs):
         self.error_value = error_value
+        self.return_items = kwargs
 
     def __str__(self):
         return repr(self.error_value)
@@ -3002,9 +3004,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies state_features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
-        method is called or **animate** is specified in a call to its `run <Composition.run>` method  (see `ShowGraph`
-        for list of attributes and their values).
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
+        method is called or **animate** is specified in a call to its `run <Composition.run>` method
+        (see `ShowGraph` for list of attributes and their values).
 
     name : str : default see `name <Composition.name>`
         specifies the name of the Composition.
@@ -3054,6 +3056,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         argument of the Composition's constructor and/or one of its `Pathway addition methods
         <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
         Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
+
+    projections : ContentAddressableList[`Projection`]
+        a list of all of the `Projections <Projection>` activated for the Composition;  this includes all of
+        the Projections among `Nodes <Composition_Nodes>` within the Composition, as well as from its `input_CIM
+        <Composition.input_CIM>` to it *INPUT* Nodes;from its `parameter_CIM <Composition.parameter_CIM>` to
+        the corresponding `ParameterPorts <ParameterPorts>`; from its *OUTPUT* Nodes to its `output_CIM
+        <Composition.output_CIM>`; and, if it is `nested <Composition_Nested>` in another Composition, then the
+        Projections to its `input_CIM <Composition.input_CIM>` and from its `output_CIM <Composition.output_CIM>`
+        to other Nodes in the Comopsition within which it is nested.
 
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the `INPUT` `Nodes <Composition_Nodes>` of the Composition. If the Composition is
@@ -3134,8 +3145,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         single call to `run <Composition.run>`.
 
     shadows : dict
-        a dictionary in which the keys are all in the Composition and the values are lists of any Nodes that
-        `shadow <InputPort_Shadow_Inputs>` the original Node's input.
+        a dictionary in which the keys are all `Nodes <Composition_Nodes>` in the Composition,
+        and the values of each is a list of any Nodes that `shadow <InputPort_Shadow_Inputs>` it's input.
 
     controller : OptimizationControlMechanism
         identifies the `OptimizationControlMechanism` used as the Composition's controller
@@ -3334,8 +3345,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                         port_map=self.output_CIM_ports)
         self.cims = [self.input_CIM, self.parameter_CIM, self.output_CIM]
 
-        self.shadows = {}
-
         self.default_execution_id = self.name
         self.execution_ids = {self.default_execution_id}
 
@@ -3350,7 +3359,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.graph_consistent = True  # Tracks if Composition is in runnable state (no dangling projections (what else?)
         self.needs_update_graph = True  # Tracks if Composition graph has been analyzed to assign roles to components
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
-        self.needs_update_scheduler = True  # Tracks i4f the scheduler needs to be regenerated
+        self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
+        self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -3372,6 +3382,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.log = CompositionLog(owner=self)
         self._terminal_backprop_sequences = {}
 
+        self.controller = None
+
+        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
+        # Nodes, Projections, and Pathways
+        if nodes is not None:
+            nodes = convert_to_list(nodes)
+            for node in nodes:
+                self.add_node(node)
+
+        # FIX 4/8/20 [JDC]: TEST THIS
+        if projections is not None:
+            projections = convert_to_list(projections)
+            self.add_projections(projections)
+
+        self.add_pathways(pathways, context=context)
+
         # Controller
         self.controller = None
         self._controller_initialization_status = ContextFlags.INITIALIZED
@@ -3387,7 +3413,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` attribute.
         self.num_trials = None
 
-
         self._update_parameter_components()
 
         self.initialization_status = ContextFlags.INITIALIZED
@@ -3397,20 +3422,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # populating both values and results, as it would be more consistent with
         # the behavior of components
         del self.parameters.value
-
-        # FIX 4/8/20 [JDC]: WHY NOT CALL add_nodes()?
-        # Nodes, Projections, and Pathways
-        if nodes is not None:
-            nodes = convert_to_list(nodes)
-            for node in nodes:
-                self.add_node(node)
-
-        # FIX 4/8/20 [JDC]: TEST THIS
-        if projections is not None:
-            projections = convert_to_list(projections)
-            self.add_projections(projections)
-
-        self.add_pathways(pathways, context=context)
 
         # Call with context = COMPOSITION to avoid calling _check_initialization_status again
         self._analyze_graph(context=context)
@@ -3476,7 +3487,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.scheduler.scheduling_mode = scheduling_mode
 
     # ******************************************************************************************************************
-    #                                              GRAPH
+    # region -------------------------------------- GRAPH  -------------------------------------------------------------
     # ******************************************************************************************************************
 
     @handle_external_context(source=ContextFlags.COMPOSITION)
@@ -3495,9 +3506,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nodes are not set to `OUTPUT <NodeRole.OUTPUT>` by default.
         """
 
-        # Instantiate any deferred init components
-        self._check_projection_initialization_status(context=context)
+        self._check_controller_initialization_status(context=context)
+        self._check_nodes_initialization_status(context=context)
 
+        # FIX: SHOULDN'T THIS TEST MORE EXPLICITLY IF NODE IS A Composition?
         # Call _analzye_graph() for any nested Compositions
         for n in self.nodes:
             try:
@@ -3506,10 +3518,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
 
         self._complete_init_of_partially_initialized_nodes(context=context)
+        # Call before _determine_pathway and _create_CIM_ports so they have updated roles
         self._determine_node_roles(context=context)
         self._determine_pathway_roles(context=context)
         self._create_CIM_ports(context=context)
+        # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
+        # Call again to accomodate any changes from _update_shadow_projections
+        self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
@@ -3538,11 +3554,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing.prune_feedback_edges()
         self.needs_update_graph_processing = False
 
+    # endregion GRAPH
 
     # ******************************************************************************************************************
-    #                                               NODES
+    # region ---------------------------------------NODES  -------------------------------------------------------------
     # ******************************************************************************************************************
-
 
     @handle_external_context(source = ContextFlags.COMPOSITION)
     def add_node(self, node, required_roles=None, context=None):
@@ -3566,17 +3582,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway_arg_str = " in " + context.string
             raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
 
-        self._update_shadows_dict(node)
-
         try:
             node._analyze_graph(context = context)
         except AttributeError:
             pass
-
-        # # MODIFIED 6/13/20 NEW:
-        # if any(n is node for nested_comp in self.nodes if isinstance(nested_comp, Composition) for n in nested_comp.nodes):
-        #     return
-        # MODIFIED 6/13/20 END
 
         node._check_for_composition(context=context)
 
@@ -3592,6 +3601,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.needs_update_graph = True
             self.needs_update_graph_processing = True
             self.needs_update_scheduler = True
+            self.needs_update_controller = True
 
         invalid_aux_components = self._add_node_aux_components(node)
 
@@ -3601,16 +3611,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 required_roles = [required_roles]
             for required_role in required_roles:
                 self._add_required_node_role(node, required_role, context)
-
-        # Add projections to node from sender of any shadowed InputPorts
-        for input_port in node.input_ports:
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                for proj in input_port.shadow_inputs.path_afferents:
-                    sender = proj.sender
-                    if sender.owner != self.input_CIM:
-                        self.add_projection(projection=MappingProjection(sender=proj.sender, receiver=input_port),
-                                            sender=proj.sender.owner,
-                                            receiver=node)
 
         # Add ControlSignals to controller and ControlProjections
         #     to any parameter_ports specified for control in node's constructor
@@ -3622,36 +3622,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._partially_added_nodes.append(node)
         except NameError:
             pass
-
-    def _instantiate_deferred_init_control(self, node, context=None):
-        """
-        If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
-        If it does not have a controller, but self does, activate them for self's controller.
-
-        If node is a Node that has deferred init control specs and self has a controller, activate the deferred init
-        control specs for self's controller.
-
-        Returns
-        -------
-
-        list of hanging control specs that were not able to be assigned for a controller at any level.
-
-        """
-        hanging_control_specs = []
-        if node.componentCategory == 'Composition':
-            for nested_node in node.nodes:
-                hanging_control_specs.extend(node._instantiate_deferred_init_control(nested_node, context=context))
-        else:
-            hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
-        if not self.controller:
-            return hanging_control_specs
-        else:
-            for spec in hanging_control_specs:
-                control_signal = self.controller._instantiate_control_signal(control_signal=spec,
-                                                                             context=context)
-                self.controller.control.append(control_signal)
-                self.controller._activate_projections_for_compositions(self)
-        return []
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
@@ -3885,15 +3855,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
            corresponding InputPorts on Composition's `input_CIM <Composition.input_CIM>`.
         """
-        # input_nodes = []
-        # for i, port in enumerate(self.input_CIM.input_ports):
-        #     output_port = next((o for o in self.input_CIM.output_ports
-        #                        if o.function.corresponding_input_port.position_in_mechanism == i), None)
-        #     assert output_port
-        #     node = next((p.receiver.owner for p in output_port.efferents if not SHADOW_INPUT_NAME in p.name), None)
-        #     assert node
-        #     input_nodes.append(node)
-        # return input_nodes
 
         return [{cim[0]:n for n, cim in self.input_CIM_ports.items()}[input_port].owner
                 for input_port in self.input_CIM.input_ports]
@@ -3902,9 +3863,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           nested_nodes=NotImplemented,
                           root_composition=NotImplemented,
                           visited_compositions=NotImplemented):
-        """Recursive search that returns all nodes of all nested compositions in a tuple with the composition they are
-            embedded in.
-
+        """Recursively search and return all nodes of all nested Compositions
+           in a tuple with Composition in which they are nested.
         :return
 
         A list of tuples in format (node, composition) containing all nodes of all nested compositions.
@@ -3929,7 +3889,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_compositions(self,
                                  nested_compositions=NotImplemented,
                                  visited_compositions=NotImplemented):
-        """Recursive search that returns all nested compositions.
+        """Recursive search for and return all nested compositions.
 
         :return
 
@@ -3977,28 +3937,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self._add_node_role(node, NodeRole.TERMINAL)
 
     def _add_node_aux_components(self, node, context=None):
-        """
+        """Add aux_components of node to Composition.
+
         Returns
         -------
-
         list containing references to all invalid aux components
-
         """
+
         # Implement any components specified in node's aux_components attribute
         invalid_aux_components = []
         if hasattr(node, "aux_components"):
-            # Collect the node's aux components that are not currently able to be added to the Composition
-            # we'll ignore these for now and try to activate them again during every call to _analyze_graph
-            # at runtime if there are still any invalid aux components left, we will issue a warning
+            # Collect the node's aux components that are not currently able to be added to the Composition;
+            # ignore these for now and try to activate them again during every call to _analyze_graph
+            # and, at runtime, if there are still any invalid aux_components left, issue a warning
             projections = []
             # Add all "nodes" to the composition first (in case projections reference them)
-            for component in node.aux_components:
+            for i, component in enumerate(node.aux_components):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
                         component._analyze_graph()
                     self.add_node(component)
                 elif isinstance(component, Projection):
-                    projections.append((component, False))
+                    proj_tuple = (component, False)
+                    projections.append(proj_tuple)
+                    node.aux_components[i] = proj_tuple
                 elif isinstance(component, tuple):
                     if isinstance(component[0], Projection):
                         if (isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}):
@@ -4035,6 +3997,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            .format(component.name, node.name))
 
             invalid_aux_components.extend(self._get_invalid_aux_components(node))
+
             # Add all Projections to the Composition
             for proj_spec in [i for i in projections if not i[0] in invalid_aux_components]:
                 # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
@@ -4056,12 +4019,77 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.add_projection(sender=proj_spec[0].sender,
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
+                del node.aux_components[node.aux_components.index(proj_spec)]
+
         return invalid_aux_components
+
+    def _get_invalid_aux_components(self, node):
+        """
+        Return any Components in aux_components for a node that references items not (yet) in this Composition
+        """
+        # FIX 11/20/21: THIS APPEARS TO ONLY HANDLE PROJECTIONS AND NOT COMPOSITIONS OR MECHANISMS
+        #  (OTHER THAN THE COMPOSITION'S controller AND ITS objective_mechanism)
+
+        # First get all valid nodes:
+        # - nodes in Composition
+        # - nodes in any nested Compositions
+        # - controller and associated objective_mechanism
+        valid_nodes = [node for node in self.nodes.data] + \
+                      [node for node, composition in self._get_nested_nodes()] + \
+                      [self]
+        if self.controller:
+            valid_nodes.append(self.controller)
+            if hasattr(self.controller,'objective_mechanism'):
+                valid_nodes.append(self.controller.objective_mechanism)
+
+        # Then get invalid components:
+        #   - Projections that have senders or receivers not in the Composition
+        #     (this includes any in aux_components of node, or associated with any Mechanism listed in aux_components)
+        invalid_components = []
+        for aux in node.aux_components:
+            component = None
+            if isinstance(aux, Projection):
+                component = aux
+            elif hasattr(aux, '__iter__'):
+                for i in aux:
+                    if isinstance(i, Projection):
+                        component = i
+                    elif isinstance(i, Mechanism):
+                        if self._get_invalid_aux_components(i):
+                            invalid_components.append(i)
+            elif isinstance(aux, Mechanism):
+                if self._get_invalid_aux_components(aux):
+                    invalid_components.append(aux)
+            if not component:
+                continue
+            if isinstance(component, Projection):
+                if hasattr(component.sender, OWNER_MECH):
+                    sender_node = component.sender.owner_mech
+                else:
+                    if isinstance(component.sender.owner, CompositionInterfaceMechanism):
+                        sender_node = component.sender.owner.composition
+                    else:
+                        sender_node = component.sender.owner
+                if hasattr(component.receiver, OWNER_MECH):
+                    receiver_node = component.receiver.owner_mech
+                else:
+                    if isinstance(component.receiver.owner, CompositionInterfaceMechanism):
+                        receiver_node = component.receiver.owner.composition
+                    else:
+                        receiver_node = component.receiver.owner
+                # Defer instantiation of all shadow Projections until call to _update_shadow_projections()
+                if (not all([sender_node in valid_nodes, receiver_node in valid_nodes])
+                        or (hasattr(component.receiver, SHADOW_INPUTS) and component.receiver.shadow_inputs)):
+                    invalid_components.append(component)
+        if invalid_components:
+            return invalid_components
+        else:
+            return []
 
     def _complete_init_of_partially_initialized_nodes(self, context=None):
         """
-        Attempt to complete initialization of aux components for any nodes with
-            aux components that were not previously compatible with Composition
+        Attempt to complete initialization of aux_components for any nodes with
+            aux_components that were not previously compatible with Composition
         """
         completed_nodes = []
         for node in self._partially_added_nodes:
@@ -4069,6 +4097,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not invalid_aux_components:
                 completed_nodes.append(node)
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
+
+        # Don't instantiate unless flagged for updating (if nodes have been added to the graph);
+        #    this avoids unnecessary calls on repeated calls to run().
+        if (self.controller
+                and self.needs_update_controller
+                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
+            if hasattr(self.controller, 'state_input_ports'):
+                self.controller._update_state_input_ports_for_controller(context=context)
+                # self._instantiate_controller_shadow_projections(context=context)
+            self._instantiate_control_projections(context=context)
+            # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
+            #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
+            self.needs_update_controller = False
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -4415,8 +4456,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
               OutputPort of each OUTPUT node. Connect the OUTPUT node's OutputPort to the output_CIM's corresponding
               InputPort via a standard MappingProjection.
 
-            - create a corresponding InputPort and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for each
-              InputPort of each node in the Composition that receives a modulatory projection from an enclosing
+            - create a corresponding InputPort and ControlSignal on the `parameter_CIM <Composition.parameter_CIM>` for
+              each InputPort of each node in the Composition that receives a modulatory projection from an enclosing
               Composition. Connect the original ControlSignal to the parameter_CIM's corresponding InputPort via a
               standard MappingProjection, then activate the projections that are created automatically during
               instantiation of the ControlSignals to carry that signal to the target ParameterPort.
@@ -4769,24 +4810,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for nc in nested_comps:
             nested_nodes = dict(nc._get_nested_nodes())
             if node in nested_nodes or node in nc.nodes.data:
+                owning_composition = nc if node in nc.nodes else nested_nodes[node]
                 # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
                 # This validation does not apply to ParameterPorts. Externally modulated nodes
-                # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes
+                # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes.
                 if not isinstance(node_port, ParameterPort):
-                    owning_composition = nc if node in nc.nodes.data else nested_nodes[node]
                     if role not in owning_composition.nodes_to_roles[node]:
-                        raise CompositionError("{} found in nested {} of {} ({}) but without required {} ({})".
-                                               format(node.name, Composition.__name__, self.name, nc.name,
-                                                      NodeRole.__name__, repr(role)))
+                        # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
+                        #                        f"({nc.name}) but without required {role}.")
+                        raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
+                                               f"({nc.name}) but without required {role}.",
+                                               ERROR='NOT_OUTPUT_NODE',
+                                               COMPOSITION=owning_composition,
+                                               NODE=node)
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
+                # FIX: 11/15/21:  ??WHY IS THIS COMMENTED OUT:
                 # if CIM_port_for_nested_node:
                 #     warnings.warn("{} found with {} of {} in more than one nested {} of {}; "
                 #                   "only first one found (in {}) will be used".
                 #                   format(node.name, NodeRole.__name__, repr(role),
                 #                          Composition.__name__, self.name, nested_comp.name))
                 #     continue
-
                 if isinstance(node_port, InputPort):
                     if node_port in nc.input_CIM_ports:
                         CIM_port_for_nested_node = owning_composition.input_CIM_ports[node_port][0]
@@ -4819,77 +4864,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 break
         return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
-    def _update_shadows_dict(self, node):
-        # Create an empty entry for this node in the Composition's "shadows" dict
-        # If any other nodes shadow this node, they will be added to the list
-        if node not in self.shadows:
-            self.shadows[node] = []
-
-        nested_nodes = dict(self._get_nested_nodes())
-        # If this node is shadowing another node, then add it to that node's entry in the Composition's "shadows" dict
-        # If the node it's shadowing is a nested node, add it to the entry for the composition it's nested in.
-        for input_port in node.input_ports:
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                owner = input_port.shadow_inputs.owner
-                if isinstance(owner, CompositionInterfaceMechanism):
-                    owner = owner.composition
-                if owner in nested_nodes:
-                    owner = nested_nodes[owner]
-                if node is self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-                    if owner not in self.nodes:
-                        continue
-                if node not in self.shadows[owner]:
-                    self.shadows[owner].append(node)
-
-    def _route_control_projection_through_intermediary_pcims(self, projection, sender, sender_mechanism, receiver, graph_receiver, context):
-        """
-        Takes as input a specification for a projection to a parameter port that is nested n-levels below its sender,
-        instantiates and activates ports and projections on intermediary pcims, and returns a new
-        projection specification from the original sender to the relevant input port of the pcim of the Composition
-        located in the same level of nesting.
-        """
-        for proj in receiver.mod_afferents:
-            if proj.sender.owner == sender_mechanism:
-                receiver._remove_projection_to_port(proj)
-        for proj in sender.efferents:
-            if proj.receiver == receiver:
-                sender._remove_projection_from_port(proj)
-        modulation = sender.modulation
-        interface_input_port = InputPort(owner=graph_receiver.parameter_CIM,
-                                         variable=receiver.defaults.value,
-                                         reference_value=receiver.defaults.value,
-                                         name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
-                                         context=context)
-        graph_receiver.parameter_CIM.add_ports([interface_input_port], context=context)
-        # control signal for parameter CIM that will project directly to inner Composition's parameter
-        control_signal = ControlSignal(
-            modulation=modulation,
-            variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position, interface_input_port)),
-            transfer_function=Identity,
-            modulates=receiver,
-            name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
-        )
-        if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
-            receiver = interface_input_port
-        graph_receiver.parameter_CIM.add_ports([control_signal], context=context)
-        # add sender and receiver to self.parameter_CIM_ports dict
-        for p in control_signal.projections:
-            # self.add_projection(p)
-            graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal)
-        try:
-            sender._remove_projection_to_port(projection)
-        except ValueError:
-            pass
-        try:
-            receiver._remove_projection_from_port(projection)
-        except ValueError:
-            pass
-        receiver = interface_input_port
-        return MappingProjection(sender=sender, receiver=receiver)
-
+    # endregion NODES
 
     # ******************************************************************************************************************
-    #                                            PROJECTIONS
+    # region ----------------------------------- PROJECTIONS -----------------------------------------------------------
     # ******************************************************************************************************************
 
     def add_projections(self, projections=None):
@@ -4947,7 +4925,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           - if it is in the Composition:
             - if there is only one, the request is ignored and the existing Projection is returned
             - if there is more than one, an exception is raised as this should never be the case
-          - it is NOT in the Composition:
+          - if it is NOT in the Composition:
             - if there is only one, that Projection is used;
             - if there is more than one, the last in the list (presumably the most recent) is used;
             in either case, processing continues, to activate it for the Composition,
@@ -4970,18 +4948,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
            its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated and
            the request is ignored.
 
-        COMMENT:
-        IMPLEMENTATION NOTE:
-            Duplicates are determined by the **Ports** to which they project, not the Mechanisms (to allow
-            multiple Projections to exist between the same pair of Mechanisms using different Ports).
-            -
+
+        .. technical_note::
+            Duplicates are determined by the `Ports <Port>` to which they project, not the `Mechanisms <Mechanism>`
+            (to allow multiple Projections to exist between the same pair of Mechanisms using different Ports).
+            ..
             If an already instantiated Projection is passed to add_projection and is a duplicate of an existing one,
-            it is detected and suppresed, with a warning, in Port._instantiate_projections_to_port.
-            -
+            it is detected and suppressed, with a warning, in Port._instantiate_projections_to_port.
+            ..
             If a Projection with deferred_init status is a duplicate, it is fully suppressed here,
             as these are generated by add_linear_processing_pathway if the pathway overlaps with an existing one,
             and so warnings are unnecessary and would be confusing to users.
-        COMMENT
 
         Arguments
         ---------
@@ -5173,16 +5150,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note: do all of the following even if Projection is a existing_projections,
         #   as these conditions should apply to the exisiting one (and it won't hurt to try again if they do)
 
-        # Create "shadow" projections to any input ports that are meant to shadow this projection's receiver
-        # (note: do this even if there is a duplciate and they are not allowed, as still want to shadow that projection)
-        if receiver_mechanism in self.shadows and len(self.shadows[receiver_mechanism]) > 0:
-            for shadow in self.shadows[receiver_mechanism]:
-                for input_port in shadow.input_ports:
-                    if input_port.shadow_inputs is not None:
-                        if input_port.shadow_inputs.owner == receiver:
-                            # TBI: Copy the projection type/matrix value of the projection that is being shadowed
-                            self.add_projection(MappingProjection(sender=sender, receiver=input_port),
-                                                sender_mechanism, shadow)
         # if feedback in {True, FEEDBACK}:
         #     self.feedback_senders.add(sender_mechanism)
         #     self.feedback_receivers.add(receiver_mechanism)
@@ -5281,7 +5248,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 sender_name = sender.name
 
-            # if the sender is IN a nested Composition AND sender is an OUTPUT Node
+            # if the sender is in a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
             sender, sender_output_port, graph_sender, sender_mechanism = \
                 self._get_nested_node_CIM_port(sender_mechanism,
@@ -5300,8 +5267,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if projection.sender.owner != sender and \
                     projection.sender.owner != graph_sender and \
                     projection.sender.owner != sender_mechanism:
-                raise CompositionError("The position of {} in {} conflicts with its sender attribute."
-                                       .format(projection.name, self.name))
+                raise CompositionError(f"The position of {projection.name} in {self.name} "
+                                       f"conflicts with its sender ({sender.name}).")
 
         return sender, sender_mechanism, graph_sender, nested_compositions
 
@@ -5383,38 +5350,85 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return receiver, receiver_mechanism, graph_receiver, receiver_input_port, \
                nested_compositions, learning_projection
 
-    def _get_original_senders(self, input_port, projections):
-        original_senders = set()
-        for original_projection in projections:
-            if original_projection in self.projections:
-                original_senders.add(original_projection.sender)
-                correct_sender = original_projection.sender
-                shadow_found = False
-                for shadow_projection in input_port.path_afferents:
-                    if shadow_projection.sender == correct_sender:
-                        shadow_found = True
-                        break
-                if not shadow_found:
-                    # TBI - Shadow projection type? Matrix value?
-                    new_projection = MappingProjection(sender=correct_sender,
-                                                       receiver=input_port)
-                    self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
-        return original_senders
-
     def _update_shadow_projections(self, context=None):
-        for node in self.nodes:
-            for input_port in node.input_ports:
-                if input_port.shadow_inputs:
-                    original_senders = self._get_original_senders(input_port, input_port.shadow_inputs.path_afferents)
-                    for shadow_projection in input_port.path_afferents:
-                        if shadow_projection.sender not in original_senders:
-                            self.remove_projection(shadow_projection)
+        """Instantiate any missing shadow_projections that have been specified in Composition
+        """
 
-            # MODIFIED 4/4/20 OLD:
-            # # If the node does not have any roles, it is internal
-            # if len(self.get_roles_by_node(node)) == 0:
-            #     self._add_node_role(node, NodeRole.INTERNAL)
-            # MODIFIED 4/4/20 END
+        # FIX 12/2/21: RENAME input_port -> shadowing_input_port
+        def _instantiate_missing_shadow_projections(input_port, projections):
+            """Instantiate shadow Projections that don't yet exist.
+
+            **input_port** is InputPort to receive shadow Projections
+            **projections** are Projections to be shadowed
+
+            Search recursively (i.e., including in nested Compositions) for receiver(s) of projections.
+            Instantiate any shadow Projections for them that don't yet exist.
+            Return actual senders of all shadow Projections.
+            """
+
+            def _get_correct_sender(comp, shadowed_projection):
+                """Search down the hierarchy of nested Compositions for Projection to shadow"""
+                if shadowed_projection in comp.projections:
+                    return shadowed_projection.sender
+                else:
+                    # Search for sender in INPUT Nodes of nested Compositions that are themselves INPUT Nodes
+                    nested_input_comps = [nested_comp for nested_comp in comp._get_nested_compositions()
+                                    if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)]
+                    for comp in nested_input_comps:
+                        if shadowed_projection in comp.projections:
+                            return _get_sender_at_right_level(shadowed_projection)
+                        else:
+                            return _get_correct_sender(comp, shadowed_projection)
+                    return None
+
+            def _get_sender_at_right_level(shadowed_proj):
+                """Search back up hierarchy of nested Compositions for sender at same level as **input_port**"""
+                if not isinstance(shadowed_proj.sender.owner, CompositionInterfaceMechanism):
+                    raise CompositionError(f"Attempt to shadow the input(s) to a node "
+                                           f"({shadowed_proj.receiver.owner.name}) in a nested Composition "
+                                           f"(of {self.name}) is not currently supported.")
+                else:
+                    #                                    WANT THIS ONE'S SENDER
+                    #                       item[0]           item[1,0]            item[1,1]
+                    #  CIM MAP ENTRIES:  [SHADOWED PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
+                    sender_proj = [entry[1][0]
+                                   for entry in list(shadowed_proj.sender.owner.port_map.items())
+                                   if entry[1][1] is shadowed_proj.sender][0].path_afferents[0]
+                    if input_port.owner in sender_proj.sender.owner.composition._all_nodes:
+                        return sender_proj.sender
+                    else:
+                        return _get_sender_at_right_level(sender_proj)
+
+            original_senders = set()
+            for shadowed_projection in projections:
+                correct_sender = _get_correct_sender(self, shadowed_projection)
+                if correct_sender:
+                    original_senders.add(correct_sender)
+                    shadow_found = False
+                    for shadow_projection in input_port.path_afferents:
+                        if shadow_projection.sender == correct_sender:
+                            shadow_found = True
+                            break
+                    if not shadow_found:
+                        # TBI - Shadow projection type? Matrix value?
+                        new_projection = MappingProjection(sender=correct_sender,
+                                                           receiver=input_port)
+                        self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+            return original_senders
+
+        for shadowing_port, shadowed_port in self.shadowing_dict.items():
+            senders = _instantiate_missing_shadow_projections(shadowing_port,
+                                                              shadowed_port.path_afferents)
+            for shadow_projection in shadowing_port.path_afferents:
+                if shadow_projection.sender not in senders:
+                    self.remove_projection(shadow_projection)
+                    Projection_Base._delete_projection(shadow_projection)
+                    if not shadow_projection.sender.efferents:
+                        if isinstance(shadow_projection.sender.owner, CompositionInterfaceMechanism):
+                            ports = shadow_projection.sender.owner.port_map.pop(shadow_projection.receiver)
+                            shadow_projection.sender.owner.remove_ports(list(ports))
+                        else:
+                            shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
@@ -5557,12 +5571,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if warn:
                 warnings.warn(warn_str)
 
+    # endregion PROJECTIONS
+
     # ******************************************************************************************************************
-    #                                            PATHWAYS
+    # region ------------------------------------- PATHWAYS ------------------------------------------------------------
     # ******************************************************************************************************************
 
-
-    # -----------------------------------------  PROCESSING  -----------------------------------------------------------
+    # region ----------------------------------  PROCESSING  -----------------------------------------------------------
 
     # FIX: REFACTOR TO TAKE Pathway OBJECT AS ARGUMENT
     def add_pathway(self, pathway):
@@ -5865,11 +5880,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           context=context)
         self.pathways.append(pathway)
 
-        # FIX 4/4/20 [JDC]: Reset to None for now to replicate prior behavior,
-        #                   but need to implement proper behavior wrt call to analyze_graph()
-        #                   _check_initalization_state()
-        # 10/22/20 [KDM]: Pass no context instead of setting to None
-        self._analyze_graph()
+        self._analyze_graph(context)
 
         return pathway
 
@@ -5927,12 +5938,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways = convert_to_list(pathways)
 
         # Possibility 2 (list is a single pathway spec):
-        # # MODIFIED 5/17/20 OLD:
-        # if isinstance(pathways, list) and all(_is_node_spec(p) for p in pathways):
-        # MODIFIED 5/17/20 NEW:
         if (isinstance(pathways, list)
                 and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
-        # MODIFIED 5/17/20 END
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
@@ -6021,7 +6028,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return added_pathways
 
-    # ------------------------------------------  LEARNING  ------------------------------------------------------------
+    # endregion PROCESSING PATHWAYS
+
+    # region ------------------------------------ LEARNING -------------------------------------------------------------
 
     @handle_external_context()
     def add_linear_learning_pathway(self,
@@ -6030,11 +6039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     loss_function=None,
                                     learning_rate:tc.any(int,float)=0.05,
                                     error_function=LinearCombination,
-                                    # # MODIFIED 5/25/20 OLD:
-                                    # learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=ONLINE,
-                                    # MODIFIED 5/25/20 NEW:
                                     learning_update:tc.any(bool, tc.enum(ONLINE, AFTER))=AFTER,
-                                    # MODIFIED 5/25/20 END
                                     name:str=None,
                                     context=None):
         """Implement learning pathway (including necessary `learning components <Composition_Learning_Components>`.
@@ -7079,19 +7084,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                if proj.receiver.owner not in self.nodes and \
-                        proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes]:
+                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
+                #      REMOVING "if not i[1] in self.nodes" crashes in test_multilevel_control
+                if ((proj.sender.owner not in self.nodes
+                     and proj.sender.owner in [i[0] for i in nested_nodes])
+                        or (proj.receiver.owner not in self.nodes
+                            and proj.receiver.owner in [i[0] for i in nested_nodes if not i[1] in self.nodes])):
                     deeply_nested_projections[spec] = proj
         return deeply_nested_projections
 
+    # endregion LEARNING PATHWAYS
+
+    # endregion PATHWAYS
+
     # ******************************************************************************************************************
-    #                                              CONTROL
+    # region ------------------------------------- CONTROL -------------------------------------------------------------
     # ******************************************************************************************************************
 
     @handle_external_context()
     def add_controller(self, controller:ControlMechanism, context=None):
         """
-        Add an `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
+        Add a `ControlMechanism` as the `controller <Composition.controller>` of the Composition.
 
         This gives the ControlMechanism access to the `Composition`'s `evaluate <Composition.evaluate>` method. This
         allows subclasses of ControlMechanism that can use this (such as `OptimizationControlMechanism`) to execute
@@ -7103,12 +7116,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <ParameterPort_Value_Specification>`, and a `ControlProjection` to its correponding `ParameterPort`.
 
         The ControlMechanism is assigned the `NodeRole` `CONTROLLER`.
-
         """
 
         if not isinstance(controller, ControlMechanism):
             raise CompositionError(f"Specification of {repr(CONTROLLER)} arg for {self.name} "
                                    f"must be a {repr(ControlMechanism.__name__)} ")
+
+        # Call with context to avoid recursion by analyze_graph -> _check_initialization_status -> add_controller
+        context.source = ContextFlags.METHOD
 
         # VALIDATE AND ADD CONTROLLER
 
@@ -7136,80 +7151,70 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
                 return
 
-            # Warn if current one is being replaced, and remove Projections for old one
+            # Remove existing controller if there is one
             if self.controller:
+                # Warn if current one is being replaced
                 if self.prefs.verbosePref:
                     warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
                                   f"is being replaced by {controller.name}.")
-                for proj in self.projections:
+                # Remove Projections for old one
+                for proj in self.projections.copy():
                     if (proj in self.controller.afferents or proj in self.controller.efferents):
                         self.remove_projection(proj)
+                        Projection_Base._delete_projection(proj)
                 self.controller.composition=None
 
+        # Assign mutual references between Composition and controller
         controller.composition = self
         self.controller = controller
         # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
         #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
         # self._add_node_role(controller, NodeRole.CONTROLLER)
 
-        # ADD AUX_COMPONENTS RELEVANT TO CONTROLLER
-
+        # Check aux_components relevant to controller
         invalid_aux_components = self._get_invalid_aux_components(controller)
-
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
+            return
 
-        # FIX: 11/3/21: ISN'T THIS HANDLED IN HANDLING OF aux_components?
-        if self.controller.objective_mechanism and self.controller.objective_mechanism not in invalid_aux_components:
-            self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        # ADD MONITORING COMPONENTS -----------------------------------------------------
 
-        self.node_ordering.append(controller)
-
-        self.enable_controller = True
-
-        controller._activate_projections_for_compositions(self)
-        # Call with context to avoid recursion by analyze_graph -> _check_inialization_status -> add_controller
-        context.source = ContextFlags.METHOD
-        self._analyze_graph(context=context)
-        self._update_shadows_dict(controller)
-
-        # INSTANTIATE SHADOW_INPUT PROJECTIONS
-        # Skip controller's first (OUTCOME) input_port (that receives the Projection from its objective_mechanism
-        nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
-        input_cims= [self.input_CIM] + nested_cims
-        # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
-        #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
-        # FIX: 11/3/21: BELOW NEEDS TO BE CORRECTED IF OUTCOME InputPort GETS MOVED
-        #               ALSO, IF Non-OCM IS USED AS CONTROLLER, MAY HAVE MORE THAN ONE Inport FOR MONITORING
-        for input_port in controller.input_ports[1:]:
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                for proj in input_port.shadow_inputs.path_afferents:
+        if self.controller.objective_mechanism:
+            # If controller has objective_mechanism, then add it and all associated Projections to Composition
+            if self.controller.objective_mechanism not in invalid_aux_components:
+                self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
+        else:
+            # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
+            if self.controller.input_ports and self.controller.input_port.path_afferents:
+                # FIX 11/27/21: THIS IS A HACK TO MAKE INTERNAL NODES OF NESTED COMPOSITIONS AVAILABLE FOR MONITORING
+                #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
+                keep_checking = True
+                while(keep_checking):
                     try:
-                        sender = proj.sender
-                        if sender.owner not in input_cims:
-                            self.add_projection(projection=MappingProjection(sender=sender, receiver=input_port),
-                                                sender=sender.owner,
-                                                receiver=controller)
-                            shadow_proj._activate_for_compositions(self)
-                        else:
-                            if not sender.owner.composition == self:
-                                sender_input_cim = sender.owner
-                                proj_index = sender_input_cim.output_ports.index(sender)
-                                sender_corresponding_input_projection = sender_input_cim.input_ports[
-                                    proj_index].path_afferents[0]
-                                input_projection_sender = sender_corresponding_input_projection.sender
-                                if input_projection_sender.owner == self.input_CIM:
-                                    shadow_proj = MappingProjection(sender=input_projection_sender,
-                                                                    receiver = input_port)
-                                    shadow_proj._activate_for_compositions(self)
+                        self._add_node_aux_components(controller, context)
+                        keep_checking = False
+                    except CompositionError as e:
+                        # If error is because INTERNAL Node has been specified as monitor_for_control on controller
+                        if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
+                            # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
+                            if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes is True:
+                                nested_comp = e.return_items.pop(COMPOSITION, None)
+                                node = e.return_items.pop(NODE, None)
+                                nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
+                                self._analyze_graph(context)
+                                keep_checking = True
+                            # Otherwise, return usual error
                             else:
-                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                                shadow_proj._activate_for_compositions(self)
-                    except DuplicateProjectionError:
-                        continue
-            for proj in input_port.path_afferents:
-                if proj.sender.owner not in nested_cims:
-                    proj._activate_for_compositions(self)
+                                raise CompositionError(e.error_value)
+                        else:
+                            assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
+                                          f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
+                    # else:
+                    #     raise CompositionError(e.error_value)
+
+            # This is set by add_node() automatically if there is an objective_mechanism;
+            #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
+            self.needs_update_controller = True
 
         # Confirm that controller has input, and if not then disable it
         if not (isinstance(self.controller.input_ports, ContentAddressableList)
@@ -7221,32 +7226,60 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.enable_controller = False
             return
 
-        # ADD ANY ControlSignals SPECIFIED BY NODES IN COMPOSITION
+        # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
         # Get rid of default ControlSignal if it has no ControlProjections
         controller._remove_default_control_signal(type=CONTROL_SIGNAL)
+        # Instantiate control specifications locally (on nodes) and/or on controller
+        self._instantiate_control_projections(context=context)
+        # Instantiate any
+        for node in self.nodes:
+            self._instantiate_deferred_init_control(node, context)
 
-        # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
-        control_signal_specs = self._get_control_signals_for_composition()
-        for ctl_sig_spec in control_signal_specs:
-            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
-            #               CALLED FROM _instantiate_control_signal
-            #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
-            # Don't add any that are already on the ControlMechanism
+        # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
-            # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
-            ctl_signal = controller._instantiate_control_signal(control_signal=ctl_sig_spec,
-                                                   context=context)
-            controller.control.append(ctl_signal)
-            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITON:
-            #                ?DON'T ASSIGN ControlProjection?
-            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
-            #                ?PUT IT IN aux_components FOR NODE?
-            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
-            controller._activate_projections_for_compositions(self)
+        self.node_ordering.append(controller)
+        self.enable_controller = True
+        # FIX: 11/15/21 - SHOULD THIS METHOD BE MOVED HERE (TO COMPOSITION) FROM ControlMechanism
+        controller._activate_projections_for_compositions(self)
+        self._analyze_graph(context=context)
         if not invalid_aux_components:
             self._controller_initialization_status = ContextFlags.INITIALIZED
-        self._analyze_graph(context=context)
+
+    def _instantiate_deferred_init_control(self, node, context=None):
+        """
+        If node is a Composition with a controller, activate its nodes' deferred init control specs for its controller.
+        If it does not have a controller, but self does, activate them for self's controller.
+
+        If node is a Node that has deferred init control specs and self has a controller, activate the deferred init
+        control specs for self's controller.
+
+        Called recursively on nodes that are nested Compositions.
+
+        Returns
+        -------
+
+        list of hanging control specs that were not able to be assigned for a controller at any level of nesting.
+
+        """
+        hanging_control_specs = []
+        if node.componentCategory == 'Composition':
+            nested_comp = node  # For readability
+            for node_in_nested_comp in nested_comp.nodes:
+                hanging_control_specs.extend(nested_comp._instantiate_deferred_init_control(node_in_nested_comp,
+                                                                                            context=context))
+                assert True
+        else:
+            hanging_control_specs = node._get_parameter_port_deferred_init_control_specs()
+        if not self.controller:
+            return hanging_control_specs
+        else:
+            for spec in hanging_control_specs:
+                control_signal = self.controller._instantiate_control_signal(control_signal=spec,
+                                                                             context=context)
+                self.controller.control.append(control_signal)
+                self.controller._activate_projections_for_compositions(self)
+        return []
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
@@ -7276,19 +7309,188 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
-    def _build_predicted_inputs_dict(self, predicted_input):
-        inputs = {}
-        # ASSUMPTION: input_ports[0] is NOT a feature and input_ports[1:] are state_features
-        # If this is not a good assumption, we need another way to look up the feature InputPorts
-        # of the OCM and know which InputPort maps to which predicted_input value
+    def reshape_control_signal(self, arr):
 
+        current_shape = np.shape(arr)
+        if len(current_shape) > 2:
+            newshape = (current_shape[0], current_shape[1])
+            newarr = np.reshape(arr, newshape)
+            arr = tuple(newarr[i].item() for i in range(len(newarr)))
+
+        return np.array(arr)
+
+    def _instantiate_control_projections(self, context):
+        """
+        Add any ControlProjections for control specified locally on nodes in Composition
+        """
+
+        # Add any ControlSignals specified for ParameterPorts of Nodes already in the Composition
+        control_signal_specs = self._get_control_signals_for_composition()
+        for ctl_sig_spec in control_signal_specs:
+            # FIX: 9/14/19: THIS SHOULD BE HANDLED IN _instantiate_projection_to_port
+            #               CALLED FROM _instantiate_control_signal
+            #               SHOULD TRAP THAT ERROR AND GENERATE CONTEXT-APPROPRIATE ERROR MESSAGE
+            # Don't add any that are already on the ControlMechanism
+
+            # FIX: 9/14/19 - IS THE CONTEXT CORRECT (TRY TRACKING IN SYSTEM TO SEE WHAT CONTEXT IS):
+            ctl_signal = self.controller._instantiate_control_signal(control_signal=ctl_sig_spec, context=context)
+
+            self.controller.control.append(ctl_signal)
+
+        # MODIFIED 11/21/21 OLD: FIX: WHY IS THIS INDENTED?  WON'T CALL OUTSIDE LOOP ACTIVATE ALL PROJECTIONS?
+            # FIX: 9/15/19 - WHAT IF NODE THAT RECEIVES ControlProjection IS NOT YET IN COMPOSITION:
+            #                ?DON'T ASSIGN ControlProjection?
+            #                ?JUST DON'T ACTIVATE IT FOR COMPOSITON?
+            #                ?PUT IT IN aux_components FOR NODE?
+            #                ! TRACE THROUGH _activate_projections_for_compositions TO SEE WHAT IT CURRENTLY DOES
+            self.controller._activate_projections_for_compositions(self)
+
+    def _route_control_projection_through_intermediary_pcims(self,
+                                                             projection,
+                                                             sender,
+                                                             sender_mechanism,
+                                                             receiver,
+                                                             graph_receiver,
+                                                             context):
+        """
+        Takes as input a specification for a projection to a parameter port that is nested n-levels below its sender,
+        instantiates and activates ports and projections on intermediary pcims, and returns a new
+        projection specification from the original sender to the relevant input port of the pcim of the Composition
+        located in the same level of nesting.
+        """
+        for proj in receiver.mod_afferents:
+            if proj.sender.owner == sender_mechanism:
+                receiver._remove_projection_to_port(proj)
+        for proj in sender.efferents:
+            if proj.receiver == receiver:
+                sender._remove_projection_from_port(proj)
+        modulation = sender.modulation
+        interface_input_port = InputPort(owner=graph_receiver.parameter_CIM,
+                                         variable=receiver.defaults.value,
+                                         reference_value=receiver.defaults.value,
+                                         name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
+                                         context=context)
+        graph_receiver.parameter_CIM.add_ports([interface_input_port], context=context)
+        # control signal for parameter CIM that will project directly to inner Composition's parameter
+        control_signal = ControlSignal(
+            modulation=modulation,
+            variable=(OWNER_VALUE, functools.partial(graph_receiver.parameter_CIM.get_input_port_position,
+                                                     interface_input_port)),
+            transfer_function=Identity,
+            modulates=receiver,
+            name=PARAMETER_CIM_NAME + "_" + receiver.owner.name + "_" + receiver.name,
+        )
+        if receiver.owner not in graph_receiver.nodes.data + graph_receiver.cims:
+            receiver = interface_input_port
+        graph_receiver.parameter_CIM.add_ports([control_signal], context=context)
+        # add sender and receiver to self.parameter_CIM_ports dict
+        for p in control_signal.projections:
+            # self.add_projection(p)
+            graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal)
+        try:
+            sender._remove_projection_to_port(projection)
+        except ValueError:
+            pass
+        try:
+            receiver._remove_projection_from_port(projection)
+        except ValueError:
+            pass
+        receiver = interface_input_port
+        return MappingProjection(sender=sender, receiver=receiver)
+
+    def _check_controller_initialization_status(self, context=None):
+        """Checks initialization status of controller (if applicable) all Projections or Ports in the Composition
+        """
+
+        # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below
+        if context and context.source == ContextFlags.METHOD:
+            return
+
+        # If controller is in deferred init, try to instantiate and add it to Composition
+        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
+            self.add_controller(self.controller, context=context)
+
+        # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
+        #    since no need to detect deferred_init and generate errors until runtime
+        if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
+            return
+
+        # Check for Mechanisms and Projections in aux_components
+        if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
+            invalid_aux_components = self._get_invalid_aux_components(self.controller)
+            for component in invalid_aux_components:
+                if isinstance(component, Projection):
+                    if hasattr(component.receiver, OWNER_MECH):
+                        owner = component.receiver.owner_mech
+                    else:
+                        owner = component.receiver.owner
+                    warnings.warn(
+                            f"The controller of {self.name} has been specified to project to {owner.name}, "
+                            f"but {owner.name} is not in {self.name} or any of its nested Compositions. "
+                            f"This projection will be deactivated until {owner.name} is added to {self.name} "
+                            f"in a compatible way."
+                    )
+                elif isinstance(component, Mechanism):
+                    warnings.warn(
+                            f"The controller of {self.name} has a specification that includes the Mechanism "
+                            f"{component.name}, but {component.name} is not in {self.name} or any of its "
+                            f"nested Compositions. This Mechanism will be deactivated until {component.name} is "
+                            f"added to {self.name} or one of its nested Compositions in a compatible way."
+                    )
+
+        # If Composition is not preparing to execute, allow deferred_inits to persist without warning
+        if context and ContextFlags.PREPARING not in context.execution_phase:
+            return
+
+        # Check for deferred init ControlProjections
+        for node in self.nodes:
+            for projection in node.projections:
+                if projection.initialization_status == ContextFlags.DEFERRED_INIT:
+                    if isinstance(projection, ControlProjection):
+                        warnings.warn(f"The {projection.receiver.name} parameter of {projection.receiver.owner.name} \n"
+                                      f"is specified for control, but {self.name} does not have a controller. Please \n"
+                                      f"add a controller to {self.name} or the control specification will be \n"
+                                      f"ignored.")
+
+    def _check_nodes_initialization_status(self, context=None):
+
+        # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below.
+        # Don't bother checking if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
+        #    since no need to detect deferred_init and generate errors until runtime.
+        # If Composition is not preparing to execute, allow deferred_inits to persist without warning
+        if context and (context.source in {ContextFlags.METHOD, ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}
+                        or ContextFlags.PREPARING not in context.execution_phase):
+            return
+
+        # NOTE:
+        #   May want to add other conditions and warnings here.
+        #   Currently just checking for unresolved projections.
+
+        for node in self._partially_added_nodes:
+            for proj in self._get_invalid_aux_components(node):
+                receiver = proj.receiver.owner
+                warnings.warn(
+                    f"{node.name} has been specified to project to {receiver.name}, "
+                    f"but {receiver.name} is not in {self.name} or any of its nested Compositions. "
+                    f"This projection will be deactivated until {receiver.name} is added to {self.name} "
+                    f"or a composition nested within it."
+                )
+
+    # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
+    #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
+    def _build_predicted_inputs_dict(self, predicted_input):
+        """Get inputs for evaluate method used to execute simulations of Composition.
+
+        Get values of state_input_ports which receive projections from items providing relevant input (and any
+        processing of those values specified
+        """
+        inputs = {}
         no_predicted_input = (predicted_input is None or not len(predicted_input))
         if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
-
         nested_nodes = dict(self._get_nested_nodes())
-        # FIX: 11/3/21 NEED TO MODIFY WHEN OUTCOME InputPort IS MOVED
+        # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         shadow_inputs_start_index = self.controller.num_outcome_input_ports
         for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
             input_port = self.controller.input_ports[j + shadow_inputs_start_index]
@@ -7314,64 +7516,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
         return inputs
-
-    def _get_invalid_aux_components(self, controller):
-        valid_nodes = \
-            [node for node in self.nodes.data] + \
-            [node for node, composition in self._get_nested_nodes()] + \
-            [self]
-        if self.controller:
-            valid_nodes.append(self.controller)
-            if hasattr(self.controller,'objective_mechanism'):
-                valid_nodes.append(self.controller.objective_mechanism)
-        invalid_components = []
-        for aux in controller.aux_components:
-            component = None
-            if isinstance(aux, Projection):
-                component = aux
-            elif hasattr(aux, '__iter__'):
-                for i in aux:
-                    if isinstance(i, Projection):
-                        component = i
-                    elif isinstance(i, Mechanism):
-                        if self._get_invalid_aux_components(i):
-                            invalid_components.append(i)
-            elif isinstance(aux, Mechanism):
-                if self._get_invalid_aux_components(aux):
-                    invalid_components.append(aux)
-            if not component:
-                continue
-            if isinstance(component, Projection):
-                if hasattr(component.sender, OWNER_MECH):
-                    sender_node = component.sender.owner_mech
-                else:
-                    if isinstance(component.sender.owner, CompositionInterfaceMechanism):
-                        sender_node = component.sender.owner.composition
-                    else:
-                        sender_node = component.sender.owner
-                if hasattr(component.receiver, OWNER_MECH):
-                    receiver_node = component.receiver.owner_mech
-                else:
-                    if isinstance(component.receiver.owner, CompositionInterfaceMechanism):
-                        receiver_node = component.receiver.owner.composition
-                    else:
-                        receiver_node = component.receiver.owner
-                if not all([sender_node in valid_nodes, receiver_node in valid_nodes]):
-                    invalid_components.append(component)
-        if invalid_components:
-            return invalid_components
-        else:
-            return []
-
-    def reshape_control_signal(self, arr):
-
-        current_shape = np.shape(arr)
-        if len(current_shape) > 2:
-            newshape = (current_shape[0], current_shape[1])
-            newarr = np.reshape(arr, newshape)
-            arr = tuple(newarr[i].item() for i in range(len(newarr)))
-
-        return np.array(arr)
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
         total_cost = 0.
@@ -7401,71 +7545,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             total_cost = self.controller.combine_costs(all_costs)
         return total_cost
 
-    def _check_projection_initialization_status(self, context=None):
-        """Checks initialization status of controller (if applicable) and any projections or ports
-        """
+    # endregion CONTROL
 
-        # Avoid recursion if called from add_controller (by way of analyze_graph) since that is called below
-        if context and context.source == ContextFlags.METHOD:
-            return
-
-        # Check if controller is in deferred init
-        if self.controller and self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-            self.add_controller(self.controller, context=context)
-
-            # Don't bother checking any further if from COMMAND_LINE or COMPOSITION (i.e., anything other than Run)
-            #    since no need to detect deferred_init and generate errors until runtime
-            if context and context.source in {ContextFlags.COMMAND_LINE, ContextFlags.COMPOSITION}:
-                return
-
-            if self._controller_initialization_status == ContextFlags.DEFERRED_INIT:
-                invalid_aux_components = self._get_invalid_aux_components(self.controller)
-                for component in invalid_aux_components:
-                    if isinstance(component, Projection):
-                        if hasattr(component.receiver, OWNER_MECH):
-                            owner = component.receiver.owner_mech
-                        else:
-                            owner = component.receiver.owner
-                        warnings.warn(
-                                f"The controller of {self.name} has been specified to project to {owner.name}, "
-                                f"but {owner.name} is not in {self.name} or any of its nested Compositions. "
-                                f"This projection will be deactivated until {owner.name} is added to {self.name} "
-                                f"in a compatible way."
-                        )
-                    elif isinstance(component, Mechanism):
-                        warnings.warn(
-                                f"The controller of {self.name} has a specification that includes the Mechanism "
-                                f"{component.name}, but {component.name} is not in {self.name} or any of its "
-                                f"nested Compositions. This Mechanism will be deactivated until {component.name} is "
-                                f"added to {self.name} or one of its nested Compositions in a compatible way."
-                        )
-
-        # If Composition is not preparing to execute, allow deferred_inits to persist without warning
-        if context and ContextFlags.PREPARING not in context.execution_phase:
-            return
-
-        for node in self.nodes:
-            # Check for deferred init projections
-            for projection in node.projections:
-                if projection.initialization_status == ContextFlags.DEFERRED_INIT:
-                    # NOTE:
-                    #   May want to add other conditions and warnings here. Currently
-                    #   just checking for unresolved control projections.
-                    if isinstance(projection, ControlProjection):
-                        warnings.warn(f"The {projection.receiver.name} parameter of {projection.receiver.owner.name} \n"
-                                      f"is specified for control, but {self.name} does not have a controller. Please \n"
-                                      f"add a controller to {self.name} or the control specification will be \n"
-                                      f"ignored.")
-
-        for node in self._partially_added_nodes:
-            for proj in self._get_invalid_aux_components(node):
-                receiver = proj.receiver.owner
-                warnings.warn(
-                    f"{node.name} has been specified to project to {receiver.name}, "
-                    f"but {receiver.name} is not in {self.name} or any of its nested Compositions. "
-                    f"This projection will be deactivated until {receiver.name} is added to {self.name} "
-                    f"or a composition nested within it."
-                )
+    # ******************************************************************************************************************
+    # region ------------------------------------ EXECUTION ------------------------------------------------------------
+    # ******************************************************************************************************************
 
     @handle_external_context()
     def evaluate(
@@ -7504,8 +7588,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         independently sampled seed for the random number generator.  All values are reset to pre-simulation
         values at the end of the simulation.
 
-        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of
-        the `agent_rep <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
+        Returns the `net_outcome <ControlMechanism.net_outcome>` of a run of the `agent_rep
+        <OptimizationControlMechanism.agent_rep>`. If **return_results** is True,
         an array with the results of each run is also returned.
         """
 
@@ -7549,7 +7633,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # EXECUTE run of composition and aggregate results
 
         # Use reporting options from Report context created in initial (outer) call to run()
-        with Report(self, context) as report:
+        with Report(self, context=context) as report:
             result = self.run(inputs=inputs,
                                     context=context,
                                     runtime_params=runtime_params,
@@ -7596,7 +7680,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return net_outcome, result
         else:
             return net_outcome
-
 
     def _infer_target_nodes(self, targets: dict):
         """
@@ -8369,18 +8452,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
-        # FIX 5/28/20
-        # context.execution_phase = ContextFlags.PREPARING
-        # context.replace_flag(ContextFlags.IDLE, ContextFlags.PREPARING)
-
-        if scheduler is None:
-            scheduler = self.scheduler
-
-        if scheduling_mode is not None:
-            scheduler.mode = scheduling_mode
-
-        if default_absolute_time_unit is not None:
-            scheduler.default_absolute_time_unit = default_absolute_time_unit
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -8401,11 +8472,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
+
         if ContextFlags.SIMULATION_MODE not in context.runmode:
-            self._check_projection_initialization_status()
+            self._check_controller_initialization_status()
+            self._check_nodes_initialization_status()
 
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
+
+        if scheduler is None:
+            scheduler = self.scheduler
+
+        if scheduling_mode is not None:
+            scheduler.mode = scheduling_mode
+
+        if default_absolute_time_unit is not None:
+            scheduler.default_absolute_time_unit = default_absolute_time_unit
 
         self._check_for_unnecessary_feedback_projections()
         self._check_for_nesting_with_absolute_conditions(scheduler, termination_processing)
@@ -9985,8 +10067,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.scheduler._delete_counts(c)
 
+    # endregion EXECUTION
+
     # ******************************************************************************************************************
-    #                                           LLVM
+    # region -------------------------------------- LLVM ---------------------------------------------------------------
     # ******************************************************************************************************************
 
     @property
@@ -10150,23 +10234,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             }]
         }
 
+    # endregion LLVM
+
     # ******************************************************************************************************************
-    #                                           PROPERTIES
+    # region ----------------------------------- PROPERTIES ------------------------------------------------------------
     # ******************************************************************************************************************
 
     @property
     def input_ports(self):
-        """Returns all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return all InputPorts that belong to the Input CompositionInterfaceMechanism"""
         return self.input_CIM.input_ports
 
     @property
     def input_port(self):
-        """Returns the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
+        """Return the index 0 InputPort that belongs to the Input CompositionInterfaceMechanism"""
         return self.input_CIM.input_ports[0]
 
     @property
     def input_values(self):
-        """Returns values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return values of all InputPorts that belong to the Input CompositionInterfaceMechanism"""
         return self.get_input_values()
 
     def get_input_values(self, context=None):
@@ -10174,21 +10260,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def output_ports(self):
-        """Returns all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
+        """Return all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports
 
     @property
     def output_values(self):
-        """Returns values of all OutputPorts that belong to the Output CompositionInterfaceMechanism in the most recently executed context"""
+        """Return values of all OutputPorts that belong to the Output CompositionInterfaceMechanism in the most recently executed context"""
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
 
-    # @property
-    # def mechanisms(self):
-    #     return MechanismList(self, [mech for mech in self.nodes
-    #                                 if isinstance(mech, Mechanism)])
+    @property
+    def shadowing_dict(self):
+        """Return dict with shadowing ports as the keys and the ports they shadow as values."""
+        return {port:port.shadow_inputs for node in self._all_nodes for port in node.input_ports if port.shadow_inputs}
 
     @property
     def mechanisms(self):
@@ -10224,7 +10310,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def default_external_input_values(self):
-        """Returns the default values of all external InputPorts that belong to the
+        """Return the default values of all external InputPorts that belong to the
         Input CompositionInterfaceMechanism
         """
 
@@ -10259,7 +10345,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def output_port(self):
-        """Returns the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
+        """Return the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports[0]
 
     @property
@@ -10332,6 +10418,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             yield self.controller
 
+    # endregion PROPERTIES
+
+    # ******************************************************************************************************************
+    # region ----------------------------------- SHOW_GRAPH ------------------------------------------------------------
+    # ******************************************************************************************************************
+
     def show_graph(self,
                    show_node_structure=False,
                    show_nested=NESTED,
@@ -10343,6 +10435,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    show_types=False,
                    show_dimensions=False,
                    show_projection_labels=False,
+                   show_projections_not_in_composition=False,
                    active_items=None,
                    output_fmt='pdf',
                    context=None):
@@ -10356,6 +10449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 show_types=show_types,
                                 show_dimensions=show_dimensions,
                                 show_projection_labels=show_projection_labels,
+                                show_projections_not_in_composition=show_projections_not_in_composition,
                                 active_items=active_items,
                                 output_fmt=output_fmt,
                                 context=context)
@@ -10365,6 +10459,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _animate_execution(self, active_items, context):
         self._show_graph._animate_execution(active_items, context)
+
+    # endregion SHOW_GRAPH
 
 
 def get_compositions():

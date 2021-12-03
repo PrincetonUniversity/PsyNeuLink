@@ -117,7 +117,10 @@ Parameter Optimization
 
     * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
-      `parameters <ParameterEstimationComposition.parameters>` are assessed.
+      `parameters <ParameterEstimationComposition.parameters>` are assessed.  The shape of the `variable
+      <Component.variable>` of the `objective_function (i.e., its first positional argument) must be the same as an
+      array containing the `value <OutputPort.value>` of the OutputPort corresponding to each item specified in
+      `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
     * **optimization_function** - specifies the function used to search over values of the `parameters
       <ParameterEstimationComposition.parameters>` in order to optimize the **objective_function**.  It can be any
@@ -145,6 +148,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontro
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.compositions.composition import Composition
+from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import BEFORE
 from psyneulink.core.globals.parameters import Parameter
 
@@ -183,33 +187,6 @@ def _same_seed_for_all_parameter_combinations_getter(owning_component, context=N
 def _same_seed_for_all_parameter_combinations_setter(value, owning_component, context=None):
     owning_component.controler.parameters.same_seed_for_all_allocations.set(value, context)
     return value
-
-
-class Parameters(Composition.Parameters):
-    """
-        Attributes
-        ----------
-
-            initial_seed
-                see `input_specification <ParameterEstimationComposition.initial_seed>`
-
-                :default value: None
-                :type: ``int``
-
-            same_seed_for_all_parameter_combinations
-                see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
-
-                :default value: False
-                :type: ``bool``
-
-    """
-    # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
-    initial_seed = Parameter(None, loggable=False, pnl_internal=True,
-                             getter=_initial_seed_getter,
-                             setter=_initial_seed_setter)
-    same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
-                                                         getter=_same_seed_for_all_parameter_combinations_getter,
-                                                         setter=_same_seed_for_all_parameter_combinations_setter)
 
 
 class ParameterEstimationComposition(Composition):
@@ -273,7 +250,10 @@ class ParameterEstimationComposition(Composition):
         specifies the function used to evaluate the `fit to data <ParameterEstimationComposition_Data_Fitting>`
         or `optimize <ParameterEstimationComposition_Optimization>` the parameters of the `model
         <ParameterEstimationComposition.model>` according to a specified `objective_function
-        <ParameterEstimationComposition.objective_function>`.
+        <ParameterEstimationComposition.objective_function>`; the shape of its `variable <Component.variable>` of the
+        `objective_function (i.e., its first positional argument) must be the same as an array containing the `value
+        <OutputPort.value>` of the OutputPort corresponding to each item specified in `outcome_variables
+        <ParameterEstimationComposition.outcome_variables>`.
 
     num_estimates : int : default 1
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
@@ -424,6 +404,33 @@ class ParameterEstimationComposition(Composition):
         found to best fit the data.
     """
 
+    class Parameters(Composition.Parameters):
+        """
+            Attributes
+            ----------
+
+                initial_seed
+                    see `input_specification <ParameterEstimationComposition.initial_seed>`
+
+                    :default value: None
+                    :type: ``int``
+
+                same_seed_for_all_parameter_combinations
+                    see `input_specification <ParameterEstimationComposition.same_seed_for_all_parameter_combinations>`
+
+                    :default value: False
+                    :type: ``bool``
+
+        """
+        # FIX: 11/32/21 CORRECT INITIAlIZATIONS?
+        initial_seed = Parameter(None, loggable=False, pnl_internal=True,
+                                 getter=_initial_seed_getter,
+                                 setter=_initial_seed_setter)
+        same_seed_for_all_parameter_combinations = Parameter(False, loggable=False, pnl_internal=True,
+                                                             getter=_same_seed_for_all_parameter_combinations_getter,
+                                                             setter=_same_seed_for_all_parameter_combinations_setter)
+
+    @handle_external_context()
     def __init__(self,
                  parameters, # OCM control_signals
                  outcome_variables,  # OCM monitor_for_control
@@ -434,8 +441,9 @@ class ParameterEstimationComposition(Composition):
                  num_estimates=1, # num seeds per parameter combination (i.e., of OCM allocation_samples)
                  num_trials_per_estimate=None, # num trials per run of model for each combination of parameters
                  initial_seed=None,
-                 same_seed_for_all_parameter_combinations=False,
+                 same_seed_for_all_parameter_combinations=None,
                  name=None,
+                 context=None,
                  **kwargs):
 
         self._validate_params(locals())
@@ -454,6 +462,8 @@ class ParameterEstimationComposition(Composition):
                          enable_controller=True,
                          **kwargs)
 
+        context=Context(source=ContextFlags.COMPOSITION)
+
         # Implement OptimizationControlMechanism and assign as PEC controller
         # (Note: Implement after Composition itself, so that:
         #     - Composition's components are all available (limits need for deferred_inits)
@@ -466,15 +476,17 @@ class ParameterEstimationComposition(Composition):
                                     num_estimates=num_estimates,
                                     num_trials_per_estimate=num_trials_per_estimate,
                                     initial_seed=initial_seed,
-                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations)
-        self.add_controller(ocm)
+                                    same_seed_for_all_parameter_combinations=same_seed_for_all_parameter_combinations,
+                                    context=context)
+
+        self.add_controller(ocm, context)
 
     def _validate_params(self, args):
 
         kwargs = args.pop('kwargs')
         pec_name = f"{self.__class__.__name__} '{args.pop('name',None)}'" or f'a {self.__class__.__name__}'
 
-        # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameterestimationcomposition.py
+        # FIX: 11/3/21 - WRITE TESTS FOR THESE ERRORS IN test_parameter_estimation_composition.py
 
         # Must specify either model or a COMPOSITION_SPECIFICATION_ARGS
         if not (args['model'] or [arg for arg in kwargs if arg in COMPOSITION_SPECIFICATION_ARGS]):
@@ -517,12 +529,13 @@ class ParameterEstimationComposition(Composition):
                          num_estimates,
                          num_trials_per_estimate,
                          initial_seed,
-                         same_seed_for_all_parameter_combinations
+                         same_seed_for_all_parameter_combinations,
+                         context=None
                          ):
 
         # # Parse **parameters** into ControlSignals specs
         control_signals = []
-        for param,allocation in parameters.items():
+        for param, allocation in parameters.items():
             control_signals.append(ControlSignal(modulates=param,
                                                  allocation_samples=allocation))
 
@@ -537,13 +550,15 @@ class ParameterEstimationComposition(Composition):
         return OptimizationControlMechanism(
             agent_rep=self,
             monitor_for_control=outcome_variables,
+            allow_probes=True,
             objective_mechanism=objective_mechanism,
             function=optimization_function,
             control_signals=control_signals,
             num_estimates=num_estimates,
             num_trials_per_estimate=num_trials_per_estimate,
             initial_seed=initial_seed,
-            same_seed_for_all_allocations=same_seed_for_all_parameter_combinations
+            same_seed_for_all_allocations=same_seed_for_all_parameter_combinations,
+            context=context
         )
 
     # def run(self):

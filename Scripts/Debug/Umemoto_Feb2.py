@@ -132,7 +132,7 @@ Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanis
         state_features=[Target_Stim.input_port,
                         Distractor_Stim.input_port,
                         Reward.input_port],
-        state_feature_function=pnl.AdaptiveIntegrator(rate=1.0),
+        state_feature_functions=pnl.AdaptiveIntegrator(rate=1.0),
         objective_mechanism=pnl.ObjectiveMechanism(
                 monitor_for_control=[Reward,
                                      (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],

@@ -36,11 +36,11 @@ calls the gym-forager agent with a specified action and returns the reward assoc
 
     Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
-    for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `state_feature_values
+    for a `Composition` (or part of one) controlled by an `OptimizationControlMechanism`, from a set of `state_feature_values
     <OptimizationControlMechanism.state_feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
-    provided by the OptimiziationControlMechanism.
+    provided by the OptimizationControlMechanism.
 
-    The `state_feature_values <OptimiziationControlMechanism.state_feature_values>` and `control_allocation
+    The `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `control_allocation
     <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method,
     and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
     `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
@@ -172,7 +172,7 @@ class GymForagerCFA(RegressionCFA):
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
         values of **control_allocation** and **state_feature_values** arguments to generate predicted `net_outcome
-        <OptimiziationControlMechanism.net_outcome>`.
+        <OptimizationControlMechanism.net_outcome>`.
 
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,
