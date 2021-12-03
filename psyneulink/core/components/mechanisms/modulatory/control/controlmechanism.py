@@ -1548,7 +1548,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
             self.aux_components = []
             for i in range(len(projection_specs)):
-                if  option == SEPARATE:
+                if option == SEPARATE:
                     # Each outcome_input_port get its own Projection
                     outcome_port_index = i
                 else:

@@ -1204,7 +1204,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"{STATE_FEATURES}) or a dict with entries of the form "
                                                         f"<state_feature>:<function>.")
             if len(convert_to_list(state_feat_fcts))>1:
-                invalid_fct_specs = [fct_spec for fct_spec in state_feat_fcts if not fct_spec in state_feats]
+                invalid_fct_specs = [fct_spec for fct_spec in state_feat_fcts if fct_spec not in state_feats]
                 if invalid_fct_specs:
                     raise OptimizationControlMechanismError(f"The following entries of the dict specified for "
                                                             f"'{STATE_FEATURE_FUNCTIONS} of {self.name} have keys that "
@@ -1468,18 +1468,18 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         """
 
-        # # MODIFIED 11/21/21 NEW:
-        # #  FIX - PURPOSE OF THE FOLLOWING IS TO "CAPTURE" CONTROL SPECS MADE LOCALLY ON MECHANISMS IN THE COMP
-        # #        AND INSTANTIATE ControlSignals FOR THEM HERE, ALONG WITH THOSE SPECIFIED IN THE CONSTRUCTOR
-        ##         FOR THE OCM. ALSO CAPTURES DUPLICATES (SEE MOD BELOW).
-        # # FIX: WITHOUT THIS, GET THE mod param ERROR;  WITH IT, GET FAILURES IN test_control:
-        # #        TestModelBasedOptimizationControlMechanisms_Execution
-        # #            test_evc
-        # #            test_stateful_mechanism_in_simulation
-        # #        TestControlMechanisms:
-        # #            test_lvoc
-        # #            test_lvoc_both_prediction_specs
-        # #            test_lvoc_features_function
+        # MODIFIED 11/21/21 NEW:
+        #  FIX - PURPOSE OF THE FOLLOWING IS TO "CAPTURE" CONTROL SPECS MADE LOCALLY ON MECHANISMS IN THE COMP
+        #        AND INSTANTIATE ControlSignals FOR THEM HERE, ALONG WITH THOSE SPECIFIED IN THE CONSTRUCTOR
+        #         FOR THE OCM. ALSO CAPTURES DUPLICATES (SEE MOD BELOW).
+        # FIX: WITHOUT THIS, GET THE mod param ERROR;  WITH IT, GET FAILURES IN test_control:
+        #        TestModelBasedOptimizationControlMechanisms_Execution
+        #            test_evc
+        #            test_stateful_mechanism_in_simulation
+        #        TestControlMechanisms:
+        #            test_lvoc
+        #            test_lvoc_both_prediction_specs
+        #            test_lvoc_features_function
         # if self.agent_rep and self.agent_rep.componentCategory=='Composition':
         #     control_signals_from_composition = self.agent_rep._get_control_signals_for_composition()
         # self.output_ports.extend(control_signals_from_composition)
@@ -2142,4 +2142,3 @@ class OptimizationControlMechanism(ControlMechanism):
             features = self._parse_state_feature_specs(features=features,
                                                        context=context)
         self.add_ports(InputPort, features)
-
