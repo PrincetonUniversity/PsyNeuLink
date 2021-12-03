@@ -82,6 +82,16 @@ parameterizations of OptimizationControlMechanism that implement various models 
 ### FIX: THROUGHOUT DOCUMENT, REWORD AS "optimizing control_allocation" RATHER THAN "maximizing" / "greatest"
 ### FIX: ADD REFERENCE TO agent_rep_type ATTRIBUTE
 
+# Document that failing to specify monitor_for_control or objective_mechanism creates a default outcome_input_port with no afferent projections
+          shadow_inputs attribute of InputPort (and conditions under which it exists)
+          OptimizationControlMechanism_State_Features and OptimizationControlMechanism_State_Features_Arg re:
+          - model-free vs. model-based
+          - Composition vs. CompositionFunctionApproximator
+          - state_input_port assignments
+          - assignment of state_feature_function:
+             for model-based assignment, can use state_features to specify which should get the function
+             ones that are not specified will get default function assigned
+
 COMMENT
 
 .. _OptimizationControlMechanism_Agent_Representation_Types:
@@ -98,7 +108,7 @@ corresponds closely to the distinction between *model-based* and *model-free* op
 <HTML REF>`_ and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
 COMMENT:
-FIX: THIS NEEDS TO BE RE-WRITTEN TO INDICATE THAT MODEL-BASED RELIES BOTH ON THE NATURE OF THE AGENT_REP AND THE STATE
+FIX: THIS NEEDS TO BE RE-WRITTEN TO INDICATE THAT MODEL-BASED RELIES BOTH ON THE NATURE OF THE AGENT_REP
      FULL MODEL-BASED USES THE COMPOSITION ITSELF AS THE OCM (BEST ESTIMATE IT HAS FOR ITS OWN POLICY) AND ACCESS TO
      STATE REPRESENTATIONS THAT FULLY DESCRIBE ALL EXPECTED STATES (I.E., DUPLICATE THE GENERATIVE PROCESS FOR) THE
      ENVIRONMENT.  SO, FULLY MODEL-BASED PROCESSING USES THE COMPOSITION ITSELF AS THE agent_rep AND A FULLY GENERATIVE
