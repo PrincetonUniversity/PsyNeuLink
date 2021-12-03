@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.14.g99dd9e8 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.13.ga1d4f2a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.g99dd9e8
+                  0+untagged.13.ga1d4f2a
                 </div>
               
             
@@ -950,10 +950,15 @@ and a corresponding MappingProjection from the sender to that InputPort;</p></li
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_montiored_for_control_input_ports">
-<span class="sig-name descname"><span class="pre">_instantiate_montiored_for_control_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_montiored_for_control_input_ports" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate InputPorts for items specified in monitor_for_control.</p>
-<p>Return sender ports and their value sizes</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._parse_monitor_for_control_input_ports">
+<span class="sig-name descname"><span class="pre">_parse_monitor_for_control_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._parse_monitor_for_control_input_ports" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get outcome_input_port specification dictionaries for items specified in monitor_for_control.</p>
+<dl class="simple">
+<dt>Note:  leave Projections unspecified, as they need to be added to self.aux_components</dt><dd><p>for validation and activation by Composition</p>
+</dd>
+</dl>
+<p>Return port specification dictionaries (<em>without</em> Projections to them specified), their value sizes,
+and monitored ports (to be used as Projection specifications by _instantiate_input_ports)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -969,7 +974,7 @@ and a corresponding MappingProjection from the sender to that InputPort;</p></li
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signals">
 <span class="sig-name descname"><span class="pre">_instantiate_control_signals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._instantiate_control_signals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Subclassess can override for class-specific implementation (see OptimiziationControlMechanism for example)</p>
+<dd><p>Subclassess can override for class-specific implementation (see OptimizationControlMechanism for example)</p>
 </dd></dl>
 
 <dl class="py method">
@@ -999,6 +1004,9 @@ once value has been expanded</p>
 </dd>
 </dl>
 <p>control_signals arg passed in to allow override by subclasses</p>
+<p>Warn if control_signal shares any ControlProjections with others in control_signals.
+Warn if control_signal is a duplicate of any in control_signals.</p>
+<p>Return True if control_signal is a duplicate</p>
 </dd></dl>
 
 <dl class="py method">
