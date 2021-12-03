@@ -7284,49 +7284,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.controller._activate_projections_for_compositions(self)
         return []
 
-    def _instantiate_controller_shadow_projections(self, context):
-
-        # INSTANTIATE SHADOW_INPUT PROJECTIONS
-        nested_cims = [comp.input_CIM for comp in self._get_nested_compositions()]
-        input_cims= [self.input_CIM] + nested_cims
-        # For the rest of the controller's input_ports if they are marked as receiving SHADOW_INPUTS,
-        #    instantiate the shadowing Projection to them from the sender to the shadowed InputPort
-        # FIX: 11/3/21 - IF Non-OCM IS ALLOWED AS CONTROLLER, MAY HAVE MORE THAN ONE InputPort FOR MONITORING
-        # Skip controller's outcome_input_ports
-        #    (they receive Projections from its objective_mechanism and/or directly from items in monitor_for_control
-        # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        for input_port in self.controller.input_ports[self.controller.num_outcome_input_ports:]:
-            if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
-                for proj in input_port.shadow_inputs.path_afferents:
-                    try:
-                        sender = proj.sender
-                        if sender.owner not in input_cims:
-                            # FIX: 11/15/21:  NEVER SEEMS TO MAKE IT HERE IN test/composition/test_control
-                            shadow_proj = self.add_projection(projection=MappingProjection(sender=sender,
-                                                                                           receiver=input_port),
-                                                              sender=sender.owner,
-                                                              receiver=self.controller)
-                            shadow_proj._activate_for_compositions(self)
-                        else:
-                            if not sender.owner.composition == self:
-                                sender_input_cim = sender.owner
-                                proj_index = sender_input_cim.output_ports.index(sender)
-                                sender_corresponding_input_projection =\
-                                    sender_input_cim.input_ports[proj_index].path_afferents[0]
-                                input_projection_sender = sender_corresponding_input_projection.sender
-                                if input_projection_sender.owner == self.input_CIM:
-                                    shadow_proj = MappingProjection(sender=input_projection_sender,
-                                                                 receiver = input_port)
-                                    shadow_proj._activate_for_compositions(self)
-                            else:
-                                shadow_proj = MappingProjection(sender=proj.sender, receiver=input_port)
-                                shadow_proj._activate_for_compositions(self)
-                    except DuplicateProjectionError:
-                        continue
-            for proj in input_port.path_afferents:
-                if proj.sender.owner not in nested_cims:
-                    proj._activate_for_compositions(self)
-
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition
 
