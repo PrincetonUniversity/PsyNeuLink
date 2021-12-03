@@ -180,7 +180,6 @@ class TestReport():
         """Test output and progress reports for execution of simulations by controller in both an outer and nested
         composition, using input dictionary, generator instance and generator function.
         """
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
@@ -441,8 +440,6 @@ class TestReport():
         assert actual_output == expected_output
 
     def test_nested_comps_and_sims_with_modulated_and_monitored_params_and_use_prefs(self):
-
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
