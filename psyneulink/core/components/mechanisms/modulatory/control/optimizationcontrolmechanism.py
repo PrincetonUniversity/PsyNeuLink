@@ -1358,12 +1358,28 @@ class OptimizationControlMechanism(ControlMechanism):
                                                           list=self.input_ports[start:stop])
 
         # Ensure that every state_input_port has no more than one afferent projection
-        for i in range(1, len(self.state_input_ports)):
+        # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
+        for i in range(self.num_outcome_input_ports, self.num_state_input_ports):
             port = self.input_ports[i]
             if len(port.path_afferents) > 1:
                 raise OptimizationControlMechanismError(f"Invalid {type(port).__name__} on {self.name}. "
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
+
+        # Ensure every Projection to outcome_input_port is from an InputPort in agent_rep if it is Composition
+        # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
+        # FIX: 12/4/21 - MOVE TO Composition.add_controller??
+        if self.agent_rep_type == MODEL_BASED and self.objective_mechanism is None:
+            all_agent_rep_nodes = [k[0] for k in self.agent_rep._get_nested_nodes()] + list(self.agent_rep.nodes)
+            invalid_outcome_input_ports = [proj.sender.owner.name
+                                           for port in self.outcome_input_ports
+                                           for proj in port.path_afferents
+                                           if port not in all_agent_rep_nodes]
+            if invalid_outcome_input_ports:
+                raise OptimizationControlMechanismError(f"{self.name} has 'outcome_ouput_ports' that receive "
+                                                        f"Projections from the following Components that do not "
+                                                        f"belong to its {AGENT_REP} ({self.agent_rep.name}): "
+                                                        f"{invalid_outcome_input_ports}. ")
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Override ControlMechanism to implement allow_probes=DIRECT option
