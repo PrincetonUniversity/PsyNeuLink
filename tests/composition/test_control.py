@@ -383,8 +383,8 @@ class TestControlSpecification:
             monitor_for_control = [I, B]       # Each nested at a different level
 
         if test == "state_features_test_internal":  # test for state_feature that is an INTERNAL Node
-            error_msg = 'Attempt to shadow the input(s) to a node (B) in a nested Composition (of OUTER COMP) ' \
-                        'is not currently supported.'
+            error_msg = 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP that is ' \
+                        'not an INPUT Node of that Composition is not currently supported.'
             state_features = B
             error_type = pnl.CompositionError
 

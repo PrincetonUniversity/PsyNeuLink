@@ -5384,9 +5384,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             def _get_sender_at_right_level(shadowed_proj):
                 """Search back up hierarchy of nested Compositions for sender at same level as **input_port**"""
                 if not isinstance(shadowed_proj.sender.owner, CompositionInterfaceMechanism):
-                    raise CompositionError(f"Attempt to shadow the input(s) to a node "
+                    raise CompositionError(f"Attempt to shadow the input to a node "
                                            f"({shadowed_proj.receiver.owner.name}) in a nested Composition "
-                                           f"(of {self.name}) is not currently supported.")
+                                           f"of {self.name} that is not an INPUT Node of that Composition is "
+                                           f"not currently supported.")
                 else:
                     #                                    WANT THIS ONE'S SENDER
                     #                       item[0]           item[1,0]            item[1,1]
