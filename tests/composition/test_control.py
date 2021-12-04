@@ -342,7 +342,6 @@ class TestControlSpecification:
         # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
         # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
 
-
     test_names = [
         "allowable1",
         "allowable2",
@@ -421,9 +420,6 @@ class TestControlSpecification:
         if "allowable" in test:
             ocm = pnl.OptimizationControlMechanism(name='OCM',
                                                    agent_rep=agent_rep,
-                                                   # state_features=A.input_port,  # <- CRASHES IN Composition._update_shadows_dict BECAUSE IT IS NESTED IN iComp
-                                                   # state_features=A,  # <- CRASHES IN _update_state_input_ports_for_controller BECAUSE IT IS NOT AN InputPort
-                                                   # state_features=[A,Y],
                                                    state_features=state_features,
                                                    monitor_for_control=monitor_for_control,
                                                    objective_mechanism=objective_mechanism,
