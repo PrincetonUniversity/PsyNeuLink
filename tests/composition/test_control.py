@@ -342,6 +342,71 @@ class TestControlSpecification:
         # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
         # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
 
+
+    test_names = [
+        "state_features_test",
+        "monitor_for_control_test",
+        "probe_test"
+    ]
+    @pytest.mark.parametrize("test", test_names, ids=test_names)
+    def test_state_features_and_monitor_for_control_in_agent_rep_and_allow_probes(self, test):
+        # FIX: ADD VERSION WITH agent_rep = CompositionFuntionApproximator
+        #      ADD VERSION WITH ObjectiveMechanism
+
+        I = pnl.ProcessingMechanism(name='I')
+        icomp = pnl.Composition(nodes=I, name='INNER COMP')
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        mcomp = pnl.Composition(pathways=[[A,B,C],icomp],
+                                name='MIDDLE COMP')
+
+        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
+
+        agent_rep = icomp
+        state_features = I
+        monitor_for_control = I
+        allow_probes = True
+
+        if test == "state_features_test":  # test for state_feature not in agent_rep (icomp, but B is mcomp)
+            error_msg = 'Attempt to shadow the input(s) to a node (B) in a nested Composition (of OUTER COMP) ' \
+                        'is not currently supported.'
+            state_features = B
+            error_type = pnl.CompositionError
+
+        if test == "monitor_for_control_test": # test for monitor_for_control not in agent_rep  (icomp, but B is mcomp)
+            error_msg = 'OCM has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
+                        'that do not belong to its agent_rep (INNER COMP): [\'B\']. '
+            monitor_for_control = B
+            error_type = pnl.OptimizationControlMechanismError
+
+        if test == "probe_test":  # test for monitor_for_control spec that is INTERNAL Node
+            error_msg = 'B found in nested Composition of OUTER COMP (MIDDLE COMP) but without ' \
+                        'required NodeRole.OUTPUT. Try setting \'allow_probes\' argument of OCM to True.'
+            allow_probes = False
+            monitor_for_control = B
+            agent_rep = mcomp
+            error_type = pnl.CompositionError
+
+        with pytest.raises(error_type) as err:
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   # state_features=A.input_port,  # <- CRASHES IN Composition._update_shadows_dict BECAUSE IT IS NESTED IN iComp
+                                                   # state_features=A,  # <- CRASHES IN _update_state_input_ports_for_controller BECAUSE IT IS NOT AN InputPort
+                                                   # state_features=[A,Y],
+                                                   state_features=state_features,
+                                                   monitor_for_control=monitor_for_control,
+                                                   allow_probes=allow_probes,
+                                                   function=pnl.GridSearch(),
+                                                   # control=(pnl.SLOPE,A), # <- ADD TEST FOR THIS ERROR
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
+                                                                                     allocation_samples=[10, 20, 30])
+                                                   )
+            ocomp.add_controller(ocm)
+        assert err.value.error_value == error_msg
+
+
     def test_agent_rep_assignement_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
         comp = pnl.Composition(name='comp',
@@ -375,7 +440,6 @@ class TestControlSpecification:
         assert old_ocm.composition is None
         assert old_ocm.state_input_ports[0].path_afferents == []
         assert not any(pnl.SLOPE in p_name for p_name in comp.projections.names)
-
 
     def test_hanging_control_spec_outer_controller(self):
         internal_mech = pnl.ProcessingMechanism(
@@ -435,7 +499,6 @@ class TestControlSpecification:
         result = outer_comp.run([1])
         assert result == [[5]]
         assert internal_mech.mod_afferents[0].sender.owner == inner_comp.controller
-
 
     def test_state_input_ports_for_two_input_nodes(self):
         # Inner Composition

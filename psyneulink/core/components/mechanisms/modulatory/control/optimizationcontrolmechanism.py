@@ -321,12 +321,13 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_Outcome_Args:
 
-* **outcome arguments** -- these include all of the `arguments used by a ControlMechanism to specify the Components
-  that are `monitored for control ControlMechanism_Monitor_for_Control>`, and used to determine the `outcome
-  <ControlMechanism.outcome>` that is used, in turn, to compute `net_outcome <ControlMechanism.net_outcome>`.
-  However, an OptimizationControlMechanism places some restrictions on their specification that, as with
-  `state_features <OptimizationControlMechanism_State_Features_Arg>`, depend on how nature of the `agent_rep
-  <OptimizationControlMechanism.agent_rep>`, as well as on an additional argument, **allow_probes**,
+* **outcome arguments** -- these include all the arguments of the constructor for a `ControlMechanism` that
+  are used to specify the Components to be `monitored for control ControlMechanism_Monitor_for_Control>`, that
+  are assigned  to its `monitor_for_control <ControlMecanism.monitor_for_control>` attribute, and the values
+  of which are assigned to its `outcome <ControlMechanism.outcome>` attribute.  However, an
+  OptimizationControlMechanism places some restrictions on the specification of these arguments -- that, as
+  with its `state_features <OptimizationControlMechanism_State_Features_Arg>`, depend on how nature of the
+  `agent_rep <OptimizationControlMechanism.agent_rep>` -- as well as on an additional argument, **allow_probes**,
   as described below.
 
   * *agent_rep is a Composition* -- the items specified to be monitored for control must belong to the `agent_rep
@@ -1398,7 +1399,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
-        # Ensure every Projection to outcome_input_port is from an InputPort in agent_rep if it is Composition
+        # Ensure all of the Components being monitored for control are in the agent_rep if it is Composition
         # FIX: 12/4/21 - MOVE TO Composition.add_controller or OCM._update_state_input_ports_for_controller??
         # FIX: 12/4/21 ADD VALIDATION FOR INPUT PORTS OF OBJECTIVE MECHANISM
         if self.agent_rep_type == MODEL_BASED:
