@@ -25,6 +25,7 @@ Contents
      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
      - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
      - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
+       - `allow_probes <OptimizationControlMechanism_Allow_Probes>`
   * `OptimizationControlMechanism_Structure`
      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
        - `State <OptimizationControlMechanism_State>`
@@ -320,27 +321,35 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_Outcome_Args:
 
-* **outcome arguments** -- the **objective_mechanism** or **monitor_for_control** arguments are used to specify the
-  value(s) used to evaluate the results of processing in the `same manner as for a ControlMechanism
-  <ControlMechanism_Monitor_for_Control>`.  However, in the case of an OptimizationControlMechanism, the results
-  pertain to the outcome of executing its `agent_rep  <OptimizationControlMechanism.agent_rep>`. Accordingly, as with
-  `state_features <>`, how this is specified depends on the nature of the `agent_rep
-  <OptimizationControlMechanism.agent_rep>`.
+* **outcome arguments** -- these include all of the `arguments used by a ControlMechanism to specify the Components
+  that are `monitored for control ControlMechanism_Monitor_for_Control>`, and used to determine the `outcome
+  <ControlMechanism.outcome>` that is used, in turn, to compute `net_outcome <ControlMechanism.net_outcome>`.
+  However, an OptimizationControlMechanism places some restrictions on their specification that, as with
+  `state_features <OptimizationControlMechanism_State_Features_Arg>`, depend on how nature of the `agent_rep
+  <OptimizationControlMechanism.agent_rep>`, as well as on an additional argument, **allow_probes**,
+  as described below.
 
-  * *agent_rep is a Composition* -- the **state_features** specify the inputs to the Composition when it is
-    executed by the Opti
+  * *agent_rep is a Composition* -- the items specified to be monitored for control must belong to the `agent_rep
+    <OptimizationControlMechanism.agent_rep>`, since those are the only ones that will be executed when the
+    `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` is called; an error will be generated
+    identifying any Components that do not belong to the `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
-  XXX
+  * *agent_rep is a CompositionFunctionApproximator* -- the items specified to be monitored for control can be any
+    within the Composition for which the OptimizationControlMechanism is the `controller <Composition_Controller>`;
+    this is because their values during the last execution of the Composition are used to determine the `net_outcome
+    ControlMechanism.net_outcome>` that the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
+    `adapt <CompositionFunctionApproximator.adapt>` method -- if it has one -- seeks to predict.  Accordingly,
+    the values of the items specified to be monitored control must match, in shape and order, the
+    **net_outcome** of that `adapt <CompositionFunctionApproximator.adapt>` method.
 
-  Accordingly, if
-  that is a `Composition`, then any Components specified in the **monitor_for_control** argument, either for a
-  specified ObjectiveMechanism or directly to the OptimizationControlMechanism, must be in that Composition.  The
-  values of those Components are assigned as the OptimizationControlMechanism's `outcome
-  <OptimizationControlMechanism.outcome>` attribute. If the `agent_rep  <OptimizationControlMechanism.agent_rep>` is
-  a `CompositionFunctionApproximator`, then the value returned the OptimizationControlMechanism's `evaluate_agent_rep
-  <OptimizationControlMechanism.evaluate_agent_rep>` method is assigned as the `outcome <OptimizationControlMechanism.outcome>`.
-  FIX: IF AGENT_REP IS A COMPOSITION, MUST BE FROM AGENT_REP
-       OTHERWISE, IT IS PROVIDED BY RESULT OF EVALUATE METHOD
+.. _OptimizationControlMechanism_Allow_Probes:
+
+* **allow_probes** -- this can be used to specify Components to be `monitored for control
+  <ControlMechanism_Monitor_for_Control>` that are `INTERNAL <NodeRole.INTERNAL>` `Nodes <Composition_Nodes>`
+  of a `nested Composition <Composition_Nested>`; ordinarily, specifying Components to be monitored within a
+  nested Composition requires that they be `OUTPUT <NodeRole.OUTPUT>` Nodes of that Composition (see `allow_probes
+  <OptimizationControlMechanism.allow_probes>` for additional details).  These can be thought of as providing
+  access to "latent variable" of the Composition being monitored.
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -390,10 +399,10 @@ OptimizationControlMechanism is the controller, then it must meet the following 
       - `control_allocation <ControlMechanism.control_allocation>` (set of parameters that led to the net_outcome);
       - `net_outcome <ControlMechanism.net_outcome>` (the net_outcome that resulted from the `state_feature_values
         <OptimizationControlMechanism.state_feature_values>` and `control_allocation
-        <ControlMechanism.control_allocation>`
+        <ControlMechanism.control_allocation>`) that must match the shape of `outcome <ControlMechanism.outcome>`.
       COMMENT:
       - `num_estimates <OptimizationControlMechanism.num_trials_per_estimate>` (number of estimates of `net_outcome
-        <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`);
+        <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`).
       COMMENT
 
  .. _OptimizationControlMechanism_State:
@@ -511,6 +520,7 @@ InputPort, that is placed in its `outcome <OptimizationControlMechanism.outcome>
 
 COMMENT:
 ADD HINT HERE RE: USE OF CONCATENATION
+
 COMMENT
 
 .. _OptimizationControlMechanism_Monitor_for_Control:
@@ -528,10 +538,13 @@ attributes, specified in the corresponding arguments of its constructor (see `Ou
 `state <OptimizationControlMechanism_State>`.
 
 COMMENT:
-FIX: MENTION allow_probes OPTION HERE
 FIX: NEED TO DESCRIBE CASES FOR agent_rep == Composition AND CompositionFunctionApproximator
-FIX: ADD TECHNICAL NOTE THAT, FOR allow_probes PROJECTIONS FROM PROBES COME FROM THE CIM AT THE SAME LEVEL AS THE OCM
-     AND THAT THE NODE IS RELABELED AS "OUTPUT"; ALSO DESCRIBE "DIRECT" OPTION
+     MENTION allow_probes OPTION HERE AND  ADD TECHNICAL NOTE THAT, FOR allow_probes PROJECTIONS FROM PROBES COME
+     FROM THE CIM AT THE SAME LEVEL AS THE OCM AND THAT THE NODE IS RELABELED AS "OUTPUT"; ALSO DESCRIBE "DIRECT" OPTION
+  .. technical_note::
+     If `allow_probes <OptimizationControlMechanism.allow_probes>` is assigned *DIRECT*, Projections to the
+     corresponding
+
 the items specified by `monitor_for_control
 <ControlMechanism.monitor_for_control>` are all assigned `MappingProjections <MappingProjection>` to a single
 *OUTCOME* InputPort.  This is assigned `Concatenate` as it `function <InputPort.function>`, which concatenates the
@@ -793,7 +806,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.state_input_ports>` assigned to each **state_feature**
         (see `state_feature_functions <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
 
-    allow_probes : bool or DIRECT : default False
+    allow_probes : bool : default False
         specifies whether `Projections <Projection>` are permitted to the ControlMechanism from items
         `being monitored <ControlMechanism_Monitor_for_Control_Argument>` that are INTERNAL `Nodes <Composition_Nodes>`
         of a `nested Composition <Composition_Nested>` (see `allow_probes <OptimizationControlMechanism.allow_probes>`
@@ -891,7 +904,7 @@ class OptimizationControlMechanism(ControlMechanism):
     num_state_input_ports : int
         cantains the number of `state_input_ports <OptimizationControlMechanism.state_input_ports>`.
 
-    allow_probes : bool or DIRECT
+    allow_probes : bool
         this is a feature that is unique to OptimizationControlMechanism and any subclasses;  it determines whether
         any `Projections <Projection>` are permitted to the ControlMechanism from items being `monitored
         <ControlMechanism_Monitor_for_Control_Argument>`, including those that are INTERNAL `Nodes <Composition_Nodes>`
@@ -908,13 +921,13 @@ class OptimizationControlMechanism(ControlMechanism):
           one of the OptimizationControlMechanism's `outcome_input_ports <ControlMechanism.outcome_input_ports>`,
           and their values will be included in the Composition's `results <Composition.results>` attribute.
 
-        - *DIRECT*: same as True, except that the specified Nodes will project *directly* to one of the
-          OptimizationControlMechanism's `outcome_input_ports <ControlMechanism.outcome_input_ports>`,
-          skipping all intervening `output_CIM <Composition.output_CIM>`\\s.
+          .. technical_note::
 
-          .. note::
-             Specifying allow_probes as DIRECT is *not recommended*; it prevents use of `compilation
-             <Composition_Compilation>`.  It is supported only for debugging purposes.
+            *DIRECT*: this is also a permitted value of **allow_probes**;  the functional result is the same,
+            but in this case the specified Nodes project *directly* to one of the OptimizationControlMechanism's
+            `outcome_input_ports <ControlMechanism.outcome_input_ports>`, skipping all intervening `output_CIM
+            <Composition.output_CIM>`\\s.  This specification is *not recommended*, as it prevents use of `compilation
+            <Composition_Compilation>`.  It is supported only for debugging purposes only.
 
     outcome_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `OutputPorts <OutputPort>` that receive `Projections <Projection>`
@@ -1329,7 +1342,9 @@ class OptimizationControlMechanism(ControlMechanism):
         The constructed state_input_ports  are passed to ControlMechanism_instantiate_input_ports(),
              which appends them to the InputPort(s) that receive input from the **objective_mechanism* (if specified)
              or **monitor_for_control** ports (if **objective_mechanism** is not specified).
-        Also ensures that every state_input_port has only a single Projection.
+        Also ensures that:
+             - every state_input_port has only a single Projection;
+             - every outcome_input_ports receive Projections from within the agent_rep if it is a Composition.
 
         If no **state_features** are specified in the constructor, assign ones for INPUT Nodes of owner.
           - warn for model-free `model-free optimization <<OptimizationControlMechanism_Model_Based>`.
@@ -1384,11 +1399,16 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
         # Ensure every Projection to outcome_input_port is from an InputPort in agent_rep if it is Composition
-        # FIX: 12/4/21 - MOVE TO Composition.add_controller??
-        if self.agent_rep_type == MODEL_BASED and self.objective_mechanism is None:
+        # FIX: 12/4/21 - MOVE TO Composition.add_controller or OCM._update_state_input_ports_for_controller??
+        # FIX: 12/4/21 ADD VALIDATION FOR INPUT PORTS OF OBJECTIVE MECHANISM
+        if self.agent_rep_type == MODEL_BASED:
+            if self.objective_mechanism:
+                outcome_input_ports = self.objective_mechanism.input_ports
+            else:
+                outcome_input_ports = self.outcome_input_ports
             all_agent_rep_nodes = [k[0] for k in self.agent_rep._get_nested_nodes()] + list(self.agent_rep.nodes)
             invalid_outcome_input_ports = [proj.sender.owner.name
-                                           for port in self.outcome_input_ports
+                                           for port in outcome_input_ports
                                            for proj in port.path_afferents
                                            if proj.sender.owner not in all_agent_rep_nodes]
             if invalid_outcome_input_ports:
