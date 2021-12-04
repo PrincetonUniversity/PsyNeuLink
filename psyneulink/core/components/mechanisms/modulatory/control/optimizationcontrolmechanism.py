@@ -24,7 +24,7 @@ Contents
      - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
      - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
-     - `Outcomes  <OptimizationControlMechanism_Outcome_Args>` 
+     - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
   * `OptimizationControlMechanism_Structure`
      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
        - `State <OptimizationControlMechanism_State>`
@@ -320,10 +320,27 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_Outcome_Args:
 
-* **outcome arguments** -- these specify the value(s) used to determine the outcome of executing the `agent_rep
-  <OptimizationControlMechanism.agent_rep>` if it is a `Composition`.
-  . For the most part, the `options <ControlMechanism_Monitor_for_Control>`
-  are the same as for a `ControlMechanism`:  if an `objective_mechanism <>
+* **outcome arguments** -- the **objective_mechanism** or **monitor_for_control** arguments are used to specify the
+  value(s) used to evaluate the results of processing in the `same manner as for a ControlMechanism
+  <ControlMechanism_Monitor_for_Control>`.  However, in the case of an OptimizationControlMechanism, the results
+  pertain to the outcome of executing its `agent_rep  <OptimizationControlMechanism.agent_rep>`. Accordingly, as with
+  `state_features <>`, how this is specified depends on the nature of the `agent_rep
+  <OptimizationControlMechanism.agent_rep>`.
+
+  * *agent_rep is a Composition* -- the **state_features** specify the inputs to the Composition when it is
+    executed by the Opti
+
+  XXX
+
+  Accordingly, if
+  that is a `Composition`, then any Components specified in the **monitor_for_control** argument, either for a
+  specified ObjectiveMechanism or directly to the OptimizationControlMechanism, must be in that Composition.  The
+  values of those Components are assigned as the OptimizationControlMechanism's `outcome
+  <OptimizationControlMechanism.outcome>` attribute. If the `agent_rep  <OptimizationControlMechanism.agent_rep>` is
+  a `CompositionFunctionApproximator`, then the value returned the OptimizationControlMechanism's `evaluate_agent_rep
+  <OptimizationControlMechanism.evaluate_agent_rep>` method is assigned as the `outcome <OptimizationControlMechanism.outcome>`.
+  FIX: IF AGENT_REP IS A COMPOSITION, MUST BE FROM AGENT_REP
+       OTHERWISE, IT IS PROVIDED BY RESULT OF EVALUATE METHOD
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -1367,19 +1384,19 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
         # Ensure every Projection to outcome_input_port is from an InputPort in agent_rep if it is Composition
-        # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         # FIX: 12/4/21 - MOVE TO Composition.add_controller??
         if self.agent_rep_type == MODEL_BASED and self.objective_mechanism is None:
             all_agent_rep_nodes = [k[0] for k in self.agent_rep._get_nested_nodes()] + list(self.agent_rep.nodes)
             invalid_outcome_input_ports = [proj.sender.owner.name
                                            for port in self.outcome_input_ports
                                            for proj in port.path_afferents
-                                           if port not in all_agent_rep_nodes]
+                                           if proj.sender.owner not in all_agent_rep_nodes]
             if invalid_outcome_input_ports:
                 raise OptimizationControlMechanismError(f"{self.name} has 'outcome_ouput_ports' that receive "
                                                         f"Projections from the following Components that do not "
                                                         f"belong to its {AGENT_REP} ({self.agent_rep.name}): "
                                                         f"{invalid_outcome_input_ports}. ")
+
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Override ControlMechanism to implement allow_probes=DIRECT option
