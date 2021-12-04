@@ -81,24 +81,6 @@ OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism
 COMMENT:
 The table `below <OptimizationControlMechanism_Examples>` lists different
 parameterizations of OptimizationControlMechanism that implement various models of EVC Optimization.
-
-### FIX: THROUGHOUT DOCUMENT, REWORD AS "optimizing control_allocation" RATHER THAN "maximizing" / "greatest"
-### FIX: ADD REFERENCE TO agent_rep_type ATTRIBUTE
-
-# Document
-
-    - state_feature_functions:
-        takes either one, that is applied to all state_input_ports,
-        or a dictionary that specifies what function to appply to each (which must correspond to either
-        the ones specified or, if none, then INPUT Nodes of the Composition or ones nested within it)
-        - assignment of state_feature_function:
-          for model-based assignment, can use state_features to specify which should get the function
-          overrides automatic specification, but aggregaate shape must match input to Composition.run()
-
-    !! failing to specify monitor_for_control or objective_mechanism creates a default outcome_input_port with no afferent projections
-      - shadow_inputs attribute of InputPort (and conditions under which it exists)
-
-
 COMMENT
 
 .. _OptimizationControlMechanism_Agent_Representation_Types:
@@ -163,7 +145,6 @@ Creating an OptimizationControlMechanism
 The constructor has the same arguments as a `ControlMechanism <ControlMechanism>`, with the following
 exceptions/additions, which are specific to the OptimizationControlMechanism:
 
-
 .. _OptimizationControlMechanism_Agent_Rep_Arg:
 
 * **agent_rep** -- specifies the `Composition` used by the OptimizationControlMechanism's `evaluate_agent_rep
@@ -179,50 +160,6 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   <OptimizationControlMechanism_Agent_Rep>`.  The type of Component assigned as the `agent_rep
   <OptimizationControlMechanism.agent_rep>` is identified in the OptimizationControlMechanism's `agent_rep_type
   <OptimizationControlMechanism.agent_rep_type>` attribute.
-
-COMMENT:
-# FIX: 11/3/21:
-
-        FIX: FROM BELOW (UNDER : *State Features* ) --------------------------------------------------------------------
-                            ^^^^^^^^^^^^^^^^
-        # FIX: MOVE MOST OF THIS TO _OptimizationControlMechanism_State_Features_Arg ABOVE.
-
-        For OptimizationControlMechanisms that
-        implement `model-free <OptimizationControlMechanism_Model_Free>` optimization, its `state_feature_values
-        <OptimizationControlMechanism.state_feature_values>` are used by its `evaluate_agent_rep
-        <OptimizationControlMechanism.evaluate_agent_rep>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
-        for a given `control_allocation <ControlMechanism.control_allocation>`.  For OptimizationControlMechanisms that
-        implement fully `agent_rep-based <OptimizationControlMechanism_Model_Based>` optimization, the `state_feature_values
-        <OptimizationCozntrolMechanism.state_feature_values>` are used as the Composition's `input <Composition.input_values>`
-        when it is executed to evaluate the `net_outcome <ControlMechanism.net_outcome>` for a given
-        `control_allocation<ControlMechanism.control_allocation>`.
-
-        State features can be of two types:
-
-        * *Input Features* -- these are values received as input by other Mechanisms in the `Composition`.
-          They are specified as `shadowed inputs <InputPort_Shadow_Inputs>` in the **state_features** argument
-          of the OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`).
-          An InputPort is created and assigned to the OptimizationControlMechanism's `state_input_ports
-          <OptimizationControlMechanism.state_input_ports>` attribute for each feature, that receives a
-          `Projection` paralleling the input to be shadowed.
-        ..
-        * *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other
-          `Mechanism <Mechanism>` in the Composition.  These too are specified in the **state_features** argument of the
-          OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a
-          `Projection` from the specifiedOutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.
-
-  `model-free <OptimizationControlMechanism_Model_Free>`
-  `model-based <OptimizationControlMechanism_Model_Based>`
-
-   OUT TAKES:
-
-  `state_feature_functions
-        <OptimizationControlMechanism_Feature_Function>` that transforms these (see `above
-        <OptimizationControlMechanism_State_Features_Arg>`).
-
-
-        FIX: -------------------------------------------------------------------------------------------------------
-COMMENT
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
@@ -240,18 +177,30 @@ COMMENT
     If **state_features** is not specified, this is done automatically by constructing a set of `state_input_ports
     <OptimizationControlMechanism.state_input_ports>` that `shadow the input <InputPort_Shadow_Inputs>` to every
     `InputPort` of every `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition assigned as
-    the `agent_rep <OptimizationControlMechanism.agent_rep>`. They can also be specified explicitly, using
-    the formats described below.  This can be useful if different functions need to be assigned to different
-    `state_input_ports <OptimizationControlMechanism.state_input_ports>` (see `below
-    <OptimizationControlMechanism_State_Feature_Functions_Arg>`);  however, doing so overrides the automatic
-    behavior, and so a complete and appropriate set of specifications must be provided (see note below).
+    the `agent_rep <OptimizationControlMechanism.agent_rep>`.  In this case, if `controller_mode
+    <OptimizationControlMechanism.controller_mode>` is *AFTER* (the default), the `input <Composition.input_values>` to
+    the `Composition` on the current trial is used as the input to the Composition for the optimization process; if
+    `controller_mode <OptimizationControlMechanism.controller_mode>` is *BEFORE*, then the inputs from the previous
+    trial are used.
+
+    The **state_features** argument can also be specified explicitly, using the formats described below.  This is
+    useful if different functions need to be assigned to different `state_input_ports
+    <OptimizationControlMechanism.state_input_ports>` used to generate the corresponding `state_feature_values
+    state_feature_values <OptimizationControlMechanism.state_feature_values>` (see `below
+    <OptimizationControlMechanism_State_Feature_Functions_Arg>`). However, doing so overrides the automatic
+    assignment of all state_features, and so a complete and appropriate set of specifications must be provided
+    (see note below).
+
+    .. _OptimizationControlMechanism_State_Features_Shapes:
 
     .. note::
        If **state_features** *are* specified explicitly when the `agent_rep <OptimizationControlMechanism.agent_rep>`
        is a Composition, there must be one for every `InputPort` of every `INPUT <NodeRole.INPUT>` `Node
-       <Composition_Nodes>` in that Composition, and these must -- both individually, and in their order -- match
+       <Composition_Nodes>` in that Composition, and these must match -- both individually, and in their order --
        the `inputs to the Composition <Composition_Execution_Inputs>`) required by its `run <Composition.run>`
        method.  Failure to do so generates an error indicating this.
+
+    .. _OptimizationControlMechanism_Selective_Input:
 
     .. hint::
        For cases in which only a subset of the inputs to the Composition are relevant to its optimization (e.g.,
@@ -278,18 +227,15 @@ COMMENT
        can the **state_features** specification be validated;  thus, specifying inappropriate **state_features** may
        produce errors that are unexpected or difficult to interpret.
 
+  COMMENT:
+   FIX: CONFIRM (OR IMPLEMENT?) THE FOLLOWING
+   If all of the inputs to the Composition are still required, these can be specified using the keyword *INPUTS*,
+   in which case they are retained along with any others specified.
+  COMMENT
 
-COMMENT:
-    FIX: CONFIRM THE FOLLOWING
-If all
-  of the inputs to the Composition are still required, these can be specified using the keyword *INPUTS*, in which
-  case they are retained along with any others specified.  Individual inputs to the Composition can be specified,
-  as well as the inputs to or outputs of any of its `Nodes <Composition_Nodes>`, using any of the following, either
-  singly or in a list:
-COMMENT
+  The specifications in the **state_features** argument are used to construct the `state_input_ports
+  <OptimizationControlMechanism.state_input_ports>`, and can be any of the following, used either singly or in a list:
 
-  The specifications in the **state_features** argument is used to construct the `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>`, and can be any of the following, either singly or in a list:
 
   * *InputPort specification* -- this creates an InputPort as one of the OptimizationControlMechanism's
    `state_input_ports <OptimizationControlMechanism.state_input_ports>` that `shadows <InputPort_Shadow_Inputs>` the
@@ -305,35 +251,37 @@ COMMENT
     `state_feature_values <OptimizationControlMechanism.state_feature_values>`
 
   COMMENT:
-      FIX: CONFIRM THE FOLLOWING
+      FIX: CONFIRM THAT THE FOLLOWING ALL WORK
   COMMENT
   State features can also be added to an existing OptimizationControlMechanism using its `add_state_features` method.
-  If the **state_features** argument is not specified, then the `input <Composition.input_values>` to the
-  `Composition` on the last trial executed is used to predict the `net_outcome <ControlMechanism.net_outcome>` for
-  the upcoming trial;
-  COMMENT:
-      FIX: CONFIRM THE FOLLOWING
-  COMMENT
-  if `controller_mode <OptimizationControlMechanism.controller_mode>` = *AFTER*, the input used is from the trial just
-  executed; if it is *BEFORE*, then it is from the previous trial.
-
 
 .. _OptimizationControlMechanism_State_Feature_Functions_Arg:
 
-COMMENT:
-    FIX: 11/26/21 EXPLAIN WHAT IS ACTUALLY FINALLY IMPLEMENTED:
-         IF A SINGLE FUNCTION IS SPECIFIED, IT WILL BE APPLIED TO ALL state_input_ports
-         OTHERWISE A DICTIONARY MUST BE PROVIDED WITH A KEY FOR EACH state_input_port AND ITS FUNCTION AS THE VALUE
-         AND THIS CAN ONLY INCLUDE SPECIFIED state_features OR, IF THEY WERE AUTOMATICALY GENERATED, THEN
-         THE InputPorts OF ANY INPUT NODES ON THE agent_rep AND/OR ANY NESTED COMPOSITIONS WITHIN IT.
-COMMENT
+* **state_feature_functions** -- specifies the `function(s) <InputPort.function>` assigned to the `state_input_ports
+  <OptimizationControlMechanism.state_input_ports>` created for each of the corresonding **state_features**.
+  If **state_feature_functions** is not specified, the identity function is assigned to all of the `state_input_ports
+  <OptimizationControlMechanism.state_input_ports>` (whether those were created automatically or explicitly specified;
+  see `above <OptimizationControlMechanism_State_Features_Arg>`).  However, functions can also be specified for the
+  individual `state_input_ports <OptimizationControlMechanism.state_input_ports>` associated with each state_feature.
+  This can be useful, for example to provide an average or integrated value of prior inputs, to select specific
+  inputs for use (see `hint <OptimizationControlMechanism_Selective_Input>` above), and/or use a generative model
+  of the environment to provide inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>` during the
+  optimization process. This can be done by specifying the **state_feature_functions** argument with a dict with keys
+  that match each of the specifications in the **state_features** argument, and corresponding values that specify the
+  function to use for each.
 
-* **state_feature_functions** -- specifies `function <InputPort>` of the InputPort created for each item listed in
-  **state_features**.  By default, this is the identity function, that assigns the current value of the feature to the
-  OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`attribute.
-  However, other functions can be assigned, for example to maintain a record of past values, integrate them over
-  trials, and/or provide a generative model of the environment (for use in `model-based processing
-  <OptimizationControlMechanism_Model_Based>`.
+    .. note::
+       A dict can be used to specify **state_feature_functions** only if **state_features** are specified explicitly
+       (see `above <OptimizationControlMechanism_State_Features_Arg>`). The dict must contain one entry for
+       each of the items specified in **state_features**, and the value returned by each function must preserve the
+       shape of its input, which must match that of the corresponding input to the Composition's `run
+       <Composition.run>` method (see `note <OptimizationControlMechanism_State_Features_Shapes>` above).
+
+COMMENT:
+* **monitor_for_control** XXX
+    !! failing to specify monitor_for_control or objective_mechanism creates a default outcome_input_port with no afferent projections
+      - shadow_inputs attribute of InputPort (and conditions under which it exists)
+COMMENT
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -345,6 +293,10 @@ and additions.
 
 *Input*
 ^^^^^^^
+
+COMMENT:
+  DESCRIBE outcome_input_ports and state_input_ports here, and that the latter follow the former (with num_XXX attrs)
+COMMENT
 
 While an OptimizationControlMechanism may be assigned a `objective_mechanism <ControlMechanism.objective_mechanism>`
 like any ControlMechanism, the input it receives from this is handled in a more specialized manner (see
