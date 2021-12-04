@@ -3165,7 +3165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
         deterines the frequency at which the `controller <Composition.controller>` is executed, either before or
-        after the Composition as determined by `controller_mode <cComposition.ontroller_mode>` (see
+        after the Composition as determined by `controller_mode <Composition.ontroller_mode>` (see
         `Composition_Controller_Execution` for additional details).
 
     controller_condition : Condition

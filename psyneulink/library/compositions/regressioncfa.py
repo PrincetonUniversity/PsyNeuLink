@@ -208,7 +208,7 @@ class RegressionCFA(CompositionFunctionApproximator):
     regression_weights : 1d array
         result returned by `update_weights <RegressionCFA.update_weights>, and used by
         `evaluate <RegressionCFA.evaluate>` method together with `prediction_vector <RegressionCFA.prediction_vector>`
-        to generate predicted `net_outcome <OptimizationControlMechanism.net_outcome>`.
+        to generate predicted `net_outcome <ControlMechanism.net_outcome>`.
 
     """
 
