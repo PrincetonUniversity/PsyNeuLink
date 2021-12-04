@@ -7205,7 +7205,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 keep_checking = True
                             # Otherwise, return usual error
                             else:
-                                raise CompositionError(e.error_value)
+                                error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
+                                                            f"{self.controller.name} to True."
+                                raise CompositionError(error_msg)
                         else:
                             assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
                                           f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"

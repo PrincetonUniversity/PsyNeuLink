@@ -24,6 +24,7 @@ Contents
      - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
      - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
+     - `Outcomes  <OptimizationControlMechanism_Outcome_Args>` 
   * `OptimizationControlMechanism_Structure`
      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
        - `State <OptimizationControlMechanism_State>`
@@ -317,12 +318,19 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
        shape of its input, which must match that of the corresponding input to the Composition's `run
        <Composition.run>` method (see `note <OptimizationControlMechanism_State_Features_Shapes>` above).
 
+.. _OptimizationControlMechanism_Outcome_Args:
+
+* **outcome arguments** -- these specify the value(s) used to determine the outcome of executing the `agent_rep
+  <OptimizationControlMechanism.agent_rep>` if it is a `Composition`.
+  . For the most part, the `options <ControlMechanism_Monitor_for_Control>`
+  are the same as for a `ControlMechanism`:  if an `objective_mechanism <>
+
 .. _OptimizationControlMechanism_Structure:
 
 Structure
 ---------
 
-An OptimizationControl Mechanism conforms to the structure of a `ControlMechanism`, with the following exceptions
+An OptimizationControlMechanism conforms to the structure of a `ControlMechanism`, with the following exceptions
 and additions.
 
 .. _OptimizationControlMechanism_Agent_Rep:
@@ -464,16 +472,16 @@ its `agent_rep <OptimizationControlMechanism.agent_rep>`.  The value of the `out
 
 *objective_mechanism*
 
-If an OCM has an `objective_mechanism <ControlMechanism.objective_mechanism>`, it is assigned a single
-outcome_input_port, named *OUTCOME*, that receives a Projection from the objective_mechanism's
-`*OUTCOME* OutputPort <REF>`. The OptimizationControlMechanism's `objective_mechanism <ControlMechanism>`
-is used to evaluate the outcome of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given
+If an OptimizationControlMechanism has an `objective_mechanism <ControlMechanism.objective_mechanism>`, it is
+assigned a single outcome_input_port, named *OUTCOME*, that receives a Projection from the objective_mechanism's
+`*OUTCOME* OutputPort <REF>`. The OptimizationControlMechanism's `objective_mechanism <ControlMechanism>` is
+used to evaluate the outcome of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given
 `state <OptimizationControlMechanism_State>`. This passes the result to the OptimizationControlMechanism's *OUTCOME*
 InputPort, that is placed in its `outcome <OptimizationControlMechanism.outcome>` attribute.
 
 .. note::
-    The `objective_mechanism <ControlMechanism.objective_mechanism>` and its `function <ObjectiveMechanism.function>`
-    are distinct from, and should not be confused with the `objective_function
+    An OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` and its `function
+    <ObjectiveMechanism.function>` are distinct from, and should not be confused with the `objective_function
     <OptimizationFunction.objective_function>` parameter of the OptimizationControlMechanism's `function
     <OptimizationControlMechanism.function>`.  The `objective_mechanism <ControlMechanism.objective_mechanism>`\\'s
     `function <ObjectiveMechanism.funtion>` evaluates the `outcome <ControlMechanism.outcome>` of processing
@@ -492,11 +500,22 @@ COMMENT
 
 *monitor_for_control*
 
+If an OptimizationControlMechanism is not assigned an `objective_mechanism <ControlMechanism.objective_mechanism>`,
+then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
+`monitor_for_control <ControlMechanism.monitor_for_control>`, outcome_input_ports_option 
+<ControlMechanism.outcome_input_ports_option>`, and `allow_probes <OptimizationControlMechanism.allow_probes>` 
+attributes, specified in the corresponding arguments of its constructor (see `Outcomes 
+<OptimizationControlMechanism_Outcome_Args>` above).  Their value(s) are assigned as the OptimizationControlMechanism's
+`outcome <OptimizationControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
+<ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given
+`state <OptimizationControlMechanism_State>`.
 
-# FIX: GOT TO HERE
-
-If it is not assigned an `objective_mechanism
-<ControlMechanism.objective_mechanism>`, then the items specified by `monitor_for_control
+COMMENT:
+FIX: MENTION allow_probes OPTION HERE
+FIX: NEED TO DESCRIBE CASES FOR agent_rep == Composition AND CompositionFunctionApproximator
+FIX: ADD TECHNICAL NOTE THAT, FOR allow_probes PROJECTIONS FROM PROBES COME FROM THE CIM AT THE SAME LEVEL AS THE OCM
+     AND THAT THE NODE IS RELABELED AS "OUTPUT"; ALSO DESCRIBE "DIRECT" OPTION
+the items specified by `monitor_for_control
 <ControlMechanism.monitor_for_control>` are all assigned `MappingProjections <MappingProjection>` to a single
 *OUTCOME* InputPort.  This is assigned `Concatenate` as it `function <InputPort.function>`, which concatenates the
 `values <Projection_Base.value>` of its Projections into a single array (that is, it is automatically configured
@@ -504,9 +523,6 @@ to use the *CONCATENATE* option of a ControlMechanism's `outcome_input_ports_opt
 <ControlMechanism.outcome_input_ports_option>` Parameter). This ensures that the input to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` has the same format as when an
 `objective_mechanism <ControlMechanism.objective_mechanism>` has been specified, as described below.
-
-COMMENT:
-  EXPLAIN ALLOW_PROBES HERE
 COMMENT
 
 
