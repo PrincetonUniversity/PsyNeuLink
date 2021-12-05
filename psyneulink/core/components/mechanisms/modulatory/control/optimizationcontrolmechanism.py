@@ -716,7 +716,8 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
+from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
+    ControlMechanism, ControlMechanismError
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -1399,25 +1400,15 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
+    def _validate_monitor_for_control(self, nodes):
         # Ensure all of the Components being monitored for control are in the agent_rep if it is Composition
-        # FIX: 12/4/21 - MOVE TO Composition.add_controller or OCM._update_state_input_ports_for_controller??
-        # FIX: 12/4/21 ADD VALIDATION FOR INPUT PORTS OF OBJECTIVE MECHANISM
         if self.agent_rep_type == MODEL_BASED:
-            if self.objective_mechanism:
-                outcome_input_ports = self.objective_mechanism.input_ports
-            else:
-                outcome_input_ports = self.outcome_input_ports
-            all_agent_rep_nodes = [k[0] for k in self.agent_rep._get_nested_nodes()] + list(self.agent_rep.nodes)
-            invalid_outcome_input_ports = [proj.sender.owner.name
-                                           for port in outcome_input_ports
-                                           for proj in port.path_afferents
-                                           if proj.sender.owner not in all_agent_rep_nodes]
-            if invalid_outcome_input_ports:
+            try:
+                super()._validate_monitor_for_control(self.agent_rep._get_all_nodes())
+            except ControlMechanismError as e:
                 raise OptimizationControlMechanismError(f"{self.name} has 'outcome_ouput_ports' that receive "
                                                         f"Projections from the following Components that do not "
-                                                        f"belong to its {AGENT_REP} ({self.agent_rep.name}): "
-                                                        f"{invalid_outcome_input_ports}. ")
-
+                                                        f"belong to its {AGENT_REP} ({self.agent_rep.name}): {e.data}.")
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Override ControlMechanism to implement allow_probes=DIRECT option

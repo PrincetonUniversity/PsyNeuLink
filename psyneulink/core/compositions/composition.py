@@ -3909,6 +3909,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
+    def _get_all_nodes(self):
+        """Return all nodes, including those within nested Compositions at any level
+        Note:  this is distinct from the _all_nodes propety, which returns all nodes at the top level"""
+        return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
+
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
            to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
@@ -4106,6 +4111,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(self.controller, 'state_input_ports'):
                 self.controller._update_state_input_ports_for_controller(context=context)
                 # self._instantiate_controller_shadow_projections(context=context)
+            self.controller._validate_monitor_for_control(self._get_all_nodes())
             self._instantiate_control_projections(context=context)
             # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
             #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
@@ -7183,6 +7189,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller.objective_mechanism:
             # If controller has objective_mechanism, then add it and all associated Projections to Composition
             if self.controller.objective_mechanism not in invalid_aux_components:
+                self.controller._validate_monitor_for_control(self._get_all_nodes())
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them

@@ -630,9 +630,9 @@ def _is_control_spec(spec):
         return False
 
 class ControlMechanismError(Exception):
-    def __init__(self, error_value):
+    def __init__(self, error_value, data=None):
         self.error_value = error_value
-
+        self.data = data
 
 def validate_monitored_port_spec(owner, spec_list):
     for spec in spec_list:
@@ -1620,6 +1620,22 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         return outcome_input_port_specs, port_value_sizes, monitored_ports
 
+    def _validate_monitor_for_control(self, nodes):
+        # Ensure all of the Components being monitored for control are in the Composition being controlled
+        from psyneulink.core.components.ports.port import Port
+        invalid_outcome_specs = [item for item in self.monitor_for_control
+                                 if ((isinstance(item, Mechanism)
+                                      and not item in nodes)
+                                     or ((isinstance(item, Port)
+                                          and not item.owner in nodes)))]
+        if invalid_outcome_specs:
+            names = [item.name if isinstance(item, Mechanism) else item.owner.name
+                     for item in invalid_outcome_specs]
+            raise ControlMechanismError(f"{self.name} has 'outcome_ouput_ports' that receive "
+                                        f"Projections from the following Components that do not "
+                                        f"belong to the Composition it controls: {names}.",
+                                        names)
+
     def _instantiate_output_ports(self, context=None):
 
     # ---------------------------------------------------
@@ -1793,7 +1809,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                               f"has one or more {projection_type.__name__}s redundant with ones already on "
                               f"an existing {ControlSignal.__name__} ({existing_ctl_sig.name}).")
 
-
     def show(self):
         """Display the OutputPorts monitored by ControlMechanism's `objective_mechanism
         <ControlMechanism.objective_mechanism>` and the parameters modulated by its `control_signals
@@ -1894,7 +1909,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 #    and will therefore be added to the Composition along with the ControlMechanism
                 from psyneulink.core.compositions.composition import NodeRole
                 assert (self.objective_mechanism, NodeRole.CONTROL_OBJECTIVE) in self.aux_components, \
-                    f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} not listed in its 'aux_components' attribute."
+                    f"PROGRAM ERROR:  {OBJECTIVE_MECHANISM} for {self.name} " \
+                    f"not listed in its 'aux_components' attribute."
                 dependent_projections.add(self._objective_projection)
                 # Add all Projections to and from objective_mechanism
                 for aff in self.objective_mechanism.afferents:
