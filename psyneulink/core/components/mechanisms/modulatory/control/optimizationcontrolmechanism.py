@@ -727,8 +727,9 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN, FUNCTION, INTERNAL_ONLY, MODEL_FREE, MODEL_BASED,\
-    OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
+    COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN,\
+    FUNCTION, INTERNAL_ONLY, OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, \
+    SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -887,9 +888,9 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_State>`; see `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
         for additional details.
 
-    agent_rep_type : None, MODEL_FREE or _MODEL_BASED
-        identifies whether the agent_rep is a `Composition` (*MODEL_BASED*), a `CompositionFunctionApproximator` or
-        one of its subclasses (*MODEL_FREE*), or it has not been assigned (None); see `Agent Representation and Types
+    agent_rep_type : None, COMPOSITION or COMPOSITION_FUNCTION_APPROXIMATOR
+        identifies whether the agent_rep is a `Composition`, a `CompositionFunctionApproximator` or
+        one of its subclasses, or it has not been assigned (None); see `Agent Representation and Types
         of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details.
 
     state_feature_values : 2d array
@@ -1369,11 +1370,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # For model-free (agent_rep = CompositionFunctionApproximator), warn if no state_features specified.
             # Note: for model-based optimization, state_input_ports and any state_feature_functions specified
             #       are assigned in _update_state_input_ports_for_controller.
-            if self.agent_rep_type == MODEL_FREE:
+            if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
                 warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
 
         else:
-            # FIX: 11/29/21: DISALLOW FOR MODEL_BASED
+            # FIX: 11/29/21: DISALLOW FOR COMPOSITION
             # Implement any specified state_features
             state_input_ports_specs = self._parse_state_feature_specs(self.state_features,
                                                                       self.state_feature_functions)
@@ -1402,7 +1403,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _validate_monitor_for_control(self, nodes):
         # Ensure all of the Components being monitored for control are in the agent_rep if it is Composition
-        if self.agent_rep_type == MODEL_BASED:
+        if self.agent_rep_type == COMPOSITION:
             try:
                 super()._validate_monitor_for_control(self.agent_rep._get_all_nodes())
             except ControlMechanismError as e:
@@ -1486,7 +1487,7 @@ class OptimizationControlMechanism(ControlMechanism):
         #    this is because they can't be programmatically validated against the agent_rep's evaluate() method.
         #    (This contrast with model-based optimization, for which there must be a state_input_port for every
         #    InputPort of every INPUT node of the agent_rep (see OptimizationControlMechanism_Model_Based).
-        if self.agent_rep_type != MODEL_BASED:
+        if self.agent_rep_type != COMPOSITION:
             return
 
         from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionInterfaceMechanism
@@ -1709,7 +1710,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.agent_rep = self.agent_rep()
 
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        if self.agent_rep_type == MODEL_FREE:
+        if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
@@ -2175,9 +2176,9 @@ class OptimizationControlMechanism(ControlMechanism):
     def agent_rep_type(self):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if isinstance(self.agent_rep, CompositionFunctionApproximator):
-            return MODEL_FREE
+            return COMPOSITION_FUNCTION_APPROXIMATOR
         elif self.agent_rep.componentCategory=='Composition':
-            return MODEL_BASED
+            return COMPOSITION
         else:
             return None
 
@@ -2203,7 +2204,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for spec in _state_input_ports:
             # MODIFIED 11/29/21 NEW:
             # If optimization is model-free, assume that shadowing of a Mechanism spec is for its primary InputPort
-            if isinstance(spec, Mechanism) and self.agent_rep_type == MODEL_BASED:
+            if isinstance(spec, Mechanism) and self.agent_rep_type == COMPOSITION:
                 # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
                 #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
                 if len(spec.input_ports)!=1:
