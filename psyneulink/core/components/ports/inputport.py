@@ -331,6 +331,21 @@ should project to the InputPort. Each of these is described below:
       list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
       from the same `senders  <Projection_Base.sender>` as the ones specified.
 
+      If an InputPort shadows another, its `shadow_inputs <InputPort.shadow_inputs>` attribute identifies the InputPort
+      that it shadows.
+
+      .. note::
+         Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
+         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing.
+
+      .. hint::
+         If an InputPort needs to be shadowed that belongs to a Mechanism in a `nested <Composition_Nested>` that is
+         not an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, this can be accomplished as
+         follows: 1) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
+         shadowed; 2) specify `OUTPUT <NodeRole.INPUT>` as a `required_role <Composition.add_node.required_roles>`
+         for that Mechanism;  3) use that Mechanism as the `InputPort specification <InputPort_Specification>`
+         for the shadowing InputPort.
+
 .. _InputPort_Compatability_and_Constraints:
 
 InputPort `variable <InputPort.variable>`: Compatibility and Constraints
@@ -658,6 +673,9 @@ class InputPort(Port_Base):
         InputPort from a Composition's `execution method <Composition_Execution_Method>` if the InputPort's `owner
         <Port.owner>` is an `INPUT` `Node <Composition_Nodes>` of that Composition; if `True`, external input is
         *not* required or allowed.
+
+    shadow_inputs : InputPort
+        identifies the InputPort of another `Mechanism` that is being shadowed by this InputPort.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is
