@@ -595,7 +595,7 @@ and used to compute the `net_outcome <ControlMechanism.net_outcome` over the est
   ..
   - It must execute the OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>`
     `num_estimates <OptimizationControlMechanism.num_estimates>` times, and aggregate the results in computing the
-    `net_outcome <ControlMechanism.net_outcome` for a given `control_allocation <ControlMechanism.control_allocation>`.
+    `net_outcome <ControlMechanism.net_outcome>` for a given `control_allocation <ControlMechanism.control_allocation>`.
   ..
   - It must implement a `reset` method that can accept as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
@@ -1013,7 +1013,6 @@ class OptimizationControlMechanism(ControlMechanism):
         over those in evaluating a given control_allocation <ControlMechanism.control_allocation>`
         (see `OptimizationControlMechanism_Function` for additional details).
 
-    COMMENT:
     search_function : function or method
         `search_function <OptimizationFunction.search_function>` assigned to `function
         <OptimizationControlMechanism.function>`; used to select samples of `control_allocation
@@ -1024,7 +1023,6 @@ class OptimizationControlMechanism(ControlMechanism):
         `search_termination_function <OptimizationFunction.search_termination_function>` assigned to
         `function <OptimizationControlMechanism.function>`;  determines when to terminate the
         `optimization process <OptimizationFunction_Process>`.
-    COMMENT
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignal>` for the OptimizationControlMechanism for the Parameters being
