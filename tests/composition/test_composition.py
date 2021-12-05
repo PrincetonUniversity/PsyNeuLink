@@ -5907,8 +5907,9 @@ class TestShadowInputs:
             with pytest.raises(CompositionError) as err:
                 O = ProcessingMechanism(name='O',input_ports=[B.input_port])
                 ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
-            assert 'Attempt to shadow the input(s) to a node (B) in a nested Composition ' \
-                   '(of OUTER COMP) is not currently supported.' in err.value.error_value
+            assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
+                   'that is not an INPUT Node of that Composition is not currently supported.' \
+                   in err.value.error_value
 
     def test_monitor_input_ports(self):
         comp = Composition(name='comp')

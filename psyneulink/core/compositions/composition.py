@@ -3165,7 +3165,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
         deterines the frequency at which the `controller <Composition.controller>` is executed, either before or
-        after the Composition as determined by `controller_mode <cComposition.ontroller_mode>` (see
+        after the Composition as determined by `controller_mode <Composition.ontroller_mode>` (see
         `Composition_Controller_Execution` for additional details).
 
     controller_condition : Condition
@@ -3909,6 +3909,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               visited_compositions)
         return nested_compositions
 
+    def _get_all_nodes(self):
+        """Return all nodes, including those within nested Compositions at any level
+        Note:  this is distinct from the _all_nodes propety, which returns all nodes at the top level
+        """
+        return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
+
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
            to all nodes in the last entry of the consideration queue. The ObjectiveMechanism of a Composition's
@@ -4106,6 +4112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if hasattr(self.controller, 'state_input_ports'):
                 self.controller._update_state_input_ports_for_controller(context=context)
                 # self._instantiate_controller_shadow_projections(context=context)
+            self.controller._validate_monitor_for_control(self._get_all_nodes())
             self._instantiate_control_projections(context=context)
             # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
             #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
@@ -5384,9 +5391,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             def _get_sender_at_right_level(shadowed_proj):
                 """Search back up hierarchy of nested Compositions for sender at same level as **input_port**"""
                 if not isinstance(shadowed_proj.sender.owner, CompositionInterfaceMechanism):
-                    raise CompositionError(f"Attempt to shadow the input(s) to a node "
+                    raise CompositionError(f"Attempt to shadow the input to a node "
                                            f"({shadowed_proj.receiver.owner.name}) in a nested Composition "
-                                           f"(of {self.name}) is not currently supported.")
+                                           f"of {self.name} that is not an INPUT Node of that Composition is "
+                                           f"not currently supported.")
                 else:
                     #                                    WANT THIS ONE'S SENDER
                     #                       item[0]           item[1,0]            item[1,1]
@@ -7182,6 +7190,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller.objective_mechanism:
             # If controller has objective_mechanism, then add it and all associated Projections to Composition
             if self.controller.objective_mechanism not in invalid_aux_components:
+                self.controller._validate_monitor_for_control(self._get_all_nodes())
                 self.add_node(self.controller.objective_mechanism, required_roles=NodeRole.CONTROLLER_OBJECTIVE)
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
@@ -7205,7 +7214,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 keep_checking = True
                             # Otherwise, return usual error
                             else:
-                                raise CompositionError(e.error_value)
+                                error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
+                                                            f"{self.controller.name} to True."
+                                raise CompositionError(error_msg)
                         else:
                             assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
                                           f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
