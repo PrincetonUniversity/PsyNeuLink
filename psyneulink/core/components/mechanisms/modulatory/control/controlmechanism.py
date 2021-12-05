@@ -1627,7 +1627,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                  if ((isinstance(item, Mechanism)
                                       and item not in nodes)
                                      or ((isinstance(item, Port)
-                                          and not item.owner in nodes)))]
+                                          and item.owner not in nodes)))]
         if invalid_outcome_specs:
             names = [item.name if isinstance(item, Mechanism) else item.owner.name
                      for item in invalid_outcome_specs]
