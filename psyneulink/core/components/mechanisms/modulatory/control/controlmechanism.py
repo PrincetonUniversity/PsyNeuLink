@@ -1625,7 +1625,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         from psyneulink.core.components.ports.port import Port
         invalid_outcome_specs = [item for item in self.monitor_for_control
                                  if ((isinstance(item, Mechanism)
-                                      and not item in nodes)
+                                      and item not in nodes)
                                      or ((isinstance(item, Port)
                                           and not item.owner in nodes)))]
         if invalid_outcome_specs:

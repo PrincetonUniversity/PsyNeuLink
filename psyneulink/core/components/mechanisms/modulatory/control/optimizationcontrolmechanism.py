@@ -530,9 +530,9 @@ COMMENT
 
 If an OptimizationControlMechanism is not assigned an `objective_mechanism <ControlMechanism.objective_mechanism>`,
 then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
-`monitor_for_control <ControlMechanism.monitor_for_control>`, outcome_input_ports_option 
-<ControlMechanism.outcome_input_ports_option>`, and `allow_probes <OptimizationControlMechanism.allow_probes>` 
-attributes, specified in the corresponding arguments of its constructor (see `Outcomes 
+`monitor_for_control <ControlMechanism.monitor_for_control>`, outcome_input_ports_option
+<ControlMechanism.outcome_input_ports_option>`, and `allow_probes <OptimizationControlMechanism.allow_probes>`
+attributes, specified in the corresponding arguments of its constructor (see `Outcomes
 <OptimizationControlMechanism_Outcome_Args>` above).  Their value(s) are assigned as the OptimizationControlMechanism's
 `outcome <OptimizationControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
 <ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given

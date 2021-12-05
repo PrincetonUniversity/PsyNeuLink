@@ -3911,7 +3911,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_all_nodes(self):
         """Return all nodes, including those within nested Compositions at any level
-        Note:  this is distinct from the _all_nodes propety, which returns all nodes at the top level"""
+        Note:  this is distinct from the _all_nodes propety, which returns all nodes at the top level
+        """
         return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
 
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
