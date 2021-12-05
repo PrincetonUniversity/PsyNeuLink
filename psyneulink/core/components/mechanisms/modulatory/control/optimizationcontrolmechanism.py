@@ -48,7 +48,7 @@ Overview
 An OptimizationControlMechanism is a `ControlMechanism <ControlMechanism>` that uses an `OptimizationFunction` to
 optimize the performance of the `Composition` for which it is a `controller <Composition_Controller>`.  It does so
 by using the `OptimizationFunction` (assigned as its `function <OptimizationControlMechanism.function>`) to execute
-its `agent_rep <OptimizationControlMechanism.agent_rep>`) -- a representation of the Composition to be optimized --
+its `agent_rep <OptimizationControlMechanism.agent_rep>` -- a representation of the Composition to be optimized --
 under different `control_allocations <ControlMechanism.control_allocation>`, and selecting
 the one that optimizes its `net_outcome <ControlMechanism.net_outcome>`.  The `agent_rep
 <OptimizationControlMechanism.agent_rep>` can be the Composition itself (implementing fully `model-based optimization
@@ -60,7 +60,7 @@ both the outcome of executing the `agent_rep <OptimizationControlMechanism.agent
 <ControlMechanism_Costs_NetOutcome>` associated with the `control_allocation <ControlMechanism.control_allocation>`.
 If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator` with an `adapt
 <CompositionFunctionApproximator.adapt>` method, that can be used to learn how to best predict its `net_outcome
-<ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` that it can use, in turn,
+<ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` that, in turn, it can use
 to predict the optimal control_allocation for a given set of inputs.
 
 COMMENT: OLD
@@ -338,7 +338,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   * *agent_rep is a CompositionFunctionApproximator* -- the items specified to be monitored for control can be any
     within the Composition for which the OptimizationControlMechanism is the `controller <Composition_Controller>`;
     this is because their values during the last execution of the Composition are used to determine the `net_outcome
-    ControlMechanism.net_outcome>` that the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
+    <ControlMechanism.net_outcome>` that the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
     `adapt <CompositionFunctionApproximator.adapt>` method -- if it has one -- seeks to predict.  Accordingly,
     the values of the items specified to be monitored control must match, in shape and order, the
     **net_outcome** of that `adapt <CompositionFunctionApproximator.adapt>` method.
@@ -493,7 +493,7 @@ if it has one or, if it does not, then the value(s) of the Component(s) it `moni
 <OptimizationControlMechanism_Monitor_for_Control>` to evaluate the outcome of executing
 its `agent_rep <OptimizationControlMechanism.agent_rep>`.  The value of the `outcome_input_ports
 <OptimizationControlMechanism.outcome_input_ports>` is assigned to the OptimizationControlMechanism's
-`outcome <OptimizationControlMechanism.outcome>` attribute.
+`outcome <ControlMechanism.outcome>` attribute.
 
 .. _OptimizationControlMechanism_ObjectiveMechanism:
 
@@ -501,10 +501,11 @@ its `agent_rep <OptimizationControlMechanism.agent_rep>`.  The value of the `out
 
 If an OptimizationControlMechanism has an `objective_mechanism <ControlMechanism.objective_mechanism>`, it is
 assigned a single outcome_input_port, named *OUTCOME*, that receives a Projection from the objective_mechanism's
-`*OUTCOME* OutputPort <REF>`. The OptimizationControlMechanism's `objective_mechanism <ControlMechanism>` is
-used to evaluate the outcome of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given
-`state <OptimizationControlMechanism_State>`. This passes the result to the OptimizationControlMechanism's *OUTCOME*
-InputPort, that is placed in its `outcome <OptimizationControlMechanism.outcome>` attribute.
+`OUTCOME OutputPort <ObjectiveMechanism_Output>`. The OptimizationControlMechanism's `objective_mechanism
+<ControlMechanism>` is used to evaluate the outcome of executing its `agent_rep
+<OptimizationControlMechanism.agent_rep>` for a given `state <OptimizationControlMechanism_State>`. This passes
+the result to the OptimizationControlMechanism's *OUTCOME* InputPort, that is placed in its `outcome
+<ControlMechanism.outcome>` attribute.
 
 .. note::
     An OptimizationControlMechanism's `objective_mechanism <ControlMechanism.objective_mechanism>` and its `function
@@ -530,11 +531,11 @@ COMMENT
 
 If an OptimizationControlMechanism is not assigned an `objective_mechanism <ControlMechanism.objective_mechanism>`,
 then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
-`monitor_for_control <ControlMechanism.monitor_for_control>`, outcome_input_ports_option 
-<ControlMechanism.outcome_input_ports_option>`, and `allow_probes <OptimizationControlMechanism.allow_probes>` 
-attributes, specified in the corresponding arguments of its constructor (see `Outcomes 
+`monitor_for_control <ControlMechanism.monitor_for_control>`, outcome_input_ports_option
+<ControlMechanism.outcome_input_ports_option>`, and `allow_probes <OptimizationControlMechanism.allow_probes>`
+attributes, specified in the corresponding arguments of its constructor (see `Outcomes
 <OptimizationControlMechanism_Outcome_Args>` above).  Their value(s) are assigned as the OptimizationControlMechanism's
-`outcome <OptimizationControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
+`outcome <ControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
 <ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given
 `state <OptimizationControlMechanism_State>`.
 
@@ -727,7 +728,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN,\
+    COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN, \
     FUNCTION, INTERNAL_ONLY, OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, \
     SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
 from psyneulink.core.globals.parameters import Parameter
@@ -1358,8 +1359,6 @@ class OptimizationControlMechanism(ControlMechanism):
         `OptimizationControlMechanism_State_Features` for additional details.
         """
 
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
         state_input_ports_specs = None
 
@@ -1709,7 +1708,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if isinstance(self.agent_rep, type):
             self.agent_rep = self.agent_rep()
 
-        from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
         if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             self._initialize_composition_function_approximator(context)
 
