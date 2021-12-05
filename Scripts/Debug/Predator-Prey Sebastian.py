@@ -167,7 +167,7 @@ agent_comp.add_projections([a,b,c])
 
 ocm = OptimizationControlMechanism(name='EVC',
                                    state_features=[trial_type_input_mech],
-                                   # state_feature_function=FEATURE_FUNCTION,
+                                   # state_feature_functions=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
                                            name='RegressionCFA',
                                            update_weights=BayesGLM(mu_0=0.5, sigma_0=0.1),

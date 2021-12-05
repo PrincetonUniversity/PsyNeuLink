@@ -1806,9 +1806,12 @@ class Port_Base(Port):
         else:
             shape = list(self.defaults.variable.shape)
             # Reduce outer dimension by one
-            shape[0]-=1
-            self.defaults.variable = np.resize(self.defaults.variable, shape)
-            self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
+            # only if shape is already greater than 1 (ports keep
+            # default of [0] if no incoming projections)
+            shape[0] -= 1
+            if shape[0] > 0:
+                self.defaults.variable = np.resize(self.defaults.variable, shape)
+                self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
             del self.path_afferents[self.path_afferents.index(projection)]
 
     def _get_primary_port(self, mechanism):

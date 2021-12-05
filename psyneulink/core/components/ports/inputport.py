@@ -331,6 +331,21 @@ should project to the InputPort. Each of these is described below:
       list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
       from the same `senders  <Projection_Base.sender>` as the ones specified.
 
+      If an InputPort shadows another, its `shadow_inputs <InputPort.shadow_inputs>` attribute identifies the InputPort
+      that it shadows.
+
+      .. note::
+         Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
+         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing.
+
+      .. hint::
+         If an InputPort needs to be shadowed that belongs to a Mechanism in a `nested <Composition_Nested>` that is
+         not an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, this can be accomplished as
+         follows: 1) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
+         shadowed; 2) specify `OUTPUT <NodeRole.INPUT>` as a `required_role <Composition.add_node.required_roles>`
+         for that Mechanism;  3) use that Mechanism as the `InputPort specification <InputPort_Specification>`
+         for the shadowing InputPort.
+
 .. _InputPort_Compatability_and_Constraints:
 
 InputPort `variable <InputPort.variable>`: Compatibility and Constraints
@@ -514,7 +529,8 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
-from psyneulink.core.globals.utilities import append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength
+from psyneulink.core.globals.utilities import \
+    append_type_to_name, convert_to_np_array, is_numeric, iscompatible, kwCompatibilityLength, convert_to_list
 
 __all__ = [
     'InputPort', 'InputPortError', 'port_type_keywords', 'SHADOW_INPUTS',
@@ -657,6 +673,9 @@ class InputPort(Port_Base):
         InputPort from a Composition's `execution method <Composition_Execution_Method>` if the InputPort's `owner
         <Port.owner>` is an `INPUT` `Node <Composition_Nodes>` of that Composition; if `True`, external input is
         *not* required or allowed.
+
+    shadow_inputs : InputPort
+        identifies the InputPort of another `Mechanism` that is being shadowed by this InputPort.
 
     name : str
         the name of the InputPort; if it is not specified in the **name** argument of the constructor, a default is
@@ -1211,11 +1230,11 @@ class InputPort(Port_Base):
 
         sender_output_ports = [p.sender for p in input_port.path_afferents]
         port_spec = {NAME: SHADOW_INPUT_NAME + input_port.owner.name,
-                      VARIABLE: np.zeros_like(input_port.variable),
-                      PORT_TYPE: InputPort,
-                      PROJECTIONS: sender_output_ports,
-                      PARAMS: {SHADOW_INPUTS: input_port},
-                      OWNER: owner}
+                     VARIABLE: np.zeros_like(input_port.variable),
+                     PORT_TYPE: InputPort,
+                     PROJECTIONS: sender_output_ports,
+                     PARAMS: {SHADOW_INPUTS: input_port},
+                     OWNER: owner}
         return port_spec
 
     @staticmethod
@@ -1392,6 +1411,7 @@ def _instantiate_input_ports(owner, input_ports=None, reference_value=None, cont
 def _parse_shadow_inputs(owner, input_ports):
     """Parses any {SHADOW_INPUTS:[InputPort or Mechanism,...]} items in input_ports into InputPort specif. dict."""
 
+    input_ports = convert_to_list(input_ports)
     input_ports_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_ports):
         # If {SHADOW_INPUTS:[InputPort or Mechaism,...]} is found:
