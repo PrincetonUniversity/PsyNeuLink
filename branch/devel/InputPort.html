@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0+untagged.13.ga1d4f2a documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0+untagged.12.g002ff21 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.13.ga1d4f2a
+                  0+untagged.12.g002ff21
                 </div>
               
             
@@ -466,6 +466,22 @@ one(s) specified (see below).</p></li>
 is created along with Projections to it that parallel those received by the corresponding InputPort in the
 list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
 from the same <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a> as the ones specified.</p>
+<p>If an InputPort shadows another, its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.shadow_inputs" title="psyneulink.core.components.ports.inputport.InputPort.shadow_inputs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">shadow_inputs</span></code></a> attribute identifies the InputPort
+that it shadows.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only InputPorts belonging to Mechanisms in the <em>same Composition</em>, or ones that are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
+<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> can be specified for shadowing.</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>If an InputPort needs to be shadowed that belongs to a Mechanism in a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> that is
+not an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of that Composition, this can be accomplished as
+follows: 1) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
+shadowed; 2) specify <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> as a <code class="xref any docutils literal notranslate"><span class="pre">required_role</span></code>
+for that Mechanism;  3) use that Mechanism as the <a class="reference internal" href="#inputport-specification"><span class="std std-ref">InputPort specification</span></a>
+for the shadowing InputPort.</p>
+</div>
 </li>
 </ul>
 </div></blockquote>
@@ -724,6 +740,17 @@ InputPort from a Composition’s <code class="xref any docutils literal notransl
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort.shadow_inputs">
+<span class="sig-name descname"><span class="pre">shadow_inputs</span></span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.shadow_inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>identifies the InputPort of another <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> that is being shadowed by this InputPort.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort">InputPort</a></p>
 </dd>
 </dl>
 </dd></dl>
