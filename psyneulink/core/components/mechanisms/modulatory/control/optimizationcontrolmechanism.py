@@ -133,6 +133,20 @@ for the parent Composition.  This distinction corresponds closely to the distinc
 <https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
 and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
+.. figure:: _static/Optimization_fig.svg
+   :scale: 50%
+   :alt: OptimizationControlMechanism
+
+   **Functional Anatomy of an OptimizationControlMechanism.** *Panel A:* Examples of use in model-based
+   and model-free optimization.  Note that in the example of `model-based optimization
+   <OptimizationControlMechanism_Model_Based>` (left), the OptimizationControlMechanism uses the entire
+   Composition that it controls as its `agent_rep <OptimizationControlMechanism.agent_rep>`, whereas in
+   the example of `model-free optimization <OptimizationControlMechanism_Model_Free>` (right) the
+   the `agent_rep <OptimizationControlMechanism.agent_rep>` is another (presumably simpler) Composition or
+   a `CompositionFunctionApproximator`. *Panel B:* Flow of execution during optimization.  In both panels,
+   faded items show process of adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
+   <OptimizationControlMechanism.agent_rep>`.
+
 .. _OptimizationControlMechanism_Model_Based:
 
 *Model-Based Optimization*
@@ -168,20 +182,6 @@ the `agent_rep <OptimizationControlMechanism.agent_rep>` is used to search over 
 <OptimizationControlMechanism.agent_rep>` is also given the chance to adapt in order to improve its prediction
 of its `net_outcome <ControlMechanism.net_outcome>` based on the `state <OptimizationControlMechanism_State>`,
 and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.
-
-.. figure:: _static/Optimization_fig.svg
-   :scale: 50%
-   :alt: OptimizationControlMechanism
-
-   **Functional Anatomy of an OptimizationControlMechanism.** *Panel A:* Examples of use in model-based
-   and model-free optimization.  Note that in the example of `model-based optimization
-   <OptimizationControlMechanism_Model_Based>` (left), the OptimizationControlMechanism uses the entire
-   Composition that it controls as its `agent_rep <OptimizationControlMechanism.agent_rep>`.
-   In the example of `model-free optimization <OptimizationControlMechanism_Model_Free>` (right) ) it uses
-   another (presumably simpler) Composition or a `CompositionFunctionApproximator` as the `agent_rep
-   <OptimizationControlMechanism.agent_rep>`. *Panel B:* Flow of execution during optimization.  In both
-   panels, faded items show adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
-   <OptimizationControlMechanism.agent_rep>`.
 
 .. _OptimizationControlMechanism_Creation:
 
