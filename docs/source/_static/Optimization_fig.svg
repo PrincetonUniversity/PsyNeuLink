@@ -240,18 +240,18 @@
 </style>
 <g>
 	<defs>
-		<rect id="SVGID_1_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_1_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_2_">
 		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
 	</clipPath>
-	<rect x="10.7" y="29.9" class="st0" width="810" height="540"/>
-	<path class="st1" d="M341.7,152.5c22.4,28.2,33.4,62.4,36.1,97.8c3.6,48.9-8.6,100-35.9,142.5c-11.6,18.1-25.4,34.1-42.6,45.6
+	<rect x="-2.3" y="29.9" class="st0" width="810" height="540"/>
+	<path class="st1" d="M328.7,152.5c22.4,28.2,33.4,62.4,36.1,97.8c3.6,48.9-8.6,100-35.9,142.5c-11.6,18.1-25.4,34.1-42.6,45.6
 		c-25.2,16.9-55.5,23-85.5,22.4c-31-0.6-61.7-8.4-87.6-26c-12.5-8.5-23.6-19.2-33.6-31.4c-57.4-70-66.4-173.4-12.1-244.3
-		c33-43.1,81.3-64,129.5-65.5C258.2,92.1,308,110.1,341.7,152.5z"/>
-	<path class="st2" d="M341.7,152.5c22.4,28.2,33.4,62.4,36.1,97.8c3.6,48.9-8.6,100-35.9,142.5c-11.6,18.1-25.4,34.1-42.6,45.6
+		c33-43.1,81.3-64,129.5-65.5C245.2,92.1,295,110.1,328.7,152.5z"/>
+	<path class="st2" d="M328.7,152.5c22.4,28.2,33.4,62.4,36.1,97.8c3.6,48.9-8.6,100-35.9,142.5c-11.6,18.1-25.4,34.1-42.6,45.6
 		c-25.2,16.9-55.5,23-85.5,22.4c-31-0.6-61.7-8.4-87.6-26c-12.5-8.5-23.6-19.2-33.6-31.4c-57.4-70-66.4-173.4-12.1-244.3
-		c33-43.1,81.3-64,129.5-65.5C258.2,92.1,308,110.1,341.7,152.5z"/>
+		c33-43.1,81.3-64,129.5-65.5C245.2,92.1,295,110.1,328.7,152.5z"/>
 </g>
 <text transform="matrix(1 0 0 1 24.4372 50.9677)" class="st3 st4">A</text>
 <text transform="matrix(1 0 0 1 286.4721 50.9675)" class="st5 st4">Optimization</text>
@@ -842,7 +842,7 @@
 <line class="st121" x1="820.7" y1="1.5" x2="820.7" y2="541.5"/>
 <g>
 	<defs>
-		<rect id="SVGID_99_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_99_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_100_">
 		<use xlink:href="#SVGID_99_"  style="overflow:visible;"/>
@@ -850,371 +850,371 @@
 	<g class="st122">
 		<g>
 			<defs>
-				<rect id="SVGID_101_" x="72.7" y="114.9" width="225" height="294"/>
+				<rect id="SVGID_101_" x="59.7" y="114.9" width="225" height="294"/>
 			</defs>
 			<clipPath id="SVGID_102_">
 				<use xlink:href="#SVGID_101_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st123">
 				<defs>
-					<rect id="SVGID_103_" x="72.7" y="114.9" width="225" height="294"/>
+					<rect id="SVGID_103_" x="59.7" y="114.9" width="225" height="294"/>
 				</defs>
 				<clipPath id="SVGID_104_">
 					<use xlink:href="#SVGID_103_"  style="overflow:visible;"/>
 				</clipPath>
-				<path class="st124" d="M295.7,167.3c-0.9,30.1-33.5,40.4-58.5,57c-24.4,16.2-41.5,41.3-32.8,68.1c7.2,22.4,31.9,34.2,41.7,55.4
+				<path class="st124" d="M282.8,167.3c-0.9,30.1-33.5,40.4-58.5,57c-24.4,16.2-41.5,41.3-32.8,68.1c7.2,22.4,31.9,34.2,41.7,55.4
 					c5.7,12.3,6,26.3-0.9,38c-8.6,14.7-24.4,21.6-41.5,21.8c-17.3,0.2-35-6.4-50.7-15.9c-26.6-16.1-49-38.2-62.9-65.6
 					c-8.4-16.5-13.3-34.4-15.1-52.7c-4-41.2,7.9-82.2,36.4-112.9c22.5-24.2,52.2-38.6,83.9-42.9c16.3-2.2,33.1-1.7,49.3,1.7
-					C271.7,125.1,296.5,141.7,295.7,167.3z"/>
-				<path class="st125" d="M295.7,167.3c-0.9,30.1-33.5,40.4-58.5,57c-24.4,16.2-41.5,41.3-32.8,68.1c7.2,22.4,31.9,34.2,41.7,55.4
+					C258.7,125.1,283.5,141.7,282.8,167.3z"/>
+				<path class="st125" d="M282.8,167.3c-0.9,30.1-33.5,40.4-58.5,57c-24.4,16.2-41.5,41.3-32.8,68.1c7.2,22.4,31.9,34.2,41.7,55.4
 					c5.7,12.3,6,26.3-0.9,38c-8.6,14.7-24.4,21.6-41.5,21.8c-17.3,0.2-35-6.4-50.7-15.9c-26.6-16.1-49-38.2-62.9-65.6
 					c-8.4-16.5-13.3-34.4-15.1-52.7c-4-41.2,7.9-82.2,36.4-112.9c22.5-24.2,52.2-38.6,83.9-42.9c16.3-2.2,33.1-1.7,49.3,1.7
-					C271.7,125.1,296.5,141.7,295.7,167.3z"/>
+					C258.7,125.1,283.5,141.7,282.8,167.3z"/>
 			</g>
 		</g>
 	</g>
-	<ellipse class="st126" cx="146" cy="208.4" rx="33.2" ry="27.1"/>
-	<ellipse class="st127" cx="146" cy="208.4" rx="33.2" ry="27.1"/>
+	<ellipse class="st126" cx="133.1" cy="208.4" rx="33.2" ry="27.1"/>
+	<ellipse class="st127" cx="133.1" cy="208.4" rx="33.2" ry="27.1"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_105_" x="112.8" y="181.2" width="66.4" height="54.3"/>
+		<rect id="SVGID_105_" x="99.9" y="181.2" width="66.4" height="54.3"/>
 	</defs>
 	<clipPath id="SVGID_106_">
 		<use xlink:href="#SVGID_105_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st128">
-		<text transform="matrix(1 0 0 1 119.3438 211.8491)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 106.3838 211.8491)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_107_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_107_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_108_">
 		<use xlink:href="#SVGID_107_"  style="overflow:visible;"/>
 	</clipPath>
-	<ellipse class="st130" cx="126.9" cy="298.7" rx="33.2" ry="27.1"/>
-	<ellipse class="st131" cx="126.9" cy="298.7" rx="33.2" ry="27.1"/>
+	<ellipse class="st130" cx="113.9" cy="298.7" rx="33.2" ry="27.1"/>
+	<ellipse class="st131" cx="113.9" cy="298.7" rx="33.2" ry="27.1"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_109_" x="93.7" y="271.6" width="66.4" height="54.3"/>
+		<rect id="SVGID_109_" x="80.7" y="271.6" width="66.4" height="54.3"/>
 	</defs>
 	<clipPath id="SVGID_110_">
 		<use xlink:href="#SVGID_109_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st132">
-		<text transform="matrix(1 0 0 1 100.1822 302.1823)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 87.2222 302.1823)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_111_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_111_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_112_">
 		<use xlink:href="#SVGID_111_"  style="overflow:visible;"/>
 	</clipPath>
-	<ellipse class="st133" cx="193.6" cy="363.4" rx="33.2" ry="27.1"/>
-	<ellipse class="st134" cx="193.6" cy="363.4" rx="33.2" ry="27.1"/>
+	<ellipse class="st133" cx="180.6" cy="363.4" rx="33.2" ry="27.1"/>
+	<ellipse class="st134" cx="180.6" cy="363.4" rx="33.2" ry="27.1"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_113_" x="160.4" y="336.2" width="66.4" height="54.3"/>
+		<rect id="SVGID_113_" x="147.4" y="336.2" width="66.4" height="54.3"/>
 	</defs>
 	<clipPath id="SVGID_114_">
 		<use xlink:href="#SVGID_113_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st135">
-		<text transform="matrix(1 0 0 1 166.8806 366.8366)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 153.9206 366.8366)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_115_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_115_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_116_">
 		<use xlink:href="#SVGID_115_"  style="overflow:visible;"/>
 	</clipPath>
-	<path class="st136" d="M127.2,271.5c1.2-9.9,3.5-20.3,6.9-31.4l0.2-0.5"/>
-	<polygon class="st137" points="136.9,241 135.8,234.4 131.2,239.2 	"/>
-	<path class="st136" d="M165.1,349.1c-8.5-5.8-15.8-12.6-22-20.4l-0.3-0.4"/>
-	<polygon class="st137" points="145.5,327 139.6,323.9 140.7,330.5 	"/>
-	<path class="st138" d="M249,277.3c-29,0.2-54.2,2.3-75.5,6.3l-2,0.4"/>
-	<polygon class="st139" points="171.7,275.4 157.2,287.4 175.4,291.8 	"/>
-	<path class="st136" d="M169.5,189.1c7.5-3.1,16.5-5.7,27.1-7.7l0.5-0.1"/>
-	<polygon class="st137" points="197.2,184.3 202.6,180.3 196.1,178.4 	"/>
-	<path class="st136" d="M144.5,275.6c21.4-27.2,43.1-51.9,65-73.9l0.4-0.4"/>
-	<polygon class="st137" points="211.7,203.8 213.8,197.5 207.4,199.6 	"/>
-	<polyline class="st138" points="255,260 190.1,229.2 188.2,228.4 	"/>
-	<polygon class="st139" points="193.7,221.6 174.9,222 186.5,236.8 	"/>
-	<path class="st140" d="M266.2,301.9c-3,7.9-6,14.7-9,20.3l-1.9,2.3"/>
-	<polygon class="st141" points="247.9,314.6 241.8,340.7 266.3,329.9 	"/>
+	<path class="st136" d="M114.2,271.5c1.2-9.9,3.5-20.3,6.9-31.4l0.2-0.5"/>
+	<polygon class="st137" points="123.9,241 122.9,234.4 118.2,239.2 	"/>
+	<path class="st136" d="M152.2,349.1c-8.5-5.8-15.8-12.6-22-20.4l-0.3-0.4"/>
+	<polygon class="st137" points="132.6,327 126.6,323.9 127.8,330.5 	"/>
+	<path class="st138" d="M236,277.3c-29,0.2-54.2,2.3-75.5,6.3l-2,0.4"/>
+	<polygon class="st139" points="158.7,275.4 144.2,287.4 162.5,291.8 	"/>
+	<path class="st136" d="M156.6,189.1c7.5-3.1,16.5-5.7,27.1-7.7l0.5-0.1"/>
+	<polygon class="st137" points="184.2,184.3 189.6,180.3 183.2,178.4 	"/>
+	<path class="st136" d="M131.6,275.6c21.4-27.2,43.1-51.9,65-73.9l0.4-0.4"/>
+	<polygon class="st137" points="198.7,203.8 200.9,197.5 194.5,199.6 	"/>
+	<polyline class="st138" points="242.1,260 177.1,229.2 175.3,228.4 	"/>
+	<polygon class="st139" points="180.7,221.6 161.9,222 173.5,236.8 	"/>
+	<path class="st140" d="M253.2,301.9c-3,7.9-6,14.7-9,20.3l-1.9,2.3"/>
+	<polygon class="st141" points="235,314.6 228.8,340.7 253.4,329.9 	"/>
 	<g class="st137">
-		<text transform="matrix(1 0 0 1 132.9228 82.8945)" class="st43 st47 st142">Model-based</text>
+		<text transform="matrix(1 0 0 1 119.9628 82.8945)" class="st43 st47 st142">Model-based</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_117_" x="419.8" y="449.4" width="24.6" height="7"/>
+		<rect id="SVGID_117_" x="406.8" y="449.4" width="24.6" height="7"/>
 	</defs>
 	<clipPath id="SVGID_118_">
 		<use xlink:href="#SVGID_117_"  style="overflow:visible;"/>
 	</clipPath>
-	<line class="st143" x1="420.8" y1="452.9" x2="443.4" y2="452.9"/>
+	<line class="st143" x1="407.8" y1="452.9" x2="430.4" y2="452.9"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_119_" x="357.7" y="438.5" width="59.7" height="25.3"/>
+		<rect id="SVGID_119_" x="344.7" y="438.5" width="59.7" height="25.3"/>
 	</defs>
 	<clipPath id="SVGID_120_">
 		<use xlink:href="#SVGID_119_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st144">
-		<text transform="matrix(1 0 0 1 363.6396 455.9646)"><tspan x="0" y="0" class="st43 st47 st145">Cont</tspan><tspan x="32.4" y="0" class="st43 st47 st145">r</tspan><tspan x="37.6" y="0" class="st43 st47 st145">ol</tspan></text>
+		<text transform="matrix(1 0 0 1 350.6796 455.9646)"><tspan x="0" y="0" class="st43 st47 st145">Cont</tspan><tspan x="32.4" y="0" class="st43 st47 st145">r</tspan><tspan x="37.6" y="0" class="st43 st47 st145">ol</tspan></text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_121_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_121_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_122_">
 		<use xlink:href="#SVGID_121_"  style="overflow:visible;"/>
 	</clipPath>
-	<line class="st146" x1="420.8" y1="519.6" x2="443.4" y2="519.6"/>
+	<line class="st146" x1="407.8" y1="519.6" x2="430.4" y2="519.6"/>
 	<g class="st147">
-		<text transform="matrix(1 0 0 1 342.6537 522.6489)" class="st148 st47 st145">Evaluation</text>
+		<text transform="matrix(1 0 0 1 329.6936 522.6489)" class="st148 st47 st145">Evaluation</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_123_" x="419.8" y="432.3" width="24.6" height="5"/>
+		<rect id="SVGID_123_" x="406.8" y="432.3" width="24.6" height="5"/>
 	</defs>
 	<clipPath id="SVGID_124_">
 		<use xlink:href="#SVGID_123_"  style="overflow:visible;"/>
 	</clipPath>
-	<line class="st149" x1="420.8" y1="434.8" x2="443.4" y2="434.8"/>
+	<line class="st149" x1="407.8" y1="434.8" x2="430.4" y2="434.8"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_125_" x="332.3" y="420.5" width="85.1" height="25.3"/>
+		<rect id="SVGID_125_" x="319.3" y="420.5" width="85.1" height="25.3"/>
 	</defs>
 	<clipPath id="SVGID_126_">
 		<use xlink:href="#SVGID_125_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st150">
-		<text transform="matrix(1 0 0 1 341.0716 437.9006)" class="st53 st145">Processing</text>
+		<text transform="matrix(1 0 0 1 328.1116 437.9006)" class="st53 st145">Processing</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_127_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_127_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_128_">
 		<use xlink:href="#SVGID_127_"  style="overflow:visible;"/>
 	</clipPath>
-	<path class="st151" d="M675.8,114.9C731,136,779.4,175.4,793.6,232.2c7.7,31,4.5,61.8-6.8,90.4c-10.6,26.9-28.3,52-50.9,72.6
+	<path class="st151" d="M662.9,114.9C718,136,766.4,175.4,780.6,232.2c7.7,31,4.5,61.8-6.8,90.4c-10.6,26.9-28.3,52-50.9,72.6
 		c-76.4,69.7-193.6,77.3-274.7,14.3c-55.8-43.3-80.3-112.3-61.3-180.7c9.9-35.4,29-66.7,56.5-89.2
-		C517.2,89.9,601.6,86.5,675.8,114.9z"/>
-	<path class="st152" d="M675.8,114.9C731,136,779.4,175.4,793.6,232.2c7.7,31,4.5,61.8-6.8,90.4c-10.6,26.9-28.3,52-50.9,72.6
+		C504.3,89.9,588.6,86.5,662.9,114.9z"/>
+	<path class="st152" d="M662.9,114.9C718,136,766.4,175.4,780.6,232.2c7.7,31,4.5,61.8-6.8,90.4c-10.6,26.9-28.3,52-50.9,72.6
 		c-76.4,69.7-193.6,77.3-274.7,14.3c-55.8-43.3-80.3-112.3-61.3-180.7c9.9-35.4,29-66.7,56.5-89.2
-		C517.2,89.9,601.6,86.5,675.8,114.9z"/>
-	<ellipse class="st153" cx="476" cy="205.3" rx="33.2" ry="27.5"/>
-	<ellipse class="st152" cx="476" cy="205.3" rx="33.2" ry="27.5"/>
+		C504.3,89.9,588.6,86.5,662.9,114.9z"/>
+	<ellipse class="st153" cx="463.1" cy="205.3" rx="33.2" ry="27.5"/>
+	<ellipse class="st152" cx="463.1" cy="205.3" rx="33.2" ry="27.5"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_129_" x="442.8" y="177.8" width="66.4" height="55.1"/>
+		<rect id="SVGID_129_" x="429.9" y="177.8" width="66.4" height="55.1"/>
 	</defs>
 	<clipPath id="SVGID_130_">
 		<use xlink:href="#SVGID_129_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st154">
-		<text transform="matrix(1 0 0 1 449.3403 208.1695)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 436.3803 208.1695)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_131_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_131_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_132_">
 		<use xlink:href="#SVGID_131_"  style="overflow:visible;"/>
 	</clipPath>
-	<ellipse class="st155" cx="456.9" cy="296.9" rx="33.2" ry="27.5"/>
-	<ellipse class="st156" cx="456.9" cy="296.9" rx="33.2" ry="27.5"/>
+	<ellipse class="st155" cx="443.9" cy="296.9" rx="33.2" ry="27.5"/>
+	<ellipse class="st156" cx="443.9" cy="296.9" rx="33.2" ry="27.5"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_133_" x="423.7" y="269.4" width="66.4" height="55.1"/>
+		<rect id="SVGID_133_" x="410.7" y="269.4" width="66.4" height="55.1"/>
 	</defs>
 	<clipPath id="SVGID_134_">
 		<use xlink:href="#SVGID_133_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st157">
-		<text transform="matrix(1 0 0 1 430.1787 299.8149)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 417.2187 299.8149)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_135_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_135_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_136_">
 		<use xlink:href="#SVGID_135_"  style="overflow:visible;"/>
 	</clipPath>
-	<ellipse class="st158" cx="523.6" cy="353.4" rx="33.2" ry="27.5"/>
-	<ellipse class="st159" cx="523.6" cy="353.4" rx="33.2" ry="27.5"/>
+	<ellipse class="st158" cx="510.6" cy="353.4" rx="33.2" ry="27.5"/>
+	<ellipse class="st159" cx="510.6" cy="353.4" rx="33.2" ry="27.5"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_137_" x="490.4" y="325.9" width="66.4" height="55.1"/>
+		<rect id="SVGID_137_" x="477.4" y="325.9" width="66.4" height="55.1"/>
 	</defs>
 	<clipPath id="SVGID_138_">
 		<use xlink:href="#SVGID_137_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st160">
-		<text transform="matrix(1 0 0 1 496.8772 356.2776)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 483.9172 356.2776)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_139_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_139_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_140_">
 		<use xlink:href="#SVGID_139_"  style="overflow:visible;"/>
 	</clipPath>
-	<path class="st161" d="M457.2,269.3c1.2-10,3.5-20.7,6.9-31.9l0.2-0.5"/>
-	<polygon class="st162" points="466.9,238.3 465.8,231.7 461.2,236.5 	"/>
-	<path class="st161" d="M493.6,341.2c-6.9-4.2-13-9.1-18.4-14.8l-0.3-0.4"/>
-	<polygon class="st162" points="477.5,324.4 471.3,321.9 473,328.4 	"/>
-	<path class="st163" d="M539.6,276c-13.7,0.4-26.1,1.6-37.2,3.7l-1.9,0.5"/>
-	<polygon class="st164" points="500.4,271.5 486,283.5 504.3,287.9 	"/>
-	<ellipse class="st165" cx="565.6" cy="173.3" rx="33.2" ry="27.5"/>
-	<ellipse class="st166" cx="565.6" cy="173.3" rx="33.2" ry="27.5"/>
+	<path class="st161" d="M444.2,269.3c1.2-10,3.5-20.7,6.9-31.9l0.2-0.5"/>
+	<polygon class="st162" points="453.9,238.3 452.9,231.7 448.2,236.5 	"/>
+	<path class="st161" d="M480.7,341.2c-6.9-4.2-13-9.1-18.4-14.8L462,326"/>
+	<polygon class="st162" points="464.5,324.4 458.3,321.9 460,328.4 	"/>
+	<path class="st163" d="M526.6,276c-13.7,0.4-26.1,1.6-37.2,3.7l-1.9,0.5"/>
+	<polygon class="st164" points="487.5,271.5 473.1,283.5 491.3,287.9 	"/>
+	<ellipse class="st165" cx="552.7" cy="173.3" rx="33.2" ry="27.5"/>
+	<ellipse class="st166" cx="552.7" cy="173.3" rx="33.2" ry="27.5"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_141_" x="532.4" y="145.8" width="66.4" height="55.1"/>
+		<rect id="SVGID_141_" x="519.5" y="145.8" width="66.4" height="55.1"/>
 	</defs>
 	<clipPath id="SVGID_142_">
 		<use xlink:href="#SVGID_141_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st167">
-		<text transform="matrix(1 0 0 1 543.7506 170.1866)" class="st28 st129">Objective</text>
+		<text transform="matrix(1 0 0 1 530.7906 170.1866)" class="st28 st129">Objective</text>
 	</g>
 	<g class="st167">
-		<text transform="matrix(1 0 0 1 587.4806 170.1866)" class="st28 st129"> </text>
+		<text transform="matrix(1 0 0 1 574.5206 170.1866)" class="st28 st129"> </text>
 	</g>
 	<g class="st167">
-		<text transform="matrix(1 0 0 1 538.9508 182.1866)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 525.9908 182.1866)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_143_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_143_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_144_">
 		<use xlink:href="#SVGID_143_"  style="overflow:visible;"/>
 	</clipPath>
-	<path class="st168" d="M499.5,185.7c7.5-3.2,16.5-5.8,27.1-7.8l0.5-0.1"/>
-	<polygon class="st169" points="527.2,180.8 532.6,176.8 526.1,174.9 	"/>
-	<path class="st168" d="M474.5,273.5c21.4-27.7,43.1-52.7,65.1-75l0.4-0.4"/>
-	<polygon class="st169" points="541.7,200.6 543.8,194.2 537.5,196.4 	"/>
-	<polyline class="st170" points="549.4,253.9 516.1,231.8 514.4,230.7 	"/>
-	<polygon class="st171" points="520.7,224.8 502.1,222.5 511.4,238.8 	"/>
+	<path class="st168" d="M486.6,185.7c7.5-3.2,16.5-5.8,27.1-7.8l0.5-0.1"/>
+	<polygon class="st169" points="514.2,180.8 519.6,176.8 513.2,174.9 	"/>
+	<path class="st168" d="M461.6,273.5c21.4-27.7,43.1-52.7,65.1-75l0.4-0.4"/>
+	<polygon class="st169" points="528.8,200.6 530.9,194.2 524.5,196.4 	"/>
+	<polyline class="st170" points="536.4,253.9 503.1,231.8 501.4,230.7 	"/>
+	<polygon class="st171" points="507.7,224.8 489.1,222.5 498.5,238.8 	"/>
 	<g class="st169">
-		<text transform="matrix(1 0 0 1 513.5948 82.6481)"><tspan x="0" y="0" class="st43 st47 st142">“Model-f</tspan><tspan x="100.4" y="0" class="st43 st47 st142">r</tspan><tspan x="109.3" y="0" class="st43 st47 st142">ee”</tspan></text>
+		<text transform="matrix(1 0 0 1 500.6348 82.6481)"><tspan x="0" y="0" class="st43 st47 st142">“Model-f</tspan><tspan x="100.4" y="0" class="st43 st47 st142">r</tspan><tspan x="109.3" y="0" class="st43 st47 st142">ee”</tspan></text>
 	</g>
-	<line class="st172" x1="420.8" y1="486.4" x2="443.4" y2="486.4"/>
+	<line class="st172" x1="407.8" y1="486.4" x2="430.4" y2="486.4"/>
 	<g class="st169">
-		<text transform="matrix(1 0 0 1 361.4319 489.8208)" class="st173 st53 st174">Features</text>
+		<text transform="matrix(1 0 0 1 348.4718 489.8208)" class="st173 st53 st174">Features</text>
 	</g>
-	<line class="st175" x1="420.8" y1="497.6" x2="443.4" y2="497.6"/>
+	<line class="st175" x1="407.8" y1="497.6" x2="430.4" y2="497.6"/>
 	<g class="st169">
-		<text transform="matrix(1 0 0 1 360.2108 501.0239)" class="st173 st53 st174">Outcome</text>
+		<text transform="matrix(1 0 0 1 347.2508 501.0239)" class="st173 st53 st174">Outcome</text>
 	</g>
-	<path class="st176" d="M598.3,176.3c26.7,10.7,30.7,30.7,12,60l-0.6,0.8"/>
-	<polygon class="st177" points="606.3,233.6 604.8,244.3 614.2,239.1 	"/>
-	<path class="st178" d="M557.4,359.5c18.9-4,33-17.2,42.2-39.5l0.3-0.9"/>
-	<polygon class="st179" points="604.1,321.6 602.9,310.9 595.1,318.3 	"/>
-	<path class="st176" d="M597.7,167.8c18.7-5.1,32.3-18.2,40.7-39.2l0.3-0.9"/>
-	<polygon class="st177" points="643,130.1 641.7,119.5 634,127 	"/>
-	<path class="st178" d="M226,363.8c26.3-7.3,44.2-22.1,53.8-44.4l0.3-0.9"/>
-	<polygon class="st179" points="284.4,321.1 283.2,310.4 275.4,317.8 	"/>
-	<path class="st178" d="M229.6,349l0.9-0.4c16.1-9.4,27.7-24.7,35-46"/>
-	<polygon class="st179" points="228.4,344.3 221.9,352.9 232.7,352.9 	"/>
-	<path class="st178" d="M604.5,408.3c-5.9-18.7-20.5-31.8-43.9-39.3l-1-0.3"/>
-	<polygon class="st179" points="562,364.3 551.4,366.4 559.4,373.6 	"/>
-	<path class="st178" d="M250.2,409.3c1.6-11.6-4.1-22.4-16.9-32.4l-0.8-0.6"/>
-	<polygon class="st179" points="236,372.9 225.4,371.4 230.6,380.8 	"/>
-	<ellipse class="st180" cx="294" cy="278.4" rx="44.9" ry="36.7"/>
-	<ellipse class="st181" cx="294" cy="278.4" rx="44.9" ry="36.7"/>
+	<path class="st176" d="M585.4,176.3c26.7,10.7,30.7,30.7,12,60l-0.6,0.8"/>
+	<polygon class="st177" points="593.4,233.6 591.9,244.3 601.3,239.1 	"/>
+	<path class="st178" d="M544.4,359.5c18.9-4,33-17.2,42.2-39.5l0.3-0.9"/>
+	<polygon class="st179" points="591.1,321.6 589.9,310.9 582.1,318.3 	"/>
+	<path class="st176" d="M584.8,167.8c18.7-5.1,32.3-18.2,40.7-39.2l0.3-0.9"/>
+	<polygon class="st177" points="630.1,130.1 628.7,119.5 621,127 	"/>
+	<path class="st178" d="M213.1,363.8c26.3-7.3,44.2-22.1,53.8-44.4l0.3-0.9"/>
+	<polygon class="st179" points="271.4,321.1 270.2,310.4 262.4,317.8 	"/>
+	<path class="st178" d="M216.7,349l0.9-0.4c16.1-9.4,27.7-24.7,35-46"/>
+	<polygon class="st179" points="215.5,344.3 209,352.9 219.7,352.9 	"/>
+	<path class="st178" d="M591.6,408.3c-5.9-18.7-20.5-31.8-43.9-39.3l-1-0.3"/>
+	<polygon class="st179" points="549,364.3 538.5,366.4 546.4,373.6 	"/>
+	<path class="st178" d="M237.3,409.3c1.6-11.6-4.1-22.4-16.9-32.4l-0.8-0.6"/>
+	<polygon class="st179" points="223.1,372.9 212.5,371.4 217.6,380.8 	"/>
+	<ellipse class="st180" cx="281.1" cy="278.4" rx="44.9" ry="36.7"/>
+	<ellipse class="st181" cx="281.1" cy="278.4" rx="44.9" ry="36.7"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_145_" x="249.1" y="241.7" width="89.8" height="73.4"/>
+		<rect id="SVGID_145_" x="236.1" y="241.7" width="89.8" height="73.4"/>
 	</defs>
 	<clipPath id="SVGID_146_">
 		<use xlink:href="#SVGID_145_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st182">
-		<text transform="matrix(1 0 0 1 260.6522 268.7302)" class="st10 st174">Optimization </text>
+		<text transform="matrix(1 0 0 1 247.6922 268.7302)" class="st10 st174">Optimization </text>
 	</g>
 	<g class="st182">
-		<text transform="matrix(1 0 0 1 274.5732 281.7302)"><tspan x="0" y="0" class="st10 st174">Cont</tspan><tspan x="25.3" y="0" class="st10 st174">r</tspan><tspan x="29.4" y="0" class="st10 st174">ol</tspan></text>
+		<text transform="matrix(1 0 0 1 261.6132 281.7302)"><tspan x="0" y="0" class="st10 st174">Cont</tspan><tspan x="25.3" y="0" class="st10 st174">r</tspan><tspan x="29.4" y="0" class="st10 st174">ol</tspan></text>
 	</g>
 	<g class="st182">
-		<text transform="matrix(1 0 0 1 263.6873 294.7302)" class="st10 st174">Mechanism</text>
+		<text transform="matrix(1 0 0 1 250.7273 294.7302)" class="st10 st174">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_147_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_147_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_148_">
 		<use xlink:href="#SVGID_147_"  style="overflow:visible;"/>
 	</clipPath>
-	<line class="st183" x1="420.8" y1="469.6" x2="443.4" y2="469.6"/>
+	<line class="st183" x1="407.8" y1="469.6" x2="430.4" y2="469.6"/>
 	<g class="st184">
-		<text transform="matrix(1 0 0 1 341.8976 472.6489)" class="st185 st47 st145">Simulation</text>
+		<text transform="matrix(1 0 0 1 328.9376 472.6489)" class="st185 st47 st145">Simulation</text>
 	</g>
-	<path class="st186" d="M274.3,200.8c6,5.6,10.7,12,14.1,19.3l0.7,2.9"/>
-	<polygon class="st187" points="276.8,223 294.4,243.3 300,217 	"/>
-	<ellipse class="st188" cx="235.6" cy="176.8" rx="33.2" ry="27.1"/>
-	<ellipse class="st189" cx="235.6" cy="176.8" rx="33.2" ry="27.1"/>
+	<path class="st186" d="M261.3,200.8c6,5.6,10.7,12,14.1,19.3l0.7,2.9"/>
+	<polygon class="st187" points="263.8,223 281.4,243.3 287.1,217 	"/>
+	<ellipse class="st188" cx="222.7" cy="176.8" rx="33.2" ry="27.1"/>
+	<ellipse class="st189" cx="222.7" cy="176.8" rx="33.2" ry="27.1"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_149_" x="202.4" y="149.7" width="66.4" height="54.3"/>
+		<rect id="SVGID_149_" x="189.5" y="149.7" width="66.4" height="54.3"/>
 	</defs>
 	<clipPath id="SVGID_150_">
 		<use xlink:href="#SVGID_149_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st190">
-		<text transform="matrix(1 0 0 1 213.7601 173.4016)" class="st28 st129">Objective</text>
+		<text transform="matrix(1 0 0 1 200.8001 173.4016)" class="st28 st129">Objective</text>
 	</g>
 	<g class="st190">
-		<text transform="matrix(1 0 0 1 257.4901 173.4016)" class="st28 st129"> </text>
+		<text transform="matrix(1 0 0 1 244.5301 173.4016)" class="st28 st129"> </text>
 	</g>
 	<g class="st190">
-		<text transform="matrix(1 0 0 1 208.9508 185.4016)" class="st28 st129">Mechanism</text>
+		<text transform="matrix(1 0 0 1 195.9908 185.4016)" class="st28 st129">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_151_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_151_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_152_">
 		<use xlink:href="#SVGID_151_"  style="overflow:visible;"/>
 	</clipPath>
-	<path class="st191" d="M292.7,234.2l-0.2-1c-3.8-17.4-13.6-31.2-29.3-41.5"/>
-	<polygon class="st192" points="287.8,234 294,242.7 297.3,232.5 	"/>
+	<path class="st191" d="M279.7,234.2l-0.2-1c-3.8-17.4-13.6-31.2-29.3-41.5"/>
+	<polygon class="st192" points="274.8,234 281,242.7 284.3,232.5 	"/>
 	<g class="st193">
-		<text transform="matrix(1 0 0 1 149.5934 153.5743)" class="st53 st129">agent_rep</text>
+		<text transform="matrix(1 0 0 1 136.6334 153.5743)" class="st53 st129">agent_rep</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_153_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_153_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_154_">
 		<use xlink:href="#SVGID_153_"  style="overflow:visible;"/>
@@ -1222,63 +1222,63 @@
 	<g class="st194">
 		<g>
 			<defs>
-				<rect id="SVGID_155_" x="653.7" y="192.9" width="130" height="142"/>
+				<rect id="SVGID_155_" x="640.7" y="192.9" width="130" height="142"/>
 			</defs>
 			<clipPath id="SVGID_156_">
 				<use xlink:href="#SVGID_155_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st195">
 				<defs>
-					<rect id="SVGID_157_" x="653.7" y="192.9" width="130" height="142"/>
+					<rect id="SVGID_157_" x="640.7" y="192.9" width="130" height="142"/>
 				</defs>
 				<clipPath id="SVGID_158_">
 					<use xlink:href="#SVGID_157_"  style="overflow:visible;"/>
 				</clipPath>
-				<path class="st196" d="M766.5,218.4c10.9,13.7,15.9,31,14.7,47.9c-1.3,17.9-9.4,35-23.2,47.1c-23.5,20.7-56.8,20.7-79.8-0.5
-					c-27.1-25-30.1-69.1-6.3-97.1C697.4,185.8,741.9,187.3,766.5,218.4z"/>
-				<path class="st197" d="M766.5,218.4c10.9,13.7,15.9,31,14.7,47.9c-1.3,17.9-9.4,35-23.2,47.1c-23.5,20.7-56.8,20.7-79.8-0.5
-					c-27.1-25-30.1-69.1-6.3-97.1C697.4,185.8,741.9,187.3,766.5,218.4z"/>
+				<path class="st196" d="M753.5,218.4c10.9,13.7,15.9,31,14.7,47.9c-1.3,17.9-9.4,35-23.2,47.1c-23.5,20.7-56.8,20.7-79.8-0.5
+					c-27.1-25-30.1-69.1-6.3-97.1C684.4,185.8,728.9,187.3,753.5,218.4z"/>
+				<path class="st197" d="M753.5,218.4c10.9,13.7,15.9,31,14.7,47.9c-1.3,17.9-9.4,35-23.2,47.1c-23.5,20.7-56.8,20.7-79.8-0.5
+					c-27.1-25-30.1-69.1-6.3-97.1C684.4,185.8,728.9,187.3,753.5,218.4z"/>
 			</g>
 		</g>
 	</g>
 	<g class="st198">
-		<text transform="matrix(1 0 0 1 696.7994 215.1294)" class="st53 st129">agent_rep</text>
+		<text transform="matrix(1 0 0 1 683.84 215.1294)" class="st53 st129">agent_rep</text>
 	</g>
-	<path class="st199" d="M641.4,305.5l2.9,0.9c8.9,1,17.2-0.3,24.8-3.9"/>
-	<polygon class="st200" points="647.7,294.9 621.3,299.5 640.8,317.9 	"/>
-	<path class="st201" d="M661.1,323l-2.8,1.1c-18.6,4.2-34.8-1.9-48.4-18.3"/>
-	<polygon class="st202" points="662.9,335.2 680.5,315 653.7,313.1 	"/>
+	<path class="st199" d="M628.4,305.5l2.9,0.9c8.9,1,17.2-0.3,24.8-3.9"/>
+	<polygon class="st200" points="634.7,294.9 608.3,299.5 627.9,317.9 	"/>
+	<path class="st201" d="M648.1,323l-2.8,1.1c-18.6,4.2-34.8-1.9-48.4-18.3"/>
+	<polygon class="st202" points="650,335.2 667.5,315 640.8,313.1 	"/>
 	<g class="st198">
-		<text transform="matrix(1 0 0 1 147.2232 434.0682)" class="st28 st203">Composition</text>
+		<text transform="matrix(1 0 0 1 134.2632 434.0682)" class="st28 st203">Composition</text>
 	</g>
 	<g class="st198">
-		<text transform="matrix(1 0 0 1 526.7776 426.3332)" class="st28 st203">Composition</text>
+		<text transform="matrix(1 0 0 1 513.8176 426.3332)" class="st28 st203">Composition</text>
 	</g>
-	<path class="st204" d="M267,167.7c13.5-5.6,24.5-16.3,33.2-31.9l0.4-0.9"/>
-	<polygon class="st205" points="304.5,138 304.5,127.3 295.9,133.7 	"/>
-	<ellipse class="st206" cx="584.6" cy="277.2" rx="44.9" ry="37.3"/>
-	<ellipse class="st207" cx="584.6" cy="277.2" rx="44.9" ry="37.3"/>
+	<path class="st204" d="M254.1,167.7c13.5-5.6,24.5-16.3,33.2-31.9l0.4-0.9"/>
+	<polygon class="st205" points="291.5,138 291.5,127.3 282.9,133.7 	"/>
+	<ellipse class="st206" cx="571.7" cy="277.2" rx="44.9" ry="37.3"/>
+	<ellipse class="st207" cx="571.7" cy="277.2" rx="44.9" ry="37.3"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_159_" x="539.7" y="240" width="89.8" height="74.5"/>
+		<rect id="SVGID_159_" x="526.7" y="240" width="89.8" height="74.5"/>
 	</defs>
 	<clipPath id="SVGID_160_">
 		<use xlink:href="#SVGID_159_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st208">
-		<text transform="matrix(1 0 0 1 551.2314 267.8358)" class="st10 st174">Optimization </text>
+		<text transform="matrix(1 0 0 1 538.2714 267.8358)" class="st10 st174">Optimization </text>
 	</g>
 	<g class="st208">
-		<text transform="matrix(1 0 0 1 565.1629 280.8358)"><tspan x="0" y="0" class="st10 st174">Cont</tspan><tspan x="25.3" y="0" class="st10 st174">r</tspan><tspan x="29.4" y="0" class="st10 st174">ol</tspan></text>
+		<text transform="matrix(1 0 0 1 552.2029 280.8358)"><tspan x="0" y="0" class="st10 st174">Cont</tspan><tspan x="25.3" y="0" class="st10 st174">r</tspan><tspan x="29.4" y="0" class="st10 st174">ol</tspan></text>
 	</g>
 	<g class="st208">
-		<text transform="matrix(1 0 0 1 554.2784 293.8358)" class="st10 st174">Mechanism</text>
+		<text transform="matrix(1 0 0 1 541.3184 293.8358)" class="st10 st174">Mechanism</text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_161_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_161_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_162_">
 		<use xlink:href="#SVGID_161_"  style="overflow:visible;"/>
@@ -1286,27 +1286,27 @@
 	<g class="st209">
 		<g>
 			<defs>
-				<rect id="SVGID_163_" x="611.7" y="228.9" width="75" height="25"/>
+				<rect id="SVGID_163_" x="598.7" y="228.9" width="75" height="25"/>
 			</defs>
 			<clipPath id="SVGID_164_">
 				<use xlink:href="#SVGID_163_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st210">
 				<defs>
-					<rect id="SVGID_165_" x="611.7" y="228.9" width="75" height="25"/>
+					<rect id="SVGID_165_" x="598.7" y="228.9" width="75" height="25"/>
 				</defs>
 				<clipPath id="SVGID_166_">
 					<use xlink:href="#SVGID_165_"  style="overflow:visible;"/>
 				</clipPath>
-				<path class="st211" d="M614,249.1c17.5-18.7,38.8-22.8,63.8-12.1l0.9,0.4"/>
-				<polygon class="st212" points="675.8,241.3 686.5,241.2 680,232.7 				"/>
+				<path class="st211" d="M601.1,249.1c17.5-18.7,38.8-22.8,63.8-12.1l0.9,0.4"/>
+				<polygon class="st212" points="662.8,241.3 673.6,241.2 667,232.7 				"/>
 			</g>
 		</g>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_167_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_167_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_168_">
 		<use xlink:href="#SVGID_167_"  style="overflow:visible;"/>
@@ -1314,68 +1314,68 @@
 	<g class="st213">
 		<g>
 			<defs>
-				<rect id="SVGID_169_" x="618.7" y="241.9" width="61" height="19"/>
+				<rect id="SVGID_169_" x="605.7" y="241.9" width="61" height="19"/>
 			</defs>
 			<clipPath id="SVGID_170_">
 				<use xlink:href="#SVGID_169_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st214">
 				<defs>
-					<rect id="SVGID_171_" x="618.7" y="241.9" width="61" height="19"/>
+					<rect id="SVGID_171_" x="605.7" y="241.9" width="61" height="19"/>
 				</defs>
 				<clipPath id="SVGID_172_">
 					<use xlink:href="#SVGID_171_"  style="overflow:visible;"/>
 				</clipPath>
-				<path class="st215" d="M620.9,256.7c15.7-12.5,32.1-15.6,49.1-9.2l0.9,0.4"/>
-				<polygon class="st216" points="668,251.8 678.7,251.5 672,243.1 				"/>
+				<path class="st215" d="M607.9,256.7c15.7-12.5,32.1-15.6,49.1-9.2l0.9,0.4"/>
+				<polygon class="st216" points="655,251.8 665.8,251.5 659.1,243.1 				"/>
 			</g>
 		</g>
 	</g>
-	<path class="st217" d="M610.9,307.2c17.8,21.4,43.4,23,76.9,4.6l0.9-0.5"/>
-	<polygon class="st218" points="690.2,316 696.1,307 685.3,307.7 	"/>
-	<path class="st219" d="M692,289.9c-19.4,16.1-40.1,20.4-62.1,12.9l-0.9-0.4"/>
-	<polygon class="st220" points="631.7,298.3 621,299.1 628.1,307.2 	"/>
-	<ellipse class="st221" cx="718.2" cy="270" rx="43.2" ry="43.1"/>
-	<ellipse class="st222" cx="718.2" cy="270" rx="43.2" ry="43.1"/>
+	<path class="st217" d="M597.9,307.2c17.8,21.4,43.4,23,76.9,4.6l0.9-0.5"/>
+	<polygon class="st218" points="677.2,316 683.1,307 672.4,307.7 	"/>
+	<path class="st219" d="M679,289.9c-19.4,16.1-40.1,20.4-62.1,12.9l-0.9-0.4"/>
+	<polygon class="st220" points="618.8,298.3 608.1,299.1 615.1,307.2 	"/>
+	<ellipse class="st221" cx="705.2" cy="270" rx="43.2" ry="43.1"/>
+	<ellipse class="st222" cx="705.2" cy="270" rx="43.2" ry="43.1"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_173_" x="675" y="226.8" width="86.4" height="86.3"/>
+		<rect id="SVGID_173_" x="662" y="226.8" width="86.4" height="86.3"/>
 	</defs>
 	<clipPath id="SVGID_174_">
 		<use xlink:href="#SVGID_173_"  style="overflow:visible;"/>
 	</clipPath>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 691.6916 250.4026)" class="st28 st224">Composition </text>
+		<text transform="matrix(1 0 0 1 678.7321 250.4026)" class="st28 st224">Composition </text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 747.2038 250.4026)" class="st28 st224"> </text>
+		<text transform="matrix(1 0 0 1 734.2443 250.4026)" class="st28 st224"> </text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 713.9441 261.4026)" class="st28 st224">or</text>
+		<text transform="matrix(1 0 0 1 700.9846 261.4026)" class="st28 st224">or</text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 722.449 261.4026)" class="st28 st224"> </text>
+		<text transform="matrix(1 0 0 1 709.4895 261.4026)" class="st28 st224"> </text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 691.6916 272.4026)" class="st28 st224">Composition</text>
+		<text transform="matrix(1 0 0 1 678.7321 272.4026)" class="st28 st224">Composition</text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 744.7014 272.4026)" class="st28 st224"> </text>
+		<text transform="matrix(1 0 0 1 731.7419 272.4026)" class="st28 st224"> </text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 700.0256 283.4026)" class="st28 st224">Function</text>
+		<text transform="matrix(1 0 0 1 687.0662 283.4026)" class="st28 st224">Function</text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 736.3674 283.4026)" class="st28 st224"> </text>
+		<text transform="matrix(1 0 0 1 723.408 283.4026)" class="st28 st224"> </text>
 	</g>
 	<g class="st223">
-		<text transform="matrix(1 0 0 1 689.8556 294.4026)"><tspan x="0" y="0" class="st28 st224">App</tspan><tspan x="17" y="0" class="st28 st224">r</tspan><tspan x="20" y="0" class="st28 st224">oximator</tspan></text>
+		<text transform="matrix(1 0 0 1 676.8961 294.4026)"><tspan x="0" y="0" class="st28 st224">App</tspan><tspan x="17" y="0" class="st28 st224">r</tspan><tspan x="20" y="0" class="st28 st224">oximator</tspan></text>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_175_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_175_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_176_">
 		<use xlink:href="#SVGID_175_"  style="overflow:visible;"/>
@@ -1383,26 +1383,26 @@
 	<g class="st225">
 		<g>
 			<defs>
-				<rect id="SVGID_177_" x="469.7" y="482.9" width="34" height="14"/>
+				<rect id="SVGID_177_" x="456.7" y="482.9" width="34" height="14"/>
 			</defs>
 			<clipPath id="SVGID_178_">
 				<use xlink:href="#SVGID_177_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st226">
 				<defs>
-					<rect id="SVGID_179_" x="469.7" y="482.9" width="34" height="14"/>
+					<rect id="SVGID_179_" x="456.7" y="482.9" width="34" height="14"/>
 				</defs>
 				<clipPath id="SVGID_180_">
 					<use xlink:href="#SVGID_179_"  style="overflow:visible;"/>
 				</clipPath>
-				<line class="st227" x1="470.8" y1="486.4" x2="493.4" y2="486.4"/>
+				<line class="st227" x1="457.8" y1="486.4" x2="480.4" y2="486.4"/>
 			</g>
 		</g>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_181_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_181_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_182_">
 		<use xlink:href="#SVGID_181_"  style="overflow:visible;"/>
@@ -1410,26 +1410,26 @@
 	<g class="st228">
 		<g>
 			<defs>
-				<rect id="SVGID_183_" x="469.7" y="493.9" width="34" height="14"/>
+				<rect id="SVGID_183_" x="456.7" y="493.9" width="34" height="14"/>
 			</defs>
 			<clipPath id="SVGID_184_">
 				<use xlink:href="#SVGID_183_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st229">
 				<defs>
-					<rect id="SVGID_185_" x="469.7" y="493.9" width="34" height="14"/>
+					<rect id="SVGID_185_" x="456.7" y="493.9" width="34" height="14"/>
 				</defs>
 				<clipPath id="SVGID_186_">
 					<use xlink:href="#SVGID_185_"  style="overflow:visible;"/>
 				</clipPath>
-				<line class="st230" x1="470.8" y1="497.6" x2="493.4" y2="497.6"/>
+				<line class="st230" x1="457.8" y1="497.6" x2="480.4" y2="497.6"/>
 			</g>
 		</g>
 	</g>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_187_" x="10.7" y="29.9" width="810" height="540"/>
+		<rect id="SVGID_187_" x="-2.3" y="29.9" width="810" height="540"/>
 	</defs>
 	<clipPath id="SVGID_188_">
 		<use xlink:href="#SVGID_187_"  style="overflow:visible;"/>
@@ -1437,20 +1437,20 @@
 	<g class="st231">
 		<g>
 			<defs>
-				<rect id="SVGID_189_" x="465.7" y="461.9" width="74" height="14"/>
+				<rect id="SVGID_189_" x="452.7" y="461.9" width="74" height="14"/>
 			</defs>
 			<clipPath id="SVGID_190_">
 				<use xlink:href="#SVGID_189_"  style="overflow:visible;"/>
 			</clipPath>
 			<g class="st232">
 				<defs>
-					<rect id="SVGID_191_" x="465.7" y="461.9" width="74" height="14"/>
+					<rect id="SVGID_191_" x="452.7" y="461.9" width="74" height="14"/>
 				</defs>
 				<clipPath id="SVGID_192_">
 					<use xlink:href="#SVGID_191_"  style="overflow:visible;"/>
 				</clipPath>
 				<g class="st233">
-					<text transform="matrix(1 0 0 1 467.8429 471.0239)" class="st173 st53 st174">Adaptation</text>
+					<text transform="matrix(1 0 0 1 454.8829 471.0239)" class="st173 st53 st174">Adaptation</text>
 				</g>
 			</g>
 		</g>

@@ -133,6 +133,8 @@ for the parent Composition.  This distinction corresponds closely to the distinc
 <https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
 and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
+|
+
 .. figure:: _static/Optimization_fig.svg
    :scale: 50%
    :alt: OptimizationControlMechanism
@@ -146,7 +148,7 @@ and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatur
    a `CompositionFunctionApproximator`. *Panel B:* Flow of execution during optimization.  In both panels,
    faded items show process of adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
    <OptimizationControlMechanism.agent_rep>`.
-
+|
 .. _OptimizationControlMechanism_Model_Based:
 
 *Model-Based Optimization*
