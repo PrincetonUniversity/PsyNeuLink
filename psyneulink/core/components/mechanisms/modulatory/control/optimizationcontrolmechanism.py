@@ -173,11 +173,15 @@ and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.
    :scale: 50%
    :alt: OptimizationControlMechanism
 
-   **Architecture and Execution Flow for an OptimizationControlMechanism*.** Panel on the left shows the
-   organization of `model-based <OptimizationControlMechanism_Model_Based>` and `model-free
-   <OptimizationControlMechanism_Model_Free>` optimization using an OptimizationControlMechanism.
-   Panel on the right show execution flow;  grayed elements show adaptation process for an
-   `agent_rep <OptimizationControlMechanism.agent_rep>` that is a `CompositionFunctionApproximator`.
+   **Functional Anatomy of an OptimizationControlMechanism.** *Panel A:* Examples of use in model-based
+   and model-free optimization.  Note that in the example of `model-based optimization
+   <OptimizationControlMechanism_Model_Based>` (left), the OptimizationControlMechanism uses the entire
+   Composition that it controls as its `agent_rep <OptimizationControlMechanism.agent_rep>`.
+   In the example of `model-free optimization <OptimizationControlMechanism_Model_Free>` (right) ) it uses
+   another (presumably simpler) Composition or a `CompositionFunctionApproximator` as the `agent_rep
+   <OptimizationControlMechanism.agent_rep>`. *Panel B:* Flow of execution during optimization.  In both
+   panels, lighter elements show adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
+   <OptimizationControlMechanism.agent_rep>`.
 
 .. _OptimizationControlMechanism_Creation:
 
