@@ -9,6 +9,7 @@
 # **************************************  OptimizationControlMechanism *************************************************
 
 # FIX: REWORK WITH REFERENCES TO `outcome <OptimizationControlMechanism.outcome>`
+#      INTRODUCE SIMULATION INTO DISCUSSION OF COMPOSITOIN-BASED
 
 """
 
@@ -118,17 +119,17 @@ COMMENT
 
 **Agent Representation and Types of Optimization**
 
-Much of the functionality described above is supported `ControlMechanism` (the OptimizationControlMechanism's parent
-class,). The defining characteristic of an OptimizationControlMechanism is its `agent representation
-<OptimizationControlMechanism_Agent_Rep>`, that is used to determine the `net_outcome <ControlMechanism.net_outcome>`
-for a given `state <OptimizationControlMechanism_State>`, and find the `control_allocation
-<ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep <OptimizationControlMechanism.agent_rep>`
-can be either the `Composition` to which the OptimizationControlMechanism belongs (and controls) or another one
-(potentially `nested <Composition_Nested>` within it), that is used to estimate the `net_outcome
-<ControlMechanism.net_outcome>` for the parent Composition.  This distinction corresponds closely to the distinction
-between *model-based* and *model-free* optimization in the `machine learning <https://www.google.com/books/
-edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).
-+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
+Much of the functionality described above is supported by a `ControlMechanism` (the parent class of an
+OptimizationControlMechanism). The defining  characteristic of an OptimizationControlMechanism is its `agent
+representation <OptimizationControlMechanism_Agent_Rep>`, that is used to determine the `net_outcome
+<ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>`, and find the
+`control_allocation <ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep
+<OptimizationControlMechanism.agent_rep>` can be the `Composition` to which the OptimizationControlMechanism
+belongs (and controls), or another one (potentially `nested <Composition_Nested>` within it,
+or a `CompositionFunctionApproximator`) that is used to estimate the `net_outcome <ControlMechanism.net_outcome>`
+for the parent Composition.  This distinction corresponds closely to the distinction between *model-based* and
+*model-free* optimization in the `machine learning
+<https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
 and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
 .. _OptimizationControlMechanism_Model_Free:
@@ -188,9 +189,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   optimization.  If that Composition already has a `controller <Composition.controller>` specified,
   the OptimizationControlMechanism is disabled. If another Composition is specified, it must conform to the
   specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as described `below
-  <OptimizationControlMechanism_Agent_Rep>`.  The type of Component assigned as the `agent_rep
-  <OptimizationControlMechanism.agent_rep>` is identified in the OptimizationControlMechanism's `agent_rep_type
-  <OptimizationControlMechanism.agent_rep_type>` attribute.
+  <OptimizationControlMechanism_Agent_Rep>`.  The  `agent_rep <OptimizationControlMechanism.agent_rep>` can also be
+  a `CompositionFunctionApproximator` for `model-free <OptimizationControlMechanism_Model_Free>` forms of
+  optimization.  The type of Component assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` is
+  identified in the OptimizationControlMechanism's `agent_rep_type <OptimizationControlMechanism.agent_rep_type>`
+  attribute.
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
@@ -352,6 +355,23 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   <OptimizationControlMechanism.allow_probes>` for additional details).  These can be thought of as providing
   access to "latent variable" of the Composition being monitored.
 
+COMMENT:
+* *Simulation Arguments*:
+        origin_objective_mechanism=False                \
+        terminal_objective_mechanism=False              \
+        function=GridSearch,                            \
+        num_estimates=1,                                \
+        initial_seed=None,                              \
+        same_seed_for_all_parameter_combinations=False  \
+        num_trials_per_estimate=None,                   \
+        search_function=None,                           \
+        search_termination_function=None,               \
+        search_space=None,                              \
+
+DESCRIPTION OF RANDOMIZATION CONTROL SIGNAL
+COMMENT
+
+
 .. _OptimizationControlMechanism_Structure:
 
 Structure
@@ -386,10 +406,7 @@ OptimizationControlMechanism is the controller, then it must meet the following 
         <OptimizationControlMechanism.state_feature_values>` (inputs for estimate);
       - `control_allocation <ControlMechanism.control_allocation>` (the set of parameters for which estimates
         of `net_outcome <ControlMechanism.net_outcome>` are made);
-      COMMENT:
-      - `num_estimates <OptimizationControlMechanism.num_trials_per_estimate>` (number of estimates of `net_outcome
-        <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`);
-      COMMENT
+
       - `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` (number of trials executed by
         agent_rep for each estimate).
     ..
@@ -947,7 +964,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.net_outcome>` of each `control_allocation <ControlMechanism.control_allocation>` evaluated
         by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` (i.e.,
         that are specified by its `search_space <OptimizationFunction.search_space>`).
-        # FIX: 11/3/21 ADD POINTER TO DESCRIPTINO OF RAONDIMZATION CONTROL SIGNAL
+        # FIX: 11/3/21 ADD POINTER TO DESCRIPTION OF RANDOMIZATION ControlSignal
 
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
@@ -2199,7 +2216,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         for spec in _state_input_ports:
             # MODIFIED 11/29/21 NEW:
-            # If optimization is model-free, assume that shadowing of a Mechanism spec is for its primary InputPort
+            # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism) and self.agent_rep_type == COMPOSITION:
                 # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
                 #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
@@ -2209,18 +2226,15 @@ class OptimizationControlMechanism(ControlMechanism):
                                                             f"more than one InputPort; a specific one or subset "
                                                             f"of them must be specified.")
                 spec = spec.input_port
-            # MODIFIED 11/29/21 END
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
                                         PROJECTIONS:None})
-            # MODIFIED 11/28/21 NEW:
             if feature_functions:
                 if isinstance(feature_functions, dict) and spec in feature_functions:
                     feat_fct = feature_functions.pop(spec)
                 else:
                     feat_fct = feature_functions
                 parsed_spec.update({FUNCTION: self._parse_state_feature_function(feat_fct)})
-            # MODIFIED 11/28/21 END
             parsed_spec = [parsed_spec] # so that extend works below
 
             parsed_features.extend(parsed_spec)
