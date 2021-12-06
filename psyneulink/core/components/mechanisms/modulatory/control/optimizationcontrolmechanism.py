@@ -372,19 +372,20 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   access to "latent variable" of the Composition being monitored.
 
 COMMENT:
-* *Simulation Arguments*:
-        origin_objective_mechanism=False                \
-        terminal_objective_mechanism=False              \
-        function=GridSearch,                            \
-        num_estimates=1,                                \
-        initial_seed=None,                              \
-        same_seed_for_all_parameter_combinations=False  \
-        num_trials_per_estimate=None,                   \
-        search_function=None,                           \
-        search_termination_function=None,               \
-        search_space=None,                              \
+FIX: SUMMARIZE THESE AND POINT TO SECTION ON SIMULATION
+        * *Simulation Arguments*:
+                origin_objective_mechanism=False                \
+                terminal_objective_mechanism=False              \
+                function=GridSearch,                            \
+                num_estimates=1,                                \
+                initial_seed=None,                              \
+                same_seed_for_all_parameter_combinations=False  \
+                num_trials_per_estimate=None,                   \
+                search_function=None,                           \
+                search_termination_function=None,               \
+                search_space=None,                              \
 
-DESCRIPTION OF RANDOMIZATION CONTROL SIGNAL
+        DESCRIPTION OF RANDOMIZATION CONTROL SIGNAL
 COMMENT
 
 
@@ -607,8 +608,9 @@ It is generally an `OptimizationFunction`, which in turn has `objective_function
 OptimizationFunction's `objective_function <OptimizationFunction.objective_function>`, and is used to
 evaluate each `control_allocation <ControlMechanism.control_allocation>` sampled from the `search_space
 <OptimizationFunction.search_space>` by the `search_function <OptimizationFunction.search_function>`
-until the `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`. Each
-`control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
+until the `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`.
+# FIX: SUMMARIZE THIS (SINCE EXECUTION IS POINTED TO AT END):
+Each `control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
 <OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method.
 Randomization over estimates can be configured using the OptimizationControlMechanism's `initial_seed
@@ -618,7 +620,7 @@ Randomization over estimates can be configured using the OptimizationControlMech
 estimates are aggregated by the `aggregation_function <OptimizationFunction.aggregation_function>` of the
 `OptimizationFunction` assigned to the OptimizationControlMechanism's `function <OptimizationControlMechanism>`,
 and used to compute the `net_outcome <ControlMechanism.net_outcome>` over the estimates for that `control_allocation
-<ControlMechanism.control_allocation>`.
+<ControlMechanism.control_allocation>`.  (See `OptimizationControlMechanism_Execution` for additonal details).
 
 A custom function can be assigned as the OptimizationControlMechanism's
 `function <OptimizationControlMechanism.function>`, however it must meet the following requirements:
@@ -661,7 +663,7 @@ either by the OptimizationControlMechanism or the OptimizationFunction are used.
 .. _OptimizationControlMechanism_Execution:
 
 Execution
----------
+---------
 
 When an OptimizationControlMechanism is executed, the `OptimizationFunction` assigned as it's `function
 <OptimizationControlMechanism.function>` is used evaluate the effects of different `control_allocations
@@ -1876,7 +1878,7 @@ class OptimizationControlMechanism(ControlMechanism):
         estimation as determined by its implementation, and returns a single estimated net_outcome.
 
 
-        See `evaluate <Composition.evaluate>` for additional details)
+        (See `evaluate <Composition.evaluate>` for additional details.)
         """
 
         # agent_rep is a Composition (since runs_simulations = True)
