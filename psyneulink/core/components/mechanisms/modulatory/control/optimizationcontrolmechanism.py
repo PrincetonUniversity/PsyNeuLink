@@ -180,7 +180,7 @@ and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.
    In the example of `model-free optimization <OptimizationControlMechanism_Model_Free>` (right) ) it uses
    another (presumably simpler) Composition or a `CompositionFunctionApproximator` as the `agent_rep
    <OptimizationControlMechanism.agent_rep>`. *Panel B:* Flow of execution during optimization.  In both
-   panels, lighter elements show adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
+   panels, faded items show adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
    <OptimizationControlMechanism.agent_rep>`.
 
 .. _OptimizationControlMechanism_Creation:
