@@ -133,6 +133,18 @@ for the parent Composition.  This distinction corresponds closely to the distinc
 <https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
 and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
 
+.. _OptimizationControlMechanism_Model_Based:
+
+*Model-Based Optimization*
+
+This is implemented by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` to the Composition for
+which the OptimizationControlMechanism is the `controller <Composition.controller>`). On each `TRIAL <TimeScale.TRIAL>`,
+that Composition *itself* is provided with either the most recently inputs to the Composition, or ones predicted for
+the upcoming trial (determined by the `state_feature_values <OptimizationControlMechanism.state_feature_values>`)
+specified for the OptimizationControlMechanism, and then used to simulate processing on that trial in order to find
+the `control_allocation <ControlMechanism.control_allocation>` that yields the best
+`net_outcome <ControlMechanism.net_outcome>` for that trial.
+
 .. _OptimizationControlMechanism_Model_Free:
 
 *"Model-Free" Optimization*
@@ -157,18 +169,15 @@ the `agent_rep <OptimizationControlMechanism.agent_rep>` is used to search over 
 of its `net_outcome <ControlMechanism.net_outcome>` based on the `state <OptimizationControlMechanism_State>`,
 and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.
 
-.. _OptimizationControlMechanism_Model_Based:
+.. figure:: _static/Optimization_fig.svg
+   :scale: 50%
+   :alt: OptimizationControlMechanism
 
-*Model-Based Optimization*
-
-This is implemented by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` to the Composition for
-which the OptimizationControlMechanism is the `controller <Composition.controller>`). On each `TRIAL <TimeScale.TRIAL>`,
-that Composition *itself* is provided with either the most recently inputs to the Composition, or ones predicted for
-the upcoming trial (determined by the `state_feature_values <OptimizationControlMechanism.state_feature_values>`)
-specified for the OptimizationControlMechanism, and then used to simulate processing on that trial in order to find
-the `control_allocation <ControlMechanism.control_allocation>` that yields the best
-`net_outcome <ControlMechanism.net_outcome>` for that trial.
-
+   **Architecture and Execution Flow for an OptimizationControlMechanism*.** Panel on the left shows the
+   organization of `model-based <OptimizationControlMechanism_Model_Based>` and `model-free
+   <OptimizationControlMechanism_Model_Free>` optimization using an OptimizationControlMechanism.
+   Panel on the right show execution flow;  grayed elements show adaptation process for an
+   `agent_rep <OptimizationControlMechanism.agent_rep>` that is a `CompositionFunctionApproximator`.
 
 .. _OptimizationControlMechanism_Creation:
 
