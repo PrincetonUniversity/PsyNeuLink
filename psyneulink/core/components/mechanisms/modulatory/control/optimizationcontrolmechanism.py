@@ -9,6 +9,8 @@
 # **************************************  OptimizationControlMechanism *************************************************
 
 # FIX: REWORK WITH REFERENCES TO `outcome <OptimizationControlMechanism.outcome>`
+#      INTRODUCE SIMULATION INTO DISCUSSION OF COMPOSITOIN-BASED
+
 
 """
 
@@ -25,7 +27,6 @@ Contents
      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
      - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
      - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
-       - `allow_probes <OptimizationControlMechanism_Allow_Probes>`
   * `OptimizationControlMechanism_Structure`
      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
        - `State <OptimizationControlMechanism_State>`
@@ -34,6 +35,7 @@ Contents
        - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
          - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
          - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
+         - `probes <OptimizationControlMechanism_Probes>`
      - `Function <OptimizationControlMechanism_Function>`
         - `Search Function, Search Space and Search Termination Function<OptimizationControlMechanism_Search_Functions>`
   * `OptimizationControlMechanism_Execution`
@@ -118,18 +120,46 @@ COMMENT
 
 **Agent Representation and Types of Optimization**
 
-Much of the functionality described above is supported `ControlMechanism` (the OptimizationControlMechanism's parent
-class,). The defining characteristic of an OptimizationControlMechanism is its `agent representation
-<OptimizationControlMechanism_Agent_Rep>`, that is used to determine the `net_outcome <ControlMechanism.net_outcome>`
-for a given `state <OptimizationControlMechanism_State>`, and find the `control_allocation
-<ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep <OptimizationControlMechanism.agent_rep>`
-can be either the `Composition` to which the OptimizationControlMechanism belongs (and controls) or another one
-(potentially `nested <Composition_Nested>` within it), that is used to estimate the `net_outcome
-<ControlMechanism.net_outcome>` for the parent Composition.  This distinction corresponds closely to the distinction
-between *model-based* and *model-free* optimization in the `machine learning <https://www.google.com/books/
-edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).
-+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
+Much of the functionality described above is supported by a `ControlMechanism` (the parent class of an
+OptimizationControlMechanism). The defining  characteristic of an OptimizationControlMechanism is its `agent
+representation <OptimizationControlMechanism_Agent_Rep>`, that is used to determine the `net_outcome
+<ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>`, and find the
+`control_allocation <ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep
+<OptimizationControlMechanism.agent_rep>` can be the `Composition` to which the OptimizationControlMechanism
+belongs (and controls), or another one (potentially `nested <Composition_Nested>` within it,
+or a `CompositionFunctionApproximator`) that is used to estimate the `net_outcome <ControlMechanism.net_outcome>`
+for the parent Composition.  This distinction corresponds closely to the distinction between *model-based* and
+*model-free* optimization in the `machine learning
+<https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
 and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
+
+|
+
+.. figure:: _static/Optimization_fig.svg
+   :scale: 50%
+   :alt: OptimizationControlMechanism
+
+   **Functional Anatomy of an OptimizationControlMechanism.** *Panel A:* Examples of use in model-based
+   and model-free optimization.  Note that in the example of `model-based optimization
+   <OptimizationControlMechanism_Model_Based>` (left), the OptimizationControlMechanism uses the entire
+   `Composition` that it controls as its `agent_rep <OptimizationControlMechanism.agent_rep>`, whereas in
+   the example of `model-free optimization <OptimizationControlMechanism_Model_Free>` (right) the
+   the `agent_rep <OptimizationControlMechanism.agent_rep>` is another (presumably simpler) Composition or
+   a `CompositionFunctionApproximator`. *Panel B:* Flow of execution during optimization.  In both panels,
+   faded items show process of adaptation when using a `CompositionFunctionApproximator` as the `agent_rep
+   <OptimizationControlMechanism.agent_rep>`.
+|
+.. _OptimizationControlMechanism_Model_Based:
+
+*Model-Based Optimization*
+
+This is implemented by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` the Composition for
+which the OptimizationControlMechanism is the `controller <Composition.controller>`). On each `TRIAL <TimeScale.TRIAL>`,
+that Composition *itself* is provided with either the most recently inputs to the Composition, or ones predicted for
+the upcoming trial (determined by the `state_feature_values <OptimizationControlMechanism.state_feature_values>`)
+specified for the OptimizationControlMechanism, and then used to simulate processing on that trial in order to find
+the `control_allocation <ControlMechanism.control_allocation>` that yields the best
+`net_outcome <ControlMechanism.net_outcome>` for that trial.
 
 .. _OptimizationControlMechanism_Model_Free:
 
@@ -138,7 +168,7 @@ and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatur
 .. note::
    The term *model-free* is placed in apology quotes to reflect the fact that, while this term is
    used widely (e.g., in machine learning and cognitive science) to distinguish it from *model-based* forms of
-   processing, "model-free" processing nevertheless relies on *some* form of model -- albeit usually a much simpler
+   processing, model-free processing nevertheless relies on *some* form of model -- albeit usually a much simpler
    one -- for learning, planning and decision making.  In the context of a OptimizationControlMechanism, this is
    addressed by use of the term "agent_rep", and how it is implemented, as described below.
 
@@ -154,19 +184,6 @@ the `agent_rep <OptimizationControlMechanism.agent_rep>` is used to search over 
 <OptimizationControlMechanism.agent_rep>` is also given the chance to adapt in order to improve its prediction
 of its `net_outcome <ControlMechanism.net_outcome>` based on the `state <OptimizationControlMechanism_State>`,
 and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.
-
-.. _OptimizationControlMechanism_Model_Based:
-
-*Model-Based Optimization*
-
-This is implemented by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>` to the Composition for
-which the OptimizationControlMechanism is the `controller <Composition.controller>`). On each `TRIAL <TimeScale.TRIAL>`,
-that Composition *itself* is provided with either the most recently inputs to the Composition, or ones predicted for
-the upcoming trial (determined by the `state_feature_values <OptimizationControlMechanism.state_feature_values>`)
-specified for the OptimizationControlMechanism, and then used to simulate processing on that trial in order to find
-the `control_allocation <ControlMechanism.control_allocation>` that yields the best
-`net_outcome <ControlMechanism.net_outcome>` for that trial.
-
 
 .. _OptimizationControlMechanism_Creation:
 
@@ -188,9 +205,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   optimization.  If that Composition already has a `controller <Composition.controller>` specified,
   the OptimizationControlMechanism is disabled. If another Composition is specified, it must conform to the
   specifications for an `agent_rep <OptimizationControlMechanism.agent_rep>` as described `below
-  <OptimizationControlMechanism_Agent_Rep>`.  The type of Component assigned as the `agent_rep
-  <OptimizationControlMechanism.agent_rep>` is identified in the OptimizationControlMechanism's `agent_rep_type
-  <OptimizationControlMechanism.agent_rep_type>` attribute.
+  <OptimizationControlMechanism_Agent_Rep>`.  The  `agent_rep <OptimizationControlMechanism.agent_rep>` can also be
+  a `CompositionFunctionApproximator` for `model-free <OptimizationControlMechanism_Model_Free>` forms of
+  optimization.  The type of Component assigned as the `agent_rep <OptimizationControlMechanism.agent_rep>` is
+  identified in the OptimizationControlMechanism's `agent_rep_type <OptimizationControlMechanism.agent_rep_type>`
+  attribute.
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
@@ -205,8 +224,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_Agent_Rep_Composition:
 
-  * *agent_rep is a Composition* -- the **state_features** specify the inputs to the Composition when it is
-    executed by the OptimizationControlMechanism to `simulate <Composition_Controller_Execution>` its performance.
+  * *agent_rep is a Composition* -- the **state_features** specify the inputs to the Composition when it is executed
+    by the OptimizationControlMechanism to `evaluate <OptimizationControlMechanism_Evaluation>` its performance.
     If **state_features** is not specified, this is done automatically by constructing a set of `state_input_ports
     <OptimizationControlMechanism.state_input_ports>` that `shadow the input <InputPort_Shadow_Inputs>` to every
     `InputPort` of every `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition assigned as
@@ -269,6 +288,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
    in which case they are retained along with any others specified.
   COMMENT
 
+  .. _OptimizationControlMechanism_State_Features_Shadow_Inputs:
+
   The specifications in the **state_features** argument are used to construct the `state_input_ports
   <OptimizationControlMechanism.state_input_ports>`, and can be any of the following, used either singly or in a list:
 
@@ -321,14 +342,15 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_Outcome_Args:
 
-* **outcome arguments** -- these include all the arguments of the constructor for a `ControlMechanism` that
-  are used to specify the Components to be `monitored for control ControlMechanism_Monitor_for_Control>`, that
-  are assigned  to its `monitor_for_control <ControlMecanism.monitor_for_control>` attribute, and the values
-  of which are assigned to its `outcome <ControlMechanism.outcome>` attribute.  However, an
-  OptimizationControlMechanism places some restrictions on the specification of these arguments -- that, as
-  with its `state_features <OptimizationControlMechanism_State_Features_Arg>`, depend on how nature of the
-  `agent_rep <OptimizationControlMechanism.agent_rep>` -- as well as on an additional argument, **allow_probes**,
-  as described below.
+* *Outcome arguments* -- these specify the Components, the values of which are assigned to the `outcome
+  <ControlMechanism.outcome>` attribute, and used to compute the `net_outcome <ControlMechanism.net_outcome>` for a
+  given `control_allocation <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution`).
+  As with a ControlMechanism, these can be sepcified directly in the **monitor_for_control** argument, or through the
+  use of `ObjectiveMechanism` specified in the  **objecctive_mechanism** argument (see
+  ControlMechanism_Monitor_for_Control for additional details).  However, an OptimizationControlMechanism places some
+  restrictions on the specification of these arguments that, as with specification of `state_features
+  <OptimizationControlMechanism_State_Features_Arg>`, depend on the nature of the `agent_rep
+  <OptimizationControlMechanism.agent_rep>`, as described below.
 
   * *agent_rep is a Composition* -- the items specified to be monitored for control must belong to the `agent_rep
     <OptimizationControlMechanism.agent_rep>`, since those are the only ones that will be executed when the
@@ -343,14 +365,21 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     the values of the items specified to be monitored control must match, in shape and order, the
     **net_outcome** of that `adapt <CompositionFunctionApproximator.adapt>` method.
 
-.. _OptimizationControlMechanism_Allow_Probes:
+  .. _OptimizationControlMechanism_Allow_Probes:
 
-* **allow_probes** -- this can be used to specify Components to be `monitored for control
-  <ControlMechanism_Monitor_for_Control>` that are `INTERNAL <NodeRole.INTERNAL>` `Nodes <Composition_Nodes>`
-  of a `nested Composition <Composition_Nested>`; ordinarily, specifying Components to be monitored within a
-  nested Composition requires that they be `OUTPUT <NodeRole.OUTPUT>` Nodes of that Composition (see `allow_probes
-  <OptimizationControlMechanism.allow_probes>` for additional details).  These can be thought of as providing
-  access to "latent variable" of the Composition being monitored.
+  * **allow_probes** -- this argument is specific to OptimizationControlMechanism, allowing values of Components that
+    are `INTERNAL <NodeRole.INTERNAL>` `Nodes <Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be
+    included in `outcome <ControlMechanism.outcome>` These can be thought of as providing access to "latent variables"
+    of the Composition being evaluated; that is, ones that do not contribute directly to the Composition's `results
+    <Composition_Execution_Results>` (see `probes <OptimizationControlMechanism_Probes>` for additional details).
+
+* *Optimization arguments* -- these specify parameters that determine how the OptimizationControlMechanism's
+  `function <OptimizationControlMechanism.function>` searches for and determines the optimal `control_allocation
+  <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution`); this includes specification
+  of the `num_estimates <OptimizationControlMechanism.num_estimates>` and `number_of_trials_per_estimate
+  <OptimizationControlMechanism.number_of_trials_per_estimate>` parameters, which determine how the `net_outcome
+  <ControlMechanism.net_outcome>` is estimated for a given `control_allocation <ControlMechanism.control_allocation>`
+  (see `OptimizationControlMechanism_Estimation_Randomization` for additional details).
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -386,10 +415,7 @@ OptimizationControlMechanism is the controller, then it must meet the following 
         <OptimizationControlMechanism.state_feature_values>` (inputs for estimate);
       - `control_allocation <ControlMechanism.control_allocation>` (the set of parameters for which estimates
         of `net_outcome <ControlMechanism.net_outcome>` are made);
-      COMMENT:
-      - `num_estimates <OptimizationControlMechanism.num_trials_per_estimate>` (number of estimates of `net_outcome
-        <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`);
-      COMMENT
+
       - `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` (number of trials executed by
         agent_rep for each estimate).
     ..
@@ -439,38 +465,40 @@ execution occurred.  Each of these is described below.
 *state_input_ports*
 ~~~~~~~~~~~~~~~~~~~
 
-The `state_input_ports <OptimizationControlMechanism.state_input_ports>` are used to convey the values of
-the `state_feature_values <OptimizationControlMechanism.state_feature_values>` to the `agent_rep
-<OptimizationControlMechanism.agent_rep>` when it is executed.  They receive `Projections <Projection>`
+The `state_input_ports <OptimizationControlMechanism.state_input_ports>` receive `Projections <Projection>`
 from the Components specified as the OptimizationControlMechanism's `state_features
-<OptimizationControlMechanism_State_Features_Arg>`. If the `agent_rep is a `Composition
-<OptimizationControlMechanism_Agent_Rep_Composition>`, then the OptimizationControlMechanism has a state_input_port
-for every `InputPort` of every `INPUT <NodeRoles.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
-<OptimizationControlMechanism.agent_rep>` Composition, each of which receives a `Projection` that `shadows the input
-<InputPort_Shadow_Inputs>` of the corresponding state_feature. If the `agent_rep is a CompositionFunctionApproximator
-<OptimizationControlMechanism_Agent_Rep_CFA>`, then the OptimizationControlMechanism has a state_input_port that
-receives a Projection from each Component specified in the **state_features** arg of its constructor. In either,
-case the the `values <InputPort.value>` of the `state_input_ports <OptimizationControlMechanism.state_input_ports>`
-are assigned to the `state_feature_values <OptimizationControlMechanism.state_feature_values>` attribute that,
-in turn, are used by the OptimizationControlMechanism's `evaluate_agent_rep
-<OptimizationControlMechanism.evaluate_agent_rep>` method to estimate or predict the `net_outcome
-<ControlMechanism.net_outcome>` for a given `control_allocation <ControlMechanism.control_allocation>`.
+<OptimizationControlMechanism_State_Features_Arg>`, the values of which are assigned as the `state_feature_values
+<OptimizationControlMechanism.state_feature_values>`, and conveyed to the `agent_rep
+<OptimizationControlMechanism.agent_rep>` when it is `executed <OptimizationControlMechanism_Execution>`. If the
+`agent_rep is a `Composition <OptimizationControlMechanism_Agent_Rep_Composition>`, then the
+OptimizationControlMechanism has a state_input_port for every `InputPort` of every `INPUT <NodeRoles.INPUT>` `Node
+<Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>` Composition, each of which receives
+a `Projection` that `shadows the input <InputPort_Shadow_Inputs>` of the corresponding state_feature. If the
+`agent_rep is a CompositionFunctionApproximator <OptimizationControlMechanism_Agent_Rep_CFA>`,
+then the OptimizationControlMechanism has a state_input_port that receives a Projection from each Component specified
+in the **state_features** arg of its constructor.
 
-COMMENT:  OLD
+COMMENT:
+In either, case the the `values <InputPort.value>` of the
+`state_input_ports <OptimizationControlMechanism.state_input_ports>` are assigned to the `state_feature_values
+<OptimizationControlMechanism.state_feature_values>` attribute that is used, in turn, by the
+OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method to
+estimate or predict the `net_outcome <ControlMechanism.net_outcome>` for a given `control_allocation
+<ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution`).
+
 State features can be of two types:
 
-* *Input Features* -- these are values received as input by other `Mechanisms <Mechanism>` in the `Composition`
-  for which the OptimizationControlMechanism is a `controller <Composition.controller>` (irrespective of whether
-  that is the OptimizationControlMechanism`s `agent_rep <OptimizationControlMechanism.agent_rep>`).
-  They are specified as `shadowed inputs <InputPort_Shadow_Inputs>` in the **state_features** argument
-  of the OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`).
-  An InputPort is created and assigned to the OptimizationControlMechanism's `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>` attribute for each feature, that receives a
-  `Projection` paralleling the input to be shadowed.
+* *Input Features* -- these are values that shadow the input received by a `Mechanisms <Mechanism>` in the
+  `Composition` for which the OptimizationControlMechanism is a `controller <Composition.controller>` (irrespective
+  of whether that is the OptimizationControlMechanism`s `agent_rep <OptimizationControlMechanism.agent_rep>`).
+  They are implemented as `shadow InputPorts <InputPort_Shadow_Inputs>` (see
+  `OptimizationControlMechanism_State_Features_Shadow_Inputs` for specification) that receive a
+  `Projection` from the same source as the Mechanism being shadowed.
 ..
-* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of some other
-  `Mechanism <Mechanism>` in the `Composition`.  These too are specified in the **state_features** argument of the
-  OptimizationControlMechanism's constructor (see `OptimizationControlMechanism_Creation`), and each is assigned a
+* *Output Features* -- these are the `value <OutputPort.value>` of an `OutputPort` of  `Mechanism <Mechanism>` in the
+  `Composition` for which the OptimizationControlMechanism is a `controller <Composition.controller>` (again,
+  irrespective of whether it is the OptimizationControlMechanism`s `agent_rep
+  <OptimizationControlMechanism.agent_rep>`); and each is assigned a
   `Projection` from the specified OutputPort(s) to the InputPort of the OptimizationControlMechanism for that feature.
 
 The InputPorts assigned to the **state_features** are listed in the OptimizationControlMechanism's `state_input_port
@@ -487,13 +515,14 @@ COMMENT
 *outcome_input_ports*
 ~~~~~~~~~~~~~~~~~~~~~
 
-The `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are used to convey either
-the value of the OptimizationControlMechanism's `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
-if it has one or, if it does not, then the value(s) of the Component(s) it `monitors
-<OptimizationControlMechanism_Monitor_for_Control>` to evaluate the outcome of executing
-its `agent_rep <OptimizationControlMechanism.agent_rep>`.  The value of the `outcome_input_ports
-<OptimizationControlMechanism.outcome_input_ports>` is assigned to the OptimizationControlMechanism's
-`outcome <ControlMechanism.outcome>` attribute.
+The `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` comprise either a single `OutputPort`
+that receives a `Projection` from the OptimizationControlMechanism's `objective_mechanism
+<OptimizationControlMechanism_ObjectiveMechanism>` if has one; or, if it does not, then an OutputPort for each
+Component it `monitors <OptimizationControlMechanism_Monitor_for_Control>` to determine the `net_outcome
+<ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` (see `outcome
+arguments <OptimizationControlMechanism_Outcome_Args>` for how these are specified). The value(s) of the
+`outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are assigned to the
+OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute.
 
 .. _OptimizationControlMechanism_ObjectiveMechanism:
 
@@ -523,30 +552,6 @@ the result to the OptimizationControlMechanism's *OUTCOME* InputPort, that is pl
 COMMENT:
 ADD HINT HERE RE: USE OF CONCATENATION
 
-COMMENT
-
-.. _OptimizationControlMechanism_Monitor_for_Control:
-
-*monitor_for_control*
-
-If an OptimizationControlMechanism is not assigned an `objective_mechanism <ControlMechanism.objective_mechanism>`,
-then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
-`monitor_for_control <ControlMechanism.monitor_for_control>`, outcome_input_ports_option
-<ControlMechanism.outcome_input_ports_option>`, and `allow_probes <OptimizationControlMechanism.allow_probes>`
-attributes, specified in the corresponding arguments of its constructor (see `Outcomes
-<OptimizationControlMechanism_Outcome_Args>` above).  Their value(s) are assigned as the OptimizationControlMechanism's
-`outcome <ControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
-<ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>` for a given
-`state <OptimizationControlMechanism_State>`.
-
-COMMENT:
-FIX: NEED TO DESCRIBE CASES FOR agent_rep == Composition AND CompositionFunctionApproximator
-     MENTION allow_probes OPTION HERE AND  ADD TECHNICAL NOTE THAT, FOR allow_probes PROJECTIONS FROM PROBES COME
-     FROM THE CIM AT THE SAME LEVEL AS THE OCM AND THAT THE NODE IS RELABELED AS "OUTPUT"; ALSO DESCRIBE "DIRECT" OPTION
-  .. technical_note::
-     If `allow_probes <OptimizationControlMechanism.allow_probes>` is assigned *DIRECT*, Projections to the
-     corresponding
-
 the items specified by `monitor_for_control
 <ControlMechanism.monitor_for_control>` are all assigned `MappingProjections <MappingProjection>` to a single
 *OUTCOME* InputPort.  This is assigned `Concatenate` as it `function <InputPort.function>`, which concatenates the
@@ -555,8 +560,60 @@ to use the *CONCATENATE* option of a ControlMechanism's `outcome_input_ports_opt
 <ControlMechanism.outcome_input_ports_option>` Parameter). This ensures that the input to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` has the same format as when an
 `objective_mechanism <ControlMechanism.objective_mechanism>` has been specified, as described below.
+
 COMMENT
 
+.. _OptimizationControlMechanism_Monitor_for_Control:
+
+*monitor_for_control*
+
+If an OptimizationControlMechanism is not assigned an `objective_mechanism <ControlMechanism.objective_mechanism>`,
+then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
+`monitor_for_control <ControlMechanism.monitor_for_control>`, and its `outcome_input_ports_option
+<ControlMechanism.outcome_input_ports_option>` and `allow_probes <OptimizationControlMechanism.allow_probes>`
+attributes, specified in the corresponding arguments of its constructor (see `Outcomes arguments
+<OptimizationControlMechanism_Outcome_Args>`).  The value(s) of the specified Components are assigned as the
+OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
+<ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>`.
+
+.. _OptimizationControlMechanism_Probes:
+
+*allow probes*
+
+The `allow_probes <OptimizationControlMechanism.allow_probes>` attribute is specific to OptimizationControlMechanism
+and its subclasses; it permits items to be `monitored <ControlMechanism_Monitor_for_Control_Argument>` that are
+INTERNAL `Nodes <Composition_Nodes>` in a `nested Composition <Composition_Nested>` -- ordinarily, such Components
+must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested Composition).  If can have the following values:
+
+COMMENT: VERIFY:
+This option only applies if an
+`objective_mechanism<ControlMechanism.objective_mechanism>` is not used.
+COMMENT
+
+- False (the default): items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` that
+  are in a `nested Composition <Composition_Nested>` must be `OUTPUT <NodeRole.OUTPUT `Nodes <Composition_Nodes>` of
+  that Composition; referencing any `INPUT <NodeRole.INPUT>` or `INTERNAL <NodeRole.INTERNAL>` Nodes of a
+  nested Composition raises an error.
+
+- True: *any* `Node <Composition_Nodes> of a `nested Composition <Composition_Nested>` can be specified in
+  `monitor_for_control <ControlMechanism.monitor_for_control>`, including `INPUT <NodeRole.INPUT>` and `INTERNAL
+  <NodeRole.INTERNAL>` nodes.
+
+  .. technical_note::
+     `INTERNAL <NodeRole.INTERNAL>` Nodes of a nested Composition will project via the nested Composition's
+     `output_CIM <Composition.output_CIM>` and those of any intervening Compositions, to one of the Composition
+     at the same level as the OptimizationControlMechanism, that in turn will project to the corresponding InputPort
+     of the OptimizationControlMechanism `outcome_input_ports <ControlMechanism.outcome_input_ports>`.  Note
+     that their values will also be included in `results <Composition.results>` attribute of the nested Composition
+     and all intervening ones, including the one to which the OptimizationControlMechanism belongs.
+
+  .. technical_note::
+
+     *DIRECT*: this is also a permitted value of **allow_probes**;  the functional result is the same,
+     but in this case the specified Nodes project *directly* to one of the OptimizationControlMechanism's
+     `outcome_input_ports <ControlMechanism.outcome_input_ports>`, skipping all intervening `output_CIM
+     <Composition.output_CIM>`\\s.  This specification is *not recommended*, as it prevents use of `compilation
+     <Composition_Compilation>`.  It is supported only for debugging purposes only.
 
 .. _OptimizationControlMechanism_Function:
 
@@ -569,48 +626,39 @@ The `function <OptimizationControlMechanism.function>` of an OptimizationControl
 It is generally an `OptimizationFunction`, which in turn has `objective_function
 <OptimizationFunction.objective_function>`, `search_function <OptimizationFunction.search_function>` and
 `search_termination_function <OptimizationFunction.search_termination_function>` methods, as well as a `search_space
-<OptimizationFunction.search_space>` attribute.  The OptimizationControlMechanism's `evaluate_agent_rep
-<OptimizationControlMechanism.evaluate_agent_rep>` method is automatically assigned as the
-OptimizationFunction's `objective_function <OptimizationFunction.objective_function>`, and is used to
-evaluate each `control_allocation <ControlMechanism.control_allocation>` sampled from the `search_space
-<OptimizationFunction.search_space>` by the `search_function `search_function <OptimizationFunction.search_function>`
-until the `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`. Each
-`control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
-<OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
-OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>` method. Randomization over
-estimates can be configured using the OptimizationControlMechanism's `initial_seed
-<OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
-<OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters; see `control_signals
-<OptimizationControlMechanism.control_signals>` for additional information.  The results of the independent
-estimates are aggregated by the `aggregation_function <OptimizationControlMechanism.aggregation_function>` of the
-`OptimizationFunction` assigned to the OptimizationControlMechanism's `function <OptimizationControlMechanism>`,
-and used to compute the `net_outcome <ControlMechanism.net_outcome` over the estimates for that `control_allocation
-<ControlMechanism.control_allocation>`.  A custom function can be assigned as the OptimizationControlMechanism's
-`function <OptimizationControlMechanism.function>`, however it must meet the following requirements:
+<OptimizationFunction.search_space>` attribute.  The `objective_function <OptimizationFunction.objective_function>`
+is automatically assigned the OptimizationControlMechanism's `evaluate_agent_rep
+<OptimizationControlMechanism.evaluate_agent_rep>` method, that is used to evaluate each `control_allocation
+<ControlMechanism.control_allocation>` sampled from the `search_space <OptimizationFunction.search_space>` by the
+`search_function <OptimizationFunction.search_function>` until the `search_termination_function
+<OptimizationFunction.search_termination_function>` returns `True` (see `OptimizationControlMechanism_Execution`
+for additional details).
 
 .. _OptimizationControlMechanism_Custom_Function:
+
+*Custom Function*
+~~~~~~~~~~~~~~~~~
+
+A custom function can be assigned as the OptimizationControlMechanism's `function
+<OptimizationControlMechanism.function>`, however it must meet the following requirements:
 
   - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
   ..
-  - It must execute the OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism>`
-    `num_estimates <OptimizationControlMechanism.num_estimates>` times, and aggregate the results in computing the
-    `net_outcome <ControlMechanism.net_outcome>` for a given `control_allocation <ControlMechanism.control_allocation>`.
+  - It must execute the OptimizationControlMechanism's `evaluate_agent_rep
+    <OptimizationControlMechanism.evaluate_agent_rep>` `num_estimates <OptimizationControlMechanism.num_estimates>`
+    times, and aggregate the results in computing the `net_outcome <ControlMechanism.net_outcome>` for a given
+    `control_allocation <ControlMechanism.control_allocation>` (see
+    `OptimizationControlMechanism_Estimation_Randomization` for additional details).
   ..
   - It must implement a `reset` method that can accept as keyword arguments **objective_function**,
       **search_function**, **search_termination_function**, and **search_space**, and implement attributes
       with corresponding names.
 
-If **function** argument is not specified, the `GridSearch` `OptimizationFunction` is assigned as the default,
-which evaluates the `net_outcome <ControlMechanism.net_outcome>` using the OptimizationControlMechanism's
-`control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_spaces>` as its
-`search_space <OptimizationFunction.search_space>`, and returns the `control_allocation
-<ControlMechanism.control_allocation>` that yields the greatest `net_outcome <ControlMechanism.net_outcome>`,
-thus implementing a computation of `EVC <OptimizationControlMechanism_EVC>`.
-
 .. _OptimizationControlMechanism_Search_Functions:
 
 *Search Function, Search Space and Search Termination Function*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Subclasses of OptimizationControlMechanism may implement their own `search_function
 <OptimizationControlMechanism.search_function>` and `search_termination_function
@@ -622,44 +670,144 @@ OptimizationControlMechanism's constructor, as long as they are compatible with 
 the OptimizationFunction and OptimizationControlMechanism.  If they are not specified, then defaults specified
 either by the OptimizationControlMechanism or the OptimizationFunction are used.
 
+.. _OptimizationControlMechanism_Default_Function:
+
+*Default Function: GridSearch*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the **function** argument is not specified, the `GridSearch` `OptimizationFunction` is assigned as the default,
+which evaluates the `net_outcome <ControlMechanism.net_outcome>` using the OptimizationControlMechanism's
+`control_allocation_search_space <OptimizationControlMechanism.control_allocation_search_space>` as its
+`search_space <OptimizationFunction.search_space>`, and returns the `control_allocation
+<ControlMechanism.control_allocation>` that yields the greatest `net_outcome <ControlMechanism.net_outcome>`,
+thus implementing a computation of `EVC <OptimizationControlMechanism_EVC>`.
+
+.. _OptimizationControlMechanism_Randomization_Control_Signal:
+
+.. _technical_note::
+
+    *Randomization ControlSignal*
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
+    a `ControlSignal` is added to the OptimizationControlMechanism's `control_signals
+    <OptimizationControlMechanism.control_signals>`, named *RANDOMIZATION_CONTROL_SIGNAL*, that modulates the
+    seeds used to randomize each estimate of the `net_outcome <ControlMechanism.net_outcome>` for each run of
+    the `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., in each call to its `evaluate
+    <Composition.evaluate>` method). That ControlSignal sends a `ControlProjection` to every `Parameter` of
+    every `Component` in `agent_rep <OptimizationControlMechanism.agent_rep>` that is labelled "seed", each of
+    which corresponds to a Parameter that uses a random number generator to assign its value (i.e.,
+    as its `function <ParameterPort.function>` (see `OptimizationControlMechanism_Estimation_Randomization`
+    for additional details of its use). The *RANDOMIZATION_CONTROL_SIGNAL* is included when constructing the
+    `control_allocation_search_space <OptimizationFunction.control_allocation_search_space>` passed to the
+    OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` constructor as its
+    **search_space** argument, along with the index of the *RANDOMIZATION_CONTROL_SIGNAL* as its
+    **randomization_dimension** argument. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
+    `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`
+    Parameters can be used to further refine this behavior.
+
 .. _OptimizationControlMechanism_Execution:
 
 Execution
----------
+---------
 
-When an OptimizationControlMechanism is executed, it carries out the following steps:
+When an OptimizationControlMechanism is executed, the `OptimizationFunction` assigned as it's `function
+<OptimizationControlMechanism.function>` is used evaluate the effects of different `control_allocations
+<ControlMechanism.control_allocation>` to find one that optimizes the `net_outcome <ControlMechanism.net_outcome>`;
+that `control_allocation <ControlMechanism.control_allocation>` is then used when the Composition controlled by the
+OptimizationControlMechanism is next executed.  The OptimizationFunction does this by either simulating performance
+of the Composition or executing the CompositionFunctionApproximator that is its `agent_rep
+<OptimizationControlMechanism.agent_rep>`.
 
-  * Calls `adapt` method of its `agent_rep <OptimizationControlMechanism.agent_rep>` to give that a chance to modify
-    its parameters in order to better predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state
-    <OptimizationControlMechanism_State>`, based the state and `net_outcome <ControlMechanism.net_outcome>` of the
-    previous trial.
-  ..
-  * Calls `function <OptimizationControlMechanism.function>` to find the `control_allocation
-    <ControlMechanism.control_allocation>` that optimizes `net_outcome <ControlMechanism.net_outcome>`. The way
-    in which it searches for the best `control_allocation <ControlMechanism.control_allocation>` is determined by
-    the type of `OptimizationFunction` assigned to `function <OptimizationControlMechanism.function>`, whereas the
-    way that it evaluates each one is determined by the OptimizationControlMechanism's `evaluate_agent_rep
-    <OptimizationControlMechanism.evaluate_agent_rep>` method.  More specifically:
+.. _OptimizationControlMechanism_Optimization_Procedure:
 
-    * The `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
+*Optimization Procedure*
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+When an OptimizationControlMechanism is executed, it carries out the following steps to find a `control_allocation
+<ControlMechanism.control_allocation>` that optmimzes performance of the Composition that it controls:
+
+  .. _OptimizationControlMechanism_Adaptation:
+
+  * *Adaptation* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`,
+    its `adapt <CompositionFunctionApproximator.adapt>` method, allowing it to modify its parameters in order to better
+    predict the `net_outcome <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>`,
+    based the state and `net_outcome <ControlMechanism.net_outcome>` of the previous `TRIAL <TimeScale.TRIAL>`.
+
+  .. _OptimizationControlMechanism_Evaluation:
+
+  * *Evaluation* -- the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` is
+    called to find the `control_allocation <ControlMechanism.control_allocation>` that optimizes `net_outcome
+    <ControlMechanism.net_outcome>` of its `agent_rep <OptimizationControlMechanism.agent_rep>` for the current
+    `state <OptimizationControlMechanism_State>`. The way in which it searches for the best `control_allocation
+    <ControlMechanism.control_allocation>` is determined by the type of `OptimizationFunction` assigned to `function
+    <OptimizationControlMechanism.function>`, whereas the way that it evaluates each one is determined by the
+    OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method.
+    More specifically, it carries out the following procedure:
+
+    .. _OptimizationControlMechanism_Estimation:
+
+    * *Estimation* - the `function <OptimizationControlMechanism.function>` selects a sample `control_allocation
       <ControlMechanism.control_allocation>` (using its `search_function <OptimizationFunction.search_function>`
-      to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the predicted
-      `net_outcome <ControlMechanism.net_outcome>` for that `control_allocation
-      <ControlMechanism.control_allocation>` using the OptimizationControlMechanism's `evaluate_agent_rep`
-      <OptimizationControlMechanism.evaluate_agent_rep>` method and the current `state_feature_values
-      <OptimizationControlMechanism.state_feature_values>` as it input, by calling it `num_estimates
-      <OptimizationControlMechanism>` times and aggregating the `agent_rep <OptimizationControlMechanism>`\\'s
-      `net_outcome <ControlMechanism.net_outcome>` over those.
-    ..
-    * It continues to evaluate the `net_outcome <ControlMechanism.net_outcome>` for `control_allocation
-      <ControlMechanism.control_allocation>` samples until its `search_termination_function
+      to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the `net_outcome
+      <ControlMechanism.net_outcome>` for that `control_allocation <ControlMechanism.control_allocation>`.
+      It does this by calling the OptimizationControlMechanism's `evaluate_agent_rep
+      <OptimizationControlMechanism.evaluate_agent_rep>` method `num_estimates <OptimizationControlMechanism>` times,
+      each with the current `state_feature_values <OptimizationControlMechanism.state_feature_values>` as its input,
+      and executing it for `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` trials
+      for each estimate.  The `control_allocation <ControlMechanism.control_allocation>` remains fixed for each
+      estimate, but the random seed of any Parameters that rely on randomization is varied, so that the values of those
+      Parameters are randomly sampled for every estimate (see `OptimizationControlMechanism_Estimation_Randomization`).
+
+     * *Aggregation* - the `function <OptimizationControlMechanism.function>`\\'s `aggregation_function
+       <OptimizationFunction.aggregation_function>` is used to aggregate the `net_outcome
+       <ControlMechanism.net_outcome>` over the all the estimates for a given `control_allocation
+       <ControlMechanism.control_allocation>`, and the aggregated value is returned as the `outcome
+       <ControlMechanism.outcome>` and used to the compute the `net_outcome <ControlMechanism.net_outcome>`
+       for that `control_allocation <ControlMechanism.control_allocation>`.
+
+    * *Termination* - the `function <OptimizationControlMechanism.function>` continues to evaluate samples of
+      `control_allocations <ControlMechanism.control_allocation>` provided by its `search_function
+      <OptimizationFunction.search_function>` until its `search_termination_function
       <OptimizationFunction.search_termination_function>` returns `True`.
-    ..
-    * Finally, it implements the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal
-      `net_outcome <ControlMechanism.net_outcome>`.  This is used by the OptimizationControlMechanism's `control_signals
-      <OptimizationControlMechanism.control_signals>` to compute their `values <ControlSignal.value>` which, in turn,
-      are used by their `ControlProjections <ControlProjection>` to modulate the parameters they control when the
-      Composition is next executed.
+
+  .. _OptimizationControlMechanism_Control_Assignment:
+
+  * *Assignment* - when the search completes, the `function <OptimizationControlMechanism.function>`
+    assigns the `control_allocation <ControlMechanism.control_allocation>` that yielded the optimal value of
+    `net_outcome <ControlMechanism.net_outcome>` to the OptimizationControlMechanism's `control_signals,
+    that compute their `values <ControlSignal.value>` which, in turn, are assigned to their `ControlProjections
+    <ControlProjection>` to `modulate the Parameters <ModulatorySignal_Modulation>` they control when the
+    Composition is next executed.
+
+.. _OptimizationControlMechanism_Estimation_Randomization:
+
+*Randomization of Estimation*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.e., it is not None) then, for a given
+`control_allocation <ControlMechanism.control_allocation>`,  the `evaluate_agent_rep
+<OptimizationControlMechanism.evaluate_agent_rep>` method is called that number of times by the
+OptimizationControlMechanism's `function OptimizationControlMechanism.function>` to estimate the `outcome
+<ControlMechanism.outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+
+If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.e., it is not None), then each
+`control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
+<OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
+OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method),
+to estimate the `outcome <ControlMechanism.outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`
+for a given `control_allocation <ControlMechanism.control_allocation>`.  This is controlled by the
+`RANDOMIZATION_CONTROL_SIGNAL <OptimizationControlMechanism_Randomization_Control_Signal>`, which is used to change
+the seeds for all Parameters that use random values on each call to `evaluate_agent_rep
+<OptimizationControlMechanism.evaluate_agent_rep>` (i.e., at the start of each run of the `agent_rep
+<OptimizationControlMechanism.agent_rep>`), while holding constant all of the other ControlSignals (i.e., the ones for
+the parameters being optimized). Randomization over estimates can be configured using the
+OptimizationControlMechanism's `initial_seed <OptimizationControlMechanism.initial_seed>` and
+`same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters. The results
+of the independent estimates are aggregated by the `aggregation_function <OptimizationFunction.aggregation_function>`
+of the `OptimizationFunction` assigned to the OptimizationControlMechanism's `function <OptimizationControlMechanism>`,
+and used to compute the `net_outcome <ControlMechanism.net_outcome>` over the estimates for that `control_allocation
+<ControlMechanism.control_allocation>`.  (See `OptimizationControlMechanism_Execution` for additional details).
 
 COMMENT:
 .. _OptimizationControlMechanism_Examples:
@@ -774,8 +922,6 @@ class OptimizationControlMechanism(ControlMechanism):
         monitor_for_control=None,                       \
         allow_probes=False,                             \
         objective_mechanism=None,                       \
-        origin_objective_mechanism=False                \
-        terminal_objective_mechanism=False              \
         function=GridSearch,                            \
         num_estimates=1,                                \
         initial_seed=None,                              \
@@ -813,7 +959,7 @@ class OptimizationControlMechanism(ControlMechanism):
     allow_probes : bool : default False
         specifies whether `Projections <Projection>` are permitted to the ControlMechanism from items
         `being monitored <ControlMechanism_Monitor_for_Control_Argument>` that are INTERNAL `Nodes <Composition_Nodes>`
-        of a `nested Composition <Composition_Nested>` (see `allow_probes <OptimizationControlMechanism.allow_probes>`
+        of a `nested Composition <Composition_Nested>` (see `allow_probes <OptimizationControlMechanism_Allow_Probes>`
         for addition information).
 
     agent_rep : None or Composition  : default None or Composition to which OptimizationControlMechanism is assigned
@@ -909,29 +1055,10 @@ class OptimizationControlMechanism(ControlMechanism):
         cantains the number of `state_input_ports <OptimizationControlMechanism.state_input_ports>`.
 
     allow_probes : bool
-        this is a feature that is unique to OptimizationControlMechanism and any subclasses;  it determines whether
-        any `Projections <Projection>` are permitted to the ControlMechanism from items being `monitored
-        <ControlMechanism_Monitor_for_Control_Argument>`, including those that are INTERNAL `Nodes <Composition_Nodes>`
-        in a `nested Composition <Composition_Nested>`. This option only applies if an
-        `objective_mechanism<ControlMechanism.objective_mechanism>` is not used.
-
-        - False (the default): items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` that
-          are in nested Composition must be *OUTPUT* `Nodes <Composition_Nodes>` of that Composition; referencing any
-          INPUT or INTERNAL Nodes of a nested Composition raises an error.
-
-        - True: *any* Node of a nested Composition can be specified in `monitor_for_control
-          <ControlMechanism.monitor_for_control>`, including INPUT and INTERNAL nodes. These will project via the
-          nested Composition's `output_CIM <Composition.output_CIM>` (and those of any intervening Compositions) to
-          one of the OptimizationControlMechanism's `outcome_input_ports <ControlMechanism.outcome_input_ports>`,
-          and their values will be included in the Composition's `results <Composition.results>` attribute.
-
-          .. technical_note::
-
-            *DIRECT*: this is also a permitted value of **allow_probes**;  the functional result is the same,
-            but in this case the specified Nodes project *directly* to one of the OptimizationControlMechanism's
-            `outcome_input_ports <ControlMechanism.outcome_input_ports>`, skipping all intervening `output_CIM
-            <Composition.output_CIM>`\\s.  This specification is *not recommended*, as it prevents use of `compilation
-            <Composition_Compilation>`.  It is supported only for debugging purposes only.
+        determines whether `Projections <Projection>` are permitted to the ControlMechanism from items
+        `being monitored <ControlMechanism_Monitor_for_Control_Argument>` that are INTERNAL `Nodes <Composition_Nodes>`
+        of a `nested Composition <Composition_Nested>` (see `probes <OptimizationControlMechanism_Probes>` for
+        addition information).
 
     outcome_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `OutputPorts <OutputPort>` that receive `Projections <Projection>`
@@ -947,7 +1074,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.net_outcome>` of each `control_allocation <ControlMechanism.control_allocation>` evaluated
         by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` (i.e.,
         that are specified by its `search_space <OptimizationFunction.search_space>`).
-        # FIX: 11/3/21 ADD POINTER TO DESCRIPTINO OF RAONDIMZATION CONTROL SIGNAL
+        # FIX: 11/3/21 ADD POINTER TO DESCRIPTION OF RANDOMIZATION ControlSignal
 
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
@@ -1028,30 +1155,13 @@ class OptimizationControlMechanism(ControlMechanism):
         list of the `ControlSignals <ControlSignal>` for the OptimizationControlMechanism for the Parameters being
         optimized by the OptimizationControlMechanism, including any inherited from the `Composition` for which it is
         the `controller <Composition.controller>` (this is the same as ControlMechanism's `output_ports
-        <Mechanism_Base.output_ports>` attribute. Each sends a `ControlProjection` to the `ParameterPort` for the
-        Parameter it controls when evaluating a `control_allocation <ControlMechanism.control_allocation>`.
-
-        .. _OptimizationControlMechanism_Randomization:
-
-        .. technical_note::
-            If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
-            a `ControlSignal` is added to control_signals, named *RANDOMIZATION_CONTROL_SIGNAL*, to modulate the
-            seeds used to randomize each estimate of the `net_outcome <ControlMechanism.net_outcome>` for each run of
-            the `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., in each call to its `evaluate
-            <Composition.evaluate>` method). That ControlSignal sends a `ControlProjection` to every `Parameter` of
-            every `Component` in `agent_rep <OptimizationControlMechanism.agent_rep>` that is labelled "seed", each of
-            which corresponds to a Parameter that uses a random number generator to assign its value (i.e.,
-            as its `function <ParameterPort.function>`.  This ControlSignal is used to change the seeds for all
-            Parameters that use random values at the start of each run of the `agent
-            <OptimizationControlMechanism.agent_rep>` used to estimate a given `control_allocation
-            <ControlMechanism.control_allocation>` of the other ControlSignals (i.e., the ones for the parameters
-            being optimized).  The *RANDOMIZATION_CONTROL_SIGNAL* is included when constructing the
-            `control_allocation_search_space <OptimizationFunction.control_allocation_search_space>` passed to the
-            OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` constructor as its
-            **search_space** argument, along with the index of the *RANDOMIZATION_CONTROL_SIGNAL* as its
-            **randomization_dimension** argument. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
-             `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`
-             Parameters can be used to further refine this behavior.
+        <Mechanism_Base.output_ports>` attribute). Each sends a `ControlProjection` to the `ParameterPort` for the
+        Parameter it controls when evaluating a `control_allocation <ControlMechanism.control_allocation>`. If
+        `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None), a
+        `ControlSignal` is added to control_signals, named *RANDOMIZATION_CONTROL_SIGNAL*, that is used to randomize
+        estimates of `outcome <ControlMechanism.outcome>` for a given `control_allocation
+        <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Estimation_Randomization` for
+        details.)
 
     control_allocation_search_space : list of SampleIterators
         `search_space <OptimizationFunction.search_space>` assigned by default to the
@@ -1062,7 +1172,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlSignal.allocation_sample>` specifications for each of the OptimizationControlMechanism's
         `control_signals <OptimizationControlMechanism.control_signals>`, and includes the
         *RANDOMIZATION_CONTROL_SIGNAL* used to randomize estimates of each `control_allocation
-        <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization>` above).
+        <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization_Control_Signal>` above).
 
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
@@ -1814,7 +1924,7 @@ class OptimizationControlMechanism(ControlMechanism):
         estimation as determined by its implementation, and returns a single estimated net_outcome.
 
 
-        See `evaluate <Composition.evaluate>` for additional details)
+        (See `evaluate <Composition.evaluate>` for additional details.)
         """
 
         # agent_rep is a Composition (since runs_simulations = True)
@@ -2199,7 +2309,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         for spec in _state_input_ports:
             # MODIFIED 11/29/21 NEW:
-            # If optimization is model-free, assume that shadowing of a Mechanism spec is for its primary InputPort
+            # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism) and self.agent_rep_type == COMPOSITION:
                 # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
                 #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
@@ -2209,18 +2319,15 @@ class OptimizationControlMechanism(ControlMechanism):
                                                             f"more than one InputPort; a specific one or subset "
                                                             f"of them must be specified.")
                 spec = spec.input_port
-            # MODIFIED 11/29/21 END
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)    # returns InputPort dict
             parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
                                         PROJECTIONS:None})
-            # MODIFIED 11/28/21 NEW:
             if feature_functions:
                 if isinstance(feature_functions, dict) and spec in feature_functions:
                     feat_fct = feature_functions.pop(spec)
                 else:
                     feat_fct = feature_functions
                 parsed_spec.update({FUNCTION: self._parse_state_feature_function(feat_fct)})
-            # MODIFIED 11/28/21 END
             parsed_spec = [parsed_spec] # so that extend works below
 
             parsed_features.extend(parsed_spec)

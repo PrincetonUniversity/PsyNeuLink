@@ -21,7 +21,7 @@ Contents
   * `ControlMechanism_Structure`
       - `ControlMechanism_Input`
       - `ControlMechanism_Function`
-      - 'ControlMechanism_Output`
+      - `ControlMechanism_Output`
       - `ControlMechanism_Costs_NetOutcome`
   * `ControlMechanism_Execution`
   * `ControlMechanism_Examples`
