@@ -18,33 +18,33 @@ Contents
 --------
 
   * `OptimizationControlMechanism_Overview`
-     - `Expected Value of Control <OptimizationControlMechanism_EVC>`
-     - `Agent Representation and Types of Optimization <OptimizationControlMechanism_Agent_Representation_Types>`
-       - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
-       - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
+      - `Expected Value of Control <OptimizationControlMechanism_EVC>`
+      - `Agent Representation and Types of Optimization <OptimizationControlMechanism_Agent_Representation_Types>`
+          - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
+          - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
   * `OptimizationControlMechanism_Creation`
-     - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
-     - `State Features <OptimizationControlMechanism_State_Features_Arg>`
-     - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
-     - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
+      - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
+      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
+      - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
+      - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
   * `OptimizationControlMechanism_Structure`
-     - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
-        - `State <OptimizationControlMechanism_State>`
-     - `Input <OptimizationControlMechanism_Input>`
-        - `state_input_ports <OptimizationControlMechanism_State_Features>`
-        - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
-        - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
-        - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
-        - `probes <OptimizationControlMechanism_Probes>`
-     - `Function <OptimizationControlMechanism_Function>`
-       - `OptimizationControlMechanism_Custom_Function`
-         - `OptimizationControlMechanism_Search_Functions`
-         - `OptimizationControlMechanism_Default_Function`
-        .. technical_note::
-          `Randomization ControlSignal <OptimizationControlMechanism_Randomization_Control_Signal>`
+      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
+          - `State <OptimizationControlMechanism_State>`
+      - `Input <OptimizationControlMechanism_Input>`
+         - `state_input_ports <OptimizationControlMechanism_State_Features>`
+         - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
+             - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
+             - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
+             - `probes <OptimizationControlMechanism_Probes>`
+      - `Function <OptimizationControlMechanism_Function>`
+          - `OptimizationControlMechanism_Custom_Function`
+          - `OptimizationControlMechanism_Search_Functions`
+          - `OptimizationControlMechanism_Default_Function`
+          .. technical_note::
+              - `Randomization ControlSignal <OptimizationControlMechanism_Randomization_Control_Signal>`
   * `OptimizationControlMechanism_Execution`
-     - `OptimizationControlMechanism_Optimization_Procedure`
-     - `OptimizationControlMechanism_Estimation_Randomization`
+      - `OptimizationControlMechanism_Optimization_Procedure`
+      - `OptimizationControlMechanism_Estimation_Randomization`
   * `OptimizationControlMechanism_Class_Reference`
 
 
