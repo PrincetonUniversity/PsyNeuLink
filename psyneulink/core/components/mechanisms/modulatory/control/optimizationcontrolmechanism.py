@@ -17,35 +17,35 @@
 Contents
 --------
 
-  * `OptimizationControlMechanism_Overview`
-      - `Expected Value of Control <OptimizationControlMechanism_EVC>`
-      - `Agent Representation and Types of Optimization <OptimizationControlMechanism_Agent_Representation_Types>`
-          - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
-          - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
-  * `OptimizationControlMechanism_Creation`
-      - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
-      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
-      - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
-      - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
-  * `OptimizationControlMechanism_Structure`
-      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
-          - `State <OptimizationControlMechanism_State>`
-      - `Input <OptimizationControlMechanism_Input>`
-          - `state_input_ports <OptimizationControlMechanism_State_Features>`
-          - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
-              - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
-              - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
-              - `probes <OptimizationControlMechanism_Probes>`
-      - `Function <OptimizationControlMechanism_Function>`
-          - `OptimizationControlMechanism_Custom_Function`
-          - `OptimizationControlMechanism_Search_Functions`
-          - `OptimizationControlMechanism_Default_Function`
-          .. technical_note::
-              - `Randomization ControlSignal <OptimizationControlMechanism_Randomization_Control_Signal>`
-  * `OptimizationControlMechanism_Execution`
-      - `OptimizationControlMechanism_Optimization_Procedure`
-      - `OptimizationControlMechanism_Estimation_Randomization`
-  * `OptimizationControlMechanism_Class_Reference`
+* `OptimizationControlMechanism_Overview`
+    - `Expected Value of Control <OptimizationControlMechanism_EVC>`
+    - `Agent Representation and Types of Optimization <OptimizationControlMechanism_Agent_Representation_Types>`
+        - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
+        - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
+* `OptimizationControlMechanism_Creation`
+    - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
+    - `State Features <OptimizationControlMechanism_State_Features_Arg>`
+    - `State Feature Functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
+    - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
+* `OptimizationControlMechanism_Structure`
+    - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
+        - `State <OptimizationControlMechanism_State>`
+    - `Input <OptimizationControlMechanism_Input>`
+        - `state_input_ports <OptimizationControlMechanism_State_Features>`
+        - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
+            - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
+            - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
+            - `probes <OptimizationControlMechanism_Probes>`
+    - `Function <OptimizationControlMechanism_Function>`
+        - `OptimizationControlMechanism_Custom_Function`
+        - `OptimizationControlMechanism_Search_Functions`
+        - `OptimizationControlMechanism_Default_Function`
+        .. technical_note::
+            - `Randomization ControlSignal <OptimizationControlMechanism_Randomization_Control_Signal>`
+* `OptimizationControlMechanism_Execution`
+    - `OptimizationControlMechanism_Optimization_Procedure`
+    - `OptimizationControlMechanism_Estimation_Randomization`
+* `OptimizationControlMechanism_Class_Reference`
 
 
 .. _OptimizationControlMechanism_Overview:
@@ -252,27 +252,27 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
     .. _OptimizationControlMechanism_State_Features_Shapes:
 
-    .. note::
-       If **state_features** *are* specified explicitly when the `agent_rep <OptimizationControlMechanism.agent_rep>`
-       is a Composition, there must be one for every `InputPort` of every `INPUT <NodeRole.INPUT>` `Node
-       <Composition_Nodes>` in that Composition, and these must match -- both individually, and in their order --
-       the `inputs to the Composition <Composition_Execution_Inputs>`) required by its `run <Composition.run>`
-       method.  Failure to do so generates an error indicating this.
+        .. note::
+           If **state_features** *are* specified explicitly when the `agent_rep <OptimizationControlMechanism.agent_rep>`
+           is a Composition, there must be one for every `InputPort` of every `INPUT <NodeRole.INPUT>` `Node
+           <Composition_Nodes>` in that Composition, and these must match -- both individually, and in their order --
+           the `inputs to the Composition <Composition_Execution_Inputs>`) required by its `run <Composition.run>`
+           method.  Failure to do so generates an error indicating this.
 
-    .. _OptimizationControlMechanism_Selective_Input:
+        .. _OptimizationControlMechanism_Selective_Input:
 
-    .. hint::
-       For cases in which only a subset of the inputs to the Composition are relevant to its optimization (e.g.,
-       the others should be held constant), it is still the case that all must be specified as **state_features**
-       (see note above).  This can be handled several ways.  One is by specifying (as required) **state_features**
-       for all of the inputs, and assigning *state_feature_functions** (see `below
-       <OptimizationControlMechanism_State_Feature_Functions_Arg>`) such that those assigned to the desired
-       inputs pass their values unmodified, while those for the inputs that are to be ignored return a constant value.
-       Another approach, for cases in which the desired inputs pertain to a subset of Components in the Composition
-       that solely responsible for determining its `net_outcome <ControlMechanism.net_outcome>`, is to assign those
-       Components to a `nested Composition <Composition_Nested>` and assign that Composition as the `agent_rep
-       <OptimizationControlMechanism.agent_rep>`.  A third, more sophisticated approach, would be to assign
-       ControlSignals to the InputPorts for the irrelevant features, and specify them to suppress their values.
+        .. hint::
+           For cases in which only a subset of the inputs to the Composition are relevant to its optimization (e.g.,
+           the others should be held constant), it is still the case that all must be specified as **state_features**
+           (see note above).  This can be handled several ways.  One is by specifying (as required) **state_features**
+           for all of the inputs, and assigning *state_feature_functions** (see `below
+           <OptimizationControlMechanism_State_Feature_Functions_Arg>`) such that those assigned to the desired
+           inputs pass their values unmodified, while those for the inputs that are to be ignored return a constant value.
+           Another approach, for cases in which the desired inputs pertain to a subset of Components in the Composition
+           that solely responsible for determining its `net_outcome <ControlMechanism.net_outcome>`, is to assign those
+           Components to a `nested Composition <Composition_Nested>` and assign that Composition as the `agent_rep
+           <OptimizationControlMechanism.agent_rep>`.  A third, more sophisticated approach, would be to assign
+           ControlSignals to the InputPorts for the irrelevant features, and specify them to suppress their values.
 
   .. _OptimizationControlMechanism_Agent_Rep_CFA:
 
@@ -280,13 +280,13 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` method.  This is not
     done automatically (see note below).
 
-    .. warning::
-       The **state_features** specified when the `agent_rep <OptimizationControlMechanism.agent_rep>` is a
-       `CompositionFunctionApproximator` must align with the arguments of its `evaluate
-       <CompositionFunctionApproximator.evaluate>` method.  Since the latter cannot always be determined automatically,
-       the `state_input_ports <OptimizationControlMechanism.state_input_ports>`) cannot be created automatically, nor
-       can the **state_features** specification be validated;  thus, specifying inappropriate **state_features** may
-       produce errors that are unexpected or difficult to interpret.
+        .. warning::
+           The **state_features** specified when the `agent_rep <OptimizationControlMechanism.agent_rep>` is a
+           `CompositionFunctionApproximator` must align with the arguments of its `evaluate
+           <CompositionFunctionApproximator.evaluate>` method.  Since the latter cannot always be determined automatically,
+           the `state_input_ports <OptimizationControlMechanism.state_input_ports>`) cannot be created automatically, nor
+           can the **state_features** specification be validated;  thus, specifying inappropriate **state_features** may
+           produce errors that are unexpected or difficult to interpret.
 
   COMMENT:
    FIX: CONFIRM (OR IMPLEMENT?) THE FOLLOWING
@@ -416,6 +416,7 @@ If the `agent_rep <OptimizationControlMechanism.agent_rep>` is not the Compositi
 OptimizationControlMechanism is the controller, then it must meet the following requirements:
 
   * Its `evaluate <Composition.evaluate>` method must accept as its first four positional arguments:
+
     - values that correspond in shape to  the `state_feature_values
       <OptimizationControlMechanism.state_feature_values>` (inputs for estimate);
     - `control_allocation <ControlMechanism.control_allocation>` (the set of parameters for which estimates
@@ -425,6 +426,7 @@ OptimizationControlMechanism is the controller, then it must meet the following 
   ..
   * If it has an `adapt <CompositionFunctionApproximator.adapt>` method, that must accept as its first three
     arguments, in order:
+
     - values that correspond to the shape of the  `state_feature_values
       <OptimizationControlMechanism.state_feature_values>` (inputs that led to the net_come);
     - `control_allocation <ControlMechanism.control_allocation>` (set of parameters that led to the net_outcome);
