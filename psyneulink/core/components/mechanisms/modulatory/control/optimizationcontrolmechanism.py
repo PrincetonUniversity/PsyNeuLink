@@ -760,9 +760,9 @@ When an OptimizationControlMechanism is executed, it carries out the following s
 
 If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.e., it is not None) then, for a given
 `control_allocation <ControlMechanism.control_allocation>`,  the `evaluate_agent_rep
-<OptimizationControlMechanism.evaluate_agent_rep>` method is called that number of times by the 
-OptimizationControlMechanism's `function OptimizationControlMechanism.function>` to estimate the `outcome 
-<ControlMechanism.outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>` 
+<OptimizationControlMechanism.evaluate_agent_rep>` method is called that number of times by the
+OptimizationControlMechanism's `function OptimizationControlMechanism.function>` to estimate the `outcome
+<ControlMechanism.outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
 If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.e., it is not None), then each
 `control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
