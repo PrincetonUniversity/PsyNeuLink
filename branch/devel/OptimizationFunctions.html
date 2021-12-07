@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationFunctions &mdash; PsyNeuLink 0+untagged.11.gaa29fa2 documentation</title>
+  <title>OptimizationFunctions &mdash; PsyNeuLink 0+untagged.10.g406f8e2 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.11.gaa29fa2
+                  0+untagged.10.g406f8e2
                 </div>
               
             
@@ -235,8 +235,8 @@ by calling <a class="reference internal" href="#psyneulink.core.components.funct
 specified in its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a> attribute;</p></li>
 </ul>
 <ul class="simple">
-<li><p>aggregate value of the estimates using <code class="xref any docutils literal notranslate"><span class="pre">aggregation_function</span></code>
-(the default is to average the values; if <code class="xref any docutils literal notranslate"><span class="pre">aggregation_function</span></code>
+<li><p>aggregate value of the estimates using <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">aggregation_function</span></code></a>
+(the default is to average the values; if <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">aggregation_function</span></code></a>
 is not specified, the entire list of estimates is returned);</p></li>
 </ul>
 <ul class="simple">
@@ -293,8 +293,9 @@ constructor).</p></li>
 <li><p><strong>objective_function</strong> (<em>function</em><em> or </em><em>method : default None</em>) – specifies function used to make a single estimate for a sample, <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a> of which are made for a given sample in each iteration of the
 <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>; if it is not specified, a default function is used
 that simply returns the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> parameter (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</p></li>
-<li><p><strong>aggregation_function</strong> (<em>function</em><em> or </em><em>method : default None</em>) – specifies function used to evaluate samples in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>; if it is not specified, a default function is used that simply returns
-the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> parameter (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</p></li>
+<li><p><strong>aggregation_function</strong> (<em>function</em><em> or </em><em>method : default None</em>) – specifies function used to aggregate the values returned over the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a> calls to the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> for a given sample in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization
+process</span></a>; if it is not specified, a default function is used that simply
+returns the value passed as its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> parameter (see <a class="reference internal" href="#optimizationfunction-defaults"><span class="std std-ref">note</span></a>).</p></li>
 <li><p><strong>search_function</strong> (<em>function</em><em> or </em><em>method : default None</em>) – specifies function used to select a sample for <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a>
 in each iteration of the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.  It <strong>must be specified</strong>
 if the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> does not generate samples on its own
@@ -393,13 +394,26 @@ is not specified, this is None, and only a single estimate is made for each samp
 <span class="sig-name descname"><span class="pre">num_estimates</span></span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates" title="Permalink to this definition">¶</a></dt>
 <dd><p>the number of independent estimates evaluated (i.e., calls made to the OptimizationFunction’s
 <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> for each sample, and aggregated over
-by its <code class="xref any docutils literal notranslate"><span class="pre">aggregation_function</span></code> to determine the estimated value
+by its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">aggregation_function</span></code></a> to determine the estimated value
 for a given sample.  This is determined from the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.search_space"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">search_space</span></code></a> by
 accessing its <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.randomization_dimension" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.randomization_dimension"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">randomization_dimension</span></code></a> and determining the
 the length of (i.e., number of elements specified for) that dimension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>int or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function">
+<span class="sig-name descname"><span class="pre">aggregation_function</span></span><a class="headerlink" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.aggregation_function" title="Permalink to this definition">¶</a></dt>
+<dd><p>used to aggregate the values returned over the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.num_estimates"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">num_estimates</span></code></a> calls to
+the <a class="reference internal" href="#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction.objective_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span></code></a> for a given sample in each iteration of
+the <a class="reference internal" href="#optimizationfunction-procedure"><span class="std std-ref">optimization process</span></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>function or method</p>
 </dd>
 </dl>
 </dd></dl>
