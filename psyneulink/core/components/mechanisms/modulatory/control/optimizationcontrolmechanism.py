@@ -20,8 +20,8 @@ Contents
   * `OptimizationControlMechanism_Overview`
      - `Expected Value of Control <OptimizationControlMechanism_EVC>`
      - `Agent Representation and Types of Optimization <OptimizationControlMechanism_Agent_Representation_Types>`
-        - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
-        - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
+       - `Model-Free" Optimization <OptimizationControlMechanism_Model_Free>`
+       - `Model-Based" Optimization <OptimizationControlMechanism_Model_Based>`
   * `OptimizationControlMechanism_Creation`
      - `Agent Rep <OptimizationControlMechanism_Agent_Rep_Arg>`
      - `State Features <OptimizationControlMechanism_State_Features_Arg>`
@@ -29,16 +29,22 @@ Contents
      - `Outcome  <OptimizationControlMechanism_Outcome_Args>`
   * `OptimizationControlMechanism_Structure`
      - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
-       - `State <OptimizationControlMechanism_State>`
+        - `State <OptimizationControlMechanism_State>`
      - `Input <OptimizationControlMechanism_Input>`
-       - `state_input_ports <OptimizationControlMechanism_State_Features>`
-       - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
-         - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
-         - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
-         - `probes <OptimizationControlMechanism_Probes>`
+        - `state_input_ports <OptimizationControlMechanism_State_Features>`
+        - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
+        - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
+        - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
+        - `probes <OptimizationControlMechanism_Probes>`
      - `Function <OptimizationControlMechanism_Function>`
-        - `Search Function, Search Space and Search Termination Function<OptimizationControlMechanism_Search_Functions>`
+       - `OptimizationControlMechanism_Custom_Function`
+         - `OptimizationControlMechanism_Search_Functions`
+         - `OptimizationControlMechanism_Default_Function`
+        .. technical_note::
+          `Randomization ControlSignal <OptimizationControlMechanism_Randomization_Control_Signal>`
   * `OptimizationControlMechanism_Execution`
+     - `OptimizationControlMechanism_Optimization_Procedure`
+     - `OptimizationControlMechanism_Estimation_Randomization`
   * `OptimizationControlMechanism_Class_Reference`
 
 
@@ -165,12 +171,12 @@ the `control_allocation <ControlMechanism.control_allocation>` that yields the b
 
 *"Model-Free" Optimization*
 
-.. note::
-   The term *model-free* is placed in apology quotes to reflect the fact that, while this term is
-   used widely (e.g., in machine learning and cognitive science) to distinguish it from *model-based* forms of
-   processing, model-free processing nevertheless relies on *some* form of model -- albeit usually a much simpler
-   one -- for learning, planning and decision making.  In the context of a OptimizationControlMechanism, this is
-   addressed by use of the term "agent_rep", and how it is implemented, as described below.
+    .. note::
+       The term *model-free* is placed in apology quotes to reflect the fact that, while this term is
+       used widely (e.g., in machine learning and cognitive science) to distinguish it from *model-based* forms of
+       processing, model-free processing nevertheless relies on *some* form of model -- albeit usually a much simpler
+       one -- for learning, planning and decision making.  In the context of a OptimizationControlMechanism, this is
+       addressed by use of the term "agent_rep", and how it is implemented, as described below.
 
 This is implemented by assigning the `agent_rep <OptimizationControlMechanism.agent_rep>` to something than the
 `Composition` for which the OptimizationControlMechanism is the `controller <Composition.controller>`).  This
@@ -342,7 +348,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_Outcome_Args:
 
-* *Outcome arguments* -- these specify the Components, the values of which are assigned to the `outcome
+* **Outcome arguments** -- these specify the Components, the values of which are assigned to the `outcome
   <ControlMechanism.outcome>` attribute, and used to compute the `net_outcome <ControlMechanism.net_outcome>` for a
   given `control_allocation <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution`).
   As with a ControlMechanism, these can be sepcified directly in the **monitor_for_control** argument, or through the
@@ -373,7 +379,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     of the Composition being evaluated; that is, ones that do not contribute directly to the Composition's `results
     <Composition_Execution_Results>` (see `probes <OptimizationControlMechanism_Probes>` for additional details).
 
-* *Optimization arguments* -- these specify parameters that determine how the OptimizationControlMechanism's
+* **Optimization arguments** -- these specify parameters that determine how the OptimizationControlMechanism's
   `function <OptimizationControlMechanism.function>` searches for and determines the optimal `control_allocation
   <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution`); this includes specification
   of the `num_estimates <OptimizationControlMechanism.num_estimates>` and `num_trials_per_estimate
@@ -601,16 +607,16 @@ COMMENT
        .. note::
            `INTERNAL <NodeRole.INTERNAL>` Nodes of a nested Composition will project via the nested Composition's
            `output_CIM <Composition.output_CIM>` and those of any intervening Compositions, to one of the Composition
-           at the same level as the OptimizationControlMechanism, that in turn will project to the corresponding InputPort
-           of the OptimizationControlMechanism `outcome_input_ports <ControlMechanism.outcome_input_ports>`.  Note
-           that their values will also be included in `results <Composition.results>` attribute of the nested Composition
-           and all intervening ones, including the one to which the OptimizationControlMechanism belongs.
+           at the same level as the OptimizationControlMechanism, that in turn will project to the corresponding
+           InputPort of the OptimizationControlMechanism `outcome_input_ports <ControlMechanism.outcome_input_ports>`.
+           Note that their values will also be included in `results <Composition.results>` attribute of the nested
+           Composition and all intervening ones, including the one to which the OptimizationControlMechanism belongs.
 
-   - *DIRECT*: this is also a permitted value of **allow_probes**;  the functional result is the same,
+   - *DIRECT*: this is also a permitted value of **allow_probes**; the functional result is the same,
      but in this case the specified Nodes project *directly* to one of the OptimizationControlMechanism's
      `outcome_input_ports <ControlMechanism.outcome_input_ports>`, skipping all intervening `output_CIM
-     <Composition.output_CIM>`\\s.  This specification is *not recommended*, as it prevents use of `compilation
-     <Composition_Compilation>`.  It is supported only for debugging purposes only.
+     <Composition.output_CIM>`\\s. This specification is *not recommended*, as it prevents use of `compilation
+     <Composition_Compilation>`. It is supported only for debugging purposes only.
 
 .. _OptimizationControlMechanism_Function:
 
@@ -781,12 +787,6 @@ When an OptimizationControlMechanism is executed, it carries out the following s
 
 *Randomization of Estimation*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.e., it is not None) then, for a given
-`control_allocation <ControlMechanism.control_allocation>`,  the `evaluate_agent_rep
-<OptimizationControlMechanism.evaluate_agent_rep>` method is called that number of times by the
-OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` to estimate the `outcome
-<ControlMechanism.outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
 If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.e., it is not None), then each
 `control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
@@ -1070,8 +1070,8 @@ class OptimizationControlMechanism(ControlMechanism):
         `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`) used to estimate the `net_outcome
         <ControlMechanism.net_outcome>` of each `control_allocation <ControlMechanism.control_allocation>` evaluated
         by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` (i.e.,
-        that are specified by its `search_space <OptimizationFunction.search_space>`).
-        # FIX: 11/3/21 ADD POINTER TO DESCRIPTION OF RANDOMIZATION ControlSignal
+        that are specified by its `search_space <OptimizationFunction.search_space>`); see
+        `OptimizationControlMechanism_Estimation_Randomization` for additional details.
 
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
@@ -1134,7 +1134,7 @@ class OptimizationControlMechanism(ControlMechanism):
         an array containing the `results <Composition.results>` of the run. This method is `num_estimates
         <OptimizationControlMechanism>` times by the OptimizationControlMechanism's `function
         <OptimizationControlMechanism.function>`, which aggregates the `net_outcome <ControlMechanism.net_outcome>`
-        over those in evaluating a given control_allocation <ControlMechanism.control_allocation>`
+        over those in evaluating a given `control_allocation <ControlMechanism.control_allocation>`
         (see `OptimizationControlMechanism_Function` for additional details).
 
     search_function : function or method
