@@ -427,16 +427,16 @@ OptimizationControlMechanism is the controller, then it must meet the following 
 * If it has an `adapt <CompositionFunctionApproximator.adapt>` method, that must accept as its first three
   arguments, in order:
 
-   - values that correspond to the shape of the  `state_feature_values
-     <OptimizationControlMechanism.state_feature_values>` (inputs that led to the net_come);
-   - `control_allocation <ControlMechanism.control_allocation>` (set of parameters that led to the net_outcome);
-   - `net_outcome <ControlMechanism.net_outcome>` (the net_outcome that resulted from the `state_feature_values
-     <OptimizationControlMechanism.state_feature_values>` and `control_allocation
-     <ControlMechanism.control_allocation>`) that must match the shape of `outcome <ControlMechanism.outcome>`.
-   COMMENT:
-   - `num_estimates <OptimizationControlMechanism.num_trials_per_estimate>` (number of estimates of `net_outcome
-     <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`).
-   COMMENT
+  - values that correspond to the shape of the  `state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` (inputs that led to the net_come);
+  - `control_allocation <ControlMechanism.control_allocation>` (set of parameters that led to the net_outcome);
+  - `net_outcome <ControlMechanism.net_outcome>` (the net_outcome that resulted from the `state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` and `control_allocation
+    <ControlMechanism.control_allocation>`) that must match the shape of `outcome <ControlMechanism.outcome>`.
+  COMMENT:
+  - `num_estimates <OptimizationControlMechanism.num_trials_per_estimate>` (number of estimates of `net_outcome
+    <ControlMechanism.net_outcome>` made for each `control_allocation <ControlMechanism.control_allocation>`).
+  COMMENT
 
  .. _OptimizationControlMechanism_State:
 
