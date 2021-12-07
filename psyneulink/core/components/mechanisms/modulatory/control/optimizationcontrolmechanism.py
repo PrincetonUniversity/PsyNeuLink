@@ -31,11 +31,11 @@ Contents
       - `Agent Representation <OptimizationControlMechanism_Agent_Rep>`
           - `State <OptimizationControlMechanism_State>`
       - `Input <OptimizationControlMechanism_Input>`
-         - `state_input_ports <OptimizationControlMechanism_State_Features>`
-         - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
-             - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
-             - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
-             - `probes <OptimizationControlMechanism_Probes>`
+          - `state_input_ports <OptimizationControlMechanism_State_Features>`
+          - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
+              - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
+              - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
+              - `probes <OptimizationControlMechanism_Probes>`
       - `Function <OptimizationControlMechanism_Function>`
           - `OptimizationControlMechanism_Custom_Function`
           - `OptimizationControlMechanism_Search_Functions`
