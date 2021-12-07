@@ -1756,7 +1756,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_stateful_mechanism_in_simulation
             allocation_parameter_default = np.ones(np.asarray(allocation_parameter_default).shape)
         except (KeyError, IndexError, TypeError):
-            allocation_parameter_default = self.parameters.control_allocation.default_value
+            # if control allocation is a single value specified from
+            # default_variable for example, it should be used here
+            # instead of the "global default" defaultControlAllocation
+            if len(self.defaults.control_allocation) == 1:
+                allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
+            else:
+                allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                            owner=self,
