@@ -460,10 +460,10 @@ the results of which are used together with the `costs <ControlMechanism_Costs_N
 *Input*
 ^^^^^^^
 
-An OptimizationControlMechanism has two types of `InputPorts <InputPort>`, corresponding to the two forms of input
-it requires: `state_input_ports <OptimizationControlMechanism.state_input_ports>` that provide the values of the
-Components specified as its `state_features <OptimizationControlMechanism_State_Features_Arg>`, and that are used as
-inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>` when its `evaluate <Composition.evaluate>` method
+An OptimizationControlMechanism has two types of `input_ports < <Mechanism_Base.input_ports>`, corresponding to the two
+forms of input it requires: `state_input_ports <OptimizationControlMechanism.state_input_ports>` that provide the values
+of the Components specified as its `state_features <OptimizationControlMechanism_State_Features_Arg>`, and that are used
+as inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>` when its `evaluate <Composition.evaluate>` method
 is used to execute it; and `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` that provide the
 outcome of executing the `agent_rep <OptimizationControlMechanism.agent_rep>`, that is used to compute the `net_outcome
 <ControlMechanism.net_outcome>` for the `control_allocation <ControlMechanism.control_allocation>` under which the
