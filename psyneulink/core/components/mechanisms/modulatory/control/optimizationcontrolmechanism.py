@@ -1466,8 +1466,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         if self.random_params is not ALL:
             invalid_params = [param for param in self.random_params
-                              if param._port.owner not in [seed._port.owner for seed in
-                                                           self.agent_rep.random_parameters]]
+                              if param not in [r._owner._owner for r in self.agent_rep.random_parameters]]
             if invalid_params:
                 raise OptimizationControlMechanismError(f"The following Parameters were specified for the "
                                                         f"{RANDOM_PARAMS} arg of {self.name} that are do randomizable "
@@ -1766,10 +1765,10 @@ class OptimizationControlMechanism(ControlMechanism):
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
             #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
             # Get ParameterPorts for Parameters to be randomized across estimates
-            if self.random_parms is ALL:
+            if self.random_params is ALL:
                 seed_param_ports = [param._port for param in self.agent_rep.random_parameters]
             else:
-                seed_param_ports = [param._port for param in self.random_params]
+                seed_param_ports = [param.parameters.seed._port for param in self.random_params]
 
             # Construct ControlSignal to modify seeds over estimates
             self.output_ports.append(ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
