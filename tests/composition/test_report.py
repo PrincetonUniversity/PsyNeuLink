@@ -1,5 +1,3 @@
-import contextlib
-import io
 import sys
 
 import numpy as np
@@ -12,29 +10,25 @@ from psyneulink.core.compositions.report import ReportOutput, ReportProgress, Re
 @pytest.mark.skipif(sys.platform == 'win32', reason="<Incompatible UDF-8 formatting of rich Console output>")
 class TestReport():
 
-    def test_reportOutputPref_true(self):
+    def test_reportOutputPref_true(self, capsys):
 
         t = pnl.TransferMechanism()
         t.reportOutputPref = ReportOutput.FULL
 
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            t.execute(1)
-        output = f.getvalue()
+        t.execute(1)
+        output = capsys.readouterr().out
 
         assert 'input: 1.0' in output
         assert 'output: 1.0' in output
         assert 'params' not in output
 
-    def test_reportOutputPref_params(self):
+    def test_reportOutputPref_params(self, capsys):
 
         t = pnl.TransferMechanism()
         t.reportOutputPref = 'params'
 
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            t.execute(1, report_output=ReportOutput.FULL)
-        output = f.getvalue()
+        t.execute(1, report_output=ReportOutput.FULL)
+        output = capsys.readouterr().out
 
         assert 'input: 1.0' in output
         assert 'output: 1.0' in output
@@ -180,7 +174,6 @@ class TestReport():
         """Test output and progress reports for execution of simulations by controller in both an outer and nested
         composition, using input dictionary, generator instance and generator function.
         """
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
@@ -441,8 +434,6 @@ class TestReport():
         assert actual_output == expected_output
 
     def test_nested_comps_and_sims_with_modulated_and_monitored_params_and_use_prefs(self):
-
-        pnl.clear_registry(pnl.FunctionRegistry)
 
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
