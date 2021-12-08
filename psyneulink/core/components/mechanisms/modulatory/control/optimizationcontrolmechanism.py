@@ -1465,12 +1465,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         if self.random_params is not ALL:
-            invalid_params = [param for param in self.random_params
+            invalid_params = [param.name for param in self.random_params
                               if param not in [r._owner._owner for r in self.agent_rep.random_parameters]]
             if invalid_params:
                 raise OptimizationControlMechanismError(f"The following Parameters were specified for the "
                                                         f"{RANDOM_PARAMS} arg of {self.name} that are do randomizable "
-                                                        f"(i.e., they do not have a 'seed' attribute.")
+                                                        f"(i.e., they do not have a 'seed' attribute: "
+                                                        f"{invalid_params}.")
 
     # FIX: CONSIDER GETTING RID OF THIS METHOD ENTIRELY, AND LETTING state_input_ports
     #      BE HANDLED ENTIRELY BY _update_state_input_ports_for_controller
