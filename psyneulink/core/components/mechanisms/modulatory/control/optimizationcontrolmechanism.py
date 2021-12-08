@@ -383,9 +383,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   `function <OptimizationControlMechanism.function>` searches for and determines the optimal `control_allocation
   <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution`); this includes specification
   of the `num_estimates <OptimizationControlMechanism.num_estimates>` and `num_trials_per_estimate
-  <OptimizationControlMechanism.num_trials_per_estimate>` parameters, which determine how the `net_outcome
-  <ControlMechanism.net_outcome>` is estimated for a given `control_allocation <ControlMechanism.control_allocation>`
-  (see `OptimizationControlMechanism_Estimation_Randomization` for additional details).
+  <OptimizationControlMechanism.num_trials_per_estimate>` parameters, as well as the `random_params
+  <OptimizationControlMechanism.random_params>`, `initial_seed <OptimizationControlMechanism.initial_seed>` and
+  `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters, which
+  determine how the `net_outcome <ControlMechanism.net_outcome>` is estimated for a given `control_allocation
+  <ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Estimation_Randomization` for additional
+  details).
 
 .. _OptimizationControlMechanism_Structure:
 
@@ -695,21 +698,21 @@ thus implementing a computation of `EVC <OptimizationControlMechanism_EVC>`.
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
-    a `ControlSignal` is added to the OptimizationControlMechanism's `control_signals
+    a `ControlSignal` is automatically added to the OptimizationControlMechanism's `control_signals
     <OptimizationControlMechanism.control_signals>`, named *RANDOMIZATION_CONTROL_SIGNAL*, that modulates the
     seeds used to randomize each estimate of the `net_outcome <ControlMechanism.net_outcome>` for each run of
     the `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., in each call to its `evaluate
-    <Composition.evaluate>` method). That ControlSignal sends a `ControlProjection` to every `Parameter` of
-    every `Component` in `agent_rep <OptimizationControlMechanism.agent_rep>` that is labelled "seed", each of
-    which corresponds to a Parameter that uses a random number generator to assign its value (i.e.,
-    as its `function <ParameterPort.function>` (see `OptimizationControlMechanism_Estimation_Randomization`
-    for additional details of its use). The *RANDOMIZATION_CONTROL_SIGNAL* is included when constructing the
-    `control_allocation_search_space <OptimizationFunction.control_allocation_search_space>` passed to the
-    OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` constructor as its
+    <Composition.evaluate>` method). That ControlSignal sends a `ControlProjection` to every `Parameter` specified
+    in `random_params <OptimizationControlMechanism.random_params>`;  by default, this is every Parameter that has a
+    `seed` attribute in the Components of `agent_rep <OptimizationControlMechanism.agent_rep>` (see
+    `OptimizationControlMechanism_Estimation_Randomization` for additional details of its use). The
+    *RANDOMIZATION_CONTROL_SIGNAL* is included when constructing the `control_allocation_search_space
+    <OptimizationFunction.control_allocation_search_space>` passed to the constructor for
+    OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`, as its
     **search_space** argument, along with the index of the *RANDOMIZATION_CONTROL_SIGNAL* as its
     **randomization_dimension** argument. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
-    `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>`
-    Parameters can be used to further refine this behavior.
+    `same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters can be
+    used to further refine this behavior.
 
 .. _OptimizationControlMechanism_Execution:
 
@@ -794,19 +797,24 @@ If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.
 `control_allocation <ControlMechanism.control_allocation>` is independently evaluated `num_estimates
 <OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method),
-to estimate the `outcome <ControlMechanism.outcome>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`
-for a given `control_allocation <ControlMechanism.control_allocation>`.  This is controlled by the
-`RANDOMIZATION_CONTROL_SIGNAL <OptimizationControlMechanism_Randomization_Control_Signal>`, which is used to change
-the seeds for all Parameters that use random values on each call to `evaluate_agent_rep
-<OptimizationControlMechanism.evaluate_agent_rep>` (i.e., at the start of each run of the `agent_rep
-<OptimizationControlMechanism.agent_rep>`), while holding constant all of the other ControlSignals (i.e., the ones for
-the parameters being optimized). Randomization over estimates can be configured using the
-OptimizationControlMechanism's `initial_seed <OptimizationControlMechanism.initial_seed>` and
-`same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters. The results
-of the independent estimates are aggregated by the `aggregation_function <OptimizationFunction.aggregation_function>`
-of the `OptimizationFunction` assigned to the OptimizationControlMechanism's `function <OptimizationControlMechanism>`,
-and used to compute the `net_outcome <ControlMechanism.net_outcome>` over the estimates for that `control_allocation
-<ControlMechanism.control_allocation>` (see `OptimizationControlMechanism_Execution` for additional details).
+randomly varying the values of the `Parameters <Parameter>` specified in `random_params
+<OptimizationControlMechanism.random_params>`, to estimate the `outcome <ControlMechanism.outcome>` of the `agent_rep
+<OptimizationControlMechanism.agent_rep>` for a given `control_allocation <ControlMechanism.control_allocation>`.
+This is controlled by the `RANDOMIZATION_CONTROL_SIGNAL <OptimizationControlMechanism_Randomization_Control_Signal>`,
+that is automatically created at construction, and used to change the seeds for all Parameters specified in
+`random_params <OptimizationControlMechanism.random_params>` on each call to `evaluate_agent_rep
+<OptimizationControlMechanism.evaluate_agent_rep>`, while holding constant all of the other ControlSignals (i.e.,
+the ones for the parameters being optimized). By default, all of the Parameters of Components in `agent_rep
+<OptimizationControlMechanism.agent_rep>` that use random values (i.e., have a `seed` attribute) are randomized;
+however, this can be configured by specifying particular parameters in the **random_params** argument of the
+OptimizationControlMechanism's constructor. Randomization over estimates can be further configured using the
+`initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
+<OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters. The results of all the estimates for a given
+`control_allocation <OptimizationControlMechanism.control_allocation>` are aggregated by the `aggregation_function
+<OptimizationFunction.aggregation_function>` of the `OptimizationFunction` assigned to the
+OptimizationControlMechanism's `function <OptimizationControlMechanism>`, and used to compute the `net_outcome
+<ControlMechanism.net_outcome>` over the estimates for that `control_allocation <ControlMechanism.control_allocation>`
+(see `OptimizationControlMechanism_Execution` for additional details).
 
 COMMENT:
 .. _OptimizationControlMechanism_Examples:
@@ -875,7 +883,7 @@ from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN, \
+    ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_VARIABLE, DIRECT, EID_FROZEN, \
     FUNCTION, INTERNAL_ONLY, OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, \
     SEPARATE, SHADOW_INPUTS, SHADOW_INPUT_NAME
 from psyneulink.core.globals.parameters import Parameter
@@ -892,6 +900,7 @@ AGENT_REP = 'agent_rep'
 STATE_FEATURES = 'state_features'
 STATE_FEATURE_FUNCTIONS = 'state_feature_functions'
 RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
+RANDOM_PARAMS = 'random_params'
 
 def _parse_state_feature_values_from_variable(index, variable):
     """Return values of state_input_ports"""
@@ -912,7 +921,6 @@ def _control_allocation_search_space_getter(owning_component=None, context=None)
     else:
         return search_space
 
-
 class OptimizationControlMechanism(ControlMechanism):
     """OptimizationControlMechanism(                    \
         agent_rep=None,                                 \
@@ -923,6 +931,7 @@ class OptimizationControlMechanism(ControlMechanism):
         objective_mechanism=None,                       \
         function=GridSearch,                            \
         num_estimates=1,                                \
+        random_params=ALL,                              \
         initial_seed=None,                              \
         same_seed_for_all_parameter_combinations=False  \
         num_trials_per_estimate=None,                   \
@@ -977,6 +986,13 @@ class OptimizationControlMechanism(ControlMechanism):
         to estimate its `net_outcome <ControlMechanism.net_outcome>` for each `control_allocation
         <ControlMechanism.control_allocation>` sampled (see `num_estimates
         <OptimizationControlMechanism.num_estimates>` for additional information).
+
+    random_params : Parameter or list[Parameter] : default ALL
+        specifies the `Parameters <Parameter>` the values of which are randomized over different estimates of the
+        same `control_allocation <OptimizationControlMechanism.control_allocation>`.  Any valid form of `Parameter
+        specification <ParameterPort_Specification>` can be used, but all Parameters specified must have a `seed`
+        attribute. By default, all of the Parameters listed in the `random_parameters <Composition.random_parameters>`
+        attribute of `agent_rep <OptimizationControlMechanism.agent_rep>` are used.
 
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
@@ -1064,7 +1080,7 @@ class OptimizationControlMechanism(ControlMechanism):
         from either its `objective_mechanism <ControlMechanism.objective_mechanism>` or the Components listed in
         its `monitor_for_control <ControlMechanism.monitor_for_control>` attribute, the values of which are used
         to compute the `net_outcome <ControlMechanism.net_outcome>` of executing the agent_rep
-        <OptimizationControlMechanism.agent_rept>` in a given `OptimizationControlMechanism_State`
+        <OptimizationControlMechanism.agent_rep>` in a given `OptimizationControlMechanism_State`
         (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
 
     num_estimates : int
@@ -1074,6 +1090,13 @@ class OptimizationControlMechanism(ControlMechanism):
         by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` (i.e.,
         that are specified by its `search_space <OptimizationFunction.search_space>`); see
         `OptimizationControlMechanism_Estimation_Randomization` for additional details.
+
+    random_params : Parameter or List[Parameter]
+        determines the `Parameters <Parameter>` the values of which are randomized over different estimates of the
+        same `control_allocation <OptimizationControlMechanism.control_allocation>`.  By default, all Parameters
+        with a `seed` attribute are randomized.  If any are specified in the **random_params** argument of the
+        OptimizationControlMechanism's constructor, then only the values of those will be randomized (see
+        `OptimizationControlMechanism_Estimation_Randomization` for additional details).
 
     initial_seed : int or None
         determines the seed used to initialize the random number generator at construction.
@@ -1307,6 +1330,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                          pnl_internal=True)
 
         # FIX: Should any of these be stateful?
+        random_params = ALL
         initial_seed = None
         same_seed_for_all_allocations = False
         num_estimates = None
@@ -1327,6 +1351,7 @@ class OptimizationControlMechanism(ControlMechanism):
                  allow_probes:tc.any(bool, tc.enum(DIRECT)) = False,  # FIX: MAKE THIS A PARAMETER AND THEN SET TO None
                  function=None,
                  num_estimates = None,
+                 random_params = None,
                  initial_seed=None,
                  same_seed_for_all_allocations=None,
                  num_trials_per_estimate = None,
@@ -1389,6 +1414,7 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_functions=state_feature_functions,
             num_estimates=num_estimates,
             num_trials_per_estimate = num_trials_per_estimate,
+            random_params=random_params,
             initial_seed=initial_seed,
             same_seed_for_all_allocations=same_seed_for_all_allocations,
             search_statefulness=search_statefulness,
@@ -1436,6 +1462,16 @@ class OptimizationControlMechanism(ControlMechanism):
                                                             f"'{STATE_FEATURE_FUNCTIONS} of {self.name} have keys that "
                                                             f"do not match any InputPorts specified in its "
                                                             f"{STATE_FEATURES} arg: {invalid_fct_specs}.")
+
+
+        if self.random_params is not ALL:
+            invalid_params = [param for param in self.random_params
+                              if param._port.owner not in [seed._port.owner for seed in
+                                                           self.agent_rep.random_parameters]]
+            if invalid_params:
+                raise OptimizationControlMechanismError(f"The following Parameters were specified for the "
+                                                        f"{RANDOM_PARAMS} arg of {self.name} that are do randomizable "
+                                                        f"(i.e., they do not have a 'seed' attribute.")
 
     # FIX: CONSIDER GETTING RID OF THIS METHOD ENTIRELY, AND LETTING state_input_ports
     #      BE HANDLED ENTIRELY BY _update_state_input_ports_for_controller
@@ -1729,8 +1765,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
             #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
-            # Get ParameterPorts for seeds of parameters in agent_rep that use them (i.e., that return a random value)
-            seed_param_ports = [param._port for param in self.agent_rep.all_dependent_parameters('seed').keys()]
+            # Get ParameterPorts for Parameters to be randomized across estimates
+            if self.random_parms is ALL:
+                seed_param_ports = [param._port for param in self.agent_rep.random_parameters]
+            else:
+                seed_param_ports = [param._port for param in self.random_params]
 
             # Construct ControlSignal to modify seeds over estimates
             self.output_ports.append(ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
