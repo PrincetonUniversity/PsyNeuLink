@@ -948,7 +948,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.state_feature_values>` and used to predict `net_outcome
         <ControlMechanism.net_outcome>`. Any `InputPort specification <InputPort_Specification>`
         can be used that resolves to an `OutputPort` that projects to that InputPort (see
-        `state_features <OptimizationControlMechanism_State_Features_Arg` for additional details>).
+        `state_features <OptimizationControlMechanism_State_Features_Arg>` for additional details>).
 
     state_feature_functions : Function or function : default None
         specifies the `function <InputPort.function>` assigned the `InputPort` in `state_input_ports
@@ -970,7 +970,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism_Model_Free>` optimization. If **agent_rep** is not specified, the
         OptimizationControlMechanism is placed in `deferred_init` status until it is assigned as the `controller
         <Composition.controller>` of a Composition, at which time that Composition is assigned as the `agent_rep
-        <agent_rep <OptimizationControlMechanism.agent_rep`.
+        <agent_rep <OptimizationControlMechanism.agent_rep>`.
 
     num_estimates : int : 1
         specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` used
@@ -999,7 +999,7 @@ class OptimizationControlMechanism(ControlMechanism):
         `search_function <OptimizationFunction.search_function>` parameter, unless that is specified in a
         constructor for `function <OptimizationControlMechanism.function>`.  It must take as its arguments
         an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and an integer
-        (indicating the iteration of the `optimization process <OptimizationFunction_Process>`), and return
+        (indicating the iteration of the `optimization process <OptimizationFunction_Procedure>`), and return
         an array with the same shape as `control_allocation <ControlMechanism.control_allocation>`.
 
     search_termination_function : function or method
@@ -1009,7 +1009,7 @@ class OptimizationControlMechanism(ControlMechanism):
         arguments an array with the same shape as `control_allocation <ControlMechanism.control_allocation>` and two
         integers (the first representing the `net_outcome <ControlMechanism.net_outcome>` for the current
         `control_allocation <ControlMechanism.control_allocation>`, and the second the current iteration of the
-        `optimization process <OptimizationFunction_Process>`);  it must return `True` or `False`.
+        `optimization process <OptimizationFunction_Procedure>`);  it must return `True` or `False`.
 
     search_space : iterable [list, tuple, ndarray, SampleSpec, or SampleIterator] | list, tuple, ndarray, SampleSpec, or SampleIterator
         specifies the `search_space <OptimizationFunction.search_space>` parameter for `function
@@ -1108,7 +1108,7 @@ class OptimizationControlMechanism(ControlMechanism):
         OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method.
         If it is None (the default), then either the number of **inputs** or the value specified for **num_trials** in
         the Composition's `run <Composition.run>` method used to determine the number of trials executed (see
-        `Composition_Execution_Num_Trials` for additional information).
+        `number of trials <Composition_Execution_Num_Trials>` for additional information).
 
     function : OptimizationFunction, function or method
         takes current `control_allocation <ControlMechanism.control_allocation>` (as initializer),
@@ -1148,7 +1148,7 @@ class OptimizationControlMechanism(ControlMechanism):
     search_termination_function : function or method
         `search_termination_function <OptimizationFunction.search_termination_function>` assigned to
         `function <OptimizationControlMechanism.function>`;  determines when to terminate the
-        `optimization process <OptimizationFunction_Process>`.
+        `optimization process <OptimizationFunction_Procedure>`.
 
     control_signals : ContentAddressableList[ControlSignal]
         list of the `ControlSignals <ControlSignal>` for the OptimizationControlMechanism for the Parameters being
@@ -1166,9 +1166,9 @@ class OptimizationControlMechanism(ControlMechanism):
         `search_space <OptimizationFunction.search_space>` assigned by default to the
         OptimizationControlMechanism's `function <OptimizationControlMechanism.function>`, that determines the
         samples of `control_allocation <ControlMechanism.control_allocation>` evaluated by the `evaluate_agent_rep
-        <OptimizationControlMechanism.evaluate_agent_rep>` method.  This is a proprety that, unless overridden,
-        returns a list of the `SampleIterators <SampleIterator>` generated from the `allocation_sample
-        <ControlSignal.allocation_sample>` specifications for each of the OptimizationControlMechanism's
+        <OptimizationControlMechanism.evaluate_agent_rep>` method.  This is a property that, unless overridden,
+        returns a list of the `SampleIterators <SampleIterator>` generated from the `allocation_samples
+        <ControlSignal.allocation_samples>` specifications for each of the OptimizationControlMechanism's
         `control_signals <OptimizationControlMechanism.control_signals>`, and includes the
         *RANDOMIZATION_CONTROL_SIGNAL* used to randomize estimates of each `control_allocation
         <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization_Control_Signal>` above).
@@ -1185,12 +1185,12 @@ class OptimizationControlMechanism(ControlMechanism):
         is `True`;  otherwise list is empty.
 
     search_statefulness : bool : True
-        if set to False, an `OptimizationControlMechanism`\\ 's `evaluate_agent_rep` will never run simulations; the
-        evaluations will simply execute in the original `execution context <_Execution_Contexts>`.
-
-        if set to True, `simulations <OptimizationControlMechanism_Execution>` will be created normally for each
-        `control allocation <control_allocation>`.
-
+        if True (the default), calls to `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
+        by the OptimizationControlMechanism's `function <OptimizationControlMechanism.function>` for each
+        `control_allocation <ControlMechanism.control_allocation>` will run as simulations in their own
+        `execution contexts <Composition_Execution_Context>`.  If *search_statefulness* is False, calls for each
+        `control_allocation <ControlMechanism.control_allocation>` will not be executed as independent simulations;
+        rather, all will be run in the same (original) execution context.
     """
 
     componentType = OPTIMIZATION_CONTROL_MECHANISM
