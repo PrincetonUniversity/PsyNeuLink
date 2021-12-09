@@ -2836,6 +2836,9 @@ class NodeRole(enum.Enum):
         can be modified by `assigning specified NodeRoles <Composition_Node_Role_Assignment>` to Nodes.  A Composition
         can have many `INPUT` Nodes.
 
+    PROBE
+        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL` but that is treated as an
+
     SINGLETON
         A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.  This role cannot be modified
         programmatically.
@@ -2897,15 +2900,18 @@ class NodeRole(enum.Enum):
         <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can,
         but generally should not be modified programmatically.
 
+    PROBE
+        An `INTERNAL` `Node <Composition_Nodes>` that is permitted to have Projections from it to the Composition's
+        `output_CIM <Composition.output_CIM>`, but -- unlike an `OUTPUT` Node -- the `output_values
+        <Mechanism_Base.output_values>` of which are *not* included in the Composition's `results
+        <Composition.results>` attribute (see `allow_probes <OptimizationContorlMechanism.allow_probes>` for an
+        example.
+
     OUTPUT
         A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
         the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
         Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
-        COMMENT:
-        .. technical_note::
-           TEST
-        COMMENT
 
     TERMINAL
         A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
@@ -2923,6 +2929,7 @@ class NodeRole(enum.Enum):
     INPUT = enum.auto()
     SINGLETON = enum.auto()
     INTERNAL = enum.auto()
+    PROBE = enum.auto()
     CYCLE = enum.auto()
     FEEDBACK_SENDER = enum.auto()
     FEEDBACK_RECEIVER = enum.auto()
