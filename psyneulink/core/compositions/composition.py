@@ -4869,16 +4869,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                ERROR='INCORRECT_NODE_ROLE',
                                                COMPOSITION=owning_composition,
                                                NODE=node)
-                        # try:
-                        #     handle_probes(node, owning_composition)
-                        # except:
-                        #     # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                        #     #                        f"({nc.name}) but without required {role}.")
-                        #     raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                        #                            f"({nc.name}) but without required {role}.",
-                        #                            ERROR='INCORRECT_NODE_ROLE',
-                        #                            COMPOSITION=owning_composition,
-                        #                            NODE=node)
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
                 # FIX: 11/15/21:  ??WHY IS THIS COMMENTED OUT:
