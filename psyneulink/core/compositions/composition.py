@@ -3956,84 +3956,112 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         list containing references to all invalid aux components
         """
 
-        # Implement any components specified in node's aux_components attribute
-        invalid_aux_components = []
-        if hasattr(node, "aux_components"):
-            # Collect the node's aux components that are not currently able to be added to the Composition;
-            # ignore these for now and try to activate them again during every call to _analyze_graph
-            # and, at runtime, if there are still any invalid aux_components left, issue a warning
-            projections = []
-            # Add all "nodes" to the composition first (in case projections reference them)
-            for i, component in enumerate(node.aux_components):
-                if isinstance(component, (Mechanism, Composition)):
-                    if isinstance(component, Composition):
-                        component._analyze_graph()
-                    self.add_node(component)
-                elif isinstance(component, Projection):
-                    proj_tuple = (component, False)
-                    projections.append(proj_tuple)
-                    node.aux_components[i] = proj_tuple
-                elif isinstance(component, tuple):
-                    if isinstance(component[0], Projection):
-                        if (isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}):
-                            projections.append(component)
-                        else:
-                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
-                                                   "tuple is used to specify a Projection, then the index 0 item must "
-                                                   "be the Projection, and the index 1 item must be the feedback "
-                                                   "specification (True or False).".format(component, node.name))
-                    elif isinstance(component[0], (Mechanism, Composition)):
-                        if isinstance(component[1], NodeRole):
-                            self.add_node(node=component[0], required_roles=component[1])
-                        elif isinstance(component[1], list):
-                            if isinstance(component[1][0], NodeRole):
-                                self.add_node(node=component[0], required_roles=component[1])
+        def _implement_aux_components(node, context):
+            # Implement any components specified in node's aux_components attribute
+            invalid_aux_components = []
+            if hasattr(node, "aux_components"):
+                # Collect the node's aux components that are not currently able to be added to the Composition;
+                # ignore these for now and try to activate them again during every call to _analyze_graph
+                # and, at runtime, if there are still any invalid aux_components left, issue a warning
+                projections = []
+                # Add all "nodes" to the composition first (in case projections reference them)
+                for i, component in enumerate(node.aux_components):
+                    if isinstance(component, (Mechanism, Composition)):
+                        if isinstance(component, Composition):
+                            component._analyze_graph()
+                        self.add_node(component)
+                    elif isinstance(component, Projection):
+                        proj_tuple = (component, False)
+                        projections.append(proj_tuple)
+                        node.aux_components[i] = proj_tuple
+                    elif isinstance(component, tuple):
+                        if isinstance(component[0], Projection):
+                            if (isinstance(component[1], bool) or component[1] in {EdgeType.FLEXIBLE, MAYBE}):
+                                projections.append(component)
                             else:
-                                raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
-                                                       "If a tuple is used to specify a Mechanism or Composition, then "
-                                                       "the index 0 item must be the Node, and the index 1 item must "
-                                                       "be the required_roles".format(component, node.name))
+                                raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
+                                                       "tuple is used to specify a Projection, then the index 0 item must "
+                                                       "be the Projection, and the index 1 item must be the feedback "
+                                                       "specification (True or False).".format(component, node.name))
+                        elif isinstance(component[0], (Mechanism, Composition)):
+                            if isinstance(component[1], NodeRole):
+                                self.add_node(node=component[0], required_roles=component[1])
+                            elif isinstance(component[1], list):
+                                if isinstance(component[1][0], NodeRole):
+                                    self.add_node(node=component[0], required_roles=component[1])
+                                else:
+                                    raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. "
+                                                           "If a tuple is used to specify a Mechanism or Composition, then "
+                                                           "the index 0 item must be the Node, and the index 1 item must "
+                                                           "be the required_roles".format(component, node.name))
 
+                            else:
+                                raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
+                                                       "tuple is used to specify a Mechanism or Composition, then the "
+                                                       "index 0 item must be the Node, and the index 1 item must be the "
+                                                       "required_roles".format(component, node.name))
                         else:
-                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a "
-                                                   "tuple is used to specify a Mechanism or Composition, then the "
-                                                   "index 0 item must be the Node, and the index 1 item must be the "
-                                                   "required_roles".format(component, node.name))
+                            raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a tuple"
+                                                   " is specified, then the index 0 item must be a Projection, Mechanism, "
+                                                   "or Composition.".format(component, node.name))
                     else:
-                        raise CompositionError("Invalid Component specification ({}) in {}'s aux_components. If a tuple"
-                                               " is specified, then the index 0 item must be a Projection, Mechanism, "
-                                               "or Composition.".format(component, node.name))
+                        raise CompositionError("Invalid Component ({}) in {}'s aux_components. Must be a Mechanism, "
+                                               "Composition, Projection, or tuple."
+                                               .format(component.name, node.name))
+
+                invalid_aux_components.extend(self._get_invalid_aux_components(node))
+
+                # Add all Projections to the Composition
+                for proj_spec in [i for i in projections if not i[0] in invalid_aux_components]:
+                    # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
+                    # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
+                    # a new projection is instantiated between sender and receiver instead of using the original spec.
+                    # If the sender or receiver is an AutoAssociativeProjection, then the owner will be another projection
+                    # instead of a mechanism, so owner_mech instead needs to be used instead.
+                    sender_node = proj_spec[0].sender.owner
+                    receiver_node = proj_spec[0].receiver.owner
+                    if isinstance(sender_node, AutoAssociativeProjection):
+                        sender_node = proj_spec[0].sender.owner.owner_mech
+                    if isinstance(receiver_node, AutoAssociativeProjection):
+                        receiver_node = proj_spec[0].receiver.owner.owner_mech
+                    if sender_node in self.nodes and \
+                            receiver_node in self.nodes:
+                        self.add_projection(projection=proj_spec[0],
+                                            feedback=proj_spec[1])
+                    else:
+                        self.add_projection(sender=proj_spec[0].sender,
+                                            receiver=proj_spec[0].receiver,
+                                            feedback=proj_spec[1])
+                    del node.aux_components[node.aux_components.index(proj_spec)]
+
+            return invalid_aux_components
+
+        invalid_aux_components = []
+        keep_checking = True
+        while(keep_checking):
+            try:
+                invalid_aux_components = _implement_aux_components(node, context)
+                keep_checking = False
+            except CompositionError as e:
+                # If error is because INTERNAL Node has been specified as monitor_for_control on controller
+                if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
+                    # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
+                    if hasattr(node, 'allow_probes') and node.allow_probes is True:
+                        nested_comp = e.return_items.pop(COMPOSITION, None)
+                        errant_node = e.return_items.pop(NODE, None)
+                        nested_comp._add_required_node_role(errant_node, NodeRole.OUTPUT, context)
+                        self._analyze_graph(context)
+                        keep_checking = True
+                    # Otherwise, return usual error
+                    else:
+                        error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
+                                                    f"{node.name} to True."
+                        raise CompositionError(error_msg)
                 else:
-                    raise CompositionError("Invalid Component ({}) in {}'s aux_components. Must be a Mechanism, "
-                                           "Composition, Projection, or tuple."
-                                           .format(component.name, node.name))
-
-            invalid_aux_components.extend(self._get_invalid_aux_components(node))
-
-            # Add all Projections to the Composition
-            for proj_spec in [i for i in projections if not i[0] in invalid_aux_components]:
-                # The proj_spec assumes a direct connection between sender and receiver, and is therefore invalid if
-                # either are nested (i.e. projections between them need to be routed through a CIM). In these cases,
-                # a new projection is instantiated between sender and receiver instead of using the original spec.
-                # If the sender or receiver is an AutoAssociativeProjection, then the owner will be another projection
-                # instead of a mechanism, so owner_mech instead needs to be used instead.
-                sender_node = proj_spec[0].sender.owner
-                receiver_node = proj_spec[0].receiver.owner
-                if isinstance(sender_node, AutoAssociativeProjection):
-                    sender_node = proj_spec[0].sender.owner.owner_mech
-                if isinstance(receiver_node, AutoAssociativeProjection):
-                    receiver_node = proj_spec[0].receiver.owner.owner_mech
-                if sender_node in self.nodes and \
-                        receiver_node in self.nodes:
-                    self.add_projection(projection=proj_spec[0],
-                                        feedback=proj_spec[1])
-                else:
-                    self.add_projection(sender=proj_spec[0].sender,
-                                        receiver=proj_spec[0].receiver,
-                                        feedback=proj_spec[1])
-                del node.aux_components[node.aux_components.index(proj_spec)]
-
+                    assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
+                                  f"specified in 'monitor_for_control' arg for {node.name} of {self.name}"
         return invalid_aux_components
+        # return _implement_aux_components(node, context)
 
     def _get_invalid_aux_components(self, node):
         """
@@ -7201,33 +7229,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
             if self.controller.input_ports and self.controller.input_port.path_afferents:
-                # FIX 11/27/21: THIS IS A HACK TO MAKE INTERNAL NODES OF NESTED COMPOSITIONS AVAILABLE FOR MONITORING
-                #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
-                keep_checking = True
-                while(keep_checking):
-                    try:
-                        self._add_node_aux_components(controller, context)
-                        keep_checking = False
-                    except CompositionError as e:
-                        # If error is because INTERNAL Node has been specified as monitor_for_control on controller
-                        if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
-                            # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
-                            if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes is True:
-                                nested_comp = e.return_items.pop(COMPOSITION, None)
-                                node = e.return_items.pop(NODE, None)
-                                nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
-                                self._analyze_graph(context)
-                                keep_checking = True
-                            # Otherwise, return usual error
-                            else:
-                                error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
-                                                            f"{self.controller.name} to True."
-                                raise CompositionError(error_msg)
-                        else:
-                            assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
-                                          f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
-                    # else:
-                    #     raise CompositionError(e.error_value)
+                # # MODIFIED 12/8/21 OLD:
+                # # FIX 11/27/21: THIS MAKES INTERNAL NODES OF NESTED COMPOSITIONS AVAILABLE FOR MONITORING;
+                # #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
+                # keep_checking = True
+                # while(keep_checking):
+                #     try:
+                #         self._add_node_aux_components(controller, context)
+                #         keep_checking = False
+                #     except CompositionError as e:
+                #         # If error is because INTERNAL Node has been specified as monitor_for_control on controller
+                #         if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
+                #             # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
+                #             if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes is True:
+                #                 nested_comp = e.return_items.pop(COMPOSITION, None)
+                #                 node = e.return_items.pop(NODE, None)
+                #                 nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
+                #                 self._analyze_graph(context)
+                #                 keep_checking = True
+                #             # Otherwise, return usual error
+                #             else:
+                #                 error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
+                #                                             f"{self.controller.name} to True."
+                #                 raise CompositionError(error_msg)
+                #         else:
+                #             assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
+                #                           f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
+                # # MODIFIED 12/8/21 NEW:
+                self._add_node_aux_components(controller, context)
+                # MODIFIED 12/8/21 END
 
             # This is set by add_node() automatically if there is an objective_mechanism;
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)

@@ -1543,6 +1543,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # Pass state_input_ports_sepcs to ControlMechanism for instantiation and addition to OCM's input_ports
         super()._instantiate_input_ports(state_input_ports_specs, context=context)
 
+        if self.objective_mechanism:
+            self.objective_mechanism.allow_probes = self.allow_probes
+
         # Assign to self.state_input_ports attribute
         start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         stop = start + len(state_input_ports_specs) if state_input_ports_specs else 0
@@ -1609,7 +1612,6 @@ class OptimizationControlMechanism(ControlMechanism):
             monitored_ports = []
 
         return outcome_input_port_specs, outcome_value_sizes, monitored_ports
-
 
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
@@ -1722,14 +1724,12 @@ class OptimizationControlMechanism(ControlMechanism):
         # for input_port in input_ports_not_specified:
         for input_port in shadow_input_ports:
             input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
-            # MODIFIED 11/28/21 NEW:
             params = {SHADOW_INPUTS: input_port,
                       INTERNAL_ONLY:True}
             # Note: state_feature_functions has been validated _validate_params
             #       to have only a single function in for model-based agent_rep
             if self.state_feature_functions:
                 params.update({FUNCTION: self._parse_state_feature_function(self.state_feature_functions)})
-            # MODIFIED 11/28/21 END
             state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
                                                               port_type=InputPort,
                                                               owner=self,
