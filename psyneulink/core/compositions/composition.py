@@ -3963,10 +3963,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         list containing references to all invalid aux components
         """
 
-        # # MODIFIED 12/9/21 RECENT:
-        # def _implement_aux_components(node, context):
-        # MODIFIED 12/9/21 OLD OUTDENTED; RECENT INDENTED:
-        # Implement any components specified in node's aux_components attribute
         invalid_aux_components = []
         if hasattr(node, "aux_components"):
             # Collect the node's aux components that are not currently able to be added to the Composition;
@@ -3978,9 +3974,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if isinstance(component, (Mechanism, Composition)):
                     if isinstance(component, Composition):
                         component._analyze_graph()
-                    # MODIFIED 12/9/21 NEW:
-                    # FIX: ??ASSIGN NodeRole.PROBE TO INPUT/INTERNAL NODES HERE IF allow_probes IS SET
-                    # MODIFIED 12/9/21 END
                     self.add_node(component)
                 elif isinstance(component, Projection):
                     proj_tuple = (component, False)
@@ -4047,39 +4040,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 del node.aux_components[node.aux_components.index(proj_spec)]
 
         return invalid_aux_components
-
-        # # MODIFIED 12/9/21 RECENT:
-        # invalid_aux_components = []
-        # # # FIX 11/27/21: THIS ALLOWS INPUT AND INTERNAL NODES OF NESTED COMPOSITIONS TO BE AVAILABLE FOR MONITORING;
-        # # #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
-        # # If node has an allow_probes attribute, and it is set to True,
-        # #    then for INPUT and INTERNAL Nodes in a nested Composition,
-        # #    impose OUTPUT NodeRole to implement Projection(s) via output_CIMs
-        # keep_checking = True
-        # while(keep_checking):
-        #     try:
-        #         invalid_aux_components = _implement_aux_components(node, context)
-        #         keep_checking = False
-        #     except CompositionError as e:
-        #         # If error is because INTERNAL Node has been specified as monitor_for_control on controller
-        #         if e.return_items.pop(ERROR,None) == 'INCORRECT_NODE_ROLE':
-        #             # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
-        #             if hasattr(node, 'allow_probes') and node.allow_probes is True:
-        #                 nested_comp = e.return_items.pop(COMPOSITION, None)
-        #                 errant_node = e.return_items.pop(NODE, None)
-        #                 nested_comp._add_required_node_role(errant_node, NodeRole.PROBE, context)
-        #                 self._analyze_graph(context)
-        #                 keep_checking = True
-        #             # Otherwise, return usual error
-        #             else:
-        #                 error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
-        #                                             f"{node.name} to True."
-        #                 raise CompositionError(error_msg)
-        #         else:
-        #             assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
-        #                           f"specified in 'monitor_for_control' arg for {node.name} of {self.name}"
-        # return invalid_aux_components
-        # MODIFIED 12/9/21 END
 
     def _get_invalid_aux_components(self, node):
         """
@@ -4863,10 +4823,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   role: tc.enum(NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT)
                                   ):
         """Check for node in nested Composition
-        Return relevant port of relevant CIM if found and nested Composition in which it was found, else (None, None)
+        Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
+        Return relevant port of relevant CIM if found and nested Composition in which it was found; else None's
         """
 
         def handle_probes(node, comp):
+            # If:
+            #  - node is an INPUT or INTERNAL node in its Composition
+            #  - outermost Composition has controller
+            #  - allow_probes is set for it or its objective_mechanism
+            # Then:
+            #  - add PROBE as one of its roles
+            #  - call _analyze_graph() to create output_CIMs ports and projections for it
             if self.controller:
                 if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
                         or (self.controller.objective_mechanism
@@ -4874,6 +4842,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and self.controller.objective.mechanism.allow_probes is True)):
                     if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                         comp._add_required_node_role(node, NodeRole.PROBE)
+                        self._analyze_graph()
 
         nested_comp = CIM_port_for_nested_node = CIM = None
 
@@ -4939,6 +4908,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     CIM = nc.parameter_CIM
                 nested_comp = nc
                 break
+
+        # Return CIM_port_for_nested_node in both expected node and node_port slots
         return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
     # endregion NODES
@@ -5327,7 +5298,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the sender is in a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
-            # FIX: 12/9/21: IS NodeRole.OUTPUT OK HERE FOR nodes THAT ARE ACTUALLY NodeRole.PROBE?
+            # (note:  NodeRole.OUTPUT used even for PROBES, since those currently use same output_CIMS as OUTPUT nodes)
             sender, sender_output_port, graph_sender, sender_mechanism = \
                 self._get_nested_node_CIM_port(sender_mechanism,
                                                sender_output_port,
