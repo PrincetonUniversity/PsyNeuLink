@@ -2929,7 +2929,6 @@ class NodeRole(enum.Enum):
     INPUT = enum.auto()
     SINGLETON = enum.auto()
     INTERNAL = enum.auto()
-    PROBE = enum.auto()
     CYCLE = enum.auto()
     FEEDBACK_SENDER = enum.auto()
     FEEDBACK_RECEIVER = enum.auto()
@@ -2939,6 +2938,7 @@ class NodeRole(enum.Enum):
     LEARNING = enum.auto()
     TARGET = enum.auto()
     LEARNING_OBJECTIVE = enum.auto()
+    PROBE = enum.auto()
     OUTPUT = enum.auto()
     TERMINAL = enum.auto()
 
@@ -4827,14 +4827,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Return relevant port of relevant CIM if found and nested Composition in which it was found; else None's
         """
 
-        def handle_probes(node, comp):
-            # If:
-            #  - node is an INPUT or INTERNAL node in its Composition
-            #  - outermost Composition has controller
-            #  - allow_probes is set for it or its objective_mechanism
-            # Then:
-            #  - add PROBE as one of its roles
-            #  - call _analyze_graph() to create output_CIMs ports and projections for it
+        def assign_as_probe(node, comp):
+            """Try to assign node as PROBE
+            If:
+             - node is an INPUT or INTERNAL node in its Composition
+             - outermost Composition has controller
+             - allow_probes is set for it or its objective_mechanism
+            Then:
+             - add PROBE as one of its roles
+             - call _analyze_graph() to create output_CIMs ports and projections for it
+             - return True
+            Else:
+             - return False
+            """
             if self.controller:
                 if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
                         or (self.controller.objective_mechanism
@@ -4843,6 +4848,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                         comp._add_required_node_role(node, NodeRole.PROBE)
                         self._analyze_graph()
+                        return True
+
 
         nested_comp = CIM_port_for_nested_node = CIM = None
 
@@ -4855,17 +4862,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # This validation does not apply to ParameterPorts. Externally modulated nodes
                 # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes.
                 if not isinstance(node_port, ParameterPort):
-                    # if role not in owning_composition.nodes_to_roles[node]:
-                    try:
-                        handle_probes(node, owning_composition)
-                    except:
-                        # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                        #                        f"({nc.name}) but without required {role}.")
+                    if (role not in owning_composition.nodes_to_roles[node]
+                            and not assign_as_probe(node, owning_composition)):
                         raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
                                                f"({nc.name}) but without required {role}.",
                                                ERROR='INCORRECT_NODE_ROLE',
                                                COMPOSITION=owning_composition,
                                                NODE=node)
+                        # try:
+                        #     handle_probes(node, owning_composition)
+                        # except:
+                        #     # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
+                        #     #                        f"({nc.name}) but without required {role}.")
+                        #     raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
+                        #                            f"({nc.name}) but without required {role}.",
+                        #                            ERROR='INCORRECT_NODE_ROLE',
+                        #                            COMPOSITION=owning_composition,
+                        #                            NODE=node)
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
                 # FIX: 11/15/21:  ??WHY IS THIS COMMENTED OUT:
