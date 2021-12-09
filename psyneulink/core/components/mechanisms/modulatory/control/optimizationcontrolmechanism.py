@@ -9,7 +9,7 @@
 # **************************************  OptimizationControlMechanism *************************************************
 
 # FIX: REWORK WITH REFERENCES TO `outcome <OptimizationControlMechanism.outcome>`
-#      INTRODUCE SIMULATION INTO DISCUSSION OF COMPOSITOIN-BASED
+#      INTRODUCE SIMULATION INTO DISCUSSION OF COMPOSITION-BASED
 
 
 """
@@ -446,7 +446,7 @@ OptimizationControlMechanism is the controller, then it must meet the following 
 *State*
 ~~~~~~~
 
-The current state of the OptimizationControlMechanism -- or, more properly, its `
+The current state of the OptimizationControlMechanism -- or, more properly, its `agent_rep
 <OptimizationControlMechanism.agent_rep>` -- is determined by the OptimizationControlMechanism's current
 `state_feature_values <OptimizationControlMechanism.state_feature_values>` (see `below
 <OptimizationControlMechanism_State_Features>`) and `control_allocation <ControlMechanism.control_allocation>`.
@@ -460,7 +460,7 @@ the results of which are used together with the `costs <ControlMechanism_Costs_N
 *Input*
 ^^^^^^^
 
-An OptimizationControlMechanism has two types of `input_ports < <Mechanism_Base.input_ports>`, corresponding to the two
+An OptimizationControlMechanism has two types of `input_ports <Mechanism_Base.input_ports>`, corresponding to the two
 forms of input it requires: `state_input_ports <OptimizationControlMechanism.state_input_ports>` that provide the values
 of the Components specified as its `state_features <OptimizationControlMechanism_State_Features_Arg>`, and that are used
 as inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>` when its `evaluate <Composition.evaluate>` method
@@ -697,7 +697,7 @@ thus implementing a computation of `EVC <OptimizationControlMechanism_EVC>`.
 ^^^^^^^^
 
 The output of OptimizationControlMechanism are its `control_signals <ControlMechanism.control_signals>` that implement
-the `control_allocations <ControlMechanism.control_allocations>` it evaluates and optimizes. These their effects are
+the `control_allocations <ControlMechanism.control_allocation>` it evaluates and optimizes. These their effects are
 estimated over variation in the values of Components with random variables, then the OptimizationControlMechanism's
 `control_signals <ControlMechanism.control_signals>` include an additional *RANDOMIZATION_CONTROL_SIGNAL* that
 implements that variablity for the relevant Components, as described below.
@@ -985,9 +985,9 @@ class OptimizationControlMechanism(ControlMechanism):
         (see `agent_rep <OptimizationControlMechanism_Agent_Rep_Arg>` for additional details).  It can also be a
         `CompositionFunctionApproximator`, or subclass of one, used for `model-free
         <OptimizationControlMechanism_Model_Free>` optimization. If **agent_rep** is not specified, the
-        OptimizationControlMechanism is placed in `deferred_init` status until it is assigned as the `controller
-        <Composition.controller>` of a Composition, at which time that Composition is assigned as the `agent_rep
-        <agent_rep <OptimizationControlMechanism.agent_rep>`.
+        OptimizationControlMechanism is placed in `deferred_init <Component_Deferred_Init>` status until it is assigned
+        as the `controller <Composition.controller>` of a Composition, at which time that Composition is assigned as
+        the `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
     num_estimates : int : 1
         specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` used
@@ -997,11 +997,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
     random_variables : Parameter or list[Parameter] : default ALL
         specifies the Components with random variables to be randomized over different estimates
-        of each `control_allocation <OptimizationControlMechanism.control_allocation>`;  these
-        must be in the `agent_rep <OptimizationControlMechanism.agent_rep>` and have a `seed` `Parameter`.
-        but all Parameters. By default, all such Components in the `agent_rep <OptimizationControlMechanism.agent_rep>`
-        are included (listed in its `random_variables <Composition.random_variables>` attribute);  see
-        `random_variables <OptimizationControlMechanism.random_variables>` for additional details.
+        of each `control_allocation <ControlMechanism.control_allocation>`;  these must be in the `agent_rep
+        <OptimizationControlMechanism.agent_rep>` and have a `seed` `Parameter`. By default, all such Components in
+        the `agent_rep <OptimizationControlMechanism.agent_rep>` (listed in its `random_variables
+        <Composition.random_variables>` attribute) are included (see `random_variables
+        <OptimizationControlMechanism.random_variables>` for additional information).
 
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
@@ -1066,7 +1066,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's
-        `OptimizationControlMechanism_State_Features>` (each of which is a 1d array).
+        `OptimizationControlMechanism_State_Features` (each of which is a 1d array).
 
     state_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `InputPorts <InputPort>` that receive `Projections <Projection>`
