@@ -1433,8 +1433,10 @@ class ShowGraph():
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
                         # Validate the Projection is from an OUTPUT node
+                        #  or a PROBE node if allow_probes is set for a controller or its objective_mechanism
                         if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
-                             NodeRole.OUTPUT not in composition.nodes_to_roles[sndr_output_node_proj_owner])):
+                             not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE} if
+                                     role in composition.nodes_to_roles[sndr_output_node_proj_owner]))):
                             raise ShowGraphError(f"Projection to output_CIM of {composition.name} "
                                                    f"from node {sndr_output_node_proj_owner} that is not "
                                                    f"an {NodeRole.OUTPUT} node.")
