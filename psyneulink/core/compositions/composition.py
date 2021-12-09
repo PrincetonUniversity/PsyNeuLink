@@ -3051,6 +3051,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     mechanisms : `MechanismList`
         list of Mechanisms in Composition, that provides access to some of they key attributes.
 
+    random_variables : list[Component]
+        list of Components in Composition with variables that call a randomization function.
+
+        .. technical_note::
+           These are Components with a seed `Parameter`.
+
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
@@ -10270,6 +10276,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [input_port.parameters.value.get(context) for input_port in self.input_CIM.input_ports]
 
     @property
+    def output_port(self):
+        """Return the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
+        return self.output_CIM.output_ports[0]
+
+    @property
     def output_ports(self):
         """Return all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports
@@ -10355,17 +10366,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return stateful_nodes
 
     @property
-    def output_port(self):
-        """Return the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
-        return self.output_CIM.output_ports[0]
-
-    @property
     def class_parameters(self):
         return self.__class__.parameters
 
     @property
     def stateful_parameters(self):
         return [param for param in self.parameters if param.stateful]
+
+    @property
+    def random_variables(self):
+        """Return list of Components with seed Parameters (i.e., ones that that call a random function)."""
+        return [param._owner._owner for param in self.all_dependent_parameters('seed').keys()]
 
     @property
     def _dependent_components(self):
