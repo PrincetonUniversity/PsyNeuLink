@@ -3051,6 +3051,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     mechanisms : `MechanismList`
         list of Mechanisms in Composition, that provides access to some of they key attributes.
 
+    random_variables : list[Component]
+        list of Components in Composition with variables that call a randomization function
+        .. technical_note::
+           These are Components with a seed `Parameter`.
+
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
@@ -10368,9 +10373,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [param for param in self.parameters if param.stateful]
 
     @property
-    def random_parameters(self):
-        """Return ParameterPorts for seeds of all Parameters that call random()"""
-        return [param for param in self.all_dependent_parameters('seed').keys()]
+    def random_variables(self):
+        """Return Components with seed Parameters (that is, ones that that call a randomization function."""
+        return [param._owner._owner for param in self.all_dependent_parameters('seed').keys()]
 
     @property
     def _dependent_components(self):

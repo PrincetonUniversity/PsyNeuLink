@@ -1116,7 +1116,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :read only: True
 
                 output_ports
-                    see `output_ports <ControlMechanism.output_ports>`
+                    see `output_ports <Mechanism_Base.output_ports>`
 
                     :default value: None
                     :type:
