@@ -375,7 +375,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   * **allow_probes** -- this argument is specific to OptimizationControlMechanism, and allows values of Components
     of a `nested Composition <Composition_Nested>` other than its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`
-    can be specified in the **monitor_for_control** argument of the OptimizationControlMechanism's constructor or,
+    to be specified in the **monitor_for_control** argument of the OptimizationControlMechanism's constructor or,
     if **objective_mechanism** is specified, in the **monitor** argument of the ObjectiveMechanism's constructor (see
     `ControlMechanism_Monitor_for_Control` for additional information about these specifications).  It can take the
     following values:
@@ -599,12 +599,12 @@ COMMENT
 
 If an OptimizationControlMechanism is not assigned an `objective_mechanism <ControlMechanism.objective_mechanism>`,
 then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
-`monitor_for_control <ControlMechanism.monitor_for_control>`, and its `outcome_input_ports_option
+`monitor_for_control <ControlMechanism.monitor_for_control>`, `outcome_input_ports_option
 <ControlMechanism.outcome_input_ports_option>` and `allow_probes <OptimizationControlMechanism.allow_probes>`
 attributes, specified in the corresponding arguments of its constructor (see `Outcomes arguments
 <OptimizationControlMechanism_Outcome_Args>`).  The value(s) of the specified Components are assigned as the
-OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute, which is used to compute the `net_outcome
-<ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>`.
+OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute, which is used to compute the
+`net_outcome <ControlMechanism.net_outcome>` of executing its `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
 .. _OptimizationControlMechanism_Probes:
 
@@ -612,25 +612,26 @@ OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute, w
 
 The `allow_probes <OptimizationControlMechanism.allow_probes>` attribute is specific to OptimizationControlMechanism
 and its subclasses; it allows the values of the items listed in `monitor_for_control
-<ControlMechanism.monitor_for_control>` to be INTERNAL `Nodes <Composition_Nodes>` of a `nested Composition
-<Composition_Nested>` to be monitored and included in the computation of `outcome <ControlMechanism.outcome>`
-(ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested Composition) -- these can be thought of as
-providing access to "latent variables" of the Composition being evaluated; that is, ones that do not contribute
-directly to the Composition's `results <Composition_Execution_Results>`. This applies both to items that are monitored
-directly by the OptimizationControlMechanism or via its ObjectiveMechanism (see `allow_probes
-<OptimizationControlMechanism_Allow_Probes>` above for additional details).
+<ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
+<Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be monitored and included in the computation
+of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
+Composition).  This can be thought of as providing access to "latent variables" of the Composition being evaluated;
+that is, ones that do not contribute directly to the Composition's `results <Composition_Execution_Results>`. This
+applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism
+(see `allow_probes <OptimizationControlMechanism_Allow_Probes>` above for additional details).
 
   .. technical_note::
 
        .. note::
           If allow_probes is True and any `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` Nodes of a
-          `nested Composition <Composition_Nested>` are specified, they project to the OptimizationControlMechanism
+          `nested Composition <Composition_Nested>` are specified, they are assigned the `NodeRole` `PROBE
+          <NodeRole.PROBE>` of the Composition to which they belong, and project to the OptimizationControlMechanism
           via the nested Composition's `output_CIM <Composition.output_CIM>` and those of any intervening Compositions,
-          to one of the Composition at the same level as the OptimizationControlMechanism, that in turn project to
+          to one of the Composition at the same level as the OptimizationControlMechanism, that in turn projects to
           the corresponding InputPort of the OptimizationControlMechanism's `outcome_input_ports
-          <ControlMechanism.outcome_input_ports>`. Note that their values will also be included in `results
-          <Composition.results>` attribute of the nested Composition and all intervening ones, including the one to
-          which the OptimizationControlMechanism belongs.
+          <ControlMechanism.outcome_input_ports>`.  Although they project via `output_CIMs <Composition.output_CIM>`,
+          their values are *not* included in `results <Composition.results>` attribute of the nested Composition, nor
+          any of the ones in which it is nested, including the one to which the OptimizationControlMechanism belongs.
 
           If allow_probes is *DIRECT*, `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` Nodes of a
           `nested Composition <Composition_Nested>` project *directly* to the corresponding `outcome_input_ports
