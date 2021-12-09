@@ -1528,11 +1528,11 @@ class OptimizationControlMechanism(ControlMechanism):
              - every outcome_input_ports receive Projections from within the agent_rep if it is a Composition.
 
         If no **state_features** are specified in the constructor, assign ones for INPUT Nodes of owner.
-          - warn for model-free `model-free optimization <<OptimizationControlMechanism_Model_Based>`.
-          - ignore here for `model-based optimization <<OptimizationControlMechanism_Model_Based>`
+          - warn for model-free `model-free optimization <OptimizationControlMechanism_Model_Based>`.
+          - ignore here for `model-based optimization <OptimizationControlMechanism_Model_Based>`
             (handled in _update_state_input_ports_for_controller)
 
-        See`state_features <OptimizationControlMechanism_State_Features_Arg>` and
+        See `state_features <OptimizationControlMechanism_State_Features_Arg>` and
         `OptimizationControlMechanism_State_Features` for additional details.
         """
 
