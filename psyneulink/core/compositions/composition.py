@@ -4866,14 +4866,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Return relevant port of relevant CIM if found and nested Composition in which it was found, else (None, None)
         """
 
-        def handle_probes(node, comp, context):
+        def handle_probes(node, comp):
             if self.controller:
-                if ((hasattr(ALLOW_PROBES, self.controller) and self.controller.allow_probes is True)
+                if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
                         or (self.controller.objective_mechanism
-                            and hasattr(ALLOW_PROBES, self.controller.objective_mechanism)
+                            and hasattr(self.controller.objective_mechanism, ALLOW_PROBES)
                             and self.controller.objective.mechanism.allow_probes is True)):
                     if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
-                        comp._add_required_node_role(node, NodeRole.PROBE, context)
+                        comp._add_required_node_role(node, NodeRole.PROBE)
 
         nested_comp = CIM_port_for_nested_node = CIM = None
 
@@ -4888,7 +4888,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if not isinstance(node_port, ParameterPort):
                     # if role not in owning_composition.nodes_to_roles[node]:
                     try:
-                        handle_probes(node, owning_composition, context)
+                        handle_probes(node, owning_composition)
                     except:
                         # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
                         #                        f"({nc.name}) but without required {role}.")
