@@ -4039,6 +4039,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         invalid_aux_components = []
         # # FIX 11/27/21: THIS ALLOWS INPUT AND INTERNAL NODES OF NESTED COMPOSITIONS TO BE AVAILABLE FOR MONITORING;
         # #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
+        # If node has an allow_probes attribute, and it is set to True,
+        #    then for INPUT and INTERNAL Nodes in a nested Composition,
+        #    impose OUTPUT NodeRole to implement Projection(s) via output_CIMs
         keep_checking = True
         while(keep_checking):
             try:
