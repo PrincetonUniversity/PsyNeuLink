@@ -4037,6 +4037,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return invalid_aux_components
 
         invalid_aux_components = []
+        # # FIX 11/27/21: THIS ALLOWS INPUT AND INTERNAL NODES OF NESTED COMPOSITIONS TO BE AVAILABLE FOR MONITORING;
+        # #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
         keep_checking = True
         while(keep_checking):
             try:
@@ -4061,7 +4063,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
                                   f"specified in 'monitor_for_control' arg for {node.name} of {self.name}"
         return invalid_aux_components
-        # return _implement_aux_components(node, context)
 
     def _get_invalid_aux_components(self, node):
         """
@@ -7229,35 +7230,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
             if self.controller.input_ports and self.controller.input_port.path_afferents:
-                # # MODIFIED 12/8/21 OLD:
-                # # FIX 11/27/21: THIS MAKES INTERNAL NODES OF NESTED COMPOSITIONS AVAILABLE FOR MONITORING;
-                # #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
-                # keep_checking = True
-                # while(keep_checking):
-                #     try:
-                #         self._add_node_aux_components(controller, context)
-                #         keep_checking = False
-                #     except CompositionError as e:
-                #         # If error is because INTERNAL Node has been specified as monitor_for_control on controller
-                #         if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
-                #             # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
-                #             if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes is True:
-                #                 nested_comp = e.return_items.pop(COMPOSITION, None)
-                #                 node = e.return_items.pop(NODE, None)
-                #                 nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
-                #                 self._analyze_graph(context)
-                #                 keep_checking = True
-                #             # Otherwise, return usual error
-                #             else:
-                #                 error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
-                #                                             f"{self.controller.name} to True."
-                #                 raise CompositionError(error_msg)
-                #         else:
-                #             assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
-                #                           f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
-                # # MODIFIED 12/8/21 NEW:
-                self._add_node_aux_components(controller, context)
-                # MODIFIED 12/8/21 END
+               self._add_node_aux_components(controller, context)
 
             # This is set by add_node() automatically if there is an objective_mechanism;
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)

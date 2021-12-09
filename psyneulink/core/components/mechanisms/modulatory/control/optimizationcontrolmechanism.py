@@ -278,13 +278,13 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   * *agent_rep is a CompositionFunctionApproximator* -- the **state_features** specify the inputs to the
     CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` method.  This is not
-    done automatically (see note below).
+    done automatically (see warning below).
 
         .. warning::
            The **state_features** specified when the `agent_rep <OptimizationControlMechanism.agent_rep>` is a
            `CompositionFunctionApproximator` must align with the arguments of its `evaluate
            <CompositionFunctionApproximator.evaluate>` method.  Since the latter cannot always be determined automatically,
-           the `state_input_ports <OptimizationControlMechanism.state_input_ports>`) cannot be created automatically, nor
+           the `state_input_ports <OptimizationControlMechanism.state_input_ports>` cannot be created automatically, nor
            can the **state_features** specification be validated;  thus, specifying inappropriate **state_features** may
            produce errors that are unexpected or difficult to interpret.
 
@@ -299,18 +299,18 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   The specifications in the **state_features** argument are used to construct the `state_input_ports
   <OptimizationControlMechanism.state_input_ports>`, and can be any of the following, used either singly or in a list:
 
-  * *InputPort specification* -- this creates an InputPort as one of the OptimizationControlMechanism's
+  * *InputPort specification* -- this creates an `InputPort` as one of the OptimizationControlMechanism's
     `state_input_ports <OptimizationControlMechanism.state_input_ports>` that `shadows <InputPort_Shadow_Inputs>` the
     input to the specified InputPort;  that is, the value of which is used as the corresponding value of the
     OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
 
     .. technical_note::
-       The InputPorts specified as state_features are marked as `internal_only <InputPorts.internal_only>` = `True`;
+      The InputPorts specified as state_features are marked as `internal_only <InputPorts.internal_only>` = `True`.
 
   * *OutputPort specification* -- this can be any form of `OutputPort specification <OutputPort_Specification>`
     for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition; the `value <OutputPort.value>`
     of the specified OutputPort is used as the corresponding value of the OptimizationControlMechanism's
-    `state_feature_values <OptimizationControlMechanism.state_feature_values>`
+    `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
 
   * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, it must be an
     `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, and the Mechanism's `primary InputPort
@@ -374,7 +374,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   .. _OptimizationControlMechanism_Allow_Probes:
 
   * **allow_probes** -- this argument is specific to OptimizationControlMechanism, and allows values of Components
-    of a `nested Composition <Composition_Nested>` other than its `OUTPUT <NodeRole.OUTP>` `Nodes <Composition_Nodes>`
+    of a `nested Composition <Composition_Nested>` other than its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`
     can be specified in the **monitor_for_control** argument of the OptimizationControlMechanism's constructor or,
     if **objective_mechanism** is specified, in the **monitor** argument of the ObjectiveMechanism's constructor (see
     `ControlMechanism_Monitor_for_Control` for additional information about these specifications).  It can take the
@@ -624,8 +624,8 @@ directly by the OptimizationControlMechanism or via its ObjectiveMechanism (see 
 
        .. note::
           If allow_probes is True and any `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` Nodes of a
-          `nested Composition <Composition_Nested>` are specified, they project to the OptimizationControlMechanism via
-          the nested Composition's `output_CIM <Composition.output_CIM>` and those of any intervening Compositions,
+          `nested Composition <Composition_Nested>` are specified, they project to the OptimizationControlMechanism
+          via the nested Composition's `output_CIM <Composition.output_CIM>` and those of any intervening Compositions,
           to one of the Composition at the same level as the OptimizationControlMechanism, that in turn project to
           the corresponding InputPort of the OptimizationControlMechanism's `outcome_input_ports
           <ControlMechanism.outcome_input_ports>`. Note that their values will also be included in `results
@@ -1099,14 +1099,14 @@ class OptimizationControlMechanism(ControlMechanism):
         if False, items specified in the `monitor_for_control <ControlMechanism.monitor_for_control>` are all `OUTPUT
         <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` if they are in a `nested Composition<Composition_Nested>`;
         if True, they may be `INPUT <NodeRole.INPUT>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes <Composition_Nodes>`
-        of `nested Composition <Composition_Nested>` (see `OptimizationControlMechanism_Probes` for additional
-        information).
+        of `nested Composition <Composition_Nested>` (see `allow probes <OptimizationControlMechanism_Probes>` for
+        additional information).
 
     outcome_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `OutputPorts <OutputPort>` that receive `Projections <Projection>`
         from either its `objective_mechanism <ControlMechanism.objective_mechanism>` or the Components listed in
         its `monitor_for_control <ControlMechanism.monitor_for_control>` attribute, the values of which are used
-        to compute the `net_outcome <ControlMechanism.net_outcome>` of executing the agent_rep
+        to compute the `net_outcome <ControlMechanism.net_outcome>` of executing the `agent_rep
         <OptimizationControlMechanism.agent_rep>` in a given `OptimizationControlMechanism_State`
         (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
 
@@ -1120,7 +1120,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     random_variables : Parameter or List[Parameter]
         list of the Components with variables that are randomized over estimates for a given `control_allocation
-        <OptimizationControlMechanism.control_allocation>`;  by default, all Components in the `agent_rep
+        <ControlMechanism.control_allocation>`;  by default, all Components in the `agent_rep
         <OptimizationControlMechanism.agent_rep>` with random variables are included (listed in its `random_variables
         <Composition.random_variables>` attribute);  see `OptimizationControlMechanism_Estimation_Randomization`
         for additional details.
