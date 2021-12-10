@@ -594,7 +594,7 @@ class TestControlSpecification:
             "[pnl.ControlSignal(modulates=('slope', a), allocation_samples=[1, 2])]",
         ]
     )
-    @pytest.mark.parametrize('ocm_num_estimates', [None, 1])
+    @pytest.mark.parametrize('ocm_num_estimates', [None, 1, 2])
     @pytest.mark.parametrize(
         'slope, intercept',
         [
