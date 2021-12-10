@@ -1742,7 +1742,10 @@ class OptimizationControlMechanism(ControlMechanism):
             # MODIFIED 11/20/21 END
             self.output_ports[i] = control_signal
 
-        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
+        self.defaults.value = np.tile(
+            control_signal.parameters.variable.default_value,
+            (len(self.output_ports), 1)
+        )
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_function(self, function, function_params=None, context=None):
