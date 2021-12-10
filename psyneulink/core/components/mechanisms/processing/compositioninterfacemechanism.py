@@ -175,3 +175,18 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             if port not in self.output_ports:
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
+
+    def _sender_is_probe(self, output_port, comp):
+        #  CIM MAP ENTRIES:  [SENDER PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
+        from psyneulink.core.compositions.composition import NodeRole
+        # Get sender to input_port of CIM for corresponding output_port
+        port_map = output_port.owner.port_map
+        input_port = [port_map[k][0] for k in port_map if port_map[k][1] is output_port]
+        assert len(input_port)==1, f"PROGRAM ERROR: Expected only 1 input_port for {output_port.name} " \
+                                   f"in port_map for {output_port.owner}; found {len(input_port)}."
+        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
+        sender = input_port[0].path_afferents[0].sender
+        if not isinstance(sender.owner, CompositionInterfaceMechanism):
+            return NodeRole.PROBE in comp.get_roles_by_node(sender.owner)
+        return self._sender_is_probe(sender, sender.owner.composition)

@@ -384,7 +384,7 @@ class TestControlSpecification:
                )
               ]
     @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, objective_mechanism, error_type, err_msg',
-                             params, ids=id)
+                             params, ids=params[0])
     def test_args_specific_to_ocm(self, id, agent_rep, state_features, monitor_for_control,
                                   allow_probes, objective_mechanism, error_type,err_msg):
         """Test args specific to OptimizationControlMechanism
@@ -394,6 +394,8 @@ class TestControlSpecification:
         :param id: """
         # FIX: ADD VERSION WITH agent_rep = CompositionFuntionApproximator
         #      ADD TESTS FOR SEPARATE AND CONCATENATE
+
+        from psyneulink.core.globals.utilities import convert_to_list
 
         I = pnl.ProcessingMechanism(name='I')
         icomp = pnl.Composition(nodes=I, name='INNER COMP')
@@ -437,6 +439,9 @@ class TestControlSpecification:
                                                    )
             ocomp.add_controller(ocm)
             ocomp._analyze_graph()
+            if allow_probes and B in convert_to_list(monitor_for_control):
+                # If this fails, could be due to ordering of ports in ocomp.output_CIM (current assumes probe is on 0)
+                assert ocomp.output_CIM._sender_is_probe(ocomp.output_CIM.output_ports[0], ocomp)
 
         else:
             with pytest.raises(error_type) as err:

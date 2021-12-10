@@ -4724,7 +4724,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get node port mappings for cim
             node_port_to_cim_port_tuples_mapping = cim.port_map
             # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
-            # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
+            # nodes within self.nodes (cim_node_indices) and ports within nodes (cim_port_within_node_indices
             cim_node_indices = []
             cim_port_within_node_indices = []
             for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
