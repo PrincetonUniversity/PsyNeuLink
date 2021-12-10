@@ -175,3 +175,41 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             if port not in self.output_ports:
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
+
+    def _get_destination_node_for_input_port(self, input_port, comp):
+        """Return Port, Node and Composition for destination of projection from input_CIM to (possibly nested) node"""
+        #  CIM MAP ENTRIES:  [RECEIVER PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
+        from psyneulink.core.compositions.composition import NodeRole
+        # Get sender to input_port of CIM for corresponding output_port
+        port_map = input_port.owner.port_map
+        output_port = [port_map[k][1] for k in port_map if port_map[k][0] is input_port]
+        assert len(output_port)==1, f"PROGRAM ERROR: Expected only 1 output_port for {input_port.name} " \
+                                   f"in port_map for {input_port.owner}; found {len(output_port)}."
+        assert len(output_port[0].efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
+                                                 f"just one efferet; has {len(output_port.efferents)}."
+        receiver = output_port[0].efferents[0].receiver
+        if not isinstance(receiver.owner, CompositionInterfaceMechanism):
+            return receiver, receiver.owner, comp
+        return self._get_destination_node_for_input_port(receiver, receiver.owner.composition)
+
+    def _get_source_node_for_output_port(self, output_port, comp):
+        """Return Port, Node and Composition  for source of projection to output_CIM from (possibly nested) node"""
+        #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
+        from psyneulink.core.compositions.composition import NodeRole
+        # Get sender to input_port of CIM for corresponding output_port
+        port_map = output_port.owner.port_map
+        input_port = [port_map[k][0] for k in port_map if port_map[k][1] is output_port]
+        assert len(input_port)==1, f"PROGRAM ERROR: Expected only 1 input_port for {output_port.name} " \
+                                   f"in port_map for {output_port.owner}; found {len(input_port)}."
+        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
+        sender = input_port[0].path_afferents[0].sender
+        if not isinstance(sender.owner, CompositionInterfaceMechanism):
+            return sender, sender.owner, comp
+        return self._get_source_node_for_output_port(sender, sender.owner.composition)
+
+    def _sender_is_probe(self, output_port):
+        """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""
+        from psyneulink.core.compositions.composition import NodeRole
+        port, node, comp = self._get_source_node_for_output_port(output_port, self.composition)
+        return NodeRole.PROBE in comp.get_roles_by_node(node)
