@@ -3,7 +3,7 @@ graph-scheduler>=0.2.0, <1.0.1
 dill<=0.32
 elfi<0.8.3
 graphviz<0.20.0
-grpcio<1.42.0
+grpcio<1.43.0
 grpcio-tools<1.43.0
 llvmlite<0.38
 matplotlib<3.4.4
