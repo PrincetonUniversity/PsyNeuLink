@@ -395,7 +395,6 @@ class TestControlSpecification:
         # FIX: ADD VERSION WITH agent_rep = CompositionFuntionApproximator
         #      ADD TESTS FOR SEPARATE AND CONCATENATE
 
-
         I = pnl.ProcessingMechanism(name='I')
         icomp = pnl.Composition(nodes=I, name='INNER COMP')
 
