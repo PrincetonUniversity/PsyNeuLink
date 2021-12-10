@@ -4840,26 +4840,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Else:
              - return False
             """
+            err_msg = f"{node.name} found in nested {Composition.__name__} of {self.name} " \
+                      f"({nc.name}) but without required {role}."
+
             if self.controller:
                 # Check if allow_probes is set on controller or it objective_mechanism
                 if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
                         or (self.controller.objective_mechanism
                             and hasattr(self.controller.objective_mechanism, ALLOW_PROBES)
-                            and self.controller.objective.mechanism.allow_probes is True)):
+                            and self.controller.objective_mechanism.allow_probes is True)):
                     # Check if Node is an INPUT or INTERNAL
                     if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                         comp._add_required_node_role(node, NodeRole.PROBE)
                         self._analyze_graph()
                         return
                 if self.controller.objective_mechanism:
-                    raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                       f"({nc.name}) but without required {role}. Try setting '{ALLOW_PROBES}' "
-                       f"argument of ObjectiveMechanism for {self.controller.name} to 'True'.")
-                raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                                       f"({nc.name}) but without required {role}. Try setting '{ALLOW_PROBES}' "
-                                       f"argument of {self.controller.name} to 'True'.")
-            raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                                   f"({nc.name}) but without required {role}.")
+                    raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument of ObjectiveMechanism "
+                                                     f"for {self.controller.name} to 'True'.")
+                raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument "
+                                                 f"of {self.controller.name} to 'True'.")
+            raise CompositionError(err_msg)
 
         nested_comp = CIM_port_for_nested_node = CIM = None
 
