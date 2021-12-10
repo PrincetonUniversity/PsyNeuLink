@@ -576,6 +576,71 @@ class TestControlSpecification:
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
 
+    @pytest.mark.parametrize(
+        'ocm_control_signals',
+        [
+            'None',
+            "[pnl.ControlSignal(modulates=('slope', a))]",
+            "[pnl.ControlSignal(modulates=('slope', a), allocation_samples=[1, 2])]",
+        ]
+    )
+    @pytest.mark.parametrize('ocm_num_estimates', [None, 1])
+    @pytest.mark.parametrize(
+        'slope, intercept',
+        [
+            ((1.0, pnl.CONTROL), None),
+            ((1.0, pnl.CONTROL), (1.0, pnl.CONTROL)),
+        ]
+    )
+    def test_transfer_mechanism_and_ocm_variations(
+        self,
+        slope,
+        intercept,
+        ocm_num_estimates,
+        ocm_control_signals,
+    ):
+        a = pnl.TransferMechanism(
+            name='a',
+            function=pnl.Linear(
+                slope=slope,
+                intercept=intercept,
+            )
+        )
+
+        comp = pnl.Composition()
+        comp.add_node(a)
+
+        ocm_control_signals = eval(ocm_control_signals)
+        ocm = pnl.OptimizationControlMechanism(
+            agent_rep=comp,
+            search_space=[[0, 1]],
+            num_estimates=ocm_num_estimates,
+            control_signals=ocm_control_signals,
+        )
+        comp.add_controller(ocm)
+
+        # assume tuple is a control spec
+        if (
+            isinstance(slope, tuple)
+            or (
+                ocm_control_signals is not None
+                and any(cs.name == 'slope' for cs in ocm_control_signals)
+            )
+        ):
+            assert 'a[slope] ControlSignal' in ocm.control.names
+        else:
+            assert 'a[slope] ControlSignal' not in ocm.control.names
+
+        if (
+            isinstance(intercept, tuple)
+            or (
+                ocm_control_signals is not None
+                and any(cs.name == 'intercept' for cs in ocm_control_signals)
+            )
+        ):
+            assert 'a[intercept] ControlSignal' in ocm.control.names
+        else:
+            assert 'a[intercept] ControlSignal' not in ocm.control.names
 
 class TestControlMechanisms:
 
