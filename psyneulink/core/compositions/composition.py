@@ -9127,8 +9127,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             Returns
             ---------
-
-            output value of the final Mechanism executed in the Composition : various
+            output_values : List
+            These are the values of the Composition's output_CIM.output_ports, excluding those the source of which
+            are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.
         """
 
         with Report(self,
@@ -9764,6 +9765,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign output_values
             output_values = []
             for port in self.output_CIM.output_ports:
+                # Don't report output for PROBE nodes (output_CIM is just used as conduit)
+                # FIX: 12/9/21 - ADD TEST FOR allow_probe HERE ONCE ADDED TO COMPOSITION
+                #                AND ONLY CHECK FOR PROBES IF IT IS TRUE
+                if self.output_CIM._sender_is_probe(port):
+                    continue
                 output_values.append(port.parameters.value._get(context))
 
             # Animate output_CIM
@@ -9825,6 +9831,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return output_values
 
     def __call__(self, *args, **kwargs):
+        """Execute Composition of any args are provided;  else simply return results of last execution.
+        This allows Composition, after it has been constructed, to be run simply by calling it directly.
+        """
         if not args and not kwargs:
             if self.results:
                 return self.results[-1]
@@ -10308,7 +10317,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
-        return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
+        return [output_port.parameters.value.get(context)
+                for output_port in self.output_CIM.output_ports
+                if not self.output_CIM._sender_is_probe(output_port)]
 
     @property
     def shadowing_dict(self):

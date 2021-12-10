@@ -354,33 +354,33 @@ class TestControlSpecification:
                ),
               ("state_features_test_internal",
                "icomp", "B", "I", True, None, pnl.CompositionError,
-               'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP that is not an INPUT Node of '
-               'that Composition is not currently supported.'
+               "Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP "
+               "that is not an INPUT Node of that Composition is not currently supported."
                ),
               ("state_features_test_not_in_agent_rep",
                "icomp", "A", "I", True, None, pnl.OptimizationControlMechanismError,
-               "OCM, being used as controller for model-based optimization of INNER COMP, has 'state_features' specified "
-               "(['Shadowed input of A']) that are missing from the Composition or any nested within it."
+               "OCM, being used as controller for model-based optimization of INNER COMP, has 'state_features' "
+               "specified (['Shadowed input of A']) that are missing from the Composition or any nested within it."
                ),
               ("monitor_for_control_test_not_in_agent_rep",
                "icomp", "I", "B", True, None, pnl.OptimizationControlMechanismError,
-               'OCM has \'outcome_ouput_ports\' that receive Projections from the following Components '
-               'that do not belong to its agent_rep (INNER COMP): [\'B\'].'
+               "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
+               "that do not belong to its agent_rep (INNER COMP): ['B']."
                ),
               ("monitor_for_control_with_obj_mech_test",
                "icomp", "I", None, True, "OBJ_MECH", pnl.OptimizationControlMechanismError,
-               'OCM has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
-               'that do not belong to its agent_rep (INNER COMP): [\'B\'].'
+               "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
+               "that do not belong to its agent_rep (INNER COMP): ['B']."
                ),
               ("probe_error_test",
                "mcomp", "I", "B", False, None, pnl.CompositionError,
-               "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without " \
-               "required NodeRole.OUTPUT. Try setting \'allow_probes\' argument of OCM to 'True'."
+               "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without "
+               "required NodeRole.OUTPUT. Try setting 'allow_probes' argument of OCM to 'True'."
                ),
               ("probe_error_obj_mech_test",
                "mcomp", "I", None, False, "OBJ_MECH", pnl.CompositionError,
-               'B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. '
-               'Try setting \'allow_probes\' argument of ObjectiveMechanism for OCM to \'True\'.'
+               "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
+               "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
                )
               ]
     @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, objective_mechanism, error_type, err_msg',
@@ -441,7 +441,7 @@ class TestControlSpecification:
             ocomp._analyze_graph()
             if allow_probes and B in convert_to_list(monitor_for_control):
                 # If this fails, could be due to ordering of ports in ocomp.output_CIM (current assumes probe is on 0)
-                assert ocomp.output_CIM._sender_is_probe(ocomp.output_CIM.output_ports[0], ocomp)
+                assert ocomp.output_CIM._sender_is_probe(ocomp.output_CIM.output_ports[0])
 
         else:
             with pytest.raises(error_type) as err:
