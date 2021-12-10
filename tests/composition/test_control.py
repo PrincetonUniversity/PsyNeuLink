@@ -621,9 +621,22 @@ class TestControlSpecification:
         comp.add_node(a)
 
         ocm_control_signals = eval(ocm_control_signals)
+
+        search_space_len = len(
+            set([
+                # value of parameter name in 'modulates' kwarg
+                p[0]
+                for cs in ocm_control_signals
+                for p in cs._init_args['projections']
+            ]) if ocm_control_signals is not None else set()
+            .union({'slope'} if slope is not None else set())
+            .union({'intercept'} if intercept is not None else set())
+        )
+        search_space = [[0, 1]] * search_space_len
+
         ocm = pnl.OptimizationControlMechanism(
             agent_rep=comp,
-            search_space=[[0, 1]],
+            search_space=search_space,
             num_estimates=ocm_num_estimates,
             control_signals=ocm_control_signals,
         )
