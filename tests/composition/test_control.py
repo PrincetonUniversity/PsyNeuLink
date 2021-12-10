@@ -345,12 +345,12 @@ class TestControlSpecification:
     #     # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
 
     test_names = [
-        "allowable1",
-        "allowable2",
-        "state_features_test_internal",
-        "state_features_test_not_in_agent_rep",
-        "monitor_for_control_test_not_in_agent_rep",
-        "monitor_for_control_with_obj_mech_test",
+        # "allowable1",
+        # "allowable2",
+        # "state_features_test_internal",
+        # "state_features_test_not_in_agent_rep",
+        # "monitor_for_control_test_not_in_agent_rep",
+        # "monitor_for_control_with_obj_mech_test",
         "probe_error_test"]
     @pytest.mark.parametrize("test", test_names, ids=test_names)
     def test_args_specific_to_ocm(self, test):
@@ -411,8 +411,8 @@ class TestControlSpecification:
             error_type = pnl.OptimizationControlMechanismError
 
         if test == "probe_error_test":  # test for monitor_for_control spec that is INTERNAL Node
-            error_msg = 'B found in nested Composition of OUTER COMP (MIDDLE COMP) but without ' \
-                        'required NodeRole.OUTPUT. Try setting \'allow_probes\' argument of OCM to True.'
+            error_msg = "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without " \
+                        "required NodeRole.OUTPUT. Try setting \'allow_probes\' argument of OCM to 'True'."
             allow_probes = False
             monitor_for_control = B
             agent_rep = mcomp
