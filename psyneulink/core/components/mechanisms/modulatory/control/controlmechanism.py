@@ -629,10 +629,12 @@ def _is_control_spec(spec):
     else:
         return False
 
+
 class ControlMechanismError(Exception):
     def __init__(self, error_value, data=None):
         self.error_value = error_value
         self.data = data
+
 
 def validate_monitored_port_spec(owner, spec_list):
     for spec in spec_list:
@@ -679,7 +681,6 @@ def validate_monitored_port_spec(owner, spec_list):
                     f"it must be an {OutputPort.__name__} or a {Mechanism.__name__}."
                 )
 
-
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
@@ -712,6 +713,7 @@ def _net_outcome_getter(owning_component=None, context=None):
         )
     except TypeError:
         return [0]
+
 
 class DefaultAllocationFunction(Function_Base):
     """Take a single 1d item and return a 2d array with n identical items

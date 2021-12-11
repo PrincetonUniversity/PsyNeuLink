@@ -2363,6 +2363,7 @@ import itertools
 import logging
 import sys
 import typing
+from typing import Union
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
@@ -2409,7 +2410,7 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, ERROR, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, DEFAULT, DIRECT, \
     FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
@@ -2949,6 +2950,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathways=None,                     \
         nodes=None,                        \
         projections=None,                  \
+        allow_probes=True,                 \
+        exclude_probes_from_output=True    \
         disable_learning=False,            \
         controller=None,                   \
         enable_controller=None,            \
@@ -3308,6 +3311,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             pathways=None,
             nodes=None,
             projections=None,
+            allow_probes:Union[bool, CONTROL]=True,
+            exclude_probes_from_output:bool=True,
             disable_learning:bool=False,
             controller:ControlMechanism=None,
             enable_controller=None,
@@ -3334,6 +3339,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
+        self.allow_probes = allow_probes
+        self.exclude_probes_from_output=exclude_probes_from_output
         self.required_node_roles = []
         self.excluded_node_roles = []
         from psyneulink.core.compositions.pathway import Pathway
@@ -4843,20 +4850,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             err_msg = f"{node.name} found in nested {Composition.__name__} of {self.name} " \
                       f"({nc.name}) but without required {role}."
 
+            # if self.controller:
+            #     # Check if allow_probes is set on controller or it objective_mechanism
+            #     if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
+            #             or (self.controller.objective_mechanism
+            #                 and hasattr(self.controller.objective_mechanism, ALLOW_PROBES)
+            #                 and self.controller.objective_mechanism.allow_probes is True)):
             if self.controller:
-                # Check if allow_probes is set on controller or it objective_mechanism
-                if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
-                        or (self.controller.objective_mechanism
-                            and hasattr(self.controller.objective_mechanism, ALLOW_PROBES)
-                            and self.controller.objective_mechanism.allow_probes is True)):
-                    # Check if Node is an INPUT or INTERNAL
-                    if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
-                        comp._add_required_node_role(node, NodeRole.PROBE)
-                        self._analyze_graph()
-                        return
+                monitored_nodes = [x.owner if isinstance(x, Port) else x for x in self.controller.monitor_for_control]
+                ctl_monitored_probe =  ((self.allow_probes is True or self.controller.allow_probes)
+                                        and node in monitored_nodes)
+            if self.allow_probes or ctl_monitored_probe:
+                # Check if Node is an INPUT or INTERNAL
+                if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
+                    comp._add_required_node_role(node, NodeRole.PROBE)
+                    self._analyze_graph()
+                    return
+            if self.controller and node in monitored_nodes:
                 if self.controller.objective_mechanism:
-                    raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument of ObjectiveMechanism "
-                                                     f"for {self.controller.name} to 'True'.")
+                    raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument of "
+                                                     f"ObjectiveMechanism for {self.controller.name} to 'True'.")
                 raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument "
                                                  f"of {self.controller.name} to 'True'.")
             raise CompositionError(err_msg)
@@ -7235,6 +7248,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
+
+        # If controller has specified allow_probes, assign at least CONTROL to Composition.allow_probes
+        if not self.allow_probes and self.controller.allow_probes:
+            self.allow_probes = CONTROL
+        # If allow_probes is specified on Composition as CONTROL, then turn it on for Composition
+        self.controller.allow_probes = self.controller.allow_probes or self.allow_probes is CONTROL
 
         if self.controller.objective_mechanism:
             # If controller has objective_mechanism, then add it and all associated Projections to Composition
@@ -9768,7 +9787,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Don't report output for PROBE nodes (output_CIM is just used as conduit)
                 # FIX: 12/9/21 - ADD TEST FOR allow_probe HERE ONCE ADDED TO COMPOSITION
                 #                AND ONLY CHECK FOR PROBES IF IT IS TRUE
-                if self.output_CIM._sender_is_probe(port):
+                if self.exclude_probes_in_output and self.output_CIM._sender_is_probe(port):
                     continue
                 output_values.append(port.parameters.value._get(context))
 

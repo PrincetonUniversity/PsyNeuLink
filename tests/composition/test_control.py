@@ -344,8 +344,7 @@ class TestControlSpecification:
     #     # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
     #     # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
 
-                  # 0      1           2            3          4           5       6        7
-                  # id, agent_rep, state_feat, mon_for_ctl, allow_probes, obj_mech err_type, error_msg
+          # id, agent_rep, state_feat, mon_for_ctl, allow_probes, obj_mech err_type, error_msg
     params = [
         ("allowable1",
          "icomp", "I", "I", True, None, None, None
@@ -382,10 +381,10 @@ class TestControlSpecification:
          "mcomp", "I", None, False, "OBJ_MECH", pnl.CompositionError,
          "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
          "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
-         )
+         ),
     ]
     @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, objective_mechanism, error_type, err_msg',
-                             params, ids=params[0])
+                             params, ids=[x[0] for x in params])
     def test_args_specific_to_ocm(self, id, agent_rep, state_features, monitor_for_control,
                                   allow_probes, objective_mechanism, error_type,err_msg):
         """Test args specific to OptimizationControlMechanism
@@ -408,7 +407,7 @@ class TestControlSpecification:
         C = pnl.ProcessingMechanism(name='C')
         mcomp = pnl.Composition(pathways=[[A,B,C],icomp],
                                 name='MIDDLE COMP')
-        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
+        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP', allow_probes=allow_probes)
 
         agent_rep = {"mcomp":mcomp,
                      "icomp":icomp
