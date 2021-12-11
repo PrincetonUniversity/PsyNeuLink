@@ -2469,14 +2469,14 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, DEFAULT, FEEDBACK, \
-    HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
+    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, \
-    OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
@@ -6594,7 +6594,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     **kwargs                  # Use of type-specific learning arguments
                                     ):
 
-        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determing this?)
+        # ONLY DO THIS IF ONE DOESN'T ALREADY EXIST (?pass in argument determining this?)
         learning_mechanism = LearningMechanism(function=learning_function,
                                                default_variable=[sender_activity_source.output_ports[0].value,
                                                                  receiver_activity_source.output_ports[0].value,
@@ -6657,6 +6657,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     learning_enabled=learning_update,
                                     in_composition=True,
                                     name="Learning Mechanism for " + learned_projection.name)
+
+            objective_mechanism.modulatory_mechanism = learning_mechanism
+
         else:
             raise CompositionError(f"'learning_function' argument of add_linear_learning_pathway "
                                    f"({learning_function}) must be a class of {LearningFunction.__name__} or a "
@@ -6731,6 +6734,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               learning_enabled=learning_update,
                               in_composition=True,
                               name="Learning Mechanism for " + learned_projection.name)
+
+        objective_mechanism.modulatory_mechanism = learning_mechanism
 
         return target_mechanism, objective_mechanism, learning_mechanism
 
@@ -7028,6 +7033,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                learning_enabled=learning_update,
                                                in_composition=True,
                                                name="Learning Mechanism for " + learned_projection.name)
+
+        objective_mechanism.modulatory_mechanism = learning_mechanism
 
         self.add_nodes(nodes=[(target_mechanism, NodeRole.TARGET),
                               (objective_mechanism, NodeRole.LEARNING_OBJECTIVE),
