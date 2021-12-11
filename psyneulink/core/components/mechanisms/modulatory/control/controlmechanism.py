@@ -189,6 +189,18 @@ specified (also see `ControlMechanism_Examples`):
       specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
       OutputPorts monitored (see `below <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
 
+  .. _ControlMechanism_Allow_Probes:
+
+  * **allow_probes** -- this argument allows values of Components of a `nested Composition <Composition_Nested>` other
+    than its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to be specified in the **monitor_for_control**
+    argument of the ControlMechanism's constructor or, if **objective_mechanism** is specified, in the
+    **monitor** argument of the ObjectiveMechanism's constructor (see above).  If the Composition's `allow_probes
+    <Composition.allow_probes>` attribute is False, it is set to *CONTROL*, and only a ControlMechanism can receive
+    projections from `PROBE <NodeRole.PROBE>` Nodes of a nested Composition (the current one as well as any others in
+    the same Composition);  if the Composition's `allow_probes <Composition.allow_probes>` attribute is True, then it
+    is left that way, and any node within the Comopsition, including the ControlMechanism, can receive projections from
+    `PROBE <NodeRole.PROBE>` Nodes (see `Composition_Probes` for additiona additional details).
+
 The OutputPorts monitored by a ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`
 are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.monitor_for_control>` attribute
 (and are the same as those listed in the `monitor <ObjectiveMechanism.monitor>` attribute of the
@@ -772,6 +784,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     ControlMechanism(                        \
         monitor_for_control=None,            \
         objective_mechanism=None,            \
+        allow_probes=False,                  \
         outcome_input_ports_option=SEPARATE  \
         function=Linear,                     \
         default_allocation=None,             \
@@ -829,6 +842,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
         OutputPorts specified in the ControlMechanism's **monitor_for_control** `argument
         <ControlMechanism_Monitor_for_Control_Argument>`.
 
+    allow_probes : bool : default False
+        specifies whether Components of a `nested Composition <Composition_Nested>` that are not OUTPUT
+        <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of that Composition can be specified as items in the
+        ControlMechanism's  **monitor_for_control** argument or, if **objective_mechanism**
+        is specified, in the ObjectiveMechanism's **monitor** argument (see `allow_probes
+        <ControlMechanism_Allow_Probes>` for additional information).
+
     outcome_input_ports_option : COMBINE, CONCATENATE, SEPARATE : default SEPARATE
         if **objective_mechanism** is not specified, this specifies whether `MappingProjections <MappingProjection>`
         from items specified in **monitor_for_control** are each assigned their own `InputPort` (*SEPARATE*)
@@ -878,6 +898,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
         `input_port <Mechanism_Base.input_port>`.
+
+    allow_probes : bool
+        indicates status of the `allow_probes <Composition.allow_probes>` attribute of the Composition
+        to which the ControlMechanism belongs.  If False, items specified in the `monitor_for_control
+        <ControlMechanism.monitor_for_control>` are all `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`
+        of that Composition.  If True, they may be `INPUT <NodeRole.INPUT>` or `INTERNAL <NodeRole.INTERNAL>`
+        `Nodes <Composition_Nodes>` of `nested Composition <Composition_Nested>` (see `allow probes
+        <ControlMechanism_Allow_Probes>` and `Composition_Probes` for additional information).
 
     outcome_input_ports_option : , SEPARATE, COMBINE, or CONCATENATE
         determines how items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` project to
@@ -1235,6 +1263,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  size=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
                  objective_mechanism=None,
+                 allow_probes:bool = False,
                  outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
@@ -1255,7 +1284,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         monitor_for_control = convert_to_list(monitor_for_control) or []
         control = convert_to_list(control) or []
-
+        self.allow_probes = allow_probes
 
         # For backward compatibility:
         if kwargs:
@@ -1440,6 +1469,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                                name=self.name + '_ObjectiveMechanism')
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
+
+        self.objective_mechanism.control_mechanism = self
 
         # Print monitored_output_ports
         if self.prefs.verbosePref:

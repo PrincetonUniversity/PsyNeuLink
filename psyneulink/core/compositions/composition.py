@@ -363,7 +363,7 @@ include the InputPorts of the nested Composition.  These can be accessed using t
 *Results from nested Compositions.* If a nested Composition is an `OUTPUT` Node of all of the Compositions within
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 both the `output_values <Composition.output_values>` and `results <Composition.results>` of the nested Composition
-will also be included in those attributes of any intervening and the outermost Composition.  If `allow_probes
+are also included in those attributes of any intervening and the outermost Composition.  If `allow_probes
 <Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
 <Composition.include_probes_in_output>` attribute determines whether their values are also included in the
 `output_values <Composition.output_values>` and `results <Composition.results>` of enclosing Compositions
@@ -2422,10 +2422,10 @@ import itertools
 import logging
 import sys
 import typing
-from typing import Union
 import warnings
 from copy import deepcopy, copy
 from inspect import isgenerator, isgeneratorfunction
+from typing import Union
 
 import graph_scheduler
 import networkx
@@ -2469,14 +2469,14 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, DEFAULT, DIRECT, \
-    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, DEFAULT, FEEDBACK, \
+    HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, \
-    OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, OUTPUT, OUTPUT_CIM_NAME, \
+    OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
@@ -4940,28 +4940,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             err_msg = f"{node.name} found in nested {Composition.__name__} of {self.name} " \
                       f"({nc.name}) but without required {role}."
 
-            # if self.controller:
-            #     # Check if allow_probes is set on controller or it objective_mechanism
-            #     if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
-            #             or (self.controller.objective_mechanism
-            #                 and hasattr(self.controller.objective_mechanism, ALLOW_PROBES)
-            #                 and self.controller.objective_mechanism.allow_probes is True)):
-            if self.controller:
-                monitored_nodes = [x.owner if isinstance(x, Port) else x for x in self.controller.monitor_for_control]
-                ctl_monitored_probe =  ((self.allow_probes is True or self.controller.allow_probes)
-                                        and node in monitored_nodes)
-            if self.allow_probes or ctl_monitored_probe:
+            # Get any Nodes monitored by ControlMechanisms for which allow_probes is specified
+            ctl_monitored_nodes = {}
+            if any(isinstance(n, ControlMechanism) and n.allow_probes for n in self._all_nodes):
+                ctl_monitored_nodes = self._get_monitor_for_control_nodes()
+
+            # If allow_probes is set on the Composition or any ControlMechanisms, then attempt to assign node as PROBE
+            if self.allow_probes or ctl_monitored_nodes:
                 # Check if Node is an INPUT or INTERNAL
                 if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                     comp._add_required_node_role(node, NodeRole.PROBE)
                     self._analyze_graph()
                     return
-            if self.controller and node in monitored_nodes:
-                if self.controller.objective_mechanism:
-                    raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument of "
-                                                     f"ObjectiveMechanism for {self.controller.name} to 'True'.")
+
+            # Failed to assign node as PROBE, so get ControlMechanisms that may be trying to monitor it
+            ctl_monitored_nodes = self._get_monitor_for_control_nodes()
+            if node in ctl_monitored_nodes:
+                if ctl_monitored_nodes[node].objective_mechanism:
+                    # Node was specified for monitoring by an ObjectiveMechanism of a ControlMechanism
+                    raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument of ObjectiveMechanism "
+                                                     f"for {ctl_monitored_nodes[node].name} to 'True'.")
+                # Node was specified for monitoring by ControlMechanism
                 raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument "
-                                                 f"of {self.controller.name} to 'True'.")
+                                                 f"of {ctl_monitored_nodes[node].name} to 'True'.")
+            # Node was not specified for monitoring by a ControlMechanism
             raise CompositionError(err_msg)
 
         nested_comp = CIM_port_for_nested_node = CIM = None
@@ -7423,6 +7425,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.controller.control.append(control_signal)
                 self.controller._activate_projections_for_compositions(self)
         return []
+
+    def _get_monitor_for_control_nodes(self):
+        """Return dict of {nodes : ControlMechanism that monitors it} for any nodes monitored for control in Composition
+        """
+        monitored_nodes = {}
+        for node in self._all_nodes:
+            if isinstance(node, ControlMechanism):
+                monitored_nodes.update({spec.owner if isinstance(spec, Port) else spec : node
+                                        for spec in node.monitor_for_control})
+        return monitored_nodes
 
     def _get_control_signals_for_composition(self):
         """Return list of ControlSignals specified by Nodes in the Composition

@@ -378,7 +378,7 @@ class TestControlSpecification:
          "required NodeRole.OUTPUT. Try setting 'allow_probes' argument of OCM to 'True'."
          ),
         ("probe_error_obj_mech_test",
-         "mcomp", "I", None, False, "OBJ_MECH", pnl.CompositionError,
+         "mcomp", "I", None, False, True, pnl.CompositionError,
          "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
          "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
          ),
