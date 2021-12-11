@@ -3733,6 +3733,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except NameError:
             pass
 
+        if isinstance(node, ControlMechanism):
+            self._handle_allow_probes_for_control(node)
+
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
             Add a list of `Nodes <Composition_Nodes>` to the Composition.
@@ -3995,6 +3998,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif root_composition is not self:
                 nested_nodes.append((node,self))
         return nested_nodes
+
+    def _handle_allow_probes_for_control(self, node):
+        """Reconcile allow_probes for Composition and any ControlMechanisms assigned to it, including controller.
+        """
+        assert isinstance(node, ControlMechanism), \
+            f"PROGRAM ERROR: Attempt to handle 'allow_probes' arg for non-ControlMechanism."
+        # If ControlMechanism has specified allow_probes, assign at least CONTROL to Composition.allow_probes
+        if not self.allow_probes and node.allow_probes:
+            self.allow_probes = CONTROL
+        # If allow_probes is specified on Composition as CONTROL, then turn it on for ControlMechanism
+        node.allow_probes = node.allow_probes or self.allow_probes is CONTROL
 
     def _get_nested_compositions(self,
                                  nested_compositions=NotImplemented,
@@ -7341,11 +7355,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
 
-        # If controller has specified allow_probes, assign at least CONTROL to Composition.allow_probes
-        if not self.allow_probes and self.controller.allow_probes:
-            self.allow_probes = CONTROL
-        # If allow_probes is specified on Composition as CONTROL, then turn it on for Composition
-        self.controller.allow_probes = self.controller.allow_probes or self.allow_probes is CONTROL
+        self._handle_allow_probes_for_control(self.controller)
 
         if self.controller.objective_mechanism:
             # If controller has objective_mechanism, then add it and all associated Projections to Composition
