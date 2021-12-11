@@ -1578,9 +1578,6 @@ class OptimizationControlMechanism(ControlMechanism):
         # Pass state_input_ports_sepcs to ControlMechanism for instantiation and addition to OCM's input_ports
         super()._instantiate_input_ports(state_input_ports_specs, context=context)
 
-        if self.objective_mechanism:
-            self.objective_mechanism.allow_probes = self.allow_probes
-
         # Assign to self.state_input_ports attribute
         start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         stop = start + len(state_input_ports_specs) if state_input_ports_specs else 0

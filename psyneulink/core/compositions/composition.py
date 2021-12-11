@@ -339,8 +339,8 @@ include the InputPorts of the nested Composition.  These can be accessed using t
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 both the `output_values <Composition.output_values>` and `results <Composition.results>` of the nested Composition
 will also be included in those attributes of any intervening and the outermost Composition.  If `allow_probes
-<Composition.allow_probes>` is set, then the Composition's `exclude_probes_from_output
-<Composition.exclude_probes_from_output>` attribute determines whether their values are included in the
+<Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
+<Composition.include_probes_in_output>` attribute determines whether their values are included in the
 `output_values <Composition.output_values>` and `results <Composition.results>` of enclosing Compositions.
 
 .. _Composition_Nested_Learning:
@@ -3034,7 +3034,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         nodes=None,                        \
         projections=None,                  \
         allow_probes=True,                 \
-        exclude_probes_from_output=True    \
+        include_probes_in_output=False     \
         disable_learning=False,            \
         controller=None,                   \
         enable_controller=None,            \
@@ -3063,6 +3063,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     projections : `Projection <Projection>` or list[`Projection <Projection>`] : default None
         specifies one or more `Projections <Projection>` to add to the Composition;  these are not functional
         unless they are explicitly assigned a `sender <Projection.sender>` and `receiver <Projection.receiver>`.
+        
+    allow_probes : bool : default True
+        specifies whether `Projections <Projection>` are allowed from `Nodes <Composition_Nodes>` of a `nested
+        Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to
+        Nodes in outer Composition(s) (see `allow_probes <Compositon.allow_probes>` for additional information).
+
+    include_probes_in_output : bool : default False
+        specifies whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
+        <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results 
+        <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
+        the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
+        they are included.    
 
     disable_learning: bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
@@ -3122,6 +3134,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         COMMENT:
             FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
         COMMENT
+        
+    allow_probes : bool
+        indicates whether `Projections <Projection>` are allowed from `Nodes <Composition_Nodes>` of a `nested
+        Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to
+        Nodes in outer (enclosing) Composition(s). If True, `INPUT <NodeRole.INPUT>` and `INTERNAL <NodeRole.INTERNAL>`
+        `Nodes <Composition_Nodes>` of `nested Composition <Composition_Nested>` can project to outer Compositions;
+        the role `PROBE <NodeRole.PROBE>` is added to the Nodes of a nested Composition that send such projections.    
+        (see `Composition_Allow_Probes` for additional information).
+
+    include_probes_in_output : bool : default False
+        determines whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
+        <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results
+        <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
+        the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
+        they are included (see `Composition_Allow_Probes` for additional details).
 
     required_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
         a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` assigned to it.
@@ -3395,7 +3422,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nodes=None,
             projections=None,
             allow_probes:Union[bool, CONTROL]=True,
-            exclude_probes_from_output:bool=True,
+            include_probes_in_output:bool=False,
             disable_learning:bool=False,
             controller:ControlMechanism=None,
             enable_controller=None,
@@ -3423,7 +3450,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.nodes = ContentAddressableList(component_type=Component)
         self.node_ordering = []
         self.allow_probes = allow_probes
-        self.exclude_probes_from_output=exclude_probes_from_output
+        self.include_probes_in_output=include_probes_in_output
         self.required_node_roles = []
         self.excluded_node_roles = []
         from psyneulink.core.compositions.pathway import Pathway
@@ -9867,10 +9894,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign output_values
             output_values = []
             for port in self.output_CIM.output_ports:
-                # Don't report output for PROBE nodes (output_CIM is just used as conduit)
-                # FIX: 12/9/21 - ADD TEST FOR allow_probe HERE ONCE ADDED TO COMPOSITION
-                #                AND ONLY CHECK FOR PROBES IF IT IS TRUE
-                if self.exclude_probes_in_output and self.output_CIM._sender_is_probe(port):
+                if (not self.allow_probes # Spare further checking of allow_probes are not allowed
+                        # skip if including PROBE nodes in output is disabled and this port is for a (nested) probe node
+                        or (not self.include_probes_in_output and self.output_CIM._sender_is_probe(port))):
                     continue
                 output_values.append(port.parameters.value._get(context))
 
