@@ -2409,7 +2409,7 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, ERROR, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROLLER, CONTROL_SIGNAL, DEFAULT, ERROR, \
     FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
     LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
@@ -2836,6 +2836,9 @@ class NodeRole(enum.Enum):
         can be modified by `assigning specified NodeRoles <Composition_Node_Role_Assignment>` to Nodes.  A Composition
         can have many `INPUT` Nodes.
 
+    PROBE
+        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL` but that is treated as an
+
     SINGLETON
         A `Node <Composition_Nodes>` that is both an `ORIGIN` and a `TERMINAL`.  This role cannot be modified
         programmatically.
@@ -2897,15 +2900,18 @@ class NodeRole(enum.Enum):
         <Composition_Learning_Pathway>`; usually a `ComparatorMechanism` (see `OBJECTIVE_MECHANISM`). This role can,
         but generally should not be modified programmatically.
 
+    PROBE
+        An `INTERNAL` `Node <Composition_Nodes>` that is permitted to have Projections from it to the Composition's
+        `output_CIM <Composition.output_CIM>`, but -- unlike an `OUTPUT` Node -- the `output_values
+        <Mechanism_Base.output_values>` of which are *not* included in the Composition's `results
+        <Composition.results>` attribute (see `allow_probes <OptimizationContorlMechanism.allow_probes>` for an
+        example.
+
     OUTPUT
         A `Node <Composition_Nodes>` the `output_values <Mechanism_Base.output_values>` of which are included in
         the Composition's `results <Composition.results>` attribute.  By default, the `TERMINAL` Nodes of a
         Composition are also its `OUTPUT` Nodes; however this can be modified by `assigning specified NodeRoles
         <Composition_Node_Role_Assignment>` to Nodes.  A Composition can have many `OUTPUT` Nodes.
-        COMMENT:
-        .. technical_note::
-           TEST
-        COMMENT
 
     TERMINAL
         A `Node <Composition_Nodes>` that does not send any `Projections <Projection>` to any other Nodes within
@@ -2932,6 +2938,7 @@ class NodeRole(enum.Enum):
     LEARNING = enum.auto()
     TARGET = enum.auto()
     LEARNING_OBJECTIVE = enum.auto()
+    PROBE = enum.auto()
     OUTPUT = enum.auto()
     TERMINAL = enum.auto()
 
@@ -3050,6 +3057,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     mechanisms : `MechanismList`
         list of Mechanisms in Composition, that provides access to some of they key attributes.
+
+    random_variables : list[Component]
+        list of Components in Composition with variables that call a randomization function.
+
+        .. technical_note::
+           These are Components with a seed `Parameter`.
 
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
@@ -3950,7 +3963,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         list containing references to all invalid aux components
         """
 
-        # Implement any components specified in node's aux_components attribute
         invalid_aux_components = []
         if hasattr(node, "aux_components"):
             # Collect the node's aux components that are not currently able to be added to the Composition;
@@ -4585,8 +4597,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Set up ports on the output CIM for all output nodes in the Composition
         current_output_node_output_ports = set()
 
-        # loop through all output ports on output nodes
-        for node in self.get_nodes_by_role(NodeRole.OUTPUT):
+        # loop through all output ports on OUTPUT and PROBE nodes
+        for node in self.get_nodes_by_role(NodeRole.OUTPUT) + self.get_nodes_by_role(NodeRole.PROBE):
             for output_port in node.output_ports:
                 current_output_node_output_ports.add(output_port)
 
@@ -4607,7 +4619,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # instantiate the output port on the output CIM to correspond to the node's output port
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
-                            variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position, interface_input_port)),
+                            variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position,
+                                                                     interface_input_port)),
                             function=Identity,
                             reference_value=output_port.defaults.value,
                             name=OUTPUT_CIM_NAME + "_" + node.name + "_" + output_port.name,
@@ -4654,6 +4667,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             del self.output_CIM_ports[output_port]
 
         # PARAMETER CIM
+
         # We get the projection that needs to be routed through the PCIM as well as the composition that owns it,
         # because we will need to activate the new projections for the composition that owns the PCIM as well as the
         # referring composition
@@ -4710,7 +4724,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Get node port mappings for cim
             node_port_to_cim_port_tuples_mapping = cim.port_map
             # Create lists of tuples of (cim_input_port, cim_output_port, index), in which indices are for
-            # nodes within self.nodes (cim_node_indices) and ports wihin nodes (cim_port_within_node_indices
+            # nodes within self.nodes (cim_node_indices) and ports within nodes (cim_port_within_node_indices
             cim_node_indices = []
             cim_port_within_node_indices = []
             for node_port, cim_ports in node_port_to_cim_port_tuples_mapping.items():
@@ -4788,7 +4802,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                f"({p} does not match the number of its OutputPorts ({n})."
             elif type==OUTPUT:
                 n = len(cim.input_ports) - len(cim.user_added_ports[INPUT_PORTS])
-                o = sum([len(n.output_ports) for n in self.get_nodes_by_role(NodeRole.OUTPUT)])
+                o = sum([len(n.output_ports)
+                         for n in self.get_nodes_by_role(NodeRole.PROBE) + self.get_nodes_by_role(NodeRole.OUTPUT)])
                 assert n == o, f"PROGRAM ERROR:  Number of InputPorts on {self.output_CIM.name} ({n}) does not " \
                                f"match the number of OutputPorts over all OUTPUT nodes of {self.name} ({o})."
                 # p = len([p for p in self.projections if OUTPUT_CIM_NAME in p.name])
@@ -4805,11 +4820,46 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_node_CIM_port(self,
                                   node: Mechanism,
                                   node_port: tc.any(InputPort, OutputPort),
-                                  role: tc.enum(NodeRole.INPUT, NodeRole.OUTPUT)
+                                  role: tc.enum(NodeRole.INPUT, NodeRole.PROBE, NodeRole.OUTPUT)
                                   ):
         """Check for node in nested Composition
-        Return relevant port of relevant CIM if found and nested Composition in which it was found, else (None, None)
+        Assign NodeRole.PROBE to relevant nodes if allow_probes is specified (see handle_probes below)
+        Return relevant port of relevant CIM if found and nested Composition in which it was found; else None's
         """
+
+        def try_assigning_as_probe(node, role, comp):
+            """Try to assign node as PROBE
+            If:
+             - node is an INPUT or INTERNAL node in its Composition
+             - outermost Composition has controller
+             - allow_probes is set for it or its objective_mechanism
+            Then:
+             - add PROBE as one of its roles
+             - call _analyze_graph() to create output_CIMs ports and projections for it
+             - return True
+            Else:
+             - return False
+            """
+            err_msg = f"{node.name} found in nested {Composition.__name__} of {self.name} " \
+                      f"({nc.name}) but without required {role}."
+
+            if self.controller:
+                # Check if allow_probes is set on controller or it objective_mechanism
+                if ((hasattr(self.controller, ALLOW_PROBES) and self.controller.allow_probes is True)
+                        or (self.controller.objective_mechanism
+                            and hasattr(self.controller.objective_mechanism, ALLOW_PROBES)
+                            and self.controller.objective_mechanism.allow_probes is True)):
+                    # Check if Node is an INPUT or INTERNAL
+                    if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
+                        comp._add_required_node_role(node, NodeRole.PROBE)
+                        self._analyze_graph()
+                        return
+                if self.controller.objective_mechanism:
+                    raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument of ObjectiveMechanism "
+                                                     f"for {self.controller.name} to 'True'.")
+                raise CompositionError(err_msg + f" Try setting '{ALLOW_PROBES}' argument "
+                                                 f"of {self.controller.name} to 'True'.")
+            raise CompositionError(err_msg)
 
         nested_comp = CIM_port_for_nested_node = CIM = None
 
@@ -4818,18 +4868,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nested_nodes = dict(nc._get_nested_nodes())
             if node in nested_nodes or node in nc.nodes.data:
                 owning_composition = nc if node in nc.nodes else nested_nodes[node]
-                # Must be assigned Node.Role of INPUT or OUTPUT (depending on receiver vs sender)
+                # Must be assigned Node.Role of INPUT, PROBE, or OUTPUT (depending on receiver vs sender)
                 # This validation does not apply to ParameterPorts. Externally modulated nodes
                 # can be in any position within a Composition. They don't need to be INPUT or OUTPUT nodes.
-                if not isinstance(node_port, ParameterPort):
-                    if role not in owning_composition.nodes_to_roles[node]:
-                        # raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                        #                        f"({nc.name}) but without required {role}.")
-                        raise CompositionError(f"{node.name} found in nested {Composition.__name__} of {self.name} "
-                                               f"({nc.name}) but without required {role}.",
-                                               ERROR='NOT_OUTPUT_NODE',
-                                               COMPOSITION=owning_composition,
-                                               NODE=node)
+                if not isinstance(node_port, ParameterPort) and role not in owning_composition.nodes_to_roles[node]:
+                    try_assigning_as_probe(node, role, owning_composition)
                 # With the current implementation, there should never be multiple nested compositions that contain the
                 # same mechanism -- because all nested compositions are passed the same execution ID
                 # FIX: 11/15/21:  ??WHY IS THIS COMMENTED OUT:
@@ -4852,7 +4895,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         CIM_port_for_nested_node = owning_composition.output_CIM_ports[node_port][1]
                         CIM = owning_composition.output_CIM
                     else:
-                        nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node, node_port, NodeRole.OUTPUT)
+                        nested_node_CIM_port_spec = nc._get_nested_node_CIM_port(node,
+                                                                                 node_port,
+                                                                                 role)
+                                                                                 # NodeRole.OUTPUT)
                         CIM_port_for_nested_node = nc.output_CIM_ports[nested_node_CIM_port_spec[0]][1]
                         CIM = nc.output_CIM
                 elif isinstance(node_port, ParameterPort):
@@ -4869,6 +4915,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     CIM = nc.parameter_CIM
                 nested_comp = nc
                 break
+
+        # Return CIM_port_for_nested_node in both expected node and node_port slots
         return CIM_port_for_nested_node, CIM_port_for_nested_node, nested_comp, CIM
 
     # endregion NODES
@@ -5257,10 +5305,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the sender is in a nested Composition AND sender is an OUTPUT Node
             # then use the corresponding CIM on the nested comp as the sender going forward
+            # (note:  NodeRole.OUTPUT used even for PROBES, since those currently use same output_CIMS as OUTPUT nodes)
             sender, sender_output_port, graph_sender, sender_mechanism = \
                 self._get_nested_node_CIM_port(sender_mechanism,
-                                                sender_output_port,
-                                                NodeRole.OUTPUT)
+                                               sender_output_port,
+                                               NodeRole.OUTPUT)
             nested_compositions.append(graph_sender)
             if sender is None:
                 receiver_name = 'node'
@@ -7195,33 +7244,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             # Otherwise, if controller has any afferent inputs (from items in monitor_for_control), add them
             if self.controller.input_ports and self.controller.input_port.path_afferents:
-                # FIX 11/27/21: THIS IS A HACK TO MAKE INTERNAL NODES OF NESTED COMPOSITIONS AVAILABLE FOR MONITORING
-                #               SHOULD BE REPLACED WITH DEDICATED NodeRole.PROBE and probe_CIM
-                keep_checking = True
-                while(keep_checking):
-                    try:
-                        self._add_node_aux_components(controller, context)
-                        keep_checking = False
-                    except CompositionError as e:
-                        # If error is because INTERNAL Node has been specified as monitor_for_control on controller
-                        if e.return_items.pop(ERROR,None) == 'NOT_OUTPUT_NODE':
-                            # If controller.allow_probes has also been specified as 'True', assign NodeRole.OUTPUT
-                            if hasattr(self.controller, 'allow_probes') and self.controller.allow_probes is True:
-                                nested_comp = e.return_items.pop(COMPOSITION, None)
-                                node = e.return_items.pop(NODE, None)
-                                nested_comp._add_required_node_role(node, NodeRole.OUTPUT, context)
-                                self._analyze_graph(context)
-                                keep_checking = True
-                            # Otherwise, return usual error
-                            else:
-                                error_msg = e.error_value + f" Try setting 'allow_probes' argument of " \
-                                                            f"{self.controller.name} to True."
-                                raise CompositionError(error_msg)
-                        else:
-                            assert False, f"PROGRAM ERROR: Unable to apply NodeRole.OUTPUT to {node} of {nested_comp} "\
-                                          f"specified in 'monitor_for_control' arg for {controller.name} of {self.name}"
-                    # else:
-                    #     raise CompositionError(e.error_value)
+                self._add_node_aux_components(controller, context)
 
             # This is set by add_node() automatically if there is an objective_mechanism;
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
@@ -9104,8 +9127,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             Returns
             ---------
-
-            output value of the final Mechanism executed in the Composition : various
+            output_values : List
+            These are the values of the Composition's output_CIM.output_ports, excluding those the source of which
+            are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.
         """
 
         with Report(self,
@@ -9741,6 +9765,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign output_values
             output_values = []
             for port in self.output_CIM.output_ports:
+                # Don't report output for PROBE nodes (output_CIM is just used as conduit)
+                # FIX: 12/9/21 - ADD TEST FOR allow_probe HERE ONCE ADDED TO COMPOSITION
+                #                AND ONLY CHECK FOR PROBES IF IT IS TRUE
+                if self.output_CIM._sender_is_probe(port):
+                    continue
                 output_values.append(port.parameters.value._get(context))
 
             # Animate output_CIM
@@ -9802,6 +9831,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return output_values
 
     def __call__(self, *args, **kwargs):
+        """Execute Composition of any args are provided;  else simply return results of last execution.
+        This allows Composition, after it has been constructed, to be run simply by calling it directly.
+        """
         if not args and not kwargs:
             if self.results:
                 return self.results[-1]
@@ -10270,6 +10302,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [input_port.parameters.value.get(context) for input_port in self.input_CIM.input_ports]
 
     @property
+    def output_port(self):
+        """Return the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
+        return self.output_CIM.output_ports[0]
+
+    @property
     def output_ports(self):
         """Return all OutputPorts that belong to the Output CompositionInterfaceMechanism"""
         return self.output_CIM.output_ports
@@ -10280,7 +10317,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.get_output_values(self.most_recent_context)
 
     def get_output_values(self, context=None):
-        return [output_port.parameters.value.get(context) for output_port in self.output_CIM.output_ports]
+        return [output_port.parameters.value.get(context)
+                for output_port in self.output_CIM.output_ports
+                if not self.output_CIM._sender_is_probe(output_port)]
 
     @property
     def shadowing_dict(self):
@@ -10355,17 +10394,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return stateful_nodes
 
     @property
-    def output_port(self):
-        """Return the index 0 OutputPort that belongs to the Output CompositionInterfaceMechanism"""
-        return self.output_CIM.output_ports[0]
-
-    @property
     def class_parameters(self):
         return self.__class__.parameters
 
     @property
     def stateful_parameters(self):
         return [param for param in self.parameters if param.stateful]
+
+    @property
+    def random_variables(self):
+        """Return list of Components with seed Parameters (i.e., ones that that call a random function)."""
+        return [param._owner._owner for param in self.all_dependent_parameters('seed').keys()]
 
     @property
     def _dependent_components(self):

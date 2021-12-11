@@ -188,9 +188,11 @@ class OptimizationFunction(Function_Base):
         <OptimizationFunction_Defaults>`).
 
     aggregation_function : function or method : default None
-        specifies function used to evaluate samples in each iteration of the `optimization process
-        <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply returns
-        the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
+        specifies function used to aggregate the values returned over the `num_estimates
+        <OptimizationFunction.num_estimates>` calls to the `objective_function
+        <OptimizationFunction.objective_function>` for a given sample in each iteration of the `optimization
+        process <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply
+        returns the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
         <OptimizationFunction_Defaults>`).
 
     search_function : function or method : default None
@@ -272,6 +274,11 @@ class OptimizationFunction(Function_Base):
         for a given sample.  This is determined from the `search_space <OptimizationFunction.search_space>` by
         accessing its `randomization_dimension <OptimizationFunction.randomization_dimension>` and determining the
         the length of (i.e., number of elements specified for) that dimension.
+
+    aggregation_function : function or method
+        used to aggregate the values returned over the `num_estimates <OptimizationFunction.num_estimates>` calls to
+        the `objective_function <OptimizationFunction.objective_function>` for a given sample in each iteration of
+        the `optimization process <OptimizationFunction_Procedure>`.
 
     search_termination_function : function or method that returns a boolean value
         used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`; if it is required
