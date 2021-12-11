@@ -373,6 +373,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_Allow_Probes:
 
+  COMMENT:
   * **allow_probes** -- this argument allows values of Components of a `nested Composition <Composition_Nested>` other
     than its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to be specified in the **monitor_for_control**
     argument of the OptimizationControlMechanism's constructor or, if **objective_mechanism** is specified, in the
@@ -401,6 +402,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
                This specification is *not recommended*, as it prevents use of `compilation
                <Composition_Compilation>`.  It is supported for debugging purposes only.
     COMMENT
+  COMMENT
 
 * **Optimization arguments** -- these specify parameters that determine how the OptimizationControlMechanism's
   `function <OptimizationControlMechanism.function>` searches for and determines the optimal `control_allocation
@@ -604,7 +606,7 @@ then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>
 <ControlMechanism.outcome_input_ports_option>` attributes, specified in the corresponding arguments of its
 constructor (see `Outcomes arguments <OptimizationControlMechanism_Outcome_Args>`), and the `allow_probes
 <Composition.allow_probes>` attribute of the Composition for which the OptimizationControlMechanism is the
-`controller <Composition.controller>`.  The latter allows the values of the items listed in `monitor_for_control
+`controller <Composition.controller>`. The latter allows the values of the items listed in `monitor_for_control
 <ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
 <Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be monitored and included in the computation
 of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
@@ -970,7 +972,7 @@ class OptimizationControlMechanism(ControlMechanism):
         objective_mechanism=None,                       \
         function=GridSearch,                            \
         num_estimates=1,                                \
-        random_variables=ALL,                              \
+        random_variables=ALL,                           \
         initial_seed=None,                              \
         same_seed_for_all_parameter_combinations=False  \
         num_trials_per_estimate=None,                   \
