@@ -24,6 +24,7 @@ Contents
      - `Composition_Graph`
      - `Composition_Nodes`
      - `Composition_Nested`
+        • `Probes <Composition_Probes>`
      - `Composition_Projections`
      - `Composition_Pathways`
   * `Composition_Controller`
@@ -314,20 +315,43 @@ nodes assigned a particular role can be listed using the `get_nodes_by_role <Com
 A nested Composition is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
 Composition is `executed <Composition_Execution>`, the nested Composition is executed when its Node in the outer
 is called to execute by the outer Composition's `scheduler <Composition.scheduler>`. Any depth of nesting of
-Compositions withinothers is allowed.
+Compositions withinothers is allowed.   
 
-. _Composition_Nested_Projections:
-*Projections to and from Nodes in a nested Composition.* Any Node within the outer Composition can send a`Projection
-<Projection>` to any `INPUT <NodeRole.INPUT>` Node, and can receive a Projection from any `OUTPUT <NodeRole.OUTPUT>`
-Node within the nested Composition.  If `allow_probes <Composition.allow_probes>` is True, then Nodes in an outer
-Composition can receive Projections from *any* nodes in a nested Composition, including ones assigned as `INPUT
-<NodeRole.INPUT>` or `INTERNAL <NodeRole.INTERNAL>`);  if such Projections are created, the sending Nodes in the
-nested Composition are assigned `PROBE <NodeRole.PROBE>` as a `role <NodeRole>` in the Composition to which they
-belong (see `allow_probes <Composition_Allow_Probes>` under `Composition_Projections` below for additional details).
-Finally, a `ControlMechanism` within the outer Composition can modulate the parameter (i.e., send a
-`ControlProjection` to the `ParameterPort`) of *any* `Mechanism <Mechanism>` within a nested Composition.
+*Projections to Nodes in a nested Composition.* Any Node within an outer Composition can send a `Projection
+<Projection>` to any `INPUT <NodeRole.INPUT>` Node of any Composition that is enclosed within it (i.e., at any level
+of nesting).  In addition, a `ControlMechanism` within an outer Composition can modulate the parameter (i.e.,
+send a `ControlProjection` to the `ParameterPort`) of *any* `Mechanism <Mechanism>` in a Composition nested within it,
+not just its `INPUT <NodeRole.INPUT>` Nodes. 
+
+*Projections from Nodes in a nested Composition.*  The nodes of an outer Composition can also *receive* Projections
+from Nodes within a nested Composition.  This is true for any `OUTPUT <NodeRole.OUTPUT>` of the nested Composition,
+and it is also true for any of its other Nodes if `allow_probes <Composition.allow_probes>` is True (the default);
+if it is *CONTROL*, then only the `controller <Composition.controller>` of a Composition can receive Projections
+from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>`Nodes.
+
+  .. _Composition_Probes:
+
+  * *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
+    outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
+    nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
+    is whether their output is included in the `output_values <Compostion.output_values>` and `results
+    <Compostion.results>` attributes of the Composition to which they belong, and any Compositions that intervene
+    between that one and the one to which the Node they project belongs.  This is determined by the
+    `include_probes_in_output <Composition.include_probes_in_output>` attribute of their Compostion and any
+    intervening ones. If `include_probes_in_output <Composition.include_probes_in_output>` is False (the default),
+    then the output of any `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
+    the `output_values <Compostion.output_values>` or `results <Compostion.results>` for that Composition. In this
+    case they can be thought of as "probing" - that is, providing access to "latent variables" of -- that Composition
+    that are not otherwise reported as part of the Composition's output or results.  If `include_probes_in_output
+    <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes of any nested
+    Compositions within are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in the
+    `output_values <Compostion.output_values>` and `results <Compostion.results>` of that Composition.  The
+    `include_probes_in_output <Composition.include_probes_in_output>` attribute can be set individually on any nested
+    Composition containing `PROBE <NodeRole.PROBE>` Nodes, and any enclosing Compositions that intervene between it
+    and the one containing the Node(s) to which its PROBES project.
 
 .. _Composition_Nested_External_Input_Ports:
+
 *Inputs for nested Compositions*.  If a nested Composition is an `INPUT` Node of all of the Compositions within
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 the `inputs specified <Composition_Execution_Inputs>` to its `execution method <Composition_Execution_Methods>` must
@@ -335,16 +359,19 @@ include the InputPorts of the nested Composition.  These can be accessed using t
 <Composition.external_input_ports>` attribute.
 
 .. _Composition_Nested_Results:
-*Results from nested Compositions. If a nested Composition is an `OUTPUT` Node of all of the Compositions within
+
+*Results from nested Compositions.* If a nested Composition is an `OUTPUT` Node of all of the Compositions within
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 both the `output_values <Composition.output_values>` and `results <Composition.results>` of the nested Composition
 will also be included in those attributes of any intervening and the outermost Composition.  If `allow_probes
 <Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
-<Composition.include_probes_in_output>` attribute determines whether their values are included in the
-`output_values <Composition.output_values>` and `results <Composition.results>` of enclosing Compositions.
+<Composition.include_probes_in_output>` attribute determines whether their values are also included in the
+`output_values <Composition.output_values>` and `results <Composition.results>` of enclosing Compositions
+(see `aove <Composition_Probes>`).
 
 .. _Composition_Nested_Learning:
-*Learning in nested Compositions. A nested Composition can also contain one or more `learning Pathways
+
+*Learning in nested Compositions.* A nested Composition can also contain one or more `learning Pathways
 <Composition_Learning_Pathway>`, however a learning Pathway may not extend from an enclosing Composition
 to one nested within it or vice versa.  The learning Pathways within a nested Composition are executed
 when that Composition is run, just like any other (see `Composition_Learning_Execution`).
@@ -373,80 +400,29 @@ graph.  Subsets of Nodes connected by Projections are often defined as a `Pathwa
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
 connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within it
-<Composition_Nested>`.  In general, such projections are restricted to the `INPUT <NodeRole.INPUT>` and from the
-`OUTPUT <NodeRole.OUTPUT>` Nodes of a nested Composition (see `above <Composition_Nested_Projections>`).  However,
-a ControlMechanism can project to any Node within a nested Composition, and the Composition's `allow_probes
-<Composition.allow_probes>` attribute can be used to permit Projections out of a nested Composition from Nodes other
-than its `OUTPUT <NodeRole.OUTPUT>` Nodes.
+<Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
+<NodeRole.OUTPUT>` Nodes of a `nested Composition <Composition_Nested>`, but if the Composition's `allow_probes
+<Composition.allow_probes>` attribute is not False, then Projections can be received from any Nodes within a nested
+Composition (see `Composition_Probes` for additional details). A  ControlMechanism can also control (i.e.,
+send a `ControlProjection`) to any Node within a nested Composition.
 
-.. _Composition_Projections_to_CIMs:
 .. technical_note::
-    Although Projections can be specified to and from Nodes within a nested Composition, these are actually implemented
-    as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,`parameter_CIM
-    <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively; those, in turn, send or receive
-    Projections to the specified Nodes within the nested Composition.
 
-.. _Composition_Allow_Probes:
-
-*Projections from Nodes in nested Compositions*.
-
-COMMENT:
-    - False (default): items specified in **monitor_for_control** (or **monitor** of an ObjectiveMechanism specified
-      in **objective_mechanism**) that are in a `nested Composition <Composition_Nested>` must be `OUTPUT
-      <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of that Composition; referencing any `INPUT <NodeRole.INPUT>` or
-      `INTERNAL <NodeRole.INTERNAL>` Nodes of a nested Composition raises an error.
-
-    - True: *any* `Node <Composition_Nodes>` of a `nested Composition <Composition_Nested>` can be specified in
-      **monitor_for_control** (or **monitor** of an ObjectiveMechanism), including `INPUT <NodeRole.INPUT>` and
-      `INTERNAL <NodeRole.INTERNAL>` nodes.
-
-    .. technical_note::
-
-        - *DIRECT*: this causes `INPUT <NodeRole.INPUT>` and `INTERNAL <NodeRole.INTERNAL>` nodes
-          of a `nested Composition <Composition_Nested>` to project *directly* to the OptimizationControlMechanism,
-          skipping all intervening `output_CIM <Composition.output_CIM>`\\s (see `allow_probes
-          <OptimizationControlMechanism_Probes>` for additional details).
-
-            .. warning::
-               This specification is *not recommended*, as it prevents use of `compilation
-               <Composition_Compilation>`.  It is supported for debugging purposes only.
------------
-
-.. _OptimizationControlMechanism_Probes:
-
-*allow probes*
-
-The `allow_probes <OptimizationControlMechanism.allow_probes>` attribute of a Composition
-is specific to OptimizationControlMechanism
-and its subclasses; it allows the values of the items listed in `monitor_for_control
-<ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
-<Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be monitored and included in the computation
-of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
-Composition).  This can be thought of as providing access to "latent variables" of the Composition being evaluated;
-that is, ones that do not contribute directly to the Composition's `results <Composition_Execution_Results>`. This
-applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism
-(see `allow_probes <OptimizationControlMechanism_Allow_Probes>` above for additional details).
-
-  .. technical_note::
-
-       .. note::
-          If allow_probes is True and any `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` Nodes of a
-          `nested Composition <Composition_Nested>` are specified, they are assigned the `NodeRole` `PROBE
-          <NodeRole.PROBE>` of the Composition to which they belong, and project to the OptimizationControlMechanism
-          via the nested Composition's `output_CIM <Composition.output_CIM>` and those of any intervening Compositions,
-          to one of the Composition at the same level as the OptimizationControlMechanism, that in turn projects to
-          the corresponding InputPort of the OptimizationControlMechanism's `outcome_input_ports
-          <ControlMechanism.outcome_input_ports>`.  Although they project via `output_CIMs <Composition.output_CIM>`,
-          their values are *not* included in `results <Composition.results>` attribute of the nested Composition, nor
-          any of the ones in which it is nested, including the one to which the OptimizationControlMechanism belongs.
-
-          If allow_probes is *DIRECT*, `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` Nodes of a
-          `nested Composition <Composition_Nested>` project *directly* to the corresponding `outcome_input_ports
-          <OptimizationControlMechanism.outcome_input_ports>` of the OptimizationControlMechanism, skipping any
-          intervening `output_CIM <Composition.output_CIM>`\\s.  This specification is *not recommended*, as it
-          prevents use of `compilation <Composition_Compilation>`. It is supported for debugging purposes only.
-
-COMMENT
+    .. _Composition_Projections_to_CIMs:
+    Although Projections can be specified to and from Nodes within a nested Composition, these are actually
+    implemented as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,
+    `parameter_CIM <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively;
+    those, in turn, send or receive Projections to the specified Nodes within the nested Composition.
+    `PROBE <NodeRole.PROBE>` Nodes of a nested Composition, like `OUTPUT <NodeRoles.OUTPUT>` Nodes,
+    project to the Node of an enclosing Composition via the nested Composition's `output_CIM
+    <Composition.output_CIM>`, and those of any intervening Compositions if it is nested Composition
+    more than one level deep. Since the `output_values <Composition.output_values>` (and `results
+    <Composition.results>`) of a Composition are derived from the `output_ports <Mechanism_Base.output_ports>`
+    of its `output_CIM <Composition.output_CIM>`, then the outputs of `PROBE <NodeRole.PROBE>` Nodes are
+    candidates for inclusion in the outputs reported for the nested Composition and any that intervene between
+    it and the one(s) to which its PROBES project; whether or not they are included is determined by the
+    `include_probes_as_output <Composition.include_probes_as_output>` of each enclosing Composition
+    (see `Composition_Probes` for additional details).
 
 .. _Composition_Pathways:
 
@@ -3067,7 +3043,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     allow_probes : bool : default True
         specifies whether `Projections <Projection>` are allowed from `Nodes <Composition_Nodes>` of a `nested
         Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to
-        Nodes in outer Composition(s) (see `allow_probes <Compositon.allow_probes>` for additional information).
+        Nodes in outer Composition(s) (see `allow_probes <Composition.allow_probes>` for additional information).
 
     include_probes_in_output : bool : default False
         specifies whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
@@ -3135,20 +3111,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
         COMMENT
         
-    allow_probes : bool
-        indicates whether `Projections <Projection>` are allowed from `Nodes <Composition_Nodes>` of a `nested
-        Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to
-        Nodes in outer (enclosing) Composition(s). If True, `INPUT <NodeRole.INPUT>` and `INTERNAL <NodeRole.INTERNAL>`
-        `Nodes <Composition_Nodes>` of `nested Composition <Composition_Nested>` can project to outer Compositions;
-        the role `PROBE <NodeRole.PROBE>` is added to the Nodes of a nested Composition that send such projections.    
-        (see `Composition_Allow_Probes` for additional information).
+    allow_probes : bool or CONTROL
+        indicates whether `Projections <Projection>` are allowed to `Nodes <Composition_Nodes>` in the Composition
+        from ones of a `nested Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes
+        <Composition_Nodes>`.  If *allow_probes* is False, Projections can be received from only the `OUTPUT
+        <NodeRole.OUTPUT>` Nodes of a nested Composition;  if it is True (the default), Projections can be received
+        from any Nodes of a nested Composition, including its `INPUT <NodeRole.INPUT>` and `INTERNAL
+        <NodeRole.INTERNAL>` Nodes;  if it is assigned *CONTROL*, then only the Composition's `controller
+        <Composition.controller>` or its `objective_mechanism <ControlMechanism.objetive_mechanism>` can receive
+        Projections from such Nodes.  Any Nodes of a nested Composition that project to an enclosing Composition,
+        other than its `OUTPUT <NodeRole.OUTPUT>` Nodes, are assiged `PROBE <NodeRole.PROBE>` in addition to their
+        other roles (see `Composition_Probes` for additional information).
 
     include_probes_in_output : bool : default False
         determines whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
         <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results
         <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
         the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
-        they are included (see `Composition_Allow_Probes` for additional details).
+        they are included (see `Composition_Probes` for additional details).
 
     required_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
         a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` assigned to it.

@@ -378,7 +378,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     argument of the OptimizationControlMechanism's constructor or, if **objective_mechanism** is specified, in the
     **monitor** argument of the ObjectiveMechanism's constructor (see `ControlMechanism_Monitor_for_Control` for
     additional information about these specifications).  It sets the Composition's `allow_probes
-    <Composition.allow_probes>` attribute to *CONTROL* (see `Composition_Allow_Probes` for additional details).
+    <Composition.allow_probes>` attribute to *CONTROL* (see `Composition_Probes` for additional details).
 
     COMMENT:
     - False (default): items specified in **monitor_for_control** (or **monitor** of an ObjectiveMechanism specified
@@ -1116,7 +1116,7 @@ class OptimizationControlMechanism(ControlMechanism):
         specified in the `monitor_for_control <ControlMechanism.monitor_for_control>` are all `OUTPUT <NodeRole.OUTPUT>`
         `Nodes <Composition_Nodes>` of that Composition.  If True, they may be `INPUT <NodeRole.INPUT>` or `INTERNAL
         <NodeRole.INTERNAL>` `Nodes <Composition_Nodes>` of `nested Composition <Composition_Nested>` (see `allow
-        probes <OptimizationControlMechanism_Monitor_for_Control>` and `Composition_Allow_Probes` for additional
+        probes <OptimizationControlMechanism_Monitor_for_Control>` and `Composition_Probes` for additional
         information).
 
     outcome_input_ports : ContentAddressableList
