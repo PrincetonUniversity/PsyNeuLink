@@ -368,7 +368,7 @@ class TestControlSpecification:
          "that do not belong to its agent_rep (INNER COMP): ['B']."
          ),
         ("monitor_for_control_with_obj_mech_test",
-         "icomp", "I", None, True, "OBJ_MECH", pnl.OptimizationControlMechanismError,
+         "icomp", "I", None, True, True, pnl.OptimizationControlMechanismError,
          "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
          "that do not belong to its agent_rep (INNER COMP): ['B']."
          ),
