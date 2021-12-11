@@ -253,7 +253,7 @@ Composition's structure is stored in its `graph <Composition.graph>` attribute, 
 its Nodes and the dependencies determined by its Projections.  There are no restrictions on the structure of the
 graph, which can be `acyclic or cyclic <Composition_Acyclic_Cyclic>`, and/or hierarchical (i.e., contain one or more
 `nested Compositions <Composition_Nested>`) as described below. A Composition's `graph <Composition.graph>` can be
-displayed using the Compositon's `show_graph <ShowGraph.show_graph>` method (see `ShowGraph_show_graph_Method`).
+displayed using the Composition's `show_graph <ShowGraph.show_graph>` method (see `ShowGraph_show_graph_Method`).
 
 .. _Composition_Acyclic_Cyclic:
 
@@ -261,7 +261,7 @@ Acyclic and Cyclic Graphs
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
-Projections among the Nodes of the Compostion never form a loop, then it is a `directed acyclic graph (DAG)
+Projections among the Nodes of the Composition never form a loop, then it is a `directed acyclic graph (DAG)
 <https://en.wikipedia.org/wiki/Acyclic_graph>`_, and the order in which its Nodes are executed can be determined by
 the structure of the graph itself.  However if the Composition contains loops, then its structure is a `cyclic graph
 <https://en.wikipedia.org/wiki/Cyclic_graph>`_, and how the Nodes in the loop are initialized and the order in which
@@ -290,7 +290,7 @@ can be explicitly assigned by specifying the desired `NodeRole` in any of the fo
   * the **required_roles** argument of the Composition's `add_node <Composition.add_node>` or `add_nodes
     <Composition.add_nodes>` methods;
 
-  * a tuple specifying the Node in the **pathways** argument of the Compositon's constructor, a `Pathway`\\'s
+  * a tuple specifying the Node in the **pathways** argument of the Composition's constructor, a `Pathway`\\'s
     constructor, or in one of the methods used to add a `Pathway <Composition_Pathways>` to the Composition
     (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its 2nd item.
 
@@ -327,28 +327,28 @@ not just its `INPUT <NodeRole.INPUT>` Nodes.
 from Nodes within a nested Composition.  This is true for any `OUTPUT <NodeRole.OUTPUT>` of the nested Composition,
 and it is also true for any of its other Nodes if `allow_probes <Composition.allow_probes>` is True (the default);
 if it is *CONTROL*, then only the `controller <Composition.controller>` of a Composition can receive Projections
-from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>`Nodes.
+from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes.
 
   .. _Composition_Probes:
 
-  * *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
-    outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
-    nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
-    is whether their output is included in the `output_values <Compostion.output_values>` and `results
-    <Compostion.results>` attributes of the Composition to which they belong, and any Compositions that intervene
-    between that one and the one to which the Node they project belongs.  This is determined by the
-    `include_probes_in_output <Composition.include_probes_in_output>` attribute of their Compostion and any
-    intervening ones. If `include_probes_in_output <Composition.include_probes_in_output>` is False (the default),
-    then the output of any `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
-    the `output_values <Compostion.output_values>` or `results <Compostion.results>` for that Composition. In this
-    case they can be thought of as "probing" - that is, providing access to "latent variables" of -- that Composition
-    that are not otherwise reported as part of the Composition's output or results.  If `include_probes_in_output
-    <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes of any nested
-    Compositions within are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in the
-    `output_values <Compostion.output_values>` and `results <Compostion.results>` of that Composition.  The
-    `include_probes_in_output <Composition.include_probes_in_output>` attribute can be set individually on any nested
-    Composition containing `PROBE <NodeRole.PROBE>` Nodes, and any enclosing Compositions that intervene between it
-    and the one containing the Node(s) to which its PROBES project.
+* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
+  outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
+  nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
+  iis whether their output is included in the `output_values <Composition.output_values>` and `results
+  <Composition.results>` attributes of the Composition to which they belong, and any Compositions that intervene
+  between that one and the one to which the Node they project belongs.  This is determined by the
+  `include_probes_in_output <Composition.include_probes_in_output>` attribute of their Composition and any
+  intervening ones. If `include_probes_in_output <Composition.include_probes_in_output>` is False (the default),
+  then the output of any `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
+  the `output_values <Composition.output_values>` or `results <Composition.results>` for that Composition. In this
+  case they can be thought of as "probing" - that is, providing access to "latent variables" of -- that Composition
+  that are not otherwise reported as part of the Composition's output or results.  If `include_probes_in_output
+  <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes of any nested
+  Compositions within are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in the
+  `output_values <Composition.output_values>` and `results <Composition.results>` of that Composition.  The
+  `include_probes_in_output <Composition.include_probes_in_output>` attribute can be set individually on any nested
+  Composition containing `PROBE <NodeRole.PROBE>` Nodes, and any enclosing Compositions that intervene between it
+  and the one containing the Node(s) to which its PROBES project.
 
 .. _Composition_Nested_External_Input_Ports:
 
@@ -367,7 +367,7 @@ are also included in those attributes of any intervening and the outermost Compo
 <Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
 <Composition.include_probes_in_output>` attribute determines whether their values are also included in the
 `output_values <Composition.output_values>` and `results <Composition.results>` of enclosing Compositions
-(see `aove <Composition_Probes>`).
+(see `above <Composition_Probes>`).
 
 .. _Composition_Nested_Learning:
 
@@ -403,7 +403,7 @@ connect a Node with itself.  Projections can also connect the Node(s) of a Compo
 <Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
 <NodeRole.OUTPUT>` Nodes of a `nested Composition <Composition_Nested>`, but if the Composition's `allow_probes
 <Composition.allow_probes>` attribute is not False, then Projections can be received from any Nodes within a nested
-Composition (see `Composition_Probes` for additional details). A  ControlMechanism can also control (i.e.,
+Composition (see `Probes <Composition_Probes>` for additional details). A  ControlMechanism can also control (i.e.,
 send a `ControlProjection`) to any Node within a nested Composition.
 
 .. technical_note::
@@ -413,7 +413,7 @@ send a `ControlProjection`) to any Node within a nested Composition.
     implemented as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,
     `parameter_CIM <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively;
     those, in turn, send or receive Projections to the specified Nodes within the nested Composition.
-    `PROBE <NodeRole.PROBE>` Nodes of a nested Composition, like `OUTPUT <NodeRoles.OUTPUT>` Nodes,
+    `PROBE <NodeRole.PROBE>` Nodes of a nested Composition, like `OUTPUT <NodeRole.OUTPUT>` Nodes,
     project to the Node of an enclosing Composition via the nested Composition's `output_CIM
     <Composition.output_CIM>`, and those of any intervening Compositions if it is nested Composition
     more than one level deep. Since the `output_values <Composition.output_values>` (and `results
@@ -421,8 +421,8 @@ send a `ControlProjection`) to any Node within a nested Composition.
     of its `output_CIM <Composition.output_CIM>`, then the outputs of `PROBE <NodeRole.PROBE>` Nodes are
     candidates for inclusion in the outputs reported for the nested Composition and any that intervene between
     it and the one(s) to which its PROBES project; whether or not they are included is determined by the
-    `include_probes_as_output <Composition.include_probes_as_output>` of each enclosing Composition
-    (see `Composition_Probes` for additional details).
+    `include_probes_in_output <Composition.include_probes_in_output>` of each enclosing Composition
+    (see `Probes <Composition_Probes>` for additional details).
 
 .. _Composition_Pathways:
 
@@ -437,7 +437,7 @@ required for implementing `learning <Composition_Learning>` in a Composition. Pa
 continguous, overlapping, intersecting, or disjoint, and can have one degree of converging and/or diverging branches
 (meaning that their branches can't branch). Each Pathway has a name (that can be assigned when it is constructed) and
 a set of attributes, including a `pathway <Pathway.pathway>` attribute that lists the Nodes and Projections in the
-Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles <PathwayRoles>` assigned to it (based on
+Pathway, a `roles <Pathway.roles>` attribute that lists the `PathwayRoles <PathwayRole>` assigned to it (based on
 the `NodeRoles <NodeRole>` assigned to its Nodes), and attributes for particular types of nodes (e.g., `INPUT` and
 `OUTPUT`) if the Pathway includes nodes assigned the corresponding `NodeRoles <NodeRole>`. If a Pathway does not have
 a particular type of Node, then its attribute returns None. There are
@@ -951,7 +951,7 @@ can also be called directly, but this is useful mostly for debugging.
 execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
 <TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
 <Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
-can also be generated as the Compostion is executing, using the **report_output** and **report_progress** arguments
+can also be generated as the Composition is executing, using the **report_output** and **report_progress** arguments
 of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
 input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
 in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
@@ -2614,23 +2614,22 @@ class Vertex(object):
 
 
 class Graph(object):
-    """
-        A Graph of vertices and edges.
+    """A Graph of vertices and edges.
 
-        Attributes
-        ----------
+    Attributes
+    ----------
 
-        comp_to_vertex : Dict[`Component <Component>` : `Vertex`]
-            maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
+    comp_to_vertex : Dict[`Component <Component>` : `Vertex`]
+        maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
 
-        vertices : List[Vertex]
-            the `Vertices <Vertex>` contained in this Graph;  each can be a `Node <Component_Nodes>` or a
-            `Projection <Component_Projections>`.
+    vertices : List[Vertex]
+        the `Vertices <Vertex>` contained in this Graph;  each can be a `Node <Component_Nodes>` or a
+        `Projection <Component_Projections>`.
 
-        dependency_dict : Dict[`Component` : Set(`Component`)]
-            maps each of the graph's Components to the others from which it receives input
-            (i.e., their `value <Component.value>`).  For a `Node <Components_Nodes>`, this is one or more
-            `Projections <Projection>`;  for a Projection, it is a single Node.
+    dependency_dict : Dict[`Component` : Set(`Component`)]
+        maps each of the graph's Components to the others from which it receives input
+        (i.e., their `value <Component.value>`).  For a `Node <Components_Nodes>`, this is one or more
+        `Projections <Projection>`;  for a Projection, it is a single Node.
 
     """
 
@@ -3068,7 +3067,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     controller_mode: enum.Enum[BEFORE|AFTER] : default AFTER
         specifies whether the `controller <Composition.controller>` is executed before or after the rest of the
         Composition when it is run, at the `TimeScale` specified by **controller_time_scale**). Must be either the
-        keyword *BEFORE* or *AFTER* (see `controller_mode <Compositon.controller_mode>` for additional details).
+        keyword *BEFORE* or *AFTER* (see `controller_mode <Composition.controller_mode>` for additional details).
 
     controller_time_scale: TimeScale[TIME_STEP, PASS, TRIAL, RUN] : default TRIAL
         specifies the frequency at which the `controller <Composition.controller>` is executed, either before or
@@ -3077,7 +3076,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     controller_condition: Condition : default Always()
         specifies a specific `Condition` for whether the Composition's `controller <Composition.controller>` is
-        executed  in a trial (see `controller_condition <Compositon.controller_condition>` for additional details).
+        executed  in a trial (see `controller_condition <Composition.controller_condition>` for additional details).
 
     retain_old_simulation_data : bool : default False
         specifies whether or not to retain Parameter values generated during `simulations
@@ -3120,15 +3119,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole.INTERNAL>` Nodes;  if it is assigned *CONTROL*, then only the Composition's `controller
         <Composition.controller>` or its `objective_mechanism <ControlMechanism.objetive_mechanism>` can receive
         Projections from such Nodes.  Any Nodes of a nested Composition that project to an enclosing Composition,
-        other than its `OUTPUT <NodeRole.OUTPUT>` Nodes, are assiged `PROBE <NodeRole.PROBE>` in addition to their
-        other roles (see `Composition_Probes` for additional information).
+        other than its `OUTPUT <NodeRole.OUTPUT>` Nodes, are assigned `PROBE <NodeRole.PROBE>` in addition to their
+        other roles (see `Probes <Composition_Probes>` for additional information).
 
     include_probes_in_output : bool : default False
         determines whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
         <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results
         <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
         the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
-        they are included (see `Composition_Probes` for additional details).
+        they are included (see `Probes <Composition_Probes>` for additional details).
 
     required_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
         a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` assigned to it.
@@ -8422,7 +8421,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         initialize_cycle_values : Dict { Node: Node Value } : default None
             sets the value of specified `Nodes <Composition_Nodes>` before the start of the run.  All specified
             Nodes must be in a `cycle <Composition_Graph>` (i.e., designated with with `NodeRole` `CYCLE
-            <NodeRoles.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
+            <NodeRole.CYCLE>`; otherwise, a warning is issued and the specification is ignored). If a Node in
             a cycle is not specified, it is assigned its `default values <Parameter_Defaults>` when initialized
             (see `Composition_Cycles_and_Feedback` additional details).
 
@@ -8619,7 +8618,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           <Composition.get_nodes_by_role>`\(`NodeRole.OUTPUT <OUTPUT>`).
 
           .. note::
-            The `results <Composition.results>` attribute of the Compositon contains a list of the outputs for all
+            The `results <Composition.results>` attribute of the Composition contains a list of the outputs for all
             trials.
 
         """

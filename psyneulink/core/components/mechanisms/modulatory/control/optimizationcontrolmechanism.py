@@ -35,7 +35,6 @@ Contents
           - `outcome_input_ports <OptimizationControlMechanism_Outcome>`
               - `objective_mechanism <OptimizationControlMechanism_ObjectiveMechanism>`
               - `monitor_for_control <OptimizationControlMechanism_Monitor_for_Control>`
-              - `probes <OptimizationControlMechanism_Probes>`
       - `Function <OptimizationControlMechanism_Function>`
           - `OptimizationControlMechanism_Custom_Function`
           - `OptimizationControlMechanism_Search_Functions`
@@ -305,7 +304,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
 
     .. technical_note::
-      The InputPorts specified as state_features are marked as `internal_only <InputPorts.internal_only>` = `True`.
+      The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
 
   * *OutputPort specification* -- this can be any form of `OutputPort specification <OutputPort_Specification>`
     for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition; the `value <OutputPort.value>`

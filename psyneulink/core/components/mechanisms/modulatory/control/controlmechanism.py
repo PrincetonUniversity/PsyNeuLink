@@ -72,7 +72,7 @@ executed, including any other ControlMechanisms that belong to it (see `Composit
 ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
 the **controller** argument of the Composition's constructor, or by using the Composition's `add_controller
 <Composition.add_controller>` method.  A Composition's `controller <Composition.controller>` and its associated
-Components can be displayed using the Composition's `show_graph <Composition.show_graph>` method with its
+Components can be displayed using the Composition's `show_graph <ShowGraph_show_graph_Method>` method with its
 **show_control** argument assigned as `True`.
 
 
@@ -199,7 +199,7 @@ specified (also see `ControlMechanism_Examples`):
     projections from `PROBE <NodeRole.PROBE>` Nodes of a nested Composition (the current one as well as any others in
     the same Composition);  if the Composition's `allow_probes <Composition.allow_probes>` attribute is True, then it
     is left that way, and any node within the Comopsition, including the ControlMechanism, can receive projections from
-    `PROBE <NodeRole.PROBE>` Nodes (see `Composition_Probes` for additiona additional details).
+    `PROBE <NodeRole.PROBE>` Nodes (see `Probes <Composition_Probes>` for additional details).
 
 The OutputPorts monitored by a ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`
 are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.monitor_for_control>` attribute
