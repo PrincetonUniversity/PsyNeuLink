@@ -315,13 +315,13 @@ nodes assigned a particular role can be listed using the `get_nodes_by_role <Com
 A nested Composition is one that is a `Node <Composition_Nodes>` within another Composition.  When the outer
 Composition is `executed <Composition_Execution>`, the nested Composition is executed when its Node in the outer
 is called to execute by the outer Composition's `scheduler <Composition.scheduler>`. Any depth of nesting of
-Compositions withinothers is allowed.   
+Compositions withinothers is allowed.
 
 *Projections to Nodes in a nested Composition.* Any Node within an outer Composition can send a `Projection
 <Projection>` to any `INPUT <NodeRole.INPUT>` Node of any Composition that is enclosed within it (i.e., at any level
 of nesting).  In addition, a `ControlMechanism` within an outer Composition can modulate the parameter (i.e.,
 send a `ControlProjection` to the `ParameterPort`) of *any* `Mechanism <Mechanism>` in a Composition nested within it,
-not just its `INPUT <NodeRole.INPUT>` Nodes. 
+not just its `INPUT <NodeRole.INPUT>` Nodes.
 
 *Projections from Nodes in a nested Composition.*  The nodes of an outer Composition can also *receive* Projections
 from Nodes within a nested Composition.  This is true for any `OUTPUT <NodeRole.OUTPUT>` of the nested Composition,
@@ -3038,7 +3038,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     projections : `Projection <Projection>` or list[`Projection <Projection>`] : default None
         specifies one or more `Projections <Projection>` to add to the Composition;  these are not functional
         unless they are explicitly assigned a `sender <Projection.sender>` and `receiver <Projection.receiver>`.
-        
+
     allow_probes : bool : default True
         specifies whether `Projections <Projection>` are allowed from `Nodes <Composition_Nodes>` of a `nested
         Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to
@@ -3046,10 +3046,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     include_probes_in_output : bool : default False
         specifies whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
-        <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results 
+        <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results
         <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
         the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
-        they are included.    
+        they are included.
 
     disable_learning: bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
@@ -3109,7 +3109,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         COMMENT:
             FIX: HOW IS THIS DIFFERENT THAN Composition.nodes?
         COMMENT
-        
+
     allow_probes : bool or CONTROL
         indicates whether `Projections <Projection>` are allowed to `Nodes <Composition_Nodes>` in the Composition
         from ones of a `nested Composition <Composition_Nested>` other than its OUTPUT <NodeRole.OUTPUT>` `Nodes
