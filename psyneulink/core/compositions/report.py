@@ -618,7 +618,7 @@ class Report:
     _outermost_comp : Composition
         the Composition that instantiated the Report in the outermost context of execution, and on which
         output and progress reports are stored by `_print_and_record_reports <Report._print_and_record_reports>`
-        in the Compositon's `rich_diverted_reports <Composition.rich_diverted_reports>` and `recorded_reports
+        in the Composition's `rich_diverted_reports <Composition.rich_diverted_reports>` and `recorded_reports
         <Composition.recorded_reports>` attributes if the `rich_divert <Report.rich_divert>`
         and/or `record_reports <Report.record_reports>` are set, respectively.
 
