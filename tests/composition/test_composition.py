@@ -6314,6 +6314,7 @@ class TestNodeRoles:
     ]
     @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
     def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
+        """Test use of allow_probes, include_probes_in_output and orphaned output from nested comp"""
 
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -6332,9 +6333,8 @@ class TestNodeRoles:
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',
                                 # node=[0,mcomp],   # <- CRASHES DUE TO INFINITE RECURSION
-                                # nodes=[mcomp,O],  # <- FAILS TO INCLUDE C and Z AS OUTPUTS OF ocomp
-                                #                   #    SINCE mcomp PROJECT TO O (DUE TO BY AND Y)
-                                nodes=[(mcomp, NodeRole.OUTPUT),O],
+                                nodes=[mcomp,O],
+                                # nodes=[(mcomp, NodeRole.OUTPUT),O],
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output
                                 )
@@ -6344,10 +6344,11 @@ class TestNodeRoles:
             # assert B.output_port in mcomp.output_CIM.port_map
             assert Y.output_port in mcomp.output_CIM.port_map
             if include_probes_in_output is False:
-                assert len(ocomp.output_values)==2
+                assert len(ocomp.output_values)==3  # Should only be outputs from mcomp (C, Z) and O
             elif include_probes_in_output is True:
-                assert len(ocomp.output_values)==3
-
+                assert len(ocomp.output_values)==4  # Outputs from mcomp (C and Z) and O (from B and Y)
+                                                    # This tests that outputs from mcomp (C and Z) are included
+                                                    # even though mcomp also projects to O (for B and Y)
         else:
             with pytest.raises(CompositionError) as err:
                 ocomp = Composition(name='OUTER COMP',
