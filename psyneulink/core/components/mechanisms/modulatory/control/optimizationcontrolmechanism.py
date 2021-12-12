@@ -170,9 +170,9 @@ implementing a more restricted form of model-based optimization.
        addressed by use of the term "agent_rep", and how it is implemented, as described below.
 
 This clearest form of this uses a `CompositionFunctionApproximator`, that learns to predict the `net_outcome
-`net_outcome <ControlMechanism.net_outcome>` for a given state (e.g., using reinforcement learning or other forms of
-function approximation, , such as a `RegressionCFA`).  In each `TRIAL <TimeScale.TRIAL>`
-the `agent_rep <OptimizationControlMechanism.agent_rep>` is used to search over `control_allocation
+`net_outcome <ControlMechanism.net_outcome>` for a given state (e.g., using reinforcement learning or other forms
+of function approximation, , such as a `RegressionCFA`).  In each `TRIAL <TimeScale.TRIAL>` the  `agent_rep
+<OptimizationControlMechanism.agent_rep>` is used to search over `control_allocation
 <ControlMechanism.control_allocation>`\\s, to find the one that yields the best predicted `net_outcome
 <ControlMechanism.net_outcome>` of processing on the upcoming trial, based on the current or (expected)
 `state_feature_values <OptimizationControlMechanism.state_feature_values>` for that trial.  The `agent_rep
