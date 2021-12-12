@@ -56,30 +56,19 @@ An OptimizationControlMechanism is a `ControlMechanism <ControlMechanism>` that 
 optimize the performance of the `Composition` for which it is a `controller <Composition_Controller>`.  It does so
 by using the `OptimizationFunction` (assigned as its `function <OptimizationControlMechanism.function>`) to execute
 its `agent_rep <OptimizationControlMechanism.agent_rep>` -- a representation of the Composition to be optimized --
-under different `control_allocations <ControlMechanism.control_allocation>`, and selecting
-the one that optimizes its `net_outcome <ControlMechanism.net_outcome>`.  The `agent_rep
-<OptimizationControlMechanism.agent_rep>` can be the Composition itself (implementing fully `model-based optimization
-<OptimizationControlMechanism_Model_Based>`), or some other representation of it (that can implement `model-free
-optimization <OptimizationControlMechanism_Model_Free>`).  The `net_outcome <ControlMechanism.net_outcome>` used to
-evaluate the `agent_rep <OptimizationControlMechanism.agent_rep>` for a given `state
-<OptimizationControlMechanism_State>` (i.e., a specific set of inputs and a given control_allocation) takes into account
-both the outcome of executing the `agent_rep <OptimizationControlMechanism.agent_rep>`, as well as any `costs
-<ControlMechanism_Costs_NetOutcome>` associated with the `control_allocation <ControlMechanism.control_allocation>`.
-If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator` with an `adapt
-<CompositionFunctionApproximator.adapt>` method, that can be used to learn how to best predict its `net_outcome
-<ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>` that, in turn, it can use
-to predict the optimal control_allocation for a given set of inputs.
-
-COMMENT: OLD
-to find an optimal `control_allocation <ControlMechanism.control_allocation>` for a given `state
-<OptimizationControlMechanism_State>`. The `OptimizationFunction` uses the OptimizationControlMechanism's
-`evaluate_agent_rep <OptimizationControlMechanism.evalutate_agent_rep>` method to evaluate different samples
-of `control_allocation <ControlMechanism.control_allocation>`, and then implements the one that yields the best
-predicted result. The result returned by the `evaluate_agent_rep <OptimizationControlMechanism.evalutate_agent_rep>`
-method is the `net_outcome <ControlMechanism.net_outcome>` computed by the OptimizationControlMechanism for
-the `Composition` (or part of one) that it controls, and its `ObjectiveFunction` seeks to maximize this,
-which corresponds to maximizing the Expected Value of Control, as described below.
-COMMENT
+under different `control_allocations <ControlMechanism.control_allocation>`, and selecting the one that optimizes
+its `net_outcome <ControlMechanism.net_outcome>`.  A OptimizationControlMechanism can be configured to implement
+forms of optimization, ranging from fully `model-based optimization <OptimizationControlMechanism_Model_Based>`
+that uses the Composition itself as the  `agent_rep <OptimizationControlMechanism.agent_rep>` to simulate the
+outcome for a given `state <OptimizationControlMechanism_State>` (i.e., a combination of the current input and a
+particular `control_allocation <ControlMechanism.control_allocation>`), to fully `model-free optimization
+<OptimizationControlMechanism_Model_Free>` by using a `CompositionFunctionApproximator` as the `agent_rep
+<OptimizationControlMechanism.agent_rep>` that learns to  predict the outcomes for a state. Intermediate forms of
+optimization can also be implemented, that use simpler Compositions to approximate the dynamics of the full Composition.
+The outcome of executing the `agent_rep <OptimizationControlMechanism.agent_rep>` is used to compute a `net_outcome
+<ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>`, that takes into account
+the `costs <ControlMechanism_Costs_NetOutcome>` associated with the `control_allocation, and is used to determine
+the optimal `control_allocations <ControlMechanism.control_allocation>`.
 
 .. _OptimizationControlMechanism_EVC:
 
@@ -131,9 +120,10 @@ representation <OptimizationControlMechanism_Agent_Rep>`, that is used to determ
 <ControlMechanism.net_outcome>` for a given `state <OptimizationControlMechanism_State>`, and find the
 `control_allocation <ControlMechanism.control_allocation>` that optimizes this.  The `agent_rep
 <OptimizationControlMechanism.agent_rep>` can be the `Composition` to which the OptimizationControlMechanism
-belongs (and controls), or another one (either one `nested <Composition_Nested>` within it, or a
-`CompositionFunctionApproximator`) that is used to estimate the `net_outcome <ControlMechanism.net_outcome>`
-for the parent Composition.  This distinction corresponds closely to the distinction between *model-based* and
+belongs (and controls), another (presumably simpler) one, or a `CompositionFunctionApproximator`) that is used to
+estimate the `net_outcome <ControlMechanism.net_outcome>` Composition of which the OptimizationControlMechanism is
+the `controller <Composition.controller>`.  These different types of `agent representation
+<OptimizationControlMechanism_Agent_Rep>` correspond closely to the distinction between *model-based* and
 *model-free* optimization in the `machine learning
 <https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&gbpv=1&dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&pg=PR7&printsec=frontcover>`_
 and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatures, as described below.
@@ -157,15 +147,15 @@ and `cognitive neuroscience <https://www.nature.com/articles/nn1560>`_ literatur
 
 *Model-Based Optimization*
 
-This fullest form of this is implemented by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>`
+The fullest form of this is implemented by assigning as the `agent_rep  <OptimizationControlMechanism.agent_rep>`
 the Composition for which the OptimizationControlMechanism is the `controller <Composition.controller>`).
 On each `TRIAL <TimeScale.TRIAL>`, that Composition *itself* is provided with either the most recent inputs
 to the Composition, or ones predicted for the upcoming trial (as determined by the `state_feature_values
 <OptimizationControlMechanism.state_feature_values>` of the OptimizationControlMechanism), and then used to simulate
 processing on that trial in order to find the `control_allocation <ControlMechanism.control_allocation>` that yields
 the best `net_outcome <ControlMechanism.net_outcome>` for that trial.  A different Composition can also be assigned as
-the `agent_rep  <OptimizationControlMechanism.agent_rep>`, that approximates they dynamics of processing in the
-Composition for which the OptimizationControlMechanism is the `controller <Composition.controller>` in simpler form,
+the `agent_rep  <OptimizationControlMechanism.agent_rep>`, that approximates in simpler form the dynamics of processing
+in the Composition for which the OptimizationControlMechanism is the `controller <Composition.controller>`,
 implementing a more restricted form of model-based optimization.
 
 .. _OptimizationControlMechanism_Model_Free:
@@ -179,18 +169,18 @@ implementing a more restricted form of model-based optimization.
        one -- for learning, planning and decision making.  In the context of a OptimizationControlMechanism, this is
        addressed by use of the term "agent_rep", and how it is implemented, as described below.
 
-This is implemented by assigning the `agent_rep <OptimizationControlMechanism.agent_rep>` to something than the
-`Composition` for which the OptimizationControlMechanism is the `controller <Composition.controller>`).  This
-can be another (presumably simpler) Composition, or a `CompositionFunctionApproximator` that is used to estimate
-and/or learn to predict the behavior of the Composition being controlled (e.g., using reinforcement learning algorithms
-or other forms of function approximation), in order to optimize its performance. In each `TRIAL <TimeScale.TRIAL>`
+This clearest form of this uses a `CompositionFunctionApproximator`, that learns to predict the `net_outcome
+`net_outcome <ControlMechanism.net_outcome>` for a given state (e.g., using reinforcement learning or other forms of
+function approximation, , such as a `RegressionCFA`).  In each `TRIAL <TimeScale.TRIAL>`
 the `agent_rep <OptimizationControlMechanism.agent_rep>` is used to search over `control_allocation
 <ControlMechanism.control_allocation>`\\s, to find the one that yields the best predicted `net_outcome
 <ControlMechanism.net_outcome>` of processing on the upcoming trial, based on the current or (expected)
 `state_feature_values <OptimizationControlMechanism.state_feature_values>` for that trial.  The `agent_rep
 <OptimizationControlMechanism.agent_rep>` is also given the chance to adapt in order to improve its prediction
 of its `net_outcome <ControlMechanism.net_outcome>` based on the `state <OptimizationControlMechanism_State>`,
-and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.
+and `net_outcome <ControlMechanism.net_outcome>` of the prior trial.  A Composition can also be used to generate
+such predictions permitting, as noted above, forms of optimization intermediate between the extreme examples of
+model-based and model-free.
 
 .. _OptimizationControlMechanism_Creation:
 
