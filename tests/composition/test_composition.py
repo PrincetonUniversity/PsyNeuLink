@@ -6296,21 +6296,21 @@ class TestNodeRoles:
         comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
         assert B.output_port in comp.output_CIM.port_map
 
-    params = [
-        (  # id     allow_probes  include_probes_in_output  err_msg
+    params = [  # id     allow_probes  include_probes_in_output  err_msg
+        (
             "allow_probes_True", True, False, None
          ),
-        # (
-        #     "allow_probes_True", True, True, None
-        #  ),
-        # (
-        #     "allow_probes_False", False, False,
-        #     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-        #  ),
-        # (
-        #     "allow_probes_CONTROL", "CONTROL", True,
-        #     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-        #  )
+        (
+            "allow_probes_True", True, True, None
+         ),
+        (
+            "allow_probes_False", False, False,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         ),
+        (
+            "allow_probes_CONTROL", "CONTROL", True,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         )
     ]
     @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
     def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
@@ -6332,21 +6332,21 @@ class TestNodeRoles:
 
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',
-                                # node=[0,mcomp],   # <- CRASHES DUE TO INFINITE RECURSION
+                                # node=[0,mcomp],   # <- CRASHES
                                 nodes=[mcomp,O],
                                 # nodes=[(mcomp, NodeRole.OUTPUT),O],
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output
                                 )
-            ocomp.show_graph(show_cim=True, show_node_structure=True)
-            assert True
+            # ocomp.show_graph(show_cim=True, show_node_structure=True)
+
             assert B.output_port in icomp.output_CIM.port_map
             # assert B.output_port in mcomp.output_CIM.port_map
             assert Y.output_port in mcomp.output_CIM.port_map
             if include_probes_in_output is False:
-                assert len(ocomp.output_values)==3  # Should only be outputs from mcomp (C, Z) and O
+                assert len(ocomp.output_values)==4  # Should only be outputs from mcomp (C, Z) and O
             elif include_probes_in_output is True:
-                assert len(ocomp.output_values)==4  # Outputs from mcomp (C and Z) and O (from B and Y)
+                assert len(ocomp.output_values)==6  # Outputs from mcomp (C and Z) and O (from B and Y)
                                                     # This tests that outputs from mcomp (C and Z) are included
                                                     # even though mcomp also projects to O (for B and Y)
         else:
