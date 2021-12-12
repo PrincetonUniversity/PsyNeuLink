@@ -3498,7 +3498,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nodes is not None:
             nodes = convert_to_list(nodes)
             for node in nodes:
-                self.add_node(node)
+                required_roles = None
+                if isinstance(node, tuple):
+                    node, required_roles = node
+                self.add_node(node, required_roles)
 
         # FIX 4/8/20 [JDC]: TEST THIS
         if projections is not None:
@@ -4380,44 +4383,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         NodeRole.FEEDBACK_RECEIVER
                     )
 
-        # region
-        # # MODIFIED 4/25/20 OLD NOTES:
-        # # If no OUTPUT nodes were explicitly specified as required_roles by *user* , assign them:
-        # # - if there are LearningMechanisms, OUTPUT node is the last non-learning-related node.
-        # # - if there are no TERMINAL nodes either, then the last node added to the Composition becomes the OUTPUT node.
-        # # - ignore OUTPUT nodes in learning pathways as those are assigned automatically in add_linear_learning_pathway
-        # #   and don't want that to suppress normal assignment of TERMINAL nodes in non-learning pathways as OUTPUT nodes
-        # #   (if user has not specified any as required roles)
-        #     #         # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
-        #     #         #    - not used for Learning;
-        #     #         #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
-        #     #         #    - do not project to any other nodes.
-        #     #
-        #     #         # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
-        #     #         #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
-        #     #         #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
-        #     #         # Next, remove any learning-related nodes, ControlMechanism(s) or control-related
-        #     #         #    ObjectiveMechanism(s) that may have "snuck in" (i.e., happen to be in the set)
-        #     #         # Then, add any nodes that are not learning-related or a ControlMechanism,
-        #     #         #    and that have *no* efferent Projections
-        #     #         # IMPLEMENTATION NOTE:
-        #     #         #  Do this here, as the list considers entire sets in the consideration queue,
-        #     #         #    and a node with no efferents may be in the same set as one with efferents
-        #     #         #    if they have the same dependencies.
-        #         # Assign TERMINAL role to nodes that are last in the scheduler's consideration queue that are:
-        #         #    - not used for Learning;
-        #         #    - not ControlMechanisms or ObjectiveMechanisms that project to them;
-        #         #    - do not project to any other nodes.
-        #         # FIX 4/25/20 [JDC]:  MISSES ObjectiveMechanism BURIED IN LAST CONSIDERATION SET
-        #         # First, find last `consideration_set <consideration_set>` in scheduler that does not contain only
-        #         #    learning-related nodes, ControlMechanism(s) or control-related ObjectiveMechanism(s);
-        #         #    note: get copy of the consideration_set, as don't want to modify one actually used by scheduler
-        #     # MODIFIED 4/25/20 END
-        # endregion
-
-        # MODIFIED 4/25/20 NEW:
         # FIX 4/25/20 [JDC]:  NEED TO AVOID AUTOMATICALLY (RE-)ASSIGNING ONES REMOVED BY exclude_node_roles
-        #     - Simply execlude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
+        #     - Simply exclude any LEARNING_OBJECTIVE and CONTROL_OBJECTIVE that project only to ModulatoryMechanism
         #     - NOTE IN PROGRAM ERROR FAILURE TO ASSIGN CONTROL_OBJECTIVE
 
         # OUTPUT
@@ -4453,7 +4420,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     self._add_node_role(node, NodeRole.OUTPUT)
                 #     continue
 
-                # Assign OUTPUT if it is an `RecurrentTransferMechanism` configured for learning
+                # Assign OUTPUT if it is a `RecurrentTransferMechanism` configured for learning
                 #    and doesn't project to any Nodes other than its `AutoassociativeLearningMechanism`
                 #    (this is not picked up as a `TERMINAL` since it projects to the `AutoassociativeLearningMechanism`)
                 #    but can (or already does) project to an output_CIM
@@ -4483,7 +4450,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        or (isinstance(p.receiver.owner, ControlMechanism) and not isinstance(node, ObjectiveMechanism)))
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
-        # MODIFIED 4/25/20 END
+
+                # If node is a Composition and its output_CIM has projections to self.output_CIM, assign as OUTPUT
+                # Note: this ensures that nested Comps that have both Nodes that project to Nodes in outer Composition
+                #       *and also* legit OUTPUT Nodes, the latter are sufficient to make the nested Comp an OUTPUT Node
+                if (isinstance(node, Composition)
+                        and any(proj.receiver.owner is self.output_CIM for
+                                port in node.output_CIM.output_ports
+                                for proj in port.efferents)):
+                    self._add_node_role(node, NodeRole.OUTPUT)
 
         # Assign SINGLETON and INTERNAL nodes
         for node in self.nodes:
@@ -5170,8 +5145,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #        will handle any existing Projections that are in the current Composition below.
         if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
-                                                               receiver=receiver,
-                                                               in_composition=False)
+                                                                        receiver=receiver,
+                                                                        in_composition=False)
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -5181,7 +5156,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receiver_check = receiver.owner
                 else:
                     receiver_check = receiver
-                if ((not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes)
+                # If either the sender or receiver are not in Composition and are not CompositionInterfaceMechanisms
+                #   remove the Projection and inclusion in relevant Ports
+                if ((not isinstance(sender_check, CompositionInterfaceMechanism)
+                     and sender_check not in self.nodes)
                         or (not isinstance(receiver_check, CompositionInterfaceMechanism)
                             and receiver_check not in self.nodes)):
                     for proj in existing_projections:
@@ -10453,7 +10431,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context)
                 for output_port in self.output_CIM.output_ports
-                if not self.output_CIM._sender_is_probe(output_port)]
+                if (not self.output_CIM._sender_is_probe(output_port) or self.include_probes_in_output)]
 
     @property
     def shadowing_dict(self):

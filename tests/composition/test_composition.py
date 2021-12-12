@@ -6296,13 +6296,13 @@ class TestNodeRoles:
         comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
         assert B.output_port in comp.output_CIM.port_map
 
-    params = [
+    params = [  # id     allow_probes  include_probes_in_output  err_msg
         (
             "allow_probes_True", True, False, None
          ),
-        # (
-        #     "allow_probes_True", True, True, None
-        #  ),
+        (
+            "allow_probes_True", True, True, None
+         ),
         (
             "allow_probes_False", False, False,
             "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
@@ -6310,10 +6310,11 @@ class TestNodeRoles:
         (
             "allow_probes_CONTROL", "CONTROL", True,
             "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         ),
+         )
     ]
     @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
     def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
+        """Test use of allow_probes, include_probes_in_output and orphaned output from nested comp"""
 
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -6331,24 +6332,23 @@ class TestNodeRoles:
 
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',
-                                # nodes=[O,mcomp], # <- CRASHES ON INFINITE RECURSION
-                                nodes=[mcomp,O],   # <- FAILS TO INCLUDE C and Z AS OUTPUTS OF ocomp
-                                                   #    SINCE mcomp PROJECTS TO O (DUE TO B and Y)
+                                # node=[0,mcomp],   # <- CRASHES
+                                nodes=[mcomp,O],
+                                # nodes=[(mcomp, NodeRole.OUTPUT),O],
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output
                                 )
-            ocomp.show_graph(show_cim=True, show_node_structure=True)
-            x = ocomp()
+            # ocomp.show_graph(show_cim=True, show_node_structure=True)
 
-            assert True
             assert B.output_port in icomp.output_CIM.port_map
             # assert B.output_port in mcomp.output_CIM.port_map
             assert Y.output_port in mcomp.output_CIM.port_map
             if include_probes_in_output is False:
-                assert len(ocomp.output_values)==2
+                assert len(ocomp.output_values)==4  # Should only be outputs from mcomp (C, Z) and O
             elif include_probes_in_output is True:
-                assert len(ocomp.output_values)==3
-
+                assert len(ocomp.output_values)==6  # Outputs from mcomp (C and Z) and O (from B and Y)
+                                                    # This tests that outputs from mcomp (C and Z) are included
+                                                    # even though mcomp also projects to O (for B and Y)
         else:
             with pytest.raises(CompositionError) as err:
                 ocomp = Composition(name='OUTER COMP',
