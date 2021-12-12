@@ -6331,10 +6331,11 @@ class TestNodeRoles:
 
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',
-                                nodes=[mcomp,O],
-                                # allow_probes=allow_probes,
-                                # allow_probes=False,
-                                # include_probes_in_output=include_probes_in_output
+                                # nodes=[O,mcomp], # <- CRASHES ON INFINITE RECURSION
+                                nodes=[mcomp,O],   # <- FAILS TO INCLUDE C and Z AS OUTPUTS OF ocomp
+                                                   #    SINCE mcomp PROJECTS TO O (DUE TO B and Y)
+                                allow_probes=allow_probes,
+                                include_probes_in_output=include_probes_in_output
                                 )
             ocomp.show_graph(show_cim=True, show_node_structure=True)
             x = ocomp()
