@@ -381,7 +381,7 @@ class TestControlSpecification:
          "mcomp", "I", None, False, True, pnl.CompositionError,
          "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
          "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
-         ),
+         )
     ]
     @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, objective_mechanism, error_type, err_msg',
                              params, ids=[x[0] for x in params])

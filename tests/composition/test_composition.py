@@ -2277,6 +2277,7 @@ class TestExecutionOrder:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
+
 class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
@@ -6287,6 +6288,59 @@ class TestNodeRoles:
         comp.add_linear_processing_pathway([A, B, C])
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
+
+    def test_unnested_PROBE(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
+        assert B.output_port in comp.output_CIM.port_map
+
+    params = [
+        # (
+        #     "allow_probes_True", True, None
+        #  ),
+        (
+            "allow_probes_False", False,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         ),
+        (
+            "allow_probes_CONTROL", "CONTROL",
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         ),
+    ]
+    @pytest.mark.parametrize('id, allow_probes, err_msg', params, ids=[x[0] for x in params])
+    def test_nested_PROBES(self, id, allow_probes, err_msg):
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
+
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        Z = ProcessingMechanism(name='Z')
+        mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
+
+        O = ProcessingMechanism(name='O',
+                                input_ports=[B, Y]) # <- BETTER ERROR
+
+        if not err_msg:
+            ocomp = Composition(name='OUTER COMP',
+                                nodes=[mcomp,O],
+                                allow_probes=allow_probes)
+
+            assert B.output_port in icomp.output_CIM.port_map
+            # assert B.output_port in mcomp.output_CIM.port_map
+            assert Y.output_port in mcomp.output_CIM.port_map
+
+        else:
+            with pytest.raises(CompositionError) as err:
+                ocomp = Composition(name='OUTER COMP',
+                                nodes=[mcomp,O],
+                                allow_probes=allow_probes)
+                ocomp._analyze_graph()
+            assert err.value.error_value == err_msg
 
     def test_two_node_cycle(self):
         A = TransferMechanism()

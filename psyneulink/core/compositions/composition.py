@@ -4959,7 +4959,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 ctl_monitored_nodes = self._get_monitor_for_control_nodes()
 
             # If allow_probes is set on the Composition or any ControlMechanisms, then attempt to assign node as PROBE
-            if self.allow_probes or ctl_monitored_nodes:
+            if self.allow_probes is True or ctl_monitored_nodes:
                 # Check if Node is an INPUT or INTERNAL
                 if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                     comp._add_required_node_role(node, NodeRole.PROBE)
