@@ -3498,7 +3498,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if nodes is not None:
             nodes = convert_to_list(nodes)
             for node in nodes:
-                self.add_node(node)
+                required_roles = None
+                if isinstance(node, tuple):
+                    node, required_roles = node
+                self.add_node(node, required_roles)
 
         # FIX 4/8/20 [JDC]: TEST THIS
         if projections is not None:
@@ -5170,8 +5173,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #        will handle any existing Projections that are in the current Composition below.
         if sender and receiver and projection is None:
             existing_projections = self._check_for_existing_projections(sender=sender,
-                                                               receiver=receiver,
-                                                               in_composition=False)
+                                                                        receiver=receiver,
+                                                                        in_composition=False)
             if existing_projections:
                 if isinstance(sender, Port):
                     sender_check = sender.owner
@@ -5181,7 +5184,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     receiver_check = receiver.owner
                 else:
                     receiver_check = receiver
-                if ((not isinstance(sender_check, CompositionInterfaceMechanism) and sender_check not in self.nodes)
+                # If either the sender or receiver are not in Composition and are not CompositionInterfaceMechanisms
+                #   remove the Projection and inclusion in relevant Ports
+                if ((not isinstance(sender_check, CompositionInterfaceMechanism)
+                     and sender_check not in self.nodes)
                         or (not isinstance(receiver_check, CompositionInterfaceMechanism)
                             and receiver_check not in self.nodes)):
                     for proj in existing_projections:

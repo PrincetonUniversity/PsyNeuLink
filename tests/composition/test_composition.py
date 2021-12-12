@@ -6297,20 +6297,20 @@ class TestNodeRoles:
         assert B.output_port in comp.output_CIM.port_map
 
     params = [
-        (
+        (  # id     allow_probes  include_probes_in_output  err_msg
             "allow_probes_True", True, False, None
          ),
         # (
         #     "allow_probes_True", True, True, None
         #  ),
-        (
-            "allow_probes_False", False, False,
-            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         ),
-        (
-            "allow_probes_CONTROL", "CONTROL", True,
-            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
-         ),
+        # (
+        #     "allow_probes_False", False, False,
+        #     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+        #  ),
+        # (
+        #     "allow_probes_CONTROL", "CONTROL", True,
+        #     "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+        #  )
     ]
     @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
     def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
@@ -6331,14 +6331,14 @@ class TestNodeRoles:
 
         if not err_msg:
             ocomp = Composition(name='OUTER COMP',
-                                nodes=[mcomp,O],
-                                # allow_probes=allow_probes,
-                                # allow_probes=False,
-                                # include_probes_in_output=include_probes_in_output
+                                # node=[0,mcomp],   # <- CRASHES DUE TO INFINITE RECURSION
+                                # nodes=[mcomp,O],  # <- FAILS TO INCLUDE C and Z AS OUTPUTS OF ocomp
+                                #                   #    SINCE mcomp PROJECT TO O (DUE TO BY AND Y)
+                                nodes=[(mcomp, NodeRole.OUTPUT),O],
+                                allow_probes=allow_probes,
+                                include_probes_in_output=include_probes_in_output
                                 )
             ocomp.show_graph(show_cim=True, show_node_structure=True)
-            x = ocomp()
-
             assert True
             assert B.output_port in icomp.output_CIM.port_map
             # assert B.output_port in mcomp.output_CIM.port_map
