@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.12.gee1f894 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.12.g3b6389a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.12.gee1f894
+                  0+untagged.12.g3b6389a
                 </div>
               
             
@@ -269,7 +269,7 @@ method, the ControlMechanism assumes control over all of the parameters that hav
 executed, including any other ControlMechanisms that belong to it (see <a class="reference internal" href="Composition.html#composition-controller-execution"><span class="std std-ref">Controller Execution</span></a>).  A
 ControlMechanism can be assigned as the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> for a Composition by specifying it in
 the <strong>controller</strong> argument of the Composition’s constructor, or by using the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_controller" title="psyneulink.core.compositions.composition.Composition.add_controller"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_controller</span></code></a> method.  A Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a> and its associated
-Components can be displayed using the Composition’s <code class="xref any docutils literal notranslate"><span class="pre">show_graph</span></code> method with its
+Components can be displayed using the Composition’s <a class="reference internal" href="Visualization.html#showgraph-show-graph-method"><span class="std std-ref">show_graph</span></a> method with its
 <strong>show_control</strong> argument assigned as <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </section>
 </section>
@@ -348,6 +348,16 @@ specify an ObjectiveMechanism with a custom <a class="reference internal" href="
 OutputPorts monitored (see <a class="reference internal" href="#controlmechanism-objectivemechanism-function"><span class="std std-ref">below</span></a> for additional details).</p></li>
 </ul>
 </li>
+</ul>
+<ul class="simple" id="controlmechanism-allow-probes">
+<li><p><strong>allow_probes</strong> – this argument allows values of Components of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> other
+than its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> to be specified in the <strong>monitor_for_control</strong>
+argument of the ControlMechanism’s constructor or, if <strong>objective_mechanism</strong> is specified, in the
+<strong>monitor</strong> argument of the ObjectiveMechanism’s constructor (see above).  If the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute is False, it is set to <em>CONTROL</em>, and only a ControlMechanism can receive
+projections from <a class="reference internal" href="Composition.html#id18" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes of a nested Composition (the current one as well as any others in
+the same Composition);  if the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute is True, then it
+is left that way, and any node within the Comopsition, including the ControlMechanism, can receive projections from
+<a class="reference internal" href="Composition.html#id18" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes (see <a class="reference internal" href="Composition.html#composition-probes"><span class="std std-ref">Probes</span></a> for additional details).</p></li>
 </ul>
 </div></blockquote>
 <p>The OutputPorts monitored by a ControlMechanism or its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>
@@ -590,7 +600,7 @@ as the OutputPort that it monitors.</p>
 <span id="controlmechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.</span></span><span class="sig-name descname"><span class="pre">ControlMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">monitor_for_control=None</span></em>, <em class="sig-param"><span class="pre">objective_mechanism=None</span></em>, <em class="sig-param"><span class="pre">outcome_input_ports_option=SEPARATE</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">function=Linear</span></em>, <em class="sig-param"><span class="pre">default_allocation=None</span></em>, <em class="sig-param"><span class="pre">control=None</span></em>, <em class="sig-param"><span class="pre">modulation=MULTIPLICATIVE</span></em>, <em class="sig-param"><span class="pre">combine_costs=np.sum</span></em>, <em class="sig-param"><span class="pre">compute_reconfiguration_cost=None</span></em>, <em class="sig-param"><span class="pre">compute_net_outcome=lambda</span> <span class="pre">x</span></em>, <em class="sig-param"><span class="pre">y:x-y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.</span></span><span class="sig-name descname"><span class="pre">ControlMechanism</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">monitor_for_control=None</span></em>, <em class="sig-param"><span class="pre">objective_mechanism=None</span></em>, <em class="sig-param"><span class="pre">allow_probes=False</span></em>, <em class="sig-param"><span class="pre">outcome_input_ports_option=SEPARATE</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">function=Linear</span></em>, <em class="sig-param"><span class="pre">default_allocation=None</span></em>, <em class="sig-param"><span class="pre">control=None</span></em>, <em class="sig-param"><span class="pre">modulation=MULTIPLICATIVE</span></em>, <em class="sig-param"><span class="pre">combine_costs=np.sum</span></em>, <em class="sig-param"><span class="pre">compute_reconfiguration_cost=None</span></em>, <em class="sig-param"><span class="pre">compute_net_outcome=lambda</span> <span class="pre">x</span></em>, <em class="sig-param"><span class="pre">y:x-y</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism" title="Permalink to this definition">¶</a></dt>
 <dd><p>Subclass of <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> that modulates the parameter(s) of one or more
 <a class="reference internal" href="Component.html"><span class="doc">Component(s)</span></a>.  See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
 <dl class="field-list simple">
@@ -605,6 +615,10 @@ ControlMechanism itself if an <strong>objective_mechanism</strong> is not specif
 should monitor; if a list of <a class="reference internal" href="ObjectiveMechanism.html#objectivemechanism-monitor"><span class="std std-ref">OutputPort specifications</span></a> is used,
 a default ObjectiveMechanism is created and the list is passed to its <strong>monitor</strong> argument, along with any
 OutputPorts specified in the ControlMechanism’s <strong>monitor_for_control</strong> <a class="reference internal" href="#controlmechanism-monitor-for-control-argument"><span class="std std-ref">argument</span></a>.</p></li>
+<li><p><strong>allow_probes</strong> (<em>bool : default False</em>) – specifies whether Components of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> that are not OUTPUT
+&lt;NodeRole.OUTPUT&gt;` <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of that Composition can be specified as items in the
+ControlMechanism’s  <strong>monitor_for_control</strong> argument or, if <strong>objective_mechanism</strong>
+is specified, in the ObjectiveMechanism’s <strong>monitor</strong> argument (see <a class="reference internal" href="#controlmechanism-allow-probes"><span class="std std-ref">allow_probes</span></a> for additional information).</p></li>
 <li><p><strong>outcome_input_ports_option</strong> (<em>COMBINE</em><em>, </em><em>CONCATENATE</em><em>, </em><em>SEPARATE : default SEPARATE</em>) – if <strong>objective_mechanism</strong> is not specified, this specifies whether <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>
 from items specified in <strong>monitor_for_control</strong> are each assigned their own <a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a> (<em>SEPARATE</em>)
 or to a single <em>OUTCOME</em> InputPort (<em>CONCATENATE</em>, <em>COMBINE</em>); (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome_input_ports_option" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.outcome_input_ports_option"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_input_ports_option</span></code></a> for additional details.</p></li>
@@ -645,6 +659,20 @@ in the latter case, the list returned is ObjectiveMechanism’s <a class="refere
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p><a class="reference internal" href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism">ObjectiveMechanism</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.allow_probes">
+<span class="sig-name descname"><span class="pre">allow_probes</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.allow_probes" title="Permalink to this definition">¶</a></dt>
+<dd><p>indicates status of the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute of the Composition
+to which the ControlMechanism belongs.  If False, items specified in the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.monitor_for_control" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.monitor_for_control"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor_for_control</span></code></a> are all <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>
+of that Composition.  If True, they may be <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> or <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INTERNAL" title="psyneulink.core.compositions.composition.NodeRole.INTERNAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INTERNAL</span></code></a>
+<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> (see <a class="reference internal" href="#controlmechanism-allow-probes"><span class="std std-ref">allow probes</span></a> and <code class="xref any docutils literal notranslate"><span class="pre">Composition_Probes</span></code> for additional information).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
