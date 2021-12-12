@@ -3675,7 +3675,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @handle_external_context(source = ContextFlags.COMPOSITION)
     def add_node(self, node, required_roles=None, context=None):
         """
-            Add a Composition Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
+            Add a Node (`Mechanism <Mechanism>` or `Composition`) to Composition, if it is not already added
 
             Arguments
             ---------
@@ -3688,11 +3688,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # FIX 5/25/20 [JDC]: ADD ERROR STRING (as in pathway_arg_str in add_linear_processing_pathway)
+        # Raise error if Composition is added to itself
         if node is self:
             pathway_arg_str = ""
             if context.source in {ContextFlags.INITIALIZING, ContextFlags.METHOD}:
                 pathway_arg_str = " in " + context.string
             raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
+
+        if isinstance(node, Composition):
+            # IMPLEMENTATION NOTE: include_probes_in_output=False is not currently supported for nested Nodes
+            #                    (they require get_output_value() to return value of all output_ports of output_CIM)
+            node.include_probes_in_output = True
 
         try:
             node._analyze_graph(context = context)
@@ -9673,7 +9679,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
+                    # # MODIFIED 12/12/21 OLD:
                     frozen_values[node] = node.get_output_values(context)
+                    # # MODIFIED 12/12/21 NEW:
+                    # buffer_setting = self.include_probes_in_output
+                    # self.include_probes_in_output = True
+                    # frozen_values[node] = node.get_output_values(context)
+                    # self.include_probes_in_output = buffer_setting
+                    # MODIFIED 12/12/21 END
 
                     # FIX: 6/12/19 Deprecate?
                     # Handle input clamping
@@ -9814,6 +9827,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for i in range(len(node.output_ports)):
                         node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                    skip_history=True, skip_log=True)
+                    # # MODIFIED 12/12/21 NEW:  THIS PASSES REGULAR TESTS,
+                    #                           BUT DOES NOT PASS IF include_probes_in_output set on nested Comp
+                    # if isinstance(node, Composition):
+                    #     node_output_ports = [output_port for output_port in node.output_ports if
+                    #                          (not node.output_CIM._sender_is_probe(output_port)
+                    #                           or self.include_probes_in_output)]
+                    # else:
+                    #     node_output_ports = node.output_ports
+                    # for i in range(len(node_output_ports)):
+                    #     node_output_ports[i].parameters.value._set(frozen_values[node][i], context,
+                    #                                                skip_history=True, skip_log=True)
+                    # MODIFIED 12/12/21 END
 
 
                 # Set all nodes to new values
@@ -9875,15 +9900,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self.output_CIM.execute(context=context)
             context.execution_phase = ContextFlags.IDLE
 
-            # Assign output_values
-            output_values = []
-            for port in self.output_CIM.output_ports:
-                if (not self.allow_probes # Spare further checking of allow_probes are not allowed
-                        # skip if including PROBE nodes in output is disabled and this port is for a (nested) probe node
-                        or (not self.include_probes_in_output and self.output_CIM._sender_is_probe(port))):
-                    continue
-                output_values.append(port.parameters.value._get(context))
-
             # Animate output_CIM
             # FIX: NOT SURE WHETHER IT CAN BE LEFT IN PROCESSING AFTER THIS -
             #      COORDINATE WITH REFACTORING OF PROCESSING/CONTROL CONTEXT
@@ -9940,7 +9956,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             execution_scheduler.get_clock(context)._increment_time(TimeScale.TRIAL)
 
-            return output_values
+            return self.get_output_values(context)
 
     def __call__(self, *args, **kwargs):
         """Execute Composition of any args are provided;  else simply return results of last execution.

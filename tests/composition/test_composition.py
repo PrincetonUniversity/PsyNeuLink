@@ -6334,7 +6334,6 @@ class TestNodeRoles:
             ocomp = Composition(name='OUTER COMP',
                                 # node=[0,mcomp],   # <- CRASHES
                                 nodes=[mcomp,O],
-                                # nodes=[(mcomp, NodeRole.OUTPUT),O],
                                 allow_probes=allow_probes,
                                 include_probes_in_output=include_probes_in_output
                                 )
@@ -6345,10 +6344,12 @@ class TestNodeRoles:
             assert Y.output_port in mcomp.output_CIM.port_map
             if include_probes_in_output is False:
                 assert len(ocomp.output_values)==4  # Should only be outputs from mcomp (C, Z) and O
+                result = ocomp.run(inputs={mcomp:[[0],[0]]})
+                assert len(result)==4  # Should only be outputs from mcomp (C, Z) and O
             elif include_probes_in_output is True:
-                assert len(ocomp.output_values)==6  # Outputs from mcomp (C and Z) and O (from B and Y)
-                                                    # This tests that outputs from mcomp (C and Z) are included
-                                                    # even though mcomp also projects to O (for B and Y)
+                assert len(ocomp.output_values)==6           # Outputs from mcomp (C and Z) and O (from B and Y)
+                result = ocomp.run(inputs={mcomp:[[0],[0]]}) # This tests that outputs from mcomp (C and Z) are included
+                assert len(result)==6                        # even though mcomp also projects to O (for B and Y)
         else:
             with pytest.raises(CompositionError) as err:
                 ocomp = Composition(name='OUTER COMP',
