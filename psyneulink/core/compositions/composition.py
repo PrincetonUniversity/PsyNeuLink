@@ -25,6 +25,7 @@ Contents
      - `Composition_Nodes`
      - `Composition_Nested`
         • `Probes <Composition_Probes>`
+     - `Composition_CIMs`
      - `Composition_Projections`
      - `Composition_Pathways`
   * `Composition_Controller`
@@ -273,6 +274,7 @@ COMMENT:
     XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
 COMMENT
 
+
 .. _Composition_Nodes:
 
 *Nodes*
@@ -306,6 +308,7 @@ roles from being assigned by default, using the `exclude_node_roles <Composition
 description of each `NodeRole` indicates whether it is modifiable using these methods.  All of the roles assigned
 to a particular Node can be listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the
 nodes assigned a particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
+
 
 .. _Composition_Nested:
 
@@ -403,6 +406,61 @@ are also included in those attributes of any intervening and the outermost Compo
 <Composition_Learning_Pathway>`, however a learning Pathway may not extend from an enclosing Composition
 to one nested within it or vice versa.  The learning Pathways within a nested Composition are executed
 when that Composition is run, just like any other (see `Composition_Learning_Execution`).
+
+
+.. _Composition_CIMs:
+
+*CompositionInterfaceMechanisms*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Every Composition has three `CompositionInterfaceMechanisms <CompositionInterfaceMechanism>`, described below,
+that act as interfaces between it and the environment, or other Components if it is `nested <Composition_Nested>`
+within another Composition.  The CompositionInterfaceMechanisms of a Composition are created and assigned to it
+automatically when the Composition is constructed, and executed automatically when it executes (they should never
+be constructed or executed on their own).
+
+.. _Composition_input_CIM:
+
+* `input_CIM <Composition.input_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `INPUT
+  <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. The InputPorts receive input
+  from either the environment or a Composition within which it is nested. If the Composition is itself an
+  `INPUT <NodeRole.INPUT>` Node of an enclosing Composition, then its input must be included in the `inputs
+  <Composition_Execution_Inputs>` to that Composition when it is `executed <Composition_Execution>`. Every InputPort
+  of an input_CIM is associated with an OutputPort that projects to a corresponding `INPUT <NodeRole.INPUT>` Node
+  of the Composition.
+
+.. _Composition_parameter_CIM:
+
+* `parameter_CIM <Composition.parameter_CIM>` - this is assigned an `InputPort` and `OutputPort` for every
+  `Parameter` of every `Node <Composition_Nodes>` of the Composition that is `modulated <ModulatorySignal_Modulation>`
+  by a `ModulatoryMechanism` (usually a `ControlMechanism`) outside of the Composition (i.e., from an enclosing
+  Composition within which it is `nested <Composition_Nested>`).  The InputPort receives a Projection from a
+  `ModulatorySignal` on the ModulatoryMechanism, and the paired OutputPort of the parameter_CIM conveys this via
+  ModulatoryProjection to the `ParameterPort` for the Paremeter of the Mechanism to be modulated.
+
+  .. _technical_note::
+    The Projection from a ModulatoryMechanism to the InputPort of a parameter_CIM is the only instance in which a
+    MappingProjection is used as an `efferent projection <Mechanism_Base.efferents>` of a ModulatoryMechanism.
+
+.. _Composition_output_CIM:
+
+* `output_CIM <Composition.output_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `OUTPUT
+  <NodeRole.OUTPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. Each InputPort receives input
+  from an `OUTPUT <NodeRole.OUTPUT>` Node of the Composition, and its `value <InputPort.value>` is assigned as the
+  `value <OutputPort.value>` of a corresponding OutputPort.  The latter are assigned to the `output_values
+  <Composition.output_values>` and `results <Composition.results>` attributes of the Composition.  If the Composition
+  is `nested <Composition_Nested>` within another, then the output_CIM's `output_ports <Mechanism_Base.output_ports>`
+  send Projections to Components of the Composition within which it is nested.  If it is an `OUTPUT <NodeRole.OUTPUT>`
+  Node of the enclosing Composition, then its OutputPorts project the `output_CIM <Composition.output_CIM>` of the
+  enclosing Composition, its `output_values <Composition.output_values>` are included in those of the enclosing
+  Composition.  If the Composition has an `PROBE <NodeRole.PROBE>` Nodes, then they too project to the Composition's
+  output_CIM.  If the Composition is nested in another, then the `values <Mechanism_Base.value>` of the `PROBE
+  <NodeRole.PROBE>` Nodes are also included in the Composition's `output_values <Composition.output_values>`;  if it
+  is an outer Composition (i.e. not nested in any other), then the Compositions' `include_probes_in_output
+  <Composition.include_probes_in_output>` attribute determines whether their values are included in its `output_values
+  <Composition.output_values>` and `results <Composition.results>` attributes (see `Probes <Composition_Probes>` for
+  additional details).
+
 
 .. _Composition_Projections:
 
@@ -3112,7 +3170,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph_show_graph_Method>`
         method is called or **animate** is specified in a call to its `run <Composition.run>` method
         (see `ShowGraph` for list of attributes and their values).
 
@@ -3202,7 +3260,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     input_CIM : `CompositionInterfaceMechanism`
         mediates input values for the `INPUT` `Nodes <Composition_Nodes>` of the Composition. If the Composition is
         `nested <Composition_Nested>`, then the input_CIM and its `InputPorts <InputPort> serve as proxies for the
-        Composition itself for its afferent `PathwayProjections <PathwayProjection>`.
+        Composition itself for its afferent `PathwayProjections <PathwayProjection>` (see `input_CIM
+        <Composition_input_CIM>` for additional details).
 
     input_CIM_ports : dict
         a dictionary in which the key of each entry is the `InputPort` of an `INPUT` `Node <Composition_Nodes>` in
@@ -3220,7 +3279,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     parameter_CIM : `CompositionInterfaceMechanism`
         mediates modulatory values for all `Nodes <Composition_Nodes>` of the Composition. If the Composition is
         `nested <Composition_Nested>`, then the parameter_CIM and its `InputPorts <InputPort>` serve as proxies for
-        the Composition itself for its afferent `ModulatoryProjections <ModulatoryProjection>`.
+        the Composition itself for its afferent `ModulatoryProjections <ModulatoryProjection>` (see `parameter_CIM
+        <Composition_parameter_CIM>` for additional details).
 
     parameter_CIM_ports : dict
         a dictionary in which keys are `ParameterPorts <ParameterPort>` of `Nodes <Composition_Nodes>` in the
@@ -3252,7 +3312,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
-        output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections.
+        output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections
+        (see `output_CIM <Composition_output_CIM>` for additional details).
 
     output_CIM_ports : dict
         a dictionary in which the key of each entry is the `OutputPort` of an `OUTPUT` `Node <Composition_Nodes>` in
@@ -3271,7 +3332,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     cims : list
         a list containing references to the Composition's `input_CIM <Composition.input_CIM>`,
-        `parameter_CIM <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>`.
+        `parameter_CIM <Composition.parameter_CIM>`, and `output_CIM <Composition.output_CIM>`
+        (see `Composition_CIMs` for additional details).
 
     env : Gym Forager Environment : default: None
         stores a Gym Forager Environment so that the Composition may interact with this environment within a
@@ -8526,13 +8588,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             details and `ReportDevices` for options.
 
         animate : dict or bool : default False
-            specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
-            sequence of Components executed in a run (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`).
-            A dict can be specified containing options to pass to the `show_graph <ShowGraph.show_graph>` method;
-            each key must be a legal argument for the `show_graph <ShowGraph.show_graph>` method, and its value a
+            specifies use of the `show_graph`show_graph <ShowGraph_show_graph_Method>` method
+            to generate a gif movie showing the sequence of Components executed in a run
+            (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`). A dict can be specified containing
+            options to pass to the `show_graph <ShowGraph_show_graph_Method>` method; each key must be a legal
+            argument for the `show_graph <ShowGraph_show_graph_Method>` method, and its value a
             specification for that argument.  The entries listed below can also be included in the dict to specify
             parameters of the animation.  If the **animate** argument is specified simply as `True`, defaults are
-            used for all arguments of `show_graph <ShowGraph.show_graph>` and the options below:
+            used for all arguments of `show_graph <ShowGraph_show_graph_Method>` and the options below:
 
             * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
               to treat as active in each call to `show_graph <ShowGraph.show_graph>`. *COMPONENT* generates an

@@ -25,31 +25,54 @@ Contents
 Overview
 --------
 
-A CompositionInterfaceMechanism stores inputs from outside the Composition so that those can be delivered to the
-Composition's `INPUT <NodeRole.INPUT>` Mechanism(s).
+CompositionInterfaceMechanisms act as interfaces between a `Composition` and its inputs from and outputs to the
+environment, or the Components of another Composition within which it is `nested <Composition_Nested>`.
+
+.. technical_note::
+
+    The CompositionInterfaceMechanism provides a standard interface through which other Components can interact with
+    the environment and/or Compositions.  By providing the standard Components used for communication among `Mechanisms
+    <Mechanism>` (`InputPorts <InputPort>` and `OutputPorts <OutputPort>`), Mechanisms and/or other Compositions that
+    are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a Composition can receive inputs from the environment
+    in the same way that any other Node receives inputs, from `afferent Projections <Mechanism_Base.efferents>` (in
+    this case, the `input_CIM  <Composition.input_CIM>` of the Composition to which they belong);  and, similarly,
+    Components that are `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of a Composition can either report their
+    outputs to the Composition or, if they are in a `nested Composition <Composition_Nested>`, send their outputs to
+    Nodes in an enclosing Composition just like any others, using `efferent Projections <Mechanism_Base.efferents>`.
 
 .. _CompositionInterfaceMechanism_Creation:
 
-Creating an CompositionInterfaceMechanism
------------------------------------------
+Creation
+--------
 
-A CompositionInterfaceMechanism is created automatically when an `INPUT <NodeRole.INPUT>` Mechanism is identified in a
-Composition. When created, the CompositionInterfaceMechanism's OutputPort is set directly by the Composition. This
-Mechanism should never be executed, and should never be created by a user.
+The following three CompositionInterfaceMechanisms are created and assigned automatically to a Composition when it is
+constructed (and should never be constructed manually):  `input_CIM <Composition.input_CIM>`, `parameter_CIM
+<Composition.parameter_CIM>` and `output_CIM <Composition.output_CIM>` (see `Composition_CIMs` for additional details).
+They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of the Composition's `show_graph
+<ShowGraph_show_graph_Method>` method.
 
-.. _CompositionInterfaceMechanism_Structure
+.. _CompositionInterfaceMechanism_Structure:
 
 Structure
 ---------
 
-[TBD]
+A CompositionInterfaceMechanisms has a set of `InputPort` / `OutputPort` pairs that its `function
+<Mechanism_Base.function>` -- the `Identity` `Function` -- uses to transmit inputs to CompositionInterfaceMechanism
+to its outputs.  These are listed in its `port_map  <CompositionInterfaceMechanism.port_map>` attribute, each entry
+of which is a key designating the `Port` of the Component with which the CompositionInterfaceMechanism communicates
+outside the Composition (i.e., from an `input_CIM <Composition.input_CIM>` receives an `afferent Projection
+<Mechanism_Base.afferents>`, a `parameter_CIM <Composition.parameter_CIM>` receives a `modulatory projection
+<ModulatoryProjections>`, or an `output_CIM <Composition.output_CIM>` sends an `efferent Projection
+<Mechanism_Base.efferents>`), and the value of which is a tuple containing the corresponding (`InputPort`,
+`OutputPort`) pair used to transmit the information to or from the CompositionInterfaceMechanism.
 
-.. _CompositionInterfaceMechanism_Execution
+.. _CompositionInterfaceMechanism_Execution:
 
 Execution
 ---------
 
-[TBD]
+A CompositionInterface Mechanism is executed when the Composition to which it belongs is executed, and shown never
+be executed manually.
 
 .. _CompositionInterfaceMechanism_Class_Reference:
 
@@ -83,8 +106,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     CompositionInterfaceMechanism(  \
         function=Identity())
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
-    inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its inputs
+    from and outputs to the environment or other Components (if it is a `nested Composition <Composition_Nested>`).
 
     See `Mechanism <Mechanism_Class_Reference>` for arguments and additional attributes.
 
@@ -94,6 +117,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     function : InterfaceFunction : default Identity
         the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
+    port_map : dict[Port:(InputPort,OutputPort)]
+        entries are comprised of keys designating a Component outside the Composition with which it communicates,
+        and values tuples that designate the corresponding `InputPort` - `OutputPort` pairs used to transmit that
+        information into or out of the Composition (see `CompositionInterfaceMechanism_Structure`, and
+        `Composition_CIMs` under Composition for additional details).
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
