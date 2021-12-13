@@ -37,14 +37,14 @@ A CompositionInterfaceMechanism is created automatically when an `INPUT <NodeRol
 Composition. When created, the CompositionInterfaceMechanism's OutputPort is set directly by the Composition. This
 Mechanism should never be executed, and should never be created by a user.
 
-.. _CompositionInterfaceMechanism_Structure
+.. _CompositionInterfaceMechanism_Structure:
 
 Structure
 ---------
 
 [TBD]
 
-.. _CompositionInterfaceMechanism_Execution
+.. _CompositionInterfaceMechanism_Execution:
 
 Execution
 ---------
