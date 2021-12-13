@@ -432,7 +432,7 @@ be constructed or executed on their own).
 .. _Composition_parameter_CIM:
 
 * `parameter_CIM <Composition.parameter_CIM>` - this is assigned an `InputPort` and `OutputPort` for every
-  `Parameter` of every `Node <Composition_Node>` of the Composition that is `modulated <ModulatorySignal_Modulation>`
+  `Parameter` of every `Node <Composition_Nodes>` of the Composition that is `modulated <ModulatorySignal_Modulation>`
   by a `ModulatoryMechanism` (usually a `ControlMechanism`) outside of the Composition (i.e., from an enclosing
   Composition within which it is `nested <Composition_Nested>`).  The InputPort receives a Projection from a
   `ModulatorySignal` on the ModulatoryMechanism, and the paired OutputPort of the parameter_CIM conveys this via

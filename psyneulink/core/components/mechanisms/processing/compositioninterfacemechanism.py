@@ -42,8 +42,8 @@ environment, or the Components of another Composition within which it is `nested
 
 .. _CompositionInterfaceMechanism_Creation:
 
-Creation of CompositionInterfaceMechanisms
-------------------------------------------
+Creation
+--------
 
 The following three CompositionInterfaceMechanisms are created and assigned automatically to a Composition when it is
 constructed (and should never be constructed manually):  `input_CIM <Composition.input_CIM>`, `parameter_CIM
@@ -53,13 +53,16 @@ They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of
 
 .. _CompositionInterfaceMechanism_Structure:
 
-A CompositionInterfaceMechanisms has a set `InputPort` / `OutputPort` pairs that its `function
-<Mechanism_Base.function>` -- the `IdentityFunction` -- uses to transmit inputs to CompositionInterfaceMechanism
+Structure
+---------
+
+A CompositionInterfaceMechanisms has a set of `InputPort` / `OutputPort` pairs that its `function
+<Mechanism_Base.function>` -- the `Identity` `Function` -- uses to transmit inputs to CompositionInterfaceMechanism
 to its outputs.  These are listed in its `port_map  <CompositionInterfaceMechanism.port_map>` attribute, each entry
 of which is a key designating the `Port` of the Component with which the CompositionInterfaceMechanism communicates
 outside the Composition (i.e., from an `input_CIM <Composition.input_CIM>` receives an `afferent Projection
 <Mechanism_Base.afferents>`, a `parameter_CIM <Composition.parameter_CIM>` receives a `modulatory projection
-<ModulatoryProjections>`, or an `output_CIM <Composition.output_CIM>` sends an efferent Projection
+<ModulatoryProjections>`, or an `output_CIM <Composition.output_CIM>` sends an `efferent Projection
 <Mechanism_Base.efferents>`), and the value of which is a tuple containing the corresponding (`InputPort`,
 `OutputPort`) pair used to transmit the information to or from the CompositionInterfaceMechanism.
 
@@ -116,9 +119,9 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
 
     port_map : dict[Port:(InputPort,OutputPort)]
         entries are comprised of keys designating a Component outside the Composition with which it communicates,
-        and values that designate the corresponding (`InputPort`,`OutputPort`) pairs used to transmit that information
-        into or out of the Composition (see `CompositionInterfaceMechanism_Structure` and `Composition_CIMs` for
-        additional details).
+        and values tuples that designate the corresponding `InputPort` - `OutputPort` pairs used to transmit that
+        information into or out of the Composition (see `CompositionInterfaceMechanism_Structure`, and
+        `Composition_CIMs` under Composition for additional details).
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
