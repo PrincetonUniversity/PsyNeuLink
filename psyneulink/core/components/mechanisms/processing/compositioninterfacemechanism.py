@@ -40,11 +40,11 @@ The following three CompositionInterfaceMechanisms are created automatically for
 constructed (and should never be constructed manually):
 
 * `input_CIM <Composition.input_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `INPUT
-  <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs; the InputPorts receive input
-  either from the environment or from a Composition within which it is nested; if the Composition is itself an
-  <NodeRole.INPUT>` Node of the enclosing Composition, then its input must be included in the `inputs
-  <Composition_Execution_Inputs>` to that Composition when it is `executed <Composition_Execute>`. Every InputPort
-  of an input_CIM is associated with an OutputPort that projects to the corresponding `INPUT <NodeRole.INPUT>` Node
+  <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. The InputPorts receive input
+  from either the environment or a Composition within which it is nested. If the Composition is itself an
+  `INPUT <NodeRole.INPUT>` Node of an enclosing Composition, then its input must be included in the `inputs
+  <Composition_Execution_Inputs>` to that Composition when it is `executed <Composition_Execution>`. Every InputPort
+  of an input_CIM is associated with an OutputPort that projects to a corresponding `INPUT <NodeRole.INPUT>` Node
   of the Composition.
 
 * `parameter_CIM <Composition.parameter_CIM>` - XXX
@@ -52,12 +52,13 @@ constructed (and should never be constructed manually):
 * `output_CIM <Composition.output_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `OUTPUT
   <NodeRole.OUTPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. Each InputPort receives input
   from an `OUTPUT <NodeRole.OUTPUT>` Node of the Composition, and its `value <InputPort.value>` is assigned as the
-  `value <OutputPort>` of a corresponding OutputPort.  Those values are assigned to the `output_values
+  `value <OutputPort.value>` of a corresponding OutputPort.  The latter are assigned to the `output_values
   <Composition.output_values>` and `results <Composition.results>` attributes of the Composition.  If the Composition
   is `nested <Composition_Nested>` within another, then the output_CIM's `output_ports <Mechanism_Base.output_ports>`
-  send Projections to Compoments of the Composition wthin which it is nested, possibly including the output_CIM
-  of the enclosing Composition if it an `OUTPUT <NodeRole.OUTPUT>` Node of the Composition within which it is nested.
-  In that case, its `output_values <Composition.output_values>` are included in those of the enclosing Composition.
+  send Projections to Components of the Composition within which it is nested.  If it is an `OUTPUT <NodeRole.OUTPUT>`
+  Node of the enclosing Composition, then its OutputPorts project the `output_CIM <Composition.output_CIM>` of the
+  enclosing Composition, its `output_values <Composition.output_values>` are included in those of the enclosing
+  Composition.
   COMMENT:
   **MENTION PROBES HERE**
   COMMENT
