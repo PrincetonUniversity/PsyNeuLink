@@ -33,6 +33,7 @@ Compilation modifiers:
                   instead of loading them from the param argument
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
+ * "opt" -- Set compiler optimization level (0,1,2,3)
 
 Compiled code dump:
  * "llvm" -- dumps LLVM IR into a file (named after the dumped module).

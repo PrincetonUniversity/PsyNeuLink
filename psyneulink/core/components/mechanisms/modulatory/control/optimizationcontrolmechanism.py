@@ -820,6 +820,7 @@ Class Reference
 ---------------
 
 """
+import ast
 import copy
 import warnings
 from collections.abc import Iterable
@@ -852,6 +853,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList
+from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -2098,13 +2100,26 @@ class OptimizationControlMechanism(ControlMechanism):
 
         comp_params, base_comp_state, allocation_sample, arg_out, arg_in, base_comp_data = llvm_func.args
 
+        if "const_params" in debug_env:
+            comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
+            const_params = comp_params.type.pointee(self.agent_rep._get_param_initializer(None))
+            builder.store(const_params, comp_params)
+
         # Create a simulation copy of composition state
         comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
-        builder.store(builder.load(base_comp_state), comp_state)
+        if "const_state" in debug_env:
+            const_state = self.agent_rep._get_state_initializer(None)
+            builder.store(comp_state.type.pointee(const_state), comp_state)
+        else:
+            builder.store(builder.load(base_comp_state), comp_state)
 
         # Create a simulation copy of composition data
         comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
-        builder.store(builder.load(base_comp_data), comp_data)
+        if "const_data" in debug_env:
+            const_data = self.agent_rep._get_data_initializer(None)
+            builder.store(comp_data.type.pointee(const_data), comp_data)
+        else:
+            builder.store(builder.load(base_comp_data), comp_data)
 
         # Evaluate is called on composition controller
         assert self.composition.controller is self
@@ -2168,6 +2183,17 @@ class OptimizationControlMechanism(ControlMechanism):
         # Assert that we have populated all inputs
         assert all(input_initialized), \
           "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
+
+        if "const_input" in debug_env:
+            if not debug_env["const_input"]:
+                input_init = [[os.defaults.variable.tolist()] for os in self.agent_rep.input_CIM.input_ports]
+                print("Setting default input: ", input_init)
+            else:
+                input_init = ast.literal_eval(debug_env["const_input"])
+                print("Setting user input in evaluate: ", input_init)
+
+            builder.store(comp_input.type.pointee(input_init), comp_input)
+
 
         # Determine simulation counts
         num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,
