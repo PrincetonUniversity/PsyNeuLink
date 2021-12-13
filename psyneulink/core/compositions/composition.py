@@ -3112,7 +3112,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph_show_graph_Method>`
         method is called or **animate** is specified in a call to its `run <Composition.run>` method
         (see `ShowGraph` for list of attributes and their values).
 
@@ -8526,13 +8526,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             details and `ReportDevices` for options.
 
         animate : dict or bool : default False
-            specifies use of the `show_graph <ShowGraph.show_graph>` method to generate a gif movie showing the
-            sequence of Components executed in a run (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`).
-            A dict can be specified containing options to pass to the `show_graph <ShowGraph.show_graph>` method;
-            each key must be a legal argument for the `show_graph <ShowGraph.show_graph>` method, and its value a
+            specifies use of the `show_graph`show_graph <ShowGraph_show_graph_Method>` method
+            to generate a gif movie showing the sequence of Components executed in a run
+            (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`). A dict can be specified containing
+            options to pass to the `show_graph <ShowGraph_show_graph_Method>` method; each key must be a legal
+            argument for the `show_graph <ShowGraph_show_graph_Method>` method, and its value a
             specification for that argument.  The entries listed below can also be included in the dict to specify
             parameters of the animation.  If the **animate** argument is specified simply as `True`, defaults are
-            used for all arguments of `show_graph <ShowGraph.show_graph>` and the options below:
+            used for all arguments of `show_graph <ShowGraph_show_graph_Method>` and the options below:
 
             * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
               to treat as active in each call to `show_graph <ShowGraph.show_graph>`. *COMPONENT* generates an

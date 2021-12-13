@@ -805,7 +805,7 @@ OutputPort(s).
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
-of the Composition's `show_graph <Composition.show_graph>` method with the keyword **LABELS**.
+of the Composition's `show_graph`show_graph <ShowGraph_show_graph_Method>` method with the keyword **LABELS**.
 
         >>> C.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
