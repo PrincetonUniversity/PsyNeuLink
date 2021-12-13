@@ -103,8 +103,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     CompositionInterfaceMechanism(  \
         function=Identity())
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
-    inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its inputs
+    from and outputs to the environment or other Components (if it is a `nested Composition <Composition_Nested>`).
 
     See `Mechanism <Mechanism_Class_Reference>` for arguments and additional attributes.
 
@@ -114,6 +114,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     function : InterfaceFunction : default Identity
         the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
+    port_map : dict[Port:(InputPort,OutputPort)]
+        entries are comprised of keys designating a Component outside the Composition with which it communicates,
+        and values that designate the corresponding (`InputPort`,`OutputPort`) pairs used to transmit that information
+        into or out of the Composition (see `CompositionInterfaceMechanism_Structure` and `Composition_CIMs` for
+        additional details).
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
