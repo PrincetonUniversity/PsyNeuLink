@@ -53,10 +53,15 @@ They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of
 
 .. _CompositionInterfaceMechanism_Structure:
 
-[TBW]
-COMMENT:
-Corresponding Input and Output ports and Port_Map
-COMMENT
+A CompositionInterfaceMechanisms has a set `InputPort` / `OutputPort` pairs that its `function
+<Mechanism_Base.function>` -- the `IdentityFunction` -- uses to transmit inputs to CompositionInterfaceMechanism
+to its outputs.  These are listed in its `port_map  <CompositionInterfaceMechanism.port_map>` attribute, each entry
+of which is a key designating the `Port` of the Component with which the CompositionInterfaceMechanism communicates
+outside the Composition (i.e., from an `input_CIM <Composition.input_CIM>` receives an `afferent Projection
+<Mechanism_Base.afferents>`, a `parameter_CIM <Composition.parameter_CIM>` receives a `modulatory projection
+<ModulatoryProjections>`, or an `output_CIM <Composition.output_CIM>` sends an efferent Projection
+<Mechanism_Base.efferents>`), and the value of which is a tuple containing the corresponding (`InputPort`,
+`OutputPort`) pair used to transmit the information to or from the CompositionInterfaceMechanism.
 
 .. _CompositionInterfaceMechanism_Execution:
 
