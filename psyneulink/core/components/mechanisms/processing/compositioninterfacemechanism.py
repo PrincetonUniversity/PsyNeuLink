@@ -26,10 +26,7 @@ Overview
 --------
 
 CompositionInterfaceMechanisms act as interfaces between a `Composition` and its inputs from and outputs to the
-environment, or the Components of another Composition within which it is `nested <Composition_Nested>`. They are
-created automatically for a Composition when it is constructed and executed when it is run.  They should never be
-constructed or executed manually.  They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of
-the Composition's `show_graph <ShowGraph_show_graph_Method>` method.
+environment, or the Components of another Composition within which it is `nested <Composition_Nested>`.
 
 .. technical_note::
 
@@ -48,20 +45,26 @@ the Composition's `show_graph <ShowGraph_show_graph_Method>` method.
 Creation of CompositionInterfaceMechanisms
 ------------------------------------------
 
-The following three CompositionInterfaceMechanisms are created automatically for a Composition when it is
-constructed (and should never be constructed manually):
-
-
+The following three CompositionInterfaceMechanisms are created and assigned automatically to a Composition when it is
+constructed (and should never be constructed manually):  `input_CIM <Composition.input_CIM>`, `parameter_CIM
+<Composition.parameter_CIM>` and `output_CIM <Composition.output_CIM>` (see `Composition_CIMs` for additional details).
+They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of the Composition's `show_graph
+<ShowGraph_show_graph_Method>` method.
 
 .. _CompositionInterfaceMechanism_Structure:
 
+[TBW]
+COMMENT:
+Corresponding Input and Output ports and Port_Map
+COMMENT
 
 .. _CompositionInterfaceMechanism_Execution:
 
 Execution
 ---------
 
-[TBD]
+A CompositionInterface Mechanism is executed when the Composition to which it belongs is executed, and shown never
+be executed manually.
 
 .. _CompositionInterfaceMechanism_Class_Reference:
 
