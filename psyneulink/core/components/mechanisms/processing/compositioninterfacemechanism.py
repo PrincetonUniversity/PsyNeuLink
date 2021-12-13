@@ -51,40 +51,7 @@ Creation of CompositionInterfaceMechanisms
 The following three CompositionInterfaceMechanisms are created automatically for a Composition when it is
 constructed (and should never be constructed manually):
 
-??MOVE THIS TO COMPOSITION?
 
-.. _CompositionInterfaceMechanism_input_CIM:
-
-* `input_CIM <Composition.input_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `INPUT
-  <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. The InputPorts receive input
-  from either the environment or a Composition within which it is nested. If the Composition is itself an
-  `INPUT <NodeRole.INPUT>` Node of an enclosing Composition, then its input must be included in the `inputs
-  <Composition_Execution_Inputs>` to that Composition when it is `executed <Composition_Execution>`. Every InputPort
-  of an input_CIM is associated with an OutputPort that projects to a corresponding `INPUT <NodeRole.INPUT>` Node
-  of the Composition.
-
-.. _CompositionInterfaceMechanism_parameter_CIM:
-
-* `parameter_CIM <Composition.parameter_CIM>` - XXX
-
-.. _CompositionInterfaceMechanism_output_CIM:
-
-* `output_CIM <Composition.output_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `OUTPUT
-  <NodeRole.OUTPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. Each InputPort receives input
-  from an `OUTPUT <NodeRole.OUTPUT>` Node of the Composition, and its `value <InputPort.value>` is assigned as the
-  `value <OutputPort.value>` of a corresponding OutputPort.  The latter are assigned to the `output_values
-  <Composition.output_values>` and `results <Composition.results>` attributes of the Composition.  If the Composition
-  is `nested <Composition_Nested>` within another, then the output_CIM's `output_ports <Mechanism_Base.output_ports>`
-  send Projections to Components of the Composition within which it is nested.  If it is an `OUTPUT <NodeRole.OUTPUT>`
-  Node of the enclosing Composition, then its OutputPorts project the `output_CIM <Composition.output_CIM>` of the
-  enclosing Composition, its `output_values <Composition.output_values>` are included in those of the enclosing
-  Composition.  If the Composition has an `PROBE <NodeRole.PROBE>` Nodes, then they too project to the Composition's
-  output_CIM.  If the Composition is nested in another, then the `values <Mechanism_Base.value>` of the `PROBE
-  <NodeRole.PROBE>` Nodes are also included in the Composition's `output_values <Composition.output_values>`;  if it
-  is an outer Composition (i.e. not nested in any other), then the Compositions' `include_probes_in_output
-  <Composition.include_probes_in_output>` attribute determines whether their values are included in its `output_values
-  <Composition.output_values>` and `results <Composition.results>` attributes (see `Probes <Composition_Probes>` for
-  additional details).
 
 .. _CompositionInterfaceMechanism_Structure:
 
