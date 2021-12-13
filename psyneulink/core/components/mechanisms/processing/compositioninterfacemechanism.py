@@ -31,6 +31,18 @@ created automatically for a Composition when it is constructed and executed when
 constructed or executed manually.  They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of
 the Composition's `show_graph <ShowGraph_show_graph_Method>` method.
 
+.. technical_note::
+
+    The CompositionInterfaceMechanism provides a standard interface through which other Components can interact with
+    the environment and/or Compositions.  By providing the standard Components used for communication among `Mechanisms
+    <Mechanism>` (`InputPorts <InputPort>` and `OutputPorts <OutputPort>`), Mechanisms and/or other Compositions that
+    are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a Composition can receive inputs from the environment
+    in the same way that any other Node receives inputs, from `afferent Projections <Mechanism_Base.efferents>` (in
+    this case, the `input_CIM  <Composition.input_CIM>` of the Composition to which they belong);  and, similarly,
+    Components that are `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of a Composition can either report their
+    outputs to the Composition or, if they are in a `nested Composition <Composition_Nested>`, send their outputs to
+    Nodes in an enclosing Composition just like any others, using `efferent Projections <Mechanism_Base.efferents>`.
+
 .. _CompositionInterfaceMechanism_Creation:
 
 Creation of CompositionInterfaceMechanisms
@@ -38,6 +50,10 @@ Creation of CompositionInterfaceMechanisms
 
 The following three CompositionInterfaceMechanisms are created automatically for a Composition when it is
 constructed (and should never be constructed manually):
+
+??MOVE THIS TO COMPOSITION?
+
+.. _CompositionInterfaceMechanism_input_CIM:
 
 * `input_CIM <Composition.input_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `INPUT
   <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. The InputPorts receive input
@@ -47,7 +63,11 @@ constructed (and should never be constructed manually):
   of an input_CIM is associated with an OutputPort that projects to a corresponding `INPUT <NodeRole.INPUT>` Node
   of the Composition.
 
+.. _CompositionInterfaceMechanism_parameter_CIM:
+
 * `parameter_CIM <Composition.parameter_CIM>` - XXX
+
+.. _CompositionInterfaceMechanism_output_CIM:
 
 * `output_CIM <Composition.output_CIM>` - this is assigned an `InputPort` and `OutputPort` for every `OUTPUT
   <NodeRole.OUTPUT>` `Node <Composition_Nodes>` of the Composition to which it belongs. Each InputPort receives input
@@ -58,17 +78,16 @@ constructed (and should never be constructed manually):
   send Projections to Components of the Composition within which it is nested.  If it is an `OUTPUT <NodeRole.OUTPUT>`
   Node of the enclosing Composition, then its OutputPorts project the `output_CIM <Composition.output_CIM>` of the
   enclosing Composition, its `output_values <Composition.output_values>` are included in those of the enclosing
-  Composition.
-  COMMENT:
-  **MENTION PROBES HERE**
-  COMMENT
+  Composition.  If the Composition has an `PROBE <NodeRole.PROBE>` Nodes, then they too project to the Composition's
+  output_CIM.  If the Composition is nested in another, then the `values <Mechanism_Base.value>` of the `PROBE
+  <NodeRole.PROBE>` Nodes are also included in the Composition's `output_values <Composition.output_values>`;  if it
+  is an outer Composition (i.e. not nested in any other), then the Compositions' `include_probes_in_output
+  <Composition.include_probes_in_output>` attribute determines whether their values are included in its `output_values
+  <Composition.output_values>` and `results <Composition.results>` attributes (see `Probes <Composition_Probes>` for
+  additional details).
 
 .. _CompositionInterfaceMechanism_Structure:
 
-Structure
----------
-
-[TBD]
 
 .. _CompositionInterfaceMechanism_Execution:
 
