@@ -6289,6 +6289,30 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
+    def test_no_orphaning_of_nested_output_nodes(self):
+        """
+        Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
+        by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
+        """
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
+
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        Z = ProcessingMechanism(name='Z')
+        mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
+
+        O = ProcessingMechanism(name='O',
+                                input_ports=[Z]
+                                )
+        ocomp = Composition(name='OUTER COMP', nodes=[mcomp,O])
+
+        len(ocomp.output_values)==3
+        result = ocomp.run(inputs={mcomp:[[0],[0]]})
+        assert len(result)==3
+
     def test_unnested_PROBE(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')

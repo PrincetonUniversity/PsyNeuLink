@@ -331,10 +331,11 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 
   .. _Composition_Probes:
 
+COMMENT:
 * *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
   outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
   nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
-  iis whether their output is included in the `output_values <Composition.output_values>` and `results
+  is whether their output is included in the `output_values <Composition.output_values>` and `results
   <Composition.results>` attributes of the Composition to which they belong, and any Compositions that intervene
   between that one and the one to which the Node they project belongs.  This is determined by the
   `include_probes_in_output <Composition.include_probes_in_output>` attribute of their Composition and any
@@ -349,6 +350,33 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
   `include_probes_in_output <Composition.include_probes_in_output>` attribute can be set individually on any nested
   Composition containing `PROBE <NodeRole.PROBE>` Nodes, and any enclosing Compositions that intervene between it
   and the one containing the Node(s) to which its PROBES project.
+COMMENT
+
+* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
+  outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
+  nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
+  is whether their output is included in the `output_values <Composition.output_values>` and `results
+  <Composition.results>` attributes of the outermost Composition to which they project; this is determined by the
+  `include_probes_in_output <Composition.include_probes_in_output>` attribute of the latter. If
+  `include_probes_in_output <Composition.include_probes_in_output>` is False (the default), then the output of any
+  `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
+  the `output_values <Composition.output_values>` or `results <Composition.results>` for the Composition to which
+  they project. In this respect, they can be thought of as "probing" - that is, providing access to "latent variables"
+  of -- the Composition to which they belong -- the values of which that are not otherwise reported as part of the
+  Composition's output or results.  If `include_probes_in_output <Composition.include_probes_in_output>` is True,
+  then any `PROBE <NodeRole.PROBE>` Nodes of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>`
+  Nodes: their outputs are included in the `output_values <Composition.output_values>` and `results
+  <Composition.results>` of that Composition.
+
+      .. note::
+         The specification of `include_probes_in_output <Composition.include_probes_in_output>` only applies to a
+         Composition that is not nested in another.  At present, specification of the attribute for nested
+         Compositions is not supported:  the **include_probes_in_output** argument in the constructor
+         for nested Compositions is ignored, and the attribute is automatically set to True.
+
+            .. technical_note::
+               This is because Compositions require access to the values of all of the output_CIM of any Compositions
+               nested within them (see `below <Composition_Projections_to_CIMs>`).
 
 .. _Composition_Nested_External_Input_Ports:
 
@@ -366,7 +394,7 @@ both the `output_values <Composition.output_values>` and `results <Composition.r
 are also included in those attributes of any intervening and the outermost Composition.  If `allow_probes
 <Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
 <Composition.include_probes_in_output>` attribute determines whether their values are also included in the
-`output_values <Composition.output_values>` and `results <Composition.results>` of enclosing Compositions
+`output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition
 (see `above <Composition_Probes>`).
 
 .. _Composition_Nested_Learning:
@@ -409,19 +437,19 @@ send a `ControlProjection`) to any Node within a nested Composition.
 .. technical_note::
 
     .. _Composition_Projections_to_CIMs:
+
     Although Projections can be specified to and from Nodes within a nested Composition, these are actually
     implemented as Projections to or from the nested Composition's `input_CIM <Composition.input_CIM>`,
     `parameter_CIM <Composition.parameter_CIM>` or `output_CIM <Composition.output_CIM>`, respectively;
-    those, in turn, send or receive Projections to the specified Nodes within the nested Composition.
+    those, in turn, send or receive Projections to or from the specified Nodes within the nested Composition.
     `PROBE <NodeRole.PROBE>` Nodes of a nested Composition, like `OUTPUT <NodeRole.OUTPUT>` Nodes,
     project to the Node of an enclosing Composition via the nested Composition's `output_CIM
-    <Composition.output_CIM>`, and those of any intervening Compositions if it is nested Composition
-    more than one level deep. Since the `output_values <Composition.output_values>` (and `results
-    <Composition.results>`) of a Composition are derived from the `output_ports <Mechanism_Base.output_ports>`
-    of its `output_CIM <Composition.output_CIM>`, then the outputs of `PROBE <NodeRole.PROBE>` Nodes are
-    candidates for inclusion in the outputs reported for the nested Composition and any that intervene between
-    it and the one(s) to which its PROBES project; whether or not they are included is determined by the
-    `include_probes_in_output <Composition.include_probes_in_output>` of each enclosing Composition
+    <Composition.output_CIM>`, and those of any intervening Compositions if it is nested more than one level deep.
+    The outputs of `PROBE <NodeRole.PROBE>` Nodes are included in the `output_values <Composition.output_values>` and
+    `results <Composition.results>` of such intervening Compositions (since those values are derived from the
+    `output_ports <Mechanism_Base.output_ports>` of the Composition's `output_CIM <Composition.output_CIM>`.
+    Specifying `include_probes_in_output <Composition.include_probes_in_output>` has no effect on this behavior
+    for intervening Compositions;  it only applies to the outermost Composition to which a PROBE Node projects
     (see `Probes <Composition_Probes>` for additional details).
 
 .. _Composition_Pathways:
@@ -3047,9 +3075,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     include_probes_in_output : bool : default False
         specifies whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
         <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results
-        <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
-        the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
-        they are included.
+        <Composition.results>` of the Composition to which they project If False, the outputs of `PROBE
+        <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default) they are included
+        (see `Probes <Composition_Probes>` for additional details).
 
     disable_learning: bool : default False
         specifies whether `LearningMechanisms <LearningMechanism>` in the Composition are executed when run in
@@ -3125,9 +3153,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     include_probes_in_output : bool : default False
         determines whether the outputs of `PROBE <NodeRole.PROBE>` Nodes within a `nested Composition
         <Composition_Nested>` are included in the `output_values <Composition.output_values>` and `results
-        <Composition.results>` of its Composition and any outer ones within which it is enclosed.  If False,
-        the outputs of `PROBE <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default)
-        they are included (see `Probes <Composition_Probes>` for additional details).
+        <Composition.results>` of the Composition to which they project.  If False, the outputs of `PROBE
+        <NodeRole.PROBE>` Nodes *are excluded* from those attributes;  if True (the default) they are included
+        (see `Probes <Composition_Probes>` for additional details).
 
     required_node_roles : list[(`Mechanism <Mechanism>` or `Composition`, `NodeRole`)]
         a list of tuples, each containing a `Node <Composition_Nodes>` and a `NodeRole` assigned to it.
@@ -4457,14 +4485,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                        for p in node.efferents):
                     self._add_node_role(node, NodeRole.OUTPUT)
 
-                # If node is a Composition and its output_CIM has projections to self.output_CIM, assign as OUTPUT
-                # Note: this ensures that nested Comps that have both Nodes that project to Nodes in outer Composition
-                #       *and also* legit OUTPUT Nodes, the latter are sufficient to make the nested Comp an OUTPUT Node
-                if (isinstance(node, Composition)
-                        and any(proj.receiver.owner is self.output_CIM for
-                                port in node.output_CIM.output_ports
-                                for proj in port.efferents)):
-                    self._add_node_role(node, NodeRole.OUTPUT)
+                # If node is a Composition and its output_CIM has OutputPorts that either have no Projections
+                #     or projections to self.output_CIM, then assign as OUTPUT Node
+                # Note: this ensures that if a nested Comp has both Nodes that project to ones in an outer Composition
+                #       *and* legit OUTPUT Nodes, the latter qualify to make the nested Comp an OUTPUT Node
+                if isinstance(node, Composition):
+                    # for port in node.output_CIM.output_ports:
+                    #     if (not port.efferents
+                    #             or any(proj.receiver.owner is self.output_CIM for proj in port.efferents)):
+                    #         self._add_node_role(node, NodeRole.OUTPUT)
+                    #         break
+                    if any(not port.efferents or any(proj.receiver.owner is self.output_CIM for proj in port.efferents)
+                           for port in node.output_CIM.output_ports):
+                        self._add_node_role(node, NodeRole.OUTPUT)
 
         # Assign SINGLETON and INTERNAL nodes
         for node in self.nodes:
