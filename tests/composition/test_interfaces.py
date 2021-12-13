@@ -295,9 +295,11 @@ class TestConnectCompositionsViaCIMS:
         outer_composition.add_node(inner_composition_2)
         outer_composition.add_node(mechanism_d)
 
-        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_1,
+        outer_composition.add_projection(projection=MappingProjection(),
+                                         sender=inner_composition_1,
                                          receiver=mechanism_d)
-        outer_composition.add_projection(projection=MappingProjection(), sender=inner_composition_2,
+        outer_composition.add_projection(projection=MappingProjection(),
+                                         sender=inner_composition_2,
                                          receiver=mechanism_d)
 
         sched = Scheduler(composition=outer_composition)
