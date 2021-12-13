@@ -274,6 +274,7 @@ COMMENT:
     XXX ADD FIGURE WITH DAG (FF) AND CYCLIC (RECURRENT) GRAPHS, OR POINT TO ONE BELOW
 COMMENT
 
+
 .. _Composition_Nodes:
 
 *Nodes*
@@ -307,6 +308,7 @@ roles from being assigned by default, using the `exclude_node_roles <Composition
 description of each `NodeRole` indicates whether it is modifiable using these methods.  All of the roles assigned
 to a particular Node can be listed using the `get_roles_by_node <Composition.get_roles_by_node>` method, and all of the
 nodes assigned a particular role can be listed using the `get_nodes_by_role <Composition.get_nodes_by_role>` method.
+
 
 .. _Composition_Nested:
 
@@ -405,15 +407,17 @@ are also included in those attributes of any intervening and the outermost Compo
 to one nested within it or vice versa.  The learning Pathways within a nested Composition are executed
 when that Composition is run, just like any other (see `Composition_Learning_Execution`).
 
-COMMENT:
+
 .. _Composition_CIMs:
 
 *CompositionInterfaceMechanisms*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Every Composition has three `CompositionInterfaceMechanisms <CompositionInterfaceMechanism>`, created and assigned to
-it automatically when the Composition is constructed.  As their name suggests, they act as interfaces between it and
-the environment, or any Compositions within which it is `nested <Composition_Nested>`, as described below.   
+Every Composition has three `CompositionInterfaceMechanisms <CompositionInterfaceMechanism>`, described below,
+that act as interfaces between it and the environment, or other Components if it is `nested <Composition_Nested>`
+within another Composition.  The CompositionInterfaceMechanisms of a Composition are created and assigned to it
+automatically when the Composition is constructed, and executed automatically when it executes (they should never
+be constructed or executed on their own).
 
 .. _Composition_input_CIM:
 
@@ -427,7 +431,16 @@ the environment, or any Compositions within which it is `nested <Composition_Nes
 
 .. _Composition_parameter_CIM:
 
-* `parameter_CIM <Composition.parameter_CIM>` - XXX
+* `parameter_CIM <Composition.parameter_CIM>` - this is assigned an `InputPort` and `OutputPort` for every
+  `Parameter` of every `Node <Composition_Node>` of the Composition that is `modulated <ModulatorySignal_Modulation>`
+  by a `ModulatoryMechanism` (usually a `ControlMechanism`) outside of the Composition (i.e., from an enclosing
+  Composition within which it is `nested <Composition_Nested>`).  The InputPort receives a Projection from a
+  `ModulatorySignal` on the ModulatoryMechanism, and the paired OutputPort of the parameter_CIM conveys this via
+  ModulatoryProjection to the `ParameterPort` for the Paremeter of the Mechanism to be modulated.
+
+  .. _technical_note::
+    The Projection from a ModulatoryMechanism to the InputPort of a parameter_CIM is the only instance in which a
+    MappingProjection is used as an `efferent projection <Mechanism_Base.efferents>` of a ModulatoryMechanism.
 
 .. _Composition_output_CIM:
 
@@ -447,7 +460,7 @@ the environment, or any Compositions within which it is `nested <Composition_Nes
   <Composition.include_probes_in_output>` attribute determines whether their values are included in its `output_values
   <Composition.output_values>` and `results <Composition.results>` attributes (see `Probes <Composition_Probes>` for
   additional details).
-COMMENT
+
 
 .. _Composition_Projections:
 
