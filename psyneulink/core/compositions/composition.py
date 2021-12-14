@@ -175,7 +175,8 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
 
         adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition,
-        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified;
+        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified
+        (or possibly a set of Projections if either Node is a Composition -- see method documentation for details);
         returns the `Pathway` added to the Composition.
 
     COMMENT:
@@ -296,8 +297,7 @@ can be explicitly assigned by specifying the desired `NodeRole` in any of the fo
     constructor, or in one of the methods used to add a `Pathway <Composition_Pathways>` to the Composition
     (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its 2nd item.
 
-  * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an
-    an existing `Node <Composition_Nodes>`.
+  * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an existing Node.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
 receive the `external input <Composition_Execution_Inputs>` when it is `run <Composition.run>`), and similarly its
@@ -3245,8 +3245,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
-        <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
-        Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
+        <Composition_Pathway_Addition_Methods>`; each item is a list of `Nodes <Composition_Nodes>`
+        (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the `Projection(s) <Projection>` between each
+        pair of Nodes;  both Nodes are Mechanism, then only a single Projection can be specified;  if either is a
+        Composition then, under some circumstances, there can be a set of Projections, specifying how the `INPUT
+        <NodeRole.INPUT>` Node(s) of the sender project to the `OUTPUT <NodeRole.OUTPUT>` Node(s) of the receiver
+        (see `add_linear_processing_pathway` for additional details).
 
     projections : ContentAddressableList[`Projection`]
         a list of all of the `Projections <Projection>` activated for the Composition;  this includes all of
@@ -5859,25 +5863,48 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
-        """Add sequence of Mechanisms and/or Compositions with intercolated Projections.
+        """Add sequence of `Nodes <Composition_Nodes>` with intercolated Projections.
 
-        A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
-        in the **pathway** argument, from the `primary OutputPort <OutputPort_Primary>` of the first one to the
-        `primary InputPort <InputPort_Primary>` of the second.
+        .. _Composition_Add_Linear_Processing_Pathway:
 
-        Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
-        <Composition.add_node.required_roles>` to Mechanisms.
-        
-        Note: if a Mechanism precedes a Composition, Projections from its `primary OutputPort <OutputPort_Primary>`
-        are created to all of the Composition's  `INPUT <NodeRole.INPUT>` Nodes, and if Composition is followed by a
-        Mechanism, Projections are created from  all of its `OUTPUT <NodeRole.OUTPUT>` Nodes to the Mechanism's
-        `primary InputPort <InputPort_Primary>`.
+        Each Node can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles <NodeRole>`)
+        that can be used to assign `required_roles to Mechanisms (see `Composition_Nodes` for additional details).
 
-        Note: any specifications of the **monitor_for_control** `argument
-        <ControlMechanism_Monitor_for_Control_Argument>` of a constructor for a `ControlMechanism` or the **monitor**
-        argument in the constructor for an `ObjectiveMechanism` in the **objective_mechanism** `argument
-        <ControlMechanism_ObjectiveMechanism>` of a ControlMechanism supercede any MappingProjections that would
-        otherwise be created for them when specified in the **pathway** argument of add_linear_processing_pathway.
+        If no `Projection` is specified between a pair of contiguous Nodes, then default Projection(s) are constructed
+        between them, as follows:
+
+        * *One to one* - if both Nodes are Mechanisms or, if either is a Composition, the first (sender) has
+          only a single `OUTPUT <NodeRole.OUTPUT>` Node and the second (receiver) has only a single `INPUT
+          <NodeRole.INPUT>` Node, then a default `MappingProjection` is created from the `primary OutputPort
+          <OutputPort_Primary>` of the sender (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sener is a
+          Composition) to the `primary InputPort <InputPort_Primary>` of the receiver (or of its sole of `INPUT
+          <NodeRole.INPUT>` Node if the receiver is a Composition).
+
+        * *One to many* - if the first Node (sender) is either a Mechanism or a Composition with a single
+          `OUTPUT <NodeRole.OUTPUT>` Node, but the second (receiver) is a Composition with more than one
+          `INPUT <NodeRole.INPUT>` Node, then a `MappingProjection` is created from the `primary OutputPort
+          <OutputPort_Primary>` of the sender Mechanism (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the
+          sender is a Compostion) to each `INPUT <NodeRole.OUTPUT>` Node of the receiver, and a *set*
+          containing the Projections is intercolated between the two Nodes in the `Pathway`.
+
+        * *Many to one* - if the first Node (sender) is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>`
+          Node, and the second (receiver) is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>`
+          Node, then a `MappingProjection` is created from each `OUPUT <NodeRole.OUTPUT>` Node of the sender to the
+          `primary InputPort <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>`
+          Node if the receiver is a Composition), and a *set* containing the Projections is intercolated
+          between the two Nodes in the `Pathway`.
+
+        * *Many to many* - if both Nodes are Compositions in which the sender has more than one `INPUT <NodeRole.INPUT>`
+          Node and the receiver has more than one `INPUT <NodeRole.INPUT>` Node, it is not possible to determine
+          the correct configuration automatically, and an error is generated.  In this case, a set of Projections
+          must be explicitly specified.
+
+        .. _note::
+           Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
+           of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
+           `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a
+           ControlMechanism supercede any MappingProjections that would otherwise be created for them when specified
+           in the **pathway** argument of add_linear_processing_pathway.
 
         Arguments
         ---------
@@ -5890,6 +5917,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
             learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name**
             argument of add_linear_processing_pathway is specified.
+            See `above <Composition_Add_Linear_Processing_Pathway>` for additional details.
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -6001,36 +6029,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver = pathway[c][0]
                     else:
                         receiver = pathway[c]
-                    # # MODIFIED 12/13/21 OLD:
-                    proj = self.add_projection(sender=sender,
-                                               receiver=receiver)
+                    comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
+                             if isinstance(item[0],Composition)}
+                    # If either sender or receive is a Composition,
+                    #   - if either sender has more than one OUTPUT Node or reciever has more than one INPUT Node:
+                    #     generate set of Projections (one->one, one->many or many->one)
+                    #   - if it is true of both, raise error (can't determine mapping for many->many)
+                    #   - assign set of Projections assigned to position in Pathway between the two nodes
+                    if comps:
+                        senders = convert_to_list(sender)
+                        receivers = convert_to_list(receiver)
+                        for node, role in comps.items():
+                            if role is NodeRole.OUTPUT:
+                                senders = node.get_nodes_by_role(role)
+                            elif role is NodeRole.INPUT:
+                                receivers = node.get_nodes_by_role(role)
+                        if len(senders) > 1 and len(receivers) > 1:
+                            raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
+                                                   f"which {sender.name} has more than one OUTPUT Node and second of"
+                                                   f"which {receiver.name} has more than one INPUT Node, making the "
+                                                   f"configuration of Projections between them ambigous. Please "
+                                                   f"specify those Projections explicity.")
+                        proj = {self.add_projection(sender=s, receiver=r) for r in receivers for s in senders}
+                    else:
+                        proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:
                         projections.append(proj)
-                    # MODIFIED 12/13/21 NEW:  FIX: NEED TO DEAL WITH MULTIPLE PROJECTIONS BETWEEN TWO NODES
-                    #                              RAISES ERROR IN HANDLING OF explicit_pathway BELOW
-                    # comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
-                    #          if isinstance(item[0],Composition)}
-                    # if comps:
-                    #     senders = convert_to_list(sender)
-                    #     receivers = convert_to_list(receiver)
-                    #     for node, role in comps.items():
-                    #         if role is NodeRole.OUTPUT:
-                    #             senders = node.get_nodes_by_role(role)
-                    #         elif role is NodeRole.INPUT:
-                    #             receivers = node.get_nodes_by_role(role)
-                    #     if len(senders) > 1 and len(receivers) > 1:
-                    #         raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
-                    #                                f"which {sender.name} has more than one OUTPUT Node and second of"
-                    #                                f"which {receiver.name} has more than one INPUT Node, making the "
-                    #                                f"configuration of Projections between them ambigous. Please "
-                    #                                f"specify those Projections explicity.")
-                    #     projs = [self.add_projection(sender=s, receiver=r) for r in receivers for s in senders]
-                    # else:
-                    #     projs = [self.add_projection(sender=sender,
-                    #                                receiver=receiver)]
-                    # if projs:
-                    #     projections.extend(projs)
-                    # MODIFIED 12/13/21 END
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
