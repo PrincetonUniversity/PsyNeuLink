@@ -462,7 +462,7 @@ class ParameterEstimationComposition(Composition):
                          enable_controller=True,
                          **kwargs)
 
-        context=Context(source=ContextFlags.COMPOSITION)
+        context = Context(source=ContextFlags.COMPOSITION, execution_id=None)
 
         # Implement OptimizationControlMechanism and assign as PEC controller
         # (Note: Implement after Composition itself, so that:
