@@ -6058,85 +6058,169 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-                proj_spec = convert_to_list(pathway[c])
-                XXX
-                if c == len(pathway) - 1:
-                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
-                                           f"{pathway[c]}.")
-                # confirm that it is between two nodes, then add the projection
-                if isinstance(pathway[c], tuple):
-                    proj = pathway[c][0]
-                    feedback = pathway[c][1]
-                else:
-                    proj = pathway[c]
-                    feedback = False
-                sender = pathway[c - 1]
-                receiver = pathway[c + 1]
-                if _is_node_spec(sender) and _is_node_spec(receiver):
-                    if isinstance(sender, tuple):
-                        sender = sender[0]
-                    if isinstance(receiver, tuple):
-                        receiver = receiver[0]
-                    try:
-                        if isinstance(proj, (np.ndarray, np.matrix, list)):
-                            # If proj is a matrix specification, use it as the matrix arg
-                            proj = MappingProjection(sender=sender,
-                                                     matrix=proj,
-                                                     receiver=receiver)
-                        else:
-                            # Otherwise, if it is Port specification, implement default Projection
-                            try:
-                                if isinstance(proj, InputPort):
-                                    proj = MappingProjection(sender=sender,
-                                                             receiver=proj)
-                                elif isinstance(proj, OutputPort):
-                                    proj = MappingProjection(sender=proj,
-                                                             receiver=receiver)
-                            except (InputPortError, ProjectionError) as error:
-                                # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
-                                raise ProjectionError(str(error.error_value))
+                # # MODIFIED 12/13/21 OLD:
+                # if c == len(pathway) - 1:
+                #     raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                #                            f"{pathway[c]}.")
+                # # confirm that it is between two nodes, then add the projection
+                # if isinstance(pathway[c], tuple):
+                #     proj = pathway[c][0]
+                #     feedback = pathway[c][1]
+                # else:
+                #     proj = pathway[c]
+                #     feedback = False
+                # sender = pathway[c - 1]
+                # receiver = pathway[c + 1]
+                # if _is_node_spec(sender) and _is_node_spec(receiver):
+                #     if isinstance(sender, tuple):
+                #         sender = sender[0]
+                #     if isinstance(receiver, tuple):
+                #         receiver = receiver[0]
+                #     try:
+                #         if isinstance(proj, (np.ndarray, np.matrix, list)):
+                #             # If proj is a matrix specification, use it as the matrix arg
+                #             proj = MappingProjection(sender=sender,
+                #                                      matrix=proj,
+                #                                      receiver=receiver)
+                #         else:
+                #             # Otherwise, if it is Port specification, implement default Projection
+                #             try:
+                #                 if isinstance(proj, InputPort):
+                #                     proj = MappingProjection(sender=sender,
+                #                                              receiver=proj)
+                #                 elif isinstance(proj, OutputPort):
+                #                     proj = MappingProjection(sender=proj,
+                #                                              receiver=receiver)
+                #             except (InputPortError, ProjectionError) as error:
+                #                 # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
+                #                 raise ProjectionError(str(error.error_value))
+                #
+                #     except (InputPortError, ProjectionError, MappingError) as error:
+                #         raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                #                                f"{str(error.error_value)}")
+                #
+                #     except DuplicateProjectionError:
+                #         # FIX: 7/22/19 ADD WARNING HERE??
+                #         # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                #         duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                #         assert len(duplicate)==1, \
+                #             f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                #             f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                #             f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                #         duplicate = duplicate[0]
+                #         warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                #                       f"in {pathway_arg_str} is a duplicate of one"
+                #         # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                #         #                      sender and receiver in different Compositions
+                #         # if duplicate in self.projections:
+                #         #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                #         #                   f"and so will be ignored.")
+                #         #     proj=duplicate
+                #         # else:
+                #         #     if self.prefs.verbosePref:
+                #         #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                #         #                       f"new one will be used; delete it if you want to use the existing one")
+                #         # Version that forbids *any* duplicate Projections between same sender and receiver
+                #         warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                #                       f"and so will be ignored.")
+                #         proj=duplicate
+                #
+                #     proj = self.add_projection(projection=proj,
+                #                                sender=sender,
+                #                                receiver=receiver,
+                #                                feedback=feedback,
+                #                                allow_duplicates=False)
+                #     if proj:
+                #         projections.append(proj)
+                #
+                # else:
+                #     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                #                            f"is not between two Nodes: {pathway[c]}")
+                # # # MODIFIED 12/13/21 NEW:
+                # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
+                #  then embed in a list for concistency of handling below
+                proj_specs = pathway[c]
+                if not isinstance(proj_specs, set):
+                    proj_specs = [proj_specs]
+                for proj_spec in proj_specs:
+                    if c == len(pathway) - 1:
+                        raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                                               f"{proj_spec}.")
+                    # confirm that it is between two nodes, then add the projection
+                    if isinstance(proj_spec, tuple):
+                        proj = proj_spec[0]
+                        feedback = proj_spec[1]
+                    else:
+                        proj = proj_spec
+                        feedback = False
+                    sender = pathway[c - 1]
+                    receiver = pathway[c + 1]
+                    if _is_node_spec(sender) and _is_node_spec(receiver):
+                        if isinstance(sender, tuple):
+                            sender = sender[0]
+                        if isinstance(receiver, tuple):
+                            receiver = receiver[0]
+                        try:
+                            if isinstance(proj, (np.ndarray, np.matrix, list)):
+                                # If proj is a matrix specification, use it as the matrix arg
+                                proj = MappingProjection(sender=sender,
+                                                         matrix=proj,
+                                                         receiver=receiver)
+                            else:
+                                # Otherwise, if it is Port specification, implement default Projection
+                                try:
+                                    if isinstance(proj, InputPort):
+                                        proj = MappingProjection(sender=sender,
+                                                                 receiver=proj)
+                                    elif isinstance(proj, OutputPort):
+                                        proj = MappingProjection(sender=proj,
+                                                                 receiver=receiver)
+                                except (InputPortError, ProjectionError) as error:
+                                    # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
+                                    raise ProjectionError(str(error.error_value))
 
-                    except (InputPortError, ProjectionError, MappingError) as error:
-                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                               f"{str(error.error_value)}")
+                        except (InputPortError, ProjectionError, MappingError) as error:
+                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                                   f"{str(error.error_value)}")
 
-                    except DuplicateProjectionError:
-                        # FIX: 7/22/19 ADD WARNING HERE??
-                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                        assert len(duplicate)==1, \
-                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                            f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                            f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                        duplicate = duplicate[0]
-                        warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                      f"in {pathway_arg_str} is a duplicate of one"
-                        # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                        #                      sender and receiver in different Compositions
-                        # if duplicate in self.projections:
-                        #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                        #                   f"and so will be ignored.")
-                        #     proj=duplicate
-                        # else:
-                        #     if self.prefs.verbosePref:
-                        #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                        #                       f"new one will be used; delete it if you want to use the existing one")
-                        # Version that forbids *any* duplicate Projections between same sender and receiver
-                        warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                                      f"and so will be ignored.")
-                        proj=duplicate
+                        except DuplicateProjectionError:
+                            # FIX: 7/22/19 ADD WARNING HERE??
+                            # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                            duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                            assert len(duplicate)==1, \
+                                f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                            duplicate = duplicate[0]
+                            warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                          f"in {pathway_arg_str} is a duplicate of one"
+                            # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                            #                      sender and receiver in different Compositions
+                            # if duplicate in self.projections:
+                            #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                            #                   f"and so will be ignored.")
+                            #     proj=duplicate
+                            # else:
+                            #     if self.prefs.verbosePref:
+                            #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                            #                       f"new one will be used; delete it if you want to use the existing one")
+                            # Version that forbids *any* duplicate Projections between same sender and receiver
+                            warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                          f"and so will be ignored.")
+                            proj=duplicate
 
-                    proj = self.add_projection(projection=proj,
-                                               sender=sender,
-                                               receiver=receiver,
-                                               feedback=feedback,
-                                               allow_duplicates=False)
-                    if proj:
-                        projections.append(proj)
+                        proj = self.add_projection(projection=proj,
+                                                   sender=sender,
+                                                   receiver=receiver,
+                                                   feedback=feedback,
+                                                   allow_duplicates=False)
+                        if proj:
+                            projections.append(proj)
 
-                else:
-                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                                           f"is not between two Nodes: {pathway[c]}")
+                    else:
+                        raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                                               f"is not between two Nodes: {pathway[c]}")
+                    # MODIFIED 12/13/21 END
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
                                        f"or a Projection: {repr(pathway[c])}.")
