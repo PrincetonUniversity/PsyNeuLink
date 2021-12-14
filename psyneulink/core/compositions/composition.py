@@ -5178,9 +5178,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             in either case, processing continues, to activate it for the Composition,
             construct any "shadow" projections that may be specified, and assign feedback if specified,
                 
-        • if **sender** or **reciever is a Composition, Projections are created for all of the existing, as yet
-          "unoccupied" InputPorts or OutputPorts of its input_CIM or output_CIM, respectively.
-
         • if the status of **projection** is `deferred_init`:
 
           - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
@@ -5871,10 +5868,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
         
-        Note: if a Mechanism precedes a Composition, its `primary OutputPort <OutputPort_Primary>` projects  
-        to all of the Composition's `INPUT <NodeRole.INPUT>` Nodes, and if Composition is followed by a Mechanism,
-        all of its `OUTPUT <NodeRole.OUTPUT>` Nodes project to that Mechanism's `primary InputPort
-        <InputPort_Primary>`.
+        Note: if a Mechanism precedes a Composition, Projections from its `primary OutputPort <OutputPort_Primary>`
+        are created to all of the Composition's  `INPUT <NodeRole.INPUT>` Nodes, and if Composition is followed by a
+        Mechanism, Projections are created from  all of its `OUTPUT <NodeRole.OUTPUT>` Nodes to the Mechanism's
+        `primary InputPort <InputPort_Primary>`.
 
         Note: any specifications of the **monitor_for_control** `argument
         <ControlMechanism_Monitor_for_Control_Argument>` of a constructor for a `ControlMechanism` or the **monitor**
@@ -6004,10 +6001,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver = pathway[c][0]
                     else:
                         receiver = pathway[c]
+                    # # MODIFIED 12/13/21 OLD:
                     proj = self.add_projection(sender=sender,
                                                receiver=receiver)
                     if proj:
                         projections.append(proj)
+                    # MODIFIED 12/13/21 NEW:  FIX: NEED TO DEAL WITH MULTIPLE PROJECTIONS BETWEEN TWO NODES
+                    #                              RAISES ERROR IN HANDLING OF explicit_pathway BELOW
+                    # comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
+                    #          if isinstance(item[0],Composition)}
+                    # if comps:
+                    #     senders = convert_to_list(sender)
+                    #     receivers = convert_to_list(receiver)
+                    #     for node, role in comps.items():
+                    #         if role is NodeRole.OUTPUT:
+                    #             senders = node.get_nodes_by_role(role)
+                    #         elif role is NodeRole.INPUT:
+                    #             receivers = node.get_nodes_by_role(role)
+                    #     if len(senders) > 1 and len(receivers) > 1:
+                    #         raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
+                    #                                f"which {sender.name} has more than one OUTPUT Node and second of"
+                    #                                f"which {receiver.name} has more than one INPUT Node, making the "
+                    #                                f"configuration of Projections between them ambigous. Please "
+                    #                                f"specify those Projections explicity.")
+                    #     projs = [self.add_projection(sender=s, receiver=r) for r in receivers for s in senders]
+                    # else:
+                    #     projs = [self.add_projection(sender=sender,
+                    #                                receiver=receiver)]
+                    # if projs:
+                    #     projections.extend(projs)
+                    # MODIFIED 12/13/21 END
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
