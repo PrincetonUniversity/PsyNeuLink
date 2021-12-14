@@ -6058,6 +6058,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
+                proj_spec = convert_to_list(pathway[c])
+                XXX
                 if c == len(pathway) - 1:
                     raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
                                            f"{pathway[c]}.")

@@ -376,7 +376,7 @@ class TestControl:
         ocomp = Composition(name='COMPOSITION', pathways=[input_mech, internal_mech, icomp, output_mech])
 
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
-        assert gv.strip() == expected_output
+         assert gv.strip() == expected_output
 
     _nested_learning_test_with_user_specified_target_in_outer_composition_data = [
         (
