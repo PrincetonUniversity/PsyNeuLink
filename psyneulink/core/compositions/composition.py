@@ -5177,6 +5177,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - if there is more than one, the last in the list (presumably the most recent) is used;
             in either case, processing continues, to activate it for the Composition,
             construct any "shadow" projections that may be specified, and assign feedback if specified,
+                
+        • if **sender** or **reciever is a Composition, Projections are created for all of the existing, as yet
+          "unoccupied" InputPorts or OutputPorts of its input_CIM or output_CIM, respectively.
 
         • if the status of **projection** is `deferred_init`:
 
@@ -5191,10 +5194,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a `feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           If **projection** is an instantiated Projection (i.e., not in `deferred_init`) and one already exists between
-           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated and
-           the request is ignored.
-
+           If **projection** is an instantiated Projection (i.e., not in `deferred_init`), and one already exists
+           between its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`, a warning is 
+           generated and the request is ignored.
 
         .. technical_note::
             Duplicates are determined by the `Ports <Port>` to which they project, not the `Mechanisms <Mechanism>`
@@ -5284,14 +5286,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"the last of these will be used in {self.name}.")
                     projection = existing_projections[-1]
 
-        # FIX: 9/30/19 - Why is this not an else?
-        #                Because above is only for existing Projections outside of Composition, which should be
-        #                used
-        #                But existing one could be within, in which case want to use that one
-        #                existing Projection might be deferred_init, and want t
+        # Create Projection if it doesn't exist
         try:
             # Note: this does NOT initialize the Projection if it is in deferred_init
-            projection = self._parse_projection_spec(projection, name)
+            projection = self._instantiate_projection_from_spec(projection, name)
         except DuplicateProjectionError:
             # return projection
             return
@@ -5364,7 +5362,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     receiver = cim_target_input_port
 
         # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
+        # Add autoassociative learning mechanism + related projections to omposition as processing components
         if (sender_mechanism != self.input_CIM
                 and sender_mechanism != self.parameter_CIM
                 and sender_mechanism != self.controller
@@ -5438,7 +5436,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
 
-    def _parse_projection_spec(self, projection, sender=None, receiver=None, name=None):
+    def _instantiate_projection_from_spec(self, projection, sender=None, receiver=None, name=None):
         if isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
@@ -5872,10 +5870,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
         <Composition.add_node.required_roles>` to Mechanisms.
+        
+        Note: if a Mechanism precedes a Composition, its `primary OutputPort <OutputPort_Primary>` projects  
+        to all of the Composition's `INPUT <NodeRole.INPUT>` Nodes, and if Composition is followed by a Mechanism,
+        all of its `OUTPUT <NodeRole.OUTPUT>` Nodes project to that Mechanism's `primary InputPort
+        <InputPort_Primary>`.
 
-        Note that any specifications of the **monitor_for_control** `argument
+        Note: any specifications of the **monitor_for_control** `argument
         <ControlMechanism_Monitor_for_Control_Argument>` of a constructor for a `ControlMechanism` or the **monitor**
-        argument specified in the constructor for an ObjectiveMechanism in the **objective_mechanism** `argument
+        argument in the constructor for an `ObjectiveMechanism` in the **objective_mechanism** `argument
         <ControlMechanism_ObjectiveMechanism>` of a ControlMechanism supercede any MappingProjections that would
         otherwise be created for them when specified in the **pathway** argument of add_linear_processing_pathway.
 
@@ -5885,10 +5888,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway : `Node <Composition_Nodes>`, list or `Pathway`
             specifies the `Nodes <Composition_Nodes>`, and optionally `Projections <Projection>`, used to construct a
             processing `Pathway <Pathway>`. Any standard form of `Pathway specification <Pathway_Specification>` can
-            be used, however if a 2-item (Pathway, LearningFunction) tuple is used the `LearningFunction` will be
-            ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
+            be used, however if a 2-item (Pathway, LearningFunction) tuple is used, the `LearningFunction` is ignored
+            (this should be used with `add_linear_learning_pathway` if a `learning Pathway
             <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
-            learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
+            learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name**
             argument of add_linear_processing_pathway is specified.
 
         name : str
@@ -6145,7 +6148,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathways : Pathway or list[Pathway]
             specifies one or more `Pathways <Pathway>` to add to the Composition (see `Pathway_Specification`).
-
+            
         Returns
         -------
 
