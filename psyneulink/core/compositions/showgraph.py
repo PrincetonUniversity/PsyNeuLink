@@ -1492,7 +1492,8 @@ class ShowGraph():
                             continue
 
                         # Skip if receiver is cim (handled by enclosing Composition's call to this method)
-                        if isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism):
+                        if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism) and
+                                rcvr_node_input_port.owner.composition is enclosing_comp):
                             continue
 
                         # Skip if there is no inner Composition (show_nested!=NESTED) or
