@@ -6050,7 +6050,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    f"which {receiver.name} has more than one INPUT Node, making the "
                                                    f"configuration of Projections between them ambigous. Please "
                                                    f"specify those Projections explicity.")
-                        proj = {self.add_projection(sender=s, receiver=r) for r in receivers for s in senders}
+                        proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                                for r in receivers for s in senders}
                     else:
                         proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:
@@ -6176,7 +6177,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         proj = MappingProjection(sender=proj,
                                                                  receiver=receiver)
                                 except (InputPortError, ProjectionError) as error:
-                                    # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
                                     raise ProjectionError(str(error.error_value))
 
                         except (InputPortError, ProjectionError, MappingError) as error:
