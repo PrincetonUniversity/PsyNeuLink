@@ -1764,6 +1764,12 @@ class SharedParameter(Parameter):
         except AttributeError:
             return super().__getattr__(attr)
 
+    def __setattr__(self, attr, value):
+        if self._source_exists and attr in self._sourced_attrs:
+            setattr(self.source, attr, value)
+        else:
+            super().__setattr__(attr, value)
+
     def _cache_inherited_attrs(self):
         super()._cache_inherited_attrs(
             exclusions=self._uninherited_attrs.union(self._sourced_attrs)
