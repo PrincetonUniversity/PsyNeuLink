@@ -1041,10 +1041,7 @@ class Parameter(ParameterBase):
             self._is_invalid_source = value
 
             if value:
-                for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
-                        self._inherited_attrs_cache[attr] = getattr(self, attr)
-                        delattr(self, attr)
+                self._cache_inherited_attrs()
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
@@ -1065,22 +1062,32 @@ class Parameter(ParameterBase):
                             next_child._inherit_from(self)
                             children.extend(next_child._owner._children)
 
-                for attr in self._param_attrs:
-                    if (
-                        attr not in self._uninherited_attrs
-                        and getattr(self, attr) is getattr(self._parent, attr)
-                    ):
-                        setattr(self, attr, self._inherited_attrs_cache[attr])
+                self._restore_inherited_attrs()
 
             self.__inherited = value
 
     def _inherit_from(self, parent):
         self._inherited_source = weakref.ref(parent)
 
-    def _cache_inherited_attrs(self):
+    def _cache_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
         for attr in self._param_attrs:
-            if attr not in self._uninherited_attrs:
+            if attr not in exclusions:
                 self._inherited_attrs_cache[attr] = getattr(self, attr)
+                delattr(self, attr)
+
+    def _restore_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
+        for attr in self._param_attrs:
+            if (
+                attr not in exclusions
+                and getattr(self, attr) is getattr(self._parent, attr)
+            ):
+                setattr(self, attr, self._inherited_attrs_cache[attr])
 
     @property
     def _parent(self):
