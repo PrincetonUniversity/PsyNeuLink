@@ -6033,7 +6033,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
                              if isinstance(item[0],Composition)}
                     # If either sender or receive is a Composition,
-                    #   - if either sender has more than one OUTPUT Node or reciever has more than one INPUT Node:
+                    #   - if either the sender has > 1 OUTPUT Node or the receiver has > 1 INPUT Node:
                     #     generate set of Projections (one->one, one->many or many->one)
                     #   - if it is true of both, raise error (can't determine mapping for many->many)
                     #   - assign set of Projections assigned to position in Pathway between the two nodes
@@ -6044,7 +6044,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             if role is NodeRole.OUTPUT:
                                 senders = node.get_nodes_by_role(role)
                             elif role is NodeRole.INPUT:
-                                receivers = node.get_nodes_by_role(role)
+                                # Note: TARGET Nodes are already accounted for
+                                receivers = [n for n in node.get_nodes_by_role(role)
+                                             if not NodeRole.TARGET in node.get_roles_by_node(n)]
                         if len(senders) > 1 and len(receivers) > 1:
                             raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
                                                    f"which {sender.name} has more than one OUTPUT Node and second of"
