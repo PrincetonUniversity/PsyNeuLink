@@ -1764,6 +1764,16 @@ class SharedParameter(Parameter):
         except AttributeError:
             return super().__getattr__(attr)
 
+    def _cache_inherited_attrs(self):
+        super()._cache_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
+    def _restore_inherited_attrs(self):
+        super()._restore_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
     def _set_name(self, name):
         if self.shared_parameter_name is None:
             self.shared_parameter_name = name
@@ -1831,6 +1841,10 @@ class SharedParameter(Parameter):
             base_param = base_param.source
 
         return base_param
+
+    @property
+    def _sourced_attrs(self):
+        return set([a for a in self._param_attrs if a not in self._unsourced_attrs])
 
 
 class FunctionParameter(SharedParameter):
