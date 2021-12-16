@@ -1812,7 +1812,7 @@ class SharedParameter(Parameter):
                             delattr(self, p)
                         except AttributeError:
                             pass
-            self._source_exists = True
+                self._source_exists = True
             return obj
         except AttributeError:
             return None
