@@ -103,7 +103,7 @@ jobs:
       run: git tag -d 'v999.999.999.999'
 
     - name: Upload Documentation
-      uses: actions/upload-artifact@v2.3.0
+      uses: actions/upload-artifact@v2.3.1
       with:
         name: Documentation-${{matrix.pnl-version}}-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         retention-days: 1
@@ -115,7 +115,7 @@ jobs:
 
     - name: Upload PR number for other workflows
       if: ${{ github.event_name == 'pull_request' }}
-      uses: actions/upload-artifact@v2.3.0
+      uses: actions/upload-artifact@v2.3.1
       with:
           name: pr_number
           path: ./pr_number.txt
