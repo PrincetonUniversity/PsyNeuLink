@@ -2530,7 +2530,8 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, RANDOMIZATION_CONTROL_SIGNAL
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
+    RANDOMIZATION_CONTROL_SIGNAL
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -7179,7 +7180,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         p.insert(0, curr_node)
                         curr_node = prev[curr_node]
                     p.insert(0, curr_node)
-                    # we only consider input -> projection -> ... -> output pathways (since we can't learn on only one mechanism)
+                    # we only consider input -> projection -> ... -> output pathways
+                    # (since we can't learn on only one mechanism)
                     if len(p) >= 3:
                         pathways.append(p)
                     continue
@@ -7285,7 +7287,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism, context)
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source,
+                                                                                 learning_mechanism,
+                                                                                 context)
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
         #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
@@ -8221,8 +8225,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_string(self, inputs):
         """
-        Validates that conditions are met to use a string as input, i.e. that there is only one input node and that node's default
-            input port has a label matching the provided string. If so, convert the string to an input dict and parse
+        Validate that conditions are met to use a string as input, i.e. that there is only one input node and that
+        node's default input port has a label matching the provided string. If so, convert the string to an input
+        dict and parse.
 
         Returns
         -------
@@ -8329,8 +8334,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 if not input_port.internal_only]
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"its external_input_values ({node_variable})."
-                    # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                    # for "functionality" but rather a hack for user clarity
+                    # 8/3/17 CW: I admit the error message implementation here is very hacky;
+                    # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(node)):
                         err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
                                             "(or other values) to represent the outside stimulus for " \
@@ -8347,8 +8352,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_lengths.remove(1)
         if len(input_lengths) > 1:
             raise CompositionError(f"The input dictionary for {self.name} contains input specifications of different "
-                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each node "
-                                    f"in a Composition.")
+                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each "
+                                   f"node in a Composition.")
         elif len(input_lengths) > 0:
             num_trials = list(input_lengths)[0]
             for mechanism in inputs_to_duplicate:
@@ -8412,12 +8417,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         -------
 
         `dict` :
-            The input dict, with inputs in the form of their label representations replaced by their numeric representations
+            The input dict, with inputs with their label representations replaced by their numeric representations
 
         """
         # the nested list comp below is necessary to retrieve target nodes of learning pathways, because the PathwayRole
         # enum is not importable into this module
-        target_to_output = {path.target: path.output for path in self.pathways if 'LEARNING' in [role.name for role in path.roles]}
+        target_to_output = {path.target: path.output for path in self.pathways
+                            if 'LEARNING' in [role.name for role in path.roles]}
         if mech:
             target_nodes_of_learning_pathways = [path.target for path in self.pathways]
             label_type = INPUT if mech not in target_nodes_of_learning_pathways else OUTPUT
@@ -8458,8 +8464,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Number of input sets in dict for each input node in the Composition
 
         """
-        # parse a user-provided input dict to format it properly for execution. compute number of input sets and return that
-        # as well
+        # parse a user-provided input dict to format it properly for execution.
+        # compute number of input sets and return that as well
         _inputs = self._parse_labels(inputs)
         _inputs = self._validate_input_dict_node_roles(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
@@ -8525,8 +8531,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Provided inputs {inputs} is in a disallowed format. Inputs must be provided in the form of "
                 f"a dict, list, function, or generator. "
-                f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run for details and "
-                f"formatting instructions for each input type."
+                f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run "
+                f"for details and formatting instructions for each input type."
             )
         return _inputs, num_inputs_sets
 
@@ -8965,8 +8971,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not valid_reset_type:
             raise CompositionError(
-                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
-                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when "
+                f"of {self.name}. reset_integrator_nodes_when must be a Condition or a dict comprised of "
+                f" {Node: Condition} pairs.")
 
         self._reset_stateful_functions_when_cache = {}
 
@@ -9116,8 +9123,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_trial, context=context)
 
             # IMPLEMENTATION NOTE:
-            # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
-            # method whether or not we are at the last trial of the run.
+            # The AFTER Run controller execution takes place here, because there's no way to tell from within the
+            # execute method whether or not we are at the last trial of the run.
             # The BEFORE Run controller execution takes place in the execute method,
             # because we can't execute the controller until after setup has occurred for the Input CIM.
             if (self.controller_mode == AFTER and
@@ -9527,7 +9534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            context=context
                            )
 
-            # ASSIGNMENTS **************************************************************************************************
+            # ASSIGNMENTS **********************************************************************************************
 
             if not hasattr(self, '_animate'):
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
@@ -9551,8 +9558,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-            # if execute was called from command line and no inputs were specified, assign default inputs to highest level
-            # composition (i.e. not on any nested Compositions)
+            # if execute was called from command line and no inputs were specified,
+            # assign default inputs to highest level composition (i.e. not on any nested Compositions)
             if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
                 inputs = self._validate_input_dict_node_roles({})
             # Skip initialization if possible (for efficiency):
@@ -9562,7 +9569,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # -     its not a simulation)
             # - or(gym forage env is being used)
             # (e.g., when run is called externally repeated for the same environment)
-            # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
+            # KAM added HACK below "or self.env is None" to merge in interactive inputs fix for speed improvement
             # TBI: Clean way to call _initialize_from_context if context has not changed, BUT composition has changed
             # for example:
             # comp.run()
@@ -9675,7 +9682,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX 5/28/20
             context.remove_flag(ContextFlags.PREPARING)
 
-            # EXECUTE INPUT CIM ********************************************************************************************
+            # EXECUTE INPUT CIM ****************************************************************************************
 
             # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
             # Handles Input CIM and Parameter CIM execution.
@@ -9683,13 +9690,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 8/21/19
             # If self is a nested composition, its input CIM will obtain its value in one of two ways,
             # depending on whether or not it is being executed within a simulation.
-            # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the inputs
-            # argument of the execute method into a suitable shape for the input ports of the input_CIM.
+            # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the
+            # inputs argument of the execute method into a suitable shape for the input ports of the input_CIM.
             # If it is not a simulation, we can simply execute the input CIM.
             #
-            # If self is an unnested composition, we must update the input ports for any input nodes that are Compositions.
-            # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
-            # method to properly validate input for those nodes.
+            # If self is an unnested composition, we must update the input ports for any input nodes that are
+            # Compositions. This is done to update the variable for their input CIMs, which allows the
+            # _adjust_execution_stimuli method to properly validate input for those nodes.
             # -DS
 
             context.execution_phase = ContextFlags.PROCESSING
@@ -9743,7 +9750,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: END
             context.remove_flag(ContextFlags.PROCESSING)
 
-            # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
+            # EXECUTE CONTROLLER (if specified for BEFORE) *************************************************************
 
             # Execute controller --------------------------------------------------------
 
@@ -9754,8 +9761,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # IMPLEMENTATION NOTE:
             # The BEFORE Run controller execution takes place here, because we can't execute the controller until after
             # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
-            # method, because there's no way to tell from within the execute method whether or not we are at the last trial
-            # of the run.
+            # method, because there's no way to tell from within the execute method whether or not we are at the last
+            # trial of the run.
             if self.controller_time_scale == TimeScale.RUN and scheduler.get_clock(context).time.trial == 0:
                 self._execute_controller(
                     relative_order=BEFORE,
@@ -9775,7 +9782,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # EXECUTE EACH EXECUTION SET *********************************************************************************
+            # EXECUTE EACH EXECUTION SET *******************************************************************************
 
             # Begin reporting of TRIAL:
             # - add TRIAL header and Composition's input to output report (now that they are known)
@@ -9824,11 +9831,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # SETUP EXECUTION ----------------------------------------------------------------------------
 
                 # IMPLEMENTATION NOTE KDM 1/15/20:
-                # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
-                # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
-                # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
-                # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
-                curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
+                # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS
+                # has ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only
+                # know a PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we
+                # have to run call_after_pass before the next PASS (here) or after this code block (see call to
+                # call_after_pass below)
+                curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
+                                                                                            TimeScale.TRIAL)
                 new_pass = False
                 if curr_pass != last_pass:
                     new_pass = True
@@ -9886,7 +9895,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.freeze_values()
 
                 # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
-                # If learning is turned off, check for any learning related nodes and remove them from the execution set
+                # If learning is turned off, check for learning related nodes and remove them from the execution set
                 if not self._is_learning(context):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
@@ -9905,7 +9914,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context.execution_phase = ContextFlags.PROCESSING
                     self._animate_execution(next_execution_set, context)
 
-                # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
+                # EXECUTE EACH NODE IN EXECUTION SET -------------------------------------------------------------------
                 if execution_scheduler.mode is SchedulingMode.EXACT_TIME:
                     # sort flattened execution set by unflattened position
                     next_execution_set = sorted(
@@ -9950,9 +9959,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         execution_runtime_params = {}
                         if node in runtime_params:
-                            execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
-                                                                                                     execution_scheduler,
-                                                                                                     context))
+                            execution_runtime_params.update(
+                                self._get_satisfied_runtime_param_values(runtime_params[node],
+                                                                         execution_scheduler,
+                                                                         context))
 
                         # (Re)set context.execution_phase to PROCESSING by default
                         context.execution_phase = ContextFlags.PROCESSING
@@ -9965,7 +9975,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             projections = set(self.projections).intersection(set(node.path_afferents))
                             if any([p for p in projections if
                                     any([a for a in p.parameter_ports[MATRIX].mod_afferents
-                                         if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
+                                         if (hasattr(a, 'learning_enabled')
+                                             and a.learning_enabled in {True, ONLINE})])]):
                                 context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                         # Execute Mechanism
