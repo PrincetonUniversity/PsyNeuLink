@@ -5331,7 +5331,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   # SENDER:projection.sender,
                                   # RECEIVER:projection.receiver,
                                   FUNCTION:projection.function,
-                                  MATRIX:projection.matrix}
+                                  MATRIX:projection.matrix.base}
                               }
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
         # MODIFIED 12/17/21 END
