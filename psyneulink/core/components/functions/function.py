@@ -343,7 +343,7 @@ def _random_state_getter(self, owning_component, context):
 
     seed_param = owning_component.parameters.seed
     try:
-        is_modulated = seed_param._port.is_modulated(context)
+        is_modulated = seed_param.port.is_modulated(context)
     except AttributeError:
         is_modulated = False
 

@@ -3134,7 +3134,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     self.parameter_ports.parameter_mapping[param_port.source] = param_port
                 except TypeError:
                     pass
-                param_port.source._port = param_port
+                param_port.source.port = param_port
 
     def _get_current_parameter_value(self, parameter, context=None):
         from psyneulink.core.components.ports.parameterport import ParameterPortError

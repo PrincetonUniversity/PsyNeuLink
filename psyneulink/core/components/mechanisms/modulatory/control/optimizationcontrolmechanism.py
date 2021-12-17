@@ -1968,7 +1968,7 @@ class OptimizationControlMechanism(ControlMechanism):
             randomization_control_signal = ControlSignal(
                 name=RANDOMIZATION_CONTROL_SIGNAL,
                 modulates=[
-                    param.parameters.seed._port
+                    param.parameters.seed.port
                     for param in self.random_variables
                 ],
                 allocation_samples=randomization_seed_mod_values
