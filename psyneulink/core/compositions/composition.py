@@ -2546,8 +2546,8 @@ from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -2557,15 +2557,15 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
-    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
-    LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
-    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PULSE_CLAMP, RECEIVER,\
+    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -4067,24 +4067,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
-
-    # def _get_nested_nodes_by_role(self, include_roles, exclude_roles=None):
-    #     """Return all Nodes from Composition and any nested ones having *include_roles* but not *exclude_roles*."""
-    #     nested_nodes = []
-    #     include_roles = convert_to_list(include_roles)
-    #     if exclude_roles:
-    #         exclude_roles = convert_to_list(exclude_roles)
-    #     else:
-    #         exclude_roles = []
-    #     NODE = 0
-    #     COMP = 1
-    #     nested_nodes = [entry[NODE] for entry in self._get_nested_nodes()
-    #                     if (not isinstance(entry[NODE], Composition)
-    #                         and any(entry[NODE] in entry[COMP].get_nodes_by_role(include)
-    #                                 for include in include_roles)
-    #                         and not any(entry[NODE] in entry[COMP].get_nodes_by_role(exclude)
-    #                                     for exclude in exclude_roles))]
-    #     return nested_nodes
+    def _get_nested_nodes_with_same_roles_at_all_levels(self, comp, include_roles, exclude_roles=None):
+        """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
+        Note:  need to do this recursively, checking roles on the "way down," since a Node may have a role in a
+               deeply nested Composition, but that Composition itself may not have the same role in the Composition
+               within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
+               nested Composition may not be an INPUT Node of the Composition in which it is nested).
+        """
+        nested_nodes = []
+        include_roles = convert_to_list(include_roles)
+        if exclude_roles:
+            exclude_roles = convert_to_list(exclude_roles)
+        else:
+            exclude_roles = []
+        if isinstance(comp, Composition):
+            # Get all nested nodes in comp that have include_roles and not exclude_roles:
+            for node in [n for n in comp.nodes
+                         if (any(n in comp.get_nodes_by_role(include)
+                                 for include in include_roles)
+                               and not any(n in comp.get_nodes_by_role(exclude)
+                                           for exclude in exclude_roles))]:
+                if isinstance(node, Composition):
+                    nested_nodes.extend(node._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles,
+                                                                                             exclude_roles))
+                else:
+                    nested_nodes.append(node)
+        return nested_nodes or None
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
@@ -5308,17 +5316,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection = existing_projections[-1]
 
         # MODIFIED 12/17/21 NEW:  COPY INSTANTIATED PROJECTION FOR PROJECTION SETS
-        # Projection is one that is directly between Nodes in nested Compositions,
-        #   need to reinstantiate for routing between those Compositions
+        # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
+        #   then re-specify it so that the proper routing can be instantiated between those Compositions
         elif isinstance(projection, Projection) and projection._initialization_status is ContextFlags.INITIALIZED:
             sender_node = projection.sender.owner
             receiver_node = projection.receiver.owner
-            # If sender or receiver is from/to a nested Node
+            # If sender or receiver is in a nested Node
             if ((sender_node not in self.nodes
                  and sender_node in [n[0] for n in self._get_nested_nodes()])
                     or (receiver_node not in self.nodes
                          and receiver_node in [n[0] for n in self._get_nested_nodes()])):
-                assert True
+                projection = {PROJECTION_TYPE:projection.className,
+                              PROJECTION_PARAMS:{SENDER:projection.sender,
+                                                 RECEIVER:projection.receiver,
+                                                 FUNCTION:projection.function,
+                                                 MATRIX:projection.matrix}}
+                return self.add_projection(sender=projection.sender, receiver=projection.receiver)
+
         # MODIFIED 12/17/21 END
 
         # Create Projection if it doesn't exist
@@ -6072,93 +6086,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         receiver = pathway[c]
 
-                    # # MODIFIED 12/17/21 OLD:
-                    # comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
-                    #          if isinstance(item[0],Composition)}
-                    # # If either sender or receive is a Composition,
-                    # #   - if either sender has more than one OUTPUT Node or receiver has more than one INPUT Node:
-                    # #     generate set of Projections (one->one, one->many or many->one)
-                    # #   - if it is true of both, raise error (can't determine mapping for many->many)
-                    # #   - assign set of Projections assigned to position in Pathway between the two nodes
-                    # if comps:
-                    #     senders = convert_to_list(sender)
-                    #     receivers = convert_to_list(receiver)
-                    #
-                    #     # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
-                    #     #    replace it with those Nodes
-                    #     def _get_nested_nodes(comps):
-                    #         """Recursively search and replace Compositions for INPUT or OUTPUT Nodes"""
-                    #         sndrs = rcvrs = None
-                    #         for comp, role in comps.items():
-                    #             if role is NodeRole.OUTPUT:
-                    #                 sndrs = comp.get_nodes_by_role(role)
-                    #                 nc = [n for n in sndrs if isinstance(n, Composition)]
-                    #                 for c in nc:
-                    #                     del sndrs[sndrs.index(c)]
-                    #                     s, _ = _get_nested_nodes({c:role})
-                    #                     sndrs.extend(s)
-                    #             elif role is NodeRole.INPUT:
-                    #                 rcvrs = [n for n in comp.get_nodes_by_role(role)
-                    #                          if not NodeRole.TARGET in comp.get_roles_by_node(n)]
-                    #                 nc = [n for n in rcvrs if isinstance(n, Composition)]
-                    #                 for c in nc:
-                    #                     del rcvrs[rcvrs.index(c)]
-                    #                     _, r = _get_nested_nodes({c:role})
-                    #                     rcvrs.extend(r)
-                    #         return sndrs, rcvrs
-                    #
-                    #     s, r = _get_nested_nodes(comps)
-                    #     senders = s or senders
-                    #     receivers = r or receivers
-                    #     # MODIFIED 12/16/21 END
-                    #
-                    #     if len(senders) > 1 and len(receivers) > 1:
-                    #         raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
-                    #                                f"which {sender.name} has more than one OUTPUT Node and second of"
-                    #                                f"which {receiver.name} has more than one INPUT Node, making the "
-                    #                                f"configuration of Projections between them ambigous. Please "
-                    #                                f"specify those Projections explicity.")
-                    #     else:
-                    #         proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-                    #                 for r in receivers for s in senders}
-
-                    # MODIFIED 12/17/21 NEW:
-                    # If either sender or receive is a Composition,
-                    #   - if either sender has more than one OUTPUT Node or receiver has more than one INPUT Node:
-                    #     generate set of Projections (one->one, one->many or many->one)
-                    #   - if it is true of both, raise error (can't determine mapping for many->many)
-                    #   - assign set of Projections assigned to position in Pathway between the two nodes
-
-                    def _get_nested_nodes_for_role_at_all_levels(comp, include_roles, exclude_roles=None):
-                        """Return all Nodes from nested Compositions having *include_roles* but not *exclude_roles*.
-                        Note:  this needs to be done recursively, checking for roles on the "way down,"
-                               since a Node may have a role in a deeply nested Composition, but that Composition
-                               itself may not have the same role in the Composition within which *it* is nested.
-                        """
-                        nested_nodes = []
-                        include_roles = convert_to_list(include_roles)
-                        if exclude_roles:
-                            exclude_roles = convert_to_list(exclude_roles)
-                        else:
-                            exclude_roles = []
-                        if isinstance(comp, Composition):
-                            # Get all nested nodes in comp that have include_roles and not exclude_roles:
-                            for node in [n for n in comp.nodes
-                                         if (any(n in comp.get_nodes_by_role(include)
-                                                 for include in include_roles)
-                                               and not any(n in comp.get_nodes_by_role(exclude)
-                                                           for exclude in exclude_roles))]:
-                                if isinstance(node, Composition):
-                                    nested_nodes.extend(_get_nested_nodes_for_role_at_all_levels(node, include_roles,
-                                                                                                 exclude_roles))
-                                else:
-                                    nested_nodes.append(node)
-                        return nested_nodes or None
-
-                    # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
+                    # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
                     #    replace it with those Nodes
-                    senders = _get_nested_nodes_for_role_at_all_levels(sender, NodeRole.OUTPUT)
-                    receivers = _get_nested_nodes_for_role_at_all_levels(receiver, NodeRole.INPUT, NodeRole.TARGET)
+                    senders = self._get_nested_nodes_with_same_roles_at_all_levels(sender, NodeRole.OUTPUT)
+                    receivers = self._get_nested_nodes_with_same_roles_at_all_levels(receiver,
+                                                                                    NodeRole.INPUT, NodeRole.TARGET)
                     if senders or receivers:
                         senders = senders or convert_to_list(sender)
                         receivers = receivers or convert_to_list(receiver)
@@ -6170,30 +6102,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    f"specify those Projections explicity.")
                         proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
                                 for r in receivers for s in senders}
-
-                    # # MODIFIED 12/17/21 NEWER:  FIX: THIS DOESN'T WORK, AS IT RETURNS *ALL* NODES WITH SPECIFIED ROLE
-                    # #                                EVEN IF COMPOSITION TO WHICH IT BELONGS DOES NOT HAVE THAT ROLE
-                    # # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes
-                    # #    (potentially within nested Compositions), replace it with those Nodes
-                    # nested_senders = nested_receivers = None
-                    # if isinstance(sender, Composition):
-                    #     nested_senders = sender._get_nested_nodes_by_role(NodeRole.OUTPUT)
-                    # if isinstance(receiver, Composition):
-                    #     nested_receivers = receiver._get_nested_nodes_by_role(NodeRole.INPUT, NodeRole.TARGET)
-                    # if nested_senders or nested_receivers:
-                    #     nested_senders = nested_senders or convert_to_list(sender)
-                    #     nested_receivers = nested_receivers or convert_to_list(receiver)
-                    #     if len(nested_senders) > 1 and len(nested_receivers) > 1:
-                    #         raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
-                    #                                f"which {sender.name} has more than one OUTPUT Node and second of"
-                    #                                f"which {receiver.name} has more than one INPUT Node, making the "
-                    #                                f"configuration of Projections between them ambigous. Please "
-                    #                                f"specify those Projections explicity.")
-                    #     proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-                    #             for r in nested_receivers for s in nested_senders}
-
-                    # MODIFIED 12/17/21 END
-
                     else:
                         proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:
