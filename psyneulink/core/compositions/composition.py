@@ -6030,158 +6030,113 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver = pathway[c][0]
                     else:
                         receiver = pathway[c]
-                    comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
-                             if isinstance(item[0],Composition)}
-                    # If either sender or receive is a Composition,
-                    #   - if either sender has more than one OUTPUT Node or receiver has more than one INPUT Node:
-                    #     generate set of Projections (one->one, one->many or many->one)
-                    #   - if it is true of both, raise error (can't determine mapping for many->many)
-                    #   - assign set of Projections assigned to position in Pathway between the two nodes
-                    if comps:
-                        senders = convert_to_list(sender)
-                        receivers = convert_to_list(receiver)
 
-                        # # MODIFIED 12/16/21 OLD:
-                        # # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
-                        # #    replace it with those Nodes
-                        # for comp, role in comps.items():
-                        #     if role is NodeRole.OUTPUT:
-                        #         senders = comp.get_nodes_by_role(role)
-                        #     elif role is NodeRole.INPUT:
-                        #         receivers = comp.get_nodes_by_role(role)
+                    # # MODIFIED 12/17/21 OLD:
+                    # comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
+                    #          if isinstance(item[0],Composition)}
+                    # # If either sender or receive is a Composition,
+                    # #   - if either sender has more than one OUTPUT Node or receiver has more than one INPUT Node:
+                    # #     generate set of Projections (one->one, one->many or many->one)
+                    # #   - if it is true of both, raise error (can't determine mapping for many->many)
+                    # #   - assign set of Projections assigned to position in Pathway between the two nodes
+                    # if comps:
+                    #     senders = convert_to_list(sender)
+                    #     receivers = convert_to_list(receiver)
+                    #
+                    #     # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
+                    #     #    replace it with those Nodes
+                    #     def _get_nested_nodes(comps):
+                    #         """Recursively search and replace Compositions for INPUT or OUTPUT Nodes"""
+                    #         sndrs = rcvrs = None
+                    #         for comp, role in comps.items():
+                    #             if role is NodeRole.OUTPUT:
+                    #                 sndrs = comp.get_nodes_by_role(role)
+                    #                 nc = [n for n in sndrs if isinstance(n, Composition)]
+                    #                 for c in nc:
+                    #                     del sndrs[sndrs.index(c)]
+                    #                     s, _ = _get_nested_nodes({c:role})
+                    #                     sndrs.extend(s)
+                    #             elif role is NodeRole.INPUT:
+                    #                 rcvrs = [n for n in comp.get_nodes_by_role(role)
+                    #                          if not NodeRole.TARGET in comp.get_roles_by_node(n)]
+                    #                 nc = [n for n in rcvrs if isinstance(n, Composition)]
+                    #                 for c in nc:
+                    #                     del rcvrs[rcvrs.index(c)]
+                    #                     _, r = _get_nested_nodes({c:role})
+                    #                     rcvrs.extend(r)
+                    #         return sndrs, rcvrs
+                    #
+                    #     s, r = _get_nested_nodes(comps)
+                    #     senders = s or senders
+                    #     receivers = r or receivers
+                    #     # MODIFIED 12/16/21 END
+                    #
+                    #     if len(senders) > 1 and len(receivers) > 1:
+                    #         raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
+                    #                                f"which {sender.name} has more than one OUTPUT Node and second of"
+                    #                                f"which {receiver.name} has more than one INPUT Node, making the "
+                    #                                f"configuration of Projections between them ambigous. Please "
+                    #                                f"specify those Projections explicity.")
+                    #     else:
+                    #         proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                    #                 for r in receivers for s in senders}
+                    # else:
+                    #     proj = self.add_projection(sender=sender, receiver=receiver)
+                    # if proj:
+                    #     projections.append(proj)
 
-                        # MODIFIED 12/16/21 NEW: RECURSIVE VERSION (TO DEAL WITH MULTIPLY-NESTED COMPS)
-                        # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
-                        #    replace it with those Nodes
-                        def _get_nested_nodes(comps):
-                            """Recursively search and replace Compositions for INPUT or OUTPUT Nodes"""
-                            sndrs = rcvrs = None
-                            for comp, role in comps.items():
-                                if role is NodeRole.OUTPUT:
-                                    sndrs = comp.get_nodes_by_role(role)
-                                    nc = [n for n in sndrs if isinstance(n, Composition)]
-                                    for c in nc:
-                                        del sndrs[sndrs.index(c)]
-                                        s, _ = _get_nested_nodes({c:role})
-                                        sndrs.extend(s)
-                                elif role is NodeRole.INPUT:
-                                    rcvrs = [n for n in comp.get_nodes_by_role(role)
-                                             if not NodeRole.TARGET in comp.get_roles_by_node(n)]
-                                    nc = [n for n in rcvrs if isinstance(n, Composition)]
-                                    for c in nc:
-                                        del rcvrs[rcvrs.index(c)]
-                                        _, r = _get_nested_nodes({c:role})
-                                        rcvrs.extend(r)
-                            return sndrs, rcvrs
+                    # MODIFIED 12/17/21 NEW:
+                    # # If either sender or receive is a Composition,
+                    # #   - if either sender has more than one OUTPUT Node or receiver has more than one INPUT Node:
+                    # #     generate set of Projections (one->one, one->many or many->one)
+                    # #   - if it is true of both, raise error (can't determine mapping for many->many)
+                    # #   - assign set of Projections assigned to position in Pathway between the two nodes
+                    def _get_nested_nodes_by_role(comp, include_roles, exclude_roles=None):
+                        """Return all Nodes from nested Compositions having *include_roles* but not *exclude_roles*."""
+                        nested_nodes = []
+                        include_roles = convert_to_list(include_roles)
+                        if exclude_roles:
+                            exclude_roles = convert_to_list(exclude_roles)
+                        else:
+                            exclude_roles = []
+                        if isinstance(comp, Composition):
+                            # Get all nested nodes in comp that have include_roles and not exclude_roles:
+                            for node in [n for n in comp.nodes
+                                         if (any(n in comp.get_nodes_by_role(include)
+                                                 for include in include_roles)
+                                               and not any(n in comp.get_nodes_by_role(exclude)
+                                                           for exclude in exclude_roles))]:
+                                if isinstance(node, Composition):
+                                    nested_nodes.extend(_get_nested_nodes_by_role(node, include_roles, exclude_roles))
+                                else:
+                                    nested_nodes.append(node)
+                        return nested_nodes or None
 
-                        s, r = _get_nested_nodes(comps)
-                        senders = s or senders
-                        receivers = r or receivers
-                        # MODIFIED 12/16/21 END
-
+                    # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
+                    #    replace it with those Nodes
+                    senders = _get_nested_nodes_by_role(sender, NodeRole.OUTPUT)
+                    receivers = _get_nested_nodes_by_role(receiver, NodeRole.INPUT, NodeRole.TARGET)
+                    if senders or receivers:
+                        senders = senders or convert_to_list(sender)
+                        receivers = receivers or convert_to_list(receiver)
                         if len(senders) > 1 and len(receivers) > 1:
                             raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
                                                    f"which {sender.name} has more than one OUTPUT Node and second of"
                                                    f"which {receiver.name} has more than one INPUT Node, making the "
                                                    f"configuration of Projections between them ambigous. Please "
                                                    f"specify those Projections explicity.")
-                        # elif len(senders) == len(receivers) == 1:
-                        #     # If sender and receiver each have just one Node, handle at level of Compositions
-                        #     # (trying to do it by nodes causes crash if sender has a nested Composition
-                        #     #  since that has not yet been implemented)
-                        #     proj = self.add_projection(sender=sender, receiver=receiver)
-                        else:
-                            proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-                                    for r in receivers for s in senders}
-
+                        proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                                for r in receivers for s in senders}
                     else:
                         proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:
                         projections.append(proj)
+                    # MODIFIED 12/17/21 END
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-                # # MODIFIED 12/13/21 OLD:
-                # if c == len(pathway) - 1:
-                #     raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
-                #                            f"{pathway[c]}.")
-                # # confirm that it is between two nodes, then add the projection
-                # if isinstance(pathway[c], tuple):
-                #     proj = pathway[c][0]
-                #     feedback = pathway[c][1]
-                # else:
-                #     proj = pathway[c]
-                #     feedback = False
-                # sender = pathway[c - 1]
-                # receiver = pathway[c + 1]
-                # if _is_node_spec(sender) and _is_node_spec(receiver):
-                #     if isinstance(sender, tuple):
-                #         sender = sender[0]
-                #     if isinstance(receiver, tuple):
-                #         receiver = receiver[0]
-                #     try:
-                #         if isinstance(proj, (np.ndarray, np.matrix, list)):
-                #             # If proj is a matrix specification, use it as the matrix arg
-                #             proj = MappingProjection(sender=sender,
-                #                                      matrix=proj,
-                #                                      receiver=receiver)
-                #         else:
-                #             # Otherwise, if it is Port specification, implement default Projection
-                #             try:
-                #                 if isinstance(proj, InputPort):
-                #                     proj = MappingProjection(sender=sender,
-                #                                              receiver=proj)
-                #                 elif isinstance(proj, OutputPort):
-                #                     proj = MappingProjection(sender=proj,
-                #                                              receiver=receiver)
-                #             except (InputPortError, ProjectionError) as error:
-                #                 # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
-                #                 raise ProjectionError(str(error.error_value))
-                #
-                #     except (InputPortError, ProjectionError, MappingError) as error:
-                #         raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                #                                f"{str(error.error_value)}")
-                #
-                #     except DuplicateProjectionError:
-                #         # FIX: 7/22/19 ADD WARNING HERE??
-                #         # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                #         duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                #         assert len(duplicate)==1, \
-                #             f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                #             f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                #             f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                #         duplicate = duplicate[0]
-                #         warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                #                       f"in {pathway_arg_str} is a duplicate of one"
-                #         # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                #         #                      sender and receiver in different Compositions
-                #         # if duplicate in self.projections:
-                #         #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                #         #                   f"and so will be ignored.")
-                #         #     proj=duplicate
-                #         # else:
-                #         #     if self.prefs.verbosePref:
-                #         #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                #         #                       f"new one will be used; delete it if you want to use the existing one")
-                #         # Version that forbids *any* duplicate Projections between same sender and receiver
-                #         warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                #                       f"and so will be ignored.")
-                #         proj=duplicate
-                #
-                #     proj = self.add_projection(projection=proj,
-                #                                sender=sender,
-                #                                receiver=receiver,
-                #                                feedback=feedback,
-                #                                allow_duplicates=False)
-                #     if proj:
-                #         projections.append(proj)
-                #
-                # else:
-                #     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                #                            f"is not between two Nodes: {pathway[c]}")
-                # # # MODIFIED 12/13/21 NEW:
-                # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
-                #  then embed in a list for concistency of handling below
+               # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
+                #  then embed in a list for consistency of handling below
                 proj_specs = pathway[c]
                 if not isinstance(proj_specs, set):
                     proj_specs = [proj_specs]
