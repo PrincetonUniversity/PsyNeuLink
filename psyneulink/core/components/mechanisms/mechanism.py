@@ -3499,8 +3499,8 @@ class Mechanism_Base(Mechanism):
         plt.plot(x_space, self.function(x_space)[0], lw=3.0, c='r')
         plt.show()
 
-    def remove_projection(self, projection):
-
+    # def remove_projection(self, projection):
+    #     pass
 
     @tc.typecheck
     def _get_port_name(self, port:Port):
