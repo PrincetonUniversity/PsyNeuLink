@@ -5364,7 +5364,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     receiver = cim_target_input_port
 
         # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to omposition as processing components
+        # Add autoassociative learning mechanism + related projections to Composition as processing components
         if (sender_mechanism != self.input_CIM
                 and sender_mechanism != self.parameter_CIM
                 and sender_mechanism != self.controller
