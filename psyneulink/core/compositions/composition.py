@@ -4068,23 +4068,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
 
 
-    def _get_nested_nodes_by_role(self, include_roles, exclude_roles=None):
-        """Return all Nodes from Composition and any nested ones having *include_roles* but not *exclude_roles*."""
-        nested_nodes = []
-        include_roles = convert_to_list(include_roles)
-        if exclude_roles:
-            exclude_roles = convert_to_list(exclude_roles)
-        else:
-            exclude_roles = []
-        NODE = 0
-        COMP = 1
-        nested_nodes = [entry[NODE] for entry in self._get_nested_nodes()
-                        if (not isinstance(entry[NODE], Composition)
-                            and any(entry[NODE] in entry[COMP].get_nodes_by_role(include)
-                                    for include in include_roles)
-                            and not any(entry[NODE] in entry[COMP].get_nodes_by_role(exclude)
-                                        for exclude in exclude_roles))]
-        return nested_nodes
+    # def _get_nested_nodes_by_role(self, include_roles, exclude_roles=None):
+    #     """Return all Nodes from Composition and any nested ones having *include_roles* but not *exclude_roles*."""
+    #     nested_nodes = []
+    #     include_roles = convert_to_list(include_roles)
+    #     if exclude_roles:
+    #         exclude_roles = convert_to_list(exclude_roles)
+    #     else:
+    #         exclude_roles = []
+    #     NODE = 0
+    #     COMP = 1
+    #     nested_nodes = [entry[NODE] for entry in self._get_nested_nodes()
+    #                     if (not isinstance(entry[NODE], Composition)
+    #                         and any(entry[NODE] in entry[COMP].get_nodes_by_role(include)
+    #                                 for include in include_roles)
+    #                         and not any(entry[NODE] in entry[COMP].get_nodes_by_role(exclude)
+    #                                     for exclude in exclude_roles))]
+    #     return nested_nodes
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
@@ -5310,7 +5310,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 12/17/21 NEW:  COPY INSTANTIATED PROJECTION FOR PROJECTION SETS
         # Projection is one that is directly between Nodes in nested Compositions,
         #   need to reinstantiate for routing between those Compositions
-        elif projection and projection._initialization_status is ContextFlags.INITIALIZED:
+        elif isinstance(projection, Projection) and projection._initialization_status is ContextFlags.INITIALIZED:
             sender_node = projection.sender.owner
             receiver_node = projection.receiver.owner
             # If sender or receiver is from/to a nested Node
@@ -6128,6 +6128,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #     generate set of Projections (one->one, one->many or many->one)
                     #   - if it is true of both, raise error (can't determine mapping for many->many)
                     #   - assign set of Projections assigned to position in Pathway between the two nodes
+
                     def _get_nested_nodes_for_role_at_all_levels(comp, include_roles, exclude_roles=None):
                         """Return all Nodes from nested Compositions having *include_roles* but not *exclude_roles*.
                         Note:  this needs to be done recursively, checking for roles on the "way down,"
