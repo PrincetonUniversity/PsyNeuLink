@@ -5308,17 +5308,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projection = existing_projections[-1]
 
         # MODIFIED 12/17/21 NEW:  COPY INSTANTIATED PROJECTION FOR PROJECTION SETS
-        # # Projection is one that is directly between Nodes in nested Compositions,
-        # #   need to reinstantiate for routing between those Compositions
-        # elif projection and projection._initialization_status is ContextFlags.INITIALIZED:
-        #     sender_node = projection.sender.owner
-        #     receiver_node = projection.receiver.owner
-        #     # If sender or receiver is from/to a nested Node
-        #     if ((sender_node not in self.nodes
-        #          and sender_node in [n[0] for n in self._get_nested_nodes()])
-        #             or (receiver_node not in self.nodes
-        #                  and receiver_node in [n[0] for n in self._get_nested_nodes()])):
-        #         assert True
+        # Projection is one that is directly between Nodes in nested Compositions,
+        #   need to reinstantiate for routing between those Compositions
+        elif projection and projection._initialization_status is ContextFlags.INITIALIZED:
+            sender_node = projection.sender.owner
+            receiver_node = projection.receiver.owner
+            # If sender or receiver is from/to a nested Node
+            if ((sender_node not in self.nodes
+                 and sender_node in [n[0] for n in self._get_nested_nodes()])
+                    or (receiver_node not in self.nodes
+                         and receiver_node in [n[0] for n in self._get_nested_nodes()])):
+                assert True
         # MODIFIED 12/17/21 END
 
         # Create Projection if it doesn't exist
@@ -6128,8 +6128,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #     generate set of Projections (one->one, one->many or many->one)
                     #   - if it is true of both, raise error (can't determine mapping for many->many)
                     #   - assign set of Projections assigned to position in Pathway between the two nodes
-                    def _get_nested_nodes_by_role(comp, include_roles, exclude_roles=None):
-                        """Return all Nodes from nested Compositions having *include_roles* but not *exclude_roles*."""
+                    def _get_nested_nodes_for_role_at_all_levels(comp, include_roles, exclude_roles=None):
+                        """Return all Nodes from nested Compositions having *include_roles* but not *exclude_roles*.
+                        Note:  this needs to be done recursively, checking for roles on the "way down,"
+                               since a Node may have a role in a deeply nested Composition, but that Composition
+                               itself may not have the same role in the Composition within which *it* is nested.
+                        """
                         nested_nodes = []
                         include_roles = convert_to_list(include_roles)
                         if exclude_roles:
@@ -6144,15 +6148,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                and not any(n in comp.get_nodes_by_role(exclude)
                                                            for exclude in exclude_roles))]:
                                 if isinstance(node, Composition):
-                                    nested_nodes.extend(_get_nested_nodes_by_role(node, include_roles, exclude_roles))
+                                    nested_nodes.extend(_get_nested_nodes_for_role_at_all_levels(node, include_roles,
+                                                                                                 exclude_roles))
                                 else:
                                     nested_nodes.append(node)
                         return nested_nodes or None
 
                     # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
                     #    replace it with those Nodes
-                    senders = _get_nested_nodes_by_role(sender, NodeRole.OUTPUT)
-                    receivers = _get_nested_nodes_by_role(receiver, NodeRole.INPUT, NodeRole.TARGET)
+                    senders = _get_nested_nodes_for_role_at_all_levels(sender, NodeRole.OUTPUT)
+                    receivers = _get_nested_nodes_for_role_at_all_levels(receiver, NodeRole.INPUT, NodeRole.TARGET)
                     if senders or receivers:
                         senders = senders or convert_to_list(sender)
                         receivers = receivers or convert_to_list(receiver)
@@ -6165,7 +6170,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
                                 for r in receivers for s in senders}
 
-                    # # MODIFIED 12/17/21 NEWER:
+                    # # MODIFIED 12/17/21 NEWER:  FIX: THIS DOESN'T WORK, AS IT RETURNS *ALL* NODES WITH SPECIFIED ROLE
+                    # #                                EVEN IF COMPOSITION TO WHICH IT BELONGS DOES NOT HAVE THAT ROLE
                     # # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes
                     # #    (potentially within nested Compositions), replace it with those Nodes
                     # nested_senders = nested_receivers = None
