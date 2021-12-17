@@ -2564,8 +2564,8 @@ from psyneulink.core.globals.keywords import \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PULSE_CLAMP, RECEIVER,\
-    SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
+    RECEIVER, SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -5326,13 +5326,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                  and sender_node in [n[0] for n in self._get_nested_nodes()])
                     or (receiver_node not in self.nodes
                          and receiver_node in [n[0] for n in self._get_nested_nodes()])):
-                projection = {PROJECTION_TYPE:projection.className,
-                              PROJECTION_PARAMS:{SENDER:projection.sender,
-                                                 RECEIVER:projection.receiver,
-                                                 FUNCTION:projection.function,
-                                                 MATRIX:projection.matrix}}
-                return self.add_projection(sender=projection.sender, receiver=projection.receiver)
-
+                proj_spec = {PROJECTION_TYPE:projection.className,
+                              PROJECTION_PARAMS:{
+                                  # SENDER:projection.sender,
+                                  # RECEIVER:projection.receiver,
+                                  FUNCTION:projection.function,
+                                  MATRIX:projection.matrix}
+                              }
+                return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
         # MODIFIED 12/17/21 END
 
         # Create Projection if it doesn't exist
@@ -5486,7 +5487,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "Components in the Composition.".format(projection, receiver))
 
     def _instantiate_projection_from_spec(self, projection, sender=None, receiver=None, name=None):
-        if isinstance(projection, (np.ndarray, np.matrix, list)):
+        # MODIFIED 12/17/21 NEW:
+        if isinstance(projection, dict):
+            projection = MappingProjection(projection)
+        # MODIFIED 12/17/21 END
+        elif isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
