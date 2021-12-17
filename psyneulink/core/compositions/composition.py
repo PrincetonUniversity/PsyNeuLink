@@ -6064,7 +6064,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         s, _ = _get_nested_nodes({c:role})
                                         sndrs.extend(s)
                                 elif role is NodeRole.INPUT:
-                                    rcvrs = comp.get_nodes_by_role(role)
+                                    rcvrs = [n for n in comp.get_nodes_by_role(role)
+                                             if not NodeRole.TARGET in comp.get_roles_by_node(n)]
                                     nc = [n for n in rcvrs if isinstance(n, Composition)]
                                     for c in nc:
                                         del rcvrs[rcvrs.index(c)]
