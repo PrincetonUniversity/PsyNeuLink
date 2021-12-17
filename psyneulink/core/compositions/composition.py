@@ -6033,28 +6033,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     comps = {item[0]:item[1] for item in zip([sender, receiver],[NodeRole.OUTPUT,NodeRole.INPUT])
                              if isinstance(item[0],Composition)}
                     # If either sender or receive is a Composition,
-                    #   - if either the sender has > 1 OUTPUT Node or the receiver has > 1 INPUT Node:
+                    #   - if either sender has more than one OUTPUT Node or receiver has more than one INPUT Node:
                     #     generate set of Projections (one->one, one->many or many->one)
                     #   - if it is true of both, raise error (can't determine mapping for many->many)
                     #   - assign set of Projections assigned to position in Pathway between the two nodes
                     if comps:
                         senders = convert_to_list(sender)
                         receivers = convert_to_list(receiver)
-                        for node, role in comps.items():
-                            if role is NodeRole.OUTPUT:
-                                senders = node.get_nodes_by_role(role)
-                            elif role is NodeRole.INPUT:
-                                # Note: TARGET Nodes are already accounted for
-                                receivers = [n for n in node.get_nodes_by_role(role)
-                                             if not NodeRole.TARGET in node.get_roles_by_node(n)]
+
+                        # # MODIFIED 12/16/21 OLD:
+                        # # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
+                        # #    replace it with those Nodes
+                        # for comp, role in comps.items():
+                        #     if role is NodeRole.OUTPUT:
+                        #         senders = comp.get_nodes_by_role(role)
+                        #     elif role is NodeRole.INPUT:
+                        #         receivers = comp.get_nodes_by_role(role)
+
+                        # MODIFIED 12/16/21 NEW: RECURSIVE VERSION (TO DEAL WITH MULTIPLY-NESTED COMPS)
+                        # If senders and/or receivers is a Composition with INPUT or OUTPUT Nodes,
+                        #    replace it with those Nodes
+                        def _get_nested_nodes(comps):
+                            """Recursively search and replace Compositions for INPUT or OUTPUT Nodes"""
+                            sndrs = rcvrs = None
+                            for comp, role in comps.items():
+                                if role is NodeRole.OUTPUT:
+                                    sndrs = comp.get_nodes_by_role(role)
+                                    nc = [n for n in sndrs if isinstance(n, Composition)]
+                                    for c in nc:
+                                        del sndrs[sndrs.index(c)]
+                                        s, _ = _get_nested_nodes({c:role})
+                                        sndrs.extend(s)
+                                elif role is NodeRole.INPUT:
+                                    rcvrs = [n for n in comp.get_nodes_by_role(role)
+                                             if not NodeRole.TARGET in comp.get_roles_by_node(n)]
+                                    nc = [n for n in rcvrs if isinstance(n, Composition)]
+                                    for c in nc:
+                                        del rcvrs[rcvrs.index(c)]
+                                        _, r = _get_nested_nodes({c:role})
+                                        rcvrs.extend(r)
+                            return sndrs, rcvrs
+
+                        s, r = _get_nested_nodes(comps)
+                        senders = s or senders
+                        receivers = r or receivers
+                        # MODIFIED 12/16/21 END
+
                         if len(senders) > 1 and len(receivers) > 1:
                             raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
                                                    f"which {sender.name} has more than one OUTPUT Node and second of"
                                                    f"which {receiver.name} has more than one INPUT Node, making the "
                                                    f"configuration of Projections between them ambigous. Please "
                                                    f"specify those Projections explicity.")
-                        proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-                                for r in receivers for s in senders}
+                        # elif len(senders) == len(receivers) == 1:
+                        #     # If sender and receiver each have just one Node, handle at level of Compositions
+                        #     # (trying to do it by nodes causes crash if sender has a nested Composition
+                        #     #  since that has not yet been implemented)
+                        #     proj = self.add_projection(sender=sender, receiver=receiver)
+                        else:
+                            proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                                    for r in receivers for s in senders}
+
                     else:
                         proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:

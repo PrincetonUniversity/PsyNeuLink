@@ -3500,6 +3500,7 @@ class Mechanism_Base(Mechanism):
         plt.show()
 
     # def remove_projection(self, projection):
+    #     pass
 
     @tc.typecheck
     def _get_port_name(self, port:Port):
