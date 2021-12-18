@@ -2574,7 +2574,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
+    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, is_numeric
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -6109,12 +6109,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-                # Convert pathway[c] to a set of Projection specifications if possible;
-                #  otherwise (if it is a matrix spec) embed in a list for consistency of handling below
-                try:
-                    proj_specs = set(convert_to_list(pathway[c]))
-                except TypeError:
+                # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
+                # try:
+                #     proj_specs = set(convert_to_list(pathway[c]))
+                # except TypeError:
+                #     proj_specs = [pathway[c]]
+                if is_numeric(pathway[c]):
                     proj_specs = [pathway[c]]
+                else:
+                    proj_specs = convert_to_list(pathway[c])
                 proj_set = []
                 for proj_spec in proj_specs:
                     if c == len(pathway) - 1:
