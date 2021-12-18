@@ -1136,7 +1136,7 @@ class MechParamsDict(UserDict):
 def _input_port_variables_getter(owning_component=None, context=None):
     try:
         return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
-    except TypeError:
+    except (AttributeError, TypeError):
         return None
 
 

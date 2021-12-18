@@ -1393,15 +1393,24 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
 def _activation_input_getter(owning_component=None, context=None):
-    return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_INPUT]
+    try:
+        return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_INPUT]
+    except (AttributeError, TypeError):
+        return None
 
 
 def _activation_output_getter(owning_component=None, context=None):
-    return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_OUTPUT]
+    try:
+        return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_OUTPUT]
+    except (AttributeError, TypeError):
+        return None
 
 
 def _error_signal_getter(owning_component=None, context=None):
-    return owning_component.parameters.variable._get(context)[LEARNING_ERROR_OUTPUT]
+    try:
+        return owning_component.parameters.variable._get(context)[LEARNING_ERROR_OUTPUT]
+    except (AttributeError, TypeError):
+        return None
 
 
 
