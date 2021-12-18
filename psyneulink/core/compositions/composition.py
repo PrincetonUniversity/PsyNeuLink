@@ -2546,8 +2546,9 @@ from psyneulink.core.components.ports.port import Port
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
-from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
+from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
+from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -2565,7 +2566,7 @@ from psyneulink.core.globals.keywords import \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
-    RECEIVER, SAMPLE, SENDER, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
+    SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
@@ -5318,7 +5319,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 12/17/21 NEW:  COPY INSTANTIATED PROJECTION FOR PROJECTION SETS
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
         #   then re-specify it so that the proper routing can be instantiated between those Compositions
-        elif isinstance(projection, Projection) and projection._initialization_status is ContextFlags.INITIALIZED:
+        # Note: restrict to PathwayProjections, since routing of ModulatoryProjections is handled separately.
+        elif (isinstance(projection, PathwayProjection_Base)
+              and projection._initialization_status is ContextFlags.INITIALIZED):
             sender_node = projection.sender.owner
             receiver_node = projection.receiver.owner
             # If sender or receiver is in a nested Node
@@ -5328,8 +5331,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                          and receiver_node in [n[0] for n in self._get_nested_nodes()])):
                 proj_spec = {PROJECTION_TYPE:projection.className,
                               PROJECTION_PARAMS:{
-                                  # SENDER:projection.sender,
-                                  # RECEIVER:projection.receiver,
                                   FUNCTION:projection.function,
                                   MATRIX:projection.matrix.base}
                               }
@@ -6116,11 +6117,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-               # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
+                # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
                 #  then embed in a list for consistency of handling below
                 proj_specs = pathway[c]
+                # FIX 12/17/21:  REFACTOR SO THAT MULTIPLE PROJECTIONS SET CAN ALSO BE SPECIFIED AS A LIST
+                #                REPLACE FOLLOWING WITH proj_specs = list(proj_specs) OR JUST APPLY TO pathway[c] ABOVE?
                 if not isinstance(proj_specs, set):
                     proj_specs = [proj_specs]
+                # FIX 12/17/21: NEED TO KEEP TRACK OF WHICH PROJECTIONS ARE IN SETS/LISTS OR ALONE
+                proj_set = []
                 for proj_spec in proj_specs:
                     if c == len(pathway) - 1:
                         raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
@@ -6192,13 +6197,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    receiver=receiver,
                                                    feedback=feedback,
                                                    allow_duplicates=False)
+                # # MODIFIED 12/17/21 OLD:
+                        # if proj:
+                        #     projections.append(proj)
+                    # else:
+                    #     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                    #                            f"is not between two Nodes: {pathway[c]}")
+                # MODIFIED 12/17/21 NEW:
+                # FIX 12/17/21: NEED TO KEEP PROJECTIONS IN SETS OR LISTS TOGETHER
                         if proj:
-                            projections.append(proj)
-
+                            proj_set.append(proj)
                     else:
                         raise CompositionError(f"A Projection specified in {pathway_arg_str} "
                                                f"is not between two Nodes: {pathway[c]}")
-                    # MODIFIED 12/13/21 END
+                if len(proj_set) == 1:
+                    projections.append(proj_set[0])
+                else:
+                    projections.append(proj_set)
+                # MODIFIED 12/17/21 END
+
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
                                        f"or a Projection: {repr(pathway[c])}.")
