@@ -105,7 +105,8 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
       each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
       (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
       <Projection_Specification>`, a (`Projection specification <Projection_Specification>`, `feedback specification
-      <Composition_Feedback_Designation>`) tuple, or a set of either interposed between a pair of nodes.
+      <Composition_Feedback_Designation>`) tuple, or a set of either interposed between a pair of nodes (see
+      `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
       The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway

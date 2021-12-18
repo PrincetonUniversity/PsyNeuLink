@@ -5931,11 +5931,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. _Composition_Add_Linear_Processing_Pathway:
 
-        Each Node can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles <NodeRole>`)
-        that can be used to assign `required_roles to Mechanisms (see `Composition_Nodes` for additional details).
+        Each `Node <CompositionNodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles
+        <NodeRole>`) that can be used to assign `required_roles to Mechanisms (see `Composition_Nodes` for additional
+        details).
 
-        If no `Projection` is specified between a pair of contiguous Nodes, then default Projection(s) are constructed
-        between them, as follows:
+        `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`. If both Nodes
+        of a pair are Mechanisms, a single `MappingProjection` can be `specified <MappingProjection_Creation>`.  The
+        same applies if the first Node is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
+        second is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either has more than one `INPUT
+        <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a list or set of Projections can be
+        specified for each pair of nested Nodes. If no `Projection` is specified between a pair of contiguous Nodes,
+        then default Projection(s) are constructed between them, as follows:
 
         * *One to one* - if both Nodes are Mechanisms or, if either is a Composition, the first (sender) has
           only a single `OUTPUT <NodeRole.OUTPUT>` Node and the second (receiver) has only a single `INPUT
