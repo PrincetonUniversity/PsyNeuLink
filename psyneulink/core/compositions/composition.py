@@ -175,7 +175,8 @@ These methods can be used to add `Pathways <Composition_Pathways>` to an existin
     - `add_linear_processing_pathway <Composition.add_linear_processing_pathway>`
 
         adds and a list of `Nodes <Composition_Nodes>` and `Projections <Projection>` to the Composition,
-        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified;
+        inserting a default Projection between any adjacent pair of Nodes for which one is not otherwise specified
+        (or possibly a set of Projections if either Node is a Composition -- see method documentation for details);
         returns the `Pathway` added to the Composition.
 
     COMMENT:
@@ -296,8 +297,7 @@ can be explicitly assigned by specifying the desired `NodeRole` in any of the fo
     constructor, or in one of the methods used to add a `Pathway <Composition_Pathways>` to the Composition
     (see `Composition_Creation`);  the Node must be the first item of the tuple, and the `NodeRole` its 2nd item.
 
-  * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an
-    an existing `Node <Composition_Nodes>`.
+  * the **roles** argument of the `require_node_roles <Composition.require_node_roles>` called for an existing Node.
 
 For example, by default, the `ORIGIN` Nodes of a Composition are assigned as its `INPUT` nodes (that is, ones that
 receive the `external input <Composition_Execution_Inputs>` when it is `run <Composition.run>`), and similarly its
@@ -2530,7 +2530,8 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, RANDOMIZATION_CONTROL_SIGNAL
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
+    RANDOMIZATION_CONTROL_SIGNAL
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2546,6 +2547,7 @@ from psyneulink.core.components.projections.modulatory.controlprojection import 
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
+from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
 from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
@@ -2556,14 +2558,14 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
-    FEEDBACK, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, LEARNED_PROJECTIONS, \
-    LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
+    FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PULSE_CLAMP, \
+    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -2572,7 +2574,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array
+    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, is_numeric
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3245,8 +3247,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     pathways : ContentAddressableList[`Pathway`]
         a list of all `Pathways <Pathway>` in the Composition that were specified in the **pathways**
         argument of the Composition's constructor and/or one of its `Pathway addition methods
-        <Composition_Pathway_Addition_Methods>`; each item is a list of nodes (`Mechanisms <Mechanism>` and/or
-        Compositions) intercolated with the `Projection <Projection>` between each pair of nodes.
+        <Composition_Pathway_Addition_Methods>`; each item is a list of `Nodes <Composition_Nodes>`
+        (`Mechanisms <Mechanism>` and/or Compositions) intercolated with the `Projection(s) <Projection>` between each
+        pair of Nodes;  both Nodes are Mechanism, then only a single Projection can be specified;  if either is a
+        Composition then, under some circumstances, there can be a set of Projections, specifying how the `INPUT
+        <NodeRole.INPUT>` Node(s) of the sender project to the `OUTPUT <NodeRole.OUTPUT>` Node(s) of the receiver
+        (see `add_linear_processing_pathway` for additional details).
 
     projections : ContentAddressableList[`Projection`]
         a list of all of the `Projections <Projection>` activated for the Composition;  this includes all of
@@ -3854,8 +3860,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         if not isinstance(nodes, list):
-            # raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-            #                        f"must be a list of nodes or (node, required_roles) tuples")
             nodes = convert_to_list(nodes)
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
@@ -4061,6 +4065,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         except KeyError as e:
             raise CompositionError('Node missing from {0}.nodes_to_roles: {1}'.format(self, e))
+
+    def _get_nested_nodes_with_same_roles_at_all_levels(self, comp, include_roles, exclude_roles=None):
+        """Return all Nodes from nested Compositions that have *include_roles* but not *exclude_roles at all levels*.
+        Note:  need to do this recursively, checking roles on the "way down," since a Node may have a role in a
+               deeply nested Composition, but that Composition itself may not have the same role in the Composition
+               within which *it* is nested (e.g., a Node might be an INPUT Node of a nested Composition, but that
+               nested Composition may not be an INPUT Node of the Composition in which it is nested).
+        """
+        nested_nodes = []
+        include_roles = convert_to_list(include_roles)
+        if exclude_roles:
+            exclude_roles = convert_to_list(exclude_roles)
+        else:
+            exclude_roles = []
+        if isinstance(comp, Composition):
+            # Get all nested nodes in comp that have include_roles and not exclude_roles:
+            for node in [n for n in comp.nodes
+                         if (any(n in comp.get_nodes_by_role(include)
+                                 for include in include_roles)
+                               and not any(n in comp.get_nodes_by_role(exclude)
+                                           for exclude in exclude_roles))]:
+                if isinstance(node, Composition):
+                    nested_nodes.extend(node._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles,
+                                                                                             exclude_roles))
+                else:
+                    nested_nodes.append(node)
+        return nested_nodes or None
 
     def _get_input_nodes_by_CIM_input_order(self):
         """Return a list with the `INPUT` `Nodes <Composition_Nodes>` of the Composition in the same order as their
@@ -5176,7 +5207,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - if there is only one, that Projection is used;
             - if there is more than one, the last in the list (presumably the most recent) is used;
             in either case, processing continues, to activate it for the Composition,
-            construct any "shadow" projections that may be specified, and assign feedback if specified,
+            construct any "shadow" projections that may be specified, and assign feedback if specified.
 
         • if the status of **projection** is `deferred_init`:
 
@@ -5191,10 +5222,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             a `feedback` Projection are implemented (in case it has not already been done for the existing Projection).
 
         .. note::
-           If **projection** is an instantiated Projection (i.e., not in `deferred_init`) and one already exists between
-           its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>` a warning is generated and
-           the request is ignored.
-
+           If **projection** is an instantiated Projection (i.e., not in `deferred_init`), and one already exists
+           between its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`, a warning is
+           generated and the request is ignored.
 
         .. technical_note::
             Duplicates are determined by the `Ports <Port>` to which they project, not the `Mechanisms <Mechanism>`
@@ -5284,14 +5314,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"the last of these will be used in {self.name}.")
                     projection = existing_projections[-1]
 
-        # FIX: 9/30/19 - Why is this not an else?
-        #                Because above is only for existing Projections outside of Composition, which should be
-        #                used
-        #                But existing one could be within, in which case want to use that one
-        #                existing Projection might be deferred_init, and want t
+        # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
+        #   then re-specify it so that the proper routing can be instantiated between those Compositions
+        # Note: restrict to PathwayProjections, since routing of ModulatoryProjections is handled separately.
+        elif (isinstance(projection, PathwayProjection_Base)
+              and projection._initialization_status is ContextFlags.INITIALIZED):
+            sender_node = projection.sender.owner
+            receiver_node = projection.receiver.owner
+            # If sender or receiver is in a nested Node
+            if ((sender_node not in self.nodes
+                 and sender_node in [n[0] for n in self._get_nested_nodes()])
+                    or (receiver_node not in self.nodes
+                         and receiver_node in [n[0] for n in self._get_nested_nodes()])):
+                proj_spec = {PROJECTION_TYPE:projection.className,
+                              PROJECTION_PARAMS:{
+                                  FUNCTION:projection.function,
+                                  MATRIX:projection.matrix.base}
+                              }
+                return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
+
+        # Create Projection if it doesn't exist
         try:
             # Note: this does NOT initialize the Projection if it is in deferred_init
-            projection = self._parse_projection_spec(projection, name)
+            projection = self._instantiate_projection_from_spec(projection, name)
         except DuplicateProjectionError:
             # return projection
             return
@@ -5364,7 +5409,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     receiver = cim_target_input_port
 
         # FIX: KAM HACK 2/13/19 to get hebbian learning working for PSY/NEU 330
-        # Add autoassociative learning mechanism + related projections to composition as processing components
+        # Add autoassociative learning mechanism + related projections to Composition as processing components
         if (sender_mechanism != self.input_CIM
                 and sender_mechanism != self.parameter_CIM
                 and sender_mechanism != self.controller
@@ -5438,8 +5483,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
                                        "Components in the Composition.".format(projection, receiver))
 
-    def _parse_projection_spec(self, projection, sender=None, receiver=None, name=None):
-        if isinstance(projection, (np.ndarray, np.matrix, list)):
+    def _instantiate_projection_from_spec(self, projection, sender=None, receiver=None, name=None):
+        if isinstance(projection, dict):
+            proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
+            params = projection.pop(PROJECTION_PARAMS, None)
+            projection = MappingProjection(params=params)
+        elif isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
             if projection in MATRIX_KEYWORD_VALUES:
@@ -5515,9 +5564,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"or any of its nested {Composition.__name__}s.")
 
         if hasattr(projection, "sender"):
-            if projection.sender.owner != sender and \
-                    projection.sender.owner != graph_sender and \
-                    projection.sender.owner != sender_mechanism:
+            if (projection.sender.owner != sender
+                    and projection.sender.owner != graph_sender
+                    and projection.sender.owner != sender_mechanism):
                 raise CompositionError(f"The position of {projection.name} in {self.name} "
                                        f"conflicts with its sender ({sender.name}).")
 
@@ -5864,20 +5913,54 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @handle_external_context()
     def add_linear_processing_pathway(self, pathway, name:str=None, context=None, *args):
-        """Add sequence of Mechanisms and/or Compositions with intercolated Projections.
+        """Add sequence of `Nodes <Composition_Nodes>` with intercolated Projections.
 
-        A `MappingProjection` is created for each contiguous pair of `Mechanisms <Mechanism>` and/or Compositions
-        in the **pathway** argument, from the `primary OutputPort <OutputPort_Primary>` of the first one to the
-        `primary InputPort <InputPort_Primary>` of the second.
+        .. _Composition_Add_Linear_Processing_Pathway:
 
-        Tuples (Mechanism, `NodeRoles <NodeRole>`) can be used to assign `required_roles
-        <Composition.add_node.required_roles>` to Mechanisms.
+        Each `Node <Composition_Nodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles
+        <NodeRole>`) that can be used to assign `required_roles` to Mechanisms (see `Composition_Nodes` for additional
+        details).
 
-        Note that any specifications of the **monitor_for_control** `argument
-        <ControlMechanism_Monitor_for_Control_Argument>` of a constructor for a `ControlMechanism` or the **monitor**
-        argument specified in the constructor for an ObjectiveMechanism in the **objective_mechanism** `argument
-        <ControlMechanism_ObjectiveMechanism>` of a ControlMechanism supercede any MappingProjections that would
-        otherwise be created for them when specified in the **pathway** argument of add_linear_processing_pathway.
+        `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`. If both Nodes
+        of a pair are Mechanisms, a single `MappingProjection` can be `specified <MappingProjection_Creation>`.  The
+        same applies if the first Node is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
+        second is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either has more than one `INPUT
+        <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a list or set of Projections can be
+        specified for each pair of nested Nodes. If no `Projection` is specified between a pair of contiguous Nodes,
+        then default Projection(s) are constructed between them, as follows:
+
+        * *One to one* - if both Nodes are Mechanisms or, if either is a Composition, the first (sender) has
+          only a single `OUTPUT <NodeRole.OUTPUT>` Node and the second (receiver) has only a single `INPUT
+          <NodeRole.INPUT>` Node, then a default `MappingProjection` is created from the `primary OutputPort
+          <OutputPort_Primary>` of the sender (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sener is a
+          Composition) to the `primary InputPort <InputPort_Primary>` of the receiver (or of its sole of `INPUT
+          <NodeRole.INPUT>` Node if the receiver is a Composition).
+
+        * *One to many* - if the first Node (sender) is either a Mechanism or a Composition with a single
+          `OUTPUT <NodeRole.OUTPUT>` Node, but the second (receiver) is a Composition with more than one
+          `INPUT <NodeRole.INPUT>` Node, then a `MappingProjection` is created from the `primary OutputPort
+          <OutputPort_Primary>` of the sender Mechanism (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the
+          sender is a Compostion) to each `INPUT <NodeRole.OUTPUT>` Node of the receiver, and a *set*
+          containing the Projections is intercolated between the two Nodes in the `Pathway`.
+
+        * *Many to one* - if the first Node (sender) is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>`
+          Node, and the second (receiver) is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>`
+          Node, then a `MappingProjection` is created from each `OUPUT <NodeRole.OUTPUT>` Node of the sender to the
+          `primary InputPort <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>`
+          Node if the receiver is a Composition), and a *set* containing the Projections is intercolated
+          between the two Nodes in the `Pathway`.
+
+        * *Many to many* - if both Nodes are Compositions in which the sender has more than one `INPUT <NodeRole.INPUT>`
+          Node and the receiver has more than one `INPUT <NodeRole.INPUT>` Node, it is not possible to determine
+          the correct configuration automatically, and an error is generated.  In this case, a set of Projections
+          must be explicitly specified.
+
+        .. _note::
+           Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
+           of a constructor for a `ControlMechanism` or the **monitor** argument in the constructor for an
+           `ObjectiveMechanism` in the **objective_mechanism** `argument <ControlMechanism_ObjectiveMechanism>` of a
+           ControlMechanism supercede any MappingProjections that would otherwise be created for them when specified
+           in the **pathway** argument of add_linear_processing_pathway.
 
         Arguments
         ---------
@@ -5885,11 +5968,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         pathway : `Node <Composition_Nodes>`, list or `Pathway`
             specifies the `Nodes <Composition_Nodes>`, and optionally `Projections <Projection>`, used to construct a
             processing `Pathway <Pathway>`. Any standard form of `Pathway specification <Pathway_Specification>` can
-            be used, however if a 2-item (Pathway, LearningFunction) tuple is used the `LearningFunction` will be
-            ignored (this should be used with `add_linear_learning_pathway` if a `learning Pathway
+            be used, however if a 2-item (Pathway, LearningFunction) tuple is used, the `LearningFunction` is ignored
+            (this should be used with `add_linear_learning_pathway` if a `learning Pathway
             <Composition_Learning_Pathway>` is desired).  A `Pathway` object can also be used;  again, however, any
-            learning-related specifications will be ignored, as will its `name <Pathway.name>` if the **name**
+            learning-related specifications are ignored, as are its `name <Pathway.name>` if the **name**
             argument of add_linear_processing_pathway is specified.
+            See `above <Composition_Add_Linear_Processing_Pathway>` for additional details.
 
         name : str
             species the name used for `Pathway`; supercedes `name <Pathway.name>` of `Pathway` object if it is has one.
@@ -6001,90 +6085,121 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receiver = pathway[c][0]
                     else:
                         receiver = pathway[c]
-                    proj = self.add_projection(sender=sender,
-                                               receiver=receiver)
+
+                    # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
+                    #    replace it with those Nodes
+                    senders = self._get_nested_nodes_with_same_roles_at_all_levels(sender, NodeRole.OUTPUT)
+                    receivers = self._get_nested_nodes_with_same_roles_at_all_levels(receiver,
+                                                                                    NodeRole.INPUT, NodeRole.TARGET)
+                    if senders or receivers:
+                        senders = senders or convert_to_list(sender)
+                        receivers = receivers or convert_to_list(receiver)
+                        if len(senders) > 1 and len(receivers) > 1:
+                            raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
+                                                   f"which {sender.name} has more than one OUTPUT Node and second of"
+                                                   f"which {receiver.name} has more than one INPUT Node, making the "
+                                                   f"configuration of Projections between them ambigous. Please "
+                                                   f"specify those Projections explicity.")
+                        proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                                for r in receivers for s in senders}
+                    else:
+                        proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:
                         projections.append(proj)
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-                if c == len(pathway) - 1:
-                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
-                                           f"{pathway[c]}.")
-                # confirm that it is between two nodes, then add the projection
-                if isinstance(pathway[c], tuple):
-                    proj = pathway[c][0]
-                    feedback = pathway[c][1]
+                # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
+                # try:
+                #     proj_specs = set(convert_to_list(pathway[c]))
+                # except TypeError:
+                #     proj_specs = [pathway[c]]
+                if is_numeric(pathway[c]):
+                    proj_specs = [pathway[c]]
                 else:
-                    proj = pathway[c]
-                    feedback = False
-                sender = pathway[c - 1]
-                receiver = pathway[c + 1]
-                if _is_node_spec(sender) and _is_node_spec(receiver):
-                    if isinstance(sender, tuple):
-                        sender = sender[0]
-                    if isinstance(receiver, tuple):
-                        receiver = receiver[0]
-                    try:
-                        if isinstance(proj, (np.ndarray, np.matrix, list)):
-                            # If proj is a matrix specification, use it as the matrix arg
-                            proj = MappingProjection(sender=sender,
-                                                     matrix=proj,
-                                                     receiver=receiver)
-                        else:
-                            # Otherwise, if it is Port specification, implement default Projection
-                            try:
-                                if isinstance(proj, InputPort):
-                                    proj = MappingProjection(sender=sender,
-                                                             receiver=proj)
-                                elif isinstance(proj, OutputPort):
-                                    proj = MappingProjection(sender=proj,
-                                                             receiver=receiver)
-                            except (InputPortError, ProjectionError) as error:
-                                # raise CompositionError(f"Bad Projection specification in {pathway_arg_str}: {proj}.")
-                                raise ProjectionError(str(error.error_value))
+                    proj_specs = convert_to_list(pathway[c])
+                proj_set = []
+                for proj_spec in proj_specs:
+                    if c == len(pathway) - 1:
+                        raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                                               f"{proj_spec}.")
+                    # confirm that it is between two nodes, then add the projection
+                    if isinstance(proj_spec, tuple):
+                        proj = proj_spec[0]
+                        feedback = proj_spec[1]
+                    else:
+                        proj = proj_spec
+                        feedback = False
+                    sender = pathway[c - 1]
+                    receiver = pathway[c + 1]
+                    if _is_node_spec(sender) and _is_node_spec(receiver):
+                        if isinstance(sender, tuple):
+                            sender = sender[0]
+                        if isinstance(receiver, tuple):
+                            receiver = receiver[0]
+                        try:
+                            if isinstance(proj, (np.ndarray, np.matrix, list)):
+                                # If proj is a matrix specification, use it as the matrix arg
+                                proj = MappingProjection(sender=sender,
+                                                         matrix=proj,
+                                                         receiver=receiver)
+                            else:
+                                # Otherwise, if it is Port specification, implement default Projection
+                                try:
+                                    if isinstance(proj, InputPort):
+                                        proj = MappingProjection(sender=sender,
+                                                                 receiver=proj)
+                                    elif isinstance(proj, OutputPort):
+                                        proj = MappingProjection(sender=proj,
+                                                                 receiver=receiver)
+                                except (InputPortError, ProjectionError) as error:
+                                    raise ProjectionError(str(error.error_value))
 
-                    except (InputPortError, ProjectionError, MappingError) as error:
-                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                               f"{str(error.error_value)}")
+                        except (InputPortError, ProjectionError, MappingError) as error:
+                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                                   f"{str(error.error_value)}")
 
-                    except DuplicateProjectionError:
-                        # FIX: 7/22/19 ADD WARNING HERE??
-                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                        assert len(duplicate)==1, \
-                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                            f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                            f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                        duplicate = duplicate[0]
-                        warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                      f"in {pathway_arg_str} is a duplicate of one"
-                        # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                        #                      sender and receiver in different Compositions
-                        # if duplicate in self.projections:
-                        #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                        #                   f"and so will be ignored.")
-                        #     proj=duplicate
-                        # else:
-                        #     if self.prefs.verbosePref:
-                        #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                        #                       f"new one will be used; delete it if you want to use the existing one")
-                        # Version that forbids *any* duplicate Projections between same sender and receiver
-                        warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                                      f"and so will be ignored.")
-                        proj=duplicate
+                        except DuplicateProjectionError:
+                            # FIX: 7/22/19 ADD WARNING HERE??
+                            # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                            duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                            assert len(duplicate)==1, \
+                                f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                            duplicate = duplicate[0]
+                            warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                          f"in {pathway_arg_str} is a duplicate of one"
+                            # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                            #                      sender and receiver in different Compositions
+                            # if duplicate in self.projections:
+                            #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                            #                   f"and so will be ignored.")
+                            #     proj=duplicate
+                            # else:
+                            #     if self.prefs.verbosePref:
+                            #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                            #                       f"new one will be used; delete it if you want to use the existing one")
+                            # Version that forbids *any* duplicate Projections between same sender and receiver
+                            warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                          f"and so will be ignored.")
+                            proj=duplicate
 
-                    proj = self.add_projection(projection=proj,
-                                               sender=sender,
-                                               receiver=receiver,
-                                               feedback=feedback,
-                                               allow_duplicates=False)
-                    if proj:
-                        projections.append(proj)
-
+                        proj = self.add_projection(projection=proj,
+                                                   sender=sender,
+                                                   receiver=receiver,
+                                                   feedback=feedback,
+                                                   allow_duplicates=False)
+                        if proj:
+                            proj_set.append(proj)
+                    else:
+                        raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                                               f"is not between two Nodes: {pathway[c]}")
+                if len(proj_set) == 1:
+                    projections.append(proj_set[0])
                 else:
-                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                                           f"is not between two Nodes: {pathway[c]}")
+                    projections.append(proj_set)
+
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
                                        f"or a Projection: {repr(pathway[c])}.")
@@ -7043,7 +7158,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         p.insert(0, curr_node)
                         curr_node = prev[curr_node]
                     p.insert(0, curr_node)
-                    # we only consider input -> projection -> ... -> output pathways (since we can't learn on only one mechanism)
+                    # we only consider input -> projection -> ... -> output pathways
+                    # (since we can't learn on only one mechanism)
                     if len(p) >= 3:
                         pathways.append(p)
                     continue
@@ -7149,7 +7265,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    error_sources will be empty (as they have been dealt with in self._get_back_prop_error_sources
         #    error_projections will contain list of any created to be added to the Composition below
         if learning_mechanism:
-            error_sources, error_projections = self._get_back_prop_error_sources(output_source, learning_mechanism, context)
+            error_sources, error_projections = self._get_back_prop_error_sources(output_source,
+                                                                                 learning_mechanism,
+                                                                                 context)
         # If learning_mechanism does not yet exist:
         #    error_sources will contain ones needed to create learning_mechanism
         #    error_projections will be empty since they can't be created until the learning_mechanism is created below;
@@ -8085,8 +8203,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_string(self, inputs):
         """
-        Validates that conditions are met to use a string as input, i.e. that there is only one input node and that node's default
-            input port has a label matching the provided string. If so, convert the string to an input dict and parse
+        Validate that conditions are met to use a string as input, i.e. that there is only one input node and that
+        node's default input port has a label matching the provided string. If so, convert the string to an input
+        dict and parse.
 
         Returns
         -------
@@ -8193,8 +8312,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 if not input_port.internal_only]
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"its external_input_values ({node_variable})."
-                    # 8/3/17 CW: I admit the error message implementation here is very hacky; but it's at least not a hack
-                    # for "functionality" but rather a hack for user clarity
+                    # 8/3/17 CW: I admit the error message implementation here is very hacky;
+                    # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(node)):
                         err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
                                             "(or other values) to represent the outside stimulus for " \
@@ -8211,8 +8330,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_lengths.remove(1)
         if len(input_lengths) > 1:
             raise CompositionError(f"The input dictionary for {self.name} contains input specifications of different "
-                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each node "
-                                    f"in a Composition.")
+                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each "
+                                   f"node in a Composition.")
         elif len(input_lengths) > 0:
             num_trials = list(input_lengths)[0]
             for mechanism in inputs_to_duplicate:
@@ -8276,12 +8395,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         -------
 
         `dict` :
-            The input dict, with inputs in the form of their label representations replaced by their numeric representations
+            The input dict, with inputs with their label representations replaced by their numeric representations
 
         """
         # the nested list comp below is necessary to retrieve target nodes of learning pathways, because the PathwayRole
         # enum is not importable into this module
-        target_to_output = {path.target: path.output for path in self.pathways if 'LEARNING' in [role.name for role in path.roles]}
+        target_to_output = {path.target: path.output for path in self.pathways
+                            if 'LEARNING' in [role.name for role in path.roles]}
         if mech:
             target_nodes_of_learning_pathways = [path.target for path in self.pathways]
             label_type = INPUT if mech not in target_nodes_of_learning_pathways else OUTPUT
@@ -8322,8 +8442,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Number of input sets in dict for each input node in the Composition
 
         """
-        # parse a user-provided input dict to format it properly for execution. compute number of input sets and return that
-        # as well
+        # parse a user-provided input dict to format it properly for execution.
+        # compute number of input sets and return that as well
         _inputs = self._parse_labels(inputs)
         _inputs = self._validate_input_dict_node_roles(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
@@ -8389,8 +8509,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Provided inputs {inputs} is in a disallowed format. Inputs must be provided in the form of "
                 f"a dict, list, function, or generator. "
-                f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run for details and "
-                f"formatting instructions for each input type."
+                f"See https://princetonuniversity.github.io/PsyNeuLink/Composition.html#composition-run "
+                f"for details and formatting instructions for each input type."
             )
         return _inputs, num_inputs_sets
 
@@ -8829,8 +8949,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if not valid_reset_type:
             raise CompositionError(
-                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when of {self.name}. "
-                "reset_integrator_nodes_when must be a Condition or a dict comprised of {Node: Condition} pairs.")
+                f"{reset_stateful_functions_when} is not a valid specification for reset_integrator_nodes_when "
+                f"of {self.name}. reset_integrator_nodes_when must be a Condition or a dict comprised of "
+                f" {Node: Condition} pairs.")
 
         self._reset_stateful_functions_when_cache = {}
 
@@ -8980,8 +9101,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     call_with_pruned_args(call_after_trial, context=context)
 
             # IMPLEMENTATION NOTE:
-            # The AFTER Run controller execution takes place here, because there's no way to tell from within the execute
-            # method whether or not we are at the last trial of the run.
+            # The AFTER Run controller execution takes place here, because there's no way to tell from within the
+            # execute method whether or not we are at the last trial of the run.
             # The BEFORE Run controller execution takes place in the execute method,
             # because we can't execute the controller until after setup has occurred for the Input CIM.
             if (self.controller_mode == AFTER and
@@ -9391,7 +9512,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            context=context
                            )
 
-            # ASSIGNMENTS **************************************************************************************************
+            # ASSIGNMENTS **********************************************************************************************
 
             if not hasattr(self, '_animate'):
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
@@ -9415,8 +9536,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-            # if execute was called from command line and no inputs were specified, assign default inputs to highest level
-            # composition (i.e. not on any nested Compositions)
+            # if execute was called from command line and no inputs were specified,
+            # assign default inputs to highest level composition (i.e. not on any nested Compositions)
             if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
                 inputs = self._validate_input_dict_node_roles({})
             # Skip initialization if possible (for efficiency):
@@ -9426,7 +9547,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # -     its not a simulation)
             # - or(gym forage env is being used)
             # (e.g., when run is called externally repeated for the same environment)
-            # KAM added HACK below "or self.env is None" in order to merge in interactive inputs fix for speed improvement
+            # KAM added HACK below "or self.env is None" to merge in interactive inputs fix for speed improvement
             # TBI: Clean way to call _initialize_from_context if context has not changed, BUT composition has changed
             # for example:
             # comp.run()
@@ -9539,7 +9660,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX 5/28/20
             context.remove_flag(ContextFlags.PREPARING)
 
-            # EXECUTE INPUT CIM ********************************************************************************************
+            # EXECUTE INPUT CIM ****************************************************************************************
 
             # FIX: 6/12/19 MOVE TO EXECUTE BELOW?
             # Handles Input CIM and Parameter CIM execution.
@@ -9547,13 +9668,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 8/21/19
             # If self is a nested composition, its input CIM will obtain its value in one of two ways,
             # depending on whether or not it is being executed within a simulation.
-            # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the inputs
-            # argument of the execute method into a suitable shape for the input ports of the input_CIM.
+            # If it is a simulation, then we need to use the _build_variable_for_input_CIM method, which parses the
+            # inputs argument of the execute method into a suitable shape for the input ports of the input_CIM.
             # If it is not a simulation, we can simply execute the input CIM.
             #
-            # If self is an unnested composition, we must update the input ports for any input nodes that are Compositions.
-            # This is done to update the variable for their input CIMs, which allows the _adjust_execution_stimuli
-            # method to properly validate input for those nodes.
+            # If self is an unnested composition, we must update the input ports for any input nodes that are
+            # Compositions. This is done to update the variable for their input CIMs, which allows the
+            # _adjust_execution_stimuli method to properly validate input for those nodes.
             # -DS
 
             context.execution_phase = ContextFlags.PROCESSING
@@ -9607,7 +9728,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: END
             context.remove_flag(ContextFlags.PROCESSING)
 
-            # EXECUTE CONTROLLER (if specified for BEFORE) *****************************************************************
+            # EXECUTE CONTROLLER (if specified for BEFORE) *************************************************************
 
             # Execute controller --------------------------------------------------------
 
@@ -9618,8 +9739,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # IMPLEMENTATION NOTE:
             # The BEFORE Run controller execution takes place here, because we can't execute the controller until after
             # setup has occurred for the Input CIM, whereas the AFTER Run controller execution takes place in the run
-            # method, because there's no way to tell from within the execute method whether or not we are at the last trial
-            # of the run.
+            # method, because there's no way to tell from within the execute method whether or not we are at the last
+            # trial of the run.
             if self.controller_time_scale == TimeScale.RUN and scheduler.get_clock(context).time.trial == 0:
                 self._execute_controller(
                     relative_order=BEFORE,
@@ -9639,7 +9760,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context=context
                 )
 
-            # EXECUTE EACH EXECUTION SET *********************************************************************************
+            # EXECUTE EACH EXECUTION SET *******************************************************************************
 
             # Begin reporting of TRIAL:
             # - add TRIAL header and Composition's input to output report (now that they are known)
@@ -9688,11 +9809,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # SETUP EXECUTION ----------------------------------------------------------------------------
 
                 # IMPLEMENTATION NOTE KDM 1/15/20:
-                # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS has
-                # ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only know a
-                # PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we have to run
-                # call_after_pass before the next PASS (here) or after this code block (see call to call_after_pass below)
-                curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS, TimeScale.TRIAL)
+                # call_*after*_pass is called here because we can't tell at the end of this code block whether a PASS
+                # has ended or not. The scheduler only modifies the pass after we receive an execution_set. So, we only
+                # know a PASS has ended in retrospect after the scheduler has changed the clock to indicate it. So, we
+                # have to run call_after_pass before the next PASS (here) or after this code block (see call to
+                # call_after_pass below)
+                curr_pass = execution_scheduler.get_clock(context).get_total_times_relative(TimeScale.PASS,
+                                                                                            TimeScale.TRIAL)
                 new_pass = False
                 if curr_pass != last_pass:
                     new_pass = True
@@ -9750,7 +9873,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _comp_ex.freeze_values()
 
                 # PURGE LEARNING IF NOT ENABLED ----------------------------------------------------------------
-                # If learning is turned off, check for any learning related nodes and remove them from the execution set
+                # If learning is turned off, check for learning related nodes and remove them from the execution set
                 if not self._is_learning(context):
                     next_execution_set = next_execution_set - set(self.get_nodes_by_role(NodeRole.LEARNING))
 
@@ -9769,7 +9892,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     context.execution_phase = ContextFlags.PROCESSING
                     self._animate_execution(next_execution_set, context)
 
-                # EXECUTE EACH NODE IN EXECUTION SET ----------------------------------------------------------------------
+                # EXECUTE EACH NODE IN EXECUTION SET -------------------------------------------------------------------
                 if execution_scheduler.mode is SchedulingMode.EXACT_TIME:
                     # sort flattened execution set by unflattened position
                     next_execution_set = sorted(
@@ -9787,14 +9910,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
-                    # # MODIFIED 12/12/21 OLD:
                     frozen_values[node] = node.get_output_values(context)
-                    # # MODIFIED 12/12/21 NEW:
-                    # buffer_setting = self.include_probes_in_output
-                    # self.include_probes_in_output = True
-                    # frozen_values[node] = node.get_output_values(context)
-                    # self.include_probes_in_output = buffer_setting
-                    # MODIFIED 12/12/21 END
 
                     # FIX: 6/12/19 Deprecate?
                     # Handle input clamping
@@ -9814,9 +9930,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                         execution_runtime_params = {}
                         if node in runtime_params:
-                            execution_runtime_params.update(self._get_satisfied_runtime_param_values(runtime_params[node],
-                                                                                                     execution_scheduler,
-                                                                                                     context))
+                            execution_runtime_params.update(
+                                self._get_satisfied_runtime_param_values(runtime_params[node],
+                                                                         execution_scheduler,
+                                                                         context))
 
                         # (Re)set context.execution_phase to PROCESSING by default
                         context.execution_phase = ContextFlags.PROCESSING
@@ -9829,7 +9946,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             projections = set(self.projections).intersection(set(node.path_afferents))
                             if any([p for p in projections if
                                     any([a for a in p.parameter_ports[MATRIX].mod_afferents
-                                         if (hasattr(a, 'learning_enabled') and a.learning_enabled in {True, ONLINE})])]):
+                                         if (hasattr(a, 'learning_enabled')
+                                             and a.learning_enabled in {True, ONLINE})])]):
                                 context.replace_flag(ContextFlags.PROCESSING, ContextFlags.LEARNING)
 
                         # Execute Mechanism
@@ -9935,19 +10053,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for i in range(len(node.output_ports)):
                         node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                    skip_history=True, skip_log=True)
-                    # # MODIFIED 12/12/21 NEW:  THIS PASSES REGULAR TESTS,
-                    #                           BUT DOES NOT PASS IF include_probes_in_output set on nested Comp
-                    # if isinstance(node, Composition):
-                    #     node_output_ports = [output_port for output_port in node.output_ports if
-                    #                          (not node.output_CIM._sender_is_probe(output_port)
-                    #                           or self.include_probes_in_output)]
-                    # else:
-                    #     node_output_ports = node.output_ports
-                    # for i in range(len(node_output_ports)):
-                    #     node_output_ports[i].parameters.value._set(frozen_values[node][i], context,
-                    #                                                skip_history=True, skip_log=True)
-                    # MODIFIED 12/12/21 END
-
 
                 # Set all nodes to new values
                 for node in next_execution_set:

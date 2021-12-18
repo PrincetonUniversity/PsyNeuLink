@@ -2,9 +2,9 @@ import numpy as np
 import pytest
 
 from psyneulink.core.components.functions.nonstateful.learningfunctions import BackPropagation
-from psyneulink.core.components.functions.stateful.memoryfunctions import STORAGE_PROB
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.functions.stateful.memoryfunctions import DictionaryMemory
+from psyneulink.core.components.functions.stateful.memoryfunctions import STORAGE_PROB
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
@@ -20,6 +20,7 @@ from psyneulink.library.components.mechanisms.processing.integrator.ddm import D
 from psyneulink.library.components.mechanisms.processing.integrator.episodicmemorymechanism import \
     EpisodicMemoryMechanism, VALUE_INPUT, VALUE_OUTPUT, KEY_INPUT, KEY_OUTPUT
 
+"""These test various elaborate forms of Composition configuration and nesting, in addition to show_graph itself"""
 
 class TestSimpleCompositions:
     def test_process(self):

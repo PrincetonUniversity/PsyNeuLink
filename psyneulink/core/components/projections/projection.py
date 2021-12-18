@@ -1142,7 +1142,6 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
 
     return False
 
-
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
 
@@ -1177,7 +1176,6 @@ def _is_projection_subclass(spec, keyword):
         if _is_projection_subclass(spec[keyword], keyword):
             return True
     return False
-
 
 def _parse_projection_spec(projection_spec,
                            owner = None,       # Used only for error message
@@ -1270,7 +1268,6 @@ def _parse_projection_spec(projection_spec,
                                  owner.name,
                                  proj_spec_dict[PROJECTION_TYPE]))
     return proj_spec_dict
-
 
 def _parse_projection_keyword(projection_spec:str):
     """Takes keyword (str) and returns corresponding Projection class
