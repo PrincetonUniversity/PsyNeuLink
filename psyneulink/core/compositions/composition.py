@@ -6109,10 +6109,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
-                # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
-                #  then embed in a list for consistency of handling below
+                # Convert pathway[c] to a set of Projection specifications if possible;
+                #  otherwise (if it is a matrix spec) embed in a list for consistency of handling below
                 try:
-                    proj_specs = set(pathway[c])
+                    proj_specs = set(convert_to_list(pathway[c]))
                 except TypeError:
                     proj_specs = [pathway[c]]
                 proj_set = []
