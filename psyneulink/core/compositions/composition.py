@@ -3860,8 +3860,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         if not isinstance(nodes, list):
-            # raise CompositionError(f"Arg for 'add_nodes' method of '{self.name}' {Composition.__name__} "
-            #                        f"must be a list of nodes or (node, required_roles) tuples")
             nodes = convert_to_list(nodes)
         for node in nodes:
             if isinstance(node, (Mechanism, Composition)):
@@ -5316,7 +5314,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"the last of these will be used in {self.name}.")
                     projection = existing_projections[-1]
 
-        # MODIFIED 12/17/21 NEW:  COPY INSTANTIATED PROJECTION FOR PROJECTION SETS
         # If Projection is one that is instantiated and is directly between Nodes in nested Compositions,
         #   then re-specify it so that the proper routing can be instantiated between those Compositions
         # Note: restrict to PathwayProjections, since routing of ModulatoryProjections is handled separately.
@@ -5335,7 +5332,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   MATRIX:projection.matrix.base}
                               }
                 return self.add_projection(proj_spec, sender=projection.sender, receiver=projection.receiver)
-        # MODIFIED 12/17/21 END
 
         # Create Projection if it doesn't exist
         try:
@@ -5488,12 +5484,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        "Components in the Composition.".format(projection, receiver))
 
     def _instantiate_projection_from_spec(self, projection, sender=None, receiver=None, name=None):
-        # MODIFIED 12/17/21 NEW:
         if isinstance(projection, dict):
             proj_type = projection.pop(PROJECTION_TYPE, None) or MappingProjection
             params = projection.pop(PROJECTION_PARAMS, None)
             projection = MappingProjection(params=params)
-        # MODIFIED 12/17/21 END
         elif isinstance(projection, (np.ndarray, np.matrix, list)):
             return MappingProjection(matrix=projection, sender=sender, receiver=receiver, name=name)
         elif isinstance(projection, str):
@@ -5572,11 +5566,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if hasattr(projection, "sender"):
             if (projection.sender.owner != sender
                     and projection.sender.owner != graph_sender
-                    and projection.sender.owner != sender_mechanism
-                    # # MODIFIED 12/17/21 NEW:
-                    # and projection.sender.owner not in [n[0] for n in self._get_nested_nodes()]
-                    # # MODIFIED 12/17/21 END
-            ):
+                    and projection.sender.owner != sender_mechanism):
                 raise CompositionError(f"The position of {projection.name} in {self.name} "
                                        f"conflicts with its sender ({sender.name}).")
 
@@ -5637,11 +5627,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and not isinstance(receiver, Composition)
                 and receiver_mechanism not in self.nodes
                 and receiver_mechanism != self.controller
-                and not learning_projection
-                # # MODIFIED 12/17/21 NEW:
-                # and projection.receiver.owner not in [n[0] for n in self._get_nested_nodes()]
-                # # MODIFIED 12/17/21 END
-        ):
+                and not learning_projection):
 
             # if the receiver is IN a nested Composition AND receiver is an INPUT Node
             # then use the corresponding CIM on the nested comp as the receiver going forward
@@ -6125,12 +6111,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
                 # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
                 #  then embed in a list for consistency of handling below
-                proj_specs = pathway[c]
-                # FIX 12/17/21:  REFACTOR SO THAT MULTIPLE PROJECTIONS SET CAN ALSO BE SPECIFIED AS A LIST
-                #                REPLACE FOLLOWING WITH proj_specs = list(proj_specs) OR JUST APPLY TO pathway[c] ABOVE?
-                if not isinstance(proj_specs, set):
-                    proj_specs = [proj_specs]
-                # FIX 12/17/21: NEED TO KEEP TRACK OF WHICH PROJECTIONS ARE IN SETS/LISTS OR ALONE
+                # # MODIFIED 12/17/21 OLD:
+                # proj_specs = pathway[c]
+                # if not isinstance(proj_specs, set):
+                #     proj_specs = [proj_specs]
+                # # MODIFIED 12/17/21 NEW:
+                # proj_specs = convert_to_list(pathway[c])
+                # # MODIFIED 12/17/21 NEWER:
+                try:
+                    proj_specs = set(pathway[c])
+                except TypeError:
+                    proj_specs = [pathway[c]]
+                # MODIFIED 12/17/21 END
                 proj_set = []
                 for proj_spec in proj_specs:
                     if c == len(pathway) - 1:
@@ -6203,14 +6195,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                    receiver=receiver,
                                                    feedback=feedback,
                                                    allow_duplicates=False)
-                # # MODIFIED 12/17/21 OLD:
-                        # if proj:
-                        #     projections.append(proj)
-                    # else:
-                    #     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                    #                            f"is not between two Nodes: {pathway[c]}")
-                # MODIFIED 12/17/21 NEW:
-                # FIX 12/17/21: NEED TO KEEP PROJECTIONS IN SETS OR LISTS TOGETHER
                         if proj:
                             proj_set.append(proj)
                     else:
@@ -6220,7 +6204,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     projections.append(proj_set[0])
                 else:
                     projections.append(proj_set)
-                # MODIFIED 12/17/21 END
 
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
@@ -9932,14 +9915,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     # Store values of all nodes in this execution_set for use by other nodes in the execution set
                     #    throughout this timestep (e.g., for recurrent Projections)
-                    # # MODIFIED 12/12/21 OLD:
                     frozen_values[node] = node.get_output_values(context)
-                    # # MODIFIED 12/12/21 NEW:
-                    # buffer_setting = self.include_probes_in_output
-                    # self.include_probes_in_output = True
-                    # frozen_values[node] = node.get_output_values(context)
-                    # self.include_probes_in_output = buffer_setting
-                    # MODIFIED 12/12/21 END
 
                     # FIX: 6/12/19 Deprecate?
                     # Handle input clamping
@@ -10082,19 +10058,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     for i in range(len(node.output_ports)):
                         node.output_ports[i].parameters.value._set(frozen_values[node][i], context,
                                                                    skip_history=True, skip_log=True)
-                    # # MODIFIED 12/12/21 NEW:  THIS PASSES REGULAR TESTS,
-                    #                           BUT DOES NOT PASS IF include_probes_in_output set on nested Comp
-                    # if isinstance(node, Composition):
-                    #     node_output_ports = [output_port for output_port in node.output_ports if
-                    #                          (not node.output_CIM._sender_is_probe(output_port)
-                    #                           or self.include_probes_in_output)]
-                    # else:
-                    #     node_output_ports = node.output_ports
-                    # for i in range(len(node_output_ports)):
-                    #     node_output_ports[i].parameters.value._set(frozen_values[node][i], context,
-                    #                                                skip_history=True, skip_log=True)
-                    # MODIFIED 12/12/21 END
-
 
                 # Set all nodes to new values
                 for node in next_execution_set:
