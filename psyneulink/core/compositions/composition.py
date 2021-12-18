@@ -5917,8 +5917,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. _Composition_Add_Linear_Processing_Pathway:
 
-        Each `Node <CompositionNodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles
-        <NodeRole>`) that can be used to assign `required_roles to Mechanisms (see `Composition_Nodes` for additional
+        Each `Node <Composition_Nodes>` can be either a `Mechanism`, a `Composition`, or a tuple (Mechanism, `NodeRoles
+        <NodeRole>`) that can be used to assign `required_roles` to Mechanisms (see `Composition_Nodes` for additional
         details).
 
         `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`. If both Nodes
