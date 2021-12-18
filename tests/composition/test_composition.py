@@ -368,7 +368,7 @@ class TestAddProjection:
     @pytest.mark.parametrize('projs, expected_matrices', test_args, ids=[x[0] for x in test_args])
     def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices):
         """Test automatic creation and explicit specification of Projections from outer Composition to multiple
-        Notes of a nested Composition, and between Nodes of nested Compositions.
+        Nodes of a nested Composition, and between Nodes of nested Compositions.
         """
 
         A = ProcessingMechanism(name='A')
