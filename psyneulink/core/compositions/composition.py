@@ -6111,18 +6111,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
                 # If pathway[c] is not a set of Projections (see add_linear_processing_pathway docstring)
                 #  then embed in a list for consistency of handling below
-                # # MODIFIED 12/17/21 OLD:
-                # proj_specs = pathway[c]
-                # if not isinstance(proj_specs, set):
-                #     proj_specs = [proj_specs]
-                # # MODIFIED 12/17/21 NEW:
-                # proj_specs = convert_to_list(pathway[c])
-                # # MODIFIED 12/17/21 NEWER:
                 try:
                     proj_specs = set(pathway[c])
                 except TypeError:
                     proj_specs = [pathway[c]]
-                # MODIFIED 12/17/21 END
                 proj_set = []
                 for proj_spec in proj_specs:
                     if c == len(pathway) - 1:

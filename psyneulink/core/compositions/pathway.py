@@ -225,11 +225,8 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
                    or (isinstance(entry, tuple)
                        and _is_projection_spec(entry[0])
                        and entry[1] in {True, FEEDBACK, False, MAYBE})
-                   # MODIFIED 12/3/21 NEW:
                    or (isinstance(entry, (set,list))
-                       and all(_is_projection_spec(item) for item in entry))
-                   # MODIFIED 12/3/21 END
-                   )
+                       and all(_is_projection_spec(item) for item in entry)))
 
     if is_node or is_proj:
         return True
