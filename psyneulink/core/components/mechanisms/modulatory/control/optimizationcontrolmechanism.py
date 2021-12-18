@@ -880,7 +880,7 @@ class OptimizationControlMechanismError(Exception):
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
     search_space = owning_component.parameters.search_space._get(context)
-    if not search_space:
+    if search_space is None:
         return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
     else:
         return search_space
@@ -1290,7 +1290,12 @@ class OptimizationControlMechanism(ControlMechanism):
         num_trials_per_estimate = None
 
         # search_space = None
-        control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
+        control_allocation_search_space = Parameter(
+            None,
+            read_only=True,
+            getter=_control_allocation_search_space_getter,
+            dependencies='search_space'
+        )
 
         saved_samples = None
         saved_values = None
