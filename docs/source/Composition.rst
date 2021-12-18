@@ -29,6 +29,6 @@ Composition
        Report
 
 .. automodule:: psyneulink.core.compositions.composition
-   :members: Composition, NodeRole
+   :members: Composition, NodeRole, Graph
    :private-members:
    :exclude-members: Parameters, show_structure, CompositionError

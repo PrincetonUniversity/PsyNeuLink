@@ -30,7 +30,7 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
-    LEARNED_PROJECTIONS, \
+    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -361,6 +361,65 @@ class TestAddProjection:
         assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix.base, weights)
+
+    test_args = [(None, ([1],[1],[1],[1])),
+        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]])),
+        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]))]
+    @pytest.mark.parametrize('projs, expected_matrices', test_args, ids=[x[0] for x in test_args])
+    def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices):
+        """Test automatic creation and explicit specification of Projections from outer Composition to multiple
+        Nodes of a nested Composition, and between Nodes of nested Compositions.
+        """
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        X = ProcessingMechanism(name='INPUT NODE')
+        M = ProcessingMechanism(name='MIDDLE NODE')
+        Y = ProcessingMechanism(name='OUTPUT NODE')
+        if projs is 'list':
+            iprojs = [MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)]
+            oprojs = [MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
+                     MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)]
+        elif projs is 'set':
+            iprojs = {MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)}
+            oprojs = {MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
+                     MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)}
+
+        comp1 = Composition(pathways=[A,B,C], name='COMP 1')
+        comp2 = Composition(pathways=[D,E,F], name='COMP 2')
+
+        if not projs:
+            ipway = [comp1, comp2]
+        else:
+            ipway = [comp1, iprojs, comp2]
+        mcomp = Composition(pathways=[ipway,M], name='MIDDLE COMPOSITION')
+
+        if not projs:
+            opway = [[X, mcomp, Y, C]]
+        else:
+            opway = [[X, oprojs, mcomp, Y, C]]
+        ocomp = Composition(pathways=opway, name='OUTER COMPOSITION')
+
+        # gv = ocomp.show_graph(output_fmt=source, show_CIM=True, show_node_structure=True)
+        # assert gv = expected
+        if not projs:
+            assert (comp1.output_CIM.output_ports[0].efferents[0].matrix.base ==
+                    comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[0])
+            assert (X.output_ports[0].efferents[0].matrix.base ==
+                    mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[1])
+            assert (X.output_ports[0].efferents[1].matrix.base ==
+                    mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base == expected_matrices[2])
+        else:
+            assert np.allclose(comp1.output_CIM.output_ports[0].efferents[0].matrix.base, expected_matrices[0])
+            assert np.allclose(comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[0])
+            assert np.allclose(X.output_ports[0].efferents[0].matrix.base, expected_matrices[1])
+            assert np.allclose(mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[1])
+            assert np.allclose(X.output_ports[0].efferents[1].matrix.base, expected_matrices[2])
+            assert np.allclose(mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base, expected_matrices[2])
 
     def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
         comp = Composition()
@@ -2276,6 +2335,7 @@ class TestExecutionOrder:
         assert comp.scheduler.mode == SchedulingMode.EXACT_TIME
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
+
 
 class TestGetMechanismsByRole:
 
@@ -6287,6 +6347,100 @@ class TestNodeRoles:
         comp.add_linear_processing_pathway([A, B, C])
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
+
+    def test_no_orphaning_of_nested_output_nodes(self):
+        """
+        Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
+        by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
+        """
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
+
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        Z = ProcessingMechanism(name='Z')
+        mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
+
+        O = ProcessingMechanism(name='O',
+                                input_ports=[Z]
+                                )
+        ocomp = Composition(name='OUTER COMP', nodes=[mcomp,O])
+
+        len(ocomp.output_values)==3
+        result = ocomp.run(inputs={mcomp:[[0],[0]]})
+        assert len(result)==3
+
+    def test_unnested_PROBE(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
+        assert B.output_port in comp.output_CIM.port_map
+
+    params = [  # id     allow_probes  include_probes_in_output  err_msg
+        (
+            "allow_probes_True", True, False, None
+         ),
+        (
+            "allow_probes_True", True, True, None
+         ),
+        (
+            "allow_probes_False", False, False,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         ),
+        (
+            "allow_probes_CONTROL", "CONTROL", True,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         )
+    ]
+    @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
+    def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
+        """Test use of allow_probes, include_probes_in_output and orphaned output from nested comp"""
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
+
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        Z = ProcessingMechanism(name='Z')
+        mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
+
+        O = ProcessingMechanism(name='O',
+                                input_ports=[B, Y]
+                                )
+
+        if not err_msg:
+            ocomp = Composition(name='OUTER COMP',
+                                # node=[0,mcomp],   # <- CRASHES
+                                nodes=[mcomp,O],
+                                allow_probes=allow_probes,
+                                include_probes_in_output=include_probes_in_output
+                                )
+            # ocomp.show_graph(show_cim=True, show_node_structure=True)
+
+            assert B.output_port in icomp.output_CIM.port_map
+            # assert B.output_port in mcomp.output_CIM.port_map
+            assert Y.output_port in mcomp.output_CIM.port_map
+            if include_probes_in_output is False:
+                assert len(ocomp.output_values)==4  # Should only be outputs from mcomp (C, Z) and O
+                result = ocomp.run(inputs={mcomp:[[0],[0]]})
+                assert len(result)==4  # Should only be outputs from mcomp (C, Z) and O
+            elif include_probes_in_output is True:
+                assert len(ocomp.output_values)==6           # Outputs from mcomp (C and Z) and O (from B and Y)
+                result = ocomp.run(inputs={mcomp:[[0],[0]]}) # This tests that outputs from mcomp (C and Z) are included
+                assert len(result)==6                        # even though mcomp also projects to O (for B and Y)
+        else:
+            with pytest.raises(CompositionError) as err:
+                ocomp = Composition(name='OUTER COMP',
+                                nodes=[mcomp,O],
+                                allow_probes=allow_probes,
+                                include_probes_in_output=include_probes_in_output)
+                ocomp._analyze_graph()
+            assert err.value.error_value == err_msg
 
     def test_two_node_cycle(self):
         A = TransferMechanism()

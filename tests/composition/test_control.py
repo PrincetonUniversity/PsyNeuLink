@@ -344,22 +344,60 @@ class TestControlSpecification:
     #     # result = 5, the input (1) multiplied by the value of the ControlSignal projecting to Node "ia"
     #     # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
 
-    test_names = [
-        "allowable1",
-        "allowable2",
-        "state_features_test_internal",
-        "state_features_test_not_in_agent_rep",
-        "monitor_for_control_test_not_in_agent_rep",
-        "monitor_for_control_with_obj_mech_test",
-        "probe_test"]
-    @pytest.mark.parametrize("test", test_names, ids=test_names)
-    def test_args_specific_to_ocm(self, test):
+          # id, agent_rep, state_feat, mon_for_ctl, allow_probes, obj_mech err_type, error_msg
+    params = [
+        ("allowable1",
+         "icomp", "I", "I", True, None, None, None
+         ),
+        ("allowable2",
+         "mcomp", "Ii A", "I B", True, None, None, None
+         ),
+        ("state_features_test_internal",
+         "icomp", "B", "I", True, None, pnl.CompositionError,
+         "Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP "
+         "that is not an INPUT Node of that Composition is not currently supported."
+         ),
+        ("state_features_test_not_in_agent_rep",
+         "icomp", "A", "I", True, None, pnl.OptimizationControlMechanismError,
+         "OCM, being used as controller for model-based optimization of INNER COMP, has 'state_features' "
+         "specified (['Shadowed input of A']) that are missing from the Composition or any nested within it."
+         ),
+        ("monitor_for_control_test_not_in_agent_rep",
+         "icomp", "I", "B", True, None, pnl.OptimizationControlMechanismError,
+         "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
+         "that do not belong to its agent_rep (INNER COMP): ['B']."
+         ),
+        ("monitor_for_control_with_obj_mech_test",
+         "icomp", "I", None, True, True, pnl.OptimizationControlMechanismError,
+         "OCM has 'outcome_ouput_ports' that receive Projections from the following Components "
+         "that do not belong to its agent_rep (INNER COMP): ['B']."
+         ),
+        ("probe_error_test",
+         "mcomp", "I", "B", False, None, pnl.CompositionError,
+         "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without "
+         "required NodeRole.OUTPUT. Try setting 'allow_probes' argument of OCM to 'True'."
+         ),
+        ("probe_error_obj_mech_test",
+         "mcomp", "I", None, False, True, pnl.CompositionError,
+         "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
+         "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
+         )
+    ]
+    @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, objective_mechanism, error_type, err_msg',
+                             params, ids=[x[0] for x in params])
+    def test_args_specific_to_ocm(self, id, agent_rep, state_features, monitor_for_control,
+                                  allow_probes, objective_mechanism, error_type,err_msg):
         """Test args specific to OptimizationControlMechanism
         - state_feature must be in agent_rep
         - monitor_for_control must be in agent_rep, whether specified directly or for ObjectiveMechanism
-        - allow_probes allows INTERNAL Nodes of nested comp to be monitored, otherwise generates and error"""
+        - allow_probes allows INTERNAL Nodes of nested comp to be monitored, otherwise generates and error
+        - probes are not included in Composition.results
+        """
+
         # FIX: ADD VERSION WITH agent_rep = CompositionFuntionApproximator
         #      ADD TESTS FOR SEPARATE AND CONCATENATE
+
+        from psyneulink.core.globals.utilities import convert_to_list
 
         I = pnl.ProcessingMechanism(name='I')
         icomp = pnl.Composition(nodes=I, name='INNER COMP')
@@ -369,56 +407,28 @@ class TestControlSpecification:
         C = pnl.ProcessingMechanism(name='C')
         mcomp = pnl.Composition(pathways=[[A,B,C],icomp],
                                 name='MIDDLE COMP')
+        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP', allow_probes=allow_probes)
 
-        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
+        agent_rep = {"mcomp":mcomp,
+                     "icomp":icomp
+                     }[agent_rep]
 
-        agent_rep = icomp
-        state_features = I
-        monitor_for_control = I
-        allow_probes = True
-        objective_mechanism = None
+        state_features = {"I":I,
+                          "Ii A":[I.input_port, A],
+                          "A":A,
+                          "B":B,
+                          }[state_features]
 
-        if test == "allowable2":  # This is to capture any unanticipated errors
-            agent_rep = mcomp
-            state_features = [I.input_port, A] # Each nested at a different level
-            monitor_for_control = [I, B]       # Each nested at a different level
+        if monitor_for_control:
+            monitor_for_control = {"I":I,
+                                   "I B":[I, B],
+                                   "B":B,
+                                   }[monitor_for_control]
 
-        if test == "state_features_test_internal":  # test for state_feature that is an INTERNAL Node
-            error_msg = 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP that is ' \
-                        'not an INPUT Node of that Composition is not currently supported.'
-            state_features = B
-            error_type = pnl.CompositionError
-
-        if test == "state_features_test_not_in_agent_rep":  # test for node not in agent_rep (icomp, but A is mcomp)
-            error_msg = "OCM, being used as controller for model-based optimization of INNER COMP, has " \
-                        "'state_features' specified (['Shadowed input of A']) that are missing " \
-                        "from the Composition or any nested within it."
-            state_features = A
-            error_type = pnl.OptimizationControlMechanismError
-
-        if test == "monitor_for_control_test_not_in_agent_rep": # test for monitor_for_control not in agent_rep  (icomp, but B is mcomp)
-            error_msg = 'OCM has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
-                        'that do not belong to its agent_rep (INNER COMP): [\'B\'].'
-            monitor_for_control = B
-            error_type = pnl.OptimizationControlMechanismError
-
-        if test == "monitor_for_control_with_obj_mech_test": # test for monitor_for_control not in agent_rep  (icomp, but B is mcomp)
-            error_msg = 'OCM has \'outcome_ouput_ports\' that receive Projections from the following Components ' \
-                        'that do not belong to its agent_rep (INNER COMP): [\'B\'].'
+        if objective_mechanism:
             objective_mechanism = pnl.ObjectiveMechanism(monitor=B)
-            monitor_for_control = None
 
-            error_type = pnl.OptimizationControlMechanismError
-
-        if test == "probe_test":  # test for monitor_for_control spec that is INTERNAL Node
-            error_msg = 'B found in nested Composition of OUTER COMP (MIDDLE COMP) but without ' \
-                        'required NodeRole.OUTPUT. Try setting \'allow_probes\' argument of OCM to True.'
-            allow_probes = False
-            monitor_for_control = B
-            agent_rep = mcomp
-            error_type = pnl.CompositionError
-
-        if "allowable" in test:
+        if not err_msg:
             ocm = pnl.OptimizationControlMechanism(name='OCM',
                                                    agent_rep=agent_rep,
                                                    state_features=state_features,
@@ -426,32 +436,34 @@ class TestControlSpecification:
                                                    objective_mechanism=objective_mechanism,
                                                    allow_probes=allow_probes,
                                                    function=pnl.GridSearch(),
-                                                   # control=(pnl.SLOPE,A), # <- ADD TEST FOR THIS ERROR
                                                    control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
                                                                                      allocation_samples=[10, 20, 30])
                                                    )
             ocomp.add_controller(ocm)
             ocomp._analyze_graph()
+            if allow_probes and B in convert_to_list(monitor_for_control):
+                # If this fails, could be due to ordering of ports in ocomp.output_CIM (current assumes probe is on 0)
+                assert ocomp.output_CIM._sender_is_probe(ocomp.output_CIM.output_ports[0])
+                # Affirm that PROBE (included in ocomp's output_ports via its output_CIM
+                #    but is *not* included in Composition.output_values (which is used for Composition.results)
+                assert len(ocomp.output_values) == len(ocomp.output_ports) - 1
 
         else:
             with pytest.raises(error_type) as err:
                 ocm = pnl.OptimizationControlMechanism(name='OCM',
                                                        agent_rep=agent_rep,
-                                                       # state_features=A.input_port,  # <- CRASHES IN Composition._update_shadows_dict BECAUSE IT IS NESTED IN iComp
-                                                       # state_features=A,  # <- CRASHES IN _update_state_input_ports_for_controller BECAUSE IT IS NOT AN InputPort
-                                                       # state_features=[A,Y],
                                                        state_features=state_features,
                                                        monitor_for_control=monitor_for_control,
                                                        objective_mechanism=objective_mechanism,
                                                        allow_probes=allow_probes,
                                                        function=pnl.GridSearch(),
-                                                       # control=(pnl.SLOPE,A), # <- ADD TEST FOR THIS ERROR
-                                                       control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
+                                                       control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,
+                                                                                                    I),
                                                                                          allocation_samples=[10, 20, 30])
                                                        )
                 ocomp.add_controller(ocm)
                 ocomp._analyze_graph()
-            assert err.value.error_value == error_msg
+            assert err.value.error_value == err_msg
 
     def test_agent_rep_assignement_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
@@ -574,6 +586,84 @@ class TestControlSpecification:
         assert all([node in [input_port.shadow_inputs.owner for input_port in ocomp.controller.state_input_ports]
                     for node in {oa, ob}])
 
+    @pytest.mark.parametrize(
+        'ocm_control_signals',
+        [
+            'None',
+            "[pnl.ControlSignal(modulates=('slope', a))]",
+            "[pnl.ControlSignal(modulates=('slope', a), allocation_samples=[1, 2])]",
+        ]
+    )
+    @pytest.mark.parametrize('ocm_num_estimates', [None, 1, 2])
+    @pytest.mark.parametrize(
+        'slope, intercept',
+        [
+            ((1.0, pnl.CONTROL), None),
+            ((1.0, pnl.CONTROL), (1.0, pnl.CONTROL)),
+        ]
+    )
+    def test_transfer_mechanism_and_ocm_variations(
+        self,
+        slope,
+        intercept,
+        ocm_num_estimates,
+        ocm_control_signals,
+    ):
+        a = pnl.TransferMechanism(
+            name='a',
+            function=pnl.Linear(
+                slope=slope,
+                intercept=intercept,
+            )
+        )
+
+        comp = pnl.Composition()
+        comp.add_node(a)
+
+        ocm_control_signals = eval(ocm_control_signals)
+
+        search_space_len = len(
+            set([
+                # value of parameter name in 'modulates' kwarg
+                p[0]
+                for cs in ocm_control_signals
+                for p in cs._init_args['projections']
+            ]) if ocm_control_signals is not None else set()
+            .union({'slope'} if slope is not None else set())
+            .union({'intercept'} if intercept is not None else set())
+        )
+        search_space = [[0, 1]] * search_space_len
+
+        ocm = pnl.OptimizationControlMechanism(
+            agent_rep=comp,
+            search_space=search_space,
+            num_estimates=ocm_num_estimates,
+            control_signals=ocm_control_signals,
+        )
+        comp.add_controller(ocm)
+
+        # assume tuple is a control spec
+        if (
+            isinstance(slope, tuple)
+            or (
+                ocm_control_signals is not None
+                and any(cs.name == 'slope' for cs in ocm_control_signals)
+            )
+        ):
+            assert 'a[slope] ControlSignal' in ocm.control.names
+        else:
+            assert 'a[slope] ControlSignal' not in ocm.control.names
+
+        if (
+            isinstance(intercept, tuple)
+            or (
+                ocm_control_signals is not None
+                and any(cs.name == 'intercept' for cs in ocm_control_signals)
+            )
+        ):
+            assert 'a[intercept] ControlSignal' in ocm.control.names
+        else:
+            assert 'a[intercept] ControlSignal' not in ocm.control.names
 
 class TestControlMechanisms:
 

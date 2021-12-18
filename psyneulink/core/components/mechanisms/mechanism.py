@@ -805,7 +805,7 @@ OutputPort(s).
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
-of the Composition's `show_graph <Composition.show_graph>` method with the keyword **LABELS**.
+of the Composition's `show_graph`show_graph <ShowGraph_show_graph_Method>` method with the keyword **LABELS**.
 
         >>> C.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
@@ -1136,7 +1136,7 @@ class MechParamsDict(UserDict):
 def _input_port_variables_getter(owning_component=None, context=None):
     try:
         return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
-    except TypeError:
+    except (AttributeError, TypeError):
         return None
 
 
@@ -2658,7 +2658,6 @@ class Mechanism_Base(Mechanism):
         self.parameters.value.set(np.atleast_1d(value), context, override=True)
         self._update_output_ports(context=context)
 
-
     def _parse_runtime_params(self, runtime_params, context):
         """Move Port param specifications and nested Project-specific specifications into sub-dicts.
 
@@ -3463,19 +3462,6 @@ class Mechanism_Base(Mechanism):
         elif output_fmt == 'jupyter':
             return m
 
-    @tc.typecheck
-    def _get_port_name(self, port:Port):
-        if isinstance(port, InputPort):
-            port_type = InputPort.__name__
-        elif isinstance(port, ParameterPort):
-            port_type = ParameterPort.__name__
-        elif isinstance(port, OutputPort):
-            port_type = OutputPort.__name__
-        else:
-            assert False, f'Mechanism._get_port_name() must be called with an ' \
-                f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
-        return port_type + '-' + port.name
-
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
         (see `DDM.plot <DDM.plot>` for details of the animated DDM plot).
@@ -3512,6 +3498,22 @@ class Mechanism_Base(Mechanism):
         x_space = np.linspace(x_range[0],x_range[1])
         plt.plot(x_space, self.function(x_space)[0], lw=3.0, c='r')
         plt.show()
+
+    # def remove_projection(self, projection):
+    #     pass
+
+    @tc.typecheck
+    def _get_port_name(self, port:Port):
+        if isinstance(port, InputPort):
+            port_type = InputPort.__name__
+        elif isinstance(port, ParameterPort):
+            port_type = ParameterPort.__name__
+        elif isinstance(port, OutputPort):
+            port_type = OutputPort.__name__
+        else:
+            assert False, f'Mechanism._get_port_name() must be called with an ' \
+                f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
+        return port_type + '-' + port.name
 
     @tc.typecheck
     @handle_external_context()

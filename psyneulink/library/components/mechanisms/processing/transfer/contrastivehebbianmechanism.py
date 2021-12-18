@@ -393,6 +393,9 @@ class ContrastiveHebbianError(Exception):
 
 def _CHM_output_activity_getter(owning_component=None, context=None):
     current_activity = owning_component.parameters.current_activity._get(context)
+    if current_activity is None:
+        return None
+
     if owning_component.target_size:
         return current_activity[owning_component.target_start:owning_component.target_end]
     else:
@@ -400,18 +403,27 @@ def _CHM_output_activity_getter(owning_component=None, context=None):
 
 def _CHM_input_activity_getter(owning_component=None, context=None):
     current_activity = owning_component.parameters.current_activity._get(context)
+    if current_activity is None:
+        return None
+
     return current_activity[:owning_component.input_size]
 
 
 def _CHM_hidden_activity_getter(owning_component=None, context=None):
     if owning_component.hidden_size:
         current_activity = owning_component.parameters.current_activity._get(context)
+        if current_activity is None:
+            return None
+
         return current_activity[owning_component.input_size:owning_component.target_start]
 
 
 def _CHM_target_activity_getter(owning_component=None, context=None):
     if owning_component.target_size:
         current_activity = owning_component.parameters.current_activity._get(context)
+        if current_activity is None:
+            return None
+
         return current_activity[owning_component.target_start:owning_component.target_end]
 
 
@@ -937,10 +949,10 @@ class ContrastiveHebbianMechanism(RecurrentTransferMechanism):
         )
         max_passes = Parameter(1000, stateful=False)
 
-        output_activity = Parameter(None, read_only=True, getter=_CHM_output_activity_getter)
-        input_activity = Parameter(None, read_only=True, getter=_CHM_input_activity_getter)
-        hidden_activity = Parameter(None, read_only=True, getter=_CHM_hidden_activity_getter)
-        target_activity = Parameter(None, read_only=True, getter=_CHM_target_activity_getter)
+        output_activity = Parameter(None, read_only=True, getter=_CHM_output_activity_getter, dependencies='current_activity')
+        input_activity = Parameter(None, read_only=True, getter=_CHM_input_activity_getter, dependencies='current_activity')
+        hidden_activity = Parameter(None, read_only=True, getter=_CHM_hidden_activity_getter, dependencies='current_activity')
+        target_activity = Parameter(None, read_only=True, getter=_CHM_target_activity_getter, dependencies='current_activity')
 
         execution_phase = Parameter(None, read_only=True)
         # is_finished_ = Parameter(False, read_only=True)
