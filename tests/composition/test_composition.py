@@ -362,17 +362,14 @@ class TestAddProjection:
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix.base, weights)
 
-
-
-
-
-    test_args = [
-        (None, ([1],[1],[1],[1])),
-        ('list', ([.1],[.2],[.3],[.4])),
-        ('set', ([.1],[.2],[.3],[.4]))
-    ]
+    test_args = [(None, ([1],[1],[1],[1])),
+        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]])),
+        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]))]
     @pytest.mark.parametrize('projs, expected_matrices', test_args, ids=[x[0] for x in test_args])
     def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices):
+        """Test automatic creation and explicit specification of Projections from outer Composition to multiple
+        Notes of a nested Composition, and between Nodes of nested Compositions.
+        """
 
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
@@ -381,41 +378,48 @@ class TestAddProjection:
         E = ProcessingMechanism(name='E')
         F = ProcessingMechanism(name='F')
         X = ProcessingMechanism(name='INPUT NODE')
+        M = ProcessingMechanism(name='MIDDLE NODE')
         Y = ProcessingMechanism(name='OUTPUT NODE')
-        C = ControlMechanism(name='CONTROL MECHANISM',control=("slope", E))
         if projs is 'list':
-            iprojs = [MappingProjection(sender=C, receiver=D)]
+            iprojs = [MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)]
             oprojs = [MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
-                     MappingProjection(sender=X, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)]
+                     MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)]
         elif projs is 'set':
+            iprojs = {MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)}
             oprojs = {MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
-                     MappingProjection(sender=X, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)}
+                     MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)}
 
         comp1 = Composition(pathways=[A,B,C], name='COMP 1')
         comp2 = Composition(pathways=[D,E,F], name='COMP 2')
 
-        if projs:
-            ipway = [comp1, iprojs, comp2]
-        else:
+        if not projs:
             ipway = [comp1, comp2]
-        mcomp = Composition(pathways=ipway, name='MIDDLE COMPOSITION')
-
-        if projs:
-            opway = [[X, oprojs, mcomp, Y, C]]
         else:
+            ipway = [comp1, iprojs, comp2]
+        mcomp = Composition(pathways=[ipway,M], name='MIDDLE COMPOSITION')
+
+        if not projs:
             opway = [[X, mcomp, Y, C]]
+        else:
+            opway = [[X, oprojs, mcomp, Y, C]]
         ocomp = Composition(pathways=opway, name='OUTER COMPOSITION')
 
         # gv = ocomp.show_graph(output_fmt=source, show_CIM=True, show_node_structure=True)
         # assert gv = expected
-        assert (comp1.output_CIM.output_ports[0].efferents[0].matrix.base ==
-                comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[0])
-        # assert (comp1.output_CIM.output_ports[1].efferents[0].matrix.base ==
-        #         comp2.input_CIM.input_ports[1].path_afferents[0].matrix.base == expected_matrices[1])
-        assert (X.output_ports[0].efferents[0].matrix.base ==
-                mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[2])
-        assert (X.output_ports[1].efferents[0].matrix.base ==
-                mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base == expected_matrices[3])
+        if not projs:
+            assert (comp1.output_CIM.output_ports[0].efferents[0].matrix.base ==
+                    comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[0])
+            assert (X.output_ports[0].efferents[0].matrix.base ==
+                    mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[1])
+            assert (X.output_ports[0].efferents[1].matrix.base ==
+                    mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base == expected_matrices[2])
+        else:
+            assert np.allclose(comp1.output_CIM.output_ports[0].efferents[0].matrix.base, expected_matrices[0])
+            assert np.allclose(comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[0])
+            assert np.allclose(X.output_ports[0].efferents[0].matrix.base, expected_matrices[1])
+            assert np.allclose(mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[1])
+            assert np.allclose(X.output_ports[0].efferents[1].matrix.base, expected_matrices[2])
+            assert np.allclose(mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base, expected_matrices[2])
 
     def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
         comp = Composition()
