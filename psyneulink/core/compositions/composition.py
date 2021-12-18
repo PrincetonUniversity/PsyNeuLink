@@ -5207,8 +5207,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - if there is only one, that Projection is used;
             - if there is more than one, the last in the list (presumably the most recent) is used;
             in either case, processing continues, to activate it for the Composition,
-            construct any "shadow" projections that may be specified, and assign feedback if specified,
-                
+            construct any "shadow" projections that may be specified, and assign feedback if specified.
+
         • if the status of **projection** is `deferred_init`:
 
           - if its `sender <Projection_Base.sender>` and/or `receiver <Projection_Base.receiver>` attributes are not
@@ -5223,7 +5223,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         .. note::
            If **projection** is an instantiated Projection (i.e., not in `deferred_init`), and one already exists
-           between its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`, a warning is 
+           between its `sender <Projection_Base.sender>` and `receiver <Projection_Base.receiver>`, a warning is
            generated and the request is ignored.
 
         .. technical_note::
@@ -6260,7 +6260,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         pathways : Pathway or list[Pathway]
             specifies one or more `Pathways <Pathway>` to add to the Composition (see `Pathway_Specification`).
-            
+
         Returns
         -------
 
