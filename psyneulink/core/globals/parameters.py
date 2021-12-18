@@ -1041,10 +1041,7 @@ class Parameter(ParameterBase):
             self._is_invalid_source = value
 
             if value:
-                for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
-                        self._inherited_attrs_cache[attr] = getattr(self, attr)
-                        delattr(self, attr)
+                self._cache_inherited_attrs()
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
@@ -1065,22 +1062,32 @@ class Parameter(ParameterBase):
                             next_child._inherit_from(self)
                             children.extend(next_child._owner._children)
 
-                for attr in self._param_attrs:
-                    if (
-                        attr not in self._uninherited_attrs
-                        and getattr(self, attr) is getattr(self._parent, attr)
-                    ):
-                        setattr(self, attr, self._inherited_attrs_cache[attr])
+                self._restore_inherited_attrs()
 
             self.__inherited = value
 
     def _inherit_from(self, parent):
         self._inherited_source = weakref.ref(parent)
 
-    def _cache_inherited_attrs(self):
+    def _cache_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
         for attr in self._param_attrs:
-            if attr not in self._uninherited_attrs:
+            if attr not in exclusions:
                 self._inherited_attrs_cache[attr] = getattr(self, attr)
+                delattr(self, attr)
+
+    def _restore_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
+        for attr in self._param_attrs:
+            if (
+                attr not in exclusions
+                and getattr(self, attr) is getattr(self._parent, attr)
+            ):
+                setattr(self, attr, self._inherited_attrs_cache[attr])
 
     @property
     def _parent(self):
@@ -1757,6 +1764,22 @@ class SharedParameter(Parameter):
         except AttributeError:
             return super().__getattr__(attr)
 
+    def __setattr__(self, attr, value):
+        if self._source_exists and attr in self._sourced_attrs:
+            setattr(self.source, attr, value)
+        else:
+            super().__setattr__(attr, value)
+
+    def _cache_inherited_attrs(self):
+        super()._cache_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
+    def _restore_inherited_attrs(self):
+        super()._restore_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
     def _set_name(self, name):
         if self.shared_parameter_name is None:
             self.shared_parameter_name = name
@@ -1812,7 +1835,7 @@ class SharedParameter(Parameter):
                             delattr(self, p)
                         except AttributeError:
                             pass
-            self._source_exists = True
+                self._source_exists = True
             return obj
         except AttributeError:
             return None
@@ -1824,6 +1847,10 @@ class SharedParameter(Parameter):
             base_param = base_param.source
 
         return base_param
+
+    @property
+    def _sourced_attrs(self):
+        return set([a for a in self._param_attrs if a not in self._unsourced_attrs])
 
 
 class FunctionParameter(SharedParameter):

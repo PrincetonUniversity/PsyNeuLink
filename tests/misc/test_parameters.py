@@ -335,6 +335,20 @@ class TestSharedParameters:
 
         assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)
 
+        orig_values = shared_param.stateful, source_param.stateful
+
+        # change value of shared attribute on source parameter
+        source_param.stateful = not source_param.stateful
+        assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)
+
+        shared_param.stateful, source_param.stateful = orig_values
+
+        # change value of shared attribute on sharedparameter
+        shared_param.stateful = not shared_param.stateful
+        assert getattr(shared_param, attr_name) == getattr(source_param, attr_name)
+
+        shared_param.stateful, source_param.stateful = orig_values
+
     @pytest.mark.parametrize(
         'integrator_function, expected_rate',
         [
