@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0+untagged.17.g7c2d3cf documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0+untagged.16.g57f9f28 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g7c2d3cf
+                  0+untagged.16.g57f9f28
                 </div>
               
             
@@ -274,9 +274,10 @@ of any of a Composition’s <a class="reference internal" href="Composition.html
 <li><p><a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>: – assigns the Node to a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> Pathway.</p></li>
 </ul>
 <ul class="simple" id="pathway-specification-list">
-<li><p><strong>list</strong>: [<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…] –
+<li><p><strong>list</strong>: [<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…] –
 each item of the list must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> – i.e., Mechanism or Composition, or a
-(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a> or a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple interposed between a pair of nodes.
+(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple, or a set of either interposed between a pair of nodes (see
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> for additional details).
 The list must begin and end with a node.</p></li>
 </ul>
 <ul class="simple">
@@ -326,7 +327,7 @@ Nodes, then it is treated as a single Pathway (i.e., the list form of <a class="
 the <strong>pathway</strong> arg of its constructor; that is, depending upon how it was specified, it may or may not contain
 fully constructed <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  This is passed to the <strong>pathways</strong> argument of a Composition’s
 constructor or one of its <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a> when the Pathway is used
-in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
+in the specification of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.pathways" title="psyneulink.core.compositions.composition.Composition.pathways"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathways</span></code></a> attribute), then the actual <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism(s)</span></a> and/or <code class="xref any docutils literal notranslate"><span class="pre">Composition(s)</span></code>
 that comprise <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>, and the <a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a> between them, are listed in the
 Pathway’s <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute.</p></li>
