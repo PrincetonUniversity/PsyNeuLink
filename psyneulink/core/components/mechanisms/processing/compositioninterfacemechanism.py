@@ -51,8 +51,6 @@ Creation
 The following three CompositionInterfaceMechanisms are created and assigned automatically to a Composition when it is
 constructed (and should never be constructed manually):  `input_CIM <Composition.input_CIM>`, `parameter_CIM
 <Composition.parameter_CIM>` and `output_CIM <Composition.output_CIM>` (see `Composition_CIMs` for additional details).
-They can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of the Composition's `show_graph
-<ShowGraph_show_graph_Method>` method.
 
 .. _CompositionInterfaceMechanism_Structure:
 
@@ -68,6 +66,33 @@ outside the Composition (i.e., from an `input_CIM <Composition.input_CIM>` recei
 <ModulatoryProjections>`, or an `output_CIM <Composition.output_CIM>` sends an `efferent Projection
 <Mechanism_Base.efferents>`), and the value of which is a tuple containing the corresponding (`InputPort`,
 `OutputPort`) pair used to transmit the information to or from the CompositionInterfaceMechanism.
+CompositionIntefaceMechanisms can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of the
+Composition's `show_graph <ShowGraph_show_graph_Method>` method (see figure below).
+
+.. figure:: _static/CIM_figure.svg
+   :scale: 50 %
+
+   **Examples of Projections to nested Compositions routed through CompositionInterfaceMechanisms.**  *Panel A:*
+   Simple example showing a basic configuration.  *Panel B:*  More complex configuration, generated from script below,
+   showing Projections automatically created from the Node of an outer Composition (*X*) to two `INPUT
+   <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a `nested Composition <Composition_Nested>`, a `ControlProjection`
+   from a `ControlMechanism` in the outer Composition to a Node it modulates in the nested one, and from a `PROBE
+   <NodeRole.PROBE>` Node (*B*) in the nested Composition to the `ControlMechanism` that monitors it. ::
+
+    A = ProcessingMechanism(name='A')
+    B = ProcessingMechanism(name='B')
+    C = ProcessingMechanism(name='C')
+    D = ProcessingMechanism(name='D')
+    E = ProcessingMechanism(name='E')
+    F = ProcessingMechanism(name='F')
+    nested_comp = Composition(pathways=[[A,B,C], [D,E,F]], name='NESTED COMPOSITION')
+    X = ProcessingMechanism(name='INPUT NODE')
+    Y = ProcessingMechanism(name='OUTPUT NODE')
+    C = ControlMechanism(name='CONTROL MECHANISM',
+                         monitor_for_control=B,
+                         control=("slope", E))
+    outer_comp = Composition(name='OUTER COMPOSITION', pathways=[X, nested_comp, Y, C])
+    outer_comp.show_graph(show_cim=NESTED, show_node_structure=True)
 
 .. _CompositionInterfaceMechanism_Execution:
 
