@@ -10225,31 +10225,44 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             dictionaries that have been specified.
         """
 
-        input_format = '{'
-        for node in self.get_nodes_by_role(NodeRole.INPUT):
-            input_format += '\n\t' + node.name + ': '
-            if not show_nested_input_nodes:
-                trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
-                trials = ', '.join([trial]*num_trials)
-                if num_trials > 1:
-                    trials = '[' + trials + ']'
-                input_format += trials
-            else:
-                if isinstance(node, Composition):
-                    for n in node.get_nodes_by_role(NodeRole.INPUT):
-                        trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
-                        trials = ', '.join([trial]*num_trials)
-                        if num_trials > 1:
-                            trials = '[' + trials + ']'
-                else: # FIX: SAME AS FOR not  show_nested_input_nodes-- CONSOLIDATE
-                    trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
+        # input_format = '{'
+        # for node in self.get_nodes_by_role(NodeRole.INPUT):
+        #     input_format += '\n\t' + node.name + ': '
+        #     if show_nested_input_nodes and isinstance(node, Composition):
+        #         for n in node.get_nodes_by_role(NodeRole.INPUT):
+        #             # trial = '[' + ','.join([repr(i.tolist()) for i in n.input_values]) + ']'
+        #             trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+        #             trials = ', '.join([trial]*num_trials)
+        #             if num_trials > 1:
+        #                 trials = f"[{trials}]"
+        #             trials = f"\n\t\t<{n.name}>: {trials}"
+        #     else:
+        #         # trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
+        #         trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+        #         trials = ', '.join([trial]*num_trials)
+        #         if num_trials > 1:
+        #             # trials = '[' + trials + ']'
+        #             trials = f"[{trials}]"
+        #     input_format += trials
+        #
+        # input_format += ',\n}'
+        # return input_format
+
+        def _get_inputs(comp, nesting_level=1):
+            input_format = ''
+            for node in comp.get_nodes_by_role(NodeRole.INPUT):
+                input_format += '\n' + '\t'*nesting_level + node.name + ': '
+                if show_nested_input_nodes and isinstance(node, Composition):
+                    trials = _get_inputs(node, nesting_level=nesting_level+1)
+                else:
+                    trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
                     trials = ', '.join([trial]*num_trials)
                     if num_trials > 1:
-                        trials = '[' + trials + ']'
-            input_format += trials
-
-        input_format += ',\n}'
-        return input_format
+                        trials = f"[{trials}]"
+                input_format += trials
+            nesting_level -= 1
+            return input_format
+        return '{' + _get_inputs(self) + ',\n}'
 
     def _update_learning_parameters(self, context):
         pass
