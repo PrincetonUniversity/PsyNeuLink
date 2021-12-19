@@ -10268,7 +10268,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         formatted_input = _get_inputs(self, 1, use_labels)
         if show_nested_input_nodes:
             preface = f"\nInputs to nested nodes of {self.name} for {num_trials} trials:\n"
-            epilog = f"\n\n**Formatted as follows for input to run():\n" \
+            epilog = f"\n\nFormat as follows for input to run():\n" \
                      f"{self.get_input_format(num_trials=num_trials)}"
             return preface + formatted_input[:-1] + epilog
         return '{' + formatted_input[:-1] + '\n}'
