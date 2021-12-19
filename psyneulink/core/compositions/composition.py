@@ -10226,18 +10226,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             representative label for each input that has been assigned on;  setting to *ALL* returns the label
             dictionaries that have been specified.
         """
-        def _get_inputs(comp, nesting_level=1):
+        label_warning_message = False
+        def _get_inputs(comp, nesting_level=1, use_labels=False):
             input_format = ''
+            indent = '\t'*nesting_level
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
-                input_format += '\n' + '\t'*nesting_level + node.name + ': '
+                local_use_labels = use_labels
+                if local_use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
+                    if node not in self.nodes:
+                        input_format += f"\n{indent}NOTE: input labels for {node.name } not supported " \
+                                        f"in a nested Composition; default values shown instead:{indent}"
+                        local_use_labels = False
+                elif isinstance(node, Mechanism) and not node.input_labels_dict:
+                    local_use_labels = False
+                input_format += '\n' + indent + node.name + ': '
                 if show_nested_input_nodes and isinstance(node, Composition):
-                    trials = _get_inputs(node, nesting_level=nesting_level+1)
+                    trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=local_use_labels)
                 else:
-                    if use_labels and node.input_labels_dict:
+                    if local_use_labels:
                         input_values = []
                         for i in range(len(node.input_values)):
                             label_dict = node.input_labels_dict[i]
-                            if use_labels == ALL:
+                            if local_use_labels == ALL:
                                 labels = repr(list(label_dict.keys()))
                             else:
                                 # Use first label as example
@@ -10250,18 +10260,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if num_trials > 1:
                         trials = f"[ {trials} ]"
                 input_format += trials
+                if not local_use_labels:
+                    input_format += ','
             nesting_level -= 1
             return input_format
 
-        display = '{' + _get_inputs(self) + ',\n}'
+        formatted_input = _get_inputs(self, 1, use_labels)
         if show_nested_input_nodes:
             preface = f"\nInputs to nested nodes of {self.name} for {num_trials} trials:\n"
-            epilog = f"\n\n**NOTE: Hierarchical format above is for informative purpose only;\n" \
-                     f"        it cannot be used for actual input.\n" \
-                     f"        For that, use the following format:\n" \
+            epilog = f"\n\n**Formatted as follows for input to run():\n" \
                      f"{self.get_input_format(num_trials=num_trials)}"
-            display = preface + display + epilog
-        return display
+            return preface + formatted_input[:-1] + epilog
+        return '{' + formatted_input[:-1] + '\n}'
 
     def _update_learning_parameters(self, context):
         pass
