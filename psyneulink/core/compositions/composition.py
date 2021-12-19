@@ -8386,6 +8386,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _inputs.update({node:inp})
         return _inputs
 
+    def _parse_names_in_inputs(self, inputs):
+        names = []
+        for key in inputs:
+            if isinstance(key, str):
+                names.append(key)
+        named_nodes = [(node, node.name) for node in self.get_nodes_by_role(NodeRole.INPUT) if node.name in names]
+        for node, name in named_nodes:
+            inputs[node] = inputs.pop(name)
+        return inputs
+
     def _parse_labels(self, inputs, mech=None):
         """
         Traverse input dict and replace any inputs that are in the form of their input or output label representations
@@ -8398,8 +8408,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             The input dict, with inputs with their label representations replaced by their numeric representations
 
         """
-        # the nested list comp below is necessary to retrieve target nodes of learning pathways, because the PathwayRole
-        # enum is not importable into this module
+        # the nested list comp below is necessary to retrieve target nodes of learning pathways,
+        # because the PathwayRole enum is not importable into this module
         target_to_output = {path.target: path.output for path in self.pathways
                             if 'LEARNING' in [role.name for role in path.roles]}
         if mech:
@@ -8444,7 +8454,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
-        _inputs = self._parse_labels(inputs)
+        _inputs = self._parse_names_in_inputs(inputs)
+        _inputs = self._parse_labels(_inputs)
         _inputs = self._validate_input_dict_node_roles(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
@@ -10623,6 +10634,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
     # region ----------------------------------- PROPERTIES ------------------------------------------------------------
     # ******************************************************************************************************************
+
+    def get_inputs_format(self, num_trials:int=1, nested:bool=False, labels:Union[bool, 'ALL']=False):
+        """Return format of dict used by **inputs** argument of `run <Composition.run>` method.
+
+        Arguments
+        ---------
+
+        num_trials : int : default 1
+            specifies number of trials' worth of inputs to included in format.
+
+        num_nested : bool : default False
+            if True, returns names of all destination `INPUT <NodeRole.INPUT>` `Nodes <Compositoin_Nodes>`
+            for items of input.
+
+        labels : bool or ALL : default False
+            if labels have been assigned for use as inputs (see XXX), then: setting **labels** to True uses a
+            representative label for each input that has been assigned on;  setting to *ALL* returns the label
+            dictionaries that have been specified.
+        """
+        return {node.name:node.input_values for node in self.get_nodes_by_role(NodeRole.INPUT)}
 
     @property
     def input_ports(self):
