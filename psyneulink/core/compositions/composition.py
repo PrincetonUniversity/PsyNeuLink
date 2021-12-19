@@ -1087,12 +1087,17 @@ be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.ru
 methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
 `disable_learning <Composition.disable_learning>` attribute.
 
+
 .. _Composition_Execution_Inputs:
 
 *Input formats (including targets for learning)*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 - `Composition_Input_Dictionary`
 - `Composition_Programmatic_Inputs`
+
+COMMENT:
+    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
+COMMENT
 
 The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
 the **targets** argument of the `learn <Composition.learn>` method) is used to specify the inputs to the Composition
@@ -10201,7 +10206,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
-    def get_inputs_format(self, num_trials:int=1, nested:bool=False, labels:Union[bool, 'ALL']=False):
+    def get_input_format(self, num_trials:int=1, show_nested_input_nodes:bool=False, labels:Union[bool, 'ALL']=False):
         """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
         Arguments
@@ -10210,23 +10215,39 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         num_trials : int : default 1
             specifies number of trials' worth of inputs to included in format.
 
-        num_nested : bool : default False
-            if True, returns names of all destination `INPUT <NodeRole.INPUT>` `Nodes <Compositoin_Nodes>`
-            for items of input.
+        show_nested_input_nodes : bool : default False
+            if True, shows names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`
+            (in <brackets>) for nested Compositions .
 
         labels : bool or ALL : default False
             if labels have been assigned for use as inputs (see XXX), then: setting **labels** to True uses a
             representative label for each input that has been assigned on;  setting to *ALL* returns the label
             dictionaries that have been specified.
         """
+
         input_format = '{'
         for node in self.get_nodes_by_role(NodeRole.INPUT):
             input_format += '\n\t' + node.name + ': '
-            trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
-            trials = ', '.join([trial]*num_trials)
-            if num_trials > 1:
-                trials = '[' + trials + ']'
+            if not show_nested_input_nodes:
+                trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
+                trials = ', '.join([trial]*num_trials)
+                if num_trials > 1:
+                    trials = '[' + trials + ']'
+                input_format += trials
+            else:
+                if isinstance(node, Composition):
+                    for n in node.get_nodes_by_role(NodeRole.INPUT):
+                        trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
+                        trials = ', '.join([trial]*num_trials)
+                        if num_trials > 1:
+                            trials = '[' + trials + ']'
+                else: # FIX: SAME AS FOR not  show_nested_input_nodes-- CONSOLIDATE
+                    trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
+                    trials = ', '.join([trial]*num_trials)
+                    if num_trials > 1:
+                        trials = '[' + trials + ']'
             input_format += trials
+
         input_format += ',\n}'
         return input_format
 
