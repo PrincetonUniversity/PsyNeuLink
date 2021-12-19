@@ -10206,7 +10206,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
-    def get_input_format(self, num_trials:int=1, show_nested_input_nodes:bool=False, labels:Union[bool, 'ALL']=False):
+    def get_input_format(self, num_trials:int=1,
+                         show_nested_input_nodes:bool=False,
+                         use_labels:Union[bool,ALL]=False):
         """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
         Arguments
@@ -10219,35 +10221,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if True, shows names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`
             (in <brackets>) for nested Compositions .
 
-        labels : bool or ALL : default False
+        use_labels : bool or ALL : default False
             if labels have been assigned for use as inputs (see XXX), then: setting **labels** to True uses a
             representative label for each input that has been assigned on;  setting to *ALL* returns the label
             dictionaries that have been specified.
         """
-
-        # input_format = '{'
-        # for node in self.get_nodes_by_role(NodeRole.INPUT):
-        #     input_format += '\n\t' + node.name + ': '
-        #     if show_nested_input_nodes and isinstance(node, Composition):
-        #         for n in node.get_nodes_by_role(NodeRole.INPUT):
-        #             # trial = '[' + ','.join([repr(i.tolist()) for i in n.input_values]) + ']'
-        #             trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
-        #             trials = ', '.join([trial]*num_trials)
-        #             if num_trials > 1:
-        #                 trials = f"[{trials}]"
-        #             trials = f"\n\t\t<{n.name}>: {trials}"
-        #     else:
-        #         # trial = '[' + ','.join([repr(i.tolist()) for i in node.input_values]) + ']'
-        #         trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
-        #         trials = ', '.join([trial]*num_trials)
-        #         if num_trials > 1:
-        #             # trials = '[' + trials + ']'
-        #             trials = f"[{trials}]"
-        #     input_format += trials
-        #
-        # input_format += ',\n}'
-        # return input_format
-
         def _get_inputs(comp, nesting_level=1):
             input_format = ''
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
@@ -10255,14 +10233,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level+1)
                 else:
-                    trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+                    if use_labels and node.input_labels_dict:
+                        input_values = []
+                        for i in range(len(node.input_values)):
+                            label_dict = node.input_labels_dict[i]
+                            if use_labels == ALL:
+                                labels = repr(list(label_dict.keys()))
+                            else:
+                                # Use first label as example
+                                labels = repr(list(label_dict.keys())[0])
+                            input_values.append(labels)
+                        trial = f"[{','.join(input_values)}]"
+                    else:
+                        trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
                     trials = ', '.join([trial]*num_trials)
                     if num_trials > 1:
-                        trials = f"[{trials}]"
+                        trials = f"[ {trials} ]"
                 input_format += trials
             nesting_level -= 1
             return input_format
-        return '{' + _get_inputs(self) + ',\n}'
+
+        display = '{' + _get_inputs(self) + ',\n}'
+        if show_nested_input_nodes:
+            preface = f"\nInputs to nested nodes of {self.name} for {num_trials} trials:\n"
+            epilog = f"\n\n**NOTE: Hierarchical format above is for informative purpose only;\n" \
+                     f"        it cannot be used for actual input.\n" \
+                     f"        For that, use the following format:\n" \
+                     f"{self.get_input_format(num_trials=num_trials)}"
+            display = preface + display + epilog
+        return display
 
     def _update_learning_parameters(self, context):
         pass
