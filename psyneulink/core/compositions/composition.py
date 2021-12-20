@@ -40,18 +40,22 @@ Contents
            - `Composition_Learning_Execution`
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
-  * `Composition_Execution`
-     - `Results, Reporting and Logging <Composition_Execution_Reporting>`
+  * `Composition_Execution`                                    -----
+     - `Execution Methods <Composition_Execution_Methods>`    ~~~~~
      - `Composition_Execution_Inputs`
-        • `Composition_Input_Dictionary`
+        • `Composition_Input_Dictionary`                      ^^^^^
         • `Composition_Programmatic_Inputs`
-     - `Composition_Runtime_Params`
-     - `Composition_Cycles_and_Feedback`
-        • `Composition_Cycle`
-        • `Composition_Feedback`
-     - `Composition_Execution_Context`
-     - `Composition_Reset`
-     - `Composition_Compilation`
+     - `Composition_Execution_Factors`
+        • `Composition_Runtime_Params`
+        • `Composition_Cycles_and_Feedback`
+          - `Cycles and Synchronous Execution <Composition_Cycle>`
+          - `Feedback and Sequential Execution <Composition_Feedback>`
+        • `Composition_Execution_Context`
+        • `Composition_Timing`
+        • `Composition_Reset`
+        • `Composition_Compilation`
+     - `Results, Reporting and Logging <Composition_Execution_Reporting>`
+  * `Composition_Visualization`
   * `Composition_Examples`
      - `Composition_Examples_Creation`
      - `Composition_Examples_Run`
@@ -997,12 +1001,16 @@ other Components in the Composition (e.g., as a source of information or for mod
 Executing a Composition
 -----------------------
 
+    - `Execution Methods <Composition_Execution_Methods>`
     - `Composition_Execution_Inputs`
-    - `Composition_Runtime_Params`
-    - `Composition_Cycles_and_Feedback`
-    - `Composition_Execution_Context`
-    - `Composition_Reset`
-    - `Composition_Compilation`
+    - `Composition_Execution_Factors`
+      • `Composition_Runtime_Params`
+      • `Composition_Cycles_and_Feedback`
+      • `Composition_Execution_Context`
+      • `Composition_Timing`
+      • `Composition_Reset`
+      • `Composition_Compilation`
+    - `Results, Reporting and Logging <Composition_Execution_Reporting>`
 
 
 .. _Composition_Execution_Methods:
@@ -1031,57 +1039,6 @@ can also be called directly, but this is useful mostly for debugging.
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
 
-COMMENT:
-FIX: MOVE FROM HERE TO END MARKED BELOW BY XXX TO RESULTS SECTION WITH ITS OWN ~~~~~~ HEADING
-COMMENT
-.. _Composition_Execution_Reporting:
-
-*Results, Reporting and Logging*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
-execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
-<TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
-<Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
-can also be generated as the Composition is executing, using the **report_output** and **report_progress** arguments
-of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
-input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
-in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
-options) shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of
-the time remaining to completion.  These options are all OFF by default (see `Report` for additional details).
-The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
-recorded in their `log <Component_Log>` attribute using the `Log` facility.
-
-COMMENT:
-FIX: MOVE THIS TO ZZZ  BELOW TO SECTION ON INPUT VVVVVV
-COMMENT
-
-*Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
-the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
-A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
-set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
-<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
-can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`). The
-same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node (in
-which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed). If the
-**inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
-the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
-If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
-argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
-
-COMMENT:
-FIX: MOVE ABOVE FROM ZZZ TO SECTION ON INPUT  ^^^^^^^^^
-COMMENT
-
-
-.. _Composition_Execution_Results:
-
-*Results*. At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of
-the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
-`results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
-<TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
-
-COMMENT:
-FIX END FROM XXX ABOVE
-COMMENT
-
 .. _Composition_Execution_Num_Trials:
 
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
@@ -1102,8 +1059,24 @@ be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.ru
 methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
 `disable_learning <Composition.disable_learning>` attribute.
 
+COMMENT:
+FIX:  ?SUMMARY OF FOLLOWING SECITONS HERE?
+COMMENT
 
 .. _Composition_Execution_Inputs:
+
+All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
+argument, which designates the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for
+each `TRIAL <TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the
+Composition to execute for a given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified
+using an `input dictionary <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn
+<Composition.learn>` methods, they can also be specified `programmatically <Composition_Programmatic_Inputs>`
+(see `Composition_Execution_Inputs`). The same number of inputs must be specified for every `INPUT` Node, unless only
+one value is specified for a Node (in which case that value is provided as the input to that Node for all `TRIAL
+<TimeScale.TRIAL>`\\s executed). If the **inputs** argument is not specified for the `run <Composition.run>` or
+`execute <Composition.execute>` methods, the `default_variable <Component_Variable>` for each `INPUT` Node is used as
+its input on `TRIAL <TimeScale.TRIAL>`. If it is not specified for the `learn <Composition.learn>` method, an error
+is generated unless its **targets**argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
 
 *Input formats (including targets for learning)*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1346,10 +1319,23 @@ Environment.
     comp.run(inputs=input_dictionary)
 COMMENT
 
+
+.. _Composition_Execution_Factors:
+
+*Execution Factors*
+~~~~~~~~~~~~~~~~~~~
+
+  • `Composition_Runtime_Params`
+  • `Composition_Cycles_and_Feedback`
+  • `Composition_Execution_Context`
+  • `Composition_Timing`
+  • `Composition_Reset`
+  • `Composition_Compilation`
+
 .. _Composition_Runtime_Params:
 
 *Runtime Parameters*
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 COMMENT:
     5/8/20
@@ -1401,9 +1387,9 @@ If its `Condition` is *not* satisfied, then none of the parameters specified wit
 .. _Composition_Cycles_and_Feedback:
 
 *Cycles and Feedback*
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
-    * `Composition_Cycle`
+    * `Cycles and Synchronous Execution <Composition_Cycle>`
     * `Composition_Feedback`
 
 If `Projections <Projection>` among any or all of the `Nodes <Composition_Nodes>` in a Composition form loops — that
@@ -1422,8 +1408,8 @@ Each of these approaches is described in greater detail below.
 
 .. _Composition_Cycle:
 
-Cycles and synchronous execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Cycles and Synchronous Execution**
+
 
 .. _Composition_Cycle_Structure:
 
@@ -1488,8 +1474,8 @@ the `initialize <Composition.initialize>` method.
 
 .. _Composition_Feedback:
 
-Feedback and sequential execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Feedback and Sequential Execution**
+
 
 .. _Composition_Feedback_Designation:
 
@@ -1546,7 +1532,7 @@ Projection in a Composition is returned by its `get_feedback_status<Composition.
 .. _Composition_Execution_Context:
 
 *Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 A Composition is always executed in a designated *execution context*, specified by an `execution_id
 <Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
@@ -1589,8 +1575,7 @@ For Developers
 
 .. _Composition_Execution_Contexts_Init:
 
-Initialization of Execution Contexts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Initialization of Execution Contexts**
 
 - The parameter values for any execution context can be copied into another execution context by using \
 Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
@@ -1607,7 +1592,7 @@ or Mechanism.input_ports, as these are added in the proper classes' _dependent_c
 .. _Composition_Timing:
 
 *Timing*
-~~~~~~~~
+^^^^^^^^
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
 method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
@@ -1622,8 +1607,8 @@ COMMENT
 
 .. _Composition_Reset:
 
-*Resetting Parameters of stateful*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Resetting Stateful Parameters*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 COMMENT:
 
@@ -1646,7 +1631,7 @@ COMMENT:
 
 COMMENT
 
-`stateful <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
+`Stateful Functions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
 `MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
 a record of the Function's `values <Parameter.values>` for each `execution context <Composition_Execution_Context>` in
 which it is executed, within and between calls to the Composition's `execute methods <Composition_Execution_Methods>`.
@@ -1715,7 +1700,7 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
 .. _Composition_Compilation:
 
 *Compilation*
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
 many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
@@ -1781,21 +1766,62 @@ GPU thread, and therefore does not produce any performance benefits over running
 `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
 in compiled modes).
 
+
+.. _Composition_Execution_Reporting:
+
+*Results, Reporting and Logging*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+*Results*
+^^^^^^^^^
+
 COMMENT:
+    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
+COMMENT
+
+Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
+execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
+<TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
+<Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
+can also be generated as the Composition is executing, using the **report_output** and **report_progress** arguments
+of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
+input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
+in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
+options) shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of
+the time remaining to completion.  These options are all OFF by default (see `Report` for additional details).
+The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
+recorded in their `log <Component_Log>` attribute using the `Log` facility.
+
+.. _Composition_Execution_Results:
+
+*Results*. At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of
+the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
+`results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
+<TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
+
+*Reporting*
+^^^^^^^^^^^
+
+FIX: XXX
+
+*Logging*
+^^^^^^^^^
+
+FIX: XXX
+
 .. _Composition_Visualization:
 
 Visualizing a Composition
 -------------------------
 
-XCOMMENTX:
+COMMENT:
     XXX - ADD EXAMPLE OF NESTED COMPOSITION
     XXX - ADD DISCUSSION OF show_controller AND show_learning
-XCOMMENTX
+COMMENT
 
 The `show_graph <ShowGraph_show_graph_Method>` method generates a display of the graph structure of `Nodes
 <Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
 <Composition.graph>`).
-COMMENT
 
 .. _Composition_Examples:
 
