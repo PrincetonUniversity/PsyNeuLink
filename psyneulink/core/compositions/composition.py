@@ -10217,8 +10217,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
     def get_input_format(self, num_trials:int=1,
-                         show_nested_input_nodes:bool=False,
-                         use_labels:Union[bool,ALL]=False):
+                         use_labels:bool=False,
+                         show_nested_input_nodes:bool=False):
         """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
         Arguments
@@ -10227,14 +10227,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         num_trials : int : default 1
             specifies number of trials' worth of inputs to included in format.
 
+        use_labels : bool : default False
+            if True, shows labels instead of values for any Mechanisms that have an `input_label_dict
+            <Mechanism_Base.input_labels_dict>`.  For **num_trials**=1, the first label is shown;
+            for **num_trials>1, a different label is used for each trial shown, cycling through if
+            **num_trials** is greater than the number of labels.
+
         show_nested_input_nodes : bool : default False
             if True, shows names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`
             (in <brackets>) for nested Compositions .
-
-        use_labels : bool or ALL : default False
-            if labels have been assigned for use as inputs (see XXX), then: setting **labels** to True uses a
-            representative label for each input that has been assigned on;  setting to *ALL* returns the label
-            dictionaries that have been specified.
         """
 
         def _get_inputs(comp, nesting_level=1, use_labels=False):
@@ -10251,26 +10252,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Nested Composition
                 else:
                     trials = []
-
                     for t in range(num_trials):
+
                         # Mechanism with labels
                         if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                             input_values = []
                             for i in range(len(node.input_values)):
                                 label_dict = node.input_labels_dict[i]
                                 labels = list(label_dict.keys())
-                                if use_labels == ALL:
-                                    labels = repr(labels)
-                                else:
-                                    # Use first label as example
-                                    labels = repr(labels[t%len(labels)])
-                                input_values.append(labels)
+                                input_values.append(repr(labels[t%len(labels)]))
                             trial = f"[{','.join(input_values)}]"
+
                         # Mechanism(s) with labels in nested Compositions
                         elif (use_labels and isinstance(node, Composition)
-                              and any(n.input_labels_dict
-                                      for n in node._get_nested_nodes_with_same_roles_at_all_levels(node,
-                                                                                                    NodeRole.INPUT))):
+                              and any(n.input_labels_dict for n
+                                      in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
                             for i, port in enumerate(node.input_CIM.input_ports):
                                 _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
