@@ -4169,7 +4169,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _get_all_nodes(self):
         """Return all nodes, including those within nested Compositions at any level
-        Note:  this is distinct from the _all_nodes propety, which returns all nodes at the top level
+        Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level
         """
         return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
 
@@ -8427,25 +8427,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for k,v in inputs.items():
                 if isinstance(k, Mechanism) and \
                    (target_to_output[k].output_labels_dict if k in target_to_output else k.input_labels_dict):
-                    # MODIFIED 12/19/21 OLD:
                     _inputs.update({k:self._parse_labels(v, k)})
-                    # # MODIFIED 12/19/21 NEW:
-                    # _inputs.update({k:self._parse_labels(np.atleast_1d(v), k)})
-                    # MODIFIED 12/19/21 END
                 else:
-                # # MODIFIED 12/19/21 OLD:
-                #     _inputs.update({k:v})
-                # MODIFIED 12/19/21 NEW:
-                    if isinstance(k, Composition):
-                        nested_inputs_dict = k._parse_labels({n:np.atleast_1d(nv)
-                                                              for n, nv in zip(k.get_nodes_by_role(NodeRole.INPUT),v)})
-                        v = values = list(nested_inputs_dict.values())
-                        if len(values) == 1:
-                            v = values[0]
+                    # Call _parse_labels for any Nodes with input_labels_dicts in nested Composition(s)
+                    if (isinstance(k, Composition)
+                            and any(n.input_labels_dict
+                                    for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
+                        for i, port in enumerate(k.input_CIM.input_ports):
+                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_port(port)
+                            if mech_with_labels.input_labels_dict:
+                                v = k._parse_labels(inputs[k],mech_with_labels)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
-                # MODIFIED 12/19/21 END
         elif type(inputs) == list or type(inputs) == np.ndarray:
             _inputs = []
             for i in range(len(inputs)):
@@ -10247,25 +10241,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_format = ''
             indent = '\t'*nesting_level
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
-                local_use_labels = use_labels
-                if local_use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
-                    if node not in self.nodes:
-                        input_format += f"\n{indent}NOTE: {node.name } has an input_labels_dict assigned," \
-                                        f"\n{indent}{indent}but labels are not supported in a nested Composition;" \
-                                        f"\n{indent}{indent}default values shown instead:{indent}"
-                        local_use_labels = False
-                else:
-                    local_use_labels = False
+                # local_use_labels = use_labels
+                # if local_use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
+                #     if node not in self.nodes:
+                #         input_format += f"\n{indent}NOTE: {node.name } has an input_labels_dict assigned," \
+                #                         f"\n{indent}{indent}but labels are not supported in a nested Composition;" \
+                #                         f"\n{indent}{indent}default values shown instead:{indent}"
+                #         local_use_labels = False
+                # else:
+                #     local_use_labels = False
 
                 input_format += '\n' + indent + node.name + ': '
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
                 else:
-                    if local_use_labels:
+                    # if local_use_labels:
+                    if use_labels and node.input_labels_dict:
                         input_values = []
                         for i in range(len(node.input_values)):
                             label_dict = node.input_labels_dict[i]
-                            if local_use_labels == ALL:
+                            # if local_use_labels == ALL:
+                            if use_labels == ALL:
                                 labels = repr(list(label_dict.keys()))
                             else:
                                 # Use first label as example

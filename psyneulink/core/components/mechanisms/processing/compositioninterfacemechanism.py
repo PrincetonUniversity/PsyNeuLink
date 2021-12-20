@@ -110,9 +110,9 @@ Class Reference
 """
 
 import warnings
-import typecheck as tc
-
 from collections.abc import Iterable
+
+import typecheck as tc
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -121,7 +121,8 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, \
+    PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -232,11 +233,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
-    def _get_destination_node_for_input_port(self, input_port, comp):
+    def _get_destination_node_for_input_port(self, input_port, comp=None):
         """Return Port, Node and Composition for destination of projection from input_CIM to (possibly nested) node"""
         #  CIM MAP ENTRIES:  [RECEIVER PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
-        from psyneulink.core.compositions.composition import NodeRole
         # Get sender to input_port of CIM for corresponding output_port
+        comp = comp or self
         port_map = input_port.owner.port_map
         output_port = [port_map[k][1] for k in port_map if port_map[k][0] is input_port]
         assert len(output_port)==1, f"PROGRAM ERROR: Expected only 1 output_port for {input_port.name} " \
@@ -251,7 +252,6 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def _get_source_node_for_output_port(self, output_port, comp):
         """Return Port, Node and Composition  for source of projection to output_CIM from (possibly nested) node"""
         #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
-        from psyneulink.core.compositions.composition import NodeRole
         # Get sender to input_port of CIM for corresponding output_port
         port_map = output_port.owner.port_map
         input_port = [port_map[k][0] for k in port_map if port_map[k][1] is output_port]
