@@ -10250,6 +10250,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Nested Composition
                 else:
+                    # FIX: PUT TRIAL LOOP HERE, AGGREGREGATE IN LIST, AND JOIN AT THE END
+                    # trials = []
+                    # for trial in trials:
                     # Mechanism with labels
                     if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                         input_values = []
