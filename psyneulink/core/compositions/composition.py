@@ -2568,7 +2568,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
@@ -10245,7 +10245,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
                 else:
-                     if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
+                    if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                         input_values = []
                         for i in range(len(node.input_values)):
                             label_dict = node.input_labels_dict[i]
