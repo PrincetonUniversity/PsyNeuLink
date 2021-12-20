@@ -10250,39 +10250,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Nested Composition
                 else:
-                    # FIX: PUT TRIAL LOOP HERE, AGGREGREGATE IN LIST, AND JOIN AT THE END
-                    # trials = []
-                    # for trial in trials:
-                    # Mechanism with labels
-                    if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
-                        input_values = []
-                        for i in range(len(node.input_values)):
-                            label_dict = node.input_labels_dict[i]
-                            if use_labels == ALL:
-                                labels = repr(list(label_dict.keys()))
-                            else:
-                                # Use first label as example
-                                labels = repr(list(label_dict.keys())[0])
-                            input_values.append(labels)
-                        trial = f"[{','.join(input_values)}]"
-                    # Mechanism(s) with labels in nested Compositions
-                    elif (use_labels and isinstance(node, Composition)
-                          and any(n.input_labels_dict
-                                  for n in node._get_nested_nodes_with_same_roles_at_all_levels(node,NodeRole.INPUT))):
-                        input_values = []
-                        for i, port in enumerate(node.input_CIM.input_ports):
-                            _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
-                            labels_dict = mech.input_labels_dict
-                            if labels_dict:
-                                input_values.append(repr([list(labels_dict[0].keys())[0]]))
-                            else:
-                                input_values.append(repr(np.array(mech.input_values).tolist()))
-                        trial = f"[{','.join(input_values)}]"
+                    trials = []
 
-                    # No Mechanism(s) with labels or use_labels == False
-                    else:
-                        trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
-                    trials = ', '.join([trial]*num_trials)
+                    for t in range(num_trials):
+                        # Mechanism with labels
+                        if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
+                            input_values = []
+                            for i in range(len(node.input_values)):
+                                label_dict = node.input_labels_dict[i]
+                                labels = list(label_dict.keys())
+                                if use_labels == ALL:
+                                    labels = repr(labels)
+                                else:
+                                    # Use first label as example
+                                    labels = repr(labels[t%len(labels)])
+                                input_values.append(labels)
+                            trial = f"[{','.join(input_values)}]"
+                        # Mechanism(s) with labels in nested Compositions
+                        elif (use_labels and isinstance(node, Composition)
+                              and any(n.input_labels_dict
+                                      for n in node._get_nested_nodes_with_same_roles_at_all_levels(node,
+                                                                                                    NodeRole.INPUT))):
+                            input_values = []
+                            for i, port in enumerate(node.input_CIM.input_ports):
+                                _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
+                                labels_dict = mech.input_labels_dict
+                                if labels_dict:
+                                    labels = list(labels_dict[0].keys())
+                                    input_values.append(repr([labels[t%len(labels)]]))
+                                else:
+                                    input_values.append(repr(np.array(mech.input_values).tolist()))
+                            trial = f"[{','.join(input_values)}]"
+
+                        # No Mechanism(s) with labels or use_labels == False
+                        else:
+                            trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+
+                        trials.append(trial)
+
+                    trials = ', '.join(trials)
                     if num_trials > 1:
                         trials = f"[ {trials} ]"
 
