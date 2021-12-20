@@ -243,16 +243,17 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
         assert len(output_port)==1, f"PROGRAM ERROR: Expected only 1 output_port for {input_port.name} " \
                                    f"in port_map for {input_port.owner}; found {len(output_port)}."
         assert len(output_port[0].efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
-                                                 f"just one efferet; has {len(output_port.efferents)}."
+                                                 f"just one efferent; has {len(output_port.efferents)}."
         receiver = output_port[0].efferents[0].receiver
         if not isinstance(receiver.owner, CompositionInterfaceMechanism):
             return receiver, receiver.owner, comp
         return self._get_destination_node_for_input_port(receiver, receiver.owner.composition)
 
-    def _get_source_node_for_output_port(self, output_port, comp):
+    def _get_source_node_for_output_port(self, output_port, comp=None):
         """Return Port, Node and Composition  for source of projection to output_CIM from (possibly nested) node"""
         #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
         # Get sender to input_port of CIM for corresponding output_port
+        comp = comp or self
         port_map = output_port.owner.port_map
         input_port = [port_map[k][0] for k in port_map if port_map[k][1] is output_port]
         assert len(input_port)==1, f"PROGRAM ERROR: Expected only 1 input_port for {output_port.name} " \
