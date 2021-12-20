@@ -8427,9 +8427,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for k,v in inputs.items():
                 if isinstance(k, Mechanism) and \
                    (target_to_output[k].output_labels_dict if k in target_to_output else k.input_labels_dict):
+                    # MODIFIED 12/19/21 OLD:
                     _inputs.update({k:self._parse_labels(v, k)})
+                    # # MODIFIED 12/19/21 NEW:
+                    # _inputs.update({k:self._parse_labels(np.atleast_1d(v), k)})
+                    # MODIFIED 12/19/21 END
                 else:
-                    _inputs.update({k:v})
+                # # MODIFIED 12/19/21 OLD:
+                #     _inputs.update({k:v})
+                # MODIFIED 12/19/21 NEW:
+                    if isinstance(k, Composition):
+                        nested_inputs_dict = k._parse_labels({n:np.atleast_1d(nv)
+                                                              for n, nv in zip(k.get_nodes_by_role(NodeRole.INPUT),v)})
+                        v = values = list(nested_inputs_dict.values())
+                        if len(values) == 1:
+                            v = values[0]
+                        _inputs.update({k:v})
+                    else:
+                        _inputs.update({k:v})
+                # MODIFIED 12/19/21 END
         elif type(inputs) == list or type(inputs) == np.ndarray:
             _inputs = []
             for i in range(len(inputs)):
@@ -10234,14 +10250,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 local_use_labels = use_labels
                 if local_use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                     if node not in self.nodes:
-                        input_format += f"\n{indent}NOTE: input labels for {node.name } not supported " \
-                                        f"in a nested Composition; default values shown instead:{indent}"
+                        input_format += f"\n{indent}NOTE: {node.name } has an input_labels_dict assigned," \
+                                        f"\n{indent}{indent}but labels are not supported in a nested Composition;" \
+                                        f"\n{indent}{indent}default values shown instead:{indent}"
                         local_use_labels = False
-                elif isinstance(node, Mechanism) and not node.input_labels_dict:
+                else:
                     local_use_labels = False
+
                 input_format += '\n' + indent + node.name + ': '
                 if show_nested_input_nodes and isinstance(node, Composition):
-                    trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=local_use_labels)
+                    trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
                 else:
                     if local_use_labels:
                         input_values = []
@@ -10260,14 +10278,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if num_trials > 1:
                         trials = f"[ {trials} ]"
                 input_format += trials
-                if not local_use_labels:
+                if not show_nested_input_nodes:
                     input_format += ','
             nesting_level -= 1
             return input_format
 
         formatted_input = _get_inputs(self, 1, use_labels)
         if show_nested_input_nodes:
-            preface = f"\nInputs to nested nodes of {self.name} for {num_trials} trials:\n"
+            preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
             epilog = f"\n\nFormat as follows for input to run():\n" \
                      f"{self.get_input_format(num_trials=num_trials)}"
             return preface + formatted_input[:-1] + epilog
@@ -10404,7 +10422,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         origin_node = origin_node.composition
 
                     if origin_node in inputs:
+                        # MODIFIED 12/19/21 OLD:
                         value = inputs[origin_node][index]
+                        # # MODIFIED 12/19/21 NEW:
+                        # # MODIFIED 12/19/21 END
+                        # if origin_node.input_labels_dict:
+                        #     labels = origin_node.input_labels_dict
+                        # else:
+                        #     value = inputs[origin_node][index]
 
                     else:
                         value = origin_node.defaults.variable[index]
