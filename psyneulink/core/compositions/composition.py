@@ -40,16 +40,16 @@ Contents
            - `Composition_Learning_Execution`
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
-  * `Composition_Execution`                                    -----
-     - `Execution Methods <Composition_Execution_Methods>`    ~~~~~
+  * `Composition_Execution`
+     - `Execution Methods <Composition_Execution_Methods>`
      - `Composition_Execution_Inputs`
-        • `Composition_Input_Dictionary`                      ^^^^^
+        • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
      - `Composition_Execution_Factors`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
-          - `Cycles and Synchronous Execution <Composition_Cycle>`
-          - `Feedback and Sequential Execution <Composition_Feedback>`
+           - `Cycles and Synchronous Execution <Composition_Cycle>`
+           - `Feedback and Sequential Execution <Composition_Feedback>`
         • `Composition_Execution_Context`
         • `Composition_Timing`
         • `Composition_Reset`
@@ -73,9 +73,9 @@ Contents
 Overview
 --------
 
-.. warning::
-    As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed!
-    Please see `this link <RefactoredLearningGuide>` for more details.
+    .. warning::
+        As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed!
+        Please see `this link <RefactoredLearningGuide>` for more details.
 
 Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.
@@ -442,7 +442,7 @@ be constructed or executed on their own).
   `ModulatorySignal` on the ModulatoryMechanism, and the paired OutputPort of the parameter_CIM conveys this via
   ModulatoryProjection to the `ParameterPort` for the Paremeter of the Mechanism to be modulated.
 
-  .. _technical_note::
+  .. technical_note::
     The Projection from a ModulatoryMechanism to the InputPort of a parameter_CIM is the only instance in which a
     MappingProjection is used as an `efferent projection <Mechanism_Base.efferents>` of a ModulatoryMechanism.
 
@@ -1004,12 +1004,12 @@ Executing a Composition
     - `Execution Methods <Composition_Execution_Methods>`
     - `Composition_Execution_Inputs`
     - `Composition_Execution_Factors`
-      • `Composition_Runtime_Params`
-      • `Composition_Cycles_and_Feedback`
-      • `Composition_Execution_Context`
-      • `Composition_Timing`
-      • `Composition_Reset`
-      • `Composition_Compilation`
+        • `Composition_Runtime_Params`
+        • `Composition_Cycles_and_Feedback`
+        • `Composition_Execution_Context`
+        • `Composition_Timing`
+        • `Composition_Reset`
+        • `Composition_Compilation`
     - `Results, Reporting and Logging <Composition_Execution_Reporting>`
 
 
@@ -1065,6 +1065,17 @@ COMMENT
 
 .. _Composition_Execution_Inputs:
 
+
+*Input formats (including targets for learning)*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- `Composition_Input_Dictionary`
+- `Composition_Programmatic_Inputs`
+
+COMMENT:
+    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
+COMMENT
+
 All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
 argument, which designates the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for
 each `TRIAL <TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the
@@ -1078,13 +1089,8 @@ one value is specified for a Node (in which case that value is provided as the i
 its input on `TRIAL <TimeScale.TRIAL>`. If it is not specified for the `learn <Composition.learn>` method, an error
 is generated unless its **targets**argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
 
-*Input formats (including targets for learning)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-- `Composition_Input_Dictionary`
-- `Composition_Programmatic_Inputs`
-
 COMMENT:
-    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
+FIX: INTEGRATE ABOVE WITH BELOW
 COMMENT
 
 The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
@@ -1390,7 +1396,7 @@ If its `Condition` is *not* satisfied, then none of the parameters specified wit
 ^^^^^^^^^^^^^^^^^^^^^
 
     * `Cycles and Synchronous Execution <Composition_Cycle>`
-    * `Composition_Feedback`
+    * `Feedback and Sequential Execution <Composition_Feedback>`
 
 If `Projections <Projection>` among any or all of the `Nodes <Composition_Nodes>` in a Composition form loops — that
 is, there are any cycles in its `graph <Composition_Graph>` —  then the order in which the Nodes are executed must
@@ -1476,7 +1482,6 @@ the `initialize <Composition.initialize>` method.
 
 **Feedback and Sequential Execution**
 
-
 .. _Composition_Feedback_Designation:
 
 **Feedback designation**. If any Projections in a loop are `designated as feedback <Composition_Feedback_Designation>`
@@ -1495,14 +1500,14 @@ the **feedback** argument of the Composition's `add_projection <Composition.add_
 or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it from being
 assigned as a feedback Projection (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
-.. warning::
-   Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
-   can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
-   permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
-   Projection designated as **feedback** will receive a value from the Projection that is based either on the
-   `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
-   (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
-   is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
+    .. warning::
+       Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
+       can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
+       permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
+       Projection designated as **feedback** will receive a value from the Projection that is based either on the
+       `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+       (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
+       is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
 
 .. _Composition_Feedback_Sequential_Execution:
 
@@ -1570,24 +1575,23 @@ COMMENT
 
 See `Composition_Examples_Execution_Context` for examples.
 
-COMMENT:
-For Developers
+.. technical_note::
 
-.. _Composition_Execution_Contexts_Init:
+    .. _Composition_Execution_Contexts_Init:
 
-**Initialization of Execution Contexts**
+    **Initialization of Execution Contexts**
 
-- The parameter values for any execution context can be copied into another execution context by using \
-Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
-and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+    - The parameter values for any execution context can be copied into another execution context by using \
+    Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
+    and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
 
-- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-other Components to function properly (beyond "standard" things like Component.function, \
-or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
-    - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
-    under **new_context**
-    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+    - `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
+    other Components to function properly (beyond "standard" things like Component.function, \
+    or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
+        - the intent is that with ``_dependent_components`` set properly, calling \
+        ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
+        under **new_context**
+        - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
 .. _Composition_Timing:
 
@@ -1602,7 +1606,6 @@ in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been execut
 `termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
 used in combination with `Condition` specifications for individual Components to execute different Components at
 different time scales.
-COMMENT
 
 
 .. _Composition_Reset:
@@ -1715,11 +1718,11 @@ information.  Users are strongly urged to report any other compilation failures 
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
 Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
-.. warning::
-   Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
-   bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
-   advised that if compilation is used, suitable tests are conducted that the results generated are identical to
-   those generated when the Composition is executed using the Python interpreter.
+    .. warning::
+       Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
+       bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
+       advised that if compilation is used, suitable tests are conducted that the results generated are identical to
+       those generated when the Composition is executed using the Python interpreter.
 
 .. _Composition_Compiled_Modes:
 
@@ -5811,7 +5814,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver.')
 
     def get_feedback_status(self, projection):
-        """Return True if **projection** is designated as a `feedback Projection <_Composition_Feedback_Designation>`
+        """Return True if **projection** is designated as a `feedback Projection <Composition_Feedback_Designation>`
         in the Composition, else False.
         """
         return projection in self.feedback_projections
