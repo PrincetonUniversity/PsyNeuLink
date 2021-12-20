@@ -8636,17 +8636,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Pass inputs to Composition, then execute sets of nodes that are eligible to run until termination
         conditions are met.
 
-        See `Composition_Execution` for details of formatting input specifications.
+        See `Composition_Execution` for details of formatting input specifications.\n
+        Use `get_input_format <Composition.get_input_format>` method to see example of input format.\n
         Use **animate** to generate a gif of the execution sequence.
 
         Arguments
         ---------
 
-        inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None
-            specifies the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL
-            <TimeScale.TRIAL>` executed during the run;  see `Composition_Execution_Inputs` for additional
-            information about format.  If **inputs** is not specified, the `default_variable
-            <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`
+        inputs: Dict{`INPUT` `Node <Composition_Nodes>` : list}, function or generator : default None specifies
+            the inputs to each `INPUT` `Node <Composition_Nodes>` of the Composition in each `TRIAL <TimeScale.TRIAL>`
+            executed during the run (see `Composition_Execution_Inputs` for additional information about format, and
+            `get_input_format <Composition.get_input_format>` method for generating an example of the input format for
+            the Composition). If **inputs** is not specified, the `default_variable <Component_Variable>` for each
+            `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
 
         num_trials : int : default 1
             typically, the composition will infer the number of trials from the length of its input specification.
@@ -10216,6 +10218,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
+    def get_inputs_format(self, **kwargs):
+        """Alias to get_input_format (easy mistake to make!)"""
+        return self.get_input_format(**kwargs)
+
     def get_input_format(self, num_trials:int=1,
                          use_labels:bool=False,
                          show_nested_input_nodes:bool=False):
@@ -10228,14 +10234,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies number of trials' worth of inputs to included in format.
 
         use_labels : bool : default False
-            if True, shows labels instead of values for any Mechanisms that have an `input_label_dict
-            <Mechanism_Base.input_labels_dict>`.  For **num_trials**=1, the first label is shown;
-            for **num_trials>1, a different label is used for each trial shown, cycling through if
-            **num_trials** is greater than the number of labels.
+            if True, shows labels instead of values for Mechanisms that have an `input_label_dict
+            <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
+            shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
+            through the set if **num_trials** is greater than the number of labels.
 
         show_nested_input_nodes : bool : default False
-            if True, shows names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`
-            (in <brackets>) for nested Compositions .
+            shows hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
+            with names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` and representative inputs,
+            followed by the actual format used for the `run <Composition.run>` method.
         """
 
         def _get_inputs(comp, nesting_level=1, use_labels=False):
