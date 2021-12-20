@@ -10236,43 +10236,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             representative label for each input that has been assigned on;  setting to *ALL* returns the label
             dictionaries that have been specified.
         """
-        label_warning_message = False
+
         def _get_inputs(comp, nesting_level=1, use_labels=False):
+
             input_format = ''
             indent = '\t'*nesting_level
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
                 input_format += '\n' + indent + node.name + ': '
+
+                # Nested Compositions
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
+
+                # Nested Composition
                 else:
-                    # # MODIFIED 12/19/21 OLD:
-                    # if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
-                    #     input_values = []
-                    #     for i in range(len(node.input_values)):
-                    #         label_dict = node.input_labels_dict[i]
-                    #         if use_labels == ALL:
-                    #             labels = repr(list(label_dict.keys()))
-                    #         else:
-                    #             # Use first label as example
-                    #             labels = repr(list(label_dict.keys())[0])
-                    #         input_values.append(labels)
-                    #     trial = f"[{','.join(input_values)}]"
-                    # # MODIFIED 12/19/21 NEW:
-                    # if use_labels:
-                    #     if isinstance(node, Mechanism) and node.input_labels_dict:
-                    #         input_values = []
-                    #         for i in range(len(node.input_values)):
-                    #             label_dict = node.input_labels_dict[i]
-                    #             if use_labels == ALL:
-                    #                 labels = repr(list(label_dict.keys()))
-                    #             else:
-                    #                 # Use first label as example
-                    #                 labels = repr(list(label_dict.keys())[0])
-                    #             input_values.append(labels)
-                    #         trial = f"[{','.join(input_values)}]"
-                    #     else:
-                    #
-                    # # MODIFIED 12/19/21 NEWER:
+                    # Mechanism with labels
                     if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                         input_values = []
                         for i in range(len(node.input_values)):
@@ -10284,7 +10262,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 labels = repr(list(label_dict.keys())[0])
                             input_values.append(labels)
                         trial = f"[{','.join(input_values)}]"
-                    elif (use_labels
+                    # Mechanism(s) with labels in nested Compositions
+                    elif (use_labels and isinstance(node, Composition)
                           and any(n.input_labels_dict
                                   for n in node._get_nested_nodes_with_same_roles_at_all_levels(node,NodeRole.INPUT))):
                         input_values = []
@@ -10292,16 +10271,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
                             labels_dict = mech.input_labels_dict
                             if labels_dict:
-                                input_values.append(repr(list(labels_dict[0].keys())[0]))
+                                input_values.append(repr([list(labels_dict[0].keys())[0]]))
                             else:
-                                input_values.append(repr(mech.input_values))
+                                input_values.append(repr(np.array(mech.input_values).tolist()))
                         trial = f"[{','.join(input_values)}]"
-                    # MODIFIED 12/19/21 END
+
+                    # No Mechanism(s) with labels or use_labels == False
                     else:
                         trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
                     trials = ', '.join([trial]*num_trials)
                     if num_trials > 1:
                         trials = f"[ {trials} ]"
+
                 input_format += trials
                 if not show_nested_input_nodes:
                     input_format += ','
