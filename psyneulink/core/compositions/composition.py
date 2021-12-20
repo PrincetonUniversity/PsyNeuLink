@@ -41,7 +41,7 @@ Contents
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
   * `Composition_Execution`
-     - `Reporting <Composition_Execution_Reporting>`
+     - `Results, Reporting and Logging <Composition_Execution_Reporting>`
      - `Composition_Execution_Inputs`
         • `Composition_Input_Dictionary`
         • `Composition_Programmatic_Inputs`
