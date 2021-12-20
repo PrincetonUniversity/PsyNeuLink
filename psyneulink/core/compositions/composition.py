@@ -10245,6 +10245,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
                 else:
+                    # # MODIFIED 12/19/21 OLD:
+                    # if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
+                    #     input_values = []
+                    #     for i in range(len(node.input_values)):
+                    #         label_dict = node.input_labels_dict[i]
+                    #         if use_labels == ALL:
+                    #             labels = repr(list(label_dict.keys()))
+                    #         else:
+                    #             # Use first label as example
+                    #             labels = repr(list(label_dict.keys())[0])
+                    #         input_values.append(labels)
+                    #     trial = f"[{','.join(input_values)}]"
+                    # # MODIFIED 12/19/21 NEW:
+                    # if use_labels:
+                    #     if isinstance(node, Mechanism) and node.input_labels_dict:
+                    #         input_values = []
+                    #         for i in range(len(node.input_values)):
+                    #             label_dict = node.input_labels_dict[i]
+                    #             if use_labels == ALL:
+                    #                 labels = repr(list(label_dict.keys()))
+                    #             else:
+                    #                 # Use first label as example
+                    #                 labels = repr(list(label_dict.keys())[0])
+                    #             input_values.append(labels)
+                    #         trial = f"[{','.join(input_values)}]"
+                    #     else:
+                    #
+                    # # MODIFIED 12/19/21 NEWER:
                     if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                         input_values = []
                         for i in range(len(node.input_values)):
@@ -10256,6 +10284,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 labels = repr(list(label_dict.keys())[0])
                             input_values.append(labels)
                         trial = f"[{','.join(input_values)}]"
+                    elif (use_labels
+                          and any(n.input_labels_dict
+                                  for n in node._get_nested_nodes_with_same_roles_at_all_levels(node,NodeRole.INPUT))):
+                        input_values = []
+                        for i, port in enumerate(node.input_CIM.input_ports):
+                            _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
+                            labels_dict = mech.input_labels_dict
+                            if labels_dict:
+                                input_values.append(repr(list(labels_dict[0].keys())[0]))
+                            else:
+                                input_values.append(repr(mech.input_values))
+                        trial = f"[{','.join(input_values)}]"
+                    # MODIFIED 12/19/21 END
                     else:
                         trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
                     trials = ', '.join([trial]*num_trials)
@@ -10270,7 +10311,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         formatted_input = _get_inputs(self, 1, use_labels)
         if show_nested_input_nodes:
             preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
-            epilog = f"\n\nFormat as follows for input to run():\n" \
+            epilog = f"\n\nFormat as follows for inputs to run():\n" \
                      f"{self.get_input_format(num_trials=num_trials)}"
             return preface + formatted_input[:-1] + epilog
         return '{' + formatted_input[:-1] + '\n}'
