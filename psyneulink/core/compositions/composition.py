@@ -1031,6 +1031,9 @@ can also be called directly, but this is useful mostly for debugging.
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
 
+COMMENT:
+FIX: MOVE FROM HERE TO END MARKED BELOW BY XXX TO RESULTS SECTION WITH ITS OWN ~~~~~~ HEADING
+COMMENT
 .. _Composition_Execution_Reporting:
 
 *Results, Reporting and Logging*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
@@ -1046,6 +1049,10 @@ the time remaining to completion.  These options are all OFF by default (see `Re
 The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
 recorded in their `log <Component_Log>` attribute using the `Log` facility.
 
+COMMENT:
+FIX: MOVE THIS TO ZZZ  BELOW TO SECTION ON INPUT VVVVVV
+COMMENT
+
 *Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
 the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
 A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
@@ -1059,6 +1066,10 @@ the `default_variable <Component_Variable>` for each `INPUT` Node is used as its
 If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
 argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
 
+COMMENT:
+FIX: MOVE ABOVE FROM ZZZ TO SECTION ON INPUT  ^^^^^^^^^
+COMMENT
+
 
 .. _Composition_Execution_Results:
 
@@ -1066,6 +1077,10 @@ argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
 the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
 `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
 <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
+
+COMMENT:
+FIX END FROM XXX ABOVE
+COMMENT
 
 .. _Composition_Execution_Num_Trials:
 
