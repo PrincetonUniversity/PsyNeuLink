@@ -2568,7 +2568,7 @@ from psyneulink.core.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
@@ -10241,26 +10241,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_format = ''
             indent = '\t'*nesting_level
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
-                # local_use_labels = use_labels
-                # if local_use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
-                #     if node not in self.nodes:
-                #         input_format += f"\n{indent}NOTE: {node.name } has an input_labels_dict assigned," \
-                #                         f"\n{indent}{indent}but labels are not supported in a nested Composition;" \
-                #                         f"\n{indent}{indent}default values shown instead:{indent}"
-                #         local_use_labels = False
-                # else:
-                #     local_use_labels = False
-
                 input_format += '\n' + indent + node.name + ': '
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
                 else:
-                    # if local_use_labels:
-                    if use_labels and node.input_labels_dict:
+                     if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                         input_values = []
                         for i in range(len(node.input_values)):
                             label_dict = node.input_labels_dict[i]
-                            # if local_use_labels == ALL:
                             if use_labels == ALL:
                                 labels = repr(list(label_dict.keys()))
                             else:
