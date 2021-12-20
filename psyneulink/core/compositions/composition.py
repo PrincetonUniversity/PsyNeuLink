@@ -2601,6 +2601,9 @@ logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
 
+get_input_format_alias_message = f"This method is an alias to get_input_format(); please use that in the future."
+get_results_by_node_alias_message = f"This method is aliased to get_results_by_node(); please use that in the future."
+
 
 class CompositionError(Exception):
 
@@ -10218,8 +10221,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
+
     def get_inputs_format(self, **kwargs):
-        """Alias to get_input_format (easy mistake to make!)"""
+        """Alias to get_input_format (easy mistake to make!)
+        """
+        warnings.warn(get_input_format_alias_message)
         return self.get_input_format(**kwargs)
 
     def get_input_format(self, num_trials:int=1,
@@ -10309,15 +10315,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return preface + formatted_input[:-1] + epilog
         return '{' + formatted_input[:-1] + '\n}'
 
-    def get_output_format(self):
+    def get_output_format(self, **kwargs):
         """Alias for get_results_format (easily confused!)"""
-        self.get_results_format()
+        warnings.warn(get_results_by_node_alias_message)
+        return self.get_results_by_node(**kwargs)
 
-    def get_result_format(self):
+    def get_result_format(self, **kwargs):
         """Alias for get_results_format (easy mistake to make!)"""
-        self.get_results_format()
+        warnings.warn(get_results_by_node_alias_message)
+        return self.get_results_by_node(**kwargs)
 
-    def get_results_format(self, use_names:bool=False):
+    def get_results_format(self, **kwargs):
+        """Alias for get_results_format (easy mistake to make!)"""
+        warnings.warn(get_results_by_node_alias_message)
+        return self.get_results_by_node(**kwargs)
+
+    def get_results_by_node(self, use_names:bool=False):
         """Return ordered dict with origin Node and current value of each item in results
 
         Arguments
@@ -10329,10 +10342,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         origin_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
                                  for port in self.output_CIM.output_ports]
+        results = self.results or self.output_values
         if use_names:
-            return {k.name:v for k,v in zip(origin_nodes, self.results[0])}
+            return {k.name:v for k,v in zip(origin_nodes, results)}
         else:
-             return {k:v for k,v in zip(origin_nodes, self.results[0])}
+             return {k:v for k,v in zip(origin_nodes, results)}
 
     def _update_learning_parameters(self, context):
         pass
