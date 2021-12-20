@@ -8266,8 +8266,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
+        # FIX: 12/20/21 :  ADD CHECK AGAINST LABELS HERE
+        value = np.squeeze(input).tolist()
+        if isinstance(value, str):
+            if not isinstance(node, Mechanism) or not node.input_labels_dict:
+                raise CompositionError(f"Inappropriate string stimulus ({input}) for {node.name} in {self.name}: "
+                                       f"it does not have an input_labels_dict.")
+            if not any(value in label_set for label_set in node.input_labels_dict.items()):
+                raise CompositionError(f"GET MESSAGE FROM _parse_label ZZZ")
+
         node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
         match_type = self._input_matches_variable(input, node_variable)
+        # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
             # np.atleast_2d will catch any single-input ports specified without an outer list
             _input = convert_to_np_array(input, 2)
@@ -8448,7 +8458,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
                 elif type(stimulus) == str:
-                    _inputs.append(labels[port][stimulus])
+                    try:
+                        _inputs.append(labels[port][stimulus])
+                    except KeyError as e:
+                        raise CompositionError(f"Mechanism {mech.name} (in {self.name}) does not have '{stimulus}' "
+                                               f"as a label in its input_labels_dict.")
                 else:
                     _inputs.append(stimulus)
         return _inputs
