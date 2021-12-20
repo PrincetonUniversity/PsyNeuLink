@@ -1581,17 +1581,19 @@ See `Composition_Examples_Execution_Context` for examples.
 
     **Initialization of Execution Contexts**
 
-    - The parameter values for any execution context can be copied into another execution context by using \
-    Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
-    and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+    - The parameter values for any execution context can be copied into another execution context by using
+      Component._initialize_from_context, which when called on a Component copies the values for all its parameters
+      and recursively for all of the Component's `_dependent_components <Component._dependent_components>`.
 
-    - `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-    other Components to function properly (beyond "standard" things like Component.function, \
-    or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
-        - the intent is that with ``_dependent_components`` set properly, calling \
-        ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
-        under **new_context**
-        - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+    - `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires
+      other Components to function properly (beyond "standard" things like Component.function, or Mechanism.input_ports,
+      as these are added in the proper classes' _dependent_components).
+
+      - The intent is that with `_dependent_components <Component._dependent_components>` set properly, calling
+        ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj under
+        **new_context**.
+
+      - A good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
 .. _Composition_Timing:
 
