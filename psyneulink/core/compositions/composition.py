@@ -1825,8 +1825,8 @@ COMMENT:
 COMMENT
 
 The `show_graph <ShowGraph_show_graph_Method>` method generates a display of the graph structure of `Nodes
-<Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
-<Composition.graph>`).
+<Composition_Nodes>` and `Projections <Projection>` in the Composition based on the Composition's `graph
+<Composition.graph>` (see `Visualization` for additional details).
 
 .. _Composition_Examples:
 
