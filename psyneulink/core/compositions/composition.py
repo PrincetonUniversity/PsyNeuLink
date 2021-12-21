@@ -44,13 +44,13 @@ Contents
      - `Execution Methods <Composition_Execution_Methods>`
      - `Composition_Execution_Inputs`
         • `Composition_Input_Formats`
-           - `Input Dictionary <Composition_Input_Dictionary>`
-           - `Specifying Inputs Programmatically <Composition_Programmatic_Inputs>`
+           - `Composition_Input_Dictionary`
+           - `Composition_Programmatic_Inputs`
      - `Composition_Execution_Factors`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
-           - `Cycles and Synchronous Execution <Composition_Cycle>`
-           - `Feedback and Sequential Execution <Composition_Feedback>`
+           - `Composition_Cycle`
+           - `Composition_Feedback`
         • `Composition_Execution_Context`
         • `Composition_Timing`
         • `Composition_Reset`
@@ -264,8 +264,8 @@ displayed using the Composition's `show_graph <ShowGraph.show_graph>` method (se
 
 .. _Composition_Acyclic_Cyclic:
 
-Acyclic and Cyclic Graphs
-^^^^^^^^^^^^^^^^^^^^^^^^^
+**Acyclic and Cyclic Graphs**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
 Projections among the Nodes of the Composition never form a loop, then it is a `directed acyclic graph (DAG)
@@ -1070,8 +1070,8 @@ how the results of execution are recorded and reported.
 *Composition Inputs*
 ~~~~~~~~~~~~~~~~~~~~
 
-- `Input Dictionary <Composition_Input_Dictionary>`
-- `Specifying Inputs Programmatically <Composition_Programmatic_Inputs>`
+- `Composition_Input_Dictionary`
+- `Composition_Programmatic_Inputs`
 
 All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
 argument (and a **targets** argument for `learn <Composition.learn>` method), which designates the values assigned
@@ -1135,7 +1135,8 @@ inputs, as described in detail below (also see `examples <Composition_Examples_I
 
 .. _Composition_Input_Dictionary:
 
-**Input Dictionary**
+*Input Dictionary*
+==================
 
 The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
 the inputs to a given `INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of
@@ -1192,7 +1193,8 @@ can be seen using its `get_input_format <Composition.get_input_format>` method.
 
 .. _Composition_Programmatic_Inputs:
 
-**Specifying Inputs Programmatically**
+*Specifying Inputs Programmatically*
+====================================
 
 Inputs can also be specified programmticaly, in a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` manner,
 using a function, generator, or generator function.
@@ -1405,8 +1407,8 @@ If its `Condition` is *not* satisfied, then none of the parameters specified wit
 *Cycles and Feedback*
 ^^^^^^^^^^^^^^^^^^^^^
 
-    * `Cycles and Synchronous Execution <Composition_Cycle>`
-    * `Feedback and Sequential Execution <Composition_Feedback>`
+    * `Composition_Cycle`
+    * `Composition_Feedback`
 
 If `Projections <Projection>` among any or all of the `Nodes <Composition_Nodes>` in a Composition form loops — that
 is, there are any cycles in its `graph <Composition_Graph>` —  then the order in which the Nodes are executed must
@@ -1424,7 +1426,8 @@ Each of these approaches is described in greater detail below.
 
 .. _Composition_Cycle:
 
-**Cycles and Synchronous Execution**
+*Cycles and Synchronous Execution*
+==================================
 
 
 .. _Composition_Cycle_Structure:
@@ -1490,7 +1493,8 @@ the `initialize <Composition.initialize>` method.
 
 .. _Composition_Feedback:
 
-**Feedback and Sequential Execution**
+*Feedback and Sequential Execution*
+===================================
 
 .. _Composition_Feedback_Designation:
 
@@ -9280,7 +9284,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 1. For each pair, the key is the  and the value is an input, the shape of which must match the Node's
                    default variable. This is identical to the input dict in the `run <Composition.run>` method
-                   (see `Input Dictionary <Composition_Input_Dictionary>` for additional details).
+                   (see `Composition_Input_Dictionary` for additional details).
 
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
                    same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
@@ -10319,7 +10323,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # Nested Compositions
                 if show_nested_input_nodes and isinstance(node, Composition):
-                    trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
+                    trials = _get_inputs(node, nesting_level=nesting_level + 1, use_labels=use_labels)
 
                 # Nested Composition
                 else:
@@ -10332,7 +10336,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for i in range(len(node.input_values)):
                                 label_dict = node.input_labels_dict[i]
                                 labels = list(label_dict.keys())
-                                input_values.append(repr(labels[t%len(labels)]))
+                                input_values.append(repr(labels[t % len(labels)]))
                             trial = f"[{','.join(input_values)}]"
 
                         # Mechanism(s) with labels in nested Compositions
@@ -10345,7 +10349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
-                                    input_values.append(repr([labels[t%len(labels)]]))
+                                    input_values.append(repr([labels[t % len(labels)]]))
                                 else:
                                     input_values.append(repr(np.array(mech.input_values).tolist()))
                             trial = f"[{','.join(input_values)}]"
@@ -10400,12 +10404,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         origin_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
-                                 for port in self.output_CIM.output_ports]
+                        for port in self.output_CIM.output_ports]
         results = self.results or self.output_values
         if use_names:
             return {k.name:v for k,v in zip(origin_nodes, results[-1])}
         else:
-             return {k:v for k,v in zip(origin_nodes, results[-1])}
+            return {k:v for k,v in zip(origin_nodes, results[-1])}
 
     def _update_learning_parameters(self, context):
         pass
