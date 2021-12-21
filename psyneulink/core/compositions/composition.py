@@ -10419,36 +10419,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `output_values <Mechanism_Base.output_values>`.
         """
 
-        # Get all output Nodes in (nested) Composition(s) and the corresponding values in self.results
+        # Get all OUTPUT Nodes in (nested) Composition(s)
         output_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
                         for port in self.output_CIM.output_ports]
-        results = self.results or self.output_values
-        full_output_set = zip(output_nodes, results)
 
-        # Translate any Node names to object references
-        if nodes:
-            for i, node in enumerate(nodes.copy()):
-                if isinstance(node, str):
-                    nodes[i] = next((n for n in output_nodes if n.name == node),None)
-                    if not nodes[i]:
-                        raise CompositionError(f"Node ({node} not found in {self.name} "
-                                               f"nor any Compositions nested within it.")
-        nodes = nodes or output_nodes
-
+        # Get all values for all OUTPUT Nodes
         if use_labels:
             # Get labels for corresponding values
             values = [node.output_labels for node in output_nodes]
         else:
-            values = results[-1]
+            values = self.results[-1] or self.output_values
 
+        full_output_set = zip(output_nodes, values)
+
+        # Translate any Node names to object references
+        if nodes:
+            for i, node in enumerate(nodes.copy()):
+                if node in output_nodes:
+                    continue
+                if isinstance(node, str):
+                    nodes[i] = next((n for n in output_nodes if n.name == node),None)
+                    if nodes[i]:
+                        continue
+                raise CompositionError(f"Node ({node} not found in {self.name} nor any Compositions nested within it.")
+
+        # Use nodes if specified, else all OUTPUT Nodes
+        nodes = convert_to_list(nodes) or output_nodes
         # Get Nodes and values for ones specified in Nodes (all by default)
         result_set = [(n,v) for n, v in full_output_set if n in nodes]
 
         if use_names:
             # Use names of Nodes
-            return {k.name:v for k,v in result_set}
+            return {k.name:np.array(v).tolist() for k,v in result_set}
         else:
-            return {k:v for k,v in result_set}
+            return {k:np.array(v).tolist() for k,v in result_set}
 
     def _update_learning_parameters(self, context):
         pass
