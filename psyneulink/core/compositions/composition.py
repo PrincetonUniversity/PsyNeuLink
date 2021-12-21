@@ -10398,9 +10398,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                  for port in self.output_CIM.output_ports]
         results = self.results or self.output_values
         if use_names:
-            return {k.name:v for k,v in zip(origin_nodes, results[0])}
+            return {k.name:v for k,v in zip(origin_nodes, results[-1])}
         else:
-             return {k:v for k,v in zip(origin_nodes, results[0])}
+             return {k:v for k,v in zip(origin_nodes, results[-1])}
 
     def _update_learning_parameters(self, context):
         pass
