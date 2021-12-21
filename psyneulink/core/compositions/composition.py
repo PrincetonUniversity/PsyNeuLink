@@ -10393,40 +10393,74 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         warnings.warn(get_results_by_node_alias_message)
         return self.get_results_by_node(**kwargs)
 
-    def get_results_by_node(self, node=None, use_names:bool=False, use_labels:bool=False):
+    def get_results_by_node(self, nodes:Union[Mechanism, list]=None, use_names:bool=False, use_labels:bool=False):
         """Return ordered dict with origin Node and current value of each item in results.
+
+        .. note::
+           Items are listed in the order of their values in the Composition's `results <Composition.results>` attribute,
+           irrespective of the order in which they appear in the **nodes** argument if specified.
 
         Arguments
         ---------
 
-        use_names : bool : False
-            if True, keys of dict are names of Mechanisms; else they are references to the Mechanisms themselves.
+        nodes : List[Mechanism or str], Mechanism or str : default None
+            specifies `Nodes <Composition_Nodes>` for which to report the value; can be a reference to a Mechanism,
+            its name, or a list of either or both.  If None (the default), the `values <Mechanism_Base.value>` of
+            all `OUTPUT <NodeRole.OUTPUT>` Nodes are reported.
 
-        use_labels : bool : False
-            if True, values are labels for Mechanisms that have an `output_labels_dict
-            <Mechanism_Base.output_labels_dict>` attribute.
+        use_names : bool : default False
+            specifies whether to use the names of `Nodes <Composition_Nodes>` rather than references to them as keys.
+
+        use_labels : bool : default False
+            specifies whether to use labels to report the `values <Mechanism_Base.value>` of Nodes for `Mechanisms
+            Mechanism` that have an `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
         Returns
         -------
 
-        Mechanism's output_values : Dict[Mechanism:value]
+        Node output_values : Dict[Mechanism:value]
             dict , the keys of which are either Mechanisms or the names of them, and values are their
             `output_values <Mechanism_Base.output_values>`.
         """
 
-        source_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
+        # Get all OUTPUT Nodes in (nested) Composition(s)
+        output_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
                         for port in self.output_CIM.output_ports]
-        results = self.results or self.output_values
 
+        # Get all values for all OUTPUT Nodes
         if use_labels:
-            values = [node.output_labels for node in source_nodes]
+            # Get labels for corresponding values
+            values = [node.output_labels for node in output_nodes]
         else:
-            values = results[-1]
+            values = self.results[-1] or self.output_values
+
+        full_output_set = zip(output_nodes, values)
+
+        nodes = convert_to_list(nodes)
+        # Translate any Node names to object references
+        if nodes:
+            bad_nodes = []
+            for i, node in enumerate(nodes.copy()):
+                if node in output_nodes:
+                    continue
+                if isinstance(node, str):
+                    nodes[i] = next((n for n in output_nodes if n.name == node),None)
+                    if nodes[i]:
+                        continue
+                bad_nodes.append(node)
+                raise CompositionError(f"Nodes specified in get_results_by_node() method not found in {self.name} "
+                                       f"nor any Compositions nested within it: {bad_nodes}")
+
+        # Use nodes if specified, else all OUTPUT Nodes
+        nodes = nodes or output_nodes
+        # Get Nodes and values for ones specified in Nodes (all by default)
+        result_set = [(n,v) for n, v in full_output_set if n in nodes]
 
         if use_names:
-            return {k.name:v for k,v in zip(source_nodes, values)}
+            # Use names of Nodes
+            return {k.name:np.array(v).tolist() for k,v in result_set}
         else:
-            return {k:v for k,v in zip(source_nodes, values)}
+            return {k:np.array(v).tolist() for k,v in result_set}
 
     def _update_learning_parameters(self, context):
         pass

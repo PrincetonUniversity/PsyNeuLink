@@ -3882,8 +3882,11 @@ class Mechanism_Base(Mechanism):
     def get_output_labels(self, context=None):
         if self.output_labels_dict:
             return self._get_port_value_labels(OutputPort, context)
-        else:
+        elif context:
             return self.get_output_values(context)
+        else:
+            return self.output_values
+
 
     @property
     def ports(self):
