@@ -1651,8 +1651,10 @@ class Mechanism_Base(Mechanism):
                  default_variable=None,
                  size=None,
                  input_ports=None,
+                 input_labels=None,
                  function=None,
                  output_ports=None,
+                 output_labels=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -1717,6 +1719,8 @@ class Mechanism_Base(Mechanism):
             name=name,
             input_ports=input_ports,
             output_ports=output_ports,
+            input_labels_dict=input_labels,
+            output_labels_dict=output_labels,
             **kwargs
         )
 
