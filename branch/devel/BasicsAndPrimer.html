@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basics and Primer &mdash; PsyNeuLink 0+untagged.16.gcc6242b documentation</title>
+  <title>Basics and Primer &mdash; PsyNeuLink 0+untagged.18.g47abfd9 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.gcc6242b
+                  0+untagged.18.g47abfd9
                 </div>
               
             
@@ -855,7 +855,7 @@ Function can be accessed in either of the following ways:</p>
 <h4>Modulable Parameters<a class="headerlink" href="#modulable-parameters" title="Permalink to this headline">¶</a></h4>
 <p>Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
 a <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignal</span></a> belonging to a <a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a>).  If the parameter
-of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is modulable, it is assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> – this is a
+of a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or a <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> is modulable, it may be assigned a <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> – this is a
 Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
 another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
 a Mechanism, its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, any of its
@@ -891,6 +891,15 @@ parameter:</p>
 </pre></div>
 </div>
 <p>This is because when the Compoistion was run, the <code class="docutils literal notranslate"><span class="pre">control</span></code> Mechanism modulated the value of the gain parameter.</p>
+<p>Some Parameters may be modulable, but not <em>modulated</em> by a
+ParameterPort, because ParameterPorts are only created for Parameters
+whose values are numeric at the time of Component construction. For
+example, <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.termination_threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TransferMechanism.termination_threshold</span></code></a> has a default value
+of None and will not have a ParameterPort by default. Similarly, when
+<a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">noise</span></code></a> is set to a function or value
+containing a function, it will not have an associated ParameterPort.</p>
+<p>In this case, dot notation for these modulable Parameters will behave
+the same as for non-modulable Parameters.</p>
 </section>
 </section>
 <section id="displaying-and-logging-values">
