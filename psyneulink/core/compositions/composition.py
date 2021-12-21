@@ -8451,7 +8451,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs[node] = inputs.pop(name)
         return inputs
 
-    def _parse_labels(self, inputs, mech=None):
+    def _parse_labels(self, inputs, mech=None, context=None):
         """
         Traverse input dict and replace any inputs that are in the form of their input or output label representations
               to their numeric representations
@@ -8468,7 +8468,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_to_output = {path.target: path.output for path in self.pathways
                             if 'LEARNING' in [role.name for role in path.roles]}
         if mech:
-            target_nodes_of_learning_pathways = [path.target for path in self.pathways]
+            target_nodes_of_learning_pathways = [path.target if path.learning_components else None
+                                                 for path in self.pathways]
             label_type = INPUT if mech not in target_nodes_of_learning_pathways else OUTPUT
             label_mech = mech if mech not in target_to_output else target_to_output[mech]
             labels = label_mech._get_standardized_label_dict(label_type)
@@ -8509,7 +8510,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _inputs.append(stimulus)
         return _inputs
 
-    def _parse_dict(self, inputs):
+    def _parse_dict(self, inputs, context=None):
         """
         Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
@@ -8561,7 +8562,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inputs[node] = node.default_external_input_values
         return inputs
 
-    def _parse_run_inputs(self, inputs):
+    def _parse_run_inputs(self, inputs, context=None):
         """
         Takes user-provided input for entire run and parses it according to its type
 
@@ -8982,7 +8983,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        inputs, num_inputs_sets = self._parse_run_inputs(inputs)
+        inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
         if num_trials is not None:
             num_trials = num_trials
