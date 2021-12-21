@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0+untagged.16.ga2afe77 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0+untagged.16.gcc6242b documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.ga2afe77
+                  0+untagged.16.gcc6242b
                 </div>
               
             
@@ -388,7 +388,7 @@ receives target values as input to the Composition for training <a class="refere
 the value is the target value used for that Node on each trial (see <a class="reference internal" href="Composition.html#composition-target-inputs"><span class="std std-ref">target inputs</span></a> for additional details concerning the formatting of targets).</p></li>
 <li><p><strong>num_trials</strong> (<em>int</em><em> (</em><em>default=None</em><em>)</em>) – typically, the Composition infers the number of trials to execute from the length of its input
 specification.  However, <strong>num_trials</strong> can be used to enforce an exact number of trials to execute;
-if it is greater than there are inputs then inputs will be repeated (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Input formats (including targets for learning)</span></a>
+if it is greater than there are inputs then inputs will be repeated (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Composition Inputs</span></a>
 for additional information).</p></li>
 <li><p><strong>epochs</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the number of training epochs (that is, repetitions of the batched input set) to run with</p></li>
 <li><p><strong>minibatch_size</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the size of the minibatches to use. The input trials will be batched and ran, after which

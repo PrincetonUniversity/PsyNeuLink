@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0+untagged.16.ga2afe77 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0+untagged.16.gcc6242b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.ga2afe77
+                  0+untagged.16.gcc6242b
                 </div>
               
             
@@ -357,10 +357,10 @@ shared via getter and  with those of their target <a class="reference internal" 
 guarantee that their target will exist, given a specific
 Component. For example, it is acceptable that
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integration_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TransferMechanism.integration_rate</span></code></a> is a <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionParameter</span></code></a>
-for the <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.rate" title="psyneulink.core.components.functions.transferfunctions.Exponential.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter of its
+for the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter of its
 <a class="reference internal" href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function" title="psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.integrator_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">integrator_function</span></code></a>,
 because all <a class="reference internal" href="TransferMechanism.html"><span class="doc">TransferMechanism</span></a>s have an integrator
-function, and all integrator functions have a <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Exponential.rate" title="psyneulink.core.components.functions.transferfunctions.Exponential.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter.
+function, and all integrator functions have a <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.SimpleIntegrator.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter.
 It is also acceptable that
 <a class="reference internal" href="ControlSignal.html#psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function" title="psyneulink.core.components.ports.modulatorysignals.controlsignal.ControlSignal.intensity_cost_function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ControlSignal.intensity_cost_function</span></code></a> is a <a class="reference internal" href="#psyneulink.core.globals.parameters.FunctionParameter" title="psyneulink.core.globals.parameters.FunctionParameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">FunctionParameter</span></code></a>
 corresponding to its function’s
@@ -928,7 +928,7 @@ instantiated before that of this Parameter</p>
 <dt class="sig sig-object py" id="psyneulink.core.globals.parameters.Parameter.initializer">
 <span class="sig-name descname"><span class="pre">initializer</span></span><a class="headerlink" href="#psyneulink.core.globals.parameters.Parameter.initializer" title="Permalink to this definition">¶</a></dt>
 <dd><p>the name of another Parameter that serves as this
-Parameter’s <code class="xref any docutils literal notranslate"><span class="pre">initializer</span></code></p>
+Parameter’s <a class="reference internal" href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers" title="psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.initializers"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Default</dt>
 <dd class="field-odd"><p>None</p>

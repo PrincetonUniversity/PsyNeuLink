@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.16.ga2afe77 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.16.gcc6242b documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.ga2afe77
+                  0+untagged.16.gcc6242b
                 </div>
               
             
@@ -699,6 +699,14 @@ the values of random variables in the <a class="reference internal" href="#psyne
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.same_seed_for_all_allocations" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.same_seed_for_all_allocations"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">same_seed_for_all_allocations</span></code></a> Parameters can also be
 used to further refine randomization (see <a class="reference internal" href="#optimizationcontrolmechanism-estimation-randomization"><span class="std std-ref">Randomization of Estimation</span></a> for additional
 details).</p>
+<div class="technical-note docutils container">
+<p>The <em>RANDOMIZATION_CONTROL_SIGNAL</em> ControlSignal sends a <a class="reference internal" href="ControlProjection.html"><span class="doc">ControlProjection</span></a> to the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for the
+see <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Parameter</span></code></a> of Components specified either in the OptimizationControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.random_variables" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.random_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">random_variables</span></code></a> attribute or that of the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> (see above). The <em>RANDOMIZATION_CONTROL_SIGNAL</em> is also included when
+constructing the <code class="xref any docutils literal notranslate"><span class="pre">control_allocation_search_space</span></code> passed
+to the constructor for OptimizationControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>,
+as its <strong>search_space</strong> argument, along with the index of the <em>RANDOMIZATION_CONTROL_SIGNAL</em> as its
+<strong>randomization_dimension</strong> argument.</p>
+</div>
 </section>
 </section>
 </section>
