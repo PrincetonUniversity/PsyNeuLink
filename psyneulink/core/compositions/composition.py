@@ -43,8 +43,9 @@ Contents
   * `Composition_Execution`
      - `Execution Methods <Composition_Execution_Methods>`
      - `Composition_Execution_Inputs`
-        • `Composition_Input_Dictionary`
-        • `Composition_Programmatic_Inputs`
+        • `Composition_Input_Formats`
+           - `Input Dictionary <Composition_Input_Dictionary>`
+           - `Specifying Inputs Programmatically <Composition_Programmatic_Inputs>`
      - `Composition_Execution_Factors`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
@@ -54,7 +55,7 @@ Contents
         • `Composition_Timing`
         • `Composition_Reset`
         • `Composition_Compilation`
-     - `Results, Reporting and Logging <Composition_Execution_Reporting>`
+     - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
   * `Composition_Visualization`
   * `Composition_Examples`
      - `Composition_Examples_Creation`
@@ -1010,7 +1011,7 @@ Executing a Composition
         • `Composition_Timing`
         • `Composition_Reset`
         • `Composition_Compilation`
-    - `Results, Reporting and Logging <Composition_Execution_Reporting>`
+    - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
 
 
 .. _Composition_Execution_Methods:
@@ -1056,48 +1057,50 @@ then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of
 its `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
 `disable_learning <Composition.disable_learning>` attribute must be False (the default). A set of targets must also
 be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.run>` and `execute <Composition.execute>`
-methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
-`disable_learning <Composition.disable_learning>` attribute.
+methods can also be used to execute a Composition that has been `configured for learning <Composition_Learning>`,
+but no learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>`
+attribute.
 
-COMMENT:
-FIX:  ?SUMMARY OF FOLLOWING SECITONS HERE?
-COMMENT
+The sections that follow describe the formats that can be used for inputs, factors that impact execution, and
+how the results of execution are recorded and reported.
+
 
 .. _Composition_Execution_Inputs:
 
-
-*Input formats (including targets for learning)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-- `Composition_Input_Dictionary`
-- `Composition_Programmatic_Inputs`
+*Composition Inputs*
+~~~~~~~~~~~~~~~~~~~~
 
 COMMENT:
     FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
 COMMENT
 
 All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
-argument, which designates the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for
-each `TRIAL <TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the
-Composition to execute for a given set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified
-using an `input dictionary <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn
-<Composition.learn>` methods, they can also be specified `programmatically <Composition_Programmatic_Inputs>`
-(see `Composition_Execution_Inputs`). The same number of inputs must be specified for every `INPUT` Node, unless only
-one value is specified for a Node (in which case that value is provided as the input to that Node for all `TRIAL
-<TimeScale.TRIAL>`\\s executed). If the **inputs** argument is not specified for the `run <Composition.run>` or
-`execute <Composition.execute>` methods, the `default_variable <Component_Variable>` for each `INPUT` Node is used as
-its input on `TRIAL <TimeScale.TRIAL>`. If it is not specified for the `learn <Composition.learn>` method, an error
-is generated unless its **targets**argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
+argument (and a **targets** argument for `learn <Composition.learn>` method), which designates the values assigned
+to the `INPUT <NodeRole.INPUT>` `(and, for learning, the `TARGET <NodeRole.TARGET>`) Nodes <Composition_Nodes>`
+of the Composition.  These are provided to the Composition each time it is executed; that is, for each `TRIAL
+<TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition
+to execute the current set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input
+dictionary <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods,
+they can also be specified `programmatically <Composition_Programmatic_Inputs>`. Irrespective of format, the same
+number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node (in which
+case that value is provided as the input to that Node for every `TRIAL <TimeScale.TRIAL>`\\s executed). If the
+**inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
+the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
+If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
+argument is specified (see `below <Composition_Execution_Learning_Inputs>`).  The Composition's `get_input_format()
+<Composition.get_input_format>` method can be used to show a template for how inputs should be formatted for the
+Composition, as well as the `INPUT <NodeRole.INPUT>` Nodes to which they are assigned.  The formats are described in
+more detail below.
 
-COMMENT:
-FIX: INTEGRATE ABOVE WITH BELOW
-COMMENT
+.. _Composition_Input_Formats:
 
-The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
-the **targets** argument of the `learn <Composition.learn>` method) is used to specify the inputs to the Composition
-for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's `INPUT` `Nodes  <Composition_Nodes>`
-(including its `TARGET_MECHANISMS <Composition_Learning_Components>` for learning) each time it is executed. There are
-two ways to specify inputs:
+*Input formats (including targets for learning)*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- `Input Dictionary <Composition_Input_Dictionary>`
+- `Specifying Inputs Programmatically <Composition_Programmatic_Inputs>`
+
+There are two ways to specify inputs:
 
   * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
@@ -1115,7 +1118,8 @@ the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that req
 in the `external_input_ports <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
 `Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
 of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the Composition being executed
-(see `above <Composition_Nested_External_Input_Ports>`)
+(see `above <Composition_Nested_External_Input_Ports>`).  The format required can also be seen using the
+`get_input_format() <Composition.get_input_format>` method.
 
 .. note::
    Most Mechanisms have only a single `InputPort`, and thus require only a single input to be specified for them
@@ -1128,15 +1132,14 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the 
    of a `nested Composition <Composition_Nested>`, based on the Mechanisms (and/or additionally nested Compositions)
    that comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
 
-These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
-return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
-of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
+The factors above determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
+return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>` of
+inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
 
 
 .. _Composition_Input_Dictionary:
 
-Input Dictionary
-^^^^^^^^^^^^^^^^
+**Input Dictionary**
 
 The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
 the inputs to a given `INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of
@@ -1159,14 +1162,23 @@ the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
    input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
    Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
 
-Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
-that Node.  These are listed in its ``external_input_ports`` attribute (`here <Mechanism_Base.external_input_ports>`
-if it is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
-shape of the input value must be compatible with the shape of the Node's `external_input_values` attribute (`here
-<Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
-a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
-may vary;  in some case shorthand notations are allowed, as illustrated in the `examples
-<Composition_Examples_Input_Dictionary>` below.
+The input specified for each `Node <CompositionNodes>` must be compatible with the number of `InputPorts <InputPort>`
+that receive external input for that Node. These are listed in its ``external_input_ports`` attribute (`here
+<Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it is a
+Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
+`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism,
+or `here <Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number
+and size of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed,
+as illustrated in the `examples <Composition_Examples_Input_Dictionary>` below.
+
+.. _Composition_Input_Labels:
+
+In general, the value of inputs should be numeric arrays;  however, some Mechanisms have an `input_labels_dict
+<Mechanism_Base.input_labels_dict>` that specifies a mapping from strings (labels) to numeric values, in which those
+strings can be used to specify inputs to that Mechanism (these are translated to their numeric values on execution).
+However, such labels are specific to a given Mechanism;  use of strings as input to a Mechanism that does not have an
+`input_labels_dict <Mechanism_Base.input_labels_dict>` specified, or use of a string that is not listed in the
+dictionary for that Mechanism generates and error.
 
 .. _Composition_Target_Inputs:
 
@@ -1179,10 +1191,12 @@ is used, it must be assigned a dictionary containing entries in which the key is
 <Composition_Learning_Pathway>`, or the corresponding `TARGET_MECHANISM <Composition_Learning_Components>`. The
 value of each entry specifies the inputs for each trial, formatted asdescribed `above <Composition_Input_Dictionary>`.
 
+The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
+can be seen using its `get_input_format <Composition.get_input_format>` method.
+
 .. _Composition_Programmatic_Inputs:
 
-Specifying Inputs Programmatically
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Specifying Inputs Programmatically**
 
 Inputs can also be specified programmticaly, in a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` manner,
 using a function, generator, or generator function.
@@ -1616,7 +1630,6 @@ different time scales.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 COMMENT:
-
       MOVE TO IntegratorMechanism and relevant arguments of run method
       - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
         - reset_integrator_nodes_to:  DICT of {node: value} paris
@@ -1633,7 +1646,6 @@ COMMENT:
         - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
                                                                    INCLUDED IN reset_integrator_nodes_when ARG OF RUN
         - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
-
 COMMENT
 
 `Stateful Functions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
@@ -1772,47 +1784,44 @@ GPU thread, and therefore does not produce any performance benefits over running
 in compiled modes).
 
 
-.. _Composition_Execution_Reporting:
+.. _Composition_Execution_Results_and_Reporting:
 
 *Results, Reporting and Logging*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. _Composition_Execution_Results:
+
 *Results*
-^^^^^^^^^
 
-COMMENT:
-    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
-COMMENT
+Executing a Composition returns the results of the last `TRIAL <TimeScale.TRIAL>` executed. If either `run
+<Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` executed
+are available in the Composition's `results <Composition.results>` attribute.  More specifically, at the end of a
+`TRIAL <TimeScale, a Composition's `output_values <Composition.output_values>` (a list of the `output_values
+<Mechanism_Base.output_values>` for all of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`) are added
+to the Composition's `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for
+the last `TRIAL <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
+The `output_values <Mechanism_Base.output_values>` of the last `TRIAL <TimeScale.TRIAL>` for each `OUTPUT
+<NodeRole.OUTPUT>` can be seen using the Composition's `get_results_by_node <Composition.get_results_by_node>` method.
 
-Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
-execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
-<TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
-<Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
-can also be generated as the Composition is executing, using the **report_output** and **report_progress** arguments
-of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
-input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
-in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
-options) shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of
-the time remaining to completion.  These options are all OFF by default (see `Report` for additional details).
+.. _Composition_Execution_Reporting:
+
+*Reporting*
+
+A report of the results of each `TRIAL <TimeScale.TRIAL>` can be generated as the Composition is executing, using the
+**report_output** and **report_progress** arguments of any of the `execution methods <Composition_Execution_Methods>`.
+**report_output** (specified using `ReportOutput` options) generates a report of the input and output of the
+Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified in the
+**report_params** arg using `ReportParams` options); **report_progress** (specified using `ReportProgress` options)
+shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of the time
+remaining to completion.  These options are all OFF by default (see `Report` for additional details).
+
+.. _Composition_Execution_Logging:
+
+*Logging*
+
 The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
 recorded in their `log <Component_Log>` attribute using the `Log` facility.
 
-.. _Composition_Execution_Results:
-
-*Results*. At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of
-the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
-`results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
-<TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
-
-*Reporting*
-^^^^^^^^^^^
-
-FIX: XXX
-
-*Logging*
-^^^^^^^^^
-
-FIX: XXX
 
 .. _Composition_Visualization:
 
