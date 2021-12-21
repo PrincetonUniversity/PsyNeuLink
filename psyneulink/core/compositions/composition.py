@@ -10393,7 +10393,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         warnings.warn(get_results_by_node_alias_message)
         return self.get_results_by_node(**kwargs)
 
-    def get_results_by_node(self, use_names:bool=False, use_labels:bool=False):
+    def get_results_by_node(self, node=None, use_names:bool=False, use_labels:bool=False):
         """Return ordered dict with origin Node and current value of each item in results.
 
         Arguments
