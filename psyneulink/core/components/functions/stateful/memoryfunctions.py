@@ -1094,7 +1094,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
@@ -2154,7 +2154,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
