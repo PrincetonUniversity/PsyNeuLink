@@ -10419,19 +10419,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `output_values <Mechanism_Base.output_values>`.
         """
 
+
         source_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
                         for port in self.output_CIM.output_ports]
         results = self.results or self.output_values
+
+        for i, node in enumerate(nodes.copy()):
+            if isinstance(node, str):
+                nodes[i] = next((n if n.name == node for n in source_nodes),None)
+                if not nodes[i]:
+                    raise CompositionError(f"Node ({node} not found in {self.name} "
+                                           f"nor any Compositions nested within it
+                    }.")
+
+        result_set = zip(source_nodes, values)
 
         if use_labels:
             values = [node.output_labels for node in source_nodes]
         else:
             values = results[-1]
 
+
         if use_names:
-            return {k.name:v for k,v in zip(source_nodes, values)}
+            return {k.name:v if k in source_nodes for k,v in result_set}
         else:
-            return {k:v for k,v in zip(source_nodes, values)}
+            return {k:v if k in source_nodes for k,v in result_set}
 
     def _update_learning_parameters(self, context):
         pass
