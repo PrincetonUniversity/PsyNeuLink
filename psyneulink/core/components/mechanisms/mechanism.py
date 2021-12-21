@@ -1272,8 +1272,8 @@ class Mechanism_Base(Mechanism):
 
     input_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
-        in which each label (key) specifies a string associated with a value for the InputPort(s) of the
-        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+        in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+        of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     input_labels : list[str]
         contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value

@@ -41,17 +41,22 @@ Contents
      - `Composition_Learning_AutodiffComposition`
      - `Composition_Learning_UDF`
   * `Composition_Execution`
-     - `Reporting <Composition_Execution_Reporting>`
+     - `Execution Methods <Composition_Execution_Methods>`
      - `Composition_Execution_Inputs`
-        • `Composition_Input_Dictionary`
-        • `Composition_Programmatic_Inputs`
-     - `Composition_Runtime_Params`
-     - `Composition_Cycles_and_Feedback`
-        • `Composition_Cycle`
-        • `Composition_Feedback`
-     - `Composition_Execution_Context`
-     - `Composition_Reset`
-     - `Composition_Compilation`
+        • `Composition_Input_Formats`
+           - `Composition_Input_Dictionary`
+           - `Composition_Programmatic_Inputs`
+     - `Composition_Execution_Factors`
+        • `Composition_Runtime_Params`
+        • `Composition_Cycles_and_Feedback`
+           - `Composition_Cycle`
+           - `Composition_Feedback`
+        • `Composition_Execution_Context`
+        • `Composition_Timing`
+        • `Composition_Reset`
+        • `Composition_Compilation`
+     - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
+  * `Composition_Visualization`
   * `Composition_Examples`
      - `Composition_Examples_Creation`
      - `Composition_Examples_Run`
@@ -69,9 +74,9 @@ Contents
 Overview
 --------
 
-.. warning::
-    As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed!
-    Please see `this link <RefactoredLearningGuide>` for more details.
+    .. warning::
+        As of PsyNeuLink 0.7.5, the API for using Compositions for Learning has been slightly changed!
+        Please see `this link <RefactoredLearningGuide>` for more details.
 
 Composition is the base class for objects that combine PsyNeuLink `Components <Component>` into an executable model.
 It defines a common set of attributes possessed, and methods used by all Composition objects.
@@ -259,8 +264,8 @@ displayed using the Composition's `show_graph <ShowGraph.show_graph>` method (se
 
 .. _Composition_Acyclic_Cyclic:
 
-Acyclic and Cyclic Graphs
-^^^^^^^^^^^^^^^^^^^^^^^^^
+**Acyclic and Cyclic Graphs**
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Projections are always directed (that is, information is transimtted in only one direction).  Therefore, if the
 Projections among the Nodes of the Composition never form a loop, then it is a `directed acyclic graph (DAG)
@@ -438,7 +443,7 @@ be constructed or executed on their own).
   `ModulatorySignal` on the ModulatoryMechanism, and the paired OutputPort of the parameter_CIM conveys this via
   ModulatoryProjection to the `ParameterPort` for the Paremeter of the Mechanism to be modulated.
 
-  .. _technical_note::
+  .. technical_note::
     The Projection from a ModulatoryMechanism to the InputPort of a parameter_CIM is the only instance in which a
     MappingProjection is used as an `efferent projection <Mechanism_Base.efferents>` of a ModulatoryMechanism.
 
@@ -986,10 +991,10 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
-that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
-the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
-other Components in the Composition (e.g., as a source of information or for modulation).
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in
+the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
+with an `AutodiffComposition`, the internal constituents of the object (e.g., intermediates layers of a neural network
+model) are not accessible to other Components in the Composition (e.g., as a source of information or for modulation).
 
 
 .. _Composition_Execution:
@@ -997,12 +1002,16 @@ other Components in the Composition (e.g., as a source of information or for mod
 Executing a Composition
 -----------------------
 
+    - `Execution Methods <Composition_Execution_Methods>`
     - `Composition_Execution_Inputs`
-    - `Composition_Runtime_Params`
-    - `Composition_Cycles_and_Feedback`
-    - `Composition_Execution_Context`
-    - `Composition_Reset`
-    - `Composition_Compilation`
+    - `Composition_Execution_Factors`
+        • `Composition_Runtime_Params`
+        • `Composition_Cycles_and_Feedback`
+        • `Composition_Execution_Context`
+        • `Composition_Timing`
+        • `Composition_Reset`
+        • `Composition_Compilation`
+    - `Results, Reporting and Logging <Composition_Execution_Results_and_Reporting>`
 
 
 .. _Composition_Execution_Methods:
@@ -1031,42 +1040,6 @@ can also be called directly, but this is useful mostly for debugging.
    then `learn <Composition.learn>` is called;  otherwise, `run <Composition.run>` is called.  In either case,
    the return value of the corresponding method is returned.
 
-.. _Composition_Execution_Reporting:
-
-*Results, Reporting and Logging*. Executing a Composition returns the results of its last `TRIAL <TimeScale.TRIAL>` of
-execution. If either `run <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS
-<TimeScale.TRIAL>` executed are available in the Composition's `results <Composition.results>` attribute (see `Results
-<Composition_Execution_Results>` for additional details).  A report of the results of each `TRIAL <TimeScale.TRIAL>`
-can also be generated as the Composition is executing, using the **report_output** and **report_progress** arguments
-of any of the execution methods. **report_output** (specified using `ReportOutput` options) generates a report of the
-input and output of the Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified
-in the **report_params** arg using `ReportParams` options);  **report_progress** (specified using `ReportProgress`
-options) shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of
-the time remaining to completion.  These options are all OFF by default (see `Report` for additional details).
-The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
-recorded in their `log <Component_Log>` attribute using the `Log` facility.
-
-*Inputs*. All methods of executing a Composition require specification of an **inputs** argument, which designates
-the values assigned to the `INPUT` `Nodes <Composition_Nodes>` of the Composition for each `TRIAL <TimeScale.TRIAL>`.
-A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition to execute for a given
-set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input dictionary
-<Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods, they
-can also be specified `programmatically <Composition_Programmatic_Inputs>` (see `Composition_Execution_Inputs`). The
-same number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node (in
-which case that value is provided as the input to that Node for all `TRIAL <TimeScale.TRIAL>`\\s executed). If the
-**inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
-the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
-If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
-argument is specified (see `below <Composition_Execution_Learning_Inputs>`).
-
-
-.. _Composition_Execution_Results:
-
-*Results*. At the end of a `TRIAL <TimeScale. Composition's `output_values <Composition.output_values>` (a list of
-the `output_values <Mechanism_Base.output_values>` for all of its `OUTPUT` Nodes) are added to the Composition's
-`results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the last `TRIAL
-<TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
-
 .. _Composition_Execution_Num_Trials:
 
 *Number of trials*. If the the `execute <Composition.execute>` method is used, a single `TRIAL <TimeScale.TRIAL>` is
@@ -1084,26 +1057,46 @@ then a number of `TRIAL <TimeScale.TRIAL>`\\s is executed equal to the number of
 its `learn <Composition.learn>` method must be used in place of the `run <Composition.run>` method, and its
 `disable_learning <Composition.disable_learning>` attribute must be False (the default). A set of targets must also
 be specified (see `below <Composition_Target_Inputs>`). The `run <Composition.run>` and `execute <Composition.execute>`
-methods can also be used to execute the Composition, but no learning will occur, irrespective of the value of the
-`disable_learning <Composition.disable_learning>` attribute.
+methods can also be used to execute a Composition that has been `configured for learning <Composition_Learning>`,
+but no learning will occur, irrespective of the value of the `disable_learning <Composition.disable_learning>`
+attribute.
+
+The sections that follow describe the formats that can be used for inputs, factors that impact execution, and
+how the results of execution are recorded and reported.
 
 
 .. _Composition_Execution_Inputs:
 
-*Input formats (including targets for learning)*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Composition Inputs*
+~~~~~~~~~~~~~~~~~~~~
+
 - `Composition_Input_Dictionary`
 - `Composition_Programmatic_Inputs`
 
-COMMENT:
-    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
-COMMENT
+All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
+argument (and a **targets** argument for `learn <Composition.learn>` method), which designates the values assigned
+to the `INPUT <NodeRole.INPUT>` `(and, for learning, the `TARGET <NodeRole.TARGET>`) Nodes <Composition_Nodes>`
+of the Composition.  These are provided to the Composition each time it is executed; that is, for each `TRIAL
+<TimeScale.TRIAL>`. A `TRIAL <TimeScale.TRIAL>` is defined as the opportunity for every Node in the Composition
+to execute the current set of inputs. The inputs for each `TRIAL <TimeScale.TRIAL>` can be specified using an `input
+dictionary <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods,
+they can also be specified `programmatically <Composition_Programmatic_Inputs>`. Irrespective of format, the same
+number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node (in which
+case that value is provided as the input to that Node for every `TRIAL <TimeScale.TRIAL>`\\s executed). If the
+**inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
+the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
+If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
+argument is specified (see `below <Composition_Execution_Learning_Inputs>`).  The Composition's `get_input_format()
+<Composition.get_input_format>` method can be used to show a template for how inputs should be formatted for the
+Composition, as well as the `INPUT <NodeRole.INPUT>` Nodes to which they are assigned.  The formats are described in
+more detail below.
 
-The **inputs** argument of the Composition's `execution methods <Composition_Execution_Methods>` (and, for learning,
-the **targets** argument of the `learn <Composition.learn>` method) is used to specify the inputs to the Composition
-for each `TRIAL <TimeScale.TRIAL>`.  These are provided to the Composition's `INPUT` `Nodes  <Composition_Nodes>`
-(including its `TARGET_MECHANISMS <Composition_Learning_Components>` for learning) each time it is executed. There are
-two ways to specify inputs:
+.. _Composition_Input_Formats:
+
+*Input formats (including targets for learning)*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There are two ways to specify inputs:
 
   * using `a dictionary <Composition_Input_Dictionary>`, in which the inputs are specified or each `TRIAL
     <TimeScale.TRIAL>` explicitly;
@@ -1121,7 +1114,8 @@ the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that req
 in the `external_input_ports <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
 `Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
 of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the Composition being executed
-(see `above <Composition_Nested_External_Input_Ports>`)
+(see `above <Composition_Nested_External_Input_Ports>`).  The format required can also be seen using the
+`get_input_format() <Composition.get_input_format>` method.
 
 .. note::
    Most Mechanisms have only a single `InputPort`, and thus require only a single input to be specified for them
@@ -1134,15 +1128,15 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the 
    of a `nested Composition <Composition_Nested>`, based on the Mechanisms (and/or additionally nested Compositions)
    that comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
 
-These factors determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
-return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>`
-of inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
+The factors above determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
+return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>` of
+inputs, as described in detail below (also see `examples <Composition_Examples_Input>`).
 
 
 .. _Composition_Input_Dictionary:
 
-Input Dictionary
-^^^^^^^^^^^^^^^^
+*Input Dictionary*
+==================
 
 The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
 the inputs to a given `INPUT` `Node <Composition_Nodes>`.  The key of each entry is a Node, and the value is a list of
@@ -1165,14 +1159,23 @@ the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
    input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
    Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
 
-Each input value must be compatible with the number of `InputPorts <InputPort>` that receive external input for
-that Node.  These are listed in its ``external_input_ports`` attribute (`here <Mechanism_Base.external_input_ports>`
-if it is Mechanism, or `here <Composition.external_input_ports>` if it is a Composition).  More specifically, the
-shape of the input value must be compatible with the shape of the Node's `external_input_values` attribute (`here
-<Mechanism_Base.external_input_values>` if it is Mechanism, or `here <Composition.external_input_values>` if it is
-a Composition).  While these are always 2d arrays, the number and size of the items (corresponding to each InputPort)
-may vary;  in some case shorthand notations are allowed, as illustrated in the `examples
-<Composition_Examples_Input_Dictionary>` below.
+The input specified for each `Node <CompositionNodes>` must be compatible with the number of `InputPorts <InputPort>`
+that receive external input for that Node. These are listed in its ``external_input_ports`` attribute (`here
+<Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it is a
+Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
+`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism,
+or `here <Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number
+and size of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed,
+as illustrated in the `examples <Composition_Examples_Input_Dictionary>` below.
+
+.. _Composition_Input_Labels:
+
+In general, the value of inputs should be numeric arrays;  however, some Mechanisms have an `input_labels_dict
+<Mechanism_Base.input_labels_dict>` that specifies a mapping from strings (labels) to numeric values, in which those
+strings can be used to specify inputs to that Mechanism (these are translated to their numeric values on execution).
+However, such labels are specific to a given Mechanism;  use of strings as input to a Mechanism that does not have an
+`input_labels_dict <Mechanism_Base.input_labels_dict>` specified, or use of a string that is not listed in the
+dictionary for that Mechanism generates and error.
 
 .. _Composition_Target_Inputs:
 
@@ -1185,10 +1188,13 @@ is used, it must be assigned a dictionary containing entries in which the key is
 <Composition_Learning_Pathway>`, or the corresponding `TARGET_MECHANISM <Composition_Learning_Components>`. The
 value of each entry specifies the inputs for each trial, formatted asdescribed `above <Composition_Input_Dictionary>`.
 
+The input format required for a Composition, and the `INPUT <NodeRole.INPUT>` Nodes to which inputs are assigned,
+can be seen using its `get_input_format <Composition.get_input_format>` method.
+
 .. _Composition_Programmatic_Inputs:
 
-Specifying Inputs Programmatically
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Specifying Inputs Programmatically*
+====================================
 
 Inputs can also be specified programmticaly, in a `TRIAL <TimeScale.TRIAL>` by `TRIAL <TimeScale.TRIAL>` manner,
 using a function, generator, or generator function.
@@ -1331,10 +1337,23 @@ Environment.
     comp.run(inputs=input_dictionary)
 COMMENT
 
+
+.. _Composition_Execution_Factors:
+
+*Execution Factors*
+~~~~~~~~~~~~~~~~~~~
+
+  • `Composition_Runtime_Params`
+  • `Composition_Cycles_and_Feedback`
+  • `Composition_Execution_Context`
+  • `Composition_Timing`
+  • `Composition_Reset`
+  • `Composition_Compilation`
+
 .. _Composition_Runtime_Params:
 
 *Runtime Parameters*
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 COMMENT:
     5/8/20
@@ -1386,7 +1405,7 @@ If its `Condition` is *not* satisfied, then none of the parameters specified wit
 .. _Composition_Cycles_and_Feedback:
 
 *Cycles and Feedback*
-~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^
 
     * `Composition_Cycle`
     * `Composition_Feedback`
@@ -1407,8 +1426,9 @@ Each of these approaches is described in greater detail below.
 
 .. _Composition_Cycle:
 
-Cycles and synchronous execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Cycles and Synchronous Execution*
+==================================
+
 
 .. _Composition_Cycle_Structure:
 
@@ -1473,8 +1493,8 @@ the `initialize <Composition.initialize>` method.
 
 .. _Composition_Feedback:
 
-Feedback and sequential execution
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+*Feedback and Sequential Execution*
+===================================
 
 .. _Composition_Feedback_Designation:
 
@@ -1494,14 +1514,14 @@ the **feedback** argument of the Composition's `add_projection <Composition.add_
 or the keyword *FEEDBACK* forces its assignment as a *feedback* Projection, whereas False precludes it from being
 assigned as a feedback Projection (e.g., a `ControlProjection` that otherwise forms a cycle will no longer do so).
 
-.. warning::
-   Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
-   can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
-   permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
-   Projection designated as **feedback** will receive a value from the Projection that is based either on the
-   `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
-   (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
-   is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
+    .. warning::
+       Designating a Projection as **feeedback** that is *not* in a loop is allowed, but will issue a warning and
+       can produce unexpected results.  Designating more than one Projection as **feedback** within a loop is also
+       permitted, by can also lead to complex and unexpected results.  In both cases, the `FEEDBACK_RECEIVER` for any
+       Projection designated as **feedback** will receive a value from the Projection that is based either on the
+       `FEEDBACK_SENDER`\\'s initial_value (the first time it is executed) or its previous `value <Component.value>`
+       (in subsequent executions), rather than its most recently computed `value <Component.value>` whether or not it
+       is in a `cycle <Composition_Cycle_Structure>` (see `below <Composition_Feedback_Initialization>`).
 
 .. _Composition_Feedback_Sequential_Execution:
 
@@ -1531,7 +1551,7 @@ Projection in a Composition is returned by its `get_feedback_status<Composition.
 .. _Composition_Execution_Context:
 
 *Execution Contexts*
-~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^
 
 A Composition is always executed in a designated *execution context*, specified by an `execution_id
 <Context.execution_id>` that can be provided to the **context** argument of the method used to execute the
@@ -1569,30 +1589,30 @@ COMMENT
 
 See `Composition_Examples_Execution_Context` for examples.
 
-COMMENT:
-For Developers
+.. technical_note::
 
-.. _Composition_Execution_Contexts_Init:
+    .. _Composition_Execution_Contexts_Init:
 
-Initialization of Execution Contexts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    **Initialization of Execution Contexts**
 
-- The parameter values for any execution context can be copied into another execution context by using \
-Component._initialize_from_context, which when called on a Component copies the values for all its parameters \
-and recursively for all of the Component's `_dependent_components <Component._dependent_components>`
+    - The parameter values for any execution context can be copied into another execution context by using
+      Component._initialize_from_context, which when called on a Component copies the values for all its parameters
+      and recursively for all of the Component's `_dependent_components <Component._dependent_components>`.
 
-- `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires \
-other Components to function properly (beyond "standard" things like Component.function, \
-or Mechanism.input_ports, as these are added in the proper classes' _dependent_components)
-    - the intent is that with ``_dependent_components`` set properly, calling \
-    ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj \
-    under **new_context**
-    - a good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
+    - `_dependent_components <Component._dependent_components>` should be added to for any new Component that requires
+      other Components to function properly (beyond "standard" things like Component.function, or Mechanism.input_ports,
+      as these are added in the proper classes' _dependent_components).
+
+      - The intent is that with `_dependent_components <Component._dependent_components>` set properly, calling
+        ``obj._initialize_from_context(new_context, base_context)`` should be sufficient to run obj under
+        **new_context**.
+
+      - A good example of a "nonstandard" override is `OptimizationControlMechanism._dependent_components`
 
 .. _Composition_Timing:
 
 *Timing*
-~~~~~~~~
+^^^^^^^^
 
 When `run <Composition.run>` is called by a Composition, it calls that Composition's `execute <Composition.execute>`
 method once for each `input <Composition_Execution_Inputs>`  (or set of inputs) specified in the call to `run
@@ -1602,16 +1622,14 @@ in each `TIME_STEP <TimeScale.TIME_STEP>`, until every Component has been execut
 `termination condition <Scheduler_Termination_Conditions>` is met.  The `scheduler <Composition.scheduler>` can be
 used in combination with `Condition` specifications for individual Components to execute different Components at
 different time scales.
-COMMENT
 
 
 .. _Composition_Reset:
 
-*Resetting Parameters of stateful*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*Resetting Stateful Parameters*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 COMMENT:
-
       MOVE TO IntegratorMechanism and relevant arguments of run method
       - DIFERENT FROM INTEGRATOR REINITIALIZATION, WHICH USES/HAS:
         - reset_integrator_nodes_to:  DICT of {node: value} paris
@@ -1628,10 +1646,9 @@ COMMENT:
         - reset_integrator_when attribute of IntegratorMechanism:  SPECIFIES WHEN INTEGRATOR IS RESET UNLESS IT IS NODE
                                                                    INCLUDED IN reset_integrator_nodes_when ARG OF RUN
         - previous_integrator_value attribute (INTERGRATOR) vs. previous value of value attribute (CYCLE)
-
 COMMENT
 
-`stateful <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
+`Stateful Functions <StatefulFunction>` (such as `IntegratorFunctions <IntegratorFunction>` and "non-parametric"
 `MemoryFunctions <MemoryFunction>`) have a `previous_value <StatefulFunction.previous_value>` attribute that maintains
 a record of the Function's `values <Parameter.values>` for each `execution context <Composition_Execution_Context>` in
 which it is executed, within and between calls to the Composition's `execute methods <Composition_Execution_Methods>`.
@@ -1700,7 +1717,7 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
 .. _Composition_Compilation:
 
 *Compilation*
-~~~~~~~~~~~~~
+^^^^^^^^^^^^^
 
 By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
 many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
@@ -1715,11 +1732,11 @@ information.  Users are strongly urged to report any other compilation failures 
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
 Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
-.. warning::
-   Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
-   bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
-   advised that if compilation is used, suitable tests are conducted that the results generated are identical to
-   those generated when the Composition is executed using the Python interpreter.
+    .. warning::
+       Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
+       bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
+       advised that if compilation is used, suitable tests are conducted that the results generated are identical to
+       those generated when the Composition is executed using the Python interpreter.
 
 .. _Composition_Compiled_Modes:
 
@@ -1766,21 +1783,59 @@ GPU thread, and therefore does not produce any performance benefits over running
 `this <https://github.com/PrincetonUniversity/PsyNeuLink/projects/1>`_ for progress extending support of parallization
 in compiled modes).
 
-COMMENT:
+
+.. _Composition_Execution_Results_and_Reporting:
+
+*Results, Reporting and Logging*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. _Composition_Execution_Results:
+
+*Results*
+
+Executing a Composition returns the results of the last `TRIAL <TimeScale.TRIAL>` executed. If either `run
+<Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` executed
+are available in the Composition's `results <Composition.results>` attribute.  More specifically, at the end of a
+`TRIAL <TimeScale, a Composition's `output_values <Composition.output_values>` (a list of the `output_values
+<Mechanism_Base.output_values>` for all of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`) are added
+to the Composition's `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for
+the last `TRIAL <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
+The `output_values <Mechanism_Base.output_values>` of the last `TRIAL <TimeScale.TRIAL>` for each `OUTPUT
+<NodeRole.OUTPUT>` can be seen using the Composition's `get_results_by_node <Composition.get_results_by_node>` method.
+
+.. _Composition_Execution_Reporting:
+
+*Reporting*
+
+A report of the results of each `TRIAL <TimeScale.TRIAL>` can be generated as the Composition is executing, using the
+**report_output** and **report_progress** arguments of any of the `execution methods <Composition_Execution_Methods>`.
+**report_output** (specified using `ReportOutput` options) generates a report of the input and output of the
+Composition and its `Nodes <Composition_Nodes>`, and optionally their `Parameters` (specified in the
+**report_params** arg using `ReportParams` options); **report_progress** (specified using `ReportProgress` options)
+shows a progress bar  indicating how many `TRIALS <TimeScale.TRIAL>` have been executed and an estimate of the time
+remaining to completion.  These options are all OFF by default (see `Report` for additional details).
+
+.. _Composition_Execution_Logging:
+
+*Logging*
+
+The values of individual Components (and their `parameters <Parameters>`) assigned during execution can also be
+recorded in their `log <Component_Log>` attribute using the `Log` facility.
+
+
 .. _Composition_Visualization:
 
 Visualizing a Composition
 -------------------------
 
-XCOMMENTX:
+COMMENT:
     XXX - ADD EXAMPLE OF NESTED COMPOSITION
     XXX - ADD DISCUSSION OF show_controller AND show_learning
-XCOMMENTX
+COMMENT
 
 The `show_graph <ShowGraph_show_graph_Method>` method generates a display of the graph structure of `Nodes
-<Composition_Nodes>` and `Projections <Projection>` in the Composition (based on the Composition's `graph
-<Composition.graph>`).
-COMMENT
+<Composition_Nodes>` and `Projections <Projection>` in the Composition based on the Composition's `graph
+<Composition.graph>` (see `Visualization` for additional details).
 
 .. _Composition_Examples:
 
@@ -5770,7 +5825,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver.')
 
     def get_feedback_status(self, projection):
-        """Return True if **projection** is designated as a `feedback Projection <_Composition_Feedback_Designation>`
+        """Return True if **projection** is designated as a `feedback Projection <Composition_Feedback_Designation>`
         in the Composition, else False.
         """
         return projection in self.feedback_projections
@@ -8271,6 +8326,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _input = []
         node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
         match_type = self._input_matches_variable(input, node_variable)
+        # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
             # np.atleast_2d will catch any single-input ports specified without an outer list
             _input = convert_to_np_array(input, 2)
@@ -8404,7 +8460,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs[node] = inputs.pop(name)
         return inputs
 
-    def _parse_labels(self, inputs, mech=None):
+    def _parse_labels(self, inputs, mech=None, context=None):
         """
         Traverse input dict and replace any inputs that are in the form of their input or output label representations
               to their numeric representations
@@ -8421,7 +8477,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         target_to_output = {path.target: path.output for path in self.pathways
                             if 'LEARNING' in [role.name for role in path.roles]}
         if mech:
-            target_nodes_of_learning_pathways = [path.target for path in self.pathways]
+            target_nodes_of_learning_pathways = [path.target if path.learning_components else None
+                                                 for path in self.pathways]
             label_type = INPUT if mech not in target_nodes_of_learning_pathways else OUTPUT
             label_mech = mech if mech not in target_to_output else target_to_output[mech]
             labels = label_mech._get_standardized_label_dict(label_type)
@@ -8438,8 +8495,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
                             _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_port(port)
-                            if mech_with_labels.input_labels_dict:
-                                v = k._parse_labels(inputs[k],mech_with_labels)
+                            v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
@@ -8451,12 +8507,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
                 elif type(stimulus) == str:
-                    _inputs.append(labels[port][stimulus])
+                    if not labels:
+                        raise CompositionError(f"Inappropriate use of str ({repr(stimulus)}) as a stimulus for "
+                                               f"{mech.name} in {self.name}: it does not have an input_labels_dict.")
+                    try:
+                        _inputs.append(labels[port][stimulus])
+                    except KeyError as e:
+                        raise CompositionError(f"Inappropriate use of {repr(stimulus)} as a stimulus for {mech.name} "
+                                               f"in {self.name}: it is not a label in its input_labels_dict.")
                 else:
                     _inputs.append(stimulus)
         return _inputs
 
-    def _parse_dict(self, inputs):
+    def _parse_dict(self, inputs, context=None):
         """
         Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
@@ -8508,7 +8571,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inputs[node] = node.default_external_input_values
         return inputs
 
-    def _parse_run_inputs(self, inputs):
+    def _parse_run_inputs(self, inputs, context=None):
         """
         Takes user-provided input for entire run and parses it according to its type
 
@@ -8929,7 +8992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
 
-        inputs, num_inputs_sets = self._parse_run_inputs(inputs)
+        inputs, num_inputs_sets = self._parse_run_inputs(inputs, context)
 
         if num_trials is not None:
             num_trials = num_trials
@@ -9221,7 +9284,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 1. For each pair, the key is the  and the value is an input, the shape of which must match the Node's
                    default variable. This is identical to the input dict in the `run <Composition.run>` method
-                   (see `Input Dictionary <Composition_Input_Dictionary>` for additional details).
+                   (see `Composition_Input_Dictionary` for additional details).
 
                 2. A dict with keys 'inputs', 'targets', and 'epochs'. The `inputs` key stores a dict that is the same
                    same structure as input specification (1) of learn. The `targets` and `epochs` keys should contain
@@ -10254,13 +10317,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _get_inputs(comp, nesting_level=1, use_labels=False):
 
             input_format = ''
-            indent = '\t'*nesting_level
+            indent = '\t' * nesting_level
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
                 input_format += '\n' + indent + node.name + ': '
 
                 # Nested Compositions
                 if show_nested_input_nodes and isinstance(node, Composition):
-                    trials = _get_inputs(node, nesting_level=nesting_level+1, use_labels=use_labels)
+                    trials = _get_inputs(node, nesting_level=nesting_level + 1, use_labels=use_labels)
 
                 # Nested Composition
                 else:
@@ -10273,7 +10336,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             for i in range(len(node.input_values)):
                                 label_dict = node.input_labels_dict[i]
                                 labels = list(label_dict.keys())
-                                input_values.append(repr(labels[t%len(labels)]))
+                                input_values.append(repr(labels[t % len(labels)]))
                             trial = f"[{','.join(input_values)}]"
 
                         # Mechanism(s) with labels in nested Compositions
@@ -10286,7 +10349,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
-                                    input_values.append(repr([labels[t%len(labels)]]))
+                                    input_values.append(repr([labels[t % len(labels)]]))
                                 else:
                                     input_values.append(repr(np.array(mech.input_values).tolist()))
                             trial = f"[{','.join(input_values)}]"
@@ -10330,23 +10393,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         warnings.warn(get_results_by_node_alias_message)
         return self.get_results_by_node(**kwargs)
 
-    def get_results_by_node(self, use_names:bool=False):
-        """Return ordered dict with origin Node and current value of each item in results
+    def get_results_by_node(self, use_names:bool=False, use_labels:bool=False):
+        """Return ordered dict with origin Node and current value of each item in results.
 
         Arguments
         ---------
 
         use_names : bool : False
             if True, keys of dict are names of Mechanisms; else they are references to the Mechanisms themselves.
+
+        use_labels : bool : False
+            if True, values are labels for Mechanisms that have an `output_labels_dict
+            <Mechanism_Base.output_labels_dict>` attribute.
+
+        Returns
+        -------
+
+        Mechanism's output_values : Dict[Mechanism:value]
+            dict , the keys of which are either Mechanisms or the names of them, and values are their
+            `output_values <Mechanism_Base.output_values>`.
         """
 
-        origin_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
-                                 for port in self.output_CIM.output_ports]
+        source_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
+                        for port in self.output_CIM.output_ports]
         results = self.results or self.output_values
-        if use_names:
-            return {k.name:v for k,v in zip(origin_nodes, results)}
+
+        if use_labels:
+            values = [node.output_labels for node in source_nodes]
         else:
-            return {k:v for k,v in zip(origin_nodes, results)}
+            values = results[-1]
+
+        if use_names:
+            return {k.name:v for k,v in zip(source_nodes, values)}
+        else:
+            return {k:v for k,v in zip(source_nodes, values)}
 
     def _update_learning_parameters(self, context):
         pass

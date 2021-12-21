@@ -670,7 +670,7 @@ the values of random variables in the `agent_rep <OptimizationControlMechanism.a
 used to further refine randomization (see `OptimizationControlMechanism_Estimation_Randomization` for additional
 details).
 
-.. _technical_note::
+.. technical_note::
 
     The *RANDOMIZATION_CONTROL_SIGNAL* ControlSignal sends a `ControlProjection` to the `ParameterPort` for the
     see `Parameter` of Components specified either in the OptimizationControlMechanism's `random_variables

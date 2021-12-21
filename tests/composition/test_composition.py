@@ -6348,12 +6348,14 @@ class TestNodeRoles:
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
 
-    def test_no_orphaning_of_nested_output_nodes(self):
+    def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
         """
         Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
         by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
+        Also test get_input_format and get_results_by_node methods
         """
-        A = ProcessingMechanism(name='A')
+        input_labels_dict = {pnl.INPUT_LABELS_DICT:{0:{'red':0, 'green':1}}}
+        A = ProcessingMechanism(name='A', params=input_labels_dict)
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
         icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
@@ -6363,14 +6365,42 @@ class TestNodeRoles:
         Z = ProcessingMechanism(name='Z')
         mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
 
-        O = ProcessingMechanism(name='O',
-                                input_ports=[Z]
-                                )
-        ocomp = Composition(name='OUTER COMP', nodes=[mcomp,O])
+        Q = ProcessingMechanism(name='Q', params=input_labels_dict)
+        O = ProcessingMechanism(name='O', input_ports=[Z])
+        ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
 
         len(ocomp.output_values)==3
         result = ocomp.run(inputs={mcomp:[[0],[0]]})
-        assert len(result)==3
+        assert len(result)==4
+
+        input_format = ocomp.get_input_format()
+        assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
+        input_format = ocomp.get_input_format(num_trials=3, use_labels=True)
+        assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[[0.0]],[\'red\']], [[[0.0]],[\'green\']], [[[0.0]],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
+        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True)
+        assert input_format == '\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ [[0.0]], [[0.0]] ]\n\tQ: [ [[0.0]], [[0.0]] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}'
+        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True, use_labels=True)
+        assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
+
+        result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
+        assert result == [[0.2], [0.2], [1.],[4.6]]
+        results_by_node = ocomp.get_results_by_node()
+        assert results_by_node[O] == [0.2]
+        assert results_by_node[Z] == [0.2]
+        assert results_by_node[C] == [1.0]
+        assert results_by_node[Q] == [4.6]
+        results_by_node = ocomp.get_results_by_node(use_names=True)
+        assert repr(results_by_node) == '{\'O\': array([0.2]), \'Z\': array([0.2]), \'C\': array([1.]), \'Q\': array([4.6])}'
+
+        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: it is not a label in its input_labels_dict."'
+        with pytest.raises(CompositionError) as error_text:
+            ocomp.run(inputs={mcomp:[[0],['purple']],Q:['red']})
+        assert label_not_in_dict_error_msg in str(error_text.value)
+
+        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: it does not have an input_labels_dict."'
+        with pytest.raises(CompositionError) as error_text:
+            ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
+        assert no_label_dict_error_msg in str(error_text.value)
 
     def test_unnested_PROBE(self):
         A = ProcessingMechanism(name='A')
