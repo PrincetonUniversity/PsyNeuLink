@@ -10346,7 +10346,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if use_names:
             return {k.name:v for k,v in zip(origin_nodes, results)}
         else:
-             return {k:v for k,v in zip(origin_nodes, results)}
+            return {k:v for k,v in zip(origin_nodes, results)}
 
     def _update_learning_parameters(self, context):
         pass
