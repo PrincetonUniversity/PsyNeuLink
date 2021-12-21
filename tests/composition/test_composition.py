@@ -6352,7 +6352,7 @@ class TestNodeRoles:
         """
         Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
         by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
-        Also test get_input_format and get_results_by_node methods
+        Also test get_input_format and get_results_by_nodes methods
         """
         input_labels_dict = {pnl.INPUT_LABELS_DICT:{0:{'red':0, 'green':1}}}
         output_labels_dict = {pnl.OUTPUT_LABELS_DICT:{0:{'red':0, 'green':1}}}
@@ -6385,20 +6385,20 @@ class TestNodeRoles:
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
         assert result == [[0.2], [0.2], [1.],[4.6]]
-        results_by_node = ocomp.get_results_by_node()
+        results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
         assert results_by_node[Z] == [0.2]
         assert results_by_node[C] == [1.0]
         assert results_by_node[Q] == [4.6]
-        results_by_node = ocomp.get_results_by_node(use_names=True)
+        results_by_node = ocomp.get_results_by_nodes(use_names=True)
         assert repr(results_by_node) == '{\'O\': [0.2], \'Z\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
-        results_by_node = ocomp.get_results_by_node(use_names=True, use_labels=True)
+        results_by_node = ocomp.get_results_by_nodes(use_names=True, use_labels=True)
         assert repr(results_by_node) == '{\'O\': [[0.2]], \'Z\': [\'red\'], \'C\': [[1.0]], \'Q\': [[4.6]]}'
-        results_by_node = ocomp.get_results_by_node(nodes=[Q, Z])
+        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, Z])
         assert repr(results_by_node) == '{(ProcessingMechanism Z): [0.2], (ProcessingMechanism Q): [4.6]}'
-        results_by_node = ocomp.get_results_by_node(nodes=Q, use_names=True)
+        results_by_node = ocomp.get_results_by_nodes(nodes=Q, use_names=True)
         assert repr(results_by_node) == '{\'Q\': [4.6]}'
-        results_by_node = ocomp.get_results_by_node(nodes=Z, use_labels=True)
+        results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
         assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
 
         label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
@@ -6413,10 +6413,10 @@ class TestNodeRoles:
             ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
         assert no_label_dict_error_msg in str(error_text.value)
 
-        no_such_node_error_msg = '"Nodes specified in get_results_by_node() method not found in OUTER COMP ' \
+        no_such_node_error_msg = '"Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
                                  'nor any Compositions nested within it: [\'N\']"'
         with pytest.raises(CompositionError) as error_text:
-            ocomp.get_results_by_node(nodes=['N'])
+            ocomp.get_results_by_nodes(nodes=['N'])
         assert no_such_node_error_msg in str(error_text.value)
 
 

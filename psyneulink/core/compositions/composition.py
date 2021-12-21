@@ -1797,11 +1797,11 @@ Executing a Composition returns the results of the last `TRIAL <TimeScale.TRIAL>
 <Composition.run>` or `learn <Composition.learn>` is called, the results of all `TRIALS <TimeScale.TRIAL>` executed
 are available in the Composition's `results <Composition.results>` attribute.  More specifically, at the end of a
 `TRIAL <TimeScale, a Composition's `output_values <Composition.output_values>` (a list of the `output_values
-<Mechanism_Base.output_values>` for all of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`) are added
-to the Composition's `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for
-the last `TRIAL <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`.
-The `output_values <Mechanism_Base.output_values>` of the last `TRIAL <TimeScale.TRIAL>` for each `OUTPUT
-<NodeRole.OUTPUT>` can be seen using the Composition's `get_results_by_node <Composition.get_results_by_node>` method.
+<Mechanism_Base.output_values>` for all of its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`) are added to
+the Composition's `results <Composition.results>` attribute, and the `output_values <Mechanism.output_values>` for the
+last `TRIAL <TimeScale.TRIAL>` executed is returned by the `execution method <Composition_Execution_Methods>`. The
+`output_values <Mechanism_Base.output_values>` of the last `TRIAL <TimeScale.TRIAL>` for each `OUTPUT <NodeRole.OUTPUT>`
+can be seen using the Composition's `get_results_by_nodes <Composition.get_results_by_nodes>` method.
 
 .. _Composition_Execution_Reporting:
 
@@ -2651,13 +2651,9 @@ __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
     ]
 
-
 logger = logging.getLogger(__name__)
 
 CompositionRegistry = {}
-
-get_input_format_alias_message = f"This method is an alias to get_input_format(); please use that in the future."
-get_results_by_node_alias_message = f"This method is aliased to get_results_by_node(); please use that in the future."
 
 
 class CompositionError(Exception):
@@ -10286,14 +10282,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
 
     def get_inputs_format(self, **kwargs):
-        """Alias to get_input_format (easy mistake to make!)
-        """
-        warnings.warn(get_input_format_alias_message)
-        return self.get_input_format(**kwargs)
+        return self.get_input_format(**kwargs, alias="get_inputs_format")
 
     def get_input_format(self, num_trials:int=1,
                          use_labels:bool=False,
-                         show_nested_input_nodes:bool=False):
+                         show_nested_input_nodes:bool=False,
+                         alias:str=None):
         """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
         Arguments
@@ -10313,6 +10307,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             with names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` and representative inputs,
             followed by the actual format used for the `run <Composition.run>` method.
         """
+
+        if alias:
+            warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
 
         def _get_inputs(comp, nesting_level=1, use_labels=False):
 
@@ -10379,21 +10376,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return '{' + formatted_input[:-1] + '\n}'
 
     def get_output_format(self, **kwargs):
-        """Alias for get_results_format (easily confused!)"""
-        warnings.warn(get_results_by_node_alias_message)
-        return self.get_results_by_node(**kwargs)
+        return self.get_results_by_nodes(**kwargs, alias="get_output_format")
 
     def get_result_format(self, **kwargs):
-        """Alias for get_results_format (easy mistake to make!)"""
-        warnings.warn(get_results_by_node_alias_message)
-        return self.get_results_by_node(**kwargs)
+        return self.get_results_by_nodes(**kwargs, alias="get_result_format")
 
     def get_results_format(self, **kwargs):
-        """Alias for get_results_format (easy mistake to make!)"""
-        warnings.warn(get_results_by_node_alias_message)
-        return self.get_results_by_node(**kwargs)
+        return self.get_results_by_nodes(**kwargs, alias="get_results_format")
 
-    def get_results_by_node(self, nodes:Union[Mechanism, list]=None, use_names:bool=False, use_labels:bool=False):
+    def get_results_for_node(self, **kwargs):
+        return self.get_results_by_nodes(**kwargs, alias="get_results_for_node")
+
+    def get_results_for_nodes(self, **kwargs):
+        return self.get_results_by_nodes(**kwargs, alias="get_results_for_nodes")
+
+    def get_results_by_node(self, **kwargs):
+        return self.get_results_by_nodes(**kwargs, alias="get_results_by_node")
+
+    def get_results_by_nodes(self,
+                             nodes:Union[Mechanism, list]=None,
+                             use_names:bool=False,
+                             use_labels:bool=False,
+                             alias:str=None):
         """Return ordered dict with origin Node and current value of each item in results.
 
         .. note::
@@ -10423,6 +10427,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             `output_values <Mechanism_Base.output_values>`.
         """
 
+        if alias:
+            warnings.warn(f"{alias} is aliased to get_results_by_nodes(); please use that in the future.")
+
         # Get all OUTPUT Nodes in (nested) Composition(s)
         output_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
                         for port in self.output_CIM.output_ports]
@@ -10448,7 +10455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if nodes[i]:
                         continue
                 bad_nodes.append(node)
-                raise CompositionError(f"Nodes specified in get_results_by_node() method not found in {self.name} "
+                raise CompositionError(f"Nodes specified in get_results_by_nodes() method not found in {self.name} "
                                        f"nor any Compositions nested within it: {bad_nodes}")
 
         # Use nodes if specified, else all OUTPUT Nodes
