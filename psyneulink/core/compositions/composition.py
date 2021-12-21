@@ -8315,19 +8315,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
-        value = np.squeeze(input).tolist()
-        if isinstance(value, str):
-            if not isinstance(node, Mechanism) or not node.input_labels_dict:
-                # raise CompositionError(f"Inappropriate stimulus str ({input}) for {node.name} in {self.name}: "
-                #                        f"it does not have an input_labels_dict.")
-                assert False, f"PROGRAM ERROR: bad label should have been caught in _parse_labels(): " \
-                              f"Inappropriate use of str ({input}) as stimulus for {node.name} in {self.name}: " \
-                              f"it does not have an input_labels_dict."
-            if not any(value in label_set for label_set in node.input_labels_dict.items()):
-                assert False, f"PROGRAM ERROR: bad label should have been caught in _parse_labels(): " \
-                              f"Inappropriate use of {repr(value)} as a stimulus for {node.name} " \
-                              f"in {self.name}: it is not a label in its input_labels_dict."
-
         node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
