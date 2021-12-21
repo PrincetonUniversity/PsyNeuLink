@@ -10389,23 +10389,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         warnings.warn(get_results_by_node_alias_message)
         return self.get_results_by_node(**kwargs)
 
-    def get_results_by_node(self, use_names:bool=False):
-        """Return ordered dict with origin Node and current value of each item in results
+    def get_results_by_node(self, use_names:bool=False, use_labels:bool=False):
+        """Return ordered dict with origin Node and current value of each item in results.
 
         Arguments
         ---------
 
         use_names : bool : False
             if True, keys of dict are names of Mechanisms; else they are references to the Mechanisms themselves.
+
+        use_labels : bool : False
+            if True, values are labels for Mechanisms that have an `output_labels_dict
+            <Mechanism_Base.output_labels_dict>` attribute.
+
+        Returns
+        -------
+
+        Mechanism's output_values : Dict[Mechanism:value]
+            dict , the keys of which are either Mechanisms or the names of them, and values are their
+            `output_values <Mechanism_Base.output_values>`.
         """
 
-        origin_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
+        source_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
                                  for port in self.output_CIM.output_ports]
         results = self.results or self.output_values
-        if use_names:
-            return {k.name:v for k,v in zip(origin_nodes, results[-1])}
+
+        if use_labels:
+            values = [node.output_labels for node in source_nodes]
         else:
-             return {k:v for k,v in zip(origin_nodes, results[-1])}
+            values = results[-1]
+
+        if use_names:
+            return {k.name:v for k,v in zip(source_nodes, values)}
+        else:
+             return {k:v for k,v in zip(source_nodes, values)}
 
     def _update_learning_parameters(self, context):
         pass
