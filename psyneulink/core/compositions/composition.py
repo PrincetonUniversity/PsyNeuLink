@@ -10393,18 +10393,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         warnings.warn(get_results_by_node_alias_message)
         return self.get_results_by_node(**kwargs)
 
-    def get_results_by_node(self, use_names:bool=False, use_labels:bool=False):
+    def get_results_by_node(self, nodes:Union[Mechanism, list]=None, use_names:bool=False, use_labels:bool=False):
         """Return ordered dict with origin Node and current value of each item in results.
 
         Arguments
         ---------
 
-        use_names : bool : False
-            if True, keys of dict are names of Mechanisms; else they are references to the Mechanisms themselves.
+        nodes : List[Mechanism or str], Mechanism or str : default None
+            specifies `Nodes <Composition_Nodes>` for which to report the value; can be a reference to a Mechanism,
+            its name, or a list of either or both.  If None (the default), the `values <Mechanism_Base.value>` of
+            all `OUTPUT <NodeRole.OUTPUT>` Nodes are reported.
 
-        use_labels : bool : False
-            if True, values are labels for Mechanisms that have an `output_labels_dict
-            <Mechanism_Base.output_labels_dict>` attribute.
+        use_names : bool : default False
+            specifies whether to use the names of `Nodes <Composition_Nodes>` rather than references to them as keys.
+
+        use_labels : bool : default False
+            specifies whether to use labels to report the `values <Mechanism_Base.value>` of Nodes for `Mechanisms
+            Mechanism` that have an `output_labels_dict <Mechanism_Base.output_labels_dict>` attribute.
 
         Returns
         -------
