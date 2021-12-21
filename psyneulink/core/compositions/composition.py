@@ -10317,7 +10317,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _get_inputs(comp, nesting_level=1, use_labels=False):
 
             input_format = ''
-            indent = '\t'*nesting_level
+            indent = '\t' * nesting_level
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
                 input_format += '\n' + indent + node.name + ': '
 
