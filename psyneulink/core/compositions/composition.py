@@ -1070,9 +1070,8 @@ how the results of execution are recorded and reported.
 *Composition Inputs*
 ~~~~~~~~~~~~~~~~~~~~
 
-COMMENT:
-    FIX: 12/19/21 - ADD MENTION OF get_input_format() AND ALSO input_labels_dict AND REFERENCE Mechanism_Base DOCSTRING
-COMMENT
+- `Input Dictionary <Composition_Input_Dictionary>`
+- `Specifying Inputs Programmatically <Composition_Programmatic_Inputs>`
 
 All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
 argument (and a **targets** argument for `learn <Composition.learn>` method), which designates the values assigned
@@ -1096,9 +1095,6 @@ more detail below.
 
 *Input formats (including targets for learning)*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-- `Input Dictionary <Composition_Input_Dictionary>`
-- `Specifying Inputs Programmatically <Composition_Programmatic_Inputs>`
 
 There are two ways to specify inputs:
 
