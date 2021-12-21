@@ -343,7 +343,7 @@ def _random_state_getter(self, owning_component, context):
 
     seed_param = owning_component.parameters.seed
     try:
-        is_modulated = seed_param._port.is_modulated(context)
+        is_modulated = seed_param.port.is_modulated(context)
     except AttributeError:
         is_modulated = False
 
@@ -352,7 +352,12 @@ def _random_state_getter(self, owning_component, context):
     else:
         seed_value = [int(seed_param._get(context=context))]
 
-    assert seed_value != [DEFAULT_SEED], "Invalid seed for {} in context: {} ({})".format(owning_component, context.execution_id, seed_param)
+    if seed_value == [DEFAULT_SEED]:
+        raise FunctionError(
+            "Invalid seed for {} in context: {} ({})".format(
+                owning_component, context.execution_id, seed_param
+            )
+        )
 
     current_state = self.values.get(context.execution_id, None)
     if current_state is None:

@@ -256,7 +256,7 @@ class TestModels:
 
         def switch_noise(mechanisms, noise):
             for mechanism in mechanisms:
-                mechanism.noise.base = noise
+                mechanism.noise = noise
 
         def switch_to_initialization_trial(mechanisms):
             # Turn off accumulation
