@@ -991,10 +991,10 @@ environment that supports learning can be assigned as the `function <Mechanism_B
 <Mechanism>`, in which case it is automatically  wrapped as `UserDefinedFunction`.  For example, the `forward and
 backward methods <https://pytorch.org/docs/master/notes/extending.html>`_ of a PyTorch object can be assigned in this
 way.  The advanatage of this approach is that it can be applied to any Python function that adheres to the requirements
-of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in the Composition, to insure
-that each function is called at the appropriate times during execution.  Furthermore, as with an `AutodiffComposition`,
-the internal constituents of the object (e.g., intermediates layers of a neural network model) are not accessible to
-other Components in the Composition (e.g., as a source of information or for modulation).
+of a `UserDefinedFunction`. It must be carefully coordinated with the execution of other learning-related Components in
+the Composition, to insure that each function is called at the appropriate times during execution.  Furthermore, as
+with an `AutodiffComposition`, the internal constituents of the object (e.g., intermediates layers of a neural network
+model) are not accessible to other Components in the Composition (e.g., as a source of information or for modulation).
 
 
 .. _Composition_Execution:
