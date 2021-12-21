@@ -718,7 +718,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],

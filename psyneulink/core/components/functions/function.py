@@ -604,7 +604,11 @@ class Function_Base(Function):
         if "random_state" in new.parameters:
             # HACK: Make sure any copies are re-seeded to avoid dependent RNG.
             # functions with "random_state" param must have "seed" parameter
-            new.seed.base = DEFAULT_SEED
+            for ctx in new.parameters.seed.values:
+                new.parameters.seed.set(
+                    DEFAULT_SEED, ctx, skip_log=True, skip_history=True
+                )
+
         return new
 
     @handle_external_context()

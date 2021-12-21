@@ -2211,7 +2211,7 @@ class GaussianDistort(TransferFunction):  #-------------------------------------
         scale = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         bounds = (None, None)
 
     @tc.typecheck

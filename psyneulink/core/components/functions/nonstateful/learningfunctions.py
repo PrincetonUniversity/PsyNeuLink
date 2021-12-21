@@ -419,7 +419,7 @@ class BayesGLM(LearningFunction):
                     :type: ``int``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,
