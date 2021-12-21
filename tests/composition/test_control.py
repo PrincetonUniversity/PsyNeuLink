@@ -39,7 +39,7 @@ class TestControlSpecification:
         comp.add_controller(ctl_mech)
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
-        assert np.allclose(comp.controller.control[0].allocation_samples.base(),
+        assert np.allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -61,7 +61,7 @@ class TestControlSpecification:
         comp._analyze_graph()
         assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples.base(),
+        assert np.allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
@@ -78,7 +78,7 @@ class TestControlSpecification:
         comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].allocation_samples.base is None
+        assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
         # First create Composition with controller that has HAS control specification,
@@ -93,7 +93,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].allocation_samples.base is None
+        assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
         # First create Composition with controller that has HAS control specification,
@@ -109,7 +109,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples.base(), [0.2, 0.5, 0.8])
+        assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
     def test_deferred_init(self):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -803,7 +803,7 @@ class TestControlMechanisms:
         assert len(lvoc.input_ports) == 5
 
         for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset.base == 10.0
+            assert lvoc.input_ports[i].function.offset == 10.0
 
     @pytest.mark.control
     @pytest.mark.composition

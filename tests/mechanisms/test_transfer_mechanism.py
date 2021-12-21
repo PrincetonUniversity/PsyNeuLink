@@ -321,7 +321,7 @@ class TestDistributionFunctions:
             )
             # This is equivalent to
             # T.noise.base.parameters.random_state.get(None).seed([22])
-            T.noise.base.parameters.seed.set(22, None)
+            T.noise.parameters.seed.set(22, None)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[1.73027452, -1.07866481, -1.98421126,  2.99564032]])
 

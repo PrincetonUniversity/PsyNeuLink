@@ -783,6 +783,12 @@ class Parameter(ParameterBase):
 
             :default: None
 
+        port
+            stores a reference to the ParameterPort that modulates this
+            Parameter, if applicable
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -846,6 +852,7 @@ class Parameter(ParameterBase):
         reference=False,
         dependencies=None,
         initializer=None,
+        port=None,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -854,7 +861,6 @@ class Parameter(ParameterBase):
         _inherited_source=None,
         _user_specified=False,
         # if modulated, set to the ParameterPort
-        _port=None,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -909,10 +915,10 @@ class Parameter(ParameterBase):
             reference=reference,
             dependencies=dependencies,
             initializer=initializer,
+            port=port,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
-            _port=_port,
             **kwargs
         )
 
