@@ -8318,12 +8318,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         value = np.squeeze(input).tolist()
         if isinstance(value, str):
             if not isinstance(node, Mechanism) or not node.input_labels_dict:
-                raise CompositionError(f"Inappropriate stimulus str ({input}) for {node.name} in {self.name}: "
-                                       f"it does not have an input_labels_dict.")
+                # raise CompositionError(f"Inappropriate stimulus str ({input}) for {node.name} in {self.name}: "
+                #                        f"it does not have an input_labels_dict.")
+                assert False, f"PROGRAM ERROR: bad label should have been caught in _parse_labels(): " \
+                              f"Inappropriate use of str ({input}) as stimulus for {node.name} in {self.name}: " \
+                              f"it does not have an input_labels_dict."
             if not any(value in label_set for label_set in node.input_labels_dict.items()):
                 assert False, f"PROGRAM ERROR: bad label should have been caught in _parse_labels(): " \
-                              f"'Mechanism {node.name} (in {self.name}) does not have '{value}' " \
-                              f"as a label in its input_labels_dict."
+                              f"Inappropriate use of {repr(value)} as a stimulus for {node.name} " \
+                              f"in {self.name}: it is not a label in its input_labels_dict."
 
         node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
         match_type = self._input_matches_variable(input, node_variable)
@@ -8495,8 +8498,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
                             _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_port(port)
-                            if mech_with_labels.input_labels_dict:
-                                v = k._parse_labels(inputs[k],mech_with_labels)
+                            v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
@@ -8508,11 +8510,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
                 elif type(stimulus) == str:
+                    if not labels:
+                        raise CompositionError(f"Inappropriate use of str ({repr(stimulus)}) as a stimulus for "
+                                               f"{mech.name} in {self.name}: it does not have an input_labels_dict.")
                     try:
                         _inputs.append(labels[port][stimulus])
                     except KeyError as e:
-                        raise CompositionError(f"Mechanism {mech.name} (in {self.name}) does not have '{stimulus}' "
-                                               f"as a label in its input_labels_dict.")
+                        raise CompositionError(f"Inappropriate use of {repr(stimulus)} as a stimulus for {mech.name} "
+                                               f"in {self.name}: it is not a label in its input_labels_dict.")
                 else:
                     _inputs.append(stimulus)
         return _inputs
