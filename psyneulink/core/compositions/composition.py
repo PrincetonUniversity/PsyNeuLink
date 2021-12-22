@@ -6132,10 +6132,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         receivers = receivers or convert_to_list(receiver)
                         if len(senders) > 1 and len(receivers) > 1:
                             raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
-                                                   f"which {sender.name} has more than one OUTPUT Node and second of"
-                                                   f"which {receiver.name} has more than one INPUT Node, making the "
-                                                   f"configuration of Projections between them ambigous. Please "
-                                                   f"specify those Projections explicity.")
+                                                   f"which ({sender.name}) has more than one OUTPUT Node, and second "
+                                                   f"of which ({receiver.name}) has more than one INPUT Node, making "
+                                                   f"the configuration of Projections between them ambiguous; please "
+                                                   f"specify those Projections explicitly.")
                         proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
                                 for r in receivers for s in senders}
                     else:
