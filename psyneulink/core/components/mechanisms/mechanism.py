@@ -378,7 +378,6 @@ The three types of Ports are shown schematically in the figure below, and descri
 
 .. figure:: _static/Mechanism_Ports_fig.svg
    :alt: Mechanism Ports
-   :scale: 75 %
    :align: left
 
    **Schematic of a Mechanism showing its three types of Ports** (`InputPort`, `ParameterPort` and `OutputPort`).

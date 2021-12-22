@@ -70,7 +70,6 @@ CompositionIntefaceMechanisms can be seen graphically using the `show_cim <ShowG
 Composition's `show_graph <ShowGraph_show_graph_Method>` method (see figure below).
 
 .. figure:: _static/CIM_figure.svg
-   :scale: 50 %
 
    **Examples of Projections to nested Compositions routed through CompositionInterfaceMechanisms.**  *Panel A:*
    Simple example showing a basic configuration.  *Panel B:*  More complex configuration, generated from script below,
