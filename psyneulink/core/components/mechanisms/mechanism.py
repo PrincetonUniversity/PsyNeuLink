@@ -646,8 +646,14 @@ attributes are listed below by their argument names / keywords, along with a des
     * **input_ports** / *INPUT_PORTS* - a list specifying the Mechanism's input_ports
       (see `InputPort_Specification` for details of specification).
     ..
+    * **input_labels** / *INPUT_LABEL_DICTS* - a dict specifying labels that can be used as inputs
+      (see `Mechanism_Labels_Dicts` for details of specification).
+    ..
     * **output_ports** / *OUTPUT_PORTS* - specifies specialized OutputPorts required by a Mechanism subclass
       (see `OutputPort_Specification` for details of specification).
+    ..
+    * **output_labels** / *OUTPUT_LABEL_DICTS* - a dict specifying labels that can be for reporting outputs
+      (see `Mechanism_Labels_Dicts` for details of specification).
     ..
     COMMENT:
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputPorts is monitored by
@@ -1231,6 +1237,12 @@ class Mechanism_Base(Mechanism):
         the number and, if specified, their values must be compatible with any specifications made for
         **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
 
+    input_labels : dict
+        specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
+        entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+        of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
         can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
@@ -1240,6 +1252,12 @@ class Mechanism_Base(Mechanism):
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
         the `value <OutputPort.value>` of which is assigned the first item in the outermost dimension (axis 0) of the
         Mechanism's `value <Mechanism_Base.value>` (see `Mechanism_OutputPorts` for additional details).
+
+    output_labels : dict
+        specifies labels (strings) that can be reported in place of numeric values as output(s) of the Mechanism;
+        entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
+        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     Attributes
     ----------
