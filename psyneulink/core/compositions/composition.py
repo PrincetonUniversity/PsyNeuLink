@@ -1696,23 +1696,27 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
 ^^^^^^^^^^^^^
 
 By default, a Composition is executed using the Python interpreter used to run the script from which it is called. In
-many cases, a Composition can also be executed in a compiled mode.  While this can add some time to initiate execution,
-execution itself can be several orders of magnitude faster than using the Python interpreter.  Thus, using a compiled
-mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIAL <TimeScale.TRIAL>`\\s.
-Compilation is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes can be specified, that
-that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of success).  Most PsyNeuLink
-`Components <Component>` and methods are supported for compilation;  however, Python native functions and methods
-(e.g., used to specify the `function <Component.function>` of a Component) are not supported at present. Users who wish
-to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more
-information.  Users are strongly urged to report any other compilation failures to
-psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
-Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
+many cases, a Composition can also be executed in a `compiled mode <Compilation>`.  While this can add some time to
+initiate execution, execution itself can be several orders of magnitude faster than using the Python interpreter. Thus,
+using a compiled mode can be useful for executing Compositions that are complex and/or for large numbers of `TRIAL
+<TimeScale.TRIAL>`\\s. `Compilation` is supported for most CPUs (including x86, arm64, and powerpc64le).  Several modes
+can be specified, that that tradeoff power (i.e., degree of speed-up) against level of support (i.e., likelihood of
+success).  Most PsyNeuLink `Components <Component>` and methods are supported for compilation;  however, Python native
+functions and methods (e.g., used to specify the `function <Component.function>` of a Component) are not supported at
+present. Users who wish to compile custom functions should refer to `compiled User Defined Functions
+<UserDefinedFunction>` for more information.   See below and `Compilation` for additional details regarding the use
+of compiled modes of execution, and `Vesely et al. (2022) <http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf>`_
+for more information about the approach taken to compilation.
 
     .. warning::
        Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
        bugs that will not cause compilation to fail, but could produce erroneous results.  Therefore, it is strongly
        advised that if compilation is used, suitable tests are conducted that the results generated are identical to
        those generated when the Composition is executed using the Python interpreter.
+
+       Users are strongly urged to report any compilation failures to psyneulinkhelp@princeton.edu, or as an
+       issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_. Known failure conditions are listed
+       `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
 
 .. _Composition_Compiled_Modes:
 

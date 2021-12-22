@@ -120,11 +120,16 @@ characteristics that are often (at least in the initial stages of development) i
 interpreted vs. compiled).
 
 That said, priorities for ongoing development of PsyNeuLink are:
-    i) acceleration, using just-in-time compilation methods and parallelization (see `Compilation`);
+    i) acceleration, using just-in-time compilation methods and parallelization
+       (see `Compilation`, and `Vesely et al., 2022 <http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf>`_);
     ii) enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
-        environment (examples currently exist for Pytorch and Emergent);
-    iii) integration of tools for parameter estimation, model comparison and data fitting; and
-    iv) a graphic interface for the construction of models and realtime display of their execution.
+        environment (examples currently exist for `Pytorch <https://pytorch.org>`_ ) and translating into a standard
+        `Model Description Format (MDF) <https://github.com/ModECI/MDF>`_;
+    iii) integration of tools for parameter estimation, model comparison and data fitting
+         (see `ParameterEstimationComposition`); and
+    iv) a graphic interface for the construction of models and realtime display of their execution
+        (see `PsyNeuLinkView <http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/>`_).
+
 
 .. _Overview:
 
@@ -244,37 +249,36 @@ Acknowledgements
 
 *(in alphabetical order)*
 
-* **Allie Burton**, Princeton Neuroscience Institute, Princeton University
+* **Allie Burton**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **Laura Bustamante**, Princeton Neuroscience Institute, Princeton University
 * **Jonathan D. Cohen**, Princeton Neuroscience Institute, Princeton University
-* **Samyak Gupta**, Department of Computer Science, Rutgers University
+* **Samyak Gupta**, Department of Computer Science, Princeton University
 * **Abigail Hoskin**, Department of Psychology, Princeton University
-* **Peter Johnson**, Princeton Neuroscience Institute, Princeton University
+* **Peter Johnson**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **Justin Junge**, Department of Psychology, Princeton University
-* **Jeremy Lee**, Princeton Neuroscience Institute, Princeton University
 * **Qihong Lu**, Department of Psychology, Princeton University
-* **Kristen Manning**, Princeton Neuroscience Institute, Princeton University
+* **Kristen Manning**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **Katherine Mantel**, Princeton Neuroscience Institute, Princeton University
 * **Lena Rosendahl**, Department of Mechanical and Aerospace Engineering, Princeton University
-* **Dillon Smith**, Princeton Neuroscience Institute, Princeton University
-* **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University
+* **Dillon Smith**, Princeton Neuroscience Institute, Princeton University (formerly)
+* **Markus Spitzer**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **David Turner**, Princeton Neuroscience Institute, Princeton University
-* **Jan Vesely**, Department of Computer Science, Rutgers University
-* **Changyan Wang**, Princeton Neuroscience Institute, Princeton University
-* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University
+* **Jan Vesely**, Department of Computer Science, Rutgers University (formerly)
+* **Changyan Wang**, Princeton Neuroscience Institute, Princeton University (formerly)
+* **Nate Wilson**, Princeton Neuroscience Institute, Princeton University (formerly)
 
 With substantial and greatly appreciated assistance from:
 
-* **Abhishek Bhattacharjee**, Department of Computer Science, Rutgers University
+* **Abhishek Bhattacharjee**, Department of Computer Science, Yale University
 * **Mihai Capota**, Intel Labs, Intel Corporation
 * **Bryn Keller**, Intel Labs, Intel Corporation
-* **Susan Liu**, Princeton Neuroscience Institute, Princeton University
+* **Susan Liu**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **Garrett McGrath**, Princeton Neuroscience Institute, Princeton University
-* **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University
+* **Sebastian Musslick**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **Amitai Shenhav**, Cognitive, Linguistic, & Psychological Sciences, Brown University
-* **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University
+* **Michael Shvartsman**, Princeton Neuroscience Institute, Princeton University (formerly)
 * **Ben Singer**, Princeton Neuroscience Institute, Princeton University
-* **Ted Willke**, Intel Labs, Intel Corporation
+* **Ted Willke**, Brain Inspired Computing Lab, Intel Corporation
 
 *Support*
 ~~~~~~~~~
