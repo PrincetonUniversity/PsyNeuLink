@@ -6354,11 +6354,8 @@ class TestNodeRoles:
         by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
         Also test get_input_format and get_results_by_nodes methods
         """
-        # input_labels_dict = {pnl.INPUT_LABELS_DICT:{0:{'red':0, 'green':1}}}
-        # output_labels_dict = {pnl.OUTPUT_LABELS_DICT:{0:{'red':0, 'green':1}}}
         input_labels_dict = {0:{'red':0, 'green':1}}
         output_labels_dict = {0:{'red':0, 'green':1}}
-        # A = ProcessingMechanism(name='A', params=input_labels_dict)
         A = ProcessingMechanism(name='A', input_labels=input_labels_dict)
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
@@ -6366,11 +6363,9 @@ class TestNodeRoles:
 
         X = ProcessingMechanism(name='X')
         Y = ProcessingMechanism(name='Y')
-        # Z = ProcessingMechanism(name='Z', params=output_labels_dict)
         Z = ProcessingMechanism(name='Z', output_labels=output_labels_dict)
         mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
 
-        # Q = ProcessingMechanism(name='Q', params=input_labels_dict)
         Q = ProcessingMechanism(name='Q', input_labels=input_labels_dict)
         O = ProcessingMechanism(name='O', input_ports=[Z])
         ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
