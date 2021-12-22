@@ -339,27 +339,6 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 
   .. _Composition_Probes:
 
-COMMENT:
-* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
-  outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
-  nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
-  is whether their output is included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` attributes of the Composition to which they belong, and any Compositions that intervene
-  between that one and the one to which the Node they project belongs.  This is determined by the
-  `include_probes_in_output <Composition.include_probes_in_output>` attribute of their Composition and any
-  intervening ones. If `include_probes_in_output <Composition.include_probes_in_output>` is False (the default),
-  then the output of any `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
-  the `output_values <Composition.output_values>` or `results <Composition.results>` for that Composition. In this
-  case they can be thought of as "probing" - that is, providing access to "latent variables" of -- that Composition
-  that are not otherwise reported as part of the Composition's output or results.  If `include_probes_in_output
-  <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes of any nested
-  Compositions within are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in the
-  `output_values <Composition.output_values>` and `results <Composition.results>` of that Composition.  The
-  `include_probes_in_output <Composition.include_probes_in_output>` attribute can be set individually on any nested
-  Composition containing `PROBE <NodeRole.PROBE>` Nodes, and any enclosing Compositions that intervene between it
-  and the one containing the Node(s) to which its PROBES project.
-COMMENT
-
 * *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
   outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
   nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
@@ -3035,9 +3014,10 @@ class NodeRole(enum.Enum):
     INPUT
         A `Node <Composition_Nodes>` that receives input from outside its `Composition`, either from the Composition's
         `run <Compositions.run>` method or, if it is in a `nested Composition <Composition_Nested>`, from the outer
-        outer Composition.  By default, the `ORIGIN` Nodes of a Composition are also its `INPUT` Nodes; however this
-        can be modified by `assigning specified NodeRoles <Composition_Node_Role_Assignment>` to Nodes.  A Composition
-        can have many `INPUT` Nodes.
+        Composition.  By default, the `ORIGIN` Nodes of a Composition are also its `INPUT` Nodes; however this can be
+        modified by `assigning specified NodeRoles <Composition_Node_Role_Assignment>` to Nodes.  A Composition can
+        have many `INPUT` Nodes.  Note that any Node that `shadows <InputPort_Shadow_Inputs>` an `INPUT` Node is itself
+        also assigned the role of `INPUT` Node.
 
     PROBE
         A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL` but that is treated as an
