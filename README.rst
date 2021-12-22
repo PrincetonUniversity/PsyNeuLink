@@ -95,11 +95,15 @@ characteristics that are often (at least in the initial stages of development) i
 interpreted vs. compiled).
 
 That said, priorities for ongoing development of PsyNeuLink are:
-    i) acceleration, using just-in-time compilation methods and parallelization;
+    i) acceleration, using just-in-time compilation methods and parallelization
+       (see `Composition_Compilation`,
+        and `Vesely et al. (2022) <http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf>`_);
     ii) enhancement of the API to facilitate wrapping modules from other packages for integration into the PsyNeuLink
         environment (examples currently exist for Pytorch and Emergent);
-    iii) integration of tools for parameter estimation, model comparison and data fitting; and
-    iv) a graphic interface for the construction of models and realtime display of their execution.
+    iii) integration of tools for parameter estimation, model comparison and data fitting
+         (see `ParameterEstimationComposition`); and
+    iv) a graphic interface for the construction of models and realtime display of their execution
+        (see `PsyNeuLinkView <http://www.psyneuln.deptcpanel.princeton.edu/psyneulink-view-2/>`_).
 
 Environment Overview
 --------------------

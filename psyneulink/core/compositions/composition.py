@@ -1706,7 +1706,8 @@ that tradeoff power (i.e., degree of speed-up) against level of support (i.e., l
 to compile custom functions should refer to `compiled User Defined Functions <UserDefinedFunction>` for more
 information.  Users are strongly urged to report any other compilation failures to
 psyneulinkhelp@princeton.edu, or as an issue `here <https://github.com/PrincetonUniversity/PsyNeuLink/issues>`_.
-Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.
+Known failure conditions are listed `here <https://github.com/PrincetonUniversity/PsyNeuLink/milestone/2>`_.  More
+information the approach to compilation can be found `here <http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf>`_.
 
     .. warning::
        Compiled modes are continuing to be developed and refined, and therefore it is still possible that there are
