@@ -5930,15 +5930,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if len(cond.absolute_fixed_points) > 0:
                         fixed_point_conds.add(cond)
 
-            warn_str = f'{self} contains a nested Composition, which may cause unexpected behavior in absolute time conditions or failure to terminate execution.'
+            warn_str = f'{self} contains a nested Composition, which may cause unexpected behavior ' \
+                       f'in absolute time conditions or failure to terminate execution.'
             warn = False
             if len(interval_conds) > 0:
                 warn_str += '\nFor repeating intervals:\n\t'
-                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tintervals: {cond.absolute_intervals}' for cond in interval_conds])
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tintervals: {cond.absolute_intervals}'
+                                         for cond in interval_conds])
                 warn = True
             if len(fixed_point_conds) > 0:
                 warn_str += '\nIn EXACT_TIME SchedulingMode, strict time points:\n\t'
-                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tstrict time points: {cond.absolute_fixed_points}' for cond in fixed_point_conds])
+                warn_str += '\n\t'.join([f'{cond.owner}: {cond}\n\t\tstrict time points: {cond.absolute_fixed_points}'
+                                         for cond in fixed_point_conds])
                 warn = True
 
             if warn:
