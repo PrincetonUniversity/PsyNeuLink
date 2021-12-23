@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0+untagged.18.g47abfd9 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0+untagged.17.g9979c07 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.18.g47abfd9
+                  0+untagged.17.g9979c07
                 </div>
               
             
@@ -471,7 +471,10 @@ that it shadows.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Only InputPorts belonging to Mechanisms in the <em>same Composition</em>, or ones that are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
-<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> can be specified for shadowing.</p>
+<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> can be specified for shadowing, unless the
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> is set to True.  Note also that any
+Node that shadows an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the Composition to which it
+belongs is itself also assigned the role of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>

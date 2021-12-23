@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0+untagged.18.g47abfd9 documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0+untagged.17.g9979c07 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.18.g47abfd9
+                  0+untagged.17.g9979c07
                 </div>
               
             
@@ -452,8 +452,7 @@ for a Mechanism, or added to an existing Mechanism using its <a class="reference
 described <a class="reference internal" href="#mechanism-port-specification"><span class="std std-ref">above</span></a>).</p>
 <p id="mechanism-figure">The three types of Ports are shown schematically in the figure below, and described briefly in the following sections.</p>
 <figure class="align-left" id="id20">
-<a class="reference internal image-reference" href="_images/Mechanism_Ports_fig.svg"><img alt="Mechanism Ports" height="4996" src="_images/Mechanism_Ports_fig.svg" width="8013" /></a>
-<figcaption>
+<img alt="Mechanism Ports" src="_images/Mechanism_Ports_fig.svg" /><figcaption>
 <p><span class="caption-text"><strong>Schematic of a Mechanism showing its three types of Ports</strong> (<a class="reference internal" href="InputPort.html"><span class="doc">InputPort</span></a>, <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> and <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a>).
 Every Mechanism has at least one (<a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary</span></a>) InputPort and one (<a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary</span></a>) OutputPort, but can have additional ports of each type.  It also has one
 <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> for each of its parameters and the parameters of its <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>.
@@ -661,8 +660,16 @@ attributes are listed below by their argument names / keywords, along with a des
 (see <a class="reference internal" href="InputPort.html#inputport-specification"><span class="std std-ref">InputPort Specification</span></a> for details of specification).</p></li>
 </ul>
 <ul class="simple">
+<li><p><strong>input_labels</strong> / <em>INPUT_LABEL_DICTS</em> - a dict specifying labels that can be used as inputs
+(see <a class="reference internal" href="#mechanism-labels-dicts"><span class="std std-ref">Value Label Dictionaries</span></a> for details of specification).</p></li>
+</ul>
+<ul class="simple">
 <li><p><strong>output_ports</strong> / <em>OUTPUT_PORTS</em> - specifies specialized OutputPorts required by a Mechanism subclass
 (see <a class="reference internal" href="OutputPort.html#outputport-specification"><span class="std std-ref">OutputPort Specification</span></a> for details of specification).</p></li>
+</ul>
+<ul class="simple">
+<li><p><strong>output_labels</strong> / <em>OUTPUT_LABEL_DICTS</em> - a dict specifying labels that can be for reporting outputs
+(see <a class="reference internal" href="#mechanism-labels-dicts"><span class="std std-ref">Value Label Dictionaries</span></a> for details of specification).</p></li>
 </ul>
 <ul class="simple">
 <li><p><strong>monitor_for_learning</strong> / <em>MONITOR_FOR_LEARNING</em> - specifies which of the Mechanism’s OutputPorts is used for
@@ -1030,12 +1037,20 @@ For example, the following Mechanisms are equivalent:</p>
 using the value of default_variable as its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>;  if more than one is specified,
 the number and, if specified, their values must be compatible with any specifications made for
 <strong>default_variable</strong> or <strong>size</strong> (see <a class="reference internal" href="#mechanism-inputports"><span class="std std-ref">InputPorts</span></a> for additional details).</p></li>
+<li><p><strong>input_labels</strong> (<em>dict</em>) – specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
+entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+of the Mechanism; see <a class="reference internal" href="#mechanism-labels-dicts"><span class="std std-ref">Value Label Dictionaries</span></a> for additional details.</p></li>
 <li><p><strong>function</strong> (<em>Function : default Linear</em>) – specifies the function used to generate the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>;
 can be a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a> or a <a class="reference internal" href="UserDefinedFunction.html"><span class="doc">UserDefinedFunction</span></a>;  it <code class="xref any docutils literal notranslate"><span class="pre">value</span></code> is used to determine
 the shape of the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary outputPort</span></a> of the Mechanism.</p></li>
 <li><p><strong>output_ports</strong> (<em>str</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default None</em>) – specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
 the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of which is assigned the first item in the outermost dimension (axis 0) of the
 Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> (see <a class="reference internal" href="#mechanism-outputports"><span class="std std-ref">OutputPorts</span></a> for additional details).</p></li>
+<li><p><strong>output_labels</strong> (<em>dict</em>) – specifies labels (strings) that can be reported in place of numeric values as output(s) of the Mechanism;
+entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
+Mechanism; see <a class="reference internal" href="#mechanism-labels-dicts"><span class="std std-ref">Value Label Dictionaries</span></a> for additional details.</p></li>
 </ul>
 </dd>
 </dl>
