@@ -336,7 +336,10 @@ should project to the InputPort. Each of these is described below:
 
       .. note::
          Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
-         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing.
+         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing, unless the
+         `allow_probes <Composition.allow_probes>` attribute of the `Composition` is set to True.  Note also that any
+         Node that shadows an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it
+         belongs is itself also assigned the role of `INPUT <NodeRole.INPUT>` Node.
 
       .. hint::
          If an InputPort needs to be shadowed that belongs to a Mechanism in a `nested <Composition_Nested>` that is

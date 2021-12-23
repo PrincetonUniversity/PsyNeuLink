@@ -147,7 +147,6 @@ method.  The figure below shows several examples.
 
 .. figure:: _static/Composition_show_graph_options_fig.svg
    :alt: Composition graph examples
-   :scale: 150 %
 
    Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
    options of its `show_graph <ShowGraph.show_graph>` method. **Panel A** shows the graph with its Projections labeled

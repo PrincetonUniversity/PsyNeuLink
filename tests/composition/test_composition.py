@@ -6352,20 +6352,21 @@ class TestNodeRoles:
         """
         Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
         by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
-        Also test get_input_format and get_results_by_node methods
+        Also test get_input_format and get_results_by_nodes methods
         """
-        input_labels_dict = {pnl.INPUT_LABELS_DICT:{0:{'red':0, 'green':1}}}
-        A = ProcessingMechanism(name='A', params=input_labels_dict)
+        input_labels_dict = {0:{'red':0, 'green':1}}
+        output_labels_dict = {0:{'red':0, 'green':1}}
+        A = ProcessingMechanism(name='A', input_labels=input_labels_dict)
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
         icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
 
         X = ProcessingMechanism(name='X')
         Y = ProcessingMechanism(name='Y')
-        Z = ProcessingMechanism(name='Z')
+        Z = ProcessingMechanism(name='Z', output_labels=output_labels_dict)
         mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
 
-        Q = ProcessingMechanism(name='Q', params=input_labels_dict)
+        Q = ProcessingMechanism(name='Q', input_labels=input_labels_dict)
         O = ProcessingMechanism(name='O', input_ports=[Z])
         ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
 
@@ -6384,23 +6385,41 @@ class TestNodeRoles:
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
         assert result == [[0.2], [0.2], [1.],[4.6]]
-        results_by_node = ocomp.get_results_by_node()
+        results_by_node = ocomp.get_results_by_nodes()
         assert results_by_node[O] == [0.2]
         assert results_by_node[Z] == [0.2]
         assert results_by_node[C] == [1.0]
         assert results_by_node[Q] == [4.6]
-        results_by_node = ocomp.get_results_by_node(use_names=True)
-        assert repr(results_by_node) == '{\'O\': array([0.2]), \'Z\': array([0.2]), \'C\': array([1.]), \'Q\': array([4.6])}'
+        results_by_node = ocomp.get_results_by_nodes(use_names=True)
+        assert repr(results_by_node) == '{\'O\': [0.2], \'Z\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
+        results_by_node = ocomp.get_results_by_nodes(use_names=True, use_labels=True)
+        assert repr(results_by_node) == '{\'O\': [[0.2]], \'Z\': [\'red\'], \'C\': [[1.0]], \'Q\': [[4.6]]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, Z])
+        assert repr(results_by_node) == '{(ProcessingMechanism Z): [0.2], (ProcessingMechanism Q): [4.6]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=Q, use_names=True)
+        assert repr(results_by_node) == '{\'Q\': [4.6]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
+        assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
 
-        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: it is not a label in its input_labels_dict."'
+        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
+                                      'it is not a label in its input_labels_dict."'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[[0],['purple']],Q:['red']})
         assert label_not_in_dict_error_msg in str(error_text.value)
 
-        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: it does not have an input_labels_dict."'
+        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
+                                  'it does not have an input_labels_dict."'
         with pytest.raises(CompositionError) as error_text:
             ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
         assert no_label_dict_error_msg in str(error_text.value)
+
+        no_such_node_error_msg = '"Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
+                                 'nor any Compositions nested within it: [\'N\']"'
+        with pytest.raises(CompositionError) as error_text:
+            ocomp.get_results_by_nodes(nodes=['N'])
+        assert no_such_node_error_msg in str(error_text.value)
+
+
 
     def test_unnested_PROBE(self):
         A = ProcessingMechanism(name='A')
