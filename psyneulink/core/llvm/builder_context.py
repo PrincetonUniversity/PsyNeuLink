@@ -17,13 +17,17 @@ from llvmlite import ir
 import numpy as np
 import os
 import re
+import time
 from typing import Set
 import weakref
+
 from psyneulink.core.scheduling.time import Time, TimeScale
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import ContentAddressableList
 from psyneulink.core import llvm as pnlvm
+
 from . import codegen
+from . import helpers
 from .debug import debug_env
 
 __all__ = ['LLVMBuilderContext', '_modules', '_find_llvm_function']
@@ -39,7 +43,7 @@ def module_count():
     if "stat" in debug_env:
         print("Total LLVM modules: ", len(_all_modules))
         print("Total structures generated: ", _struct_count)
-        s = LLVMBuilderContext.get_global()
+        s = LLVMBuilderContext.get_current()
         print("Total generations by global context: {}".format(s._llvm_generation))
         print("Object cache in global context: {} hits, {} misses".format(s._stats["cache_requests"] - s._stats["cache_misses"], s._stats["cache_misses"]))
         for stat in ("input", "output", "param", "state", "data"):
@@ -51,7 +55,8 @@ def module_count():
 
 
 _BUILTIN_PREFIX = "__pnl_builtin_"
-_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close'))
+_builtin_intrinsics = frozenset(('pow', 'log', 'exp', 'tanh', 'coth', 'csch', 'is_close', 'mt_rand_init',
+                                 'philox_rand_init'))
 
 
 class _node_wrapper():
@@ -81,14 +86,15 @@ def _comp_cached(func):
 
 
 class LLVMBuilderContext:
-    __global_context = None
+    __current_context = None
     __uniq_counter = 0
     _llvm_generation = 0
     int32_ty = ir.IntType(32)
-    float_ty = ir.DoubleType()
+    default_float_ty = ir.DoubleType()
     bool_ty = ir.IntType(1)
 
-    def __init__(self):
+    def __init__(self, float_ty):
+        assert LLVMBuilderContext.__current_context is None
         self._modules = []
         self._cache = weakref.WeakKeyDictionary()
         self._stats = { "cache_misses":0,
@@ -100,6 +106,9 @@ class LLVMBuilderContext:
                         "input_structs_generated":0,
                         "output_structs_generated":0,
                       }
+        self.float_ty = float_ty
+        self.init_builtins()
+        LLVMBuilderContext.__current_context = self
 
     def __enter__(self):
         module = ir.Module(name="PsyNeuLinkModule-" + str(LLVMBuilderContext._llvm_generation))
@@ -119,16 +128,66 @@ class LLVMBuilderContext:
         return self._modules[-1]
 
     @classmethod
-    def get_global(cls):
-        if cls.__global_context is None:
-            cls.__global_context = LLVMBuilderContext()
-        return cls.__global_context
+    def get_current(cls):
+        if cls.__current_context is None:
+            return LLVMBuilderContext(cls.default_float_ty)
+        return cls.__current_context
+
+    @classmethod
+    def clear_global(cls):
+        cls.__current_context = None
 
     @classmethod
     def get_unique_name(cls, name: str):
         cls.__uniq_counter += 1
         name = re.sub(r"[^a-zA-Z0-9_]", "_", name)
         return name + '_' + str(cls.__uniq_counter)
+
+    def init_builtins(self):
+        start = time.perf_counter()
+        with self as ctx:
+            # Numeric
+            pnlvm.builtins.setup_pnl_intrinsics(ctx)
+            pnlvm.builtins.setup_csch(ctx)
+            pnlvm.builtins.setup_coth(ctx)
+            pnlvm.builtins.setup_tanh(ctx)
+            pnlvm.builtins.setup_is_close(ctx)
+
+            # PRNG
+            pnlvm.builtins.setup_mersenne_twister(ctx)
+            pnlvm.builtins.setup_philox(ctx)
+
+            # Matrix/Vector
+            pnlvm.builtins.setup_vxm(ctx)
+            pnlvm.builtins.setup_vxm_transposed(ctx)
+            pnlvm.builtins.setup_vec_add(ctx)
+            pnlvm.builtins.setup_vec_sum(ctx)
+            pnlvm.builtins.setup_mat_add(ctx)
+            pnlvm.builtins.setup_vec_sub(ctx)
+            pnlvm.builtins.setup_mat_sub(ctx)
+            pnlvm.builtins.setup_vec_hadamard(ctx)
+            pnlvm.builtins.setup_mat_hadamard(ctx)
+            pnlvm.builtins.setup_vec_scalar_mult(ctx)
+            pnlvm.builtins.setup_mat_scalar_mult(ctx)
+            pnlvm.builtins.setup_mat_scalar_add(ctx)
+
+        finish = time.perf_counter()
+
+        if "time_stat" in debug_env:
+            print("Time to setup PNL builtins: {}".format(finish - start))
+
+    def get_uniform_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_double")
+        if len(state.type.pointee) == 7:
+            return self.import_llvm_function("__pnl_builtin_philox_rand_{}".format(str(self.float_ty)))
+
+    def get_normal_dist_function_by_state(self, state):
+        if len(state.type.pointee) == 5:
+            return self.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        if len(state.type.pointee) == 7:
+            # Normal exists only for self.float_ty
+            return self.import_llvm_function("__pnl_builtin_philox_rand_normal")
 
     def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:
@@ -187,6 +246,36 @@ class LLVMBuilderContext:
             assert decl_f.is_declaration
             return decl_f
         return f
+
+    def get_random_state_ptr(self, builder, component, state, params):
+        random_state_ptr = helpers.get_state_ptr(builder, component, state, "random_state")
+
+
+        # Used seed is the last member of both MT state and Philox state
+        seed_idx = len(random_state_ptr.type.pointee) - 1
+        used_seed_ptr = builder.gep(random_state_ptr, [self.int32_ty(0), self.int32_ty(seed_idx)])
+        used_seed = builder.load(used_seed_ptr)
+
+        seed_ptr = helpers.get_param_ptr(builder, component, params, "seed")
+        if isinstance(seed_ptr.type.pointee, ir.ArrayType):
+            # Modulated params are usually single element arrays
+            seed_ptr = builder.gep(seed_ptr, [self.int32_ty(0), self.int32_ty(0)])
+        new_seed = builder.load(seed_ptr)
+        # FIXME: The seed should ideally be integer already.
+        #        However, it can be modulated and we don't support,
+        #        passing integer values as computed results.
+        new_seed = builder.fptoui(new_seed, used_seed.type)
+
+        seeds_cmp = builder.icmp_unsigned("!=", used_seed, new_seed)
+        with builder.if_then(seeds_cmp, likely=False):
+            if seed_idx == 4:
+                reseed_f = self.get_builtin("mt_rand_init")
+            elif seed_idx == 6:
+                reseed_f = self.get_builtin("philox_rand_init")
+
+            builder.call(reseed_f, [random_state_ptr, new_seed])
+
+        return random_state_ptr
 
     @staticmethod
     def get_debug_location(func: ir.Function, component):
@@ -266,6 +355,8 @@ class LLVMBuilderContext:
                 val = np.asfarray(val).flatten()
             elif p.name == 'num_estimates':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
+            elif p.name == 'num_trials_per_estimate':  # Should always be int
+                val = np.int32(0) if val is None else np.int32(val)
             elif np.ndim(val) == 0 and component._is_param_modulated(p):
                 val = [val]   # modulation adds array wrap
             return self.convert_python_struct_to_llvm_ir(val)
@@ -336,6 +427,9 @@ class LLVMBuilderContext:
             return self.convert_python_struct_to_llvm_ir(t.tolist())
         elif isinstance(t, np.random.RandomState):
             return pnlvm.builtins.get_mersenne_twister_state_struct(self)
+        elif isinstance(t, np.random.Generator):
+            assert isinstance(t.bit_generator, np.random.Philox)
+            return pnlvm.builtins.get_philox_state_struct(self)
         elif isinstance(t, Time):
             return ir.ArrayType(self.int32_ty, len(TimeScale))
         elif isinstance(t, SampleIterator):
@@ -449,7 +543,9 @@ def _convert_llvm_ir_to_ctype(t: ir.Type):
     if type_t is ir.VoidType:
         return None
     elif type_t is ir.IntType:
-        if t.width == 8:
+        if t.width == 1:
+            return ctypes.c_bool
+        elif t.width == 8:
             return ctypes.c_int8
         elif t.width == 16:
             return ctypes.c_int16

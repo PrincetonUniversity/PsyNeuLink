@@ -148,7 +148,7 @@ from psyneulink.core.compositions.report \
     import ReportOutput, ReportParams, ReportProgress, ReportSimulations, ReportDevices, \
     LEARN_REPORT, EXECUTE_REPORT, PROGRESS_REPORT
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import SOFT_CLAMP
+from psyneulink.core.globals.keywords import AUTODIFF_COMPOSITION, SOFT_CLAMP
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.time import TimeScale
@@ -210,6 +210,7 @@ class AutodiffComposition(Composition):
 
     """
 
+    componentCategory = AUTODIFF_COMPOSITION
     class Parameters(Composition.Parameters):
         """"""
         optimizer = None
@@ -556,6 +557,9 @@ class AutodiffComposition(Composition):
                                                         report=report,
                                                         report_num=report_num
                                                         )
+
+    def _get_state_ids(self):
+        return super()._get_state_ids() + ["optimizer"]
 
     def _get_state_struct_type(self, ctx):
         comp_state_type_list = ctx.get_state_struct_type(super())

@@ -718,7 +718,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
@@ -1074,7 +1074,7 @@ class DDM(ProcessingMechanism):
             # Convert ER to decision variable:
             threshold = float(self.function._get_current_parameter_value(THRESHOLD, context))
             random_state = self._get_current_parameter_value(self.parameters.random_state, context)
-            if random_state.rand() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
+            if random_state.uniform() < return_value[self.PROBABILITY_LOWER_THRESHOLD_INDEX]:
                 return_value[self.DECISION_VARIABLE_INDEX] = np.atleast_1d(-1 * threshold)
             else:
                 return_value[self.DECISION_VARIABLE_INDEX] = threshold
@@ -1127,9 +1127,10 @@ class DDM(ProcessingMechanism):
             threshold = pnlvm.helpers.load_extract_scalar_array_one(builder,
                                                                     threshold_ptr)
             # Load mechanism state to generate random numbers
-            state = builder.function.args[1]
-            random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
-            random_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+            mech_params = builder.function.args[0]
+            mech_state = builder.function.args[1]
+            random_state = ctx.get_random_state_ptr(builder, self, mech_state, mech_params)
+            random_f = ctx.get_uniform_dist_function_by_state(random_state)
             random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
             builder.call(random_f, [random_state, random_val_ptr])
             random_val = builder.load(random_val_ptr)

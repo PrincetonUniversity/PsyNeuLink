@@ -25,31 +25,81 @@ Contents
 Overview
 --------
 
-A CompositionInterfaceMechanism stores inputs from outside the Composition so that those can be delivered to the
-Composition's `INPUT <NodeRole.INPUT>` Mechanism(s).
+CompositionInterfaceMechanisms act as interfaces between a `Composition` and its inputs from and outputs to the
+environment, or the Components of another Composition within which it is `nested <Composition_Nested>`.
+
+.. technical_note::
+
+    The CompositionInterfaceMechanism provides both a standard interface through which other Components can interact
+    with the environment and/or Compositions, as well as a means of preserving the modularity of Compositions for
+    `compilation <Composition_Compilation>`. By providing the standard Components for communication among `Mechanisms
+    <Mechanism>` (`InputPorts <InputPort>` and `OutputPorts <OutputPort>`), Mechanisms (and/or other Compositions) that
+    are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a Composition can receive inputs from the environment
+    in the same way that any other Node receives inputs, from `afferent Projections <Mechanism_Base.efferents>` (in
+    this case, the `input_CIM  <Composition.input_CIM>` of the Composition to which they belong);  and, similarly,
+    Components that are `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of a Composition can either report their
+    outputs to the Composition or, if they are in a `nested Composition <Composition_Nested>`, send their outputs to
+    Nodes in an enclosing Composition just like any others, using `efferent Projections <Mechanism_Base.efferents>`.
+    Similarly, for Compilation, they provide a standard interface through which to provide inputs to a Composition and
+    for aggregating outputs that, again, maintain a standard interface to other Components (which may not be compiled).
 
 .. _CompositionInterfaceMechanism_Creation:
 
-Creating an CompositionInterfaceMechanism
------------------------------------------
+Creation
+--------
 
-A CompositionInterfaceMechanism is created automatically when an `INPUT <NodeRole.INPUT>` Mechanism is identified in a
-Composition. When created, the CompositionInterfaceMechanism's OutputPort is set directly by the Composition. This
-Mechanism should never be executed, and should never be created by a user.
+The following three CompositionInterfaceMechanisms are created and assigned automatically to a Composition when it is
+constructed (and should never be constructed manually):  `input_CIM <Composition.input_CIM>`, `parameter_CIM
+<Composition.parameter_CIM>` and `output_CIM <Composition.output_CIM>` (see `Composition_CIMs` for additional details).
 
-.. _CompositionInterfaceMechanism_Structure
+.. _CompositionInterfaceMechanism_Structure:
 
 Structure
 ---------
 
-[TBD]
+A CompositionInterfaceMechanisms has a set of `InputPort` / `OutputPort` pairs that its `function
+<Mechanism_Base.function>` -- the `Identity` `Function` -- uses to transmit inputs to CompositionInterfaceMechanism
+to its outputs.  These are listed in its `port_map  <CompositionInterfaceMechanism.port_map>` attribute, each entry
+of which is a key designating the `Port` of the Component with which the CompositionInterfaceMechanism communicates
+outside the Composition (i.e., from an `input_CIM <Composition.input_CIM>` receives an `afferent Projection
+<Mechanism_Base.afferents>`, a `parameter_CIM <Composition.parameter_CIM>` receives a `modulatory projection
+<ModulatoryProjections>`, or an `output_CIM <Composition.output_CIM>` sends an `efferent Projection
+<Mechanism_Base.efferents>`), and the value of which is a tuple containing the corresponding (`InputPort`,
+`OutputPort`) pair used to transmit the information to or from the CompositionInterfaceMechanism.
+CompositionIntefaceMechanisms can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of the
+Composition's `show_graph <ShowGraph_show_graph_Method>` method (see figure below).
 
-.. _CompositionInterfaceMechanism_Execution
+.. figure:: _static/CIM_figure.svg
+
+   **Examples of Projections to nested Compositions routed through CompositionInterfaceMechanisms.**  *Panel A:*
+   Simple example showing a basic configuration.  *Panel B:*  More complex configuration, generated from script below,
+   showing Projections automatically created from the Node of an outer Composition (*X*) to two `INPUT
+   <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a `nested Composition <Composition_Nested>`, a `ControlProjection`
+   from a `ControlMechanism` in the outer Composition to a Node it modulates in the nested one, and from a `PROBE
+   <NodeRole.PROBE>` Node (*B*) in the nested Composition to the `ControlMechanism` that monitors it. ::
+
+    A = ProcessingMechanism(name='A')
+    B = ProcessingMechanism(name='B')
+    C = ProcessingMechanism(name='C')
+    D = ProcessingMechanism(name='D')
+    E = ProcessingMechanism(name='E')
+    F = ProcessingMechanism(name='F')
+    nested_comp = Composition(pathways=[[A,B,C], [D,E,F]], name='NESTED COMPOSITION')
+    X = ProcessingMechanism(name='INPUT NODE')
+    Y = ProcessingMechanism(name='OUTPUT NODE')
+    C = ControlMechanism(name='CONTROL MECHANISM',
+                         monitor_for_control=B,
+                         control=("slope", E))
+    outer_comp = Composition(name='OUTER COMPOSITION', pathways=[X, nested_comp, Y, C])
+    outer_comp.show_graph(show_cim=NESTED, show_node_structure=True)
+
+.. _CompositionInterfaceMechanism_Execution:
 
 Execution
 ---------
 
-[TBD]
+A CompositionInterface Mechanism is executed when the Composition to which it belongs is executed, and shown never
+be executed manually.
 
 .. _CompositionInterfaceMechanism_Class_Reference:
 
@@ -59,9 +109,9 @@ Class Reference
 """
 
 import warnings
-import typecheck as tc
-
 from collections.abc import Iterable
+
+import typecheck as tc
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
@@ -70,7 +120,8 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, PREFERENCE_SET_NAME
+from psyneulink.core.globals.keywords import COMPOSITION_INTERFACE_MECHANISM, INPUT_PORTS, OUTPUT_PORTS, \
+    PREFERENCE_SET_NAME
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
@@ -83,8 +134,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     CompositionInterfaceMechanism(  \
         function=Identity())
 
-    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its
-    inputs from and outputs to the environment or other Mechanisms (if it is a nested Composition).
+    Subclass of `ProcessingMechanism <ProcessingMechanism>` that acts as interface between a Composition and its inputs
+    from and outputs to the environment or other Components (if it is a `nested Composition <Composition_Nested>`).
 
     See `Mechanism <Mechanism_Class_Reference>` for arguments and additional attributes.
 
@@ -94,6 +145,11 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     function : InterfaceFunction : default Identity
         the function used to transform the variable before assigning it to the Mechanism's OutputPort(s)
 
+    port_map : dict[Port:(InputPort,OutputPort)]
+        entries are comprised of keys designating a Component outside the Composition with which it communicates,
+        and values tuples that designate the corresponding `InputPort` - `OutputPort` pairs used to transmit that
+        information into or out of the Composition (see `CompositionInterfaceMechanism_Structure`, and
+        `Composition_CIMs` under Composition for additional details).
     """
 
     componentType = COMPOSITION_INTERFACE_MECHANISM
@@ -175,3 +231,41 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
             if port not in self.output_ports:
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
+
+    def _get_destination_node_for_input_port(self, input_port, comp=None):
+        """Return Port, Node and Composition for destination of projection from input_CIM to (possibly nested) node"""
+        #  CIM MAP ENTRIES:  [RECEIVER PORT,  [input_CIM InputPort,  input_CIM OutputPort]]
+        # Get sender to input_port of CIM for corresponding output_port
+        comp = comp or self
+        port_map = input_port.owner.port_map
+        output_port = [port_map[k][1] for k in port_map if port_map[k][0] is input_port]
+        assert len(output_port)==1, f"PROGRAM ERROR: Expected only 1 output_port for {input_port.name} " \
+                                   f"in port_map for {input_port.owner}; found {len(output_port)}."
+        assert len(output_port[0].efferents)==1, f"PROGRAM ERROR: Port ({output_port.name}) expected to have " \
+                                                 f"just one efferent; has {len(output_port.efferents)}."
+        receiver = output_port[0].efferents[0].receiver
+        if not isinstance(receiver.owner, CompositionInterfaceMechanism):
+            return receiver, receiver.owner, comp
+        return self._get_destination_node_for_input_port(receiver, receiver.owner.composition)
+
+    def _get_source_node_for_output_port(self, output_port, comp=None):
+        """Return Port, Node and Composition  for source of projection to output_CIM from (possibly nested) node"""
+        #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
+        # Get sender to input_port of CIM for corresponding output_port
+        comp = comp or self
+        port_map = output_port.owner.port_map
+        input_port = [port_map[k][0] for k in port_map if port_map[k][1] is output_port]
+        assert len(input_port)==1, f"PROGRAM ERROR: Expected only 1 input_port for {output_port.name} " \
+                                   f"in port_map for {output_port.owner}; found {len(input_port)}."
+        assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+                                                     f"just one path_afferent; has {len(input_port.path_afferents)}."
+        sender = input_port[0].path_afferents[0].sender
+        if not isinstance(sender.owner, CompositionInterfaceMechanism):
+            return sender, sender.owner, comp
+        return self._get_source_node_for_output_port(sender, sender.owner.composition)
+
+    def _sender_is_probe(self, output_port):
+        """Return True if source of output_port is a PROBE Node of the Composition to which it belongs"""
+        from psyneulink.core.compositions.composition import NodeRole
+        port, node, comp = self._get_source_node_for_output_port(output_port, self.composition)
+        return NodeRole.PROBE in comp.get_roles_by_node(node)

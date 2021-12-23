@@ -67,11 +67,13 @@ def _binding_initialize():
 def _cpu_jit_constructor():
     _binding_initialize()
 
+    opt_level = int(debug_env.get('opt', 2))
+
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.loop_vectorize = True
-    __pass_manager_builder.slp_vectorize = True
-    __pass_manager_builder.opt_level = 2
+    __pass_manager_builder.loop_vectorize = opt_level != 0
+    __pass_manager_builder.slp_vectorize = opt_level != 0
+    __pass_manager_builder.opt_level = opt_level
 
     __cpu_features = binding.get_host_cpu_features().flatten()
     __cpu_name = binding.get_host_cpu_name()
@@ -80,14 +82,14 @@ def _cpu_jit_constructor():
     __cpu_target = binding.Target.from_default_triple()
     # FIXME: reloc='static' is needed to avoid crashes on win64
     # see: https://github.com/numba/llvmlite/issues/457
-    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=2, reloc='static')
+    __cpu_target_machine = __cpu_target.create_target_machine(cpu=__cpu_name, features=__cpu_features, opt=opt_level, reloc='static')
 
     __cpu_pass_manager = binding.ModulePassManager()
     __cpu_target_machine.add_analysis_passes(__cpu_pass_manager)
     __pass_manager_builder.populate(__cpu_pass_manager)
 
     # And an execution engine with a builtins backing module
-    builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.float_ty)
+    builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
     if "llvm" in debug_env:
         with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
             dump_file.write(str(builtins_module))
@@ -101,10 +103,12 @@ def _cpu_jit_constructor():
 def _ptx_jit_constructor():
     _binding_initialize()
 
+    opt_level = int(debug_env.get('opt', 0))
+
     # PassManagerBuilder can be shared
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.opt_level = 1  # Basic optimizations
-    __pass_manager_builder.size_level = 1  # asic size optimizations
+    __pass_manager_builder.opt_level = opt_level
+    __pass_manager_builder.size_level = 1 # Try to reduce size to reduce PTX parsing time
 
     # Use default device
     # TODO: Add support for multiple devices
@@ -286,18 +290,19 @@ class ptx_jit_engine(jit_engine):
             self._target_machine = tm
 
             # -dc option tells the compiler that the code will be used for linking
-            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(LLVMBuilderContext.float_ty)), target='cubin', options=['-dc'])
+            self._generated_builtins = pycuda.compiler.compile(_ptx_builtin_source.format(type=str(LLVMBuilderContext.get_current().float_ty)), target='cubin', options=['-dc'])
 
         def set_object_cache(cache):
             pass
 
         def add_module(self, module):
+            max_regs = int(debug_env.get("cuda_max_regs", 256))
             try:
                 # LLVM can't produce CUBIN for some reason
                 start_time = time.perf_counter()
                 ptx = self._target_machine.emit_assembly(module)
                 ptx_time = time.perf_counter()
-                mod = pycuda.compiler.DynamicModule()
+                mod = pycuda.compiler.DynamicModule(link_options=[(pycuda.driver.jit_option.MAX_REGISTERS, max_regs)])
                 mod.add_data(self._generated_builtins, pycuda.driver.jit_input_type.CUBIN, "builtins.cubin")
                 mod.add_data(ptx.encode(), pycuda.driver.jit_input_type.PTX, module.name + ".ptx")
                 module_time = time.perf_counter()

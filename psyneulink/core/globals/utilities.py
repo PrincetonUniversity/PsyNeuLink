@@ -195,15 +195,15 @@ def is_modulation_operation(val):
     return get_modulationOperation_name(val)
 
 def get_modulationOperation_name(operation):
-        x = operation(1, 2)
-        if x == 1:
-            return MODULATION_OVERRIDE
-        elif x == 2:
-            return MODULATION_MULTIPLY
-        elif x == 3:
-            return MODULATION_ADD
-        else:
-            return False
+    x = operation(1, 2)
+    if x == 1:
+        return MODULATION_OVERRIDE
+    elif x == 2:
+        return MODULATION_MULTIPLY
+    elif x == 3:
+        return MODULATION_ADD
+    else:
+        return False
 
 
 
@@ -238,8 +238,8 @@ class AutoNumber(IntEnum):
         obj._value_ = value
         return obj
 
-# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 
+# ******************************** GLOBAL STRUCTURES, CONSTANTS AND METHODS  *******************************************
 TEST_CONDTION = False
 
 
@@ -1204,7 +1204,7 @@ class ContentAddressableList(UserList):
             key_num = self._get_key_for_item(key)
             if key_num is None:
                 # raise TypeError("\'{}\' is not a key in the {} being addressed".
-                                # format(key, self.__class__.__name__))
+                #                 format(key, self.__class__.__name__))
                 # raise KeyError("\'{}\' is not a key in {}".
                 raise TypeError("\'{}\' is not a key in {}".
                                 format(key, self.name))
@@ -1538,6 +1538,43 @@ def convert_to_list(l):
 
 def flatten_list(l):
     return [item for sublist in l for item in sublist]
+
+
+# Seeds and randomness
+
+class SeededRandomState(np.random.RandomState):
+    def __init__(self, *args, **kwargs):
+        # Extract seed
+        self.used_seed = (kwargs.get('seed', None) or args[0])[:]
+        super().__init__(*args, **kwargs)
+
+    def __deepcopy__(self, memo):
+        # There's no easy way to deepcopy parent first.
+        # Create new instance and rewrite the state.
+        dup = type(self)(seed=self.used_seed)
+        dup.set_state(self.get_state())
+        return dup
+
+    def seed(self, seed):
+        assert False, "Use 'seed' parameter instead of seeding the random state directly"
+
+
+class _SeededPhilox(np.random.Generator):
+    def __init__(self, *args, **kwargs):
+        # Extract seed
+        self.used_seed = (kwargs.get('seed', None) or args[0])[:]
+        state = np.random.Philox([self.used_seed])
+        super().__init__(state)
+
+    def __deepcopy__(self, memo):
+        # There's no easy way to deepcopy parent first.
+        # Create new instance and rewrite the state.
+        dup = type(self)(seed=self.used_seed)
+        dup.bit_generator.state = self.bit_generator.state
+        return dup
+
+    def seed(self, seed):
+        assert False, "Use 'seed' parameter instead of seeding the random state directly"
 
 
 _seed = np.int32((time.time() * 1000) % 2**31)

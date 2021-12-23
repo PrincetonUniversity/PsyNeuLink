@@ -15,14 +15,13 @@
 
 """
 
-import numpy as np
-
-import typecheck as tc
 from collections.abc import Iterator
-from inspect import isclass
 from decimal import Decimal, getcontext
+from inspect import isclass
 from numbers import Number
 
+import numpy as np
+import typecheck as tc
 
 __all__ = ['SampleSpec', 'SampleIterator']
 
@@ -91,7 +90,7 @@ class SampleSpec():
           complete.
 
         * if **num** is not specified, the **function** is called once on each iteration, and iteration may continue
-          indefintely.
+          indefinitely.
 
     (3) Specify a custom_spec, that is passed to SampleIterator unmodified.
 

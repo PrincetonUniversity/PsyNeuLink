@@ -9,10 +9,10 @@ import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
-from psyneulink.core.components.functions.stateful.integratorfunctions import \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
@@ -30,7 +30,7 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
-    LEARNED_PROJECTIONS, \
+    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -361,6 +361,65 @@ class TestAddProjection:
         assert np.allclose(B.get_input_values(comp), [[11.2,  14.8]])
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix.base, weights)
+
+    test_args = [(None, ([1],[1],[1],[1])),
+        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]])),
+        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]))]
+    @pytest.mark.parametrize('projs, expected_matrices', test_args, ids=[x[0] for x in test_args])
+    def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices):
+        """Test automatic creation and explicit specification of Projections from outer Composition to multiple
+        Nodes of a nested Composition, and between Nodes of nested Compositions.
+        """
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+        E = ProcessingMechanism(name='E')
+        F = ProcessingMechanism(name='F')
+        X = ProcessingMechanism(name='INPUT NODE')
+        M = ProcessingMechanism(name='MIDDLE NODE')
+        Y = ProcessingMechanism(name='OUTPUT NODE')
+        if projs is 'list':
+            iprojs = [MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)]
+            oprojs = [MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
+                     MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)]
+        elif projs is 'set':
+            iprojs = {MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)}
+            oprojs = {MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
+                     MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)}
+
+        comp1 = Composition(pathways=[A,B,C], name='COMP 1')
+        comp2 = Composition(pathways=[D,E,F], name='COMP 2')
+
+        if not projs:
+            ipway = [comp1, comp2]
+        else:
+            ipway = [comp1, iprojs, comp2]
+        mcomp = Composition(pathways=[ipway,M], name='MIDDLE COMPOSITION')
+
+        if not projs:
+            opway = [[X, mcomp, Y, C]]
+        else:
+            opway = [[X, oprojs, mcomp, Y, C]]
+        ocomp = Composition(pathways=opway, name='OUTER COMPOSITION')
+
+        # gv = ocomp.show_graph(output_fmt=source, show_CIM=True, show_node_structure=True)
+        # assert gv = expected
+        if not projs:
+            assert (comp1.output_CIM.output_ports[0].efferents[0].matrix.base ==
+                    comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[0])
+            assert (X.output_ports[0].efferents[0].matrix.base ==
+                    mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[1])
+            assert (X.output_ports[0].efferents[1].matrix.base ==
+                    mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base == expected_matrices[2])
+        else:
+            assert np.allclose(comp1.output_CIM.output_ports[0].efferents[0].matrix.base, expected_matrices[0])
+            assert np.allclose(comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[0])
+            assert np.allclose(X.output_ports[0].efferents[0].matrix.base, expected_matrices[1])
+            assert np.allclose(mcomp.input_CIM.input_ports[0].path_afferents[0].matrix.base, expected_matrices[1])
+            assert np.allclose(X.output_ports[0].efferents[1].matrix.base, expected_matrices[2])
+            assert np.allclose(mcomp.input_CIM.input_ports[1].path_afferents[0].matrix.base, expected_matrices[2])
 
     def test_add_linear_processing_pathway_with_noderole_specified_in_tuple(self):
         comp = Composition()
@@ -2277,6 +2336,7 @@ class TestExecutionOrder:
         assert comp.scheduler.execution_list[comp.default_execution_id] == [{A, B}]
         assert comp.scheduler.execution_timestamps[comp.default_execution_id][0].absolute == 1 * pnl._unit_registry.ms
 
+
 class TestGetMechanismsByRole:
 
     def test_multiple_roles(self):
@@ -4131,7 +4191,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_function=pnl.Buffer(history=2),
+                # state_feature_functions=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=ocomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
@@ -4151,7 +4211,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_function=pnl.Buffer(history=2),
+                # state_feature_functions=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=icomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
@@ -4298,82 +4358,82 @@ class TestNestedCompositions:
         assert myMech6 in terminals
 
     def test_combine_two_overlapping_trees(self):
-            # Goal:
+        # Goal:
 
-            # Mech1 --
-            #          --> Mech3 --
-            # Mech2 --              --> Mech5
-            #              Mech4 --
+        # Mech1 --
+        #          --> Mech3 --
+        # Mech2 --              --> Mech5
+        #              Mech4 --
 
-            # create first composition -----------------------------------------------
+        # create first composition -----------------------------------------------
 
-            # Mech1 --
-            #           --> Mech3
-            # Mech2 --
+        # Mech1 --
+        #           --> Mech3
+        # Mech2 --
 
-            tree1 = Composition()
+        tree1 = Composition()
 
-            myMech1 = TransferMechanism(name="myMech1")
-            myMech2 = TransferMechanism(name="myMech2")
-            myMech3 = TransferMechanism(name="myMech3")
-            myMech4 = TransferMechanism(name="myMech4")
-            myMech5 = TransferMechanism(name="myMech5")
+        myMech1 = TransferMechanism(name="myMech1")
+        myMech2 = TransferMechanism(name="myMech2")
+        myMech3 = TransferMechanism(name="myMech3")
+        myMech4 = TransferMechanism(name="myMech4")
+        myMech5 = TransferMechanism(name="myMech5")
 
-            tree1.add_node(myMech1)
-            tree1.add_node(myMech2)
-            tree1.add_node(myMech3)
-            tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
-            tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
+        tree1.add_node(myMech1)
+        tree1.add_node(myMech2)
+        tree1.add_node(myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech1, receiver=myMech3), myMech1, myMech3)
+        tree1.add_projection(MappingProjection(sender=myMech2, receiver=myMech3), myMech2, myMech3)
 
-            # validate first composition ---------------------------------------------
+        # validate first composition ---------------------------------------------
 
-            tree1._analyze_graph()
-            origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 2
-            assert myMech1 in origins
-            assert myMech2 in origins
-            terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech3 in terminals
+        tree1._analyze_graph()
+        origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 2
+        assert myMech1 in origins
+        assert myMech2 in origins
+        terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech3 in terminals
 
-            # create second composition ----------------------------------------------
+        # create second composition ----------------------------------------------
 
-            # Mech3 --
-            #           --> Mech5
-            # Mech4 --
+        # Mech3 --
+        #           --> Mech5
+        # Mech4 --
 
-            tree2 = Composition()
-            tree2.add_node(myMech3)
-            tree2.add_node(myMech4)
-            tree2.add_node(myMech5)
-            tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
-            tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
+        tree2 = Composition()
+        tree2.add_node(myMech3)
+        tree2.add_node(myMech4)
+        tree2.add_node(myMech5)
+        tree2.add_projection(MappingProjection(sender=myMech3, receiver=myMech5), myMech3, myMech5)
+        tree2.add_projection(MappingProjection(sender=myMech4, receiver=myMech5), myMech4, myMech5)
 
-            # validate second composition ----------------------------------------------
+        # validate second composition ----------------------------------------------
 
-            tree2._analyze_graph()
-            origins = tree2.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 2
-            assert myMech3 in origins
-            assert myMech4 in origins
-            terminals = tree2.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech5 in terminals
+        tree2._analyze_graph()
+        origins = tree2.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 2
+        assert myMech3 in origins
+        assert myMech4 in origins
+        terminals = tree2.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech5 in terminals
 
-            # combine the compositions -------------------------------------------------
+        # combine the compositions -------------------------------------------------
 
-            tree1.add_pathway(tree2)
-            tree1._analyze_graph()
-            # no need for a projection connecting the two compositions because they share myMech3
+        tree1.add_pathway(tree2)
+        tree1._analyze_graph()
+        # no need for a projection connecting the two compositions because they share myMech3
 
-            origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
-            assert len(origins) == 3
-            assert myMech1 in origins
-            assert myMech2 in origins
-            assert myMech4 in origins
-            terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
-            assert len(terminals) == 1
-            assert myMech5 in terminals
+        origins = tree1.get_nodes_by_role(NodeRole.ORIGIN)
+        assert len(origins) == 3
+        assert myMech1 in origins
+        assert myMech2 in origins
+        assert myMech4 in origins
+        terminals = tree1.get_nodes_by_role(NodeRole.TERMINAL)
+        assert len(terminals) == 1
+        assert myMech5 in terminals
 
     # MODIFIED 5/8/20 OLD:  ELIMINATE SYSTEM:
     # FIX SHOULD THESE BE RE-WRITTEN WITH STANDARD NESTED COMPOSITIONS AND PATHWAYS?
@@ -4653,6 +4713,82 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [4500]
 
+    @pytest.mark.parametrize('nesting', ("unnested", "nested"))
+    def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
+        pnl.clear_registry()
+        samples = np.arange(0.1, 1.01, 0.3)
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
+                                       name='reward',
+                                       )
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
+                                                                     pnl.ControlProjection(function=pnl.Linear,
+                                                                                       control_signal_params={
+                                                                                           pnl.ALLOCATION_SAMPLES: samples,
+                                                                                       })),
+                                                         threshold=(1.0,
+                                                                    pnl.ControlProjection(function=pnl.Linear,
+                                                                                      control_signal_params={
+                                                                                          pnl.ALLOCATION_SAMPLES: samples,
+                                                                                      })),
+                                                         noise=0.5,
+                                                         starting_point=0,
+                                                         t0=0.45),
+                       output_ports=[pnl.DECISION_VARIABLE,
+                                     pnl.RESPONSE_TIME,
+                                     pnl.PROBABILITY_UPPER_THRESHOLD],
+                       name='Decision')
+        Response = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=1.0,
+                                                          threshold=1.0,
+                                                          noise=0.5,
+                                                          starting_point=0,
+                                                          t0=0.45),
+                        output_ports=[pnl.DECISION_VARIABLE,
+                                      pnl.RESPONSE_TIME,
+                                      pnl.PROBABILITY_UPPER_THRESHOLD],
+                        name='Response')
+
+        icomp = pnl.Composition(name="EVC (inner comp)", retain_old_simulation_data=True)
+        icomp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_node(Response, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_linear_processing_pathway([Input, pnl.IDENTITY_MATRIX, Decision, Response])
+        if nesting == 'nested':
+            comp = Composition(nodes=icomp, name="Outer Composition")
+        else:
+            comp = icomp
+        ocm=OptimizationControlMechanism(
+            agent_rep=comp,
+            monitor_for_control=[Decision.output_ports[pnl.DECISION_VARIABLE],
+                                 Decision.output_ports[pnl.RESPONSE_TIME]],
+            num_estimates=1,
+            function=GridSearch,
+            control_signals=[
+                ControlSignal(modulates=('drift_rate',Decision), # OVERLAPS WITH CONTROL SPEC ON Decision
+                              allocation_samples=[1,2]),
+                ControlSignal(modulates=('threshold',Response), # ADDS CONTROL SPEC FOR Response
+                              allocation_samples=[1,2]),
+            ]
+        )
+        comp.add_controller(ocm)
+
+        assert len(comp.controller.input_ports[pnl.OUTCOME].path_afferents) == 2
+        if nesting == 'nested':
+            # All Projections to controller's OUTCOME InputPort should be from input_CIM
+            assert all(isinstance(comp.controller.input_ports[pnl.OUTCOME].path_afferents[i].sender.owner,
+                                  pnl.CompositionInterfaceMechanism) for i in range(2))
+
+        assert len(comp.controller.control_signals) == 4  # Should be 4:  Decision threshold (spec'd locally on mech)
+                                                          #               Decision drift_rate (spec'd on mech and OCM)
+                                                          #               Response threshold (spec'd on OCM)
+                                                          #               RANDOMIZATION
+        ctl_sig_names = ['Decision[drift_rate] ControlSignal', 'Decision[threshold] ControlSignal',
+                         'Response[threshold] ControlSignal', 'RANDOMIZATION_CONTROL_SIGNAL']
+        assert all([name in ctl_sig_names for name in comp.controller.control_signals.names])
+        if nesting == 'nested':
+            # All of the controller's ControlSignals should project to the ParameterCIM for the nested comp
+            assert all(isinstance(comp.controller.control_signals[i].efferents[0].receiver.owner,
+                                  pnl.CompositionInterfaceMechanism) for i in range(4))
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
@@ -5705,7 +5841,11 @@ class TestShadowInputs:
 
         assert A.value == [[1.0]]
         assert B.value == [[1.0]]
-        assert comp.shadows[A] == [B]
+
+        # Since B is both an INPUT Node and also shadows A, it should have two afferent Projections,
+        #   one from it own OutputPort of the Composition's input_CIM, and another from the one for A
+        # assert len(B.path_afferents)==2
+        # assert B.input_port.path_afferents[1].sender is A.input_port.path_afferents[0].sender
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
@@ -5720,7 +5860,7 @@ class TestShadowInputs:
         assert len(B.path_afferents) == 1
         assert B.path_afferents[0].sender.owner == C
 
-    def test_two_origins_two_input_ports(self):
+    def test_shadow_internal_projectionstest_two_origins_two_input_ports(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A',
                                 function=Linear(slope=2.0))
@@ -5732,15 +5872,20 @@ class TestShadowInputs:
 
         assert A.value == [[2.0]]
         assert np.allclose(B.value, [[1.0], [2.0]])
-        assert comp.shadows[A] == [B]
+
+        assert len(B.input_ports)==2
+        assert len(B.input_ports[0].path_afferents)==1
+        assert len(B.input_ports[1].path_afferents)==1
+        assert B.input_ports[0].path_afferents[0].sender is A.input_ports[0].path_afferents[0].sender
+        assert B.input_ports[1].path_afferents[0].sender is A.output_ports[0]
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
 
         comp.run(inputs={C: 1.5})
         assert A.value == [[3.0]]
-        assert np.allclose(B.value, [[1.5], [3.0]])
         assert C.value == [[1.5]]
+        assert np.allclose(B.value, [[1.5], [3.0]])
 
         # Since B is shadowing A, its old projection from the CIM should be deleted,
         # and a new projection from C should be added
@@ -5773,11 +5918,58 @@ class TestShadowInputs:
         comp.add_linear_processing_pathway([A2, B])
         comp.run(inputs={A: [[1.0]],
                          A2: [[1.0]]})
-
         assert A.value == [[1.0]]
         assert A2.value == [[1.0]]
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
+
+
+    _test_shadow_nested_nodes_arg =\
+        [
+            ('shadow_nodes_one_and_two_levels_deep', 0),
+            ('shadow_nested_internal_node', 1),
+         ],
+
+    @pytest.mark.parametrize(
+        'condition',
+        ['shadow_nodes_one_and_two_levels_deep',
+         'shadow_nested_internal_node'],
+    )
+    def test_shadow_nested_nodes(self, condition):
+
+        I = ProcessingMechanism(name='I')
+        icomp = Composition(nodes=I, name='INNER COMP')
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        mcomp = Composition(pathways=[[A,B,C],icomp], name='MIDDLE COMP')
+
+        if condition == 'shadow_nodes_one_and_two_levels_deep':
+
+            # Confirm that B's shadow of I comes from the same ocomp_input_CIM that serves I
+            O = ProcessingMechanism(name='O',input_ports=[I.input_port, A.input_port])
+            ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+            ocomp._analyze_graph()
+            assert len(O.afferents)==2
+            assert O.input_ports[0].shadow_inputs.owner is I
+            receiver = icomp.input_CIM.port_map[I.input_port][0]
+            receiver = receiver.path_afferents[0].sender.owner.port_map[receiver][0]
+            assert O.input_ports[0].path_afferents[0].sender is \
+                   ocomp.input_CIM.port_map[receiver][1]
+
+            # Confirm that B's shadow of A comes from the same ocomp_input_CIM that serves A
+            assert O.input_ports[1].shadow_inputs.owner is A
+            assert O.input_ports[1].path_afferents[0].sender is \
+                   mcomp.input_CIM.port_map[A.input_port][0].path_afferents[0].sender
+
+        elif condition == 'shadow_nested_internal_node':
+            with pytest.raises(CompositionError) as err:
+                O = ProcessingMechanism(name='O',input_ports=[B.input_port])
+                ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+            assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
+                   'that is not an INPUT Node of that Composition is not currently supported.' \
+                   in err.value.error_value
 
     def test_monitor_input_ports(self):
         comp = Composition(name='comp')
@@ -6155,6 +6347,149 @@ class TestNodeRoles:
         comp.add_linear_processing_pathway([A, B, C])
 
         assert comp.get_nodes_by_role(NodeRole.INTERNAL) == [B]
+
+    def test_input_labels_and_results_by_node_and_no_orphaning_of_nested_output_nodes(self):
+        """
+        Test that nested Composition with two outputs, one of which Projects to a node in the outer Composition is,
+        by virtue of its other output, still assigned as an OUTPUT Node of the outer Composition
+        Also test get_input_format and get_results_by_nodes methods
+        """
+        input_labels_dict = {0:{'red':0, 'green':1}}
+        output_labels_dict = {0:{'red':0, 'green':1}}
+        A = ProcessingMechanism(name='A', input_labels=input_labels_dict)
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
+
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        Z = ProcessingMechanism(name='Z', output_labels=output_labels_dict)
+        mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
+
+        Q = ProcessingMechanism(name='Q', input_labels=input_labels_dict)
+        O = ProcessingMechanism(name='O', input_ports=[Z])
+        ocomp = Composition(name='OUTER COMP', nodes=[O, mcomp,Q])
+
+        len(ocomp.output_values)==3
+        result = ocomp.run(inputs={mcomp:[[0],[0]]})
+        assert len(result)==4
+
+        input_format = ocomp.get_input_format()
+        assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
+        input_format = ocomp.get_input_format(num_trials=3, use_labels=True)
+        assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[[0.0]],[\'red\']], [[[0.0]],[\'green\']], [[[0.0]],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
+        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True)
+        assert input_format == '\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ [[0.0]], [[0.0]] ]\n\tQ: [ [[0.0]], [[0.0]] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}'
+        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True, use_labels=True)
+        assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
+
+        result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})
+        assert result == [[0.2], [0.2], [1.],[4.6]]
+        results_by_node = ocomp.get_results_by_nodes()
+        assert results_by_node[O] == [0.2]
+        assert results_by_node[Z] == [0.2]
+        assert results_by_node[C] == [1.0]
+        assert results_by_node[Q] == [4.6]
+        results_by_node = ocomp.get_results_by_nodes(use_names=True)
+        assert repr(results_by_node) == '{\'O\': [0.2], \'Z\': [0.2], \'C\': [1.0], \'Q\': [4.6]}'
+        results_by_node = ocomp.get_results_by_nodes(use_names=True, use_labels=True)
+        assert repr(results_by_node) == '{\'O\': [[0.2]], \'Z\': [\'red\'], \'C\': [[1.0]], \'Q\': [[4.6]]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=[Q, Z])
+        assert repr(results_by_node) == '{(ProcessingMechanism Z): [0.2], (ProcessingMechanism Q): [4.6]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=Q, use_names=True)
+        assert repr(results_by_node) == '{\'Q\': [4.6]}'
+        results_by_node = ocomp.get_results_by_nodes(nodes=Z, use_labels=True)
+        assert repr(results_by_node) == '{(ProcessingMechanism Z): [\'red\']}'
+
+        label_not_in_dict_error_msg = '"Inappropriate use of \'purple\' as a stimulus for A in MIDDLE COMP: ' \
+                                      'it is not a label in its input_labels_dict."'
+        with pytest.raises(CompositionError) as error_text:
+            ocomp.run(inputs={mcomp:[[0],['purple']],Q:['red']})
+        assert label_not_in_dict_error_msg in str(error_text.value)
+
+        no_label_dict_error_msg = '"Inappropriate use of str (\'red\') as a stimulus for X in MIDDLE COMP: ' \
+                                  'it does not have an input_labels_dict."'
+        with pytest.raises(CompositionError) as error_text:
+            ocomp.run(inputs={mcomp:[['red'],['red']],Q:['red']})
+        assert no_label_dict_error_msg in str(error_text.value)
+
+        no_such_node_error_msg = '"Nodes specified in get_results_by_nodes() method not found in OUTER COMP ' \
+                                 'nor any Compositions nested within it: [\'N\']"'
+        with pytest.raises(CompositionError) as error_text:
+            ocomp.get_results_by_nodes(nodes=['N'])
+        assert no_such_node_error_msg in str(error_text.value)
+
+
+
+    def test_unnested_PROBE(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        comp = Composition(pathways=[A,(B, NodeRole.PROBE), C], name='COMP')
+        assert B.output_port in comp.output_CIM.port_map
+
+    params = [  # id     allow_probes  include_probes_in_output  err_msg
+        (
+            "allow_probes_True", True, False, None
+         ),
+        (
+            "allow_probes_True", True, True, None
+         ),
+        (
+            "allow_probes_False", False, False,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         ),
+        (
+            "allow_probes_CONTROL", "CONTROL", True,
+            "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT."
+         )
+    ]
+    @pytest.mark.parametrize('id, allow_probes, include_probes_in_output, err_msg', params, ids=[x[0] for x in params])
+    def test_nested_PROBES(self, id, allow_probes, include_probes_in_output, err_msg):
+        """Test use of allow_probes, include_probes_in_output and orphaned output from nested comp"""
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        icomp = Composition(pathways=[[A,B,C]], name='INNER COMP')
+
+        X = ProcessingMechanism(name='X')
+        Y = ProcessingMechanism(name='Y')
+        Z = ProcessingMechanism(name='Z')
+        mcomp = Composition(pathways=[[X,Y,Z],icomp], name='MIDDLE COMP')
+
+        O = ProcessingMechanism(name='O',
+                                input_ports=[B, Y]
+                                )
+
+        if not err_msg:
+            ocomp = Composition(name='OUTER COMP',
+                                # node=[0,mcomp],   # <- CRASHES
+                                nodes=[mcomp,O],
+                                allow_probes=allow_probes,
+                                include_probes_in_output=include_probes_in_output
+                                )
+            # ocomp.show_graph(show_cim=True, show_node_structure=True)
+
+            assert B.output_port in icomp.output_CIM.port_map
+            # assert B.output_port in mcomp.output_CIM.port_map
+            assert Y.output_port in mcomp.output_CIM.port_map
+            if include_probes_in_output is False:
+                assert len(ocomp.output_values)==4  # Should only be outputs from mcomp (C, Z) and O
+                result = ocomp.run(inputs={mcomp:[[0],[0]]})
+                assert len(result)==4  # Should only be outputs from mcomp (C, Z) and O
+            elif include_probes_in_output is True:
+                assert len(ocomp.output_values)==6           # Outputs from mcomp (C and Z) and O (from B and Y)
+                result = ocomp.run(inputs={mcomp:[[0],[0]]}) # This tests that outputs from mcomp (C and Z) are included
+                assert len(result)==6                        # even though mcomp also projects to O (for B and Y)
+        else:
+            with pytest.raises(CompositionError) as err:
+                ocomp = Composition(name='OUTER COMP',
+                                nodes=[mcomp,O],
+                                allow_probes=allow_probes,
+                                include_probes_in_output=include_probes_in_output)
+                ocomp._analyze_graph()
+            assert err.value.error_value == err_msg
 
     def test_two_node_cycle(self):
         A = TransferMechanism()

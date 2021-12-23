@@ -81,12 +81,18 @@ def uint_min(builder, val, other):
 
 
 def get_param_ptr(builder, component, params_ptr, param_name):
+    # check if the passed location matches expected size
+    assert len(params_ptr.type.pointee) == len(component.llvm_param_ids)
+
     idx = ir.IntType(32)(component.llvm_param_ids.index(param_name))
     return builder.gep(params_ptr, [ir.IntType(32)(0), idx],
                        name="ptr_param_{}_{}".format(param_name, component.name))
 
 
 def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
+    # check if the passed location matches expected size
+    assert len(state_ptr.type.pointee) == len(component.llvm_state_ids)
+
     idx = ir.IntType(32)(component.llvm_state_ids.index(stateful_name))
     ptr = builder.gep(state_ptr, [ir.IntType(32)(0), idx],
                       name="ptr_state_{}_{}".format(stateful_name,
@@ -128,6 +134,19 @@ def load_extract_scalar_array_one(builder, ptr):
     return val
 
 
+def umul_lo_hi(builder, a, b):
+    assert a.type.width == b.type.width
+
+    a_val = builder.zext(a, ir.IntType(a.type.width * 2))
+    b_val = builder.zext(b, ir.IntType(b.type.width * 2))
+    res = builder.mul(a_val, b_val)
+
+    lo = builder.trunc(res, a.type)
+    hi = builder.lshr(res, res.type(a.type.width))
+    hi = builder.trunc(hi, a.type)
+    return lo, hi
+
+
 def fneg(builder, val, name=""):
     return builder.fsub(val.type(-0.0), val, name)
 
@@ -136,6 +155,18 @@ def exp(ctx, builder, x):
     exp_f = ctx.get_builtin("exp", [x.type])
     return builder.call(exp_f, [x])
 
+def log(ctx, builder, x):
+    log_f = ctx.get_builtin("log", [x.type])
+    return builder.call(log_f, [x])
+
+def log1p(ctx, builder, x):
+    log_f = ctx.get_builtin("log", [x.type])
+    x1p = builder.fadd(x, x.type(1))
+    return builder.call(log_f, [x1p])
+
+def sqrt(ctx, builder, x):
+    sqrt_f = ctx.get_builtin("sqrt", [x.type])
+    return builder.call(sqrt_f, [x])
 
 def tanh(ctx, builder, x):
     tanh_f = ctx.get_builtin("tanh", [x.type])

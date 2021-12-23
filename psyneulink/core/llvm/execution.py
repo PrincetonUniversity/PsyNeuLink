@@ -18,6 +18,7 @@ import numpy as np
 from inspect import isgenerator
 import os
 import sys
+import time
 
 
 from psyneulink.core import llvm as pnlvm
@@ -69,17 +70,28 @@ class Execution:
         self._debug_env = debug_env
 
     def _get_compilation_param(self, name, init_method, arg):
-        struct = getattr(self, name)
+        struct = getattr(self, name, None)
         if struct is None:
             struct_ty = self._bin_func.byref_arg_types[arg]
             init_f = getattr(self._obj, init_method)
             if len(self._execution_contexts) > 1:
                 struct_ty = struct_ty * len(self._execution_contexts)
+                init_start = time.time()
                 initializer = (init_f(ex) for ex in self._execution_contexts)
             else:
+                init_start = time.time()
                 initializer = init_f(self._execution_contexts[0])
 
+            init_end = time.time()
             struct = struct_ty(*initializer)
+            struct_end = time.time()
+
+
+            if "time_stat" in self._debug_env:
+                print("Time to get initializer for struct:", name,
+                      "for", self._obj.name, ":", init_end - init_start)
+                print("Time to instantiate struct:", name,
+                      "for", self._obj.name, ":", struct_end - init_end)
             setattr(self, name, struct)
             if "stat" in self._debug_env:
                 print("Instantiated struct:", name, "( size:" ,
@@ -158,7 +170,7 @@ class CUDAExecution(Execution):
     @property
     def _cuda_out(self):
         if self._buffer_cuda_out is None:
-            size = ctypes.sizeof(self._vo_ty)
+            size = ctypes.sizeof(self._ct_vo)
             self._buffer_cuda_out = jit_engine.pycuda.driver.mem_alloc(size)
         return self._buffer_cuda_out
 
@@ -174,7 +186,7 @@ class CUDAExecution(Execution):
                                  threads=len(self._execution_contexts))
 
         # Copy the result from the device
-        ct_res = self.download_ctype(self._cuda_out, self._vo_ty, 'result')
+        ct_res = self.download_ctype(self._cuda_out, type(self._ct_vo), 'result')
         return _convert_ctype_to_python(ct_res)
 
 
@@ -188,10 +200,7 @@ class FuncExecution(CUDAExecution):
         ]
         self._component = component
 
-        self._param = None
-        self._state = None
-
-        par_struct_ty, ctx_struct_ty, vi_ty, vo_ty = self._bin_func.byref_arg_types
+        _, _, vi_ty, vo_ty = self._bin_func.byref_arg_types
 
         if len(execution_ids) > 1:
             self._bin_multirun = self._bin_func.get_multi_run()
@@ -199,9 +208,7 @@ class FuncExecution(CUDAExecution):
             vo_ty = vo_ty * len(execution_ids)
             vi_ty = vi_ty * len(execution_ids)
 
-        self._vo_ty = vo_ty
         self._ct_vo = vo_ty()
-        self._vi_ty = vi_ty
         self._vi_dty = _element_dtype(vi_ty)
         if "stat" in self._debug_env:
             print("Input struct size:", _pretty_size(ctypes.sizeof(vi_ty)),
@@ -223,7 +230,7 @@ class FuncExecution(CUDAExecution):
 
     def execute(self, variable):
         # Make sure function inputs are 2d.
-        # Mechanism inptus are already 3d so the first part is nop.
+        # Mechanism inputs are already 3d so the first part is nop.
         new_variable = np.asfarray(np.atleast_2d(variable),
                                    dtype=self._vi_dty)
 
@@ -271,9 +278,6 @@ class CompExecution(CUDAExecution):
         self.__tags = frozenset(additional_tags)
 
         self.__conds = None
-        self._state = None
-        self._param = None
-        self._data = None
 
         if len(execution_ids) > 1:
             self._ct_len = ctypes.c_int(len(execution_ids))
@@ -320,7 +324,7 @@ class CompExecution(CUDAExecution):
 
     def _set_bin_node(self, node):
         assert node in self._composition._all_nodes
-        wrapper = builder_context.LLVMBuilderContext.get_global().get_node_wrapper(self._composition, node)
+        wrapper = builder_context.LLVMBuilderContext.get_current().get_node_wrapper(self._composition, node)
         self.__bin_func = pnlvm.LLVMBinaryFunction.from_obj(
             wrapper, tags=self.__tags.union({"node_wrapper"}))
 
@@ -407,11 +411,14 @@ class CompExecution(CUDAExecution):
         #   followed by a list of projection parameters; get the first one
         # output structure consists of a list of node outputs,
         #   followed by a list of nested data structures; get the first one
-        field = data._fields_[0][0]
-        res_struct = getattr(data, field)
+        field_name = data._fields_[0][0]
+        res_struct = getattr(data, field_name)
+
+        # Get the index into the array of all nodes
         index = self._composition._get_node_index(node)
-        field = res_struct._fields_[index][0]
-        res_struct = getattr(res_struct, field)
+        field_name = res_struct._fields_[index][0]
+        res_struct = getattr(res_struct, field_name)
+
         return _convert_ctype_to_python(res_struct)
 
     def extract_node_struct(self, node, struct):
@@ -656,20 +663,20 @@ class CompExecution(CUDAExecution):
     def _prepare_evaluate(self, variable, num_evaluations):
         ocm = self._composition.controller
         assert len(self._execution_contexts) == 1
-        context = self._execution_contexts[0]
 
         bin_func = pnlvm.LLVMBinaryFunction.from_obj(ocm, tags=frozenset({"evaluate", "alloc_range"}))
         self.__bin_func = bin_func
-        assert len(bin_func.byref_arg_types) == 7
 
         # There are 7 arguments to evaluate_alloc_range:
         # comp_param, comp_state, from, to, results, input, comp_data
         # all but #4 are shared
+        assert len(bin_func.byref_arg_types) == 7
 
         # Directly initialized structures
-        ct_comp_param = bin_func.byref_arg_types[0](*ocm.agent_rep._get_param_initializer(context))
-        ct_comp_state = bin_func.byref_arg_types[1](*ocm.agent_rep._get_state_initializer(context))
-        ct_comp_data = bin_func.byref_arg_types[6](*ocm.agent_rep._get_data_initializer(context))
+        assert ocm.agent_rep is self._composition
+        ct_comp_param = self._get_compilation_param('_eval_param', '_get_param_initializer', 0)
+        ct_comp_state = self._get_compilation_param('_eval_state', '_get_state_initializer', 1)
+        ct_comp_data = self._get_compilation_param('_eval_data', '_get_data_initializer', 6)
 
         # Construct input variable
         var_dty = _element_dtype(bin_func.byref_arg_types[5])
@@ -678,6 +685,7 @@ class CompExecution(CUDAExecution):
         # Output ctype
         out_ty = bin_func.byref_arg_types[4] * num_evaluations
 
+        # return variable as numpy array. pycuda can use it directly
         return ct_comp_param, ct_comp_state, ct_comp_data, converted_variable, out_ty
 
     def cuda_evaluate(self, variable, num_evaluations):
@@ -685,8 +693,7 @@ class CompExecution(CUDAExecution):
             self._prepare_evaluate(variable, num_evaluations)
         self._uploaded_bytes['input'] += converted_variable.nbytes
 
-        # Ouput is allocated on device, but we need the ctype.
-
+        # Output is allocated on device, but we need the ctype (out_ty).
         cuda_args = (self.upload_ctype(ct_comp_param, 'params'),
                      self.upload_ctype(ct_comp_state, 'state'),
                      jit_engine.pycuda.driver.mem_alloc(ctypes.sizeof(out_ty)),

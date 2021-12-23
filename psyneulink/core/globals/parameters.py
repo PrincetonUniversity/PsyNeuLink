@@ -296,7 +296,6 @@ import types
 import typing
 import weakref
 
-import numpy as np
 
 from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
@@ -366,7 +365,7 @@ def copy_parameter_value(value, shared_types=None, memo=None):
     from psyneulink.core.components.component import Component, ComponentsMeta
 
     if shared_types is None:
-        shared_types = (Component, ComponentsMeta, types.MethodType)
+        shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
     else:
         shared_types = tuple(shared_types)
 
@@ -784,6 +783,12 @@ class Parameter(ParameterBase):
 
             :default: None
 
+        port
+            stores a reference to the ParameterPort that modulates this
+            Parameter, if applicable
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -847,6 +852,7 @@ class Parameter(ParameterBase):
         reference=False,
         dependencies=None,
         initializer=None,
+        port=None,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -855,7 +861,6 @@ class Parameter(ParameterBase):
         _inherited_source=None,
         _user_specified=False,
         # if modulated, set to the ParameterPort
-        _port=None,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -910,10 +915,10 @@ class Parameter(ParameterBase):
             reference=reference,
             dependencies=dependencies,
             initializer=initializer,
+            port=port,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
-            _port=_port,
             **kwargs
         )
 
@@ -1042,10 +1047,7 @@ class Parameter(ParameterBase):
             self._is_invalid_source = value
 
             if value:
-                for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
-                        self._inherited_attrs_cache[attr] = getattr(self, attr)
-                        delattr(self, attr)
+                self._cache_inherited_attrs()
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
@@ -1066,22 +1068,32 @@ class Parameter(ParameterBase):
                             next_child._inherit_from(self)
                             children.extend(next_child._owner._children)
 
-                for attr in self._param_attrs:
-                    if (
-                        attr not in self._uninherited_attrs
-                        and getattr(self, attr) is getattr(self._parent, attr)
-                    ):
-                        setattr(self, attr, self._inherited_attrs_cache[attr])
+                self._restore_inherited_attrs()
 
             self.__inherited = value
 
     def _inherit_from(self, parent):
         self._inherited_source = weakref.ref(parent)
 
-    def _cache_inherited_attrs(self):
+    def _cache_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
         for attr in self._param_attrs:
-            if attr not in self._uninherited_attrs:
+            if attr not in exclusions:
                 self._inherited_attrs_cache[attr] = getattr(self, attr)
+                delattr(self, attr)
+
+    def _restore_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
+        for attr in self._param_attrs:
+            if (
+                attr not in exclusions
+                and getattr(self, attr) is getattr(self._parent, attr)
+            ):
+                setattr(self, attr, self._inherited_attrs_cache[attr])
 
     @property
     def _parent(self):
@@ -1521,7 +1533,7 @@ class Parameter(ParameterBase):
                 pass
 
     def _initialize_from_context(self, context=None, base_context=Context(execution_id=None), override=True):
-        from psyneulink.core.components.component import Component
+        from psyneulink.core.components.component import Component, ComponentsMeta
 
         try:
             try:
@@ -1540,7 +1552,7 @@ class Parameter(ParameterBase):
                 except KeyError:
                     new_history = NotImplemented
 
-                shared_types = (Component, types.MethodType)
+                shared_types = (Component, ComponentsMeta, types.MethodType, types.ModuleType)
 
                 if isinstance(new_val, (dict, list)):
                     new_val = copy_iterable_with_shared(new_val, shared_types)
@@ -1758,11 +1770,41 @@ class SharedParameter(Parameter):
         except AttributeError:
             return super().__getattr__(attr)
 
+    def __setattr__(self, attr, value):
+        if self._source_exists and attr in self._sourced_attrs:
+            setattr(self.source, attr, value)
+        else:
+            super().__setattr__(attr, value)
+
+    def _cache_inherited_attrs(self):
+        super()._cache_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
+    def _restore_inherited_attrs(self):
+        super()._restore_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
     def _set_name(self, name):
         if self.shared_parameter_name is None:
             self.shared_parameter_name = name
 
         super(Parameter, self).__setattr__('name', name)
+
+    @handle_external_context()
+    def get_previous(
+        self,
+        context=None,
+        index: int = 1,
+        range_start: int = None,
+        range_end: int = None,
+    ):
+        return self.source.get_previous(context, index, range_start, range_end)
+
+    @handle_external_context()
+    def get_delta(self, context=None):
+        return self.source.get_delta(context)
 
     @property
     def source(self):
@@ -1776,11 +1818,19 @@ class SharedParameter(Parameter):
                     f' cannot be stateful.'
                 )
             obj = obj.values[None]
-        except (AttributeError, KeyError):
+        except AttributeError:
             try:
                 obj = getattr(self._owner._owner, self.attribute_name)
             except AttributeError:
                 return None
+        except KeyError:
+            # KeyError means there is no stored value for this
+            # parameter, which should only occur when the source is
+            # desired for a descriptive parameter attribute value (e.g.
+            # stateful or loggable) and when either self._owner._owner
+            # is a type or is in the process of instantiating a
+            # Parameter for an instance of a Component
+            obj = getattr(self._owner._owner.defaults, self.attribute_name)
 
         try:
             obj = getattr(obj.parameters, self.shared_parameter_name)
@@ -1791,7 +1841,7 @@ class SharedParameter(Parameter):
                             delattr(self, p)
                         except AttributeError:
                             pass
-            self._source_exists = True
+                self._source_exists = True
             return obj
         except AttributeError:
             return None
@@ -1803,6 +1853,10 @@ class SharedParameter(Parameter):
             base_param = base_param.source
 
         return base_param
+
+    @property
+    def _sourced_attrs(self):
+        return set([a for a in self._param_attrs if a not in self._unsourced_attrs])
 
 
 class FunctionParameter(SharedParameter):

@@ -378,7 +378,6 @@ The three types of Ports are shown schematically in the figure below, and descri
 
 .. figure:: _static/Mechanism_Ports_fig.svg
    :alt: Mechanism Ports
-   :scale: 75 %
    :align: left
 
    **Schematic of a Mechanism showing its three types of Ports** (`InputPort`, `ParameterPort` and `OutputPort`).
@@ -646,8 +645,14 @@ attributes are listed below by their argument names / keywords, along with a des
     * **input_ports** / *INPUT_PORTS* - a list specifying the Mechanism's input_ports
       (see `InputPort_Specification` for details of specification).
     ..
+    * **input_labels** / *INPUT_LABEL_DICTS* - a dict specifying labels that can be used as inputs
+      (see `Mechanism_Labels_Dicts` for details of specification).
+    ..
     * **output_ports** / *OUTPUT_PORTS* - specifies specialized OutputPorts required by a Mechanism subclass
       (see `OutputPort_Specification` for details of specification).
+    ..
+    * **output_labels** / *OUTPUT_LABEL_DICTS* - a dict specifying labels that can be for reporting outputs
+      (see `Mechanism_Labels_Dicts` for details of specification).
     ..
     COMMENT:
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputPorts is monitored by
@@ -805,7 +810,7 @@ OutputPort(s).
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
-of the Composition's `show_graph <Composition.show_graph>` method with the keyword **LABELS**.
+of the Composition's `show_graph`show_graph <ShowGraph_show_graph_Method>` method with the keyword **LABELS**.
 
         >>> C.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
@@ -1136,7 +1141,7 @@ class MechParamsDict(UserDict):
 def _input_port_variables_getter(owning_component=None, context=None):
     try:
         return [input_port.parameters.variable._get(context) for input_port in owning_component.input_ports]
-    except TypeError:
+    except (AttributeError, TypeError):
         return None
 
 
@@ -1231,6 +1236,12 @@ class Mechanism_Base(Mechanism):
         the number and, if specified, their values must be compatible with any specifications made for
         **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
 
+    input_labels : dict
+        specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
+        entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+        of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
         can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
@@ -1240,6 +1251,12 @@ class Mechanism_Base(Mechanism):
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
         the `value <OutputPort.value>` of which is assigned the first item in the outermost dimension (axis 0) of the
         Mechanism's `value <Mechanism_Base.value>` (see `Mechanism_OutputPorts` for additional details).
+
+    output_labels : dict
+        specifies labels (strings) that can be reported in place of numeric values as output(s) of the Mechanism;
+        entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
+        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     Attributes
     ----------
@@ -1272,8 +1289,8 @@ class Mechanism_Base(Mechanism):
 
     input_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
-        in which each label (key) specifies a string associated with a value for the InputPort(s) of the
-        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+        in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+        of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     input_labels : list[str]
         contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
@@ -1380,20 +1397,20 @@ class Mechanism_Base(Mechanism):
 
     projections : ContentAddressableList
         a list of all of the Mechanism's `Projections <Projection>`, composed from the
-        `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`,
         and the `efferents <Port.efferents>` of all of its `output_ports <Mechanism_Base.output_ports>`.
 
     afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `Projections <Projection>`, composed from the
-        `path_afferents <InputPorts.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
+        `path_afferents <Port.path_afferents>` of all of its `input_ports <Mechanism_Base.input_ports>`,
         and the `mod_afferents` of all of its `input_ports <Mechanism_Base.input_ports>`,
         `parameter_ports <Mechanism)Base.parameter_ports>`, and `output_ports <Mechanism_Base.output_ports>`.,
 
     path_afferents : ContentAddressableList
         a list of all of the Mechanism's afferent `PathwayProjections <PathwayProjection>`, composed from the
-        `path_afferents <InputPorts.path_afferents>` attributes of all of its `input_ports
+        `path_afferents <Port.path_afferents>` attributes of all of its `input_ports
         <Mechanism_Base.input_ports>`.
 
     mod_afferents : ContentAddressableList
@@ -1651,8 +1668,10 @@ class Mechanism_Base(Mechanism):
                  default_variable=None,
                  size=None,
                  input_ports=None,
+                 input_labels=None,
                  function=None,
                  output_ports=None,
+                 output_labels=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -1717,6 +1736,8 @@ class Mechanism_Base(Mechanism):
             name=name,
             input_ports=input_ports,
             output_ports=output_ports,
+            input_labels_dict=input_labels,
+            output_labels_dict=output_labels,
             **kwargs
         )
 
@@ -1783,11 +1804,9 @@ class Mechanism_Base(Mechanism):
                             default_variable = default_variable_from_input_ports
                         else:
                             raise MechanismError(
-                                'default variable determined from the specified input_ports spec ({0}) '
-                                'is not compatible with the default variable determined from size parameter ({1})'.
-                                    format(default_variable_from_input_ports, size_variable,
-                                )
-                            )
+                                f'Default variable for {self.name} determined from the specified input_ports spec '
+                                f'({default_variable_from_input_ports}) is not compatible with the default variable '
+                                f'determined from size parameter ({size_variable}).')
                     else:
                         # do not pass input_ports variable as default_variable, fall back to size specification
                         pass
@@ -1795,11 +1814,9 @@ class Mechanism_Base(Mechanism):
                 if input_ports_variable_was_specified:
                     if not iscompatible(self._parse_arg_variable(default_variable), default_variable_from_input_ports):
                         raise MechanismError(
-                            'Default variable determined from the specified input_ports spec ({0}) for {1} '
-                            'is not compatible with its specified default variable ({2})'.format(
-                                default_variable_from_input_ports, self.name, default_variable
-                            )
-                        )
+                            f'Default variable for {self.name} determined from the specified input_ports spec '
+                            f'({default_variable_from_input_ports}) is not compatible with its specified '
+                            f'default variable ({default_variable}).')
                 else:
                     # do not pass input_ports variable as default_variable, fall back to default_variable specification
                     pass
@@ -1814,7 +1831,7 @@ class Mechanism_Base(Mechanism):
         Returns
         -------
             A, B where
-            A is an defaults.variable-like object
+            A is a defaults.variable-like object
             B is True if **input_ports** contained an explicit variable specification, False otherwise
         """
 
@@ -1840,8 +1857,8 @@ class Mechanism_Base(Mechanism):
                     default_variable_from_input_ports.append(InputPort.defaults.variable)
                     continue
                 else:
-                    raise MechanismError("PROGRAM ERROR: Problem parsing {} specification ({}) for {}".
-                                         format(InputPort.__name__, s, self.name))
+                    raise MechanismError(f"PROGRAM ERROR: Problem parsing {InputPort.__name__} specification ({s}) "
+                                         f"for {self.name}.")
 
             mech_variable_item = None
 
@@ -2409,7 +2426,7 @@ class Mechanism_Base(Mechanism):
                                     for i in range(len(item.shape)))
                                 for item in return_value))):
 
-                        return return_value
+                    return return_value
                 else:
                     converted_to_2d = convert_to_np_array(return_value, dimension=2)
                 # If return_value is a list of heterogenous elements, return as is
@@ -2503,7 +2520,7 @@ class Mechanism_Base(Mechanism):
                                 all(item.shape[i]==value[0].shape[0]
                                     for i in range(len(item.shape)))
                                 for item in value))):
-                        pass
+                    pass
                 else:
                     converted_to_2d = convert_to_np_array(value, dimension=2)
                     # If return_value is a list of heterogenous elements, return as is
@@ -2661,7 +2678,6 @@ class Mechanism_Base(Mechanism):
                                      format(value, append_type_to_name(self)))
         self.parameters.value.set(np.atleast_1d(value), context, override=True)
         self._update_output_ports(context=context)
-
 
     def _parse_runtime_params(self, runtime_params, context):
         """Move Port param specifications and nested Project-specific specifications into sub-dicts.
@@ -2915,24 +2931,26 @@ class Mechanism_Base(Mechanism):
         # Few extra copies will be eliminated by the compiler.
         builder.store(builder.load(params_in), params_out)
 
-        # Filter out param ports without corresponding params for this function
-        param_ports = [p for p in self._parameter_ports if p.name in obj.llvm_param_ids]
+        # This should be faster than 'obj._get_compilation_params'
+        compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
+        # Filter out param ports without corresponding param for this function
+        param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
-                                              param_ports[i].name)
+                                              param_ports[i].source.name)
             return b, ptr
 
         def _fill_input(b, p_input, i):
-            param_in_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                                       param_ports[i].name)
+            param_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
+                                                    param_ports[i].source.name)
             # Parameter port inputs are {original parameter, [modulations]},
-            # fill in the first one.
+            # here we fill in the first one.
             data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            assert data_ptr.type == param_in_ptr.type, \
+            assert data_ptr.type == param_ptr.type, \
                 "Mishandled modulation type for: {} in '{}' in '{}'".format(
                     param_ports[i].name, obj.name, self.name)
-            b.store(b.load(param_in_ptr), data_ptr)
+            b.store(b.load(param_ptr), data_ptr)
             return b
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
@@ -2942,20 +2960,20 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_output_port_parse_variable(self, ctx, builder,
                                              mech_params, mech_state, value, port):
-            port_spec = port._variable_spec
-            if port_spec == OWNER_VALUE:
-                return value
-            elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-                index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+        port_spec = port._variable_spec
+        if port_spec == OWNER_VALUE:
+            return value
+        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
+            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
 
-                assert index < len(value.type.pointee)
-                return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
-            elif port_spec == OWNER_EXECUTION_COUNT:
-                execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
-                return execution_count
-            else:
-                #TODO: support more spec options
-                assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            assert index < len(value.type.pointee)
+            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
+        elif port_spec == OWNER_EXECUTION_COUNT:
+            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
+            return execution_count
+        else:
+            #TODO: support more spec options
+            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
@@ -3465,19 +3483,6 @@ class Mechanism_Base(Mechanism):
         elif output_fmt == 'jupyter':
             return m
 
-    @tc.typecheck
-    def _get_port_name(self, port:Port):
-        if isinstance(port, InputPort):
-            port_type = InputPort.__name__
-        elif isinstance(port, ParameterPort):
-            port_type = ParameterPort.__name__
-        elif isinstance(port, OutputPort):
-            port_type = OutputPort.__name__
-        else:
-            assert False, f'Mechanism._get_port_name() must be called with an ' \
-                f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
-        return port_type + '-' + port.name
-
     def plot(self, x_range=None):
         """Generate a plot of the Mechanism's `function <Mechanism_Base.function>` using the specified parameter values
         (see `DDM.plot <DDM.plot>` for details of the animated DDM plot).
@@ -3514,6 +3519,22 @@ class Mechanism_Base(Mechanism):
         x_space = np.linspace(x_range[0],x_range[1])
         plt.plot(x_space, self.function(x_space)[0], lw=3.0, c='r')
         plt.show()
+
+    # def remove_projection(self, projection):
+    #     pass
+
+    @tc.typecheck
+    def _get_port_name(self, port:Port):
+        if isinstance(port, InputPort):
+            port_type = InputPort.__name__
+        elif isinstance(port, ParameterPort):
+            port_type = ParameterPort.__name__
+        elif isinstance(port, OutputPort):
+            port_type = OutputPort.__name__
+        else:
+            assert False, f'Mechanism._get_port_name() must be called with an ' \
+                f'{InputPort.__name__}, {ParameterPort.__name__} or {OutputPort.__name__}'
+        return port_type + '-' + port.name
 
     @tc.typecheck
     @handle_external_context()
@@ -3595,7 +3616,7 @@ class Mechanism_Base(Mechanism):
                                                                   context=context)
             for port in instantiated_input_ports:
                 if port.name is port.componentName or port.componentName + '-' in port.name:
-                        port._assign_default_port_Name()
+                    port._assign_default_port_Name()
             # self._instantiate_function(function=self.function)
         if output_ports:
             instantiated_output_ports = _instantiate_output_ports(self, output_ports, context=context)
@@ -3882,8 +3903,11 @@ class Mechanism_Base(Mechanism):
     def get_output_labels(self, context=None):
         if self.output_labels_dict:
             return self._get_port_value_labels(OutputPort, context)
-        else:
+        elif context:
             return self.get_output_values(context)
+        else:
+            return self.output_values
+
 
     @property
     def ports(self):

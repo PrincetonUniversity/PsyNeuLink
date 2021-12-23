@@ -1094,7 +1094,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
@@ -1419,7 +1419,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             self.parameters.memory_field_shapes.set([item.shape for item in variable], context=context, override=True)
 
         # Retrieve entry from memory that best matches variable
-        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
             entry = self.get_memory(variable, distance_field_weights, context).copy()
         else:
             # QUESTION: SHOULD IT RETURN ZERO VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE AND OutputPort FROM LAST TRIAL)?
@@ -1428,7 +1428,7 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             entry = self.uniform_entry(0, context)
 
         # Store variable in memory
-        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.uniform()):
             self._store_memory(variable, context)
 
         return entry
@@ -1601,12 +1601,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
             matches = [m for m in existing_entries if len(m) and self._is_duplicate(entry, m, field_weights, context)]
 
             # If duplicate entries are not allowed and entry matches any existing entries, don't store
-            if matches and self.duplicate_entries_allowed == False:
+            if matches and self.duplicate_entries_allowed is False:
                 storage_succeeded = False
 
             # If duplicate_entries_allowed is True or OVERWRITE, replace value for matching entry:
             # FIX: SHOULD BE OVERWRITE or False
-            elif matches and self.duplicate_entries_allowed is OVERWRITE:
+            elif matches and self.duplicate_entries_allowed == OVERWRITE:
                 if len(matches)>1:
                     # If there is already more than one duplicate, raise error as it is not clear what to overwrite
                     raise FunctionError(f"Attempt to store item ({entry}) in {self.name} "
@@ -2154,7 +2154,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
@@ -2243,8 +2243,8 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         # PRNG
-        rand_struct = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
-        uniform_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+        rand_struct = ctx.get_random_state_ptr(builder, self, state, params)
+        uniform_f = ctx.get_uniform_dist_function_by_state(rand_struct)
 
         # Ring buffer
         buffer_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "ring_memory")
@@ -2575,7 +2575,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
             self.parameters.val_size._set(len(val), context)
 
         # Retrieve value from current dict with key that best matches key
-        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.rand()):
+        if retrieval_prob == 1.0 or (retrieval_prob > 0.0 and retrieval_prob > random_state.uniform()):
             memory = self.get_memory(key, context)
         else:
             # QUESTION: SHOULD IT RETURN 0's VECTOR OR NOT RETRIEVE AT ALL (LEAVING VALUE & OutputPort FROM LAST TRIAL)?
@@ -2592,7 +2592,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
                 # TODO: does val need noise?
                 key += noise[KEYS]
 
-        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.rand()):
+        if storage_prob == 1.0 or (storage_prob > 0.0 and storage_prob > random_state.uniform()):
             self._store_memory(variable, context)
 
         # Return 3d array with keys and vals as lists
@@ -2711,7 +2711,7 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         matches = [k for k in d[KEYS] if key==list(k)]
 
         # If dupliciate keys are not allowed and key matches any existing keys, don't store
-        if matches and self.duplicate_keys == False:
+        if matches and self.duplicate_keys is False:
             storage_succeeded = False
 
         # If dupliciate_keys is specified as OVERWRITE, replace value for matching key:

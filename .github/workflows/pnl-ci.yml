@@ -10,9 +10,6 @@ on:
     tags-ignore:
       - 'v**'
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'doc_requirements.txt'
 
 jobs:
   build:
@@ -22,21 +19,34 @@ jobs:
       matrix:
         python-version: [3.7, 3.8, 3.9]
         python-architecture: ['x64']
+        extra-args: ['']
         os: [ubuntu-latest, macos-latest, windows-latest]
         include:
+          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
+          - python-version: 3.7
+            python-architecture: 'x64'
+            os: macos-10.15
           # add 32-bit build on windows
           - python-version: 3.8
             python-architecture: 'x86'
             os: windows-latest
+          # code-coverage build on macos python 3.9
+          - python-version: 3.9
+            os: macos-latest
+            extra-args: '--cov=psyneulink'
+        exclude:
+          # 3.7 is broken on macos-11, https://github.com/actions/virtual-environments/issues/4230
+          - python-version: 3.7
+            os: macos-latest
 
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v2.3.4
+      uses: actions/checkout@v2.4.0
       with:
         fetch-depth: 10
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.2.2
+      uses: actions/setup-python@v2.3.1
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -50,7 +60,7 @@ jobs:
         echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
 
     - name: Wheels cache
-      uses: actions/cache@v2.1.6
+      uses: actions/cache@v2.1.7
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
@@ -71,16 +81,29 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Test with pytest
-      timeout-minutes: 80
-      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto --maxprocesses=2
+      timeout-minutes: 180
+      run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto ${{ matrix.extra-args }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2.2.4
+      uses: actions/upload-artifact@v2.3.1
       with:
-        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.extra-args }}
         path: tests_out.xml
         retention-days: 5
       if: success() || failure()
+
+    - name: Upload coveralls code coverage
+      if: contains(matrix.extra-args, '--cov=psyneulink')
+      shell: bash
+      env:
+        COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
+      run: |
+        if [ -n "$COVERALLS_REPO_TOKEN" ]; then
+          pip install coveralls
+          coveralls
+        else
+          echo "::warning::Not uploading to coveralls.io, token not available!"
+        fi
 
     - name: Build dist
       run: |
@@ -88,7 +111,7 @@ jobs:
         python setup.py sdist bdist_wheel
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v2.2.4
+      uses: actions/upload-artifact@v2.3.1
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/

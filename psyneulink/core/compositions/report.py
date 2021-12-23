@@ -26,10 +26,10 @@ Mechanism's `execute <Mechanism_Base.execute>` method or any of a Composition's 
 reporting is generated as execution of each Component occurs;  if `FULL <ReportOutput.FULL>` is used, then the
 information is reported at the end of each `TRIAL <TimeScale.TRIAL>` executed.  This always includes the input and
 output to a `Mechanism` or a `Composition` and its `Nodes <Composition_Nodes>`, and can also include the values
-of their `Parameters`, depending on the specification of the **report_params** argument (using `ReportParams` options`
+of their `Parameters`, depending on the specification of the **report_params** argument (using `ReportParams` options
 and/or the `reportOutputPref <PreferenceSet_reportOutputPref>` settings of individual Mechanisms).  The output
 for a `nested Composition <Composition_Nested>` is indented relative to the output for the Composition within which
-it is nested.  Whether `simulations <OptimizationControlMechanism_Execution>` executed by a Composition's `
+it is nested.  Whether `simulations <OptimizationControlMechanism_Execution>` executed by a Composition's `controller
 <Composition_Controller>` are reported is determined by the **report_simulations** argument, using a
 `ReportSimulations` option and, if displayed, is indented relative to the `controller <Composition.controller>`
 that executed the simulations.  Output is reported to the devices specified in the **report_to_devices** argument
@@ -63,7 +63,7 @@ Simulations
 -----------
 
 Output and progress reporting can include execution in `simulations <OptimizationControlMechanism_Execution>`
-of a Composition's `controller <Composition_Controller>`), by specifying a `ReportSimulation` option in the
+of a Composition's `controller <Composition_Controller>`), by specifying a `ReportSimulations` option in the
 **report_simulations** argument of a Composition's `run <Composition.run>` or `learn <Composition.run>` methods.
 
 .. _Report_To_Device:
@@ -296,8 +296,10 @@ class ReportParams(Enum):
     """
     Options used in the **report_params** argument of a `Composition`\'s `execution methods
     <Composition_Execution_Methods>`, to specify the scope of reporting for values of it `Parameters`
-    and those of its `Nodes <Composition_Nodes>` (see `Reporting Parameter values <Report_Params>` under
-    `Report_Output` for additional details).
+    and those of its `Nodes <Composition_Nodes>` (see `Report_Output` for additional details).
+    COMMENT:
+    (see `Reporting Parameter values <Report_Params>` under `Report_Output` for additional details).
+    COMMENT
 
     .. technical_note::
         Use of these options is expected in the **report_output** constructor for the `Report` object,
@@ -312,15 +314,13 @@ class ReportParams(Enum):
     USE_PREFS
         defers to `reportOutputPref <PreferenceSet_reportOutputPref>` settings of individual Components.
 
-    MODULATED (aka CONTROLLED)
-        report all `Parameters` that are being `modulated <ModulatorySignal.modulation>` (i.e., controlled) by a
-        `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
-        receives a `ControlProjection` from a `ControlSignal`.
-
     CONTROLLED (aka MODULATED)
         report all `Parameters` that are being controlled (i.e., `modulated <ModulatorySignal.modulation>`) by a
         `ControlMechanism` within the `Composition` (that is, those for which the corresponding `ParameterPort`
         receives a `ControlProjection` from a `ControlSignal`).
+
+    MODULATED (aka CONTROLLED)
+        this is identical to `ReportParams.CONTROLLED`.
 
     MONITORED
         report the `value <Mechanism_Base.value>` of any `Mechanism` that is being `monitored
@@ -341,6 +341,7 @@ class ReportParams(Enum):
     MONITORED = auto()
     LOGGED = auto()
     ALL = auto()
+
 
 MODULATED = ReportParams.MODULATED
 CONTROLLED = ReportParams.CONTROLLED
@@ -467,6 +468,7 @@ class ReportDevices(Flag):
     RECORD = auto()
     DIVERT = auto()
     PNL_VIEW = auto()
+
 
 CONSOLE = ReportDevices.CONSOLE
 RECORD = ReportDevices.RECORD
@@ -616,7 +618,7 @@ class Report:
     _outermost_comp : Composition
         the Composition that instantiated the Report in the outermost context of execution, and on which
         output and progress reports are stored by `_print_and_record_reports <Report._print_and_record_reports>`
-        in the Compositon's `rich_diverted_reports <Composition.rich_diverted_reports>` and `recorded_reports
+        in the Composition's `rich_diverted_reports <Composition.rich_diverted_reports>` and `recorded_reports
         <Composition.recorded_reports>` attributes if the `rich_divert <Report.rich_divert>`
         and/or `record_reports <Report.record_reports>` are set, respectively.
 
@@ -997,7 +999,7 @@ class Report:
             in the output report.
 
         node : Composition or Mechanism : default None
-            specifies `node <Composition_Nodes>` for which output is being reported.
+            specifies `Node <Composition_Nodes>` for which output is being reported.
         """
 
         if self._report_output is ReportOutput.OFF:
@@ -1261,8 +1263,11 @@ class Report:
 
             # Only deal with ReportOutput.FULL;  ReportOutput.TERSE is handled above under content='controller_start'
             if report_output in {ReportOutput.FULL}:
-
-                features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
+                try:
+                    features = [p.parameters.value.get(context).tolist() for p in node.input_ports if p.name != OUTCOME]
+                except AttributeError:
+                    features = [np.array(p.parameters.value.get(context)).tolist()
+                                for p in node.input_ports if p.name != OUTCOME]
                 outcome = node.input_ports[OUTCOME].parameters.value.get(context).tolist()
                 control_allocation = [r.tolist() for r in node.control_allocation]
 
@@ -1323,7 +1328,7 @@ class Report:
                               is_controller=False
                               ) -> Panel:
         """
-        Generates formatted output report for the `node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
+        Generates formatted output report for the `Node <Composition_Nodes>` of a `Composition` or a `Mechanism`.
         Called by `report_output <Report.report_output>` for execution of a Composition, and directly by the `execute
         <Mechanism_Base>` method of a `Mechanism` when executed on its own.
 
@@ -1342,7 +1347,7 @@ class Report:
             if it is not specified, it is resolved by calling the node's get_input_values() method.
 
         params : 'params' or 'parameters' : default None
-            specifies whether to report the values of the `Parameters` of the `node <Composition_Nodes>` being executed
+            specifies whether to report the values of the `Parameters` of the `Node <Composition_Nodes>` being executed
             together with its input and output.
 
         output_val : 2d array : default None
@@ -1679,7 +1684,7 @@ class Report:
 
         # Don't indent for nodes inside Panels (except Composition.controller, which is never in a Panel)
         if report_output is ReportOutput.FULL and not is_controller:
-                depth_indent = 0
+            depth_indent = 0
 
         return Padding.indent(report, depth_indent)
 
@@ -1727,7 +1732,7 @@ class Report:
             # If was simulating previously, then have just exited, so:
             #   (note: need to use transition and not explicit count of simulations,
             #    since number of simulation trials being run is generally not known)
-                # - turn it off
+            #     - turn it off
             self.output_reports[caller][SIMULATING] = False
 
         # Update progress report
@@ -1807,15 +1812,15 @@ class Report:
                     self._rich_progress.console.print('')
             # Record output reports as they are created
             if len(self._execution_stack)==0 and self._report_output is not ReportOutput.OFF:
-                    if self._rich_divert:
-                        self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
-                    if self._record_reports:
-                        with self._recording_console.capture() as capture:
-                            if report_type is EXECUTE_REPORT:
-                                self._recording_console.print(output_report.trial_report)
-                            elif report_type is RUN_REPORT:
-                                self._recording_console.print(output_report.run_report)
-                        self._recorded_reports += capture.get()
+                if self._rich_divert:
+                    self._rich_diverted_reports += (f'\n{self._rich_progress.console.file.getvalue()}')
+                if self._record_reports:
+                    with self._recording_console.capture() as capture:
+                        if report_type == EXECUTE_REPORT:
+                            self._recording_console.print(output_report.trial_report)
+                        elif report_type == RUN_REPORT:
+                            self._recording_console.print(output_report.run_report)
+                    self._recorded_reports += capture.get()
 
         # Record progress after execution of outer-most Composition
         if (self._report_output is not ReportOutput.OFF

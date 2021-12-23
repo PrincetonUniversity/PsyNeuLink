@@ -470,6 +470,7 @@ class LogCondition(enum.IntFlag):
         except KeyError:
             raise LogError("\'{}\' is not a value of {}".format(s, LogCondition))
 
+
 TIME_NOT_SPECIFIED = 'Time Not Specified'
 EXECUTION_CONDITION_NAMES = {LogCondition.PROCESSING.name,
                              LogCondition.LEARNING.name,
@@ -482,6 +483,8 @@ class LogTimeScaleIndices(AutoNumber):
     TRIAL = ()
     PASS = ()
     TIME_STEP = ()
+
+
 NUM_TIME_SCALES = len(LogTimeScaleIndices.__members__)
 TIME_SCALE_NAMES = list(LogTimeScaleIndices.__members__)
 

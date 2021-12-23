@@ -39,10 +39,10 @@ def pytest_runtest_setup(item):
             pytest.skip('{0} tests not requested'.format(m))
 
     if 'cuda' in item.keywords and not pnlvm.ptx_enabled:
-            pytest.skip('PTX engine not enabled/available')
+        pytest.skip('PTX engine not enabled/available')
 
     if 'pytorch' in item.keywords and not pytorch_available:
-            pytest.skip('pytorch not available')
+        pytest.skip('pytorch not available')
 
     doctest.ELLIPSIS_MARKER = "[...]"
 
@@ -118,7 +118,7 @@ def get_func_execution(func, func_mode):
     elif func_mode == 'Python':
         return func.function
     else:
-        assert False, "Unknown function mode: {}".format(mech_mode)
+        assert False, "Unknown function mode: {}".format(func_mode)
 
 @pytest.helpers.register
 def get_mech_execution(mech, mech_mode):

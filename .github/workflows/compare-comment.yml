@@ -11,15 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.workflow_run.event == 'pull_request' &&
         github.event.workflow_run.conclusion == 'success'
+    permissions:
+      actions: read
+      pull-requests: write
 
     steps:
-
     - name: 'Download docs artifacts'
       id: docs-artifacts
-      uses: actions/github-script@v4.1
+      uses: actions/github-script@v5
       with:
         script: |
-          var artifacts = await github.actions.listWorkflowRunArtifacts({
+          var artifacts = await github.rest.actions.listWorkflowRunArtifacts({
              owner: context.repo.owner,
              repo: context.repo.repo,
              run_id: ${{ github.event.workflow_run.id }},
@@ -44,7 +46,7 @@ jobs:
           var fs = require('fs');
           for (artifact of docsArtifacts) {
             console.log('Downloading: ' + artifact.name);
-            var download = await github.actions.downloadArtifact({
+            var download = await github.rest.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
                artifact_id: artifact.id,
@@ -68,7 +70,7 @@ jobs:
         (diff -r docs-base docs-head && echo 'No differences!' || true) | tee ./result.diff
 
     - name: Post comment with docs diff
-      uses: actions/github-script@v4.1
+      uses: actions/github-script@v5
       with:
         script: |
           var fs = require('fs');
@@ -77,7 +79,7 @@ jobs:
 
           console.log('Posting diff to PR: ' + issue_number);
 
-          github.issues.createComment({
+          github.rest.issues.createComment({
             issue_number: issue_number,
             owner: context.repo.owner,
             repo: context.repo.repo,

@@ -12,9 +12,7 @@ import psyneulink as pnl
 import networkx as nx
 import os
 import sys
-import warnings
 import time
-#warnings.filterwarnings("error", category=UserWarning)
 
 ###################### Convenience functions for testing script #################################
 

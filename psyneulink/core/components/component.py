@@ -498,7 +498,9 @@ import inspect
 import itertools
 import logging
 import numbers
+import re
 import types
+import typing
 import warnings
 from abc import ABCMeta
 from collections.abc import Iterable
@@ -648,14 +650,16 @@ def make_parameter_property(param):
     def getter(self):
         p = getattr(self.parameters, param.name)
 
-        if p.modulable:
+        if p.port is not None:
+            assert p.modulable
             return getattr(self, _get_parametervalue_attr(p))
         else:
             return p._get(self.most_recent_context)
 
     def setter(self, value):
         p = getattr(self.parameters, param.name)
-        if p.modulable:
+        if p.port is not None:
+            assert p.modulable
             warnings.warn(
                 'Setting parameter values directly using dot notation'
                 ' may be removed in a future release. It is replaced with,'
@@ -1099,8 +1103,6 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         Note: if parameter_validation is off, validation is suppressed (for efficiency) (Component class default = on)
 
         """
-        self._handle_illegal_kwargs(**kwargs)
-
         context = Context(
             source=ContextFlags.CONSTRUCTOR,
             execution_phase=ContextFlags.IDLE,
@@ -1116,6 +1118,16 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             function_params = copy.copy(param_defaults[FUNCTION_PARAMS])
         except (KeyError, TypeError):
             function_params = {}
+
+        # if function is string, assume any unknown kwargs are for the
+        # corresponding UDF expression
+        if isinstance(function, (types.FunctionType, str)):
+            function_params = {
+                **kwargs,
+                **function_params
+            }
+        else:
+            self._handle_illegal_kwargs(**kwargs)
 
         # allow override of standard arguments with arguments specified in
         # params (here, param_defaults) argument
@@ -1146,6 +1158,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             default_variable = var
             self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
+
+        self.parameters.variable._set(
+            copy_parameter_value(default_variable),
+            context=context,
+            skip_log=True,
+            skip_history=True,
+            override=True
+        )
 
         # ASSIGN PREFS
         _assign_prefs(self, prefs, BasePreferenceSet)
@@ -1324,7 +1344,12 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             x = p.get(context)
             if isinstance(x, np.random.RandomState):
                 # Skip first element of random state (id string)
-                val = pnlvm._tupleize(x.get_state()[1:])
+                val = pnlvm._tupleize((*x.get_state()[1:], x.used_seed[0]))
+            elif isinstance(x, np.random.Generator):
+                state = x.bit_generator.state
+                val = pnlvm._tupleize((state['state']['counter'], state['state']['key'],
+                                       state['buffer'], state['uinteger'], state['buffer_pos'],
+                                       state['has_uint32'], x.used_seed[0]))
             elif isinstance(x, Time):
                 val = tuple(getattr(x, graph_scheduler.time._time_scale_to_attr_str(t)) for t in TimeScale)
             elif isinstance(x, Component):
@@ -1348,13 +1373,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
-                     "input_labels_dict", "output_labels_dict",
-                     "modulated_mechanisms", "grid",
+                     "input_labels_dict", "output_labels_dict", "num_estimates",
+                     "modulated_mechanisms", "grid", "control_signal_params",
                      "activation_derivative_fct", "input_specification",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "auto", "hetero", "cost", "costs", "combined_costs",
+                     "control_signal",
                      # autodiff specific types
                      "pytorch_representation", "optimizer"}
         # Mechanism's need few extra entires:
@@ -1420,8 +1446,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             elif isinstance(x, Component):
                 return x._get_param_initializer(context)
 
-            try:   # This can't use tupleize and needs to recurse to handle
-                   # 'search_space' list of SampleIterators
+            try:
+                # This can't use tupleize and needs to recurse to handle
+                # 'search_space' list of SampleIterators
                 return tuple(_convert(i) for i in x)
             except TypeError:
                 return x if x is not None else tuple()
@@ -1431,8 +1458,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             # Modulated parameters change shape to array
             if np.ndim(param) == 0 and self._is_param_modulated(p):
                 return (param,)
-            elif p.name == 'num_estimates':
-                return 0 if param is None else param
+            elif p.name == 'num_trials_per_estimate': # Should always be int
+                return 0 if param is None else int(param)
             elif p.name == 'matrix': # Flatten matrix
                 return tuple(np.asfarray(param).flatten())
             return _convert(param)
@@ -1684,15 +1711,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self._init_args.update(kwargs)
 
             # Complete initialization
-            # MODIFIED 10/27/18 OLD:
             super(self.__class__,self).__init__(**self._init_args)
-
-            # MODIFIED 10/27/18 NEW:  FOLLOWING IS NEEDED TO HANDLE FUNCTION DEFERRED INIT (JDC)
-            # try:
-            #     super(self.__class__,self).__init__(**self._init_args)
-            # except:
-            #     self.__init__(**self._init_args)
-            # MODIFIED 10/27/18 END
 
             # If name was assigned, "[DEFERRED INITIALIZATION]" was appended to it, so remove it
             if DEFERRED_INITIALIZATION in self.name:
@@ -1947,6 +1966,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             Composition_Base,
             ComponentsMeta,
             types.MethodType,
+            types.ModuleType,
             functools.partial,
         )
         alias_names = {p.name for p in self.class_parameters if isinstance(p, ParameterAlias)}
@@ -2040,7 +2060,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             p.spec = copy_parameter_value(p.spec)
 
             # set default to None context to ensure it exists
-            if p.getter is None and p._get(context) is None:
+            if (
+                p._get(context) is None and p.getter is None
+                or context.execution_id not in p.values
+            ):
                 if p._user_specified:
                     val = param_defaults[p.name]
 
@@ -2536,10 +2559,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     inspect.isclass(param_value) and
                     inspect.isclass(getattr(self.defaults, param_name))
                     and issubclass(param_value, getattr(self.defaults, param_name))):
-                    # Assign instance to target and move on
-                    #  (compatiblity check no longer needed and can't handle function)
-                    target_set[param_name] = param_value()
-                    continue
+                # Assign instance to target and move on
+                #  (compatiblity check no longer needed and can't handle function)
+                target_set[param_name] = param_value()
+                continue
 
             # Check if param value is of same type as one with the same name in defaults
             #    don't worry about length
@@ -2818,11 +2841,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         # Specification is a standard python function, so wrap as a UserDefnedFunction
         # Note:  parameter_ports for function's parameters will be created in_instantiate_attributes_after_function
-        if isinstance(function, types.FunctionType):
-            function = UserDefinedFunction(default_variable=function_variable,
-                                                custom_function=function,
-                                                owner=self,
-                                                context=context)
+        if isinstance(function, (types.FunctionType, str)):
+            function = UserDefinedFunction(
+                default_variable=function_variable,
+                custom_function=function,
+                owner=self,
+                context=context,
+                **function_params,
+            )
 
         # Specification is an already implemented Function
         elif isinstance(function, Function):
@@ -3110,7 +3136,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     self.parameter_ports.parameter_mapping[param_port.source] = param_port
                 except TypeError:
                     pass
-                param_port.source._port = param_port
+                param_port.source.port = param_port
 
     def _get_current_parameter_value(self, parameter, context=None):
         from psyneulink.core.components.ports.parameterport import ParameterPortError
@@ -3513,6 +3539,81 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 visited.add(obj)
                 obj._propagate_most_recent_context(context, visited)
 
+    def all_dependent_parameters(
+        self,
+        filter_name: typing.Union[str, typing.Iterable[str]] = None,
+        filter_regex: typing.Union[str, typing.Iterable[str]] = None,
+    ):
+        """Dictionary of Parameters of this Component and its \
+        `_dependent_components` filtered by **filter_name** and \
+        **filter_regex**. If no filter is specified, all Parameters \
+        are included.
+
+        Args:
+            filter_name (Union[str, Iterable[str]], optional): The \
+                exact name or names of Parameters to include. Defaults \
+                to None.
+            filter_regex (Union[str, Iterable[str]], optional): \
+                Regular expression patterns. If any pattern matches a \
+                Parameter name (using re.match), it will be included \
+                in the result. Defaults to None.
+
+        Returns:
+            dict[Parameter:Component]: Dictionary of filtered Parameters
+        """
+        def _all_dependent_parameters(obj, filter_name, filter_regex, visited):
+            parameters = {}
+
+            if isinstance(filter_name, str):
+                filter_name = [filter_name]
+
+            if isinstance(filter_regex, str):
+                filter_regex = [filter_regex]
+
+            if filter_name is not None:
+                filter_name = set(filter_name)
+
+            try:
+                filter_regex = [re.compile(r) for r in filter_regex]
+            except TypeError:
+                pass
+
+            for p in obj.parameters:
+                include = filter_name is None and filter_regex is None
+
+                if filter_name is not None:
+                    if p.name in filter_name:
+                        include = True
+
+                if not include and filter_regex is not None:
+                    for r in filter_regex:
+                        if r.match(p.name):
+                            include = True
+                            break
+
+                # owner check is primarily for value parameter on
+                # Composition which is deleted in
+                # ba56af82585e2d61f5b5bd13d9a19b7ee3b60124 presumably
+                # for clarity (results is used instead)
+                if include and p._owner._owner is obj:
+                    parameters[p] = obj
+
+            for c in obj._dependent_components:
+                if c not in visited:
+                    visited.add(c)
+                    parameters.update(
+                        _all_dependent_parameters(
+                            c,
+                            filter_name,
+                            filter_regex,
+                            visited
+                        )
+                    )
+
+            return parameters
+
+        return _all_dependent_parameters(self, filter_name, filter_regex, set())
+
     @property
     def _dict_summary(self):
         from psyneulink.core.compositions.composition import Composition
@@ -3755,21 +3856,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # store all Components in Parameters to be used in
         # _dependent_components for _initialize_from_context
         for p in self.parameters:
+            param_value = p._get(context)
             try:
-                param_value = p._get(context)
-                try:
-                    param_value = param_value.__self__
-                except AttributeError:
-                    pass
+                param_value = param_value.__self__
+            except AttributeError:
+                pass
 
-                if isinstance(param_value, Component) and param_value is not self:
-                    self._parameter_components.add(param_value)
-            # ControlMechanism and GatingMechanism have Parameters that only
-            # throw these errors
-            except Exception as e:
-                # cannot import the specific exceptions due to circularity
-                if 'attribute is not implemented on' not in str(e):
-                    raise
+            if isinstance(param_value, Component) and param_value is not self:
+                self._parameter_components.add(param_value)
 
     @property
     def _dependent_components(self):
@@ -3855,23 +3949,20 @@ class ParameterValue:
 
     @property
     def modulated(self):
-        try:
-            is_modulated = (self._parameter in self._owner.parameter_ports)
-        except AttributeError:
-            is_modulated = False
-
-        try:
-            is_modulated = is_modulated or (self._parameter in self._owner.owner.parameter_ports)
-        except AttributeError:
-            pass
-
-        if is_modulated:
-            return self._owner._get_current_parameter_value(
+        # TODO: consider making this
+        # self._parameter.port.is_modulated(self._owner.most_recent_context)
+        # because the port existing doesn't necessarily mean modulation
+        # is actually happening
+        if self._parameter.port is not None:
+            return self._parameter.port.owner._get_current_parameter_value(
                 self._parameter,
                 self._owner.most_recent_context
             )
         else:
-            warnings.warn(f'{self._parameter.name} is not currently modulated.')
+            warnings.warn(
+                f'{self._parameter.name} is not currently modulated in most'
+                f' recent context {self._owner.most_recent_context}'
+            )
             return None
 
     @modulated.setter

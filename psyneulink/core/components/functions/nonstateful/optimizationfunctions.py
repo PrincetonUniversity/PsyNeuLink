@@ -53,13 +53,15 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import call_with_pruned_args
 
 __all__ = ['OptimizationFunction', 'GradientOptimization', 'GridSearch', 'GaussianProcess', 'ParamEstimationFunction',
-           'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION',
-           'SEARCH_FUNCTION', 'SEARCH_SPACE', 'SEARCH_TERMINATION_FUNCTION', 'SIMULATION_PROGRESS'
+           'ASCENT', 'DESCENT', 'DIRECTION', 'MAXIMIZE', 'MINIMIZE', 'OBJECTIVE_FUNCTION', 'SEARCH_FUNCTION',
+           'SEARCH_SPACE', 'RANDOMIZATION_DIMENSION', 'SEARCH_TERMINATION_FUNCTION', 'SIMULATION_PROGRESS'
            ]
 
 OBJECTIVE_FUNCTION = 'objective_function'
+AGGREGATION_FUNCTION = 'aggregation_function'
 SEARCH_FUNCTION = 'search_function'
 SEARCH_SPACE = 'search_space'
+RANDOMIZATION_DIMENSION = 'randomization_dimension'
 SEARCH_TERMINATION_FUNCTION = 'search_termination_function'
 DIRECTION = 'direction'
 SIMULATION_PROGRESS = 'simulation_progress'
@@ -69,6 +71,13 @@ class OptimizationFunctionError(Exception):
         self.error_value = error_value
 
 
+def _num_estimates_getter(owning_component, context):
+    if owning_component.parameters.randomization_dimension._get(context) is None:
+        return 1
+    else:
+        return owning_component.parameters.search_space._get(context)[owning_component.randomization_dimension].num
+
+
 class OptimizationFunction(Function_Base):
     """
     OptimizationFunction(                            \
@@ -76,6 +85,7 @@ class OptimizationFunction(Function_Base):
     objective_function=lambda x:0,                   \
     search_function=lambda x:x,                      \
     search_space=[0],                                \
+    randomization_dimension=None,                    \
     search_termination_function=lambda x,y,z:True,   \
     save_samples=False,                              \
     save_values=False,                               \
@@ -102,18 +112,22 @@ class OptimizationFunction(Function_Base):
     When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
 
         - get sample from `search_space <OptimizationFunction.search_space>` by calling `search_function
-          <OptimizationFunction.search_function>`
+          <OptimizationFunction.search_function>`;
         ..
-        - compute value of `objective_function <OptimizationFunction.objective_function>` for the sample
-          by calling `objective_function <OptimizationFunction.objective_function>`;
+        - estimate the value of `objective_function <OptimizationFunction.objective_function>` for the sample
+          by calling `objective_function <OptimizationFunction.objective_function>` the number of times
+          specified in its `num_estimates <OptimizationFunction.num_estimates>` attribute;
         ..
-        - report value returned by `objective_function <OptimizationFunction.objective_function>` for the sample
-          by calling `report_value <OptimizationFunction.report_value>`;
+        - aggregate value of the estimates using `aggregation_function <OptimizationFunction.aggregation_function>`
+          (the default is to average the values; if `aggregation_function <OptimizationFunction.aggregation_function>`
+          is not specified, the entire list of estimates is returned);
+        ..
+        - report the aggregated value for the sample by calling `report_value <OptimizationFunction.report_value>`;
         ..
         - evaluate `search_termination_function <OptimizationFunction.search_termination_function>`.
 
-    The current iteration numberris contained in `iteration <OptimizationFunction.iteration>`. Iteration continues until
-    all values of `search_space <OptimizationFunction.search_space>` have been evaluated and/or
+    The current iteration number is contained in `iteration <OptimizationFunction.iteration>`. Iteration continues
+    until all values of `search_space <OptimizationFunction.search_space>` have been evaluated and/or
     `search_termination_function <OptimizationFunction.search_termination_function>` returns `True`.  The `function
     <OptimizationFunction.function>` returns:
 
@@ -146,18 +160,17 @@ class OptimizationFunction(Function_Base):
         the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
         relevant argument(s) as `NotImplemnted`.
 
-    COMMENT:
-    NOTES TO DEVELOPERS:
-    - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments required
-      by some subclasses but not others (e.g., search_space needed by `GridSearch` but not `GradientOptimization`) so
-      that subclasses can be used interchangeably by OptimizationMechanisms.
+    .. technical_note::
+       - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments
+         required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
+         `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
-    - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
-      `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
-      reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
-      `NotImplemented` should be passed as the argument's value in the call to super (i.e., the OptimizationFunction's
-      constructor).
-    COMMENT
+       - Subclasses with attributes that depend on one of the OptimizationFunction's parameters should implement the
+         `reset <OptimizationFunction.reset>` method, that calls super().reset(*args) and then
+         reassigns the values of the dependent attributes accordingly.  If an argument is not needed for the subclass,
+         `NotImplemented` should be passed as the argument's value in the call to super (i.e.,
+         the OptimizationFunction's
+         constructor).
 
 
     Arguments
@@ -168,9 +181,18 @@ class OptimizationFunction(Function_Base):
         `objective_function <OptimizationFunction.objective_function>`.
 
     objective_function : function or method : default None
-        specifies function used to evaluate sample in each iteration of the `optimization process
-        <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply returns
-        the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
+        specifies function used to make a single estimate for a sample, `num_estimates
+        <OptimizationFunction.num_estimates>` of which are made for a given sample in each iteration of the
+        `optimization process <OptimizationFunction_Procedure>`; if it is not specified, a default function is used
+        that simply returns the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
+        <OptimizationFunction_Defaults>`).
+
+    aggregation_function : function or method : default None
+        specifies function used to aggregate the values returned over the `num_estimates
+        <OptimizationFunction.num_estimates>` calls to the `objective_function
+        <OptimizationFunction.objective_function>` for a given sample in each iteration of the `optimization
+        process <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply
+        returns the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
         <OptimizationFunction_Defaults>`).
 
     search_function : function or method : default None
@@ -189,6 +211,10 @@ class OptimizationFunction(Function_Base):
         (e.g., as does `GradientOptimization`). If it is required and not specified, the optimization process
         executes exactly once using the value passed as its `variable <OptimizationFunction.variable>` parameter
         (see `note <OptimizationFunction_Defaults>`).
+
+    randomization_dimension : int
+        specifies the index of `search_space <OptimizationFunction.search_space>` containing the seeds for use in
+        randomization over each estimate of a sample (see `num_estimates <OptimizationFunction.num_estimates>`).
 
     search_termination_function : function or method : None
         specifies function used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`.
@@ -231,10 +257,28 @@ class OptimizationFunction(Function_Base):
         `objective_function <OptimizationFunction.objective_function>` in each iteration of the `optimization process
         <OptimizationFunction_Procedure>`.  The number of SampleIterators in the list determines the dimensionality
         of each sample:  in each iteration of the `optimization process <OptimizationFunction_Procedure>`, each
-        SampleIterator is called upon to provide the value for one of the dimensions of the sample.m`NotImplemented`
+        SampleIterator is called upon to provide the value for one of the dimensions of the sample
         if the `objective_function <OptimizationFunction.objective_function>` generates its own samples.  If it is
         required and not specified, the optimization process executes exactly once using the value passed as its
         `variable <OptimizationFunction.variable>` parameter (see `note <OptimizationFunction_Defaults>`).
+
+    randomization_dimension : int or None
+        the index of `search_space <OptimizationFunction.search_space>` containing the seeds for use in randomization
+        over each estimate of a sample (see `num_estimates <OptimizationFunction.num_estimates>`);  if num_estimates
+        is not specified, this is None, and only a single estimate is made for each sample.
+
+    num_estimates : int or None
+        the number of independent estimates evaluated (i.e., calls made to the OptimizationFunction's
+        `objective_function <OptimizationFunction.objective_function>` for each sample, and aggregated over
+        by its `aggregation_function <OptimizationFunction.aggregation_function>` to determine the estimated value
+        for a given sample.  This is determined from the `search_space <OptimizationFunction.search_space>` by
+        accessing its `randomization_dimension <OptimizationFunction.randomization_dimension>` and determining the
+        the length of (i.e., number of elements specified for) that dimension.
+
+    aggregation_function : function or method
+        used to aggregate the values returned over the `num_estimates <OptimizationFunction.num_estimates>` calls to
+        the `objective_function <OptimizationFunction.objective_function>` for a given sample in each iteration of
+        the `optimization process <OptimizationFunction_Procedure>`.
 
     search_termination_function : function or method that returns a boolean value
         used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`; if it is required
@@ -278,11 +322,22 @@ class OptimizationFunction(Function_Base):
                     :default value: None
                     :type:
 
+                num_estimates
+                    see `num_estimates <OptimizationFunction.num_estimates>`
+
+                    :default value: None
+                    :type: ``int``
+
                 objective_function
                     see `objective_function <OptimizationFunction.objective_function>`
 
                     :default value: lambda x: 0
                     :type: ``types.FunctionType``
+
+                randomization_dimension
+                    see `randomization_dimension <OptimizationFunction.randomization_dimension>`
+                    :default value: None
+                    :type: ``int``
 
                 save_samples
                     see `save_samples <OptimizationFunction.save_samples>`
@@ -331,9 +386,14 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x,n: sum(x) / n, stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
+        randomization_dimension = Parameter(None, stateful=False, loggable=False)
+        num_estimates = Parameter(None, stateful=True, loggable=True, read_only=True,
+                                  dependencies=[randomization_dimension, search_space],
+                                  getter=_num_estimates_getter)
 
         save_samples = Parameter(False, pnl_internal=True)
         save_values = Parameter(False, pnl_internal=True)
@@ -349,8 +409,10 @@ class OptimizationFunction(Function_Base):
         self,
         default_variable=None,
         objective_function:tc.optional(is_function_type)=None,
+        aggregation_function:tc.optional(is_function_type)=None,
         search_function:tc.optional(is_function_type)=None,
         search_space=None,
+        randomization_dimension=None,
         search_termination_function:tc.optional(is_function_type)=None,
         save_samples:tc.optional(bool)=None,
         save_values:tc.optional(bool)=None,
@@ -367,11 +429,16 @@ class OptimizationFunction(Function_Base):
         if objective_function is None:
             self._unspecified_args.append(OBJECTIVE_FUNCTION)
 
+        if aggregation_function is None:
+            self._unspecified_args.append(AGGREGATION_FUNCTION)
+
         if search_function is None:
             self._unspecified_args.append(SEARCH_FUNCTION)
 
         if search_termination_function is None:
             self._unspecified_args.append(SEARCH_TERMINATION_FUNCTION)
+
+        self.randomization_dimension = randomization_dimension
 
         super().__init__(
             default_variable=default_variable,
@@ -380,6 +447,7 @@ class OptimizationFunction(Function_Base):
             max_iterations=max_iterations,
             search_space=search_space,
             objective_function=objective_function,
+            aggregation_function=aggregation_function,
             search_function=search_function,
             search_termination_function=search_termination_function,
             params=params,
@@ -398,6 +466,12 @@ class OptimizationFunction(Function_Base):
                 raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
                                                 format(repr(OBJECTIVE_FUNCTION), self.__class__.__name__,
                                                        request_set[OBJECTIVE_FUNCTION].__name__))
+
+        if AGGREGATION_FUNCTION in request_set and request_set[AGGREGATION_FUNCTION] is not None:
+            if not is_function_type(request_set[AGGREGATION_FUNCTION]):
+                raise OptimizationFunctionError("Specification of {} arg for {} ({}) must be a function or method".
+                                                format(repr(AGGREGATION_FUNCTION), self.__class__.__name__,
+                                                       request_set[AGGREGATION_FUNCTION].__name__))
 
         if SEARCH_FUNCTION in request_set and request_set[SEARCH_FUNCTION] is not None:
             if not is_function_type(request_set[SEARCH_FUNCTION]):
@@ -437,9 +511,11 @@ class OptimizationFunction(Function_Base):
         self,
         default_variable=None,
         objective_function=None,
+        aggregation_function=None,
         search_function=None,
         search_termination_function=None,
         search_space=None,
+        randomization_dimension=None,
         context=None
     ):
         """Reset parameters of the OptimizationFunction
@@ -457,6 +533,8 @@ class OptimizationFunction(Function_Base):
             request_set={
                 'default_variable': default_variable,
                 'objective_function': objective_function,
+                'aggregation_function': aggregation_function,
+                RANDOMIZATION_DIMENSION : randomization_dimension,
                 'search_function': search_function,
                 'search_termination_function': search_termination_function,
                 'search_space': search_space,
@@ -469,6 +547,10 @@ class OptimizationFunction(Function_Base):
             self.parameters.objective_function._set(objective_function, context)
             if OBJECTIVE_FUNCTION in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(OBJECTIVE_FUNCTION)]
+        if aggregation_function is not None:
+            self.parameters.aggregation_function._set(aggregation_function, context)
+            if AGGREGATION_FUNCTION in self._unspecified_args:
+                del self._unspecified_args[self._unspecified_args.index(AGGREGATION_FUNCTION)]
         if search_function is not None:
             self.parameters.search_function._set(search_function, context)
             if SEARCH_FUNCTION in self._unspecified_args:
@@ -481,6 +563,8 @@ class OptimizationFunction(Function_Base):
             self.parameters.search_space._set(search_space, context)
             if SEARCH_SPACE in self._unspecified_args:
                 del self._unspecified_args[self._unspecified_args.index(SEARCH_SPACE)]
+        if randomization_dimension is not None:
+            self.parameters.randomization_dimension._set(randomization_dimension, context)
 
     def _function(self,
                  variable=None,
@@ -504,7 +588,6 @@ class OptimizationFunction(Function_Base):
             second list contains the values returned by `objective_function <OptimizationFunction.objective_function>`
             for all the samples in the order they were evaluated; otherwise it is empty.
         """
-
         if self._unspecified_args and self.initialization_status == ContextFlags.INITIALIZED:
             warnings.warn("The following arg(s) were not specified for {}: {} -- using default(s)".
                           format(self.name, ', '.join(self._unspecified_args)))
@@ -526,7 +609,6 @@ class OptimizationFunction(Function_Base):
 
         # Set up progress bar
         _show_progress = False
-        from psyneulink.core.compositions.report import ReportOutput
         if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
             _show_progress = True
             _progress_bar_char = '.'
@@ -539,11 +621,11 @@ class OptimizationFunction(Function_Base):
                   format(self.owner.name, repr(_progress_bar_char), _progress_bar_rate_str, _search_space_size))
             _progress_bar_count = 0
         # Iterate optimization process
+
         while not call_with_pruned_args(self.search_termination_function,
                                         current_sample,
                                         current_value, iteration,
                                         context=context):
-
             if _show_progress:
                 increment_progress_bar = (_progress_bar_rate < 1) or not (_progress_bar_count % _progress_bar_rate)
                 if increment_progress_bar:
@@ -552,8 +634,14 @@ class OptimizationFunction(Function_Base):
 
             # Get next sample of sample
             new_sample = call_with_pruned_args(self.search_function, current_sample, iteration, context=context)
-            # Compute new value based on new sample
-            new_value = call_with_pruned_args(self.objective_function, new_sample, context=context)
+
+            # Generate num_estimates of sample, then apply aggregation_function and return result
+            estimates = []
+            num_estimates = self.num_estimates
+            for i in range(num_estimates):
+                estimate = call_with_pruned_args(self.objective_function, new_sample, context=context)
+                estimates.append(estimate)
+            new_value = self.aggregation_function(estimates, num_estimates) if self.aggregation_function else estimates
             self._report_value(new_value)
             iteration += 1
             max_iterations = self.parameters.max_iterations._get(context)
@@ -576,6 +664,29 @@ class OptimizationFunction(Function_Base):
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
+
+
+class GridBasedOptimizationFunction(OptimizationFunction):
+    """Implement helper method for parallelizing instantiation for evaluating samples from search space."""
+
+    def _grid_evaluate(self, ocm, context):
+
+        assert ocm is ocm.agent_rep.controller
+        # Compiled evaluate expects the same variable as mech function
+        variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
+        num_evals = np.prod([d.num for d in self.search_space])
+
+        # Map allocations to values
+        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
+        execution_mode = ocm.parameters.comp_execution_mode._get(context)
+        if execution_mode == "PTX":
+            outcomes = comp_exec.cuda_evaluate(variable, num_evals)
+        elif execution_mode == "LLVM":
+            outcomes = comp_exec.thread_evaluate(variable, num_evals)
+        else:
+            assert False, f"Unknown execution mode for {ocm.name}: {execution_mode}."
+
+        return outcomes, num_evals
 
 
 ASCENT = 'ascent'
@@ -1121,7 +1232,7 @@ MAXIMIZE = 'maximize'
 MINIMIZE = 'minimize'
 
 
-class GridSearch(OptimizationFunction):
+class GridSearch(GridBasedOptimizationFunction):
     """
     GridSearch(                      \
         default_variable=None,       \
@@ -1152,7 +1263,7 @@ class GridSearch(OptimizationFunction):
     `search_space <GridSearch.search_space>2` is contained in `num_iterations <GridSearch.num_iterations>`).
     Iteration continues until all values in `search_space <GridSearch.search_space>` have been evaluated (i.e.,
     `num_iterations <GridSearch.num_iterations>` is reached), or `max_iterations <GridSearch.max_iterations>` is
-    execeeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
+    exceeded.  The function returns the sample that yielded either the highest (if `direction <GridSearch.direction>`
     is *MAXIMIZE*) or lowest (if `direction <GridSearch.direction>` is *MINIMIZE*) value of the `objective_function
     <GridSearch.objective_function>`, along with the value for that sample, as well as lists containing all of the
     samples evaluated and their values if either `save_samples <GridSearch.save_samples>` or `save_values
@@ -1275,7 +1386,7 @@ class GridSearch(OptimizationFunction):
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
@@ -1489,7 +1600,7 @@ class GridSearch(OptimizationFunction):
 
                         # Roll a dice to see if we should replace the current min
                         prob = b.fdiv(opt_count.type(1), opt_count)
-                        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_double")
+                        rand_f = ctx.get_uniform_dist_function_by_state(random_state)
                         b.call(rand_f, [random_state, rand_out_ptr])
                         rand_out = b.load(rand_out_ptr)
                         replace = b.fcmp_ordered("<", rand_out, prob)
@@ -1601,20 +1712,9 @@ class GridSearch(OptimizationFunction):
         return builder
 
     def _run_grid(self, ocm, variable, context):
-        assert ocm is ocm.agent_rep.controller
-        # Compiled evaluate expects the same variable as mech function
-        new_variable = [ip.parameters.value.get(context) for ip in ocm.input_ports]
-        num_evals = np.prod([d.num for d in self.search_space])
 
-        # Map allocations to values
-        comp_exec = pnlvm.execution.CompExecution(ocm.agent_rep, [context.execution_id])
-        variant = ocm.parameters.comp_execution_mode._get(context)
-        if variant == "PTX":
-            ct_values = comp_exec.cuda_evaluate(new_variable, num_evals)
-        elif variant == "LLVM":
-            ct_values = comp_exec.thread_evaluate(new_variable, num_evals)
-        else:
-            assert False, "Unknown OCM execution variant: {}".format(variant)
+        # "ct" => c-type variables
+        ct_values, num_evals = self._grid_evaluate(ocm, context)
 
         assert len(ct_values) == num_evals
         # Reduce array of values to min/max
@@ -1633,7 +1733,7 @@ class GridSearch(OptimizationFunction):
         bin_func(ct_param, ct_state, ct_opt_sample, ct_alloc, ct_opt_value,
                  ct_values, ct_opt_count, ct_start, ct_stop)
 
-        return ct_opt_sample, ct_opt_value, ct_values
+        return np.ctypeslib.as_array(ct_opt_sample), ct_opt_value.value, np.ctypeslib.as_array(ct_values)
 
     def _function(self,
                  variable=None,
@@ -1691,7 +1791,6 @@ class GridSearch(OptimizationFunction):
 
             # Set up progress bar
             _show_progress = False
-            from psyneulink.core.compositions.report import ReportOutput
             if hasattr(self, OWNER) and self.owner and self.owner.prefs.reportOutputPref is SIMULATION_PROGRESS:
                 _show_progress = True
                 _progress_bar_char = '.'
@@ -1762,14 +1861,24 @@ class GridSearch(OptimizationFunction):
 
 
             ocm = self._get_optimized_controller()
-            if ocm is not None and \
-               (ocm.parameters.comp_execution_mode._get(context) == "PTX" or
-                ocm.parameters.comp_execution_mode._get(context) == "LLVM"):
-                    opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
-                    # This should not be evaluated unless needed
-                    all_samples = [itertools.product(*self.search_space)]
-                    value_optimal = opt_value
-                    sample_optimal = opt_sample
+
+            # Compiled version
+            if ocm is not None and ocm.parameters.comp_execution_mode._get(context) in {"PTX", "LLVM"}:
+                opt_sample, opt_value, all_values = self._run_grid(ocm, variable, context)
+                # This should not be evaluated unless needed
+                all_samples = [s for s in itertools.product(*self.search_space)]
+                value_optimal = opt_value
+                sample_optimal = opt_sample
+
+                # These are normally stored in the parent function (OptimizationFunction).
+                # Since we didn't  call super()._function like the python path,
+                # save the values here
+                if self.parameters.save_samples._get(context):
+                    self.parameters.saved_samples._set(all_samples, context)
+                if self.parameters.save_values._get(context):
+                    self.parameters.saved_values._set(all_values, context)
+
+            # Python version
             else:
                 last_sample, last_value, all_samples, all_values = super()._function(
                     variable=variable,
@@ -2241,7 +2350,7 @@ class ParamEstimationFunction(OptimizationFunction):
         """
         variable = Parameter([[0], [0]], read_only=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         save_samples = True
         save_values = True
 
@@ -2377,7 +2486,7 @@ class ParamEstimationFunction(OptimizationFunction):
             # FIXME: This doesn't work at the moment. Need to use for loop below.
             # The batch_size is the number of estimates/simulations, set it on the
             # optimization control mechanism.
-            # self.owner.parameters.num_estimates.set(batch_size, execution_id)
+            # self.owner.parameters.num_trials_per_estimate.set(batch_size, execution_id)
 
             # Run batch_size simulations of the PsyNeuLink composition
             results = []

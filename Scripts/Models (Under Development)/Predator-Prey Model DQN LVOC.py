@@ -161,7 +161,7 @@ agent_comp.add_projections([a,b,c])
 
 ocm = OptimizationControlMechanism(name='EVC',
                                    state_features=trial_type_input_mech,
-                                   state_feature_function=FEATURE_FUNCTION,
+                                   state_feature_functions=FEATURE_FUNCTION,
                                    agent_rep=RegressionCFA(
                                            update_weights=BayesGLM(mu_0=0.5, sigma_0=0.1),
                                            prediction_terms=[PV.F, PV.C, PV.COST]
@@ -278,7 +278,7 @@ def main():
                 print(f'OUTER LOOP AGENT ACTION:{agent_action}')
 
             if VERBOSE >= STANDARD_REPORTING:
-                if agent_comp.controller_mode is BEFORE:
+                if agent_comp.controller_mode == BEFORE:
                     print_controller()
                 print(f'\nObservations:'
                       f'\n\tPlayer:\n\t\tveridical: {player_percept.parameters.variable.get(context)}'
@@ -290,7 +290,7 @@ def main():
                       f'\n\nActions:\n\tAgent: {agent_action}\n\tOptimal: {optimal_action}'
                       f'\n\nOutcome:\n\t{ocm.objective_mechanism.parameters.value.get(context)}'
                       )
-                if agent_comp.controller_mode is AFTER:
+                if agent_comp.controller_mode == AFTER:
                     print_controller()
 
             # Restore frame buffer to state after optimal action taken (at beginning of trial)

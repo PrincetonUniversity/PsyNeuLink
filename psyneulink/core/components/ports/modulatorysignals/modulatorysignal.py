@@ -203,7 +203,6 @@ detail under `ModulatorySignal_Implementation`.
 
 .. figure:: _static/Modulation_Anatomy_fig.svg
    :alt: Modulation
-   :scale: 150 %
 
    **Three types of Modulatory Components and the Ports they modulate**. The default `type of modulation
    <ModulatorySignal_Types>` for each type of ModulatorySignal, and the default Function and modulated parameter of
@@ -285,7 +284,6 @@ in the figure below:
 
 .. figure:: _static/Modulation_Detail_fig.svg
    :alt: Modulation_Detail
-   :scale: 150 %
 
    A ModulatorySignal modulates the `value <Port_Base.value>` of a Port either by modifying a parameter of the
    Port's `function <Port_Base.function>`, or assigining the `value <Port_Base.value>` of the Port directly.
@@ -410,11 +408,10 @@ Class Reference
 from psyneulink.core.components.component import component_keywords
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, DISABLE, MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, MULTIPLICATIVE_PARAM, \
     OVERRIDE, PROJECTIONS, VARIABLE
-
-from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
 __all__ = [
@@ -434,6 +431,7 @@ def _is_modulatory_spec(spec, include_matrix_spec=True):
         return True
     else:
         return False
+
 
 modulatory_signal_keywords = {MECHANISM, MODULATION}
 modulatory_signal_keywords.update(component_keywords)

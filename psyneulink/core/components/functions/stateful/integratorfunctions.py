@@ -1213,6 +1213,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         return self.convert_output_type(adjusted_value, variable)
         # MODIFIED 6/21/19 END
 
+
 S_MINUS_L = 's-l'
 L_MINUS_S = 'l-s'
 OPERATIONS = {PRODUCT, SUM, S_MINUS_L, L_MINUS_S}
@@ -2366,7 +2367,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2484,9 +2485,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         threshold = self._gen_llvm_load_param(ctx, builder, params, index, THRESHOLD)
         time_step_size = self._gen_llvm_load_param(ctx, builder, params, index, TIME_STEP_SIZE)
 
-        random_state = pnlvm.helpers.get_state_ptr(builder, self, state, "random_state")
+        random_state = ctx.get_random_state_ptr(builder, self, state, params)
         rand_val_ptr = builder.alloca(ctx.float_ty)
-        rand_f = ctx.import_llvm_function("__pnl_builtin_mt_rand_normal")
+        rand_f = ctx.get_normal_dist_function_by_state(random_state)
         builder.call(rand_f, [random_state, rand_val_ptr])
         rand_val = builder.load(rand_val_ptr)
 
@@ -2858,7 +2859,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3390,7 +3391,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         starting_point = 0.0
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,

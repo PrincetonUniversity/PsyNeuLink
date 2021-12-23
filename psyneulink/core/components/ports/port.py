@@ -1766,7 +1766,12 @@ class Port_Base(Port):
                                                                                               context=context)
                         # Match the projection's value with the value of the function parameter
                         # should be defaults.value?
-                        mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                        try:
+                            mod_proj_spec_value = type_match(projection.value, type(mod_param_value))
+                        except TypeError as error:
+                            raise PortError(f"The value for {self.name} of {self.owner.name} ({projection.value}) does "
+                                            f"not match the format ({mod_param_value}) of the Parameter it modulates "
+                                            f"({receiver.owner.name}[{mod_param_name}]).")
                         if (mod_param_value is not None
                             and not iscompatible(mod_param_value, mod_proj_spec_value)):
                             raise PortError(f"Output of {projection.name} ({mod_proj_spec_value}) is not compatible "
@@ -1801,9 +1806,12 @@ class Port_Base(Port):
         else:
             shape = list(self.defaults.variable.shape)
             # Reduce outer dimension by one
-            shape[0]-=1
-            self.defaults.variable = np.resize(self.defaults.variable, shape)
-            self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
+            # only if shape is already greater than 1 (ports keep
+            # default of [0] if no incoming projections)
+            shape[0] -= 1
+            if shape[0] > 0:
+                self.defaults.variable = np.resize(self.defaults.variable, shape)
+                self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
             del self.path_afferents[self.path_afferents.index(projection)]
 
     def _get_primary_port(self, mechanism):
@@ -3260,8 +3268,10 @@ def _parse_port_spec(port_type=None,
     #                                 port_dict[OWNER].name, spec_function_value, spec_function))
 
     if port_dict[REFERENCE_VALUE] is not None and not iscompatible(port_dict[VALUE], port_dict[REFERENCE_VALUE]):
-        raise PortError("Port value ({}) does not match reference_value ({}) for {} of {})".
-                         format(port_dict[VALUE], port_dict[REFERENCE_VALUE], port_type.__name__, owner.name))
+        port_name = f"the {port_dict[NAME]}" if (NAME in port_dict and port_dict[NAME]) else f"an"
+        raise PortError(f"The value ({port_dict[VALUE]}) for {port_name} {port_type.__name__} of "
+                        f"{owner.name} does not match the reference_value ({port_dict[REFERENCE_VALUE]}) "
+                        f"used for it at construction.")
 
     return port_dict
 

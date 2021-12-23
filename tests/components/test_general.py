@@ -1,6 +1,7 @@
 import inspect
 import psyneulink as pnl
 import pytest
+import re
 
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
@@ -81,3 +82,104 @@ def test_parameters_user_specified(class_):
         + f' {class_.__name__}: {violators}'
     )
     assert violators == set(), message
+
+
+@pytest.fixture(scope='module')
+def nested_compositions():
+    comp = pnl.Composition(name='comp')
+    inner_comp = pnl.Composition(name='Inner Composition')
+    A = pnl.TransferMechanism(
+        function=pnl.Linear(slope=5.0, intercept=2.0),
+        name='A'
+    )
+    B = pnl.TransferMechanism(function=pnl.Logistic, name='B')
+    C = pnl.RecurrentTransferMechanism(name='C')
+    D = pnl.IntegratorMechanism(
+        function=pnl.SimpleIntegrator(noise=pnl.NormalDist()),
+        name='D'
+    )
+    E = pnl.TransferMechanism(name='E')
+    F = pnl.TransferMechanism(name='F')
+
+    for m in [E, F]:
+        inner_comp.add_node(m)
+
+    for m in [A, B, C, D, inner_comp]:
+        comp.add_node(m)
+
+    comp.add_projection(pnl.MappingProjection(), A, B)
+    comp.add_projection(pnl.MappingProjection(), A, C)
+    comp.add_projection(pnl.MappingProjection(), B, D)
+    comp.add_projection(pnl.MappingProjection(), C, D)
+    comp.add_projection(pnl.MappingProjection(), C, inner_comp)
+
+    inner_comp.add_projection(pnl.MappingProjection(), E, F)
+
+    yield comp, inner_comp
+
+
+@pytest.mark.parametrize(
+    'filter_name, filter_regex, unknown_param_names',
+    [
+        (None, None, []),
+        (None, 'slo$', ['slope']),
+        ('slo', None, ['slope']),
+        ('slo', 'slo$', ['slope']),
+        (['slope', 'seed'], None, []),
+        (None, ['slope', 'seed'], []),
+        (None, ['.*_param'], ['slope']),
+    ]
+)
+def test_all_dependent_parameters(
+    nested_compositions,
+    filter_name,
+    filter_regex,
+    unknown_param_names
+):
+    comp, inner_comp = nested_compositions
+
+    params_comp = comp.all_dependent_parameters(filter_name, filter_regex)
+    params_inner_comp = inner_comp.all_dependent_parameters(
+        filter_name, filter_regex
+    )
+
+    params_comp_keys = set(params_comp.keys())
+    params_inner_comp_keys = set(params_inner_comp.keys())
+
+    assert params_inner_comp_keys.issubset(params_comp_keys)
+    assert(
+        len(params_comp_keys) == 0
+        or not params_comp_keys.issubset(params_inner_comp_keys)
+    )
+
+    if filter_name is not None:
+        if isinstance(filter_name, str):
+            filter_name = [filter_name]
+
+    if filter_regex is not None:
+        if isinstance(filter_regex, str):
+            filter_regex = [filter_regex]
+
+    for item, comp_name in [
+        (params_comp, 'comp'),
+        (params_inner_comp, 'inner_comp')
+    ]:
+        for p in item:
+            assert p._owner._owner is item[p], (p.name, comp_name)
+
+            matches = True
+            try:
+                matches = matches and p.name in filter_name
+            except TypeError:
+                pass
+
+            try:
+                for pattern in filter_regex:
+                    matches = matches or re.match(pattern, p.name)
+            except TypeError:
+                pass
+
+            assert matches
+
+        for p in unknown_param_names:
+            assert p not in item, (p.name, comp_name)

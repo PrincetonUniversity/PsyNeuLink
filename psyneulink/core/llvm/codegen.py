@@ -55,6 +55,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         numpy_handlers = {
             'tanh': self.call_builtin_np_tanh,
             'exp': self.call_builtin_np_exp,
+            'sqrt': self.call_builtin_np_sqrt,
             'equal': get_np_cmp("=="),
             'not_equal': get_np_cmp("!="),
             'less': get_np_cmp("<"),
@@ -470,6 +471,10 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         x = self.get_rval(x)
         return self._do_unary_op(builder, x, lambda builder, x: helpers.exp(self.ctx, builder, x))
 
+    def call_builtin_np_sqrt(self, builder, x):
+        x = self.get_rval(x)
+        return self._do_unary_op(builder, x, lambda builder, x: helpers.sqrt(self.ctx, builder, x))
+
     def call_builtin_np_max(self, builder, x):
         # numpy max searches for the largest scalar and propagates NaNs be default.
         # Only the default behaviour is supported atm
@@ -717,7 +722,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
     with _gen_composition_exec_context(ctx, composition, tags=tags) as (builder, data, params, cond_gen):
         state, _, comp_in, _, cond = builder.function.args
 
-        nodes_states = helpers.get_param_ptr(builder, composition, state, "nodes")
+        nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
 
         # Allocate temporary output storage
         output_storage = builder.alloca(data.type.pointee, name="output_storage")

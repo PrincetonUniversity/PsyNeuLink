@@ -185,11 +185,10 @@ import typecheck as tc
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
-from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    GATING, GATING_PROJECTION, GATING_PROJECTIONS,GATING_SIGNAL,GATING_SIGNALS,GATING_SIGNAL_SPECS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, MULTIPLICATIVE, PROJECTION_TYPE
+    GATING, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -227,29 +226,6 @@ def _is_gating_spec(spec):
 class GatingMechanismError(Exception):
     def __init__(self, error_value):
         self.error_value = error_value
-
-def _gating_allocation_getter(owning_component=None, context=None):
-    return owning_component.control_allocation
-
-def _gating_allocation_setter(value, owning_component=None, context=None):
-    owning_component.parameters.control_allocation._set(np.array(value), context)
-    return value
-
-# def _control_allocation_getter(owning_component=None, context=None):
-#     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-#     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-#     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
-#                                 f"consider using a {ControlMechanism.__name__} instead, "
-#                                 f"or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s and "
-#                                 f"{GatingSignal.__name__}s are needed.")
-#
-# def _control_allocation_setter(value, owning_component=None, context=None, **kwargs):
-#     from psyneulink.core.components.mechanisms.modulatory.controlmechanism import ControlMechanism
-#     from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
-#     raise GatingMechanismError(f"'control_allocation' attribute is not implemented on {owning_component.name};  "
-#                                 f"consider using a {ControlMechanism.__name__} instead, "
-#                                 f"or a {ControlMechanism.__name__} if both {ControlSignal.__name__}s and "
-#                                 f"{GatingSignal.__name__}s are needed.")
 
 
 class GatingMechanism(ControlMechanism):
@@ -431,12 +407,9 @@ class GatingMechanism(ControlMechanism):
                     :read only: True
         """
         # This must be a list, as there may be more than one (e.g., one per control_signal)
-        value = Parameter(np.array([defaultGatingAllocation]), aliases='control_allocation', pnl_internal=True)
-        gating_allocation = Parameter(
+        value = Parameter(
             np.array([defaultGatingAllocation]),
-            getter=_gating_allocation_getter,
-            setter=_gating_allocation_setter,
-            read_only=True,
+            aliases=['control_allocation', 'gating_allocation'],
             pnl_internal=True
         )
 

@@ -43,6 +43,7 @@ def test_ipynb(filepath):
     else:
         del os.environ["PYTHONPATH"]
 
+
 if __name__ == '__main__':
     for filepath in _find_ipynbs():
         print('Running {}'.format(filepath))

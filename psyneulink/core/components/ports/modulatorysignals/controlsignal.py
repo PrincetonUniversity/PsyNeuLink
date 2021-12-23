@@ -400,9 +400,11 @@ Class Reference
 
 import numpy as np
 import typecheck as tc
+import warnings
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
+from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
@@ -1075,8 +1077,81 @@ class ControlSignal(ModulatorySignal):
             duration_cost = self.duration_cost_function(self.parameters.cost._get(context), context=context)
             self.parameters.duration_cost._set(duration_cost, context)
 
-        return max(0.0,
-                   self.combine_costs_function([intensity_cost,
-                                                adjustment_cost,
-                                                duration_cost],
-                                               context=context))
+        all_costs = [intensity_cost, adjustment_cost, duration_cost]
+        combined_cost = self.combine_costs_function(all_costs, context=context)
+        return max(0.0, combined_cost)
+
+    def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,
+                                    extra_args=[], tags:frozenset):
+        if "costs" in tags:
+            assert len(extra_args) == 0
+            return self._gen_llvm_costs(ctx=ctx, tags=tags)
+
+        return super()._gen_llvm_function(ctx=ctx, extra_args=extra_args, tags=tags)
+
+    def _gen_llvm_costs(self, *, ctx:pnlvm.LLVMBuilderContext, tags:frozenset):
+        args = [ctx.get_param_struct_type(self).as_pointer(),
+                ctx.get_state_struct_type(self).as_pointer(),
+                ctx.get_input_struct_type(self).as_pointer()]
+
+        assert "costs" in tags
+        builder = ctx.create_llvm_function(args, self, str(self) + "_costs",
+                                           tags=tags,
+                                           return_type=ctx.float_ty)
+
+        params, state, arg_in = builder.function.args
+
+        func_params = pnlvm.helpers.get_param_ptr(builder, self, params,
+                                                 "function")
+        func_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+                                                 "function")
+
+        # FIXME: This allows INTENSITY and NONE
+        assert self.cost_options & ~CostFunctions.INTENSITY == 0
+
+        cfunc = ctx.import_llvm_function(self.function.combine_costs_fct)
+        cfunc_in = builder.alloca(cfunc.args[2].type.pointee)
+
+        # Set to 0 be default
+        builder.store(cfunc_in.type.pointee(None), cfunc_in)
+
+        cost_funcs = 0
+        if self.cost_options & CostFunctions.INTENSITY:
+            ifunc = ctx.import_llvm_function(self.function.intensity_cost_fct)
+
+            ifunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
+                                                       func_params,
+                                                       "intensity_cost_fct")
+            ifunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
+                                                      func_state,
+                                                      "intensity_cost_fct")
+            # Port input is always struct { data input, modulations }
+            ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            # point output to the proper slot in comb func input
+            assert cost_funcs == 0, "Intensity should eb the first cost function!"
+            ifunc_out = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
+            if ifunc_out.type != ifunc.args[3].type:
+                warnings.warn("Shape mismatch: {} element of combination func input ({}) doesn't match INTENSITY cost output ({})".format(cost_funcs, self.function.combine_costs_fct.defaults.variable, self.function.intensity_cost_fct.defaults.value))
+                assert self.cost_options == CostFunctions.INTENSITY
+                ifunc_out = cfunc_in
+
+            builder.call(ifunc, [ifunc_params, ifunc_state, ifunc_in, ifunc_out])
+
+            cost_funcs += 1
+
+
+        # Call combination function
+        cfunc_params = pnlvm.helpers.get_param_ptr(builder, self.function,
+                                                   func_params,
+                                                   "combine_costs_fct")
+        cfunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
+                                                  func_state,
+                                                  "combine_costs_fct")
+        cfunc_out = builder.alloca(cfunc.args[3].type.pointee)
+        builder.call(cfunc, [cfunc_params, cfunc_state, cfunc_in, cfunc_out])
+
+
+        ret_val = pnlvm.helpers.load_extract_scalar_array_one(builder, cfunc_out)
+        builder.ret(ret_val)
+
+        return builder.function

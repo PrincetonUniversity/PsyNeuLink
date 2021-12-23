@@ -101,11 +101,12 @@ of any of a Composition's `Pathway addition methods <Composition_Pathway_Additio
     ..
     .. _Pathway_Specification_List:
 
-    * **list**: [`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...] --
+    * **list**: [`Node <Composition_Nodes>`, <`Projection(s) <Projection>`,> `Node <Composition_Nodes>`...] --
       each item of the list must be a `Node <Composition_Nodes>` -- i.e., Mechanism or Composition, or a
       (`Mechanism <Mechanism>`, `NodeRoles <NodeRole>`) tuple -- or, optionally, a `Projection specification
-      <Projection_Specification>` or a (`Projection specification <Projection_Specification>`, `feedback specification
-      <Composition_Feedback_Designation>`) tuple interposed between a pair of nodes.
+      <Projection_Specification>`, a (`Projection specification <Projection_Specification>`, `feedback specification
+      <Composition_Feedback_Designation>`) tuple, or a set of either interposed between a pair of nodes (see
+      `add_linear_processing_pathway <Composition.add_linear_processing_pathway>` for additional details).
       The list must begin and end with a node.
     ..
     * **2-item tuple**: (Pathway, `LearningFunction`) -- used to specify a `learning Pathway
@@ -153,7 +154,7 @@ A Pathway has the following primary attributes:
   the **pathway** arg of its constructor; that is, depending upon how it was specified, it may or may not contain
   fully constructed `Components <Component>`.  This is passed to the **pathways** argument of a Composition's
   constructor or one of its `pathway addition methods <Composition_Pathway_Addition_Methods>` when the Pathway is used
-  in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
+  in the specification of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
   `pathways <Composition.pathways>` attribute), then the actual `Mechanism(s) <Mechanism>` and/or `Composition(s)`
   that comprise `Nodes <Composition_Nodes>`, and the `Projection(s) <Projection>` between them, are listed in the
   Pathway's `pathway <Pathway.pathway>` attribute.
@@ -162,7 +163,7 @@ A Pathway has the following primary attributes:
   or None if it is a ``template <Pathway_Template>` (i.e., was constructed on its own).
 
 * `roles <Pathway.roles>` and `Node <Composition_Nodes>` attributes - if the Pathway was created by a Composition,
-  the `roles <Pathway.roles>` attribute `this lists the `PathwayRoles <PathwayRole>` assigned to it by the Compositon
+  the `roles <Pathway.roles>` attribute `this lists the `PathwayRoles <PathwayRole>` assigned to it by the Composition
   that correspond to the `NodeRoles <NodeRole`> of its Components, and the `Nodes <Composition_Nodes>` with each of
   those `NodeRoles <NodeRole>` is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
   to a Composition (i.e., it is a `template <Pathway_Template>`), then these attributes return None.
@@ -188,16 +189,15 @@ Class Reference
 """
 import warnings
 from enum import Enum
+
 import typecheck as tc
 
-from psyneulink.core.components.functions.nonstateful.learningfunctions import LearningFunction
 from psyneulink.core.components.shellclasses import Mechanism
-from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     ANY, CONTEXT, FEEDBACK, MAYBE, NODE, LEARNING_FUNCTION, OBJECTIVE_MECHANISM, PROJECTION, TARGET_MECHANISM
 from psyneulink.core.globals.registry import register_category
-
 
 __all__ = [
     'Pathway', 'PathwayRegistry', 'PathwayRole'
@@ -224,7 +224,9 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
         is_proj = (_is_projection_spec(entry)
                    or (isinstance(entry, tuple)
                        and _is_projection_spec(entry[0])
-                       and entry[1] in {True, FEEDBACK, False, MAYBE}))
+                       and entry[1] in {True, FEEDBACK, False, MAYBE})
+                   or (isinstance(entry, (set,list))
+                       and all(_is_projection_spec(item) for item in entry)))
 
     if is_node or is_proj:
         return True
@@ -297,7 +299,7 @@ class Pathway(object):
     ---------
 
     pathway : list[`Node <Composition_Nodes>`, <`Projection <Projection>`,> `Node <Composition_Nodes>`...]
-        specifies list of `Nodes <Composition_Node>` and intercolated `Projections <Projection>` to be
+        specifies list of `Nodes <Composition_Nodes>` and intercolated `Projections <Projection>` to be
         created for the Pathway.
 
     name : str : default see `name <Pathway.name>`

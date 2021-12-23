@@ -93,7 +93,7 @@ from queue import Queue
 import time as py_time  # "time" is declared below
 import typecheck as tc
 
-from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZATION_STATUS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
+from psyneulink.core.globals.keywords import CONTEXT, CONTROL, EXECUTING, EXECUTION_PHASE, FLAGS, INITIALIZING, LEARNING, SEPARATOR_BAR, SOURCE, VALIDATE
 from psyneulink.core.globals.utilities import get_deepcopy_with_shared
 
 
@@ -234,6 +234,7 @@ class ContextFlags(enum.IntFlag):
                     flagged_items.append(c.name)
         string += ", ".join(flagged_items)
         return string
+
 
 INITIALIZATION_STATUS_FLAGS = {ContextFlags.DEFERRED_INIT,
                                ContextFlags.INITIALIZING,
@@ -390,7 +391,9 @@ class Context():
         # if isinstance(composition, Composition):
         if (
             composition is None
-            or composition.__class__.__name__ in {'Composition', 'AutodiffComposition'}
+            or composition.__class__.__name__ in {'Composition',
+                                                  'AutodiffComposition',
+                                                  'ParameterEstimationComposition'}
         ):
             self._composition = composition
         else:
@@ -570,28 +573,28 @@ def _get_time(component, context):
     """
 
     from psyneulink.core.globals.context import time
-    from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
+    from psyneulink.core.components.shellclasses import Mechanism, Projection, Port, Function
 
     no_time = time(None, None, None, None)
 
     # Get mechanism to which Component being logged belongs
     if isinstance(component, Mechanism):
         ref_mech = component
-    elif isinstance(component, Port):
+    elif isinstance(component, (Port, Function)):
         if isinstance(component.owner, Mechanism):
             ref_mech = component.owner
         elif isinstance(component.owner, Projection):
             ref_mech = component.owner.receiver.owner
         else:
-            raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+            raise ContextError("Logging currently does not support {} (only {}s, {}s, {}s, and {}s).".
                                format(component.__class__.__name__,
-                                      Mechanism.__name__, Port.__name__, Projection.__name__))
+                                      Mechanism.__name__, Port.__name__, Projection.__name__, Function.__name__))
     elif isinstance(component, Projection):
         ref_mech = component.receiver.owner
     else:
-        raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+        raise ContextError("Logging currently does not support {} (only {}s, {}s, {}s, and {}s).".
                            format(component.__class__.__name__,
-                                  Mechanism.__name__, Port.__name__, Projection.__name__))
+                                  Mechanism.__name__, Port.__name__, Projection.__name__, Function.__name__))
 
     # Get Composition in which it is being (or was last) executed (if any):
 

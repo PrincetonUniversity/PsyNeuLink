@@ -36,11 +36,11 @@ calls the gym-forager agent with a specified action and returns the reward assoc
 
     Parameterizes weights of a `update_weights <RegressorCFA.update_weights>` used by its `evaluate
     <CompositionFunctionApproximator.evaluate>` method to predict the `net_outcome <ControlMechanism.net_outcome>`
-    for a `Composition` (or part of one) controlled by an `OptimiziationControlMechanism`, from a set of `state_feature_values
+    for a `Composition` (or part of one) controlled by an `OptimizationControlMechanism`, from a set of `state_feature_values
     <OptimizationControlMechanism.state_feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
-    provided by the OptimiziationControlMechanism.
+    provided by the OptimizationControlMechanism.
 
-    The `state_feature_values <OptimiziationControlMechanism.state_feature_values>` and `control_allocation
+    The `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `control_allocation
     <ControlMechanism.control_allocation>` passed to the RegressorCFA's `adapt <RegressorCFA.adapt>` method,
     and provided as the input to its `update_weights <RegressorCFA.update_weights>`, are represented in the
     `vector <PredictionVector.vector>` attribute of a `PredictionVector` assigned to the RegressorCFA`s
@@ -99,7 +99,7 @@ class GymForagerCFA(RegressionCFA):
         prediction_terms=None)
 
     Subclass of `RegressionCFA` that implements a CompositionFunctionApproximator as the
-    `agent_rep <OptimizationControlmechanism.agent>` of an `OptimizationControlmechanism`.
+    `agent_rep <OptimizationControlMechanism.agent>` of an `OptimizationControlMechanism`.
 
     See `RegressionCFA <rRegressionCFA_Class_Reference>` for arguments and attributes.
 
@@ -166,13 +166,13 @@ class GymForagerCFA(RegressionCFA):
 
     # FIX: RENAME AS _EXECUTE_AS_REP ONCE SAME IS DONE FOR COMPOSITION
     # def evaluate(self, control_allocation, num_samples, reset_stateful_functions_to, state_feature_values, context):
-    def evaluate(self, feature_values, control_allocation, num_estimates, context):
+    def evaluate(self, feature_values, control_allocation, num_estimates, num_trials_per_estimate, context):
         """Update prediction_vector <RegressorCFA.prediction_vector>`,
         then multiply by regression_weights.
 
         Uses the current values of `regression_weights <RegressorCFA.regression_weights>` together with
         values of **control_allocation** and **state_feature_values** arguments to generate predicted `net_outcome
-        <OptimiziationControlMechanism.net_outcome>`.
+        <OptimizationControlMechanism.net_outcome>`.
 
         .. note::
             If this method is assigned as the `objective_funtion of a `GradientOptimization` `Function`,

@@ -131,6 +131,7 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
             return [3.12748415, 2.76778478, 2.45911505, 3.06686514, 1.6311395,
                     2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
 
+
 GROUP_PREFIX="IntegratorFunction "
 
 
@@ -219,6 +220,7 @@ def test_integrator_function_with_default_variable_and_params_of_different_lengt
     error_msg_b = "don't have the same length as its 'default_variable' (3): ['offset']."
     assert error_msg_a in str(error_text.value)
     assert error_msg_b in str(error_text.value)
+
 
 err_msg_initializer = "'initializer' must be a list or 1d array of length 3 (the value of the 'dimension' parameter minus 1)"
 err_msg_angle_func = 'Variable shape incompatibility between (DriftOnASphereIntegrator DriftOnASphereIntegrator'
