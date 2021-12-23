@@ -5746,6 +5746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if correct_sender:
                     original_senders.add(correct_sender)
                     shadow_found = False
+                    # Look for existing shadow_projections from correct_sender to shadowing input_port
                     for shadow_projection in input_port.path_afferents:
                         if shadow_projection.sender == correct_sender:
                             shadow_found = True
@@ -5755,6 +5756,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         new_projection = MappingProjection(sender=correct_sender,
                                                            receiver=input_port)
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+                else:
+                    raise CompositionError(f"Unable to find port to shadow ({shadowed_projection.receiver.owner.name}"
+                                           f"[{shadowed_projection.receiver.name}]) specified for "
+                                           f"{input_port.owner.name}[{input_port.name}] within the same Composition "
+                                           f"('{self.name}') as '{input_port.owner.name}' nor any nested within it. "
+                                           f"'{shadowed_projection.receiver.owner.name}' may  in another Composition "
+                                           f"at the same level within '{self.name}' or in an outer Composition, "
+                                           f"for which shadowing is not supported.")
             return original_senders
 
         for shadowing_port, shadowed_port in self.shadowing_dict.items():
