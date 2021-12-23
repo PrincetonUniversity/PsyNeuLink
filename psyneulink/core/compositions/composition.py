@@ -5822,11 +5822,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if isinstance(node, Composition):
                 node._check_for_unused_projections(context)
-                if isinstance(node, Mechanism):
-                    unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
-                                               for proj in node.afferents if proj not in self.projections])
-                    unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
-                                               for proj in node.efferents if proj not in self.projections])
+            if isinstance(node, Mechanism):
+                unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
+                                           for proj in node.afferents if proj not in self.projections])
+                unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
+                                           for proj in node.efferents if proj not in self.projections])
         if unused_projections:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}': \n"
             warnings.warn(warning + "\n\t".join(unused_projections))
