@@ -3559,7 +3559,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             name=name,
         )
 
-        # core attribute
+        # core attributes
         self.graph = Graph()  # Graph of the Composition
         self._graph_processing = None
         self.nodes = ContentAddressableList(component_type=Component)
@@ -3606,6 +3606,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
         self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
+        self._need_check_for_unused_projections = True
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -3775,6 +3776,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call again to accomodate any changes from _update_shadow_projections
         self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
+        # if self._need_check_for_unused_projections:
+        #     self._check_for_unused_projections(context)
+
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -3879,6 +3883,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         if isinstance(node, ControlMechanism):
             self._handle_allow_probes_for_control(node)
+
+        self._need_check_for_unused_projections = True
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
@@ -5746,6 +5752,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if correct_sender:
                     original_senders.add(correct_sender)
                     shadow_found = False
+                    # Look for existing shadow_projections from correct_sender to shadowing input_port
                     for shadow_projection in input_port.path_afferents:
                         if shadow_projection.sender == correct_sender:
                             shadow_found = True
@@ -5755,6 +5762,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         new_projection = MappingProjection(sender=correct_sender,
                                                            receiver=input_port)
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
+                else:
+                    raise CompositionError(f"Unable to find port to shadow ({shadowed_projection.receiver.owner.name}"
+                                           f"[{shadowed_projection.receiver.name}]) specified for "
+                                           f"{input_port.owner.name}[{input_port.name}] within the same Composition "
+                                           f"('{self.name}') as '{input_port.owner.name}' nor any nested within it. "
+                                           f"'{shadowed_projection.receiver.owner.name}' may  in another Composition "
+                                           f"at the same level within '{self.name}' or in an outer Composition, "
+                                           f"for which shadowing is not supported.")
             return original_senders
 
         for shadowing_port, shadowed_port in self.shadowing_dict.items():
@@ -5775,8 +5790,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
 
         Validate that all InputPorts with require_projection_in_composition == True have an afferent Projection.
-        Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
+        Validate that all OutputPorts with require_projection_in_composition == True have an efferent Projection.
         Validate that all Projections have senders and receivers.
+        Issue warning if any Projections are to/from nodes not in Composition.projections
         """
         projections = self.projections.copy()
 
@@ -5800,6 +5816,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a sender.')
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver.')
+
+    # MODIFIED 12/23/21 NEW:
+    def _check_for_unused_projections(self, context):
+        unused_projections = []
+        for node in self.nodes:
+            if isinstance(node, Composition):
+                node._check_for_unused_projections(context)
+            if isinstance(node, Mechanism):
+                # unused_projections.extend([(f"To '{node.name}' in '{self.name}' from {}: " + proj.name)
+                #                            for proj in node.afferents if proj not in self.projections])
+                # unused_projections.extend([(f"From '{node.name}' in '{self.name}': " + proj.name)
+                #                            for proj in node.efferents if proj not in self.projections])
+
+                unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
+                                           for proj in node.afferents if proj not in self.projections])
+                unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
+                                           for proj in node.efferents if proj not in self.projections])
+
+        if unused_projections:
+            warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}': \n"
+            warnings.warn(warning + "\n\t".join(unused_projections))
+        self._need_check_for_unused_projections = False
+        # MODIFIED 12/23/21 END
 
     def get_feedback_status(self, projection):
         """Return True if **projection** is designated as a `feedback Projection <Composition_Feedback_Designation>`
@@ -5846,6 +5885,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 err_msg = f"Can't create a {Projection.__name__} from '{sender.name}' to '{receiver.name}': " + err_msg
                 raise CompositionError(err_msg)
 
+        # Check for existing Projections from specified sender
         existing_projections = [proj for proj in sender.efferents if proj.receiver is receiver]
         existing_projections_in_composition = [proj for proj in existing_projections if proj in self.projections]
         assert len(existing_projections_in_composition) <= 1, \
@@ -8919,9 +8959,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # May be used by controller for specifying num_trials_per_simulation
         self.num_trials = num_trials
 
-        # DS 1/7/20: Check to see if any Components are still in deferred init. If so, attempt to initialize them.
+        # Check to see if any Components are still in deferred init. If so, attempt to initialize them.
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
+
+        # MODIFIED 12/23/21 NEW:
+        if self._need_check_for_unused_projections:
+            self._check_for_unused_projections(context=context)
+        # MODIFIED 12/23/21 END
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_controller_initialization_status()
@@ -11095,6 +11140,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    active_items=None,
                    output_fmt='pdf',
                    context=None):
+
         return self._show_graph(show_node_structure=show_node_structure,
                                 show_nested=show_nested,
                                 show_nested_args=show_nested_args,

@@ -760,6 +760,8 @@ class ShowGraph():
         # get all Nodes
         if output_fmt != 'gv':
             composition._analyze_graph(context=context)
+            if composition._need_check_for_unused_projections:
+                composition._check_for_unused_projections(context)
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:

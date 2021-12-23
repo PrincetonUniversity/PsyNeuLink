@@ -5,6 +5,10 @@
 .. image:: https://mybinder.org/badge.svg
     :target: https://mybinder.org/v2/gh/PrincetonUniversity/PsyNeuLink/master
 
+.. *****************************************************************************************
+.. ****** NOTE:  UPDATES TO THIS PAGE SHOULD ALSO BE MADE TO docs/source.index.rst *********
+.. *****************************************************************************************
+
 
 Welcome to PsyNeuLink
 =====================
