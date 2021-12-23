@@ -3776,8 +3776,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Call again to accomodate any changes from _update_shadow_projections
         self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
-        # if self._need_check_for_unused_projections:
-        #     self._check_for_unused_projections(context)
 
         self.needs_update_graph = False
 
@@ -5817,28 +5815,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if not projection.receiver:
                 warnings.warn(f'{Projection.__name__} {projection.name} is missing a receiver.')
 
-    # MODIFIED 12/23/21 NEW:
     def _check_for_unused_projections(self, context):
+        """Warn if there are any Nodes in the Composition, or any nested within it, that are not used.
+        """
         unused_projections = []
         for node in self.nodes:
             if isinstance(node, Composition):
                 node._check_for_unused_projections(context)
-            if isinstance(node, Mechanism):
-                # unused_projections.extend([(f"To '{node.name}' in '{self.name}' from {}: " + proj.name)
-                #                            for proj in node.afferents if proj not in self.projections])
-                # unused_projections.extend([(f"From '{node.name}' in '{self.name}': " + proj.name)
-                #                            for proj in node.efferents if proj not in self.projections])
-
-                unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
-                                           for proj in node.afferents if proj not in self.projections])
-                unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
-                                           for proj in node.efferents if proj not in self.projections])
-
+                if isinstance(node, Mechanism):
+                    unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
+                                               for proj in node.afferents if proj not in self.projections])
+                    unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
+                                               for proj in node.efferents if proj not in self.projections])
         if unused_projections:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}': \n"
             warnings.warn(warning + "\n\t".join(unused_projections))
         self._need_check_for_unused_projections = False
-        # MODIFIED 12/23/21 END
 
     def get_feedback_status(self, projection):
         """Return True if **projection** is designated as a `feedback Projection <Composition_Feedback_Designation>`
@@ -8963,10 +8955,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
 
-        # MODIFIED 12/23/21 NEW:
         if self._need_check_for_unused_projections:
             self._check_for_unused_projections(context=context)
-        # MODIFIED 12/23/21 END
 
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_controller_initialization_status()
