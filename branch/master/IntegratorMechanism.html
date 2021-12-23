@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>IntegratorMechanism &mdash; PsyNeuLink 0+untagged.17.g912f691 documentation</title>
+  <title>IntegratorMechanism &mdash; PsyNeuLink 0+untagged.12.g5efe4d9 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g912f691
+                  0+untagged.12.g5efe4d9
                 </div>
               
             
@@ -215,7 +215,7 @@
 <span id="integratormechanism-overview"></span><h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>An IntegratorMechanism integrates its input, possibly based on its prior values.  The input can be a single
 scalar value or an array of scalars (list or 1d np.array).  If it is a list or array, then each value is
-independently integrated.  The default function (<code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code>) can be parametrized to implement either a simple
+independently integrated.  The default function (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>) can be parametrized to implement either a simple
 increment rate, additive accumulator, or an (exponentially weighted) time-averaging of its input.  It can also be
 assigned a custom function.</p>
 </section>
@@ -246,11 +246,11 @@ the <code class="xref any docutils literal notranslate"><span class="pre">value<
 <span id="integratormechanism-execution"></span><h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
 <p>When an IntegratorMechanism is executed, it carries out the specified integration, and assigns the
 result to the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of its <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a>.  For the default
-function (<code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code>), if the value specified for <strong>default_variable</strong> is a list or array, or <strong>size</strong> is greater
-than 1, each element of the array is independently integrated.  If its <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> parameter is a
-single value,  that rate will be used for integrating each element.  If the <code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> parameter is a
+function (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a>), if the value specified for <strong>default_variable</strong> is a list or array, or <strong>size</strong> is greater
+than 1, each element of the array is independently integrated.  If its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter is a
+single value,  that rate will be used for integrating each element.  If the <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> parameter is a
 list or array, then each element will be used as the rate for the corresponding element of the input (in this case,
-<code class="xref any docutils literal notranslate"><span class="pre">rate</span></code> must be the same length as the value specified for <strong>default_variable</strong> or <strong>size</strong>).</p>
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">rate</span></code></a> must be the same length as the value specified for <strong>default_variable</strong> or <strong>size</strong>).</p>
 </section>
 <section id="class-reference">
 <span id="integratormechanism-class-reference"></span><h2>Class Reference<a class="headerlink" href="#class-reference" title="Permalink to this headline">¶</a></h2>

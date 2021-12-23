@@ -10,6 +10,8 @@ Composition
 
        AutodiffComposition
        CompositionFunctionApproximator
+       ParameterEstimationComposition
+
     |
 
 .. container:: related
@@ -27,6 +29,6 @@ Composition
        Report
 
 .. automodule:: psyneulink.core.compositions.composition
-   :members: Composition, NodeRole
+   :members: Composition, NodeRole, Graph
    :private-members:
-   :exclude-members: Parameters, show_structure, CompositionError
+   :exclude-members: Parameters, show_structure, CompositionError, get_inputs_format

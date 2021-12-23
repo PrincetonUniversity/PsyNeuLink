@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0+untagged.17.g912f691 documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0+untagged.12.g5efe4d9 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g912f691
+                  0+untagged.12.g5efe4d9
                 </div>
               
             
@@ -386,9 +386,10 @@ values of the same shape as <a class="reference internal" href="Composition.html
 <li><p><strong>targets</strong> ({<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>:list }) – a dictionary containing a key-value pair for each <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> in the Composition that
 receives target values as input to the Composition for training <a class="reference internal" href="Composition.html#composition-learning-pathway"><span class="std std-ref">learning pathways</span></a>. The key of each entry can be either the <a class="reference internal" href="Composition.html#composition-learning-components"><span class="std std-ref">TARGET_MECHANISM</span></a> for a learning pathway or the final Node in that Pathway, and
 the value is the target value used for that Node on each trial (see <a class="reference internal" href="Composition.html#composition-target-inputs"><span class="std std-ref">target inputs</span></a> for additional details concerning the formatting of targets).</p></li>
-<li><p><strong>num_trials</strong> (<em>int</em><em> (</em><em>default=None</em><em>)</em>) – typically, the composition will infer the number of trials from the length of its input specification.
-To reuse the same inputs across many trials, you may specify an input dictionary with lists of length 1,
-or use default inputs, and select a number of trials with num_trials.</p></li>
+<li><p><strong>num_trials</strong> (<em>int</em><em> (</em><em>default=None</em><em>)</em>) – typically, the Composition infers the number of trials to execute from the length of its input
+specification.  However, <strong>num_trials</strong> can be used to enforce an exact number of trials to execute;
+if it is greater than there are inputs then inputs will be repeated (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Composition Inputs</span></a>
+for additional information).</p></li>
 <li><p><strong>epochs</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the number of training epochs (that is, repetitions of the batched input set) to run with</p></li>
 <li><p><strong>minibatch_size</strong> (<em>int</em><em> (</em><em>default=1</em><em>)</em>) – specifies the size of the minibatches to use. The input trials will be batched and ran, after which
 learning mechanisms with learning mode TRIAL will update weights</p></li>
@@ -468,10 +469,12 @@ details and <a class="reference internal" href="Report.html#psyneulink.core.comp
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>output value of the final Mechanism executed in the Composition</strong></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>various</p>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>output_values</strong> (<em>List</em>)</p></li>
+<li><p><em>These are the values of the Composition’s output_CIM.output_ports, excluding those the source of which</em></p></li>
+<li><p><em>are from a (potentially nested) Node with NodeRole.PROBE in its enclosing Composition.</em></p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>

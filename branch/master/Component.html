@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Component &mdash; PsyNeuLink 0+untagged.17.g912f691 documentation</title>
+  <title>Component &mdash; PsyNeuLink 0+untagged.12.g5efe4d9 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g912f691
+                  0+untagged.12.g5efe4d9
                 </div>
               
             
@@ -487,13 +487,13 @@ execution of the Components to which they belong or on which they depend for exe
 <ul id="component-reset-stateful-function-when">
 <li><p><strong>reset_stateful_function_when</strong> – a <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> that determines when the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a>
 method is called.  The <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method and <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> attribute only exist for Mechanisms that have <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a> <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a>, or that have a <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> with <a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter.stateful" title="psyneulink.core.globals.parameters.Parameter.stateful"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">stateful</span></code></a> Parameters.  When the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset" title="psyneulink.core.components.component.Component.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method is called, this is done without any
-arguments, so that the relevant <code class="xref any docutils literal notranslate"><span class="pre">initializer</span></code> attributes (or their equivalents
+arguments, so that the relevant <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.initializer" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction.initializer"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">initializer</span></code></a> attributes (or their equivalents
 – initialization attributes vary among functions) are used for reinitialization.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p><a class="reference internal" href="Mechanisms.html"><span class="doc">Mechanisms</span></a> &lt;Mechanism&gt;` are the only type of Component that reset when the <a class="reference internal" href="#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> <a class="reference internal" href="Condition.html"><span class="doc">Condition</span></a> is satisfied. Other Component types do not reset,
 although <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> has a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.reset" title="psyneulink.core.compositions.composition.Composition.reset"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">reset</span></code></a> method that can be used to reset all of its eligible
-Mechanisms (see <a class="reference internal" href="Composition.html#composition-reset"><span class="std std-ref">Resetting Parameters of stateful</span></a>)</p>
+Mechanisms (see <a class="reference internal" href="Composition.html#composition-reset"><span class="std std-ref">Resetting Stateful Parameters</span></a>)</p>
 </div>
 </li>
 </ul>
@@ -744,7 +744,7 @@ override any assigned to those parameters in arguments of the constructor.</p></
 <dd><p>see <a class="reference internal" href="#component-parameters"><span class="std std-ref">parameters</span></a> and <a class="reference internal" href="Parameters.html"><span class="doc">Parameters</span></a> for additional information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="RegressionCFA.html#psyneulink.library.compositions.regressioncfa.RegressionCFA.Parameters" title="psyneulink.library.compositions.regressioncfa.RegressionCFA.Parameters">Parameters</a></p>
+<dd class="field-odd"><p><a class="reference internal" href="CompositionInterfaceMechanism.html#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters" title="psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism.Parameters">Parameters</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1136,7 +1136,7 @@ Called by Composition.add_node.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.component.Component.reset">
 <span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.reset" title="Permalink to this definition">¶</a></dt>
-<dd><p>If the component’s execute method involves execution of an <code class="xref any docutils literal notranslate"><span class="pre">IntegratorFunction</span></code> Function, this method
+<dd><p>If the component’s execute method involves execution of an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction" title="psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">IntegratorFunction</span></code></a> Function, this method
 effectively begins the function’s accumulation over again at the specified value, and may update related
 values on the component, depending on the component type.  Otherwise, it simply reassigns the Component’s
 value based on its default_variable.</p>
@@ -1186,6 +1186,26 @@ method of the Component’s <a class="reference internal" href="#psyneulink.core
 <dd><p>Specifies items to be logged; ; these must be be <a class="reference internal" href="#psyneulink.core.components.component.Component.loggable_items" title="psyneulink.core.components.component.Component.loggable_items"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">loggable_items</span></code></a> of the Component’s
 <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>. This is a convenience method that calls the <code class="xref any docutils literal notranslate"><span class="pre">log_values</span></code> method
 of the Component’s <a class="reference internal" href="#psyneulink.core.components.component.Component.log" title="psyneulink.core.components.component.Component.log"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">log</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.component.Component.all_dependent_parameters">
+<span class="sig-name descname"><span class="pre">all_dependent_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filter_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filter_regex</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.component.Component.all_dependent_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of Parameters of this Component and its         <a class="reference internal" href="#psyneulink.core.components.component.Component._dependent_components" title="psyneulink.core.components.component.Component._dependent_components"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">_dependent_components</span></code></a> filtered by <strong>filter_name</strong> and         <strong>filter_regex</strong>. If no filter is specified, all Parameters         are included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filter_name</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – The                 exact name or names of Parameters to include. Defaults                 to None.</p></li>
+<li><p><strong>filter_regex</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Iterable</em><em>[</em><em>str</em><em>]</em><em>]</em><em>, </em><em>optional</em>) – Regular expression patterns. If any pattern matches a                 Parameter name (using re.match), it will be included                 in the result. Defaults to None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Component]: Dictionary of filtered Parameters</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict[<a class="reference internal" href="Parameters.html#psyneulink.core.globals.parameters.Parameter" title="psyneulink.core.globals.parameters.Parameter">Parameter</a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">

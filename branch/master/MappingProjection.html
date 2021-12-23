@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>MappingProjection &mdash; PsyNeuLink 0+untagged.17.g912f691 documentation</title>
+  <title>MappingProjection &mdash; PsyNeuLink 0+untagged.12.g5efe4d9 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g912f691
+                  0+untagged.12.g5efe4d9
                 </div>
               
             
@@ -256,7 +256,7 @@ specification, which determines the appropriate matrix by context);</p></li>
 appropriate matrix by context);</p></li>
 </ul>
 <ul class="simple">
-<li><p>by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>, between it and the other components required to implement learning
+<li><p>by a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>, between it and the other components required to implement learning
 (see <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a> for details);</p></li>
 </ul>
 <ul class="simple">
@@ -328,7 +328,7 @@ using the <a class="reference internal" href="#mappingprojection-learning-tuple-
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">specifying</span> <span class="pre">learning</span></code> for a <code class="xref any docutils literal notranslate"><span class="pre">Process</span></code>, which assigns <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> to all of the  MappingProjections in the Process’ <code class="xref any docutils literal notranslate"><span class="pre">pathway</span></code>;</p></li>
 </ul>
 </div></blockquote>
-<p>See <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> documentation for an overview of <a class="reference internal" href="LearningMechanism.html#learningmechanism-overview"><span class="std std-ref">learning components</span></a> and a
+<p>See <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> documentation for an overview of <a class="reference internal" href="LearningMechanism.html#learningmechanism-overview"><span class="std std-ref">learning components</span></a> and a
 detailed description of <a class="reference internal" href="LearningMechanism.html#learningmechanism-learning-configurations"><span class="std std-ref">Learning Configurations</span></a>;  see <a class="reference internal" href="#mappingprojection-learning"><span class="std std-ref">Learning</span></a> below for a
 description of how learning modifies a MappingProjection.</p>
 <section id="specifying-learning-in-a-tuple">
@@ -387,7 +387,7 @@ matrix minus its sender dimensionality).</p></li>
 <li><p><em>MATRIX</em> <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> - this receives any <a class="reference internal" href="LearningProjection.html"><span class="doc">LearningProjections</span></a> that are assigned to the
 MappingProjection (see <a class="reference internal" href="#mappingprojection-learning-specification"><span class="std std-ref">Specifying Learning</span></a> above), and updates the current value of the
 MappingProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter in response to <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning</span></a>.  The <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a <em>MATRIX</em> ParameterPort is an
-<code class="xref any docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code>, which accumulates the weight changes received from the LearningProjections
+<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code></a>, which accumulates the weight changes received from the LearningProjections
 that project to it (see <a class="reference internal" href="#mappingprojection-learning"><span class="std std-ref">Learning</span></a> below).  This can be replaced by any function that defines an
 <em>ADDITIVE_PARAM</em> <a class="reference internal" href="ModulatorySignal.html#modulatorysignal-modulation"><span class="std std-ref">modulatory parameter</span></a>), and that takes as its input an array or
 matrix and returns one of the same size.</p></li>
@@ -428,12 +428,12 @@ This conforms to the general procedures for modulation used by <a class="referen
 A LearningProjection <a class="reference internal" href="LearningSignal.html#learningsignal-modulation"><span class="std std-ref">modulates</span></a> the <a class="reference internal" href="ParameterPort.html#psyneulink.core.components.ports.parameterport.ParameterPort.function" title="psyneulink.core.components.ports.parameterport.ParameterPort.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of the
 <em>MATRIX</em> ParameterPort, which is responsible for keeping a record of the value of the MappingProjection’s matrix,
 and providing it to the MappingProjection’s <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.function" title="psyneulink.core.components.projections.projection.Projection_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> (usually <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearMatrix</span></code></a>).  By
-default, the function for the <em>MATRIX</em> ParameterPort is an <code class="xref any docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code>.  A LearningProjection
-modulates it by assigning the value of its <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code> (<code class="xref any docutils literal notranslate"><span class="pre">increment</span></code>), which is added to its <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code>
+default, the function for the <em>MATRIX</em> ParameterPort is an <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code></a>.  A LearningProjection
+modulates it by assigning the value of its <code class="xref any docutils literal notranslate"><span class="pre">additive_param</span></code> (<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a>), which is added to its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>
 attribute each time it is executed. The result is that each time the MappingProjection is executed, and in turn
 executes its <em>MATRIX</em> ParameterPort, the <a class="reference internal" href="LearningProjection.html#learningprojection-structure"><span class="std std-ref">weight changes</span></a> conveyed to the
 MappingProjection from any LearningProjection(s) are added to the record of the matrix kept by the <em>MATRIX</em>
-ParameterPort’s <code class="xref any docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code> function in its <code class="xref any docutils literal notranslate"><span class="pre">previous_value</span></code>
+ParameterPort’s <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code></a> function in its <a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.previous_value" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.previous_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">previous_value</span></code></a>
 attribute. This is then the value of the matrix used  by the MappingProjection’s <a class="reference internal" href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.LinearMatrix" title="psyneulink.core.components.functions.transferfunctions.LinearMatrix"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearMatrix</span></code></a> function when it is
 executed.  It is important to note that the accumulated weight changes received by a MappingProjection from its
 LearningProjection(s) are stored by the <em>MATRIX</em> ParameterPort’s function, and not the MappingProjection’s <a class="reference internal" href="#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter itself; the latter stores the original value of the matrix before learning (that

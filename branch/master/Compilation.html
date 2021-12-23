@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Compilation &mdash; PsyNeuLink 0+untagged.17.g912f691 documentation</title>
+  <title>Compilation &mdash; PsyNeuLink 0+untagged.12.g5efe4d9 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g912f691
+                  0+untagged.12.g5efe4d9
                 </div>
               
             
@@ -201,7 +201,11 @@
 <h1>Compilation<a class="headerlink" href="#compilation" title="Permalink to this headline">¶</a></h1>
 <p>PsyNeulink includes a runtime compiler to improve performance of executed models.
 This section describes the overview of the compiler design and its use.
-The performance improvements varies, but it has been observed to be between one and three orders of magnitude depending on the model.</p>
+The performance improvements varies, but it has been observed to be between
+one and three orders of magnitude depending on the model.
+See <a class="reference external" href="http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf">Vesely et al. (2022)</a>
+for additional information about the approach taken to compilation, and
+<a class="reference internal" href="Composition.html#composition-compilation"><span class="std std-ref">Compilation</span></a> for it use in executing a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>.</p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The PsyNeuLink runtime compiler works in several steps when invoked via <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="AutodiffComposition.html#psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute" title="psyneulink.library.compositions.autodiffcomposition.AutodiffComposition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>:

@@ -8,4 +8,5 @@ Subclasses of `Core` `Composition` that implement specialized operations.
 
    AutodiffComposition
    CompositionFunctionApproximator
+   ParameterEstimationComposition
 
