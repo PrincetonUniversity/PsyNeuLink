@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0+untagged.17.g9979c07 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0+untagged.16.g436f5d9 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g9979c07
+                  0+untagged.16.g436f5d9
                 </div>
               
             
@@ -3621,8 +3621,15 @@ the cycle</span></a>.</p></li>
 <span class="sig-name descname"><span class="pre">_check_for_projection_assignments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._check_for_projection_assignments" title="Permalink to this definition">¶</a></dt>
 <dd><p>Check that all Projections and Ports with require_projection_in_composition attribute are configured.</p>
 <p>Validate that all InputPorts with require_projection_in_composition == True have an afferent Projection.
-Validate that all OuputStates with require_projection_in_composition == True have an efferent Projection.
-Validate that all Projections have senders and receivers.</p>
+Validate that all OutputPorts with require_projection_in_composition == True have an efferent Projection.
+Validate that all Projections have senders and receivers.
+Issue warning if any Projections are to/from nodes not in Composition.projections</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._check_for_unused_projections">
+<span class="sig-name descname"><span class="pre">_check_for_unused_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._check_for_unused_projections" title="Permalink to this definition">¶</a></dt>
+<dd><p>Warn if there are any Nodes in the Composition, or any nested within it, that are not used.</p>
 </dd></dl>
 
 <dl class="py method">
