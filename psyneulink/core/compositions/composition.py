@@ -5761,13 +5761,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            receiver=input_port)
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
                 else:
-                    raise CompositionError(f"Unable to find port to shadow ({shadowed_projection.receiver.owner.name}"
-                                           f"[{shadowed_projection.receiver.name}]) specified for "
-                                           f"{input_port.owner.name}[{input_port.name}] within the same Composition "
-                                           f"('{self.name}') as '{input_port.owner.name}' nor any nested within it. "
-                                           f"'{shadowed_projection.receiver.owner.name}' may  in another Composition "
-                                           f"at the same level within '{self.name}' or in an outer Composition, "
-                                           f"for which shadowing is not supported.")
+                    raise CompositionError(f"Unable to find port specified to be shadowed by '{input_port.owner.name}' "
+                                           f"({shadowed_projection.receiver.owner.name}"
+                                           f"[{shadowed_projection.receiver.name}]) within the same Composition "
+                                           f"('{self.name}'), nor in any nested within it. "
+                                           f"'{shadowed_projection.receiver.owner.name}' may be in another "
+                                           f"Composition at the same level within '{self.name}' or in an outer "
+                                           f"Composition, neither of which are supported by shadowing.")
             return original_senders
 
         for shadowing_port, shadowed_port in self.shadowing_dict.items():
@@ -5825,7 +5825,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Mechanism):
                 unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
                                            for proj in node.afferents if proj not in self.projections])
-                unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
+                unused_projections.extend([(f"From '{node.name}' to '{proj.receiver.owner.name}' ({proj.name})")
                                            for proj in node.efferents if proj not in self.projections])
         if unused_projections:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}': \n"

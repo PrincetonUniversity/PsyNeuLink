@@ -556,6 +556,19 @@ comp.add_node(B)
         print()
         logger.info('completed {0} addition{2} of a projection to a composition in {1:.8f}s'.format(count, t, 's' if count != 1 else ''))
 
+    def test_unused_projections_warning(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C', input_ports=[A])
+        D = ProcessingMechanism(name='D')
+        icomp = Composition(name='iCOMP', pathways=[A, B])
+        comp1 = Composition(name='COMP_1', pathways=[icomp])
+        comp2 = Composition(name='COMP_2', pathways=[C, D])
+        with pytest.warns(UserWarning) as warning:
+            ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
+            ocomp.run()
+        assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\': \\nFrom \'A\' to \'C\' (MappingProjection from A[OutputPort-0] to C[InputPort-0])"'
+        assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\': \\nTo \'C\' from \'A\' (MappingProjection from A[OutputPort-0] to C[InputPort-0])"'
 
 class TestPathway:
 
@@ -4790,6 +4803,7 @@ class TestNestedCompositions:
             assert all(isinstance(comp.controller.control_signals[i].efferents[0].receiver.owner,
                                   pnl.CompositionInterfaceMechanism) for i in range(4))
 
+
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
         a = TransferMechanism(name='a', function=Linear(slope=2))
@@ -5923,7 +5937,6 @@ class TestShadowInputs:
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
 
-
     _test_shadow_nested_nodes_arg =\
         [
             ('shadow_nodes_one_and_two_levels_deep', 0),
@@ -5970,6 +5983,19 @@ class TestShadowInputs:
             assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
                    'that is not an INPUT Node of that Composition is not currently supported.' \
                    in err.value.error_value
+
+    def test_failure_to_find_node_to_shadow(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C', input_ports=[A.input_port])
+        D = ProcessingMechanism(name='D')
+        icomp = Composition(name='iCOMP', nodes=[A, B])
+        comp1 = Composition(name='COMP_1', pathways=[icomp])
+        err_msg = "Unable to find port specified to be shadowed by 'C' (A[InputPort-0]) within the same Composition"
+        with pytest.raises(CompositionError) as error_value:
+            comp2 = Composition(name='COMP_2', pathways=[C, D])
+            ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
+        assert err_msg in str(error_value)
 
     def test_monitor_input_ports(self):
         comp = Composition(name='comp')
@@ -6115,6 +6141,7 @@ class TestInitialize:
         )
         with pytest.warns(UserWarning, match=warning_text):
             comp.run(initialize_cycle_values={a: 1})
+
 
 class TestResetValues:
 
@@ -6418,8 +6445,6 @@ class TestNodeRoles:
         with pytest.raises(CompositionError) as error_text:
             ocomp.get_results_by_nodes(nodes=['N'])
         assert no_such_node_error_msg in str(error_text.value)
-
-
 
     def test_unnested_PROBE(self):
         A = ProcessingMechanism(name='A')
