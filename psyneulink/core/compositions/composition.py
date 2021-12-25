@@ -1135,14 +1135,15 @@ the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
    input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
    Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
 
-The input specified for each `Node <CompositionNodes>` must be compatible with the number of `InputPorts <InputPort>`
-that receive external input for that Node. These are listed in its ``external_input_ports`` attribute (`here
-<Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it is a
-Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
-`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism,
-or `here <Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number
-and size of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed,
-as illustrated in the `examples <Composition_Examples_Input_Dictionary>` below.
+The key for each entry of the dict can be a direct reference to the `Node <Composition_Nodes>`, or the name assigned
+to one (i.e., its `name <Component.name>` attribute).  The value must an input that is compatible with the number of
+`InputPorts <InputPort>` that receive external input for that Node. These are listed in its ``external_input_ports``
+(`here <Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it
+is a Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
+`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism, or `here
+<Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number and size
+of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed, as illustrated
+in the `examples <Composition_Examples_Input_Dictionary>` below.
 
 .. _Composition_Input_Labels:
 
