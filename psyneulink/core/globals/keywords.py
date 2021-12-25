@@ -392,7 +392,7 @@ FINAL = 'FINAL'
 
 # 11/15/21: FIX - CHANGE TO LOWER CASE FOR USE WITH componentCategory (OR CHANGE THAT?);  MAY NEED TO CHANGE TESTS
 # Composition Categories
-COMPOSITION = 'COMPOSITION'
+COMPOSITION = 'Composition'
 AUTODIFF_COMPOSITION = 'AutodiffComposition'
 COMPOSITION_FUNCTION_APPROXIMATOR = 'CompositionFunctionApproximator'
 
