@@ -266,8 +266,10 @@ class ShowGraphError(Exception):
 
 
 class ShowGraph():
-    """
-    ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+    """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+
+    Every Composition is assigned a ShowGraph object, with its `show_graph <ShowGraph.show_graph>` method
+    assigned to, and callable as Composition.show_graph().
 
     Arguments
     ---------
@@ -303,7 +305,7 @@ class ShowGraph():
     composition_shape : default 'rectangle'
         specifies the shape in which nodes that represent `nested Compositions <Composition_Nested>` are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+        level specified in a call to `show_graph() <ShowGraph.show_graph>`.
 
     agent_rep_shape : default 'egg'
         specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed.
@@ -352,7 +354,7 @@ class ShowGraph():
     composition_color : keyword : default 'pink'
         specifies the color in which nodes that represent `nested Compositions <Composition_Nested> are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+        level specified in a call to `show_graph() <ShowGraph.show_graph>`.
 
     inactive_projection_color : keyword : default 'red'
         specifies the color in which `Projections <Projection>` not active within the `Composition` are displayed,
@@ -363,7 +365,7 @@ class ShowGraph():
 
     active_thicker_by : int : default 2
         specifies the amount by which to increase the width of the outline of Components specified in the
-        **active_items** argument of a call to `show_graph <ShowGraph.show_graph>`.
+        **active_items** argument of a call to `show_graph() <ShowGraph.show_graph>`.
 
     bold_width : int : default 3,
         specifies the width of the outline for `INPUT` and `OUTPUT` Nodes of the Composition.
@@ -492,7 +494,8 @@ class ShowGraph():
            output_fmt='pdf',                         \
            context=None)
 
-        Show graphical display of Components in a Composition's graph.
+        Show graphical display of Components in a Composition's graph.  See `show_graph <ShowGraph_show_graph_Method>`
+        for additional details.
 
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported

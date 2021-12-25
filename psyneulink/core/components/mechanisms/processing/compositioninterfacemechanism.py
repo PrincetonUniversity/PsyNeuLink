@@ -67,7 +67,7 @@ outside the Composition (i.e., from an `input_CIM <Composition.input_CIM>` recei
 <Mechanism_Base.efferents>`), and the value of which is a tuple containing the corresponding (`InputPort`,
 `OutputPort`) pair used to transmit the information to or from the CompositionInterfaceMechanism.
 CompositionIntefaceMechanisms can be seen graphically using the `show_cim <ShowGraph.show_cim>` option of the
-Composition's `show_graph <ShowGraph_show_graph_Method>` method (see figure below).
+Composition's `show_graph <ShowGraph.show_graph>` method (see figure below).
 
 .. figure:: _static/CIM_figure.svg
 
