@@ -1109,7 +1109,8 @@ class ShowGraph():
 
         def _render_projection(_g, proj, sndr_label, rcvr_label,
                                proj_color=self.default_node_color,
-                               arrowhead=self.default_projection_arrow):
+                               arrowhead=self.default_projection_arrow,
+                               style=self.style):
             if any(item in active_items for item in {proj, proj.sender.owner}):
                 if self.active_color == BOLD:
                     color = proj_color
@@ -1126,7 +1127,11 @@ class ShowGraph():
             else:
                 label = ''
 
-            _g.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
+            _g.edge(sndr_label, rcvr_label,
+                    label=label, color=color,
+                    penwidth=proj_width,
+                    arrowhead=arrowhead,
+                    style=style)
 
         for cim in composition.cims:
 
@@ -1244,7 +1249,10 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
 
                         # Render Projection
-                        _render_projection(enclosing_g, proj, sndr_output_node_proj_label, rcvr_cim_proj_label,
+                        _render_projection(enclosing_g,
+                                           proj,
+                                           sndr_output_node_proj_label,
+                                           rcvr_cim_proj_label,
                                            proj_color)
 
                 # Projections from input_CIM to INPUT nodes
