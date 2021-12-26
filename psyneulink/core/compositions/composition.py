@@ -1135,14 +1135,15 @@ the corresonding Node in every `TRIAL <TimeScale.TRIAL>`.
    input, and for which only one input is specified (``[1.0]``), which is therefore provided as the input to
    Mechanism ``c`` on every `TRIAL <TimeScale.TRIAL>`.
 
-The input specified for each `Node <CompositionNodes>` must be compatible with the number of `InputPorts <InputPort>`
-that receive external input for that Node. These are listed in its ``external_input_ports`` attribute (`here
-<Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it is a
-Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
-`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism,
-or `here <Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number
-and size of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed,
-as illustrated in the `examples <Composition_Examples_Input_Dictionary>` below.
+The key for each entry of the dict can be a direct reference to the `Node <Composition_Nodes>`, or the name assigned
+to one (i.e., its `name <Component.name>` attribute).  The value must an input that is compatible with the number of
+`InputPorts <InputPort>` that receive external input for that Node. These are listed in its ``external_input_ports``
+(`here <Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it
+is a Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
+`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism, or `here
+<Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number and size
+of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed, as illustrated
+in the `examples <Composition_Examples_Input_Dictionary>` below.
 
 .. _Composition_Input_Labels:
 
@@ -1813,7 +1814,7 @@ COMMENT:
     XXX - ADD DISCUSSION OF show_controller AND show_learning
 COMMENT
 
-The `show_graph <ShowGraph_show_graph_Method>` method generates a display of the graph structure of `Nodes
+The `show_graph <show_graph <ShowGraph.show_graph>` method generates a display of the graph structure of `Nodes
 <Composition_Nodes>` and `Projections <Projection>` in the Composition based on the Composition's `graph
 <Composition.graph>` (see `Visualization` for additional details).
 
@@ -3212,7 +3213,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition.retain_old_simulation_data>` for additional details).
 
     show_graph_attributes : dict : None
-        specifies features of how the Composition is displayed when its `show_graph <ShowGraph_show_graph_Method>`
+        specifies features of how the Composition is displayed when its `show_graph <ShowGraph.show_graph>`
         method is called or **animate** is specified in a call to its `run <Composition.run>` method
         (see `ShowGraph` for list of attributes and their values).
 
@@ -5761,13 +5762,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                            receiver=input_port)
                         self.add_projection(new_projection, sender=correct_sender, receiver=input_port)
                 else:
-                    raise CompositionError(f"Unable to find port to shadow ({shadowed_projection.receiver.owner.name}"
-                                           f"[{shadowed_projection.receiver.name}]) specified for "
-                                           f"{input_port.owner.name}[{input_port.name}] within the same Composition "
-                                           f"('{self.name}') as '{input_port.owner.name}' nor any nested within it. "
-                                           f"'{shadowed_projection.receiver.owner.name}' may  in another Composition "
-                                           f"at the same level within '{self.name}' or in an outer Composition, "
-                                           f"for which shadowing is not supported.")
+                    raise CompositionError(f"Unable to find port specified to be shadowed by '{input_port.owner.name}' "
+                                           f"({shadowed_projection.receiver.owner.name}"
+                                           f"[{shadowed_projection.receiver.name}]) within the same Composition "
+                                           f"('{self.name}'), nor in any nested within it. "
+                                           f"'{shadowed_projection.receiver.owner.name}' may be in another "
+                                           f"Composition at the same level within '{self.name}' or in an outer "
+                                           f"Composition, neither of which are supported by shadowing.")
             return original_senders
 
         for shadowing_port, shadowed_port in self.shadowing_dict.items():
@@ -5822,11 +5823,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             if isinstance(node, Composition):
                 node._check_for_unused_projections(context)
-                if isinstance(node, Mechanism):
-                    unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
-                                               for proj in node.afferents if proj not in self.projections])
-                    unused_projections.extend([(f"From '{node.name}' to '{proj.sender.owner.name}' ({proj.name})")
-                                               for proj in node.efferents if proj not in self.projections])
+            if isinstance(node, Mechanism):
+                unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
+                                           for proj in node.afferents if proj not in self.projections])
+                unused_projections.extend([(f"From '{node.name}' to '{proj.receiver.owner.name}' ({proj.name})")
+                                           for proj in node.efferents if proj not in self.projections])
         if unused_projections:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}': \n"
             warnings.warn(warning + "\n\t".join(unused_projections))
@@ -8826,17 +8827,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             details and `ReportDevices` for options.
 
         animate : dict or bool : default False
-            specifies use of the `show_graph`show_graph <ShowGraph_show_graph_Method>` method
-            to generate a gif movie showing the sequence of Components executed in a run
-            (see `example <BasicsAndPrimer_Stroop_Example_Animation_Figure>`). A dict can be specified containing
-            options to pass to the `show_graph <ShowGraph_show_graph_Method>` method; each key must be a legal
-            argument for the `show_graph <ShowGraph_show_graph_Method>` method, and its value a
-            specification for that argument.  The entries listed below can also be included in the dict to specify
-            parameters of the animation.  If the **animate** argument is specified simply as `True`, defaults are
-            used for all arguments of `show_graph <ShowGraph_show_graph_Method>` and the options below:
+            specifies use of the `show_graph`show_graph <ShowGraph.show_graph>` method to generate
+            a gif movie showing the sequence of Components executed in a run (see `example
+            <BasicsAndPrimer_Stroop_Example_Animation_Figure>`). A dict can be specified containing
+            options to pass to the `show_graph <ShowGraph.show_graph>` method; each key must be a legal
+            argument for the `show_graph <ShowGraph.show_graph>` method, and its value a specification for that
+            argument.  The entries listed below can also be included in the dict to specify parameters of the
+            animation.  If the **animate** argument is specified simply as `True`, defaults are used for all
+            arguments of `show_graph <ShowGraph.show_graph>` and the options below:
 
             * *UNIT*: *EXECUTION_SET* or *COMPONENT* (default=\\ *EXECUTION_SET*\\ ) -- specifies which Components
-              to treat as active in each call to `show_graph <ShowGraph.show_graph>`. *COMPONENT* generates an
+              to treat as active in each call to `show_graph() <ShowGraph.show_graph>`. *COMPONENT* generates an
               image for the execution of each Component.  *EXECUTION_SET* generates an image for each `execution_set
               <Component.execution_sets>`, showing all of the Components in that set as active.
 
