@@ -567,8 +567,8 @@ comp.add_node(B)
         with pytest.warns(UserWarning) as warning:
             ocomp = Composition(name='OUTER COMPOSITION',pathways=[comp1, comp2])
             ocomp.run()
-        assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\': \\nFrom \'A\' to \'C\' (MappingProjection from A[OutputPort-0] to C[InputPort-0])"'
-        assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\': \\nTo \'C\' from \'A\' (MappingProjection from A[OutputPort-0] to C[InputPort-0])"'
+        assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (from \'A\' to \'C\')"'
+        assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')"'
 
 class TestPathway:
 

@@ -666,3 +666,5 @@ class TestControl:
         ocomp.add_controller(ocm)
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
         assert gv.strip() == expected_output
+
+    # def test_randomization_control_signal:
