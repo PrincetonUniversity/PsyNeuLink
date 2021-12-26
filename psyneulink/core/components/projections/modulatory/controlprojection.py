@@ -30,8 +30,8 @@ A ControlProjection is a type of `ModulatoryProjection <ModulatoryProjection>` t
 <ParameterPort>` of a `ProcessingMechanism <ProcessingMechanism>`. It takes the `value <ControlSignal.value>` of a
 `ControlSignal` of a `ControlMechanism <ControlMechanism>` and uses it to  modify the value of the parameter associated
 with the ParameterPort to which it projects.  All of the ControlProjections in a Composition, along with its other
-`control components <ControlMechanism>`, can be displayed using the Composition's `show_graph <Composition.show_graph>`
-method with its **show_control** argument assigned as `True`.
+`control components <ControlMechanism>`, can be displayed using the Composition's `show_graph
+<ShowGraph_show_graph_Method>` method with its **show_control** argument assigned as `True`.
 
 .. _ControlProjection_Creation:
 

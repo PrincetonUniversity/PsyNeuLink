@@ -670,7 +670,7 @@ the values of random variables in the `agent_rep <OptimizationControlMechanism.a
 used to further refine randomization (see `OptimizationControlMechanism_Estimation_Randomization` for additional
 details).
 
-.. _technical_note::
+.. technical_note::
 
     The *RANDOMIZATION_CONTROL_SIGNAL* ControlSignal sends a `ControlProjection` to the `ParameterPort` for the
     see `Parameter` of Components specified either in the OptimizationControlMechanism's `random_variables
@@ -820,6 +820,7 @@ Class Reference
 ---------------
 
 """
+import ast
 import copy
 import warnings
 from collections.abc import Iterable
@@ -831,7 +832,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
-    GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
+    GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -852,6 +853,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
 from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList
+from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
@@ -878,7 +880,7 @@ class OptimizationControlMechanismError(Exception):
 
 def _control_allocation_search_space_getter(owning_component=None, context=None):
     search_space = owning_component.parameters.search_space._get(context)
-    if not search_space:
+    if search_space is None:
         return [c.parameters.allocation_samples._get(context) for c in owning_component.control_signals]
     else:
         return search_space
@@ -1288,7 +1290,12 @@ class OptimizationControlMechanism(ControlMechanism):
         num_trials_per_estimate = None
 
         # search_space = None
-        control_allocation_search_space = Parameter(None, read_only=True, getter=_control_allocation_search_space_getter)
+        control_allocation_search_space = Parameter(
+            None,
+            read_only=True,
+            getter=_control_allocation_search_space_getter,
+            dependencies='search_space'
+        )
 
         saved_samples = None
         saved_values = None
@@ -1712,23 +1719,6 @@ class OptimizationControlMechanism(ControlMechanism):
         #     control_signals_from_composition = self.agent_rep._get_control_signals_for_composition()
         # self.output_ports.extend(control_signals_from_composition)
         # MODIFIED 11/21/21 END
-
-        if self.num_estimates:
-
-            randomization_seed_mod_values = SampleSpec(start=1,stop=self.num_estimates,step=1)
-
-            # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
-            #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
-            #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
-            # Get Components with variables to be randomized across estimates
-            #   and construct ControlSignal to modify their seeds over estimates
-            if self.random_variables is ALL:
-                self.random_variables = self.agent_rep.random_variables
-            self.output_ports.append(ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
-                                                   modulates=[param.parameters.seed._port
-                                                              for param in self.random_variables],
-                                                   allocation_samples=randomization_seed_mod_values))
-
         control_signals = []
         for i, spec in list(enumerate(self.output_ports)):
             control_signal = self._instantiate_control_signal(spec, context=context)
@@ -1740,7 +1730,15 @@ class OptimizationControlMechanism(ControlMechanism):
             # MODIFIED 11/20/21 END
             self.output_ports[i] = control_signal
 
-        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (i + 1, 1))
+        self._create_randomization_control_signal(
+            context,
+            set_control_signal_index=False
+        )
+
+        self.defaults.value = np.tile(
+            control_signal.parameters.variable.default_value,
+            (len(self.output_ports), 1)
+        )
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
     def _instantiate_function(self, function, function_params=None, context=None):
@@ -1780,19 +1778,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 corrected_search_space = [SampleIterator(specification=search_space)]
             self.parameters.search_space._set(corrected_search_space, context)
 
-        # If there is no randomization_control_signal, but num_estimates is 1 or None,
-        #     pass None for randomization_control_signal_index (1 will be used by default by OptimizationFunction)
-        if RANDOMIZATION_CONTROL_SIGNAL not in self.control_signals and self.num_estimates in {1, None}:
-            randomization_control_signal_index = None
-        # Otherwise, assert that num_estimates and number of seeds generated by randomization_control_signal are equal
-        else:
-            num_seeds = self.control_signals[RANDOMIZATION_CONTROL_SIGNAL].allocation_samples.base.num
-            assert self.num_estimates == num_seeds, \
-                    f"PROGRAM ERROR:  The value of the 'num_estimates' Parameter of {self.name}" \
-                    f"({self.num_estimates}) is not equal to the number of estimates that will be generated by " \
-                    f"its {RANDOMIZATION_CONTROL_SIGNAL} ControlSignal ({num_seeds})."
-            randomization_control_signal_index = self.control_signals.names.index(RANDOMIZATION_CONTROL_SIGNAL)
-
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
         self.function.reset(**{
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
@@ -1800,7 +1785,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # SEARCH_FUNCTION: self.search_function,
             # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
             SEARCH_SPACE: self.parameters.control_allocation_search_space._get(context),
-            RANDOMIZATION_DIMENSION: randomization_control_signal_index
         })
 
         if isinstance(self.agent_rep, type):
@@ -1964,6 +1948,65 @@ class OptimizationControlMechanism(ControlMechanism):
                                            context=context
                                            )
 
+    def _create_randomization_control_signal(
+        self,
+        context,
+        set_control_signal_index=True
+    ):
+        if self.num_estimates:
+            # must be SampleSpec in allocation_samples arg
+            randomization_seed_mod_values = SampleSpec(start=1, stop=self.num_estimates, step=1)
+
+            # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
+            #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
+            #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
+            # Get Components with variables to be randomized across estimates
+            #   and construct ControlSignal to modify their seeds over estimates
+            if self.random_variables is ALL:
+                self.random_variables = self.agent_rep.random_variables
+
+            randomization_control_signal = ControlSignal(
+                name=RANDOMIZATION_CONTROL_SIGNAL,
+                modulates=[
+                    param.parameters.seed.port
+                    for param in self.random_variables
+                ],
+                allocation_samples=randomization_seed_mod_values
+            )
+            randomization_control_signal_index = len(self.output_ports)
+            randomization_control_signal._variable_spec = (
+                OWNER_VALUE, randomization_control_signal_index
+            )
+            randomization_control_signal = self._instantiate_control_signal(
+                randomization_control_signal, context
+            )
+            self.output_ports.append(randomization_control_signal)
+
+            # Otherwise, assert that num_estimates and number of seeds generated by randomization_control_signal are equal
+            num_seeds = self.control_signals[RANDOMIZATION_CONTROL_SIGNAL].parameters.allocation_samples._get(context).num
+            assert self.num_estimates == num_seeds, \
+                    f"PROGRAM ERROR:  The value of the 'num_estimates' Parameter of {self.name}" \
+                    f"({self.num_estimates}) is not equal to the number of estimates that will be generated by " \
+                    f"its {RANDOMIZATION_CONTROL_SIGNAL} ControlSignal ({num_seeds})."
+
+            function_search_space = self.function.parameters.search_space._get(context)
+            if randomization_control_signal_index >= len(function_search_space):
+                # TODO: check here if search_space has an item for each
+                # control_signal? or is allowing it through for future
+                # checks the right way?
+
+                # search_space must be a SampleIterator
+                function_search_space.append(SampleIterator(randomization_seed_mod_values))
+
+            # workaround for fact that self.function.reset call in
+            # _instantiate_attributes_after_function expects to use
+            # old/unset values when running _update_default_variable,
+            # which calls self.agent_rep.evaluate and is brittle.
+            if set_control_signal_index:
+                self.function.parameters.randomization_dimension._set(
+                    randomization_control_signal_index, context
+                )
+
     def _get_evaluate_input_struct_type(self, ctx):
         # We construct input from optimization function input
         return ctx.get_input_struct_type(self.function)
@@ -2098,13 +2141,26 @@ class OptimizationControlMechanism(ControlMechanism):
 
         comp_params, base_comp_state, allocation_sample, arg_out, arg_in, base_comp_data = llvm_func.args
 
+        if "const_params" in debug_env:
+            comp_params = builder.alloca(comp_params.type.pointee, name="const_params_loc")
+            const_params = comp_params.type.pointee(self.agent_rep._get_param_initializer(None))
+            builder.store(const_params, comp_params)
+
         # Create a simulation copy of composition state
         comp_state = builder.alloca(base_comp_state.type.pointee, name="state_copy")
-        builder.store(builder.load(base_comp_state), comp_state)
+        if "const_state" in debug_env:
+            const_state = self.agent_rep._get_state_initializer(None)
+            builder.store(comp_state.type.pointee(const_state), comp_state)
+        else:
+            builder.store(builder.load(base_comp_state), comp_state)
 
         # Create a simulation copy of composition data
         comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
-        builder.store(builder.load(base_comp_data), comp_data)
+        if "const_data" in debug_env:
+            const_data = self.agent_rep._get_data_initializer(None)
+            builder.store(comp_data.type.pointee(const_data), comp_data)
+        else:
+            builder.store(builder.load(base_comp_data), comp_data)
 
         # Evaluate is called on composition controller
         assert self.composition.controller is self
@@ -2168,6 +2224,17 @@ class OptimizationControlMechanism(ControlMechanism):
         # Assert that we have populated all inputs
         assert all(input_initialized), \
           "Not all inputs to the simulated composition are initialized: {}".format(input_initialized)
+
+        if "const_input" in debug_env:
+            if not debug_env["const_input"]:
+                input_init = [[os.defaults.variable.tolist()] for os in self.agent_rep.input_CIM.input_ports]
+                print("Setting default input: ", input_init)
+            else:
+                input_init = ast.literal_eval(debug_env["const_input"])
+                print("Setting user input in evaluate: ", input_init)
+
+            builder.store(comp_input.type.pointee(input_init), comp_input)
+
 
         # Determine simulation counts
         num_trials_per_estimate_ptr = pnlvm.helpers.get_param_ptr(builder, self,

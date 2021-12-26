@@ -336,7 +336,10 @@ should project to the InputPort. Each of these is described below:
 
       .. note::
          Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
-         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing.
+         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing, unless the
+         `allow_probes <Composition.allow_probes>` attribute of the `Composition` is set to True.  Note also that any
+         Node that shadows an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it
+         belongs is itself also assigned the role of `INPUT <NodeRole.INPUT>` Node.
 
       .. hint::
          If an InputPort needs to be shadowed that belongs to a Mechanism in a `nested <Composition_Nested>` that is
@@ -507,11 +510,11 @@ Class Reference
 ---------------
 
 """
+import collections
 import inspect
 import numbers
 import warnings
 
-import collections
 import numpy as np
 import typecheck as tc
 
@@ -523,7 +526,7 @@ from psyneulink.core.components.ports.port import PortError, Port_Base, _instant
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     COMBINE, CONTROL_SIGNAL, EXPONENT, FUNCTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, INPUT_PORT_PARAMS, \
-    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER,\
+    LEARNING_SIGNAL, MAPPING_PROJECTION, MATRIX, NAME, OPERATION, OUTPUT_PORT, OUTPUT_PORTS, OWNER, \
     PARAMS, PRODUCT, PROJECTIONS, REFERENCE_VALUE, \
     SENDER, SHADOW_INPUTS, SHADOW_INPUT_NAME, SIZE, PORT_TYPE, SUM, VALUE, VARIABLE, WEIGHT
 from psyneulink.core.globals.parameters import Parameter
@@ -1414,11 +1417,11 @@ def _parse_shadow_inputs(owner, input_ports):
     input_ports = convert_to_list(input_ports)
     input_ports_to_shadow_specs=[]
     for spec_idx, spec in enumerate(input_ports):
-        # If {SHADOW_INPUTS:[InputPort or Mechaism,...]} is found:
+        # If {SHADOW_INPUTS:[InputPort or Mechanism,...]} is found:
         if isinstance(spec, dict) and SHADOW_INPUTS in spec:
             input_ports_to_shadow_in_spec=[]
             # For each item in list of items to shadow specified in that entry:
-            for item in list(spec[SHADOW_INPUTS]):
+            for item in convert_to_list(spec[SHADOW_INPUTS]):
                 from psyneulink.core.components.mechanisms.mechanism import Mechanism
                 # If an InputPort was specified, just used that
                 if isinstance(item, InputPort):

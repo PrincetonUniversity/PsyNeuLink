@@ -373,7 +373,7 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core.components.component import Component, parameter_keywords
-from psyneulink.core.components.functions.function import get_param_value_for_keyword
+from psyneulink.core.components.functions.function import FunctionError, get_param_value_for_keyword
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.port import PortError, Port_Base, _instantiate_port, port_type_keywords
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Function
@@ -571,8 +571,16 @@ class ParameterPortList(ContentAddressableList):
         return names
 
     @classmethod
-    def _get_explicit_name(cls, port_name, parameter_name=None):
-        return f'{port_name}{cls.separator}{parameter_name}'
+    def _get_explicit_name(cls, port_name, parameter_names=None):
+        if isinstance(parameter_names, str):
+            parameter_names = [parameter_names]
+
+        if parameter_names is not None:
+            suffix = cls.separator + cls.separator.join(p for p in parameter_names)
+        else:
+            suffix = ''
+
+        return f'{port_name}{suffix}'
 
     @classmethod
     def _get_base_name(cls, explicit_name):
@@ -584,7 +592,7 @@ class ParameterPortList(ContentAddressableList):
     @classmethod
     def _get_suffix(cls, explicit_name):
         try:
-            return explicit_name.split(cls.separator)[1]
+            return cls.separator.join(explicit_name.split(cls.separator)[1:])
         except IndexError:
             return ''
 
@@ -1005,45 +1013,74 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             or not parameter.modulable
         )
 
-    port_parameters = collections.defaultdict(set)
+    def _enumerate_parameter_ports(obj, prev_objs, port_collection):
+        """
+        Returns:
+            [Dict[str:List[List]]]: a dictionary containing keys that
+            correspond to parameter names that will get parameter ports,
+            and values of lists of lists. Each list contains a series of
+            parameter names that correspond to a path to the function
+            whose parameter (with name equivalent to the key) will be
+            modulated
+        """
+        for p in obj.parameters:
+            # prefer instantiated value if exists
+            try:
+                func = p._get(context)
+            except FunctionError:
+                func = None
+
+            if func is None:
+                func = p.default_value
+
+            if (
+                not p.reference
+                and is_instance_or_subclass(func, Function)
+                and not isinstance(p, (ParameterAlias, SharedParameter))
+            ):
+                _enumerate_parameter_ports(
+                    func, prev_objs + [p.name], port_collection
+                )
+
+            if isinstance(p, ParameterAlias):
+                port_aliases.add(p.name)
+
+            if not skip_parameter_port(p):
+                port_collection[p.name].append(prev_objs)
+
+        return port_collection
+
+    def _get_corresponding_component(obj, param_list, context=None, index=None):
+        if index is None:
+            index = len(param_list) - 1
+
+        res = obj
+        for p in param_list[0:index + 1]:
+            param = getattr(res.parameters, p)
+            func = param._get(context)
+
+            if func is None:
+                func = param.default_value
+
+            res = func
+
+        return res
+
     port_aliases = set()
-    owner_ports = set()
+    port_collection = _enumerate_parameter_ports(
+        owner, [], collections.defaultdict(list)
+    )
 
-    # function may be a custom function not yet parsed to a UDF
-    # function may also be a Function class, in which case parameter
-    # ports are still created for the modulable Parameters
-
-    for p in owner.parameters:
-        func = p.default_value
-        if (
-            not p.reference
-            and is_instance_or_subclass(func, Function)
-            and not isinstance(p, (ParameterAlias, SharedParameter))
-        ):
-            for func_param in func.parameters:
-                if not skip_parameter_port(func_param):
-                    port_parameters[func_param.name].add(p.name)
-        if isinstance(p, ParameterAlias):
-            port_aliases.add(p.name)
-
-        if not skip_parameter_port(p):
-            owner_ports.add(p.name)
-
-    for parameter_port_name in port_parameters:
-        if (
-            len(port_parameters[parameter_port_name]) > 1
+    for parameter_port_name in port_collection:
+        add_suffix = (
+            len(port_collection[parameter_port_name]) > 1
             or parameter_port_name in port_aliases
-            or parameter_port_name in owner_ports
-        ):
-            add_suffix = True
-        else:
-            add_suffix = False
+        )
 
-        for corresponding_parameter_component_name in port_parameters[parameter_port_name]:
-            corresponding_parameter_component = getattr(
-                owner.parameters,
-                corresponding_parameter_component_name
-            )._get(context)
+        for corresponding_parameter_component_names in port_collection[parameter_port_name]:
+            corresponding_parameter_component = _get_corresponding_component(
+                owner, corresponding_parameter_component_names, context
+            )
 
             p = getattr(
                 corresponding_parameter_component.parameters,
@@ -1052,15 +1089,26 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
 
             # .function is not finalized yet, because this happens before
             # _instantiate_function
-            if corresponding_parameter_component_name is FUNCTION:
-                source = operator.attrgetter(f'{FUNCTION}.parameters.{p.name}')
-            else:
+            if corresponding_parameter_component is owner and p.name != FUNCTION:
                 source = p
+            else:
+                source = operator.attrgetter(
+                    f'{".".join(corresponding_parameter_component_names)}.parameters.{p.name}'
+                )
 
             # use Shared/FunctionParameter value as fallback
             try:
-                value = owner.initial_shared_parameters[corresponding_parameter_component_name][p.name]
-            except (KeyError, TypeError):
+                # want the isp value for the last parameter name of the
+                # second to last component
+                isp_owner = _get_corresponding_component(
+                    owner, corresponding_parameter_component_names, context, -2
+                )
+            except IndexError:
+                isp_owner = owner
+
+            try:
+                value = isp_owner.initial_shared_parameters[corresponding_parameter_component_names[-1]][p.name]
+            except (AttributeError, IndexError, KeyError, TypeError):
                 value = None
 
             # if parameter value on actual Parameter was specified or there is
@@ -1074,7 +1122,9 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
             if add_suffix:
                 explicit_name = ParameterPortList._get_explicit_name(
                     p.name,
-                    corresponding_parameter_component_name
+                    corresponding_parameter_component_names
+                    if len(corresponding_parameter_component_names) > 0
+                    else ParameterPortList._owner_port_suffix
                 )
             else:
                 explicit_name = p.name
@@ -1087,34 +1137,6 @@ def _instantiate_parameter_ports(owner, function=None, context=None):
                 function=corresponding_parameter_component,
                 source=source,
                 explicit_name=explicit_name
-            )
-
-    for p in owner.parameters:
-        if not skip_parameter_port(p):
-            if (
-                p.name in port_parameters
-                or p.name in port_aliases
-            ):
-                explicit_name = ParameterPortList._get_explicit_name(
-                    p.name,
-                    ParameterPortList._owner_port_suffix
-                )
-            else:
-                explicit_name = p.name
-
-            if p.spec is not None:
-                value = p.spec
-            else:
-                value = p.default_value
-
-            _instantiate_parameter_port(
-                owner,
-                p.name,
-                value,
-                context=context,
-                function=function,
-                source=p,
-                explicit_name=explicit_name,
             )
 
     owner.parameter_ports.sort(key=lambda port: port.name)

@@ -151,7 +151,7 @@ class NormalDist(DistributionFunction):
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @tc.typecheck
     def __init__(self,
@@ -330,7 +330,7 @@ class UniformToNormalDist(DistributionFunction):
                     :type: ``float``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
         mean = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         standard_deviation = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
@@ -459,7 +459,7 @@ class ExponentialDist(DistributionFunction):
         """
         beta = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @tc.typecheck
     def __init__(self,
@@ -584,7 +584,7 @@ class UniformDist(DistributionFunction):
         low = Parameter(0.0, modulable=True)
         high = Parameter(1.0, modulable=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
     @tc.typecheck
     def __init__(self,
@@ -739,7 +739,7 @@ class GammaDist(DistributionFunction):
                     :type: ``float``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         dist_shape = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 
@@ -873,7 +873,7 @@ class WaldDist(DistributionFunction):
                     :type: ``float``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         mean = Parameter(1.0, modulable=True, aliases=[ADDITIVE_PARAM])
 

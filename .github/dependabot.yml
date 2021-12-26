@@ -16,6 +16,7 @@ updates:
       include: "scope"
     labels:
       - "CI"
+    rebase-strategy: "disabled"
 
   - package-ecosystem: "pip"
     directory: "/" # use top dir
@@ -27,3 +28,4 @@ updates:
     labels:
       - "deps"
     open-pull-requests-limit: 15
+    rebase-strategy: "disabled"

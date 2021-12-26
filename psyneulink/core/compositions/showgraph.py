@@ -42,16 +42,26 @@ a Composition's `controller <Composition_Controller>`;  and **show_learning** de
 `learning compnents <Composition_Learning_Components>`.  These are listed as the arguments for the show_graph
 <ShowGraph.show_graph>` method below.
 
-*Display attributes* -- state_features (such as the colors and shapes) in which different types of nodes are displayed
-can be modified by assigning a dictionary of attribute:values pairs to the **show_graph_configuration** argument of the
-Composition's constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
-in the `class reference <ShowGraph_Class_Reference>` below.
+*Display attributes* -- the colors, shapes and arrow styles used in the display can be modified using the
+**show_graph_attributes** argument of a Composition's constructor, as described below.
+
+.. _ShowGraph_Attributes:
+
+*Display Attributes*
+--------------------
+
+The default attributes used to display different types of `Components <Component>` and their `roles <NodeRole>`
+within a Composition are listed below. These can be customized using the **show_graph_attributes** argument of a
+Composition's constructor, in a dict with keys that are any of the parameters listed in `ShowGraph`, and values
+that are any supported by `GraphViz <https://www.graphviz.org>`_ for
+`shapes <https://www.graphviz.org/doc/info/shapes.html>`_,
+`arrow styles <https://www.graphviz.org/doc/info/arrows.html>`_
+`colors <https://www.graphviz.org/doc/info/colors.html>`_.
+
+Shapes
+~~~~~~
 
 COMMENT:
-
-The following are the default attribute used to display different types of `Components <Component>` and their `roles
-<NodeRole>` within a Composition:
-
 FIX: MAKE FIGURE THAT HAS ALL THE VARIOUS TYPES USING CORRESPONDING NAMES
 Input Node
 Singleton Node
@@ -60,12 +70,9 @@ LearningMechanism
 ControlMechanism
 Controller
 Nested Composition
+COMMENT
 
-
-Shapes
-~~~~~~
-
-`Nested Compositions <Composition_Nested>`: square
+`Nested Composition <Composition_Nested>`: square
 
 `Mechanism`:
   - default: oval
@@ -73,36 +80,37 @@ Shapes
   - `FEEDBACK_SENDER`: octagon
   - `CONTROLLER`: doubleoctagon
 
-Projection:
+`Projection`:
   - default: arrow
   - `ControlProjection`: box
+    - 'RANDOMIZATION_CONTROL_SIGNAL` : dashed line
   - `MappingProjection` that receives a `LearningProjection` when **show_learning** is True:  diamond
 
 Colors
 ~~~~~~
+
+Component-types
+^^^^^^^^^^^^^^^
+
+- Control-related components:  blue
+- Controller-related: purple
+- Learning-related components: orange
+- Inactive Projection: red
+- Active items (when **animate** = True in `run <Composition.run>`): **BOLD**
 
 Nodes
 ^^^^^
   - `INPUT`: green
   - `OUTPUT`: red
   - `SINGLETON`: brown
-
-Component-types
-^^^^^^^^^^^^^^^
-
-Control-related compoments:  blue
-Controller-related: purple
-Learning-related components: orange
-
-Active items (when **animate**=True in `run <Composition.run>`): **BOLD**
-
-COMMENT
+  - `CONTROL`: blue
+  - `CONTROLLER` : purple
+  - `LEARNING` : orange
 
 .. _ShowGraph_Examples_Visualization:
 
 *Examples*
 ----------
-
 
 .. _Composition_show_graph_basic_figure:
 
@@ -147,7 +155,6 @@ method.  The figure below shows several examples.
 
 .. figure:: _static/Composition_show_graph_options_fig.svg
    :alt: Composition graph examples
-   :scale: 150 %
 
    Displays of the Composition in the `example above <Composition_show_graph_basic_figure>`, generated using various
    options of its `show_graph <ShowGraph.show_graph>` method. **Panel A** shows the graph with its Projections labeled
@@ -202,7 +209,8 @@ from PIL import Image
 
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    AGENT_REP, RANDOMIZATION_CONTROL_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -267,8 +275,10 @@ class ShowGraphError(Exception):
 
 
 class ShowGraph():
-    """
-    ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+    """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+
+    Every Composition is assigned a ShowGraph object, with its `show_graph <ShowGraph.show_graph>` method
+    assigned to, and callable as Composition.show_graph().
 
     Arguments
     ---------
@@ -304,7 +314,7 @@ class ShowGraph():
     composition_shape : default 'rectangle'
         specifies the shape in which nodes that represent `nested Compositions <Composition_Nested>` are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+        level specified in a call to `show_graph() <ShowGraph.show_graph>`.
 
     agent_rep_shape : default 'egg'
         specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed.
@@ -353,7 +363,7 @@ class ShowGraph():
     composition_color : keyword : default 'pink'
         specifies the color in which nodes that represent `nested Compositions <Composition_Nested> are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+        level specified in a call to `show_graph() <ShowGraph.show_graph>`.
 
     inactive_projection_color : keyword : default 'red'
         specifies the color in which `Projections <Projection>` not active within the `Composition` are displayed,
@@ -364,7 +374,7 @@ class ShowGraph():
 
     active_thicker_by : int : default 2
         specifies the amount by which to increase the width of the outline of Components specified in the
-        **active_items** argument of a call to `show_graph <ShowGraph.show_graph>`.
+        **active_items** argument of a call to `show_graph() <ShowGraph.show_graph>`.
 
     bold_width : int : default 3,
         specifies the width of the outline for `INPUT` and `OUTPUT` Nodes of the Composition.
@@ -493,7 +503,8 @@ class ShowGraph():
            output_fmt='pdf',                         \
            context=None)
 
-        Show graphical display of Components in a Composition's graph.
+        Show graphical display of Components in a Composition's graph.  See `show_graph <ShowGraph_show_graph_Method>`
+        for additional details.
 
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
@@ -623,9 +634,7 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
-        # MODIFIED 6/13/20 NEW:
         from psyneulink.core.compositions.composition import Composition
-        # MODIFIED 6/13/20 END
 
         composition = self.composition
 
@@ -734,6 +743,7 @@ class ShowGraph():
         # BUILD GRAPH ------------------------------------------------------------------------
 
         import graphviz as gv
+        self.style = 'solid'
 
         G = gv.Digraph(
             name=composition.name,
@@ -761,6 +771,8 @@ class ShowGraph():
         # get all Nodes
         if output_fmt != 'gv':
             composition._analyze_graph(context=context)
+            if composition._need_check_for_unused_projections:
+                composition._check_for_unused_projections(context)
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
@@ -1097,7 +1109,8 @@ class ShowGraph():
 
         def _render_projection(_g, proj, sndr_label, rcvr_label,
                                proj_color=self.default_node_color,
-                               arrowhead=self.default_projection_arrow):
+                               arrowhead=self.default_projection_arrow,
+                               style=self.style):
             if any(item in active_items for item in {proj, proj.sender.owner}):
                 if self.active_color == BOLD:
                     color = proj_color
@@ -1114,7 +1127,11 @@ class ShowGraph():
             else:
                 label = ''
 
-            _g.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
+            _g.edge(sndr_label, rcvr_label,
+                    label=label, color=color,
+                    penwidth=proj_width,
+                    arrowhead=arrowhead,
+                    style=style)
 
         for cim in composition.cims:
 
@@ -1232,7 +1249,10 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
 
                         # Render Projection
-                        _render_projection(enclosing_g, proj, sndr_output_node_proj_label, rcvr_cim_proj_label,
+                        _render_projection(enclosing_g,
+                                           proj,
+                                           sndr_output_node_proj_label,
+                                           rcvr_cim_proj_label,
                                            proj_color)
 
                 # Projections from input_CIM to INPUT nodes
@@ -1404,10 +1424,18 @@ class ShowGraph():
                         else:
                             ctl_proj_color = proj_color or self.control_color
 
-                        arrowhead = self.default_projection_arrow if isinstance(proj, MappingProjection) else self.control_projection_arrow
+                        if isinstance(proj, MappingProjection):
+                            arrowhead = self.default_projection_arrow
+                        else:
+                            arrowhead = self.control_projection_arrow
+
+                        if RANDOMIZATION_CONTROL_SIGNAL in proj.name:
+                            style = 'dashed'
+                        else:
+                            style = self.style
 
                         _render_projection(g, proj, sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label,
-                                           proj_color=ctl_proj_color, arrowhead=arrowhead)
+                                           proj_color=ctl_proj_color, arrowhead=arrowhead, style=style)
 
 
             # OUTPUT_CIM ----------------------------------------------------------------------------
@@ -1492,7 +1520,8 @@ class ShowGraph():
                             continue
 
                         # Skip if receiver is cim (handled by enclosing Composition's call to this method)
-                        if isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism):
+                        if (isinstance(rcvr_node_input_port.owner, CompositionInterfaceMechanism) and
+                                rcvr_node_input_port.owner.composition is enclosing_comp):
                             continue
 
                         # Skip if there is no inner Composition (show_nested!=NESTED) or
@@ -1703,13 +1732,19 @@ class ShowGraph():
                 else:
                     edge_label = ''
 
+                if RANDOMIZATION_CONTROL_SIGNAL in ctl_proj.name:
+                    style = 'dashed'
+                else:
+                    style = self.style
+
                 # Construct edge -----------------------------------------------------------------------
                 g.edge(ctl_proj_sndr_label,
                        ctl_proj_rcvr_label,
                        label=edge_label,
                        color=ctl_proj_color,
                        penwidth=ctl_proj_width,
-                       arrowhead=ctl_proj_arrowhead
+                       arrowhead=ctl_proj_arrowhead,
+                       style = style
                        )
 
         # If controller has objective_mechanism, assign its node and Projections,

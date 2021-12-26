@@ -50,7 +50,7 @@ class TestMechanism:
         t2 = pnl.TransferMechanism(name='t2', size=2)
         t2.integrator_function.parameters.noise.set(noise())
 
-        t1.integrator_function.noise.base.seed = 0
+        t1.integrator_function.noise.seed = 0
         t2.integrator_function.noise.base.seed = 0
 
         for _ in range(5):

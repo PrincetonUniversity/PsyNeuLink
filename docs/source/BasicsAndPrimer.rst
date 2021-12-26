@@ -720,7 +720,7 @@ Modulable Parameters
 ^^^^^^^^^^^^^^^^^^^^
 Some parameters of Components can be modulable, meaning they can be modified by another Component (specifically,
 a `ModulatorySignal <ModulatorySignal>` belonging to a `ModulatoryMechanism <ModulatoryMechanism>`).  If the parameter
-of a `Mechanism <Mechanism>` or a `Projection <Projection>` is modulable, it is assigned a `ParameterPort` -- this is a
+of a `Mechanism <Mechanism>` or a `Projection <Projection>` is modulable, it may be assigned a `ParameterPort` -- this is a
 Component that belongs to the Mechanism or Projection and can receive a Projection from a ModulatorySignal, allowing
 another component to modulate the value of the parameter. ParameterPorts are created for every modulable parameter of
 a Mechanism, its `function <Mechanism_Base.function>`, any of its
@@ -757,6 +757,17 @@ parameter::
     1.0
 
 This is because when the Compoistion was run, the ``control`` Mechanism modulated the value of the gain parameter.
+
+Some Parameters may be modulable, but not *modulated* by a
+ParameterPort, because ParameterPorts are only created for Parameters
+whose values are numeric at the time of Component construction. For
+example, `TransferMechanism.termination_threshold` has a default value
+of None and will not have a ParameterPort by default. Similarly, when
+`noise <TransferMechanism.noise>` is set to a function or value
+containing a function, it will not have an associated ParameterPort.
+
+In this case, dot notation for these modulable Parameters will behave
+the same as for non-modulable Parameters.
 
 .. *Initialization* ???XXX
 
