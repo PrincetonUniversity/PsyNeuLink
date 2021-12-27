@@ -340,6 +340,7 @@ class LLVMBuilderContext:
 
     @_comp_cached
     def get_param_struct_type(self, component):
+        from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import NUM_ESTIMATES
         self._stats["param_structs_generated"] += 1
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
