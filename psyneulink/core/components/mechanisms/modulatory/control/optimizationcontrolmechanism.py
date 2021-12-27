@@ -607,7 +607,7 @@ A custom function can be assigned as the OptimizationControlMechanism's `functio
   - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
   ..
-  - It must execute the OptimizationControlMechanism's `evaluate_agent_rep
+  - It must be able to execute the OptimizationControlMechanism's `evaluate_agent_rep
     <OptimizationControlMechanism.evaluate_agent_rep>` `num_estimates <OptimizationControlMechanism.num_estimates>`
     times, and aggregate the results in computing the `net_outcome <ControlMechanism.net_outcome>` for a given
     `control_allocation <ControlMechanism.control_allocation>` (see
@@ -661,14 +661,19 @@ implements that variablity for the relevant Components, as described below.
 *Randomization ControlSignal*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
-a `ControlSignal` is automatically added to the OptimizationControlMechanism's `control_signals
-<OptimizationControlMechanism.control_signals>`, named *RANDOMIZATION_CONTROL_SIGNAL*, that randomizes
-the values of random variables in the `agent_rep <OptimizationControlMechanism.agent_rep>` over estimates of its
-`net_outcome <ControlMechanism.net_outcome>`. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
-`same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters can also be
-used to further refine randomization (see `OptimizationControlMechanism_Estimation_Randomization` for additional
-details).
+If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None), and
+`agent_rep <OptimizationControlMechanism.agent_rep>` has any `Components <Component>` with random variables
+(that is, that call a randomization function) specified in the OptimizationControlMechanism's `random_variables
+<OptimizationControlMechanism.random_variables>` attribute, then a `ControlSignal` is automatically added to the
+OptimizationControlMechanism's `control_signals <OptimizationControlMechanism.control_signals>`, named
+*RANDOMIZATION_CONTROL_SIGNAL*, that randomizes the values of the `random variables
+<OptimizationControlMechanism.random_variables>` over estimates of its `net_outcome <ControlMechanism.net_outcome>`
+for each `control_allocation <ControlMechanism.control_allocation>` If `num_estimates
+<OptimizationControlMechanism.num_estimates>` is specified but `agent_rep <OptimizationControlMechanism.agent_rep>`
+has not random variables, then a warning is issued and no *RANDOMIZATION_CONTROL_SIGNAL* is constructed. The
+`initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
+<OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters can also be used to further refine
+randomization (see `OptimizationControlMechanism_Estimation_Randomization` for additional details).
 
 .. technical_note::
 
@@ -765,7 +770,7 @@ If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.
 <OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method).
 The values of Components listed in the OptimizationControlMechanism's `random_variables
-<OptimizationControlMechanism.random_variables>` attribute are randomized over thoese estimates.  By default,
+<OptimizationControlMechanism.random_variables>` attribute are randomized over those estimates.  By default,
 this includes all Components in the `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables (listed
 in its `random_variables <Composition.random_variables>` attribute).  However, if particular Components are specified
 in the **random_variables** argument of the OptimizationControlMechanism's constructor, then randomization is
@@ -927,7 +932,8 @@ class OptimizationControlMechanism(ControlMechanism):
     state_feature_functions : Function or function : default None
         specifies the `function <InputPort.function>` assigned the `InputPort` in `state_input_ports
         <OptimizationControlMechanism.state_input_ports>` assigned to each **state_feature**
-        (see `state_feature_functions <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
+        (see `state_feature_functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
+        for additional details).
 
     agent_rep : None or Composition  : default None or Composition to which OptimizationControlMechanism is assigned
         specifies the `Composition` used by `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
@@ -941,18 +947,22 @@ class OptimizationControlMechanism(ControlMechanism):
         the `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
     num_estimates : int : 1
-        specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` used
-        to estimate its `net_outcome <ControlMechanism.net_outcome>` for each `control_allocation
-        <ControlMechanism.control_allocation>` sampled (see `num_estimates
+        specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` randomized
+        over **random_variables** and used to estimate its `net_outcome <ControlMechanism.net_outcome>` for each
+        `control_allocation <ControlMechanism.control_allocation>` sampled (see `num_estimates
         <OptimizationControlMechanism.num_estimates>` for additional information).
 
     random_variables : Parameter or list[Parameter] : default ALL
-        specifies the Components with random variables to be randomized over different estimates
-        of each `control_allocation <ControlMechanism.control_allocation>`;  these must be in the `agent_rep
-        <OptimizationControlMechanism.agent_rep>` and have a `seed` `Parameter`. By default, all such Components in
-        the `agent_rep <OptimizationControlMechanism.agent_rep>` (listed in its `random_variables
-        <Composition.random_variables>` attribute) are included (see `random_variables
-        <OptimizationControlMechanism.random_variables>` for additional information).
+        specifies the Components of `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables to be
+        randomized over different estimates of each `control_allocation <ControlMechanism.control_allocation>`;  these
+        must be in the `agent_rep <OptimizationControlMechanism.agent_rep>` and have a `seed` `Parameter`. By default,
+        all such Components (listed in its `random_variables <Composition.random_variables>` attribute) are included
+        (see `random_variables <OptimizationControlMechanism.random_variables>` for additional information).
+
+        .. note::
+           if **num_estimates** is specified but `agent_rep <OptimizationControlMechanism.agent_rep>` has no
+           `random variables <Composition.random_variables>`, a warning is generated and `num_estimates
+           <OptimizationControlMechanism.num_estimates>` is set to None.
 
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
@@ -1046,8 +1056,9 @@ class OptimizationControlMechanism(ControlMechanism):
         `OptimizationControlMechanism_Estimation_Randomization` for additional details.
 
     random_variables : Parameter or List[Parameter]
-        list of the Components with variables that are randomized over estimates for a given `control_allocation
-        <ControlMechanism.control_allocation>`;  by default, all Components in the `agent_rep
+        list of the `Parameters <Parameter>` in `agent_rep <OptimizationControlMechanism.agent_rep>` with random
+        variables (that is, ones that call a randomization function) that are randomized over estimates for a given
+        `control_allocation <ControlMechanism.control_allocation>`;  by default, all Components in the `agent_rep
         <OptimizationControlMechanism.agent_rep>` with random variables are included (listed in its `random_variables
         <Composition.random_variables>` attribute);  see `OptimizationControlMechanism_Estimation_Randomization`
         for additional details.
