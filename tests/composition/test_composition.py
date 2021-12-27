@@ -25,6 +25,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
@@ -569,6 +570,7 @@ comp.add_node(B)
             ocomp.run()
         assert repr(warning[0].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'iCOMP\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (from \'A\' to \'C\')"'
         assert repr(warning[1].message.args[0]) == '"\\nThe following Projections were specified but are not being used by Nodes in \'COMP_2\':\\n\\tMappingProjection from A[OutputPort-0] to C[InputPort-0] (to \'C\' from \'A\')"'
+
 
 class TestPathway:
 
@@ -1258,6 +1260,54 @@ class TestCompositionPathwaysArg:
         with pytest.raises(pnl.CompositionError) as error_text:
             c = Composition(pathways=[{'P1': ([A,B],C)}])
         assert ("The 2nd item" in str(error_text.value) and "must be a LearningFunction" in str(error_text.value))
+
+
+class TestProperties:
+
+    def test_properties(self):
+
+        Input = pnl.TransferMechanism(name='Input')
+        Reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward')
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical,
+                           output_ports=[pnl.DECISION_VARIABLE,
+                                         pnl.RESPONSE_TIME,
+                                         pnl.PROBABILITY_UPPER_THRESHOLD],
+                           name='Decision')
+        task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, (Decision, NodeRole.OUTPUT)]
+        comp = pnl.Composition(name="evc", retain_old_simulation_data=True, pathways=[task_execution_pathway,
+                                                                                      Reward])
+        comp.add_controller(
+            controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                num_estimates=2,
+                state_features=[Input.input_port, Reward.input_port],
+                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.1),
+                monitor_for_control=[Reward,
+                                     Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                     Decision.output_ports[pnl.RESPONSE_TIME]],
+                function=pnl.GridSearch(),
+                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                 {PROJECTIONS: ("threshold", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                 {PROJECTIONS: ("slope", Reward),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}]))
+
+        assert len(comp.nodes) == len(comp.mechanisms) == 3
+        assert len(list(comp._all_nodes)) == 7
+        assert len(comp.input_ports) == len(comp.get_nodes_by_role(NodeRole.INPUT)) == 2
+        assert len(comp.external_input_ports) == len(comp.input_ports)
+        assert len(comp.output_ports) / 3  == len(comp.get_nodes_by_role(NodeRole.OUTPUT)) == 2
+        assert len(comp.shadowing_dict) == 2
+        assert len(comp.stateful_nodes) == 0
+        assert len(comp.stateful_parameters) == 10
+        assert len(comp.random_variables) == 2
+        assert len(comp._dependent_components) == 25
+        assert len(comp.afferents) == len(comp.efferents) == 0
+        assert isinstance(comp.controller, OptimizationControlMechanism)
+        assert len(comp.projections) == 18
+        assert len([proj for proj in comp.projections if isinstance(proj, MappingProjection)]) == 14
+        assert len([proj for proj in comp.projections if isinstance(proj, ControlProjection)]) == 4
 
 
 class TestAnalyzeGraph:
