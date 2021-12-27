@@ -607,7 +607,7 @@ A custom function can be assigned as the OptimizationControlMechanism's `functio
   - It must accept as its first argument and return as its result an array with the same shape as the
     OptimizationControlMechanism's `control_allocation <ControlMechanism.control_allocation>`.
   ..
-  - It must execute the OptimizationControlMechanism's `evaluate_agent_rep
+  - It must be able to execute the OptimizationControlMechanism's `evaluate_agent_rep
     <OptimizationControlMechanism.evaluate_agent_rep>` `num_estimates <OptimizationControlMechanism.num_estimates>`
     times, and aggregate the results in computing the `net_outcome <ControlMechanism.net_outcome>` for a given
     `control_allocation <ControlMechanism.control_allocation>` (see
@@ -661,14 +661,19 @@ implements that variablity for the relevant Components, as described below.
 *Randomization ControlSignal*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None),
-a `ControlSignal` is automatically added to the OptimizationControlMechanism's `control_signals
-<OptimizationControlMechanism.control_signals>`, named *RANDOMIZATION_CONTROL_SIGNAL*, that randomizes
-the values of random variables in the `agent_rep <OptimizationControlMechanism.agent_rep>` over estimates of its
-`net_outcome <ControlMechanism.net_outcome>`. The `initial_seed <OptimizationControlMechanism.initial_seed>` and
-`same_seed_for_all_allocations <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters can also be
-used to further refine randomization (see `OptimizationControlMechanism_Estimation_Randomization` for additional
-details).
+If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (that is, it is not None), and
+`agent_rep <OptimizationControlMechanism.agent_rep>` has any `Components <Component>` with random variables
+(that is, that call a randomization function) specified in the OptimizationControlMechanism's `random_variables
+<OptimizationControlMechanism.random_variables>` attribute, then a `ControlSignal` is automatically added to the
+OptimizationControlMechanism's `control_signals <OptimizationControlMechanism.control_signals>`, named
+*RANDOMIZATION_CONTROL_SIGNAL*, that randomizes the values of the `random variables
+<OptimizationControlMechanism.random_variables>` over estimates of its `net_outcome <ControlMechanism.net_outcome>`
+for each `control_allocation <ControlMechanism.control_allocation>` If `num_estimates
+<OptimizationControlMechanism.num_estimates>` is specified but `agent_rep <OptimizationControlMechanism.agent_rep>`
+has not random variables, then a warning is issued and no *RANDOMIZATION_CONTROL_SIGNAL* is constructed. The
+`initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
+<OptimizationControlMechanism.same_seed_for_all_allocations>` Parameters can also be used to further refine
+randomization (see `OptimizationControlMechanism_Estimation_Randomization` for additional details).
 
 .. technical_note::
 
@@ -765,7 +770,7 @@ If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.
 <OptimizationControlMechanism.num_estimates>` times (i.e., by that number of calls to the
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method).
 The values of Components listed in the OptimizationControlMechanism's `random_variables
-<OptimizationControlMechanism.random_variables>` attribute are randomized over thoese estimates.  By default,
+<OptimizationControlMechanism.random_variables>` attribute are randomized over those estimates.  By default,
 this includes all Components in the `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables (listed
 in its `random_variables <Composition.random_variables>` attribute).  However, if particular Components are specified
 in the **random_variables** argument of the OptimizationControlMechanism's constructor, then randomization is
@@ -857,7 +862,7 @@ from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
-    'AGENT_REP', 'STATE_FEATURES', 'STATE_FEATURE_FUNCTIONS', 'RANDOMIZATION_CONTROL_SIGNAL'
+    'AGENT_REP', 'STATE_FEATURES', 'STATE_FEATURE_FUNCTIONS', 'RANDOMIZATION_CONTROL_SIGNAL', 'NUM_ESTIMATES'
 ]
 
 AGENT_REP = 'agent_rep'
@@ -865,6 +870,7 @@ STATE_FEATURES = 'state_features'
 STATE_FEATURE_FUNCTIONS = 'state_feature_functions'
 RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
 RANDOM_VARIABLES = 'random_variables'
+NUM_ESTIMATES = 'num_estimates'
 
 def _parse_state_feature_values_from_variable(index, variable):
     """Return values of state_input_ports"""
@@ -926,7 +932,8 @@ class OptimizationControlMechanism(ControlMechanism):
     state_feature_functions : Function or function : default None
         specifies the `function <InputPort.function>` assigned the `InputPort` in `state_input_ports
         <OptimizationControlMechanism.state_input_ports>` assigned to each **state_feature**
-        (see `state_feature_functions <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
+        (see `state_feature_functions <OptimizationControlMechanism_State_Feature_Functions_Arg>`
+        for additional details).
 
     agent_rep : None or Composition  : default None or Composition to which OptimizationControlMechanism is assigned
         specifies the `Composition` used by `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
@@ -940,18 +947,22 @@ class OptimizationControlMechanism(ControlMechanism):
         the `agent_rep <OptimizationControlMechanism.agent_rep>`.
 
     num_estimates : int : 1
-        specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` used
-        to estimate its `net_outcome <ControlMechanism.net_outcome>` for each `control_allocation
-        <ControlMechanism.control_allocation>` sampled (see `num_estimates
+        specifies the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` randomized
+        over **random_variables** and used to estimate its `net_outcome <ControlMechanism.net_outcome>` for each
+        `control_allocation <ControlMechanism.control_allocation>` sampled (see `num_estimates
         <OptimizationControlMechanism.num_estimates>` for additional information).
 
     random_variables : Parameter or list[Parameter] : default ALL
-        specifies the Components with random variables to be randomized over different estimates
-        of each `control_allocation <ControlMechanism.control_allocation>`;  these must be in the `agent_rep
-        <OptimizationControlMechanism.agent_rep>` and have a `seed` `Parameter`. By default, all such Components in
-        the `agent_rep <OptimizationControlMechanism.agent_rep>` (listed in its `random_variables
-        <Composition.random_variables>` attribute) are included (see `random_variables
-        <OptimizationControlMechanism.random_variables>` for additional information).
+        specifies the Components of `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables to be
+        randomized over different estimates of each `control_allocation <ControlMechanism.control_allocation>`;  these
+        must be in the `agent_rep <OptimizationControlMechanism.agent_rep>` and have a `seed` `Parameter`. By default,
+        all such Components (listed in its `random_variables <Composition.random_variables>` attribute) are included
+        (see `random_variables <OptimizationControlMechanism.random_variables>` for additional information).
+
+        .. note::
+           if **num_estimates** is specified but `agent_rep <OptimizationControlMechanism.agent_rep>` has no
+           `random variables <Composition.random_variables>`, a warning is generated and `num_estimates
+           <OptimizationControlMechanism.num_estimates>` is set to None.
 
     initial_seed : int : default None
         specifies the seed used to initialize the random number generator at construction.
@@ -1045,8 +1056,9 @@ class OptimizationControlMechanism(ControlMechanism):
         `OptimizationControlMechanism_Estimation_Randomization` for additional details.
 
     random_variables : Parameter or List[Parameter]
-        list of the Components with variables that are randomized over estimates for a given `control_allocation
-        <ControlMechanism.control_allocation>`;  by default, all Components in the `agent_rep
+        list of the `Parameters <Parameter>` in `agent_rep <OptimizationControlMechanism.agent_rep>` with random
+        variables (that is, ones that call a randomization function) that are randomized over estimates for a given
+        `control_allocation <ControlMechanism.control_allocation>`;  by default, all Components in the `agent_rep
         <OptimizationControlMechanism.agent_rep>` with random variables are included (listed in its `random_variables
         <Composition.random_variables>` attribute);  see `OptimizationControlMechanism_Estimation_Randomization`
         for additional details.
@@ -1730,16 +1742,65 @@ class OptimizationControlMechanism(ControlMechanism):
             # MODIFIED 11/20/21 END
             self.output_ports[i] = control_signal
 
-        self._create_randomization_control_signal(
-            context,
-            set_control_signal_index=False
-        )
-
-        self.defaults.value = np.tile(
-            control_signal.parameters.variable.default_value,
-            (len(self.output_ports), 1)
-        )
+        self._create_randomization_control_signal(context, set_control_signal_index=False)
+        self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
+
+    def _create_randomization_control_signal(self, context, set_control_signal_index=True):
+        if self.num_estimates:
+            # must be SampleSpec in allocation_samples arg
+            randomization_seed_mod_values = SampleSpec(start=1, stop=self.num_estimates, step=1)
+
+            # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
+            #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
+            #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
+            # Get Components with variables to be randomized across estimates
+            #   and construct ControlSignal to modify their seeds over estimates
+            if self.random_variables is ALL:
+                self.random_variables = self.agent_rep.random_variables
+
+            if not self.random_variables:
+                warnings.warn(f"'{self.name}' has '{NUM_ESTIMATES} = {self.num_estimates}' specified, "
+                              f"but its '{AGENT_REP}' ('{self.agent_rep.name}') has no random variables: "
+                              f"'{RANDOMIZATION_CONTROL_SIGNAL}' will not be created, and num_estimates set to None.")
+                self.num_estimates = None
+                return
+
+            randomization_control_signal = ControlSignal(name=RANDOMIZATION_CONTROL_SIGNAL,
+                                                         modulates=[param.parameters.seed.port
+                                                                    for param in self.random_variables],
+                                                         allocation_samples=randomization_seed_mod_values)
+            randomization_control_signal_index = len(self.output_ports)
+            randomization_control_signal._variable_spec = (OWNER_VALUE, randomization_control_signal_index)
+
+            randomization_control_signal = self._instantiate_control_signal(randomization_control_signal, context)
+
+            self.output_ports.append(randomization_control_signal)
+
+            # Otherwise, assert that num_estimates and number of seeds generated by randomization_control_signal are equal
+            num_seeds = self.control_signals[RANDOMIZATION_CONTROL_SIGNAL].parameters.allocation_samples._get(context).num
+            assert self.num_estimates == num_seeds, \
+                    f"PROGRAM ERROR:  The value of the {NUM_ESTIMATES} Parameter of {self.name}" \
+                    f"({self.num_estimates}) is not equal to the number of estimates that will be generated by " \
+                    f"its {RANDOMIZATION_CONTROL_SIGNAL} ControlSignal ({num_seeds})."
+
+            function_search_space = self.function.parameters.search_space._get(context)
+            if randomization_control_signal_index >= len(function_search_space):
+                # TODO: check here if search_space has an item for each
+                # control_signal? or is allowing it through for future
+                # checks the right way?
+
+                # search_space must be a SampleIterator
+                function_search_space.append(SampleIterator(randomization_seed_mod_values))
+
+            # workaround for fact that self.function.reset call in
+            # _instantiate_attributes_after_function expects to use
+            # old/unset values when running _update_default_variable,
+            # which calls self.agent_rep.evaluate and is brittle.
+            if set_control_signal_index:
+                self.function.parameters.randomization_dimension._set(
+                    randomization_control_signal_index, context
+                )
 
     def _instantiate_function(self, function, function_params=None, context=None):
         # this indicates a significant peculiarity of OCM, in that its function
@@ -1947,65 +2008,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                            self.parameters.num_trials_per_estimate._get(context),
                                            context=context
                                            )
-
-    def _create_randomization_control_signal(
-        self,
-        context,
-        set_control_signal_index=True
-    ):
-        if self.num_estimates:
-            # must be SampleSpec in allocation_samples arg
-            randomization_seed_mod_values = SampleSpec(start=1, stop=self.num_estimates, step=1)
-
-            # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
-            #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
-            #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
-            # Get Components with variables to be randomized across estimates
-            #   and construct ControlSignal to modify their seeds over estimates
-            if self.random_variables is ALL:
-                self.random_variables = self.agent_rep.random_variables
-
-            randomization_control_signal = ControlSignal(
-                name=RANDOMIZATION_CONTROL_SIGNAL,
-                modulates=[
-                    param.parameters.seed.port
-                    for param in self.random_variables
-                ],
-                allocation_samples=randomization_seed_mod_values
-            )
-            randomization_control_signal_index = len(self.output_ports)
-            randomization_control_signal._variable_spec = (
-                OWNER_VALUE, randomization_control_signal_index
-            )
-            randomization_control_signal = self._instantiate_control_signal(
-                randomization_control_signal, context
-            )
-            self.output_ports.append(randomization_control_signal)
-
-            # Otherwise, assert that num_estimates and number of seeds generated by randomization_control_signal are equal
-            num_seeds = self.control_signals[RANDOMIZATION_CONTROL_SIGNAL].parameters.allocation_samples._get(context).num
-            assert self.num_estimates == num_seeds, \
-                    f"PROGRAM ERROR:  The value of the 'num_estimates' Parameter of {self.name}" \
-                    f"({self.num_estimates}) is not equal to the number of estimates that will be generated by " \
-                    f"its {RANDOMIZATION_CONTROL_SIGNAL} ControlSignal ({num_seeds})."
-
-            function_search_space = self.function.parameters.search_space._get(context)
-            if randomization_control_signal_index >= len(function_search_space):
-                # TODO: check here if search_space has an item for each
-                # control_signal? or is allowing it through for future
-                # checks the right way?
-
-                # search_space must be a SampleIterator
-                function_search_space.append(SampleIterator(randomization_seed_mod_values))
-
-            # workaround for fact that self.function.reset call in
-            # _instantiate_attributes_after_function expects to use
-            # old/unset values when running _update_default_variable,
-            # which calls self.agent_rep.evaluate and is brittle.
-            if set_control_signal_index:
-                self.function.parameters.randomization_dimension._set(
-                    randomization_control_signal_index, context
-                )
 
     def _get_evaluate_input_struct_type(self, ctx):
         # We construct input from optimization function input

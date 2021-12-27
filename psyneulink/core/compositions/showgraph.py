@@ -1429,7 +1429,7 @@ class ShowGraph():
                         else:
                             arrowhead = self.control_projection_arrow
 
-                        if RANDOMIZATION_CONTROL_SIGNAL in proj.name:
+                        if RANDOMIZATION_CONTROL_SIGNAL in proj.sender.name:
                             style = 'dashed'
                         else:
                             style = self.style
@@ -1732,7 +1732,7 @@ class ShowGraph():
                 else:
                     edge_label = ''
 
-                if RANDOMIZATION_CONTROL_SIGNAL in ctl_proj.name:
+                if RANDOMIZATION_CONTROL_SIGNAL in ctl_proj.sender.name:
                     style = 'dashed'
                 else:
                     style = self.style
