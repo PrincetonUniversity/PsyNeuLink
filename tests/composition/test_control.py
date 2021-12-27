@@ -2422,15 +2422,23 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               state_features=[A.input_port],
-                                               objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(),
-                                               num_estimates=num_estimates,
-                                               control_signals=[control_signal])
+        warning_type = None
+        if num_estimates and not rand_var:
+            warning_type = UserWarning
+        warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
+                      f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
+                      f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
+        with pytest.warns(warning_type) as warning:
+            ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                   state_features=[A.input_port],
+                                                   objective_mechanism=objective_mech,
+                                                   function=pnl.GridSearch(),
+                                                   num_estimates=num_estimates,
+                                                   control_signals=[control_signal])
+            if warning_type:
+                assert repr(warning[5].message.args[0]) == warning_msg
 
         comp.add_controller(ocm)
-
         inputs = {A: [[[1.0]]]}
 
         comp.run(inputs=inputs,
@@ -2438,8 +2446,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         if not num_estimates or not rand_var:
             assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates
-        elif num_estimates==1:
-            assert comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents == []# Confirm no noise
+        elif num_estimates:
+            assert len(comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents) == 1
+            # noise
 
         if rand_var: # results for DDM (which has random variables)
             assert np.allclose(comp.simulation_results,
