@@ -2367,7 +2367,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         time_step_size = Parameter(1.0, modulable=True)
         previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -2859,7 +2859,7 @@ class DriftOnASphereIntegrator(IntegratorFunction):  # -------------------------
         initializer = Parameter([0], initalizer='variable', stateful=True)
         angle_function = Parameter(None, stateful=False, loggable=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,
@@ -3391,7 +3391,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         starting_point = 0.0
         previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
             False,
             stateful=False,

@@ -39,7 +39,7 @@ class TestControlSpecification:
         comp.add_controller(ctl_mech)
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
-        assert np.allclose(comp.controller.control[0].allocation_samples.base(),
+        assert np.allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
@@ -61,7 +61,7 @@ class TestControlSpecification:
         comp._analyze_graph()
         assert comp.controller.control[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples.base(),
+        assert np.allclose(comp.controller.control[0].allocation_samples(),
                            [0.1, 0.4, 0.7000000000000001, 1.0000000000000002])
 
     def test_redundant_control_spec_add_node_with_control_specified_then_controller_in_comp_constructor(self):
@@ -78,7 +78,7 @@ class TestControlSpecification:
         comp.add_controller(pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].allocation_samples.base is None
+        assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_control_specified(self):
         # First create Composition with controller that has HAS control specification,
@@ -93,7 +93,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert comp.controller.control_signals[0].allocation_samples.base is None
+        assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
         # First create Composition with controller that has HAS control specification,
@@ -109,7 +109,7 @@ class TestControlSpecification:
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
-        assert np.allclose(comp.controller.control[0].allocation_samples.base(), [0.2, 0.5, 0.8])
+        assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
     def test_deferred_init(self):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -803,7 +803,7 @@ class TestControlMechanisms:
         assert len(lvoc.input_ports) == 5
 
         for i in range(1,5):
-            assert lvoc.input_ports[i].function.offset.base == 10.0
+            assert lvoc.input_ports[i].function.offset == 10.0
 
     @pytest.mark.control
     @pytest.mark.composition
@@ -2400,12 +2400,17 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
 
-    @pytest.mark.parametrize('num_estimates',[None, 1] )
-    def test_model_based_num_estimates(self, num_estimates):
+    @pytest.mark.parametrize('num_estimates',[None, 1, 2] )
+    @pytest.mark.parametrize('rand_var',[False, True] )
+    def test_model_based_num_estimates(self, num_estimates, rand_var):
 
         A = pnl.ProcessingMechanism(name='A')
-        B = pnl.ProcessingMechanism(name='B',
-                                    function=pnl.SimpleIntegrator(rate=1))
+        if rand_var:
+            B = pnl.DDM(name='B',
+                        function=pnl.DriftDiffusionAnalytical)
+        else:
+            B = pnl.ProcessingMechanism(name='B',
+                                        function=pnl.SimpleIntegrator(rate=1))
 
         comp = pnl.Composition(name='comp')
         comp.add_linear_processing_pathway([A, B])
@@ -2417,28 +2422,44 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            intensity_cost_function=pnl.Linear(slope=0.))
 
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
-        ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
-                                               state_features=[A.input_port],
-                                               objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(),
-                                               num_estimates=num_estimates,
-                                               control_signals=[control_signal])
+        warning_type = None
+        if num_estimates and not rand_var:
+            warning_type = UserWarning
+        warning_msg = f'"\'OptimizationControlMechanism-0\' has \'num_estimates = {num_estimates}\' specified, ' \
+                      f'but its \'agent_rep\' (\'comp\') has no random variables: ' \
+                      f'\'RANDOMIZATION_CONTROL_SIGNAL\' will not be created, and num_estimates set to None."'
+        with pytest.warns(warning_type) as warning:
+            ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
+                                                   state_features=[A.input_port],
+                                                   objective_mechanism=objective_mech,
+                                                   function=pnl.GridSearch(),
+                                                   num_estimates=num_estimates,
+                                                   control_signals=[control_signal])
+            if warning_type:
+                assert repr(warning[5].message.args[0]) == warning_msg
 
         comp.add_controller(ocm)
-
         inputs = {A: [[[1.0]]]}
 
         comp.run(inputs=inputs,
                  num_trials=2)
 
-        if num_estimates is None:
+        if not num_estimates or not rand_var:
             assert pnl.RANDOMIZATION_CONTROL_SIGNAL not in comp.controller.control_signals # Confirm no estimates
-        elif num_estimates==1:
-            assert comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents == []# Confirm no noise
-        assert np.allclose(comp.simulation_results,
-                           [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
-        assert np.allclose(comp.results,
-                           [[np.array([1.])], [np.array([1.75])]])
+        elif num_estimates:
+            assert len(comp.controller.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].efferents) == 1
+            # noise
+
+        if rand_var: # results for DDM (which has random variables)
+            assert np.allclose(comp.simulation_results,
+                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
+            assert np.allclose(comp.results,
+                               [[np.array([1.]), np.array([1.1993293])], [np.array([1.]), np.array([3.24637662])]])
+        else:  # results for ProcessingMechanism (which does not have any random variables)
+            assert np.allclose(comp.simulation_results,
+                               [[np.array([2.25])], [np.array([3.5])], [np.array([4.75])], [np.array([3.])], [np.array([4.25])], [np.array([5.5])]])
+            assert np.allclose(comp.results,
+                               [[np.array([1.])], [np.array([1.75])]])
 
     def test_model_based_ocm_no_simulations(self):
         A = pnl.ProcessingMechanism(name='A')

@@ -378,7 +378,6 @@ The three types of Ports are shown schematically in the figure below, and descri
 
 .. figure:: _static/Mechanism_Ports_fig.svg
    :alt: Mechanism Ports
-   :scale: 75 %
    :align: left
 
    **Schematic of a Mechanism showing its three types of Ports** (`InputPort`, `ParameterPort` and `OutputPort`).
@@ -646,8 +645,14 @@ attributes are listed below by their argument names / keywords, along with a des
     * **input_ports** / *INPUT_PORTS* - a list specifying the Mechanism's input_ports
       (see `InputPort_Specification` for details of specification).
     ..
+    * **input_labels** / *INPUT_LABEL_DICTS* - a dict specifying labels that can be used as inputs
+      (see `Mechanism_Labels_Dicts` for details of specification).
+    ..
     * **output_ports** / *OUTPUT_PORTS* - specifies specialized OutputPorts required by a Mechanism subclass
       (see `OutputPort_Specification` for details of specification).
+    ..
+    * **output_labels** / *OUTPUT_LABEL_DICTS* - a dict specifying labels that can be for reporting outputs
+      (see `Mechanism_Labels_Dicts` for details of specification).
     ..
     COMMENT:
     * **monitor_for_control** / *MONITOR_FOR_CONTROL* - specifies which of the Mechanism's OutputPorts is monitored by
@@ -805,7 +810,7 @@ OutputPort(s).
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
-of the Composition's `show_graph`show_graph <ShowGraph_show_graph_Method>` method with the keyword **LABELS**.
+of the Composition's `show_graph`show_graph <ShowGraph.graph>` method with the keyword **LABELS**.
 
         >>> C.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
@@ -1231,6 +1236,12 @@ class Mechanism_Base(Mechanism):
         the number and, if specified, their values must be compatible with any specifications made for
         **default_variable** or **size** (see `Mechanism_InputPorts` for additional details).
 
+    input_labels : dict
+        specifies labels (strings) that can be used to specify numeric values as input to the Mechanism;
+        entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+        of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+
     function : Function : default Linear
         specifies the function used to generate the Mechanism's `value <Mechanism_Base.value>`;
         can be a PsyNeuLink `Function` or a `UserDefinedFunction`;  it `value <Function.value>` is used to determine
@@ -1240,6 +1251,12 @@ class Mechanism_Base(Mechanism):
         specifies the OutputPorts for the Mechanism; if it is not specified, a single OutputPort is created
         the `value <OutputPort.value>` of which is assigned the first item in the outermost dimension (axis 0) of the
         Mechanism's `value <Mechanism_Base.value>` (see `Mechanism_OutputPorts` for additional details).
+
+    output_labels : dict
+        specifies labels (strings) that can be reported in place of numeric values as output(s) of the Mechanism;
+        entries must be either label:value pairs, or sub-dictionaries containing label:value pairs,
+        in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
+        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     Attributes
     ----------
@@ -1272,8 +1289,8 @@ class Mechanism_Base(Mechanism):
 
     input_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
-        in which each label (key) specifies a string associated with a value for the InputPort(s) of the
-        Mechanism; see `Mechanism_Labels_Dicts` for additional details.
+        in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
+        of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
     input_labels : list[str]
         contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
@@ -1651,8 +1668,10 @@ class Mechanism_Base(Mechanism):
                  default_variable=None,
                  size=None,
                  input_ports=None,
+                 input_labels=None,
                  function=None,
                  output_ports=None,
+                 output_labels=None,
                  params=None,
                  name=None,
                  prefs=None,
@@ -1717,6 +1736,8 @@ class Mechanism_Base(Mechanism):
             name=name,
             input_ports=input_ports,
             output_ports=output_ports,
+            input_labels_dict=input_labels,
+            output_labels_dict=output_labels,
             **kwargs
         )
 
@@ -3882,8 +3903,11 @@ class Mechanism_Base(Mechanism):
     def get_output_labels(self, context=None):
         if self.output_labels_dict:
             return self._get_port_value_labels(OutputPort, context)
-        else:
+        elif context:
             return self.get_output_values(context)
+        else:
+            return self.output_values
+
 
     @property
     def ports(self):

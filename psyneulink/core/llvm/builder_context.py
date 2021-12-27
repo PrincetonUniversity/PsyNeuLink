@@ -340,6 +340,7 @@ class LLVMBuilderContext:
 
     @_comp_cached
     def get_param_struct_type(self, component):
+        from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import NUM_ESTIMATES
         self._stats["param_structs_generated"] += 1
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
@@ -353,7 +354,7 @@ class LLVMBuilderContext:
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
             elif p.name == 'matrix':   # Flatten matrix
                 val = np.asfarray(val).flatten()
-            elif p.name == 'num_estimates':  # Should always be int
+            elif p.name == NUM_ESTIMATES:  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
             elif p.name == 'num_trials_per_estimate':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)

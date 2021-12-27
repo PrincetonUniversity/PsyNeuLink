@@ -72,7 +72,7 @@ executed, including any other ControlMechanisms that belong to it (see `Composit
 ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
 the **controller** argument of the Composition's constructor, or by using the Composition's `add_controller
 <Composition.add_controller>` method.  A Composition's `controller <Composition.controller>` and its associated
-Components can be displayed using the Composition's `show_graph <ShowGraph_show_graph_Method>` method with its
+Components can be displayed using the Composition's `show_graph <ShowGraph.show_graph>` method with its
 **show_control** argument assigned as `True`.
 
 

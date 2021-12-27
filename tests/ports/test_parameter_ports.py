@@ -178,6 +178,31 @@ class TestParameterPortList:
         ):
             mech.parameter_ports['offset']
 
+    def test_duplicate_from_nested_class(self):
+        class NewFunc(pnl.SimpleIntegrator):
+            class Parameters(pnl.SimpleIntegrator.Parameters):
+                func_a = pnl.Parameter(pnl.UniformDist, modulable=True, stateful=False)
+
+        class NewMech(TransferMechanism):
+            class Parameters(TransferMechanism.Parameters):
+                offset = pnl.Parameter(0, modulable=True)
+                noise = pnl.Parameter(pnl.UniformDist, modulable=True)
+                func_b = pnl.Parameter(NewFunc, stateful=False)
+
+        mech = NewMech()
+
+        assert mech.parameter_ports['offset-self'].source is mech.parameters.offset
+        assert mech.parameter_ports['offset-integrator_function'].source is mech.integrator_function.parameters.offset
+
+        assert mech.parameter_ports['seed-func_b-func_a'].source is mech.func_b.func_a.parameters.seed
+        assert mech.parameter_ports['seed-noise'].source is mech.noise.parameters.seed
+
+        assert mech.parameter_ports['high-func_b-func_a'].source is mech.func_b.func_a.parameters.high
+        assert mech.parameter_ports['high-noise'].source is mech.noise.parameters.high
+
+        assert mech.parameter_ports['low-func_b-func_a'].source is mech.func_b.func_a.parameters.low
+        assert mech.parameter_ports['low-noise'].source is mech.noise.parameters.low
+
     def test_duplicate_sources(self, transfer_mech):
         assert transfer_mech.parameter_ports['offset-function'].source is transfer_mech.function.parameters.offset
         assert transfer_mech.parameter_ports['offset-integrator_function'].source is transfer_mech.integrator_function.parameters.offset
@@ -206,3 +231,17 @@ class TestParameterPortList:
             match='Did you want leak-function or rate'
         ):
             mech.parameter_ports['leak']
+
+    def test_subsubfunction_params_included_in_transfer_mech(self):
+        t = pnl.TransferMechanism(noise=pnl.UniformDist())
+
+        noise_func = t.integrator_function.noise
+        assert t.parameter_ports['seed'].source is noise_func.parameters.seed
+        assert t.parameter_ports['high'].source is noise_func.parameters.high
+        assert t.parameter_ports['low'].source is noise_func.parameters.low
+
+    def test_source_uninitialized_functions(self):
+        m = pnl.EpisodicMemoryMechanism()
+
+        assert m.parameter_ports['seed-function'].source is m.function.parameters.seed
+        assert m.parameter_ports['seed-function-selection_function'].source is m.function.selection_function.parameters.seed

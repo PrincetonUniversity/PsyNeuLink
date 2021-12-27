@@ -3,7 +3,11 @@ Compilation
 
 PsyNeulink includes a runtime compiler to improve performance of executed models.
 This section describes the overview of the compiler design and its use.
-The performance improvements varies, but it has been observed to be between one and three orders of magnitude depending on the model.
+The performance improvements varies, but it has been observed to be between
+one and three orders of magnitude depending on the model.
+See `Vesely et al. (2022) <http://www.cs.yale.edu/homes/abhishek/jvesely-cgo22.pdf>`_
+for additional information about the approach taken to compilation, and
+`Composition_Compilation` for it use in executing a `Composition`.
 
 
 Overview
