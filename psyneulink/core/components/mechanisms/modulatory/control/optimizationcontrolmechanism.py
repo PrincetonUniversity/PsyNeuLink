@@ -295,6 +295,21 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     input to the specified InputPort;  that is, the value of which is used as the corresponding value of the
     OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
 
+    .. note::
+       Only the `INPUT <NodeRole.INPUT>` `Nodes <Component_Nodes>` of a `nested Composition <Composition_Nested>`
+       can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
+       nested Compositions, only its `INPUT <NodeRole.INPUT>` Nodes can be specified for shadowing in the
+       **state_features** argument of the OptimizationControlMechanism's constructor.
+
+    .. hint::
+       Shadowing the input to a Node of a `nested Composition <Composition_Nested>` that is not an `INTERNAL
+       <NodeRole.INTERNAL>` Node of that Composition can be accomplished one or of two ways, by: a) assigning it
+       `INPUT <NodeRole.INPUT>` as a `required NodeRole <Composition_Node_Role_Assignment>` where it is added to
+       the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
+       (this is allowed *within* the *same* Composition), and is assigned as an `OUTPUT <NodeRole.OUTPUT>` Node of
+       that Composition, the `OutputPort` of which which can then be specified in the **state_features** argument of
+       the OptimizationControlMechanism's constructor (see below).
+
     .. technical_note::
       The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
 
@@ -307,7 +322,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, and the Mechanism's `primary InputPort
     <InputPort_Primary>` is used (since in this case the state_feature must correspond to an input to the Composition).
     If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, then the
-    Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since is the typically usage for specifying an
+    Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since is the typical usage for specifying an
     InputPort);  if the input to the Mechanism is to be shadowed, then its InputPort must be specified explicitly.
 
   COMMENT:

@@ -156,7 +156,7 @@ Projection in context:
 
   .. _Projection_Specification_Dictionary:
 
-  * **Specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
+  * **Projection specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
       * *PROJECTION_TYPE*: *<name of a Projection type>* --

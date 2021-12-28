@@ -458,7 +458,7 @@ First, they too can carry out (restricted) computations, such as matrix transfor
 Second, they can be the receiver of a Projection, as in the case of a MappingProjection that receives a
 `LearningProjection` used to modify its `matrix <MappingProjection.matrix>` parameter.  Nevertheless, since they
 define the connections and therefore dependencies among the Composition's Nodes, they determine the structure of its
-graph.  Subsets of Nodes connected by Projections are often defined as a `Pathway <Pathway>` as decribed under
+graph.  Subsets of Nodes connected by Projections can be defined as a `Pathway <Pathway>` as decribed under
 `Composition_Pathways` below).
 
 .. _Composition_Graph_Projection_Vertices:
@@ -469,12 +469,27 @@ graph.  Subsets of Nodes connected by Projections are often defined as a `Pathwa
 
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
-connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within it
-<Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
+connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within
+it <Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
 <NodeRole.OUTPUT>` Nodes of a `nested Composition <Composition_Nested>`, but if the Composition's `allow_probes
 <Composition.allow_probes>` attribute is not False, then Projections can be received from any Nodes within a nested
 Composition (see `Probes <Composition_Probes>` for additional details). A  ControlMechanism can also control (i.e.,
 send a `ControlProjection`) to any Node within a nested Composition.
+
+Projections can be specified between `Mechanisms <Mechanism>` before they are added to a Composition.  If both
+Mechanisms are later added to the same Composition, and the Projection between them is legal for the Composition,
+then the Projection between them is added to it and is used during its `execution <Composition_Execution>`.
+However, if the Projection is not legal for the Composition (e.g., the Mechanisms are not assigned as `INTERNAL
+<NodeRole.INTERNAL>` `Nodes <Composition_Nodes>` of two different `nested Compositions <Composition_Nested>`),
+the Projection will still be associated with the two Mechanisms (i.e., listed in their `afferents
+<Mechanism_Base.afferents>` and `efferents <Mechanism_Base.efferents>` attributes, respectively), but it is not
+added to the Composition and not used during its execution.
+
+    .. hint::
+        Projections that are associated with the `Nodes <Composition_Nodes>` of a Composition but are not in the
+        Composition itself (and, accordingly, *not* listed it is `projections <Composition.projections>` attribute)
+        can still be visualized using the Composition's `show_graph <ShowGraph.show_graph>` method, by specifying its
+        **show_projections_not_in_composition** argument as True; Projections not in the Composition appear in red.
 
 .. technical_note::
 

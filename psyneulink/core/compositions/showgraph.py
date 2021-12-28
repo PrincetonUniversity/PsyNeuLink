@@ -586,7 +586,8 @@ class ShowGraph():
 
         show_projections_not_in_composition : bool : default False
             specifies whether or not to show `Projections <Projection>` that are not active in the current
-            `Composition`;  these will display in red. This option is for use in debugging.
+            `Composition` (and, accordingly, are *not* listed in its `projections <Composition.projections>`
+            attribute);  these are shown in red.
 
         show_headers : bool : default True
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
