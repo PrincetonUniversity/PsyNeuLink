@@ -2572,7 +2572,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import I
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
-    RANDOMIZATION_CONTROL_SIGNAL
+    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -4314,8 +4314,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     sender_node = proj_spec[0].sender.owner.owner_mech
                 if isinstance(receiver_node, AutoAssociativeProjection):
                     receiver_node = proj_spec[0].receiver.owner.owner_mech
-                if sender_node in self.nodes and \
-                        receiver_node in self.nodes:
+                if sender_node in self._all_nodes and \
+                        receiver_node in self._all_nodes:
                     self.add_projection(projection=proj_spec[0],
                                         feedback=proj_spec[1])
                 else:
@@ -5824,13 +5824,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 node._check_for_unused_projections(context)
             if isinstance(node, Mechanism):
-                unused_projections.extend([(f"To '{node.name}' from '{proj.sender.owner.name}' ({proj.name})")
+                unused_projections.extend([(f"{proj.name} (to '{node.name}' from '{proj.sender.owner.name}')")
                                            for proj in node.afferents if proj not in self.projections])
-                unused_projections.extend([(f"From '{node.name}' to '{proj.receiver.owner.name}' ({proj.name})")
+                unused_projections.extend([(f"{proj.name} (from '{node.name}' to '{proj.receiver.owner.name}')")
                                            for proj in node.efferents if proj not in self.projections])
         if unused_projections:
-            warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}': \n"
-            warnings.warn(warning + "\n\t".join(unused_projections))
+            warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}':"
+            warnings.warn(warning + "\n\t" + "\n\t".join(unused_projections))
         self._need_check_for_unused_projections = False
 
     def get_feedback_status(self, projection):
@@ -7668,17 +7668,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
 
-        if RANDOMIZATION_CONTROL_SIGNAL not in self.controller.output_ports.names:
-            try:
-                self.controller._create_randomization_control_signal(context)
-            except AttributeError:
-                # ControlMechanism does not use RANDOMIZATION_CONTROL_SIGNAL
-                pass
-        else:
-            self.controller.function.parameters.randomization_dimension._set(
-                self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                context
-            )
+        if hasattr(self.controller, NUM_ESTIMATES) and self.controller.num_estimates:
+            if RANDOMIZATION_CONTROL_SIGNAL not in self.controller.output_ports.names:
+                try:
+                    self.controller._create_randomization_control_signal(context)
+                except AttributeError:
+                    # ControlMechanism does not use RANDOMIZATION_CONTROL_SIGNAL
+                    pass
+            else:
+                self.controller.function.parameters.randomization_dimension._set(
+                    self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
+                    context
+                )
 
         # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
