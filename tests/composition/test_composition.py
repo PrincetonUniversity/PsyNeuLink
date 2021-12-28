@@ -24,8 +24,8 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
@@ -6497,6 +6497,7 @@ class TestNodeRoles:
         assert no_such_node_error_msg in str(error_text.value)
 
     def test_unnested_PROBE(self):
+        """Assigning PROBE to a Node should add OutputPort to output_CIM even if Node is not in a nested Composition"""
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
