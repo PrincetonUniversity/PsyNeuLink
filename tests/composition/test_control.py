@@ -18,11 +18,6 @@ class TestControlSpecification:
     #    2) specification of control in controller supercedes any conflicting specification on a node;
     #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
 
-    # FIX: OUTSTANDING ISSUES -
-    #      When control is specified in a controller for a Mechanism that is not yet a node in the Composition
-    #          it nevertheless gets activated (in call to controller._activate_projections_for_compositions;
-    #          instead, it should either be put in deferred_init or added to node's aux_components attribute
-
     def test_add_node_with_control_specified_then_add_controller(self):
         # First add Mechanism with control specification to Composition,
         #    then add controller with NO control specification to Composition

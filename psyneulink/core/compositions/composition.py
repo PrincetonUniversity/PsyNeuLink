@@ -2613,7 +2613,7 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
     FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
@@ -3788,6 +3788,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
+        # FIX: 12/29/21: MOVE TO _update_shadow_projections
         # Call again to accomodate any changes from _update_shadow_projections
         self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
@@ -4337,6 +4338,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
                 del node.aux_components[node.aux_components.index(proj_spec)]
+
+            # MODIFIED 12/29/21 NEW:
+            # # Finally, check for any deferred_init Projections
+            invalid_aux_components.extend([p for p in node.projections
+                                           if p._initialization_status & ContextFlags.DEFERRED_INIT])
+            # MODIFIED 12/29/21 END
 
         return invalid_aux_components
 
@@ -5838,10 +5845,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 node._check_for_unused_projections(context)
             if isinstance(node, Mechanism):
-                unused_projections.extend([(f"{proj.name} (to '{node.name}' from '{proj.sender.owner.name}')")
-                                           for proj in node.afferents if proj not in self.projections])
-                unused_projections.extend([(f"{proj.name} (from '{node.name}' to '{proj.receiver.owner.name}')")
-                                           for proj in node.efferents if proj not in self.projections])
+                for proj in [p for p in node.projections if p not in self.projections]:
+                    proj_deferred = proj._initialization_status & ContextFlags.DEFERRED_INIT
+                    proj_name = proj._name if proj_deferred else proj.name
+                    if proj in node.afferents:
+                        first_item = '' if proj_deferred else f" (to '{node.name}'"
+                        second_item = '' if proj_deferred else f" from '{proj.sender.owner.name}')."
+                    if proj in node.efferents:
+                        first_item = '' if proj_deferred else f" (from '{node.name}'"
+                        second_item = '' if proj_deferred else f" to '{proj.receiver.owner.name}')."
+                    unused_projections.append(f"{proj_name}{first_item}{second_item}")
         if unused_projections:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}':"
             warnings.warn(warning + "\n\t" + "\n\t".join(unused_projections))
@@ -7912,10 +7925,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for projection in node.projections:
                 if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                     if isinstance(projection, ControlProjection):
-                        warnings.warn(f"The {projection.receiver.name} parameter of {projection.receiver.owner.name} \n"
-                                      f"is specified for control, but {self.name} does not have a controller. Please \n"
-                                      f"add a controller to {self.name} or the control specification will be \n"
-                                      f"ignored.")
+                        warnings.warn(f"The '{projection.receiver.name}' parameter of "
+                                      f"'{projection.receiver.owner.name}' is specified for control, "
+                                      f"but the {COMPOSITION} it is in ('{self.name}') does not have a controller; "
+                                      f"if a controller is not added to {self.name} "
+                                      f"the control specification will be ignored.")
 
     def _check_nodes_initialization_status(self, context=None):
 
