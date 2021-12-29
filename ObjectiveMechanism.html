@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.9.1.1 documentation</title>
+  <title>ObjectiveMechanism &mdash; PsyNeuLink 0.10.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.9.1.1
+                  0.10.0.0
                 </div>
               
             
@@ -440,7 +440,6 @@ specified, as it is not used.  However it, and the <a class="reference internal"
 <li><p><strong>function</strong> (<em>CombinationFunction</em><em>, </em><a class="reference internal" href="ObjectiveFunctions.html#psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction" title="psyneulink.core.components.functions.objectivefunctions.ObjectiveFunction"><em>ObjectiveFunction</em></a><em>, </em><em>function</em><em> or </em><em>method : default LinearCombination</em>) – specifies the function used to evaluate the values listed in <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.monitor"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">monitor</span></code></a> &lt;ObjectiveMechanism.monitor&gt;`
 (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> for details).</p></li>
 <li><p><strong>output_ports</strong> (<em>list</em><em>[</em><a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort"><em>OutputPort</em></a><em>, </em><em>value</em><em>, </em><em>str</em><em> or </em><em>dict</em><em>] or </em><em>dict</em><em>[</em><em>] </em><em>: default</em><em> [</em><em>OUTCOME</em><em>]</em>) – specifies the OutputPorts for the Mechanism;</p></li>
-<li><p><strong>role</strong> (<em>LEARNING</em><em> or </em><em>CONTROL : default None</em>) – specifies if the ObjectiveMechanism is being used for learning or control (see <a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">role</span></code></a> for details).</p></li>
 </ul>
 </dd>
 </dl>
@@ -506,18 +505,6 @@ input_ports) and returns a 1d array.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role">
-<span class="sig-name descname"><span class="pre">role</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.role" title="Permalink to this definition">¶</a></dt>
-<dd><p>specifies whether the ObjectiveMechanism is used for learning in a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> (in conjunction with a
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>), or for control in a Composition (in conjunction with a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>).</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>None, LEARNING or CONTROL</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port">
 <span class="sig-name descname"><span class="pre">output_port</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_port" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains the <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> of the ObjectiveMechanism; the default is
@@ -565,6 +552,20 @@ ObjectiveMechanism’s <a class="reference internal" href="#psyneulink.core.comp
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.modulatory_mechanism">
+<span class="sig-name descname"><span class="pre">modulatory_mechanism</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.modulatory_mechanism" title="Permalink to this definition">¶</a></dt>
+<dd><p><a class="reference internal" href="ModulatoryMechanism.html"><span class="doc">ModulatoryMechanism</span></a> to which ObjectiveMechanism has been assigned, and to which one or more of its
+<a class="reference internal" href="#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports" title="psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism.output_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_ports</span></code></a> project. If that is a <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>, then
+the ObjectiveMechanism is assigned as its <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>;
+if it is a <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>, it is in its <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.error_sources"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">error_sources</span></code></a> attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>None or ModulatoryMechanism</p>
 </dd>
 </dl>
 </dd></dl>

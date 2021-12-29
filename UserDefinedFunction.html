@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>UserDefinedFunction &mdash; PsyNeuLink 0.9.1.1 documentation</title>
+  <title>UserDefinedFunction &mdash; PsyNeuLink 0.10.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.9.1.1
+                  0.10.0.0
                 </div>
               
             
@@ -205,20 +205,23 @@
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.userdefinedfunction.</span></span><span class="sig-name descname"><span class="pre">UserDefinedFunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.userdefinedfunction.UserDefinedFunction" title="Permalink to this definition">¶</a></dt>
 <dd><blockquote>
-<div><p id="udf-description">A UserDefinedFunction (UDF) is used to “wrap” a Python function or method, including a lamdba function,
+<div><p id="udf-description">A UserDefinedFunction (UDF) is used to “wrap” a Python function or method, lamdba function,
+or an expression written in string format
 as a PsyNeuLink <a class="reference internal" href="Function.html"><span class="doc">Function</span></a>, so that it can be used as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of a
 <a class="reference internal" href="Component.html"><span class="doc">Component</span></a>.  This is done automatically if a Python function or method is assigned as the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.function" title="psyneulink.core.components.component.Component.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> attribute of a Component.  A Python function or method can also be wrapped explicitly,
 using the UserDefinedFunction constructor, and assigning the Python function or method to its <strong>custom_function</strong>
 argument.  A Python function or method wrapped as a UDF must obey the following conventions to be treated
 correctly:</p>
 <ul class="simple" id="udf-variable">
-<li><p>It must have <strong>at least one argument</strong> (that can be a positional or a keyword argument);  this will be treated
+<li><p>If providing a Python function, method, or lambda function, it must have <strong>at least one argument</strong> (that can be a positional or a keyword argument);  this will be treated
 as the <code class="xref any docutils literal notranslate"><span class="pre">variable</span></code> attribute of the UDF’s <code class="xref any docutils literal notranslate"><span class="pre">function</span></code>.
 When the UDF calls the function or method that it wraps, an initial attempt is made to do so with <strong>variable</strong>
 as the name of the first argument; if that fails, it is called positionally.  The argument is always passed as a
 2d np.array, that may contain one or more items (elements in axis 0), depending upon the Component to which the
 UDF is assigned.  It is the user’s responsibility to insure that the number of items expected in the first
-argument of the function or method is compatible with the circumstances in which it will be called.</p></li>
+argument of the function or method is compatible with the circumstances in which it will be called.
+If providing a string expression, <strong>variable</strong> is optional. However, if <strong>variable</strong> is not included in
+the expression, the resulting UDF will not use <strong>variable</strong> at all in its calculation.</p></li>
 </ul>
 <ul class="simple" id="udf-additional-arguments">
 <li><p>It may have have <strong>any number of additional arguments</strong> (positional and/or keyword);  these are treated as
@@ -309,6 +312,14 @@ to a 2d array).</p>
 <p><code class="docutils literal notranslate"><span class="pre">my_sinusoidal_fct</span></code> also has two other arguments, <code class="docutils literal notranslate"><span class="pre">phase</span></code> and <code class="docutils literal notranslate"><span class="pre">amplitude</span></code>.   When it is assigned to
 <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, those parameters are assigned to <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPorts</span></a> of <code class="docutils literal notranslate"><span class="pre">my_wave_mech</span></code>, which
 that be used to modify their values by <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> (see <code class="xref any docutils literal notranslate"><span class="pre">example</span> <span class="pre">below</span></code>).</p>
+<p id="udf-string-expression-function-examples">The <strong>function</strong> argument may also be an expression written as a string:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">function</span><span class="o">=</span><span class="s1">&#39;sum(variable, 2)&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">my_mech</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="go">array([[3]])</span>
+</pre></div>
+</div>
+<p>This option is primarily designed for compatibility with other packages that use string expressions as
+their main description of computation and may be less flexible or reliable than the previous styles.</p>
 <p id="udf-explicit-creation-examples">In all of the examples above, a UDF was automatically created for the functions assigned to the Mechanism.  A UDF
 can also be created explicitly, as follows:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_sinusoidal_UDF</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">UserDefinedFunction</span><span class="p">(</span><span class="n">custom_function</span><span class="o">=</span><span class="n">my_sinusoidal_fct</span><span class="p">)</span>

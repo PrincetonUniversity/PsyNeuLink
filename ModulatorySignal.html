@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ModulatorySignal &mdash; PsyNeuLink 0.9.1.1 documentation</title>
+  <title>ModulatorySignal &mdash; PsyNeuLink 0.10.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.9.1.1
+                  0.10.0.0
                 </div>
               
             
@@ -267,7 +267,7 @@ specialized for gating the input to and/or output of a Mechanism.</p>
 <ul class="simple">
 <li><dl class="simple">
 <dt><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a></dt><dd><p>takes the <a class="reference internal" href="LearningMechanism.html"><span class="doc">learning_signal</span></a> calculated by the <a class="reference internal" href="LearningMechanism.html#psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function" title="psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism.LearningMechanism.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a> of the
-<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> to which it belongs, and uses it to modulate the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter
+<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> to which it belongs, and uses it to modulate the <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> parameter
 of a <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a>.</p>
 </dd>
 </dl>
@@ -399,8 +399,8 @@ parameter</p></td>
 <td><p><a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignal</span></a> (green)</p></td>
 <td><p><em>ADDITIVE</em></p></td>
 <td><p>MappingProjection <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a></p></td>
-<td><p><code class="xref any docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code>
-(<code class="xref any docutils literal notranslate"><span class="pre">increment</span></code>)</p></td>
+<td><p><a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator"><code class="xref any py py-class docutils literal notranslate"><span class="pre">AccumulatorIntegrator</span></code></a>
+(<a class="reference internal" href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.increment" title="psyneulink.core.components.functions.stateful.integratorfunctions.AccumulatorIntegrator.increment"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">increment</span></code></a>)</p></td>
 </tr>
 </tbody>
 </table>
@@ -411,8 +411,7 @@ the function of the Mechanism or Projection itself.  This is shown in the follow
 detail under <a class="reference internal" href="#modulatorysignal-implementation"><span class="std std-ref">Implementation of Modulation</span></a>.</p>
 <p id="modulatorysignal-anatomy-figure"><strong>Anatomy of Modulation</strong></p>
 <figure class="align-default" id="id5">
-<a class="reference internal image-reference" href="_images/Modulation_Anatomy_fig.svg"><img alt="Modulation" src="_images/Modulation_Anatomy_fig.svg" /></a>
-<figcaption>
+<img alt="Modulation" src="_images/Modulation_Anatomy_fig.svg" /><figcaption>
 <p><span class="caption-text"><strong>Three types of Modulatory Components and the Ports they modulate</strong>. The default <a class="reference internal" href="#modulatorysignal-types"><span class="std std-ref">type of modulation</span></a> for each type of ModulatorySignal, and the default Function and modulated parameter of
 its recipient Port are listed in the <a class="reference internal" href="#modulatorysignal-table"><span class="std std-ref">table</span></a> above. Note that the <a class="reference internal" href="ControlMechanism.html"><span class="doc">ControlMechanism</span></a>
 and <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignal</span></a> are shown in the figure modulating the <a class="reference internal" href="ParameterPort.html"><span class="doc">ParameterPort</span></a> of a Mechanism;
@@ -459,7 +458,7 @@ specify a <a class="reference internal" href="Functions.html#function-modulatory
 </div></blockquote>
 <p>The default type of modulation for <a class="reference internal" href="ControlSignal.html"><span class="doc">ControlSignals</span></a> and <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignals</span></a> is
 <em>MULTIPLICATIVE</em>.  The default for <a class="reference internal" href="LearningSignal.html"><span class="doc">LearningSignals</span></a> is <em>ADDITIVE</em> (which additively modifies the
-<code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of the LearningSignal (i.e., the weight changes computed by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>)
+<code class="xref any docutils literal notranslate"><span class="pre">value</span></code> of the LearningSignal (i.e., the weight changes computed by the <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>)
 to the Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.variable" title="psyneulink.core.components.ports.port.Port_Base.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> (i.e., the current weight <a class="reference internal" href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix" title="psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection.matrix"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">matrix</span></code></a> for
 the <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjection</span></a> being learned).</p>
 </section>
@@ -472,8 +471,7 @@ generating those values, by modifying a parameter of that Port’s <a class="ref
 in the figure below:</p>
 <p id="modulatorysignal-detail-figure"><strong>Detailed View of Modulation</strong></p>
 <figure class="align-default" id="id6">
-<a class="reference internal image-reference" href="_images/Modulation_Detail_fig.svg"><img alt="Modulation_Detail" src="_images/Modulation_Detail_fig.svg" /></a>
-<figcaption>
+<img alt="Modulation_Detail" src="_images/Modulation_Detail_fig.svg" /><figcaption>
 <p><span class="caption-text">A ModulatorySignal modulates the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of a Port either by modifying a parameter of the
 Port’s <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.function" title="psyneulink.core.components.ports.port.Port_Base.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, or assigining the <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.value" title="psyneulink.core.components.ports.port.Port_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the Port directly.
 This is determined by the ModulatorySignal’s <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.modulation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">modulation</span></code></a> attribute.  That can be

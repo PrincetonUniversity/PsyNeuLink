@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Pathway &mdash; PsyNeuLink 0.9.1.1 documentation</title>
+  <title>Pathway &mdash; PsyNeuLink 0.10.0.0 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.9.1.1
+                  0.10.0.0
                 </div>
               
             
@@ -274,9 +274,10 @@ of any of a Composition’s <a class="reference internal" href="Composition.html
 <li><p><a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>: – assigns the Node to a <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a> Pathway.</p></li>
 </ul>
 <ul class="simple" id="pathway-specification-list">
-<li><p><strong>list</strong>: [<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…] –
+<li><p><strong>list</strong>: [<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…] –
 each item of the list must be a <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> – i.e., Mechanism or Composition, or a
-(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a> or a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple interposed between a pair of nodes.
+(<a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a>) tuple – or, optionally, a <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, a (<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specification</span></a>, <a class="reference internal" href="Composition.html#composition-feedback-designation"><span class="std std-ref">feedback specification</span></a>) tuple, or a set of either interposed between a pair of nodes (see
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway" title="psyneulink.core.compositions.composition.Composition.add_linear_processing_pathway"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_linear_processing_pathway</span></code></a> for additional details).
 The list must begin and end with a node.</p></li>
 </ul>
 <ul class="simple">
@@ -326,14 +327,14 @@ Nodes, then it is treated as a single Pathway (i.e., the list form of <a class="
 the <strong>pathway</strong> arg of its constructor; that is, depending upon how it was specified, it may or may not contain
 fully constructed <a class="reference internal" href="Component.html"><span class="doc">Components</span></a>.  This is passed to the <strong>pathways</strong> argument of a Composition’s
 constructor or one of its <a class="reference internal" href="Composition.html#composition-pathway-addition-methods"><span class="std std-ref">pathway addition methods</span></a> when the Pathway is used
-in the specifiation of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
+in the specification of any of these.  In contrast, when a Pathway is created by a Composition (and assigned to its
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.pathways" title="psyneulink.core.compositions.composition.Composition.pathways"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathways</span></code></a> attribute), then the actual <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism(s)</span></a> and/or <code class="xref any docutils literal notranslate"><span class="pre">Composition(s)</span></code>
 that comprise <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a>, and the <a class="reference internal" href="Projection.html"><span class="doc">Projection(s)</span></a> between them, are listed in the
 Pathway’s <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.pathway" title="psyneulink.core.compositions.pathway.Pathway.pathway"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">pathway</span></code></a> attribute.</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.composition" title="psyneulink.core.compositions.pathway.Pathway.composition"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">composition</span></code></a> - contains the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> that created the Pathway and to which it belongs,
 or None if it is a <a href="#id3"><span class="problematic" id="id4">``</span></a>template &lt;Pathway_Template&gt;` (i.e., was constructed on its own).</p></li>
 <li><p><a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> and <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> attributes - if the Pathway was created by a Composition,
-the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> attribute <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">this</span> <span class="pre">lists</span> <span class="pre">the</span> <span class="pre">`PathwayRoles</span></code></a> assigned to it by the Compositon
+the <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.roles" title="psyneulink.core.compositions.pathway.Pathway.roles"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">roles</span></code></a> attribute <a class="reference internal" href="#psyneulink.core.compositions.pathway.PathwayRole" title="psyneulink.core.compositions.pathway.PathwayRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">this</span> <span class="pre">lists</span> <span class="pre">the</span> <span class="pre">`PathwayRoles</span></code></a> assigned to it by the Composition
 that correspond to the <code class="xref any docutils literal notranslate"><span class="pre">NodeRoles</span> <span class="pre">&lt;NodeRole</span></code>&gt; of its Components, and the <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> with each of
 those <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole" title="psyneulink.core.compositions.composition.NodeRole"><code class="xref any py py-class docutils literal notranslate"><span class="pre">NodeRoles</span></code></a> is assigned to a corresponding attribute on the Pathway.  If the Pathway does not belong
 to a Composition (i.e., it is a <a class="reference internal" href="#pathway-template"><span class="std std-ref">template</span></a>), then these attributes return None.</p></li>
@@ -357,7 +358,7 @@ for one that can be assigned to one or more Compositions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>pathway</strong> (list[<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…]) – specifies list of <code class="xref any docutils literal notranslate"><span class="pre">Nodes</span></code> and intercolated <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to be
+<li><p><strong>pathway</strong> (list[<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>, &lt;<a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>,&gt; <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>…]) – specifies list of <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> and intercolated <a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a> to be
 created for the Pathway.</p></li>
 <li><p><strong>name</strong> (str : default see <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a>) – specifies the name of the Pathway;  see <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.name" title="psyneulink.core.compositions.pathway.Pathway.name"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">name</span></code></a> for additional information.</p></li>
 </ul>
@@ -468,7 +469,7 @@ it is a <a class="reference internal" href="Composition.html#composition-learnin
 ..
 <em>OBJECTIVE_MECHANISM</em>: <a class="reference internal" href="ComparatorMechanism.html"><span class="doc">ComparatorMechanism</span></a> (assigned to <a class="reference internal" href="#psyneulink.core.compositions.pathway.Pathway.learning_objective" title="psyneulink.core.compositions.pathway.Pathway.learning_objective"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">learning_objective</span></code></a>)
 ..
-<em>LEARNING_MECHANISMS</em>: <a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a> or list[<a class="reference internal" href="LearningMechanism.html"><span class="doc">Learning Mechanism</span></a>]
+<em>LEARNING_MECHANISMS</em>: <a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a> or list[<a class="reference internal" href="LearningMechanism.html"><span class="doc">LearningMechanism</span></a>]
 ..
 <em>LEARNED_PROJECTIONS</em>: <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a> or list[<a class="reference internal" href="Projection.html"><span class="doc">Projections</span></a>]</p>
 </div></blockquote>
