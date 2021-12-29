@@ -309,6 +309,19 @@ class TestControlSpecification:
                                              "for 'Composition-0'; assignment to 'Composition-1' ignored."):
             comp_2.add_controller(ctlr_1)
 
+    def test_warning_for_replacement_of_controller(self):
+        mech_1 = pnl.ProcessingMechanism()
+        ctlr_1 = pnl.ControlMechanism()
+        comp_1 = pnl.Composition()
+        comp_1.add_node(mech_1)
+        comp_1.add_controller(ctlr_1)
+        ctlr_2 = pnl.ControlMechanism()
+        expected_warning = "The existing controller for 'Composition-0' ('ControlMechanism-0') " \
+                           "is being replaced by 'ControlMechanism-1'."
+        with pytest.warns(UserWarning) as warning:
+            comp_1.add_controller(ctlr_2)
+        assert expected_warning in repr(warning[0].message.args[0])
+
     # FIX: DEPRACATE THIS TEST - IT ALLOWS A COMPOSITION TO EXECUTE WITH A BAD MONITOR FOR CONTROL SPECIFICATION
     #      SUPERCEDED BY test_args_specific_to_ocm outcome_input_ports WHICH TESTS FOR THIS
     # def test_deferred_objective_mech(self):

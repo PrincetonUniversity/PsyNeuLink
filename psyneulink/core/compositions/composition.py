@@ -7622,9 +7622,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Remove existing controller if there is one
             if self.controller:
                 # Warn if current one is being replaced
-                if self.prefs.verbosePref:
-                    warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
-                                  f"is being replaced by {controller.name}.")
+                warnings.warn(f"The existing {CONTROLLER} for '{self.name}' ('{self.controller.name}') "
+                              f"is being replaced by '{controller.name}'.")
                 # Remove Projections for old one
                 for proj in self.projections.copy():
                     if (proj in self.controller.afferents or proj in self.controller.efferents):
