@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0+untagged.15.gcb18e77 documentation</title>
+  <title>ParameterEstimationComposition &mdash; PsyNeuLink 0+untagged.15.g5d2089a documentation</title>
   
 
   
@@ -34,7 +34,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Subsystems" href="Subystems.html" />
-    <link rel="prev" title="RegressionCFA" href="RegressionCFA.html" /> 
+    <link rel="prev" title="OptimizationControlMechanism" href="OptimizationControlMechanism.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.15.gcb18e77
+                  0+untagged.15.g5d2089a
                 </div>
               
             
@@ -205,6 +205,14 @@
               
   <section id="parameterestimationcomposition">
 <h1>ParameterEstimationComposition<a class="headerlink" href="#parameterestimationcomposition" title="Permalink to this headline">¶</a></h1>
+<div class="related docutils container">
+<p><em>Related</em></p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="OptimizationControlMechanism.html">OptimizationControlMechanism</a></li>
+</ul>
+</div>
+</div>
 <div class="toctree-wrapper compound">
 </div>
 <span class="target" id="module-psyneulink.core.compositions.parameterestimationcomposition"></span><section id="contents">
@@ -279,8 +287,8 @@ for searching over parameter combinations.</p></li>
 <div><ul class="simple" id="parameterestimationcomposition-objective-function">
 <li><p><strong>objective_function</strong> - specifies a function used to evaluate the <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the
 <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>, according to which combinations of
-<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> are assessed.  The shape of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_function</span> <span class="pre">(i.e.,</span> <span class="pre">its</span> <span class="pre">first</span> <span class="pre">positional</span> <span class="pre">argument)</span> <span class="pre">must</span> <span class="pre">be</span> <span class="pre">the</span> <span class="pre">same</span> <span class="pre">as</span> <span class="pre">an</span>
-<span class="pre">array</span> <span class="pre">containing</span> <span class="pre">the</span> <span class="pre">`value</span></code></a> of the OutputPort corresponding to each item specified in
+<a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> are assessed.  The shape of the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.variable" title="psyneulink.core.components.component.Component.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> of the <strong>objective_function</strong> (i.e., its first positional argument) must be the same as
+an array containing the <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort.value" title="psyneulink.core.components.ports.outputport.OutputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of the OutputPort corresponding to each  item specified in
 <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.outcome_variables"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">outcome_variables</span></code></a>.</p></li>
 <li><p><strong>optimization_function</strong> - specifies the function used to search over values of the <a class="reference internal" href="#psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters" title="psyneulink.core.compositions.parameterestimationcomposition.ParameterEstimationComposition.parameters"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">parameters</span></code></a> in order to optimize the <strong>objective_function</strong>.  It can be any
 <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">OptimizationFunction</span></code></a> that accepts an <a class="reference internal" href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction" title="psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction"><code class="xref any py py-class docutils literal notranslate"><span class="pre">objective_function</span></code></a> as an argument or specifies
@@ -604,7 +612,7 @@ found to best fit the data.</p>
         <a href="Subystems.html" class="btn btn-neutral float-right" title="Subsystems" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
       
       
-        <a href="RegressionCFA.html" class="btn btn-neutral" title="RegressionCFA" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+        <a href="OptimizationControlMechanism.html" class="btn btn-neutral" title="OptimizationControlMechanism" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
       
     </div>
   

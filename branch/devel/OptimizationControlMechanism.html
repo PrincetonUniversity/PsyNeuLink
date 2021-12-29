@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.15.gcb18e77 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.15.g5d2089a documentation</title>
   
 
   
@@ -32,7 +32,9 @@
   <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="_static/css/custom.css" type="text/css" />
     <link rel="index" title="Index" href="genindex.html" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="ParameterEstimationComposition" href="ParameterEstimationComposition.html" />
+    <link rel="prev" title="RegressionCFA" href="RegressionCFA.html" /> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -99,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.15.gcb18e77
+                  0+untagged.15.g5d2089a
                 </div>
               
             
@@ -126,12 +128,12 @@
               
             
             
-              <ul>
+              <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to PsyNeuLink </a></li>
 <li class="toctree-l1"><a class="reference internal" href="BasicsAndPrimer.html">Basics and Primer</a></li>
 <li class="toctree-l1"><a class="reference internal" href="QuickReference.html">Quick Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Core.html">Core</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Library.html">Library</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="Library.html">Library</a></li>
 <li class="toctree-l1"><a class="reference internal" href="ContributorsGuide.html">Contributors Guide</a></li>
 </ul>
 
@@ -173,6 +175,12 @@
         </a> &gt;
       </li>
 
+        
+          <li><a href="Library.html">Library</a> &gt;</li>
+        
+          <li><a href="Compositions.html">Compositions</a> &gt;</li>
+        
+          <li><a href="CompositionFunctionApproximator.html">CompositionFunctionApproximator</a> &gt;</li>
         
       <li>OptimizationControlMechanism</li>
     
@@ -458,6 +466,22 @@ produce errors that are unexpected or difficult to interpret.</p>
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_input_ports</span></code></a> that <a class="reference internal" href="InputPort.html#inputport-shadow-inputs"><span class="std std-ref">shadows</span></a> the
 input to the specified InputPort;  that is, the value of which is used as the corresponding value of the
 OptimizationControlMechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Only the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <code class="xref any docutils literal notranslate"><span class="pre">Nodes</span></code> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a>
+can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
+nested Compositions, only its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Nodes can be specified for shadowing in the
+<strong>state_features</strong> argument of the OptimizationControlMechanism’s constructor.</p>
+</div>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Shadowing the input to a Node of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> that is not an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INTERNAL" title="psyneulink.core.compositions.composition.NodeRole.INTERNAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INTERNAL</span></code></a> Node of that Composition can be accomplished one or of two ways, by: a) assigning it
+<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> as a <a class="reference internal" href="Composition.html#composition-node-role-assignment"><span class="std std-ref">required NodeRole</span></a> where it is added to
+the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
+(this is allowed <em>within</em> the <em>same</em> Composition), and is assigned as an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> Node of
+that Composition, the <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPort</span></a> of which which can then be specified in the <strong>state_features</strong> argument of
+the OptimizationControlMechanism’s constructor (see below).</p>
+</div>
 <div class="technical-note docutils container">
 <p>The InputPorts specified as state_features are marked as <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="psyneulink.core.components.ports.inputport.InputPort.internal_only"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">internal_only</span></code></a> = <code class="xref any docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </div>
@@ -469,7 +493,7 @@ of the specified OutputPort is used as the corresponding value of the Optimizati
 <li><p><em>Mechanism</em> – if the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> is a Composition, it must be an
 <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of that Composition, and the Mechanism’s <a class="reference internal" href="InputPort.html#inputport-primary"><span class="std std-ref">primary InputPort</span></a> is used (since in this case the state_feature must correspond to an input to the Composition).
 If the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> is a <a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a>, then the
-Mechanism’s <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used (since is the typically usage for specifying an
+Mechanism’s <a class="reference internal" href="OutputPort.html#outputport-primary"><span class="std std-ref">primary OutputPort</span></a> is used (since is the typical usage for specifying an
 InputPort);  if the input to the Mechanism is to be shadowed, then its InputPort must be specified explicitly.</p></li>
 </ul>
 <p>State features can also be added to an existing OptimizationControlMechanism using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_state_features" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_state_features"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_state_features</span></code></a> method.</p>
@@ -1285,6 +1309,15 @@ predict <a class="reference internal" href="ControlMechanism.html#psyneulink.cor
              
             </div>
             <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="ParameterEstimationComposition.html" class="btn btn-neutral float-right" title="ParameterEstimationComposition" accesskey="n" rel="next">Next <img src="_static/images/chevron-right-orange.svg" class="next-page"></a>
+      
+      
+        <a href="RegressionCFA.html" class="btn btn-neutral" title="RegressionCFA" accesskey="p" rel="prev"><img src="_static/images/chevron-right-orange.svg" class="previous-page"> Previous</a>
+      
+    </div>
   
 
   

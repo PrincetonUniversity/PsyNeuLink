@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0+untagged.15.gcb18e77 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0+untagged.15.g5d2089a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.15.gcb18e77
+                  0+untagged.15.g5d2089a
                 </div>
               
             
@@ -471,18 +471,18 @@ that it shadows.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Only InputPorts belonging to Mechanisms in the <em>same Composition</em>, or ones that are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
-<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> can be specified for shadowing, unless the
-<a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute of the <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> is set to True.  Note also that any
-Node that shadows an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the Composition to which it
+<a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> can be specified for shadowing.  Note also that
+any Node that shadows an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of the Composition to which it
 belongs is itself also assigned the role of <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node.</p>
 </div>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>If an InputPort needs to be shadowed that belongs to a Mechanism in a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> that is
-not an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of that Composition, this can be accomplished as
-follows: 1) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
-shadowed; 2) specify <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> as a <code class="xref any docutils literal notranslate"><span class="pre">required_role</span></code>
-for that Mechanism;  3) use that Mechanism as the <a class="reference internal" href="#inputport-specification"><span class="std std-ref">InputPort specification</span></a>
+not an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of that Composition, this can be accomplished in
+one of two ways:  1) by assigning it <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> as a <a class="reference internal" href="Composition.html#composition-node-role-assignment"><span class="std std-ref">required NodeRole</span></a> where it is added to the nested Composition; and/or 2) by doing the
+following: a) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
+shadowed; b) specify <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> as a <code class="xref any docutils literal notranslate"><span class="pre">required_role</span></code>
+for that Mechanism;  c) use that Mechanism as the <a class="reference internal" href="#inputport-specification"><span class="std std-ref">InputPort specification</span></a>
 for the shadowing InputPort.</p>
 </div>
 </li>
