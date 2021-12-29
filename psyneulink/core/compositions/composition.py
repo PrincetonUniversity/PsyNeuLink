@@ -2613,7 +2613,7 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
     FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
@@ -7614,9 +7614,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
 
             # Warn for request to assign ControlMechanism that is already the controller of another Composition
-            if hasattr(controller, COMPOSITION) and controller.composition is not self:
-                warnings.warn(f"{controller} has already been assigned as the {CONTROLLER} "
-                              f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
+            if hasattr(controller, 'composition') and controller.composition is not self:
+                warnings.warn(f"'{controller.name}' has already been assigned as the {CONTROLLER} "
+                              f"for '{controller.composition.name}'; assignment to '{self.name}' ignored.")
                 return
 
             # Remove existing controller if there is one

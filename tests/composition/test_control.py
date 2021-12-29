@@ -20,7 +20,7 @@ class TestControlSpecification:
 
     # FIX: OUTSTANDING ISSUES -
     #      When control is specified in a controller for a Mechanism that is not yet a node in the Composition
-    #          it neverhtless gets activated (in call to controller._activate_projections_for_compositions;
+    #          it nevertheless gets activated (in call to controller._activate_projections_for_compositions;
     #          instead, it should either be put in deferred_init or added to node's aux_components attribute
 
     def test_add_node_with_control_specified_then_add_controller(self):
@@ -285,6 +285,29 @@ class TestControlSpecification:
         # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
         # Control Signal "deferred_node": Maximizes over the search space consisting of ints 1-5
         assert result == [[10]]
+
+    def test_warning_for_add_controller_twice(self):
+        mech = pnl.ProcessingMechanism()
+        ctlr_1 = pnl.ControlMechanism()
+        comp = pnl.Composition()
+        comp.add_node(mech)
+        comp.add_controller(ctlr_1)
+        with pytest.warns(UserWarning, match="ControlMechanism-0 has already been assigned as the controller "
+                                             "for Composition-0; assignment ignored."):
+            comp.add_controller(ctlr_1)
+
+    def test_warning_for_controller_assigned_to_another_comp(self):
+        mech_1 = pnl.ProcessingMechanism()
+        ctlr_1 = pnl.ControlMechanism()
+        comp_1 = pnl.Composition()
+        comp_1.add_node(mech_1)
+        comp_1.add_controller(ctlr_1)
+        mech_2 = pnl.ProcessingMechanism()
+        comp_2 = pnl.Composition()
+        comp_2.add_node(mech_2)
+        with pytest.warns(UserWarning, match="'ControlMechanism-0' has already been assigned as the controller "
+                                             "for 'Composition-0'; assignment to 'Composition-1' ignored."):
+            comp_2.add_controller(ctlr_1)
 
     # FIX: DEPRACATE THIS TEST - IT ALLOWS A COMPOSITION TO EXECUTE WITH A BAD MONITOR FOR CONTROL SPECIFICATION
     #      SUPERCEDED BY test_args_specific_to_ocm outcome_input_ports WHICH TESTS FOR THIS
@@ -664,6 +687,7 @@ class TestControlSpecification:
             assert 'a[intercept] ControlSignal' in ocm.control.names
         else:
             assert 'a[intercept] ControlSignal' not in ocm.control.names
+
 
 class TestControlMechanisms:
 
