@@ -458,7 +458,7 @@ First, they too can carry out (restricted) computations, such as matrix transfor
 Second, they can be the receiver of a Projection, as in the case of a MappingProjection that receives a
 `LearningProjection` used to modify its `matrix <MappingProjection.matrix>` parameter.  Nevertheless, since they
 define the connections and therefore dependencies among the Composition's Nodes, they determine the structure of its
-graph.  Subsets of Nodes connected by Projections are often defined as a `Pathway <Pathway>` as decribed under
+graph.  Subsets of Nodes connected by Projections can be defined as a `Pathway <Pathway>` as decribed under
 `Composition_Pathways` below).
 
 .. _Composition_Graph_Projection_Vertices:
@@ -469,12 +469,27 @@ graph.  Subsets of Nodes connected by Projections are often defined as a `Pathwa
 
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
-connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within it
-<Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
+connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within
+it <Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
 <NodeRole.OUTPUT>` Nodes of a `nested Composition <Composition_Nested>`, but if the Composition's `allow_probes
 <Composition.allow_probes>` attribute is not False, then Projections can be received from any Nodes within a nested
 Composition (see `Probes <Composition_Probes>` for additional details). A  ControlMechanism can also control (i.e.,
 send a `ControlProjection`) to any Node within a nested Composition.
+
+Projections can be specified between `Mechanisms <Mechanism>` before they are added to a Composition.  If both
+Mechanisms are later added to the same Composition, and the Projection between them is legal for the Composition,
+then the Projection between them is added to it and is used during its `execution <Composition_Execution>`.
+However, if the Projection is not legal for the Composition (e.g., the Mechanisms are not assigned as `INTERNAL
+<NodeRole.INTERNAL>` `Nodes <Composition_Nodes>` of two different `nested Compositions <Composition_Nested>`),
+the Projection will still be associated with the two Mechanisms (i.e., listed in their `afferents
+<Mechanism_Base.afferents>` and `efferents <Mechanism_Base.efferents>` attributes, respectively), but it is not
+added to the Composition and not used during its execution.
+
+    .. hint::
+        Projections that are associated with the `Nodes <Composition_Nodes>` of a Composition but are not in the
+        Composition itself (and, accordingly, *not* listed it is `projections <Composition.projections>` attribute)
+        can still be visualized using the Composition's `show_graph <ShowGraph.show_graph>` method, by specifying its
+        **show_projections_not_in_composition** argument as True; Projections not in the Composition appear in red.
 
 .. technical_note::
 
@@ -2598,7 +2613,7 @@ from psyneulink.core.compositions.report import Report, \
 from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHOW_CIM, EXECUTION_SET, SHOW_CONTROLLER
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
+    AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
     FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
@@ -3651,10 +3666,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Controller
         self.controller = None
         self._controller_initialization_status = ContextFlags.INITIALIZED
+        self.enable_controller = enable_controller
         if controller:
             self.add_controller(controller)
-        else:
-            self.enable_controller = enable_controller
         self.controller_mode = controller_mode
         self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
@@ -7599,17 +7613,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
 
             # Warn for request to assign ControlMechanism that is already the controller of another Composition
-            if hasattr(controller, COMPOSITION) and controller.composition is not self:
-                warnings.warn(f"{controller} has already been assigned as the {CONTROLLER} "
-                              f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
+            if hasattr(controller, 'composition') and controller.composition is not self:
+                warnings.warn(f"'{controller.name}' has already been assigned as the {CONTROLLER} "
+                              f"for '{controller.composition.name}'; assignment to '{self.name}' ignored.")
                 return
 
             # Remove existing controller if there is one
             if self.controller:
                 # Warn if current one is being replaced
-                if self.prefs.verbosePref:
-                    warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
-                                  f"is being replaced by {controller.name}.")
+                warnings.warn(f"The existing {CONTROLLER} for '{self.name}' ('{self.controller.name}') "
+                              f"is being replaced by '{controller.name}'.")
                 # Remove Projections for old one
                 for proj in self.projections.copy():
                     if (proj in self.controller.afferents or proj in self.controller.efferents):
@@ -7648,15 +7661,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
             self.needs_update_controller = True
 
-        # Confirm that controller has input, and if not then disable it
-        if not (isinstance(self.controller.input_ports, ContentAddressableList)
-                and self.controller.input_ports):
-            # If controller was enabled, warn that it has been disabled
-            if self.enable_controller:
-                warnings.warn(f"{self.controller.name} for {self.name} has no input_ports, "
-                              f"so controller will be disabled.")
-            self.enable_controller = False
-            return
+        # Warn if controller is enabled but has no inputs
+        if (self.enable_controller
+                and not (isinstance(self.controller.input_ports, ContentAddressableList)
+                         and self.controller.input_ports
+                         and self.controller.afferents)):
+            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 

@@ -24,8 +24,8 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
-from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
+from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
@@ -363,13 +363,13 @@ class TestAddProjection:
         assert np.allclose(B.parameters.value.get(comp), [[22.4,  29.6]])
         assert np.allclose(proj.matrix.base, weights)
 
-    test_args = [(None, ([1],[1],[1],[1])),
-        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]])),
-        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]))]
-    @pytest.mark.parametrize('projs, expected_matrices', test_args, ids=[x[0] for x in test_args])
-    def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices):
-        """Test automatic creation and explicit specification of Projections from outer Composition to multiple
-        Nodes of a nested Composition, and between Nodes of nested Compositions.
+    test_args = [(None, ([1],[1],[1],[1]), 3.0),
+        ('list', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612),
+        ('set', ([[0.60276338]],[[0.64589411]],[[0.96366276]]), 2.02947612)]
+    @pytest.mark.parametrize('projs, expected_matrices, expected_result', test_args, ids=[x[0] for x in test_args])
+    def test_add_multiple_projections_for_nested_compositions(self, projs, expected_matrices, expected_result):
+        """Test both automatic creation as well as explicit specification of Projections from outer Composition to
+        multiple Nodes of a nested Composition, and between Nodes of nested Compositions.
         """
 
         A = ProcessingMechanism(name='A')
@@ -405,8 +405,8 @@ class TestAddProjection:
             opway = [[X, oprojs, mcomp, Y, C]]
         ocomp = Composition(pathways=opway, name='OUTER COMPOSITION')
 
-        # gv = ocomp.show_graph(output_fmt=source, show_CIM=True, show_node_structure=True)
-        # assert gv = expected
+        assert np.allclose(ocomp.run(inputs=[[1.5]]), expected_result)
+
         if not projs:
             assert (comp1.output_CIM.output_ports[0].efferents[0].matrix.base ==
                     comp2.input_CIM.input_ports[0].path_afferents[0].matrix.base == expected_matrices[0])
@@ -6497,6 +6497,7 @@ class TestNodeRoles:
         assert no_such_node_error_msg in str(error_text.value)
 
     def test_unnested_PROBE(self):
+        """Assigning PROBE to a Node should add OutputPort to output_CIM even if Node is not in a nested Composition"""
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
         C = ProcessingMechanism(name='C')
