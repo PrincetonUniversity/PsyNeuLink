@@ -3666,10 +3666,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Controller
         self.controller = None
         self._controller_initialization_status = ContextFlags.INITIALIZED
+        self.enable_controller = enable_controller
         if controller:
             self.add_controller(controller)
-        else:
-            self.enable_controller = enable_controller
         self.controller_mode = controller_mode
         self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
@@ -7662,15 +7661,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
             self.needs_update_controller = True
 
-        # Confirm that controller has input, and if not then disable it
-        if not (isinstance(self.controller.input_ports, ContentAddressableList)
-                and self.controller.input_ports):
-            # If controller was enabled, warn that it has been disabled
-            if self.enable_controller:
-                warnings.warn(f"{self.controller.name} for {self.name} has no input_ports, "
-                              f"so controller will be disabled.")
-            self.enable_controller = False
-            return
+        # Warn if controller is enabled but has no inputs
+        if (self.enable_controller
+                and not (isinstance(self.controller.input_ports, ContentAddressableList)
+                         and self.controller.input_ports
+                         and self.controller.afferents)):
+            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 

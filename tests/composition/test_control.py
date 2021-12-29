@@ -310,16 +310,27 @@ class TestControlSpecification:
             comp_2.add_controller(ctlr_1)
 
     def test_warning_for_replacement_of_controller(self):
-        mech_1 = pnl.ProcessingMechanism()
+        mech = pnl.ProcessingMechanism()
         ctlr_1 = pnl.ControlMechanism()
-        comp_1 = pnl.Composition()
-        comp_1.add_node(mech_1)
-        comp_1.add_controller(ctlr_1)
+        comp = pnl.Composition()
+        comp.add_node(mech)
+        comp.add_controller(ctlr_1)
         ctlr_2 = pnl.ControlMechanism()
         expected_warning = "The existing controller for 'Composition-0' ('ControlMechanism-0') " \
                            "is being replaced by 'ControlMechanism-1'."
         with pytest.warns(UserWarning) as warning:
-            comp_1.add_controller(ctlr_2)
+            comp.add_controller(ctlr_2)
+        assert expected_warning in repr(warning[0].message.args[0])
+
+    def test_controller_has_no_input(self):
+        mech = pnl.ProcessingMechanism()
+        ctlr = pnl.ControlMechanism()
+        comp = pnl.Composition()
+        comp.add_node(mech)
+        expected_warning = 'ControlMechanism-0 for Composition-0 is enabled but has no inputs.'
+        with pytest.warns(UserWarning) as warning:
+            comp.enable_controller = True
+            comp.add_controller(ctlr)
         assert expected_warning in repr(warning[0].message.args[0])
 
     # FIX: DEPRACATE THIS TEST - IT ALLOWS A COMPOSITION TO EXECUTE WITH A BAD MONITOR FOR CONTROL SPECIFICATION
