@@ -7903,18 +7903,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         owner = component.receiver.owner
                     warnings.warn(
-                            f"The controller of {self.name} has been specified to project to {owner.name}, "
-                            f"but {owner.name} is not in {self.name} or any of its nested Compositions. "
-                            f"This projection will be deactivated until {owner.name} is added to {self.name} "
+                            f"The controller of '{self.name}' has been specified to project to '{owner.name}', "
+                            f"but '{owner.name}' is not in '{self.name}' or any of its nested Compositions. "
+                            f"This projection will be deactivated until '{owner.name}' is added to' {self.name}' "
                             f"in a compatible way."
                     )
                 elif isinstance(component, Mechanism):
                     warnings.warn(
-                            f"The controller of {self.name} has a specification that includes the Mechanism "
-                            f"{component.name}, but {component.name} is not in {self.name} or any of its "
-                            f"nested Compositions. This Mechanism will be deactivated until {component.name} is "
-                            f"added to {self.name} or one of its nested Compositions in a compatible way."
+                            f"The controller of '{self.name}' has a specification that includes the Mechanism "
+                            f"'{component.name}', but '{component.name}' is not in '{self.name}' or any of its "
+                            f"nested Compositions. This Mechanism will be deactivated until '{component.name}' is "
+                            f"added to '{self.name}' or one of its nested Compositions in a compatible way."
                     )
+                    assert False, "WARNING MESSAGE"
 
         # If Composition is not preparing to execute, allow deferred_inits to persist without warning
         if context and ContextFlags.PREPARING not in context.execution_phase:
@@ -7930,6 +7931,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"but the {COMPOSITION} it is in ('{self.name}') does not have a controller; "
                                       f"if a controller is not added to {self.name} "
                                       f"the control specification will be ignored.")
+                        # assert False, "WARNING MESSAGE"
 
     def _check_nodes_initialization_status(self, context=None):
 
