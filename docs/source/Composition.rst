@@ -24,6 +24,7 @@ Composition
        :maxdepth: 1
 
        Pathway
+       CompositionInterfaceMechanism
        Scheduling
        Visualization
        Report
