@@ -7931,7 +7931,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       f"but the {COMPOSITION} it is in ('{self.name}') does not have a controller; "
                                       f"if a controller is not added to {self.name} "
                                       f"the control specification will be ignored.")
-                        # assert False, "WARNING MESSAGE"
 
     def _check_nodes_initialization_status(self, context=None):
 

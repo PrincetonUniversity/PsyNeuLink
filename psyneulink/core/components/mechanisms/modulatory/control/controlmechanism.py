@@ -1385,11 +1385,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     validate_monitored_port_spec(self, obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
-                raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
-                                            "or a list of Mechanisms and/or OutputPorts to be monitored for control".
-                                            format(OBJECTIVE_MECHANISM,
-                                                   self.name, target_set[OBJECTIVE_MECHANISM],
-                                                   ObjectiveMechanism.componentName))
+                raise ControlMechanismError(f"Specification of {OBJECTIVE_MECHANISM} arg for '{self.name}' "
+                                            f"({target_set[OBJECTIVE_MECHANISM].name}) must be an "
+                                            f"{ObjectiveMechanism.componentType} or a list of Mechanisms and/or "
+                                            f"OutputPorts to be monitored for control.")
 
         if CONTROL in target_set and target_set[CONTROL]:
             control = target_set[CONTROL]

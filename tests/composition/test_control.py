@@ -95,7 +95,7 @@ class TestControlSpecification:
         assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
-        # First create Composition with controller that has HAS control specification,
+        # First create Composition with controller that has HAS control specification that includes allocation_samples,
         #    then add Mechanism with control specification to Composition;
         # Control specification on controller should supercede one on Mechanism (which should be ignored)
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
@@ -103,12 +103,33 @@ class TestControlSpecification:
                                             pnl.ControlProjection(
                                                   function=pnl.Linear,
                                                   control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01,0.3)}))))
-        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
-                                                                                PROJECTIONS:('drift_rate', ddm)}))
+        expected_warning = "The controller of 'Composition-0' has been specified to project to 'DDM-0', but 'DDM-0' " \
+                           "is not in 'Composition-0' or any of its nested Compositions. This projection will be " \
+                           "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
+        with pytest.warns(UserWarning, match=expected_warning):
+            comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
+                                                                                    PROJECTIONS:('drift_rate', ddm)}))
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
+
+    # def test_missing_mech_referenced_by_controller_warning(self):
+    #     mech = pnl.ProcessingMechanism()
+    #     warning_msg_1 = ''
+    #     with pytest.warns(UserWarning) as warning:
+    #         comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+    #     assert repr(warning[1].message.args[0]) == warning_msg_1
+
+    def test_bad_objective_mechanism_spec(self):
+        mech = pnl.ProcessingMechanism()
+        expected_error = 'Specification of objective_mechanism arg for \'ControlMechanism-0\' ' \
+                         '(ProcessingMechanism-0) must be an ObjectiveMechanism or a list of Mechanisms ' \
+                         'and/or OutputPorts to be monitored for control.'
+        with pytest.raises(pnl.ControlMechanismError) as error:
+            comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+        error_msg = error.value.error_value
+        assert expected_error in error_msg
 
     def test_deferred_init(self):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
