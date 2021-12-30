@@ -114,6 +114,13 @@ class TestControlSpecification:
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
 
+    # def test_missing_mech_referenced_by_controller_warning(self):
+    #     mech = pnl.ProcessingMechanism()
+    #     warning_msg_1 = ''
+    #     with pytest.warns(UserWarning) as warning:
+    #         comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+    #     assert repr(warning[1].message.args[0]) == warning_msg_1
+
     def test_bad_objective_mechanism_spec(self):
         mech = pnl.ProcessingMechanism()
         expected_error = 'Specification of objective_mechanism arg for \'ControlMechanism-0\' ' \
