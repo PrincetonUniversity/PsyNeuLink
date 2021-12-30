@@ -1037,8 +1037,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep_type : None, COMPOSITION or COMPOSITION_FUNCTION_APPROXIMATOR
         identifies whether the agent_rep is a `Composition`, a `CompositionFunctionApproximator` or
-        one of its subclasses, or it has not been assigned (None); see `Agent Representation and Types
-        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details.
+        one of its subclasses, or it has not been assigned (None) (see `Agent Representation and Types
+        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details).
+
+    state_features : List[Mechanism, InputPort, or OutputPort, Projection, or dict]
+        lists the specifications provided to the **state_features** argument of the OptimizationControlMechanism's
+        constructor, that are used to generate the inputs to `state_input_ports
+        <OptimizationControlMechanism.state_input_ports>` (see `OptimizationControlMechanism_State_Features` for
+        additional details).
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's
