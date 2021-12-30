@@ -7908,6 +7908,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             f"This projection will be deactivated until '{owner.name}' is added to' {self.name}' "
                             f"in a compatible way."
                     )
+                # FIX: It seems this may never get called, as any specification of a Mechanism in the constructor
+                #      for a ControlMechanism automatically instantiates a Projection that triggers the warning above.
                 elif isinstance(component, Mechanism):
                     warnings.warn(
                             f"The controller of '{self.name}' has a specification that includes the Mechanism "
