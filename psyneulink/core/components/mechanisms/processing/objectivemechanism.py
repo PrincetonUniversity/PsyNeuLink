@@ -498,7 +498,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     """
 
-    componentType = OBJECTIVE_MECHANISM
+    componentType = 'ObjectiveMechanism'
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TYPE_DEFAULT_PREFERENCES

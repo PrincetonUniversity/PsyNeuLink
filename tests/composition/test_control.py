@@ -18,11 +18,6 @@ class TestControlSpecification:
     #    2) specification of control in controller supercedes any conflicting specification on a node;
     #    3) order of addition to the composition does not matter (i.e., Principle 2 always applies)
 
-    # FIX: OUTSTANDING ISSUES -
-    #      When control is specified in a controller for a Mechanism that is not yet a node in the Composition
-    #          it nevertheless gets activated (in call to controller._activate_projections_for_compositions;
-    #          instead, it should either be put in deferred_init or added to node's aux_components attribute
-
     def test_add_node_with_control_specified_then_add_controller(self):
         # First add Mechanism with control specification to Composition,
         #    then add controller with NO control specification to Composition
@@ -89,14 +84,18 @@ class TestControlSpecification:
                                             pnl.ControlProjection(
                                                   function=pnl.Linear,
                                                   control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}))))
-        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
+        expected_warning = "The controller of 'Composition-0' has been specified to project to 'DDM-0', but 'DDM-0' " \
+                           "is not in 'Composition-0' or any of its nested Compositions. This projection will be " \
+                           "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
+        with pytest.warns(UserWarning, match=expected_warning):
+            comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals=("drift_rate", ddm)))
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].allocation_samples is None
 
     def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
-        # First create Composition with controller that has HAS control specification,
+        # First create Composition with controller that has HAS control specification that includes allocation_samples,
         #    then add Mechanism with control specification to Composition;
         # Control specification on controller should supercede one on Mechanism (which should be ignored)
         ddm = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
@@ -104,12 +103,33 @@ class TestControlSpecification:
                                             pnl.ControlProjection(
                                                   function=pnl.Linear,
                                                   control_signal_params={ALLOCATION_SAMPLES: np.arange(0.1, 1.01,0.3)}))))
-        comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
-                                                                                PROJECTIONS:('drift_rate', ddm)}))
+        expected_warning = "The controller of 'Composition-0' has been specified to project to 'DDM-0', but 'DDM-0' " \
+                           "is not in 'Composition-0' or any of its nested Compositions. This projection will be " \
+                           "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
+        with pytest.warns(UserWarning, match=expected_warning):
+            comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
+                                                                                    PROJECTIONS:('drift_rate', ddm)}))
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert np.allclose(comp.controller.control[0].allocation_samples(), [0.2, 0.5, 0.8])
+
+    # def test_missing_mech_referenced_by_controller_warning(self):
+    #     mech = pnl.ProcessingMechanism()
+    #     warning_msg_1 = ''
+    #     with pytest.warns(UserWarning) as warning:
+    #         comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+    #     assert repr(warning[1].message.args[0]) == warning_msg_1
+
+    def test_bad_objective_mechanism_spec(self):
+        mech = pnl.ProcessingMechanism()
+        expected_error = 'Specification of objective_mechanism arg for \'ControlMechanism-0\' ' \
+                         '(ProcessingMechanism-0) must be an ObjectiveMechanism or a list of Mechanisms ' \
+                         'and/or OutputPorts to be monitored for control.'
+        with pytest.raises(pnl.ControlMechanismError) as error:
+            comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+        error_msg = error.value.error_value
+        assert expected_error in error_msg
 
     def test_deferred_init(self):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -1330,6 +1350,26 @@ class TestControlMechanisms:
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(comp.results, [[[0.375]]])
+
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_add_node_with_controller_spec_and_control_mech_but_not_a_controller(self):
+        mech = pnl.ProcessingMechanism(name='MECH', function=pnl.Linear(slope=(2, pnl.CONTROL)))
+        ctl = pnl.ControlMechanism(name='CONTROL MECHANISM')
+        warning_msg_1 = '"OutputPort (\'ControlSignal-0\') of \'CONTROL MECHANISM\' doesn\'t have any efferent ' \
+                        'Projections in \'COMPOSITION\'."'
+        warning_msg_4 = '"\\nThe following Projections were specified but are not being used by Nodes in ' \
+                        '\'COMPOSITION\':\\n\\tControlProjection for MECH[slope]"'
+        warning_msg_5 = '"The \'slope\' parameter of \'MECH\' is specified for control, but the Composition it is in ' \
+                        '(\'COMPOSITION\') does not have a controller; if a controller is not added to COMPOSITION ' \
+                        'the control specification will be ignored."'
+        with pytest.warns(UserWarning) as warning:
+            comp = pnl.Composition(name='COMPOSITION', pathways=[ctl])
+            comp.add_node(mech)
+            comp.run()
+        assert repr(warning[1].message.args[0]) == warning_msg_1
+        assert repr(warning[4].message.args[0]) == warning_msg_4
+        assert repr(warning[5].message.args[0]) == warning_msg_5
 
     @pytest.mark.control
     @pytest.mark.composition
