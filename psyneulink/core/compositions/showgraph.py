@@ -1643,7 +1643,7 @@ class ShowGraph():
                 ctl_proj_rcvr = ctl_proj.receiver
                 # If receiver is a parameter_CIM
                 if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
-                    # PATCH 6/7/20 to deal with ControlProjections across more than one level of nesting:
+                    # Deal with ControlProjections across more than one level of nesting:
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
                         """Find deepest enclosing composition within range of num_nesting_levels"""
@@ -1657,7 +1657,11 @@ class ShowGraph():
                         return None
                     project_to_node = False
                     try:
-                        enclosing_comp, l = find_rcvr_comp(rcvr_comp, composition, 0)
+                        # # MODIFIED 12/30/21 OLD:
+                        # enclosing_comp, l = find_rcvr_comp(rcvr_comp, composition, 0)
+                        # MODIFIED 12/30/21 NEW:
+                        enclosing_comp, l = find_rcvr_comp(rcvr_comp, controller.composition, 0)
+                        # MODIFIED 12/30/21 END
                     except TypeError:
                         raise ShowGraphError(f"ControlProjection not found from {controller} in "
                                                f"{composition.name} to {rcvr_comp}")

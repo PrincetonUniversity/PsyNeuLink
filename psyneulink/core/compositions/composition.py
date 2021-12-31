@@ -7646,6 +7646,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Assign mutual references between Composition and controller
         controller.composition = self
         self.controller = controller
+
+        # # MODIFIED 12/30/21 NEW:  FIX: THIS IS NOT CORRECT, BECAUSE WITH REGARD TO EXECUTION SEQUENCING,
+        # #                                                    CONTROLLER IS NOT THE CONTROLLER OF THE AGENT_REP,
+        # #                                                    IT JUST EXECUTES IT.
+        # # Deal with agent_rep of controller that is in a nested Composition
+        # if (hasattr(self.controller, AGENT_REP)
+        #         and self.controller.agent_rep != self
+        #         and self.controller.agent_rep in self._get_nested_compositions()):
+        #     self.controller.agent_rep.controller = self.controller
+        # MODIFIED 12/30/21 END
+
         # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
         #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
         # self._add_node_role(controller, NodeRole.CONTROLLER)
@@ -8003,28 +8014,41 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(context))
+            def get_controller(comp):
+                """Get controller for which the current Composition is an agent_rep.
+                Recursively search enclosing Compositions for controller if self does not have one.
+                This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+                """
+                if comp.controller:
+                    return comp.controller
+                elif context.composition:
+                    return get_controller(context.composition)
+                else:
+                    assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
+            controller = get_controller(self)
+            base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
             # Get reconfiguration cost for candidate control signal
             reconfiguration_cost = 0.
-            if callable(self.controller.compute_reconfiguration_cost):
-                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+            if callable(controller.compute_reconfiguration_cost):
+                reconfiguration_cost = controller.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                      base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
+                controller.reconfiguration_cost.set(reconfiguration_cost, context)
 
             # Apply candidate control signal
-            self.controller._apply_control_allocation(candidate_control_allocation,
+            controller._apply_control_allocation(candidate_control_allocation,
                                                                 context=context,
                                                                 runtime_params=runtime_params,
                                                                 )
 
             # Get control signal costs
-            other_costs = self.controller.parameters.costs._get(context) or []
+            other_costs = controller.parameters.costs._get(context) or []
             all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
-            total_cost = self.controller.combine_costs(all_costs)
+            total_cost = controller.combine_costs(all_costs)
+
         return total_cost
 
     # endregion CONTROL

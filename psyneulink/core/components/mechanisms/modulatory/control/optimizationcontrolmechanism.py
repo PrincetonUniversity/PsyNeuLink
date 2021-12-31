@@ -2360,6 +2360,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(builder.load(val_ptr), dest_ptr)
         return oport_input
 
+    # Deprecated - this is now a Parameter
     # @property
     # def state_feature_values(self):
     #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
@@ -2430,9 +2431,9 @@ class OptimizationControlMechanism(ControlMechanism):
         except:
             return 0
 
-    # @property
-    # def state(self):
-    #     return self.state_feature_values + self.control_allocation
+    @property
+    def state(self):
+        return self.state_feature_values + self.control_allocation
 
     @property
     def _model_spec_parameter_blacklist(self):
