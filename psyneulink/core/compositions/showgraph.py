@@ -1889,16 +1889,39 @@ class ShowGraph():
             # incoming edges (from monitored mechs directly to controller)
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
+
+                    # Determine color
+                    # # MODIFIED 1/1/22 OLD:
+                    # if controller in active_items:
+                    #     if self.active_color == BOLD:
+                    #         proj_color = self.controller_color
+                    #     else:
+                    #         proj_color = self.active_color
+                    #     proj_width = str(self.default_width + self.active_thicker_by)
+                    #     composition.active_item_rendered = True
+                    # else:
+                    #     proj_color = self.controller_color
+                    #     proj_width = str(self.default_width)
+                    # MODIFIED 1/1/22 NEW:
+                    source = projection.sender
+                    if (isinstance(source.owner, CompositionInterfaceMechanism)
+                            and source._get_source_node_for_output_port(source)
+                            and not composition.include_probes_in_output):
+                        controller_color = self.probe_color
+                    else:
+                        controller_color = self.controller_color
                     if controller in active_items:
                         if self.active_color == BOLD:
-                            proj_color = self.controller_color
+                            proj_color = controller_color
                         else:
                             proj_color = self.active_color
                         proj_width = str(self.default_width + self.active_thicker_by)
                         composition.active_item_rendered = True
                     else:
-                        proj_color = self.controller_color
+                        proj_color = controller_color
                         proj_width = str(self.default_width)
+                    # MODIFIED 1/1/22 END
+
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,

@@ -389,7 +389,7 @@ include the InputPorts of the nested Composition.  These can be accessed using t
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 both the `output_values <Composition.output_values>` and `results <Composition.results>` of the nested Composition
 are also included in those attributes of any intervening and the outermost Composition.  If `allow_probes
-<Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
+<Composition.allow_probes>` is set (which it is by default), then the Composition's `include_probes_in_output
 <Composition.include_probes_in_output>` attribute determines whether their values are also included in the
 `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition
 (see `above <Composition_Probes>`).
