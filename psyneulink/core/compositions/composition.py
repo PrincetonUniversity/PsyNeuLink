@@ -8034,7 +8034,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
-            # MODIFIED 12/31/21 OLD:
             def get_controller(comp):
                 """Get controller for which the current Composition is an agent_rep.
                 Recursively search enclosing Compositions for controller if self does not have one.
@@ -8049,9 +8048,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
             controller = get_controller(self)
-            # # MODIFIED 12/31/21 NEW:
-            # controller = self._get_controller(context)
-            # MODIFIED 12/31/21 END
+
             base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
