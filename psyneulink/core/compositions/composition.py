@@ -339,21 +339,31 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 
   .. _Composition_Probes:
 
-* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
-  outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
+* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition, but project to ones in an
+  outer Composition, are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
   nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
   is whether their output is included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` attributes of the outermost Composition to which they project; this is determined by the
+  <Composition.results>` attributes of the *outermost* Composition to which they project; this is determined by the
   `include_probes_in_output <Composition.include_probes_in_output>` attribute of the latter. If
   `include_probes_in_output <Composition.include_probes_in_output>` is False (the default), then the output of any
-  `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
-  the `output_values <Composition.output_values>` or `results <Composition.results>` for the Composition to which
-  they project. In this respect, they can be thought of as "probing" - that is, providing access to "latent variables"
-  of -- the Composition to which they belong -- the values of which that are not otherwise reported as part of the
-  Composition's output or results.  If `include_probes_in_output <Composition.include_probes_in_output>` is True,
-  then any `PROBE <NodeRole.PROBE>` Nodes of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>`
-  Nodes: their outputs are included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` of that Composition.
+  `PROBE <NodeRole.PROBE>` Nodes are *not* included in the `output_values <Composition.output_values>` or `results
+  <Composition.results>` for the outermost Composition to which they project (although they *are* still included
+  in those attributes of the nested Compositions; see note below). In this respect, they can be thought of as
+  "probing" - that is, providing access to "latent variables" of -- the nested Composition to which they belong --
+  the values of which that are not otherwise reported as part of the outermost Composition's output or results. If
+  `include_probes_in_output <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes
+  of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in
+  the `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition.
+  `PROBE <NodeRole.PROBE>` Nodes can be visualized, along with any Projections treated differently from those of
+  `OUTPUT <NodeRole.OUTPUT>` Nodes (i.e., when `include_probes_in_output <Composition.include_probes_in_output>` is
+  False), using the Composition's `show_graph <ShowGraph.show_graph>` method, which displays them in their own color
+  (pink by default).
+
+      .. hint::
+         `PROBE <NodeRole.PROBE>` Nodes are useful for `model-based optimization using an
+         <OptimizationControlMechanism_Model_Based>`, in which the value of one or more Nodes in a nested Composition
+         may need to be `monitored <OptimizationControlMechanism_Monitor_for_Control>` without being considered as
+        part of the output or results of the Composition being optimized.
 
       .. note::
          The specification of `include_probes_in_output <Composition.include_probes_in_output>` only applies to a

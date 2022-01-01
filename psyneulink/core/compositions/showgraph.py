@@ -338,6 +338,9 @@ class ShowGraph():
     input_color : keyword : default 'green',
         specifies the color in which `INPUT <NodeRole.INPUT>` Nodes of the Composition are displayed.
 
+    probe_color : keyword : default 'pink',
+        specifies the color in which `PROBE <NodeRole.PROBE>` Nodes of the Composition are displayed.
+
     output_color : keyword : default 'red',
         specifies the color in which `OUTPUT <NodeRole.OUTPUT>` Nodes of the Composition are displayed.
 
@@ -410,6 +413,7 @@ class ShowGraph():
                  default_node_color = 'black',
                  active_color=BOLD,
                  input_color='green',
+                 probe_color='pink',
                  output_color='red',
                  input_and_output_color='brown',
                  # feedback_color='yellow',
@@ -448,6 +452,7 @@ class ShowGraph():
         self.default_node_color = default_node_color
         self.active_color = active_color
         self.input_color = input_color
+        self.probe_color=probe_color
         self.output_color = output_color
         self.input_and_output_color = input_and_output_color
         # self.feedback_color = self.feedback_color
@@ -930,6 +935,8 @@ class ShowGraph():
                     nested_comp_graph.attr(color=self.input_and_output_color)
                 elif rcvr in composition.get_nodes_by_role(NodeRole.INPUT):
                     nested_comp_graph.attr(color=self.input_color)
+                elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+                    nested_comp_graph.attr(color=self.probe_color)
                 elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
                     nested_comp_graph.attr(color=self.output_color)
                 nested_comp_graph.attr(label=rcvr_label)
@@ -1008,6 +1015,20 @@ class ShowGraph():
                 rcvr_color = self.input_color
                 rcvr_penwidth = str(self.bold_width)
             rcvr_rank = self.input_rank
+
+        # PROBE Node
+        elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+            if rcvr in active_items:
+                if self.active_color == BOLD:
+                    rcvr_color = self.probe_color
+                else:
+                    rcvr_color = self.active_color
+                rcvr_penwidth = str(self.bold_width + self.active_thicker_by)
+                composition.active_item_rendered = True
+            else:
+                rcvr_color = self.probe_color
+                rcvr_penwidth = str(self.bold_width)
+            rcvr_rank = self.output_rank
 
         # OUTPUT Node
         elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
