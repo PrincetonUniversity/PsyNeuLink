@@ -1635,16 +1635,25 @@ class ShowGraph():
                               f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
             return
 
+        # Assign colors, penwidth and label displayed for controller and ControlProjections ---------------------
+        ctlr_color = self.controller_color
         if controller in active_items:
-            if self.active_color == BOLD:
-                ctlr_color = self.controller_color
-            else:
+            if self.active_color != BOLD:
                 ctlr_color = self.active_color
             ctlr_width = str(self.default_width + self.active_thicker_by)
             composition.active_item_rendered = True
         else:
             ctlr_color = self.controller_color
             ctlr_width = str(self.default_width)
+
+        ctl_proj_color = self.controller_color
+        if controller in active_items:
+            if self.active_color != BOLD:
+                ctl_proj_color = self.active_color
+            ctl_proj_width = str(self.default_width + self.active_thicker_by)
+            composition.active_item_rendered = True
+        else:
+            ctl_proj_width = str(self.default_width)
 
         # Assign controller node
         node_shape = self.mechanism_shape
@@ -1745,17 +1754,6 @@ class ShowGraph():
                     ctl_proj_sndr_label = ctlr_label
                     ctl_proj_rcvr_label = rcvr_label
 
-                # Assign colors, penwidth and label displayed for ControlProjection ---------------------
-                if controller in active_items:
-                    if self.active_color == BOLD:
-                        ctl_proj_color = self.controller_color
-                    else:
-                        ctl_proj_color = self.active_color
-                    ctl_proj_width = str(self.default_width + self.active_thicker_by)
-                    composition.active_item_rendered = True
-                else:
-                    ctl_proj_color = self.controller_color
-                    ctl_proj_width = str(self.default_width)
                 if show_projection_labels:
                     edge_label = ctl_proj.name
                 else:
@@ -1890,7 +1888,8 @@ class ShowGraph():
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
 
-                    # Determine color
+                    # # MODIFIED 1/1/22 OLD:
+                    # # Determine color
                     # # MODIFIED 1/1/22 OLD:
                     # if controller in active_items:
                     #     if self.active_color == BOLD:
@@ -1902,25 +1901,26 @@ class ShowGraph():
                     # else:
                     #     proj_color = self.controller_color
                     #     proj_width = str(self.default_width)
-                    # MODIFIED 1/1/22 NEW:
-                    source = projection.sender
-                    if (isinstance(source.owner, CompositionInterfaceMechanism)
-                            and source._get_source_node_for_output_port(source)
-                            and not composition.include_probes_in_output):
-                        controller_color = self.probe_color
-                    else:
-                        controller_color = self.controller_color
-                    if controller in active_items:
-                        if self.active_color == BOLD:
-                            proj_color = controller_color
-                        else:
-                            proj_color = self.active_color
-                        proj_width = str(self.default_width + self.active_thicker_by)
-                        composition.active_item_rendered = True
-                    else:
-                        proj_color = controller_color
-                        proj_width = str(self.default_width)
-                    # MODIFIED 1/1/22 END
+                    # # MODIFIED 1/1/22 NEW:
+                    # source = projection.sender
+                    # if (isinstance(source.owner, CompositionInterfaceMechanism)
+                    #         and source._get_source_node_for_output_port(source)
+                    #         and not composition.include_probes_in_output):
+                    #     controller_color = self.probe_color
+                    # else:
+                    #     controller_color = self.controller_color
+                    # if controller in active_items:
+                    #     if self.active_color == BOLD:
+                    #         proj_color = controller_color
+                    #     else:
+                    #         proj_color = self.active_color
+                    #     proj_width = str(self.default_width + self.active_thicker_by)
+                    #     composition.active_item_rendered = True
+                    # else:
+                    #     proj_color = controller_color
+                    #     proj_width = str(self.default_width)
+                    # # MODIFIED 1/1/22 END
+                    # # MODIFIED 1/1/22 END
 
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
@@ -1955,7 +1955,8 @@ class ShowGraph():
                     else:
                         edge_label = ''
                     g.edge(sndr_proj_label, ctlr_input_proj_label, label=edge_label,
-                           color=proj_color, penwidth=proj_width)
+                           # color=proj_color, penwidth=proj_width)
+                           color=ctl_proj_color, penwidth=ctl_proj_width)
 
         # If controller has an agent_rep, assign its node and edges (not Projections per se)
         if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
