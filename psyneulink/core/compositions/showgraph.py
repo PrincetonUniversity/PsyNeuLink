@@ -675,14 +675,14 @@ class ShowGraph():
         # ASSIGN ATTRIBUTES PASSED TO NESTED COMPOSITIONS  -----------------------------------------------
 
         if show_all:
-           show_node_structure=ALL
-           show_nested=NESTED
-           show_nested_args=ALL
-           show_cim=True
-           show_controller=True
-           show_learning=ALL
-           show_headers=True
-           show_projections_not_in_composition=True
+            show_node_structure=ALL
+            show_nested=NESTED
+            show_nested_args=ALL
+            show_cim=True
+            show_controller=True
+            show_learning=ALL
+            show_headers=True
+            show_projections_not_in_composition=True
 
         # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
