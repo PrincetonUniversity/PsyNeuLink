@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.12.gecaf289 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.11.g05fcc78 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.12.gecaf289
+                  0+untagged.11.g05fcc78
                 </div>
               
             
@@ -342,7 +342,7 @@ the <a class="reference internal" href="Composition.html#psyneulink.core.composi
 <em>model-free</em> optimization in the <a class="reference external" href="https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&amp;gbpv=1&amp;dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&amp;pg=PR7&amp;printsec=frontcover">machine learning</a>
 and <a class="reference external" href="https://www.nature.com/articles/nn1560">cognitive neuroscience</a> literatures, as described below.</p>
 <figure class="align-default" id="id3">
-<a class="reference internal image-reference" href="_images/Optimization_fig.svg"><img alt="OptimizationControlMechanism" src="_images/Optimization_fig.svg" /></a>
+<a class="reference internal image-reference" href="_static/Optimization_fig.svg"><img alt="OptimizationControlMechanism" src="_static/Optimization_fig.svg" /></a>
 <figcaption>
 <p><span class="caption-text"><strong>Functional Anatomy of an OptimizationControlMechanism.</strong> <em>Panel A:</em> Examples of use in fully model-based
 and model-free optimization.  Note that in the example of <a class="reference internal" href="#optimizationcontrolmechanism-model-based"><span class="std std-ref">model-based optimization</span></a> (left), the OptimizationControlMechanism uses the entire
@@ -881,11 +881,24 @@ for additional details.</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep_type">
 <span class="sig-name descname"><span class="pre">agent_rep_type</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>identifies whether the agent_rep is a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, a <a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a> or
-one of its subclasses, or it has not been assigned (None); see <a class="reference internal" href="#optimizationcontrolmechanism-agent-representation-types"><span class="std std-ref">Agent Representation and Types
-of Optimization</span></a> for additional details.</p>
+one of its subclasses, or it has not been assigned (None) (see <a class="reference internal" href="#optimizationcontrolmechanism-agent-representation-types"><span class="std std-ref">Agent Representation and Types
+of Optimization</span></a> for additional details).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>None, COMPOSITION or COMPOSITION_FUNCTION_APPROXIMATOR</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_features">
+<span class="sig-name descname"><span class="pre">state_features</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>lists the specifications provided to the <strong>state_features</strong> argument of the OptimizationControlMechanism’s
+constructor, that are used to generate the inputs to <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_input_ports</span></code></a> (see <a class="reference internal" href="#optimizationcontrolmechanism-state-features"><span class="std std-ref">state_input_ports</span></a> for
+additional details).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[Mechanism, <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort" title="psyneulink.core.components.ports.inputport.InputPort">InputPort</a>, or <a class="reference internal" href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort" title="psyneulink.core.components.ports.outputport.OutputPort">OutputPort</a>, Projection, or dict]</p>
 </dd>
 </dl>
 </dd></dl>
