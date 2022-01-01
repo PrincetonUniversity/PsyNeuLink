@@ -8591,7 +8591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_port(port)
+                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_CIM(port)
                             v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
@@ -10444,7 +10444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
                             for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
+                                _, mech, __ = node.input_CIM._get_destination_node_for_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
@@ -10533,7 +10533,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_results_by_nodes(); please use that in the future.")
 
         # Get all OUTPUT Nodes in (nested) Composition(s)
-        output_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
+        output_nodes = [self.output_CIM._get_source_node_for_output_CIM(port)[1]
                         for port in self.output_CIM.output_ports]
 
         # Get all values for all OUTPUT Nodes

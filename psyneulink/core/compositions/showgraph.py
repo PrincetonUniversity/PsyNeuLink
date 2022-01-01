@@ -1492,6 +1492,11 @@ class ShowGraph():
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
+                        else:
+                            port, node, comp = cim._get_source_node_for_output_CIM(proj.receiver)
+                            if (node in comp.get_nodes_by_role(NodeRole.PROBE)
+                                    and not composition.include_probes_in_output):
+                                proj_color=self.probe_color
 
                         sndr_output_node_proj = proj.sender
                         if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
@@ -1531,7 +1536,7 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
                             rcvr_output_cim_proj_label = cim_label
 
-                        # FIX 6/23/20 PROBLEM POINT:
+                        # FIX 6/23/20 PROBLEM POINT: (SEE MESSAGE FOR COMMIT eb61303808ad2a5ba46fdd18d0e583283397915c)
                         # Render Projection
                         _render_projection(g,
                                            proj,
@@ -1550,7 +1555,6 @@ class ShowGraph():
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-
                         rcvr_node_input_port = proj.receiver
 
                         # Skip if receiver is controller of enclosing_comp (handled by _assign_controller_components)
@@ -1887,41 +1891,6 @@ class ShowGraph():
             # incoming edges (from monitored mechs directly to controller)
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
-
-                    # # MODIFIED 1/1/22 OLD:
-                    # # Determine color
-                    # # MODIFIED 1/1/22 OLD:
-                    # if controller in active_items:
-                    #     if self.active_color == BOLD:
-                    #         proj_color = self.controller_color
-                    #     else:
-                    #         proj_color = self.active_color
-                    #     proj_width = str(self.default_width + self.active_thicker_by)
-                    #     composition.active_item_rendered = True
-                    # else:
-                    #     proj_color = self.controller_color
-                    #     proj_width = str(self.default_width)
-                    # # MODIFIED 1/1/22 NEW:
-                    # source = projection.sender
-                    # if (isinstance(source.owner, CompositionInterfaceMechanism)
-                    #         and source._get_source_node_for_output_port(source)
-                    #         and not composition.include_probes_in_output):
-                    #     controller_color = self.probe_color
-                    # else:
-                    #     controller_color = self.controller_color
-                    # if controller in active_items:
-                    #     if self.active_color == BOLD:
-                    #         proj_color = controller_color
-                    #     else:
-                    #         proj_color = self.active_color
-                    #     proj_width = str(self.default_width + self.active_thicker_by)
-                    #     composition.active_item_rendered = True
-                    # else:
-                    #     proj_color = controller_color
-                    #     proj_width = str(self.default_width)
-                    # # MODIFIED 1/1/22 END
-                    # # MODIFIED 1/1/22 END
-
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,
