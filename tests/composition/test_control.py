@@ -127,7 +127,14 @@ class TestControlSpecification:
                          '(ProcessingMechanism-0) must be an ObjectiveMechanism or a list of Mechanisms ' \
                          'and/or OutputPorts to be monitored for control.'
         with pytest.raises(pnl.ControlMechanismError) as error:
-            comp = pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+            pnl.Composition(controller=pnl.ControlMechanism(objective_mechanism=mech))
+        error_msg = error.value.error_value
+        assert expected_error in error_msg
+
+    def test_objective_mechanism_spec_as_monitor_for_control_error(self):
+        expected_error = 'The \'monitor_for_control\' arg of \'ControlMechanism-0\' contains a specification for an ObjectiveMechanism ([(ObjectiveMechanism ObjectiveMechanism-0)]).  This should be specified in its \'objective_mechanism\' argument.'
+        with pytest.raises(pnl.ControlMechanismError) as error:
+            pnl.Composition(controller=pnl.ControlMechanism(monitor_for_control=pnl.ObjectiveMechanism()))
         error_msg = error.value.error_value
         assert expected_error in error_msg
 
