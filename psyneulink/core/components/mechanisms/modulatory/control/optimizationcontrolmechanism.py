@@ -1037,8 +1037,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep_type : None, COMPOSITION or COMPOSITION_FUNCTION_APPROXIMATOR
         identifies whether the agent_rep is a `Composition`, a `CompositionFunctionApproximator` or
-        one of its subclasses, or it has not been assigned (None); see `Agent Representation and Types
-        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details.
+        one of its subclasses, or it has not been assigned (None) (see `Agent Representation and Types
+        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details).
+
+    state_features : List[Mechanism, InputPort, or OutputPort, Projection, or dict]
+        lists the specifications provided to the **state_features** argument of the OptimizationControlMechanism's
+        constructor, that are used to generate the inputs to `state_input_ports
+        <OptimizationControlMechanism.state_input_ports>` (see `OptimizationControlMechanism_State_Features` for
+        additional details).
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's
@@ -1061,6 +1067,12 @@ class OptimizationControlMechanism(ControlMechanism):
         to compute the `net_outcome <ControlMechanism.net_outcome>` of executing the `agent_rep
         <OptimizationControlMechanism.agent_rep>` in a given `OptimizationControlMechanism_State`
         (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
+
+    COMMENT:
+    state : ndarray
+        lists the values of the current state -- a concatenation of the state_feature_values and control_allocation
+        following the last execution of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+    COMMENT
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to
@@ -1651,7 +1663,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (not (input_port.shadow_inputs.owner in
+                                      if (input_port.shadow_inputs
+                                          and not (input_port.shadow_inputs.owner in
                                                 list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
                                           and (not [input_port.shadow_inputs.owner.composition is x for x in
                                                       comp._get_nested_compositions()
@@ -1666,9 +1679,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Ensure that all  InputPorts shadowed by specified state_input_ports
             #    reference INPUT Nodes of agent_rep or of a nested Composition
             invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
+                                      if (input_port.shadow_inputs
+                                          and not (input_port.shadow_inputs.owner
+                                                   in _get_all_input_nodes(self.agent_rep))
                                           and (isinstance(input_port.shadow_inputs.owner,
-                                                         CompositionInterfaceMechanism)
+                                                          CompositionInterfaceMechanism)
                                                and not (input_port.shadow_inputs.owner.composition in
                                                         [nested_comp for nested_comp in comp._get_nested_compositions()
                                                          if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])))]
@@ -2345,6 +2360,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(builder.load(val_ptr), dest_ptr)
         return oport_input
 
+    # Deprecated - this is now a Parameter
     # @property
     # def state_feature_values(self):
     #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
@@ -2414,6 +2430,10 @@ class OptimizationControlMechanism(ControlMechanism):
             return len(self.state_input_ports)
         except:
             return 0
+
+    @property
+    def state(self):
+        return self.state_feature_values + self.control_allocation
 
     @property
     def _model_spec_parameter_blacklist(self):

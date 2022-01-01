@@ -5039,6 +5039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           if x in cim_prt_tpl),
                                                          len(self.nodes)))
 
+
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
             # happening outside of this normal context? This is here as
@@ -5049,6 +5050,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # otherwise, CIM ports will not be initialized properly
             orig_eid = context.execution_id
             context.execution_id = None
+            context_string = context.string
 
             new_default_variable = [
                 deepcopy(input_port.defaults.value)
@@ -5065,6 +5067,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # no input ports in CIM, so assume Composition is blank
 
             context.execution_id = orig_eid
+            context.string = context_string
 
             # verify there is exactly one automatically instantiated input port for each automatically instantiated
             # output port
@@ -5134,7 +5137,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Check if Node is an INPUT or INTERNAL
                 if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                     comp._add_required_node_role(node, NodeRole.PROBE)
-                    self._analyze_graph()
+                    # Ignore warning since a Projection to the PROBE will not yet have been instantiated
+                    # self._analyze_graph(context=Context(string='IGNORE_NO_AFFERENTS_WARNING'))
+                    self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION,
+                                                        string='IGNORE_NO_AFFERENTS_WARNING'))
                     return
 
             # Failed to assign node as PROBE, so get ControlMechanisms that may be trying to monitor it
@@ -5821,7 +5827,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections.append(node)
                 continue
 
-            if context.source != ContextFlags.INITIALIZING:
+            if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition and not input_port.path_afferents:
                         warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
@@ -7646,6 +7652,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Assign mutual references between Composition and controller
         controller.composition = self
         self.controller = controller
+
+        # # MODIFIED 12/30/21 NEW:  FIX: THIS IS NOT CORRECT, BECAUSE WITH REGARD TO EXECUTION SEQUENCING,
+        # #                                                    CONTROLLER IS NOT THE CONTROLLER OF THE AGENT_REP,
+        # #                                                    IT JUST EXECUTES IT.
+        # # Deal with agent_rep of controller that is in a nested Composition
+        # if (hasattr(self.controller, AGENT_REP)
+        #         and self.controller.agent_rep != self
+        #         and self.controller.agent_rep in self._get_nested_compositions()):
+        #     self.controller.agent_rep.controller = self.controller
+        # MODIFIED 12/30/21 END
+
         # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
         #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
         # self._add_node_role(controller, NodeRole.CONTROLLER)
@@ -7787,6 +7804,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
+    # def _get_controller(comp, context=None):
+    #     """Get controller for which the current Composition is an agent_rep.
+    #     Recursively search enclosing Compositions for controller if self does not have one.
+    #     Use context.composition if there is no controller.
+    #     This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+    #     """
+    #     context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
+    #     if comp.controller:
+    #         return comp.controller
+    #     elif context.composition:
+    #         return context.composition._get_controller(context)
+    #     else:
+    #         assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
+
     def reshape_control_signal(self, arr):
 
         current_shape = np.shape(arr)
@@ -7908,6 +7939,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             f"This projection will be deactivated until '{owner.name}' is added to' {self.name}' "
                             f"in a compatible way."
                     )
+                # FIX: It seems this may never get called, as any specification of a Mechanism in the constructor
+                #      for a ControlMechanism automatically instantiates a Projection that triggers the warning above.
                 elif isinstance(component, Mechanism):
                     warnings.warn(
                             f"The controller of '{self.name}' has a specification that includes the Mechanism "
@@ -8001,28 +8034,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(context))
+            def get_controller(comp):
+                """Get controller for which the current Composition is an agent_rep.
+                Recursively search enclosing Compositions for controller if self does not have one.
+                Use context.composition to find controller.
+                This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+                """
+                if comp.controller:
+                    return comp.controller
+                elif context.composition:
+                    return get_controller(context.composition)
+                else:
+                    assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
+            controller = get_controller(self)
+
+            base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
             # Get reconfiguration cost for candidate control signal
             reconfiguration_cost = 0.
-            if callable(self.controller.compute_reconfiguration_cost):
-                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+            if callable(controller.compute_reconfiguration_cost):
+                reconfiguration_cost = controller.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                      base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
+                controller.reconfiguration_cost.set(reconfiguration_cost, context)
 
             # Apply candidate control signal
-            self.controller._apply_control_allocation(candidate_control_allocation,
+            controller._apply_control_allocation(candidate_control_allocation,
                                                                 context=context,
                                                                 runtime_params=runtime_params,
                                                                 )
 
             # Get control signal costs
-            other_costs = self.controller.parameters.costs._get(context) or []
+            other_costs = controller.parameters.costs._get(context) or []
             all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
-            total_cost = self.controller.combine_costs(all_costs)
+            total_cost = controller.combine_costs(all_costs)
+
         return total_cost
 
     # endregion CONTROL
@@ -11146,6 +11194,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     def show_graph(self,
+                   show_all=False,
                    show_node_structure=False,
                    show_nested=NESTED,
                    show_nested_args=ALL,
@@ -11161,7 +11210,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_fmt='pdf',
                    context=None):
 
-        return self._show_graph(show_node_structure=show_node_structure,
+        return self._show_graph(show_all=show_all,
+                                show_node_structure=show_node_structure,
                                 show_nested=show_nested,
                                 show_nested_args=show_nested_args,
                                 show_cim=show_cim,

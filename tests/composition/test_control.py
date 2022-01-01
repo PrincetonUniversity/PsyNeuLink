@@ -2679,6 +2679,30 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # -7 ((5*-1)+(-2*1))
         assert np.allclose(results, [[7]])
 
+    @pytest.mark.control
+    @pytest.mark.composition
+    def test_nested_composition_as_agent_rep(self):
+        I = pnl.ProcessingMechanism(name='I')
+        icomp = pnl.Composition(nodes=I, name='INNER COMP')
+
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        mcomp = pnl.Composition(pathways=[[A,B,C], icomp],
+                            name='MIDDLE COMP')
+        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
+        ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                           agent_rep=mcomp,  # Nested Composition as agent_rep
+                                           state_features=I.input_port,
+                                           objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                           allow_probes=True,
+                                           function=pnl.GridSearch(),
+                                           control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
+                                                                         allocation_samples=[10, 20, 30]))
+        ocomp.add_controller(ocm)
+        # FIX:  CRASHES IN composition._get_total_cost_of_control_allocation()
+        # ocomp.run()
+
 
 class TestSampleIterator:
 

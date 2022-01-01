@@ -470,6 +470,7 @@ class ShowGraph():
     @tc.typecheck
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
+                   show_all:bool=False,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
@@ -485,9 +486,11 @@ class ShowGraph():
                    active_items=None,
                    output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
                    context=None,
+                   *args,
                    **kwargs):
         """
         show_graph(                                  \
+           show_all=False,                           \
            show_node_structure=False,                \
            show_nested=NESTED,                       \
            show_nested_args=ALL,                     \
@@ -512,6 +515,10 @@ class ShowGraph():
 
         Arguments
         ---------
+
+        show_all : bool : default False
+            if False, defer to specification of all other arguments;  if True, override all show_XXX arguments,
+            automatically specifying them with their most informative settings.
 
         show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, PORT_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
@@ -666,6 +673,16 @@ class ShowGraph():
         composition.active_item_rendered = False
 
         # ASSIGN ATTRIBUTES PASSED TO NESTED COMPOSITIONS  -----------------------------------------------
+
+        if show_all:
+            show_node_structure=ALL
+            show_nested=NESTED
+            show_nested_args=ALL
+            show_cim=True
+            show_controller=True
+            show_learning=ALL
+            show_headers=True
+            show_projections_not_in_composition=True
 
         # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
@@ -1643,10 +1660,10 @@ class ShowGraph():
                 ctl_proj_rcvr = ctl_proj.receiver
                 # If receiver is a parameter_CIM
                 if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
-                    # PATCH 6/7/20 to deal with ControlProjections across more than one level of nesting:
+                    # Deal with ControlProjections across more than one level of nesting:
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
-                        """Find deepest enclosing composition within range of num_nesting_levels"""
+                        """Find deepest Composition within c that encloses r within range of num_nesting_levels of c"""
                         if (self.num_nesting_levels is not None and l > self.num_nesting_levels):
                             return c, l
                         elif r in c.nodes:
@@ -1674,26 +1691,17 @@ class ShowGraph():
                             rcvr_comp = enclosing_comp
                     else:
                         rcvr_comp = enclosing_comp
-                    # PATCH 6/6/20 END
 
-                    # PATCH 6/6/20:
                     # if show_cim and show_nested is NESTED:
                     if show_cim and project_to_node:
-                    # PATCH 6/6/20 END
                         # Use Composition's parameter_CIM port
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                    # PATCH 6/6/20:
-                    # elif show_nested is NESTED:
                     elif project_to_node:
-                    # PATCH 6/6/20 END
                         ctl_proj_rcvr = self._trace_receivers_for_terminal_receiver(ctl_proj_rcvr)
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
                     else:
                         # Use Composition if show_cim is False
-                        # PATCH 6/6/20:
-                        # ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
                         ctl_proj_rcvr_owner = rcvr_comp
-                        # PATCH 6/6/20 END
                 # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                 else:
                     ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
