@@ -5039,6 +5039,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           if x in cim_prt_tpl),
                                                          len(self.nodes)))
 
+
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
             # happening outside of this normal context? This is here as
@@ -5049,6 +5050,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # otherwise, CIM ports will not be initialized properly
             orig_eid = context.execution_id
             context.execution_id = None
+            context_string = context.string
 
             new_default_variable = [
                 deepcopy(input_port.defaults.value)
@@ -5065,6 +5067,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # no input ports in CIM, so assume Composition is blank
 
             context.execution_id = orig_eid
+            context.string = context_string
 
             # verify there is exactly one automatically instantiated input port for each automatically instantiated
             # output port
@@ -5134,7 +5137,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Check if Node is an INPUT or INTERNAL
                 if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                     comp._add_required_node_role(node, NodeRole.PROBE)
-                    self._analyze_graph()
+                    # Ignore warning since a Projection to the PROBE will not yet have been instantiated
+                    # self._analyze_graph(context=Context(string='IGNORE_NO_AFFERENTS_WARNING'))
+                    self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION,
+                                                        string='IGNORE_NO_AFFERENTS_WARNING'))
                     return
 
             # Failed to assign node as PROBE, so get ControlMechanisms that may be trying to monitor it
@@ -5821,7 +5827,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections.append(node)
                 continue
 
-            if context.source != ContextFlags.INITIALIZING:
+            if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition and not input_port.path_afferents:
                         warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
@@ -7798,6 +7804,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
+    # def _get_controller(comp, context=None):
+    #     """Get controller for which the current Composition is an agent_rep.
+    #     Recursively search enclosing Compositions for controller if self does not have one.
+    #     Use context.composition if there is no controller.
+    #     This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+    #     """
+    #     context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
+    #     if comp.controller:
+    #         return comp.controller
+    #     elif context.composition:
+    #         return context.composition._get_controller(context)
+    #     else:
+    #         assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
+
     def reshape_control_signal(self, arr):
 
         current_shape = np.shape(arr)
@@ -8014,9 +8034,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
+            # MODIFIED 12/31/21 OLD:
             def get_controller(comp):
                 """Get controller for which the current Composition is an agent_rep.
                 Recursively search enclosing Compositions for controller if self does not have one.
+                Use context.composition to find controller.
                 This is needed for agent_rep that is nested within the Composition to which the controller belongs.
                 """
                 if comp.controller:
@@ -8027,6 +8049,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
             controller = get_controller(self)
+            # # MODIFIED 12/31/21 NEW:
+            # controller = self._get_controller(context)
+            # MODIFIED 12/31/21 END
             base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
@@ -11172,6 +11197,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     def show_graph(self,
+                   show_all=False,
                    show_node_structure=False,
                    show_nested=NESTED,
                    show_nested_args=ALL,
@@ -11187,7 +11213,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_fmt='pdf',
                    context=None):
 
-        return self._show_graph(show_node_structure=show_node_structure,
+        return self._show_graph(show_all=show_all,
+                                show_node_structure=show_node_structure,
                                 show_nested=show_nested,
                                 show_nested_args=show_nested_args,
                                 show_cim=show_cim,
