@@ -680,14 +680,14 @@ class ShowGraph():
         # ASSIGN ATTRIBUTES PASSED TO NESTED COMPOSITIONS  -----------------------------------------------
 
         if show_all:
-           show_node_structure=ALL
-           show_nested=NESTED
-           show_nested_args=ALL
-           show_cim=True
-           show_controller=True
-           show_learning=ALL
-           show_headers=True
-           show_projections_not_in_composition=True
+            show_node_structure=ALL
+            show_nested=NESTED
+            show_nested_args=ALL
+            show_cim=True
+            show_controller=True
+            show_learning=ALL
+            show_headers=True
+            show_projections_not_in_composition=True
 
         # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
@@ -1499,8 +1499,7 @@ class ShowGraph():
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
-                        # Validate the Projection is from an OUTPUT node
-                        #  or a PROBE node if allow_probes is set for a controller or its objective_mechanism
+                        # Validate the Projection is from an OUTPUT or PROBE node
                         if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
                              not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE} if
                                      role in composition.nodes_to_roles[sndr_output_node_proj_owner]))):

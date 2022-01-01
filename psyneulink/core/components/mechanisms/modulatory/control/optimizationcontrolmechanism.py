@@ -577,7 +577,9 @@ If an OptimizationControlMechanism is not assigned an `objective_mechanism <Cont
 then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
 `monitor_for_control <ControlMechanism.monitor_for_control>` and `outcome_input_ports_option
 <ControlMechanism.outcome_input_ports_option>` attributes, specified in the corresponding arguments of its
-constructor (see `Outcomes arguments <OptimizationControlMechanism_Outcome_Args>`), and the `allow_probes
+constructor (see `Outcomes arguments <OptimizationControlMechanism_Outcome_Args>`).
+COMMENT:
+, and the `allow_probes
 <Composition.allow_probes>` attribute of the Composition for which the OptimizationControlMechanism is the
 `controller <Composition.controller>`. The latter allows the values of the items listed in `monitor_for_control
 <ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
@@ -585,9 +587,8 @@ constructor (see `Outcomes arguments <OptimizationControlMechanism_Outcome_Args>
 of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
 Composition).  This can be thought of as providing access to "latent variables" of the Composition being evaluated;
 that is, ones that do not contribute directly to the Composition's `results <Composition_Execution_Results>`. This
-applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism
-(see `allow_probes <ControlMechanism_Allow_Probes>` above for additional details).
-
+applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism.
+COMMENT
 The value(s) of the specified Components are assigned as the OptimizationControlMechanism's `outcome
 <ControlMechanism.outcome>` attribute, which is used to compute the `net_outcome <ControlMechanism.net_outcome>`
 of executing its `agent_rep <OptimizationControlMechanism.agent_rep>`.
