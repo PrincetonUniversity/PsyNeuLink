@@ -339,21 +339,31 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 
   .. _Composition_Probes:
 
-* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
-  outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
+* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition, but project to ones in an
+  outer Composition, are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
   nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
   is whether their output is included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` attributes of the outermost Composition to which they project; this is determined by the
+  <Composition.results>` attributes of the *outermost* Composition to which they project; this is determined by the
   `include_probes_in_output <Composition.include_probes_in_output>` attribute of the latter. If
   `include_probes_in_output <Composition.include_probes_in_output>` is False (the default), then the output of any
-  `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
-  the `output_values <Composition.output_values>` or `results <Composition.results>` for the Composition to which
-  they project. In this respect, they can be thought of as "probing" - that is, providing access to "latent variables"
-  of -- the Composition to which they belong -- the values of which that are not otherwise reported as part of the
-  Composition's output or results.  If `include_probes_in_output <Composition.include_probes_in_output>` is True,
-  then any `PROBE <NodeRole.PROBE>` Nodes of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>`
-  Nodes: their outputs are included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` of that Composition.
+  `PROBE <NodeRole.PROBE>` Nodes are *not* included in the `output_values <Composition.output_values>` or `results
+  <Composition.results>` for the outermost Composition to which they project (although they *are* still included
+  in those attributes of the nested Compositions; see note below). In this respect, they can be thought of as
+  "probing" - that is, providing access to "latent variables" of -- the nested Composition to which they belong --
+  the values of which that are not otherwise reported as part of the outermost Composition's output or results. If
+  `include_probes_in_output <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes
+  of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in
+  the `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition.
+  `PROBE <NodeRole.PROBE>` Nodes can be visualized, along with any Projections treated differently from those of
+  `OUTPUT <NodeRole.OUTPUT>` Nodes (i.e., when `include_probes_in_output <Composition.include_probes_in_output>` is
+  False), using the Composition's `show_graph <ShowGraph.show_graph>` method, which displays them in their own color
+  (pink by default).
+
+      .. hint::
+         `PROBE <NodeRole.PROBE>` Nodes are useful for `model-based optimization using an
+         <OptimizationControlMechanism_Model_Based>`, in which the value of one or more Nodes in a nested Composition
+         may need to be `monitored <OptimizationControlMechanism_Monitor_for_Control>` without being considered as
+        part of the output or results of the Composition being optimized.
 
       .. note::
          The specification of `include_probes_in_output <Composition.include_probes_in_output>` only applies to a
@@ -379,7 +389,7 @@ include the InputPorts of the nested Composition.  These can be accessed using t
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 both the `output_values <Composition.output_values>` and `results <Composition.results>` of the nested Composition
 are also included in those attributes of any intervening and the outermost Composition.  If `allow_probes
-<Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
+<Composition.allow_probes>` is set (which it is by default), then the Composition's `include_probes_in_output
 <Composition.include_probes_in_output>` attribute determines whether their values are also included in the
 `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition
 (see `above <Composition_Probes>`).
@@ -8581,7 +8591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_port(port)
+                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_CIM(port)
                             v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
@@ -10434,7 +10444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
                             for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
+                                _, mech, __ = node.input_CIM._get_destination_node_for_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
@@ -10523,7 +10533,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_results_by_nodes(); please use that in the future.")
 
         # Get all OUTPUT Nodes in (nested) Composition(s)
-        output_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
+        output_nodes = [self.output_CIM._get_source_node_for_output_CIM(port)[1]
                         for port in self.output_CIM.output_ports]
 
         # Get all values for all OUTPUT Nodes
