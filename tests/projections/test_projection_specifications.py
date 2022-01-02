@@ -52,14 +52,15 @@ class TestProjectionSpecificationFormats:
         # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
         assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
 
-    def test_multiple_modulatory_projection_specs(self):
+    @pytest.mark.parametrize("control_spec", [pnl.CONTROL, pnl.PROJECTIONS])
+    def test_multiple_modulatory_projection_specs(self, control_spec):
 
         M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [M.parameter_ports[
+        C = pnl.ControlMechanism(control_signals=[{control_spec: [M.parameter_ports[
                                                                          psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
                                                                      M.parameter_ports[
                                                                          psyneulink.core.globals.keywords.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_ports[pnl.DECISION_VARIABLE],
+        G = pnl.GatingMechanism(gating_signals=[{control_spec: [M.output_ports[pnl.DECISION_VARIABLE],
                                                                      M.output_ports[pnl.RESPONSE_TIME]]}])
         assert len(C.control_signals)==1
         assert len(C.control_signals[0].efferents)==2

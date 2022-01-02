@@ -64,7 +64,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
 ControlSignal can be used or a `port specification dictionary <Port_Specification>`, in which the parameter(s) to be
-controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
+controlled are specified in the **control** argument or *CONTROL* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
 of the following can be use to specify the parameter(s) to be controlled:
@@ -114,10 +114,10 @@ that are described below.
 ~~~~~~~~~~~~~
 
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
-the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
-with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ModulatorySignal.efferents>` attribute.  See
+the **control** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
+with the key *CONTROL*.  These are assigned to its `efferents <ModulatorySignal.efferents>` attribute.  See
 `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
-creating a Port.
+creating a Port, including `examples <Port_Modulatory_Projections_Examples>` of ControlProjection specification.
 
 .. note::
    Although a ControlSignal can be assigned more than one `ControlProjection`, all of those Projections will receive
@@ -347,7 +347,7 @@ function <ControlSignal_Costs>` can be modulated by another ControlSignal::
   >>> from psyneulink import *
   >>> mech = ProcessingMechanism(name='my_mech')
   >>> ctl_mech_A = ControlMechanism(monitor_for_control=mech,
-  ...                               control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+  ...                               control_signals=ControlSignal(control=(INTERCEPT,mech),
   ...                                                             cost_options=CostFunctions.INTENSITY))
   >>> ctl_mech_B = ControlMechanism(monitor_for_control=mech,
   ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
@@ -414,8 +414,8 @@ from psyneulink.core.components.ports.outputport import _output_port_variable_ge
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, CONTROL_PROJECTION, CONTROL_SIGNAL, \
-    INPUT_PORT, INPUT_PORTS, \
+    ALLOCATION_SAMPLES, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, \
+    INPUT_PORT, INPUT_PORTS, MODULATES, \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
     PARAMETER_PORT, PARAMETER_PORTS, \
     RECEIVER, FUNCTION
@@ -457,7 +457,7 @@ class ControlSignal(ModulatorySignal):
         duration_cost_function=IntegratorFunction,                 \
         combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
-        modulates=None,                                            \
+        control=None,                                              \
         projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
@@ -499,7 +499,7 @@ class ControlSignal(ModulatorySignal):
         specifies the values used by the ControlSignal's `owner <ModulatorySignal.owner>` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
-    modulates : list of Projection specifications
+    control : list of Projection specifications
         specifies the `ControlProjection(s) <ControlProjection>` to be assigned to the ControlSignal, and that will be
         listed in its `efferents <ModulatorySignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
@@ -767,11 +767,11 @@ class ControlSignal(ModulatorySignal):
                 pass
 
     portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
-                                                          COST_OPTIONS,
-                                                          INTENSITY_COST_FUNCTION,
-                                                          ADJUSTMENT_COST_FUNCTION,
-                                                          DURATION_COST_FUNCTION,
-                                                          COMBINE_COSTS_FUNCTION}
+                                                        COST_OPTIONS,
+                                                        INTENSITY_COST_FUNCTION,
+                                                        ADJUSTMENT_COST_FUNCTION,
+                                                        DURATION_COST_FUNCTION,
+                                                        COMBINE_COSTS_FUNCTION}
 
     connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
     connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
@@ -802,7 +802,7 @@ class ControlSignal(ModulatorySignal):
                  combine_costs_function:tc.optional(is_function_type)=None,
                  allocation_samples=None,
                  modulation:tc.optional(str)=None,
-                 modulates=None,
+                 control=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -810,13 +810,20 @@ class ControlSignal(ModulatorySignal):
 
         try:
             if kwargs[FUNCTION] is not None:
-                raise TypeError(
-                    f'{self.__class__.__name__} automatically creates a '
-                    'TransferWithCosts function, and does not accept override. '
-                    'TransferWithCosts uses the transfer_function parameter.'
-                )
+                raise TypeError(f'{self.__class__.__name__} automatically creates a '
+                                'TransferWithCosts function, and does not accept override. '
+                                'TransferWithCosts uses the transfer_function parameter.')
         except KeyError:
             pass
+
+        # Deal with **modulates** if specified
+        if MODULATES in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if control:
+                raise ControlSignalError(f"Both '{CONTROL}' and '{MODULATES}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.name}; "
+                                         f"'{MODULATES}' has been deprecated, use '{CONTROL}'.")
+            control = kwargs.pop(MODULATES)
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
@@ -836,7 +843,7 @@ class ControlSignal(ModulatorySignal):
             size=size,
             transfer_function=transfer_function,
             modulation=modulation,
-            modulates=modulates,
+            modulates=control,
             cost_options=cost_options,
             intensity_cost_function=intensity_cost_function,
             adjustment_cost_function=adjustment_cost_function,

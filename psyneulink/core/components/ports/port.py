@@ -584,20 +584,23 @@ ParameterPorts of a `DDM` Mechanism::
         print(control_signal.name)
         for control_projection in control_signal.efferents:
             print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
-    > MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL
+    > MY DDM DRIFT RATE AND THRESHOLD CONTROL SIGNAL
     >     MY DDM: (ParameterPort drift_rate)
     >     MY DDM: (ParameterPort threshold)
 
 Note that a ControlMechanism uses a **control_signals** argument in place of an **output_ports** argument (since it
-uses `ControlSignal <ControlSignals>` for its `OutputPorts <OutputPort>`.  In the example above,
-both ControlProjections are assigned to a single ControlSignal.  However, they could each be assigned to their own by
-specifying them in separate itesm of the **control_signals** argument::
+uses `ControlSignal <ControlSignals>` for its `OutputPorts <OutputPort>`.  Note also that, for specifying Projections
+of a ControlSignal (i.e., its ControlProjections), the keyword *CONTROL* can be used in place of the more generic
+*PROJECTIONS* keyword (as shown in the example below).
+
+In the example above, both ControlProjections are assigned to a single ControlSignal.  However, they could each be
+assigned to their own by specifying them in separate items of the **control_signals** argument::
 
     my_mech = pnl.DDM(name='MY DDM')
     my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'DRIFT RATE CONTROL SIGNAL',
-                                                         pnl.PROJECTIONS: [my_mech.parameter_ports[pnl.DRIFT_RATE]]},
+                                                         pnl.CONTROL: [my_mech.parameter_ports[pnl.DRIFT_RATE]]},
                                                         {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
-                                                         pnl.PROJECTIONS: [my_mech.parameter_ports[pnl.THRESHOLD]]}])
+                                                         pnl.CONTROL: [my_mech.parameter_ports[pnl.THRESHOLD]]}])
     # Print ControlSignals and their ControlProjections...
     > DRIFT RATE CONTROL SIGNAL
     >     MY DDM: (ParameterPort drift_rate)
@@ -1020,6 +1023,7 @@ class Port_Base(Port):
 
         This is used by subclasses to implement the InputPort(s), OutputPort(s), and ParameterPort(s) of a Mechanism.
 
+        COMMENT: [OLD]
         Arguments:
             - owner (Mechanism):
                  Mechanism with which Port is associated (default: NotImplemented)
@@ -1050,6 +1054,7 @@ class Port_Base(Port):
                 NOTES:
                     * these are used for dictionary specification of a Port in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
+        COMMENT
         """
         if kwargs:
             try:

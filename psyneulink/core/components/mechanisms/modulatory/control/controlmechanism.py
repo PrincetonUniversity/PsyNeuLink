@@ -1231,17 +1231,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
                         MECHANISM: output_ports[i][1]
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
-                elif (
-                    isinstance(output_ports[i], dict)
-                    and PROJECTIONS in output_ports[i]
-                    and is_2tuple(output_ports[i][PROJECTIONS])
-                ):
-                    full_spec_dict = {
-                        NAME: output_ports[i][PROJECTIONS][0],
-                        MECHANISM: output_ports[i][PROJECTIONS][1],
-                        **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                    }
-                    output_ports[i] = full_spec_dict
+                elif isinstance(output_ports[i], dict):
+                    # Handle CONTROL as synonym of PROJECTIONS
+                    if CONTROL in output_ports[i]:
+                        # CONTROL AND PROJECTIONS can't both be used
+                        if PROJECTIONS in output_ports[i]:
+                            raise ControlMechanismError(f"Both 'PROJECTIONS' and 'CONTROL' entries found in "
+                                                        f"specification dict for ControlSignal of '{self.name}': "
+                                                        f"({output_ports[i]}).")
+                        # Replace CONTROL with PROJECTIONS
+                        output_ports[i][PROJECTIONS] = output_ports[i].pop(CONTROL)
+                    if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
+                        full_spec_dict = {
+                            NAME: output_ports[i][PROJECTIONS][0],
+                            MECHANISM: output_ports[i][PROJECTIONS][1],
+                            **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
+                        }
+                        output_ports[i] = full_spec_dict
 
             return output_ports
 
