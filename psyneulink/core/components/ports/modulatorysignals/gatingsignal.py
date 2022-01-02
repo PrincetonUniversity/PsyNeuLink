@@ -297,6 +297,11 @@ class GatingSignal(ControlSignal):
     default_allocation : scalar, list or np.ndarray : defaultGatingAllocation
         specifies the template and default value used for `allocation <GatingSignal.allocation>`.
 
+    gate : list of Projection specifications
+        specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
+        listed in its `efferents <ModulatorySignal.efferents>` attribute (see `GatingSignal_Projections` for additional
+        details).
+
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its
         `owner <GatingMechanism.owner>`.
@@ -419,7 +424,7 @@ class GatingSignal(ControlSignal):
                  size=None,
                  transfer_function=None,
                  modulation:tc.optional(str)=None,
-                 modulates=None,
+                 gate=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -436,7 +441,7 @@ class GatingSignal(ControlSignal):
                          default_allocation=default_allocation,
                          size=size,
                          modulation=modulation,
-                         modulates=modulates,
+                         control=gate,
                          params=params,
                          name=name,
                          prefs=prefs,
