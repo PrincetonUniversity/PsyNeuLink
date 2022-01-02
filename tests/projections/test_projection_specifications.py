@@ -57,7 +57,7 @@ class TestProjectionSpecificationFormats:
         (pnl.CONTROL, None),
         (pnl.MODULATES, None),
         (pnl.PROJECTIONS, None),
-        ('mod and ctl', '"Both \'control\' and \'modulates\' arguments are specified in ' \
+        ('mod and ctl', '"Both \'control\' and \'modulates\' arguments are specified in '
                         'the constructor for \'ControlSignal; Should use just \'control\'."'),
         ('proj and ctl', 'Both \'control\' and \'projections\' arguments are specified in the constructor for '
                          '\'ControlSignal; Must use just one or the other.'),
@@ -85,6 +85,39 @@ class TestProjectionSpecificationFormats:
             ctl_sig = pnl.ControlSignal(**control_specs[args[0]])
             assert ctl_sig._init_args[pnl.PROJECTIONS][0][0] == pnl.SLOPE
             assert ctl_sig._init_args[pnl.PROJECTIONS][0][1] is M
+
+    @pytest.mark.parametrize('args', [
+        (pnl.GATE, None),
+        (pnl.MODULATES, None),
+        (pnl.PROJECTIONS, None),
+        ('mod and gate', '"Both \'gate\' and \'modulates\' arguments are specified in the constructor for '
+                         '\'GatingSignal; Should use just \'gate\'."'),
+        ('proj and gate', 'Both \'gate\' and \'projections\' arguments are specified in the constructor for '
+                          '\'GatingSignal; Must use just one or the other.'),
+        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'GatingSignal; Should use just \'projections\' (or \'gate\') "')
+    ])
+    def test_gating_signal_projections_arg(self, args):
+        M = pnl.ProcessingMechanism()
+        gating_specs = {pnl.GATE: {'gate':(pnl.SLOPE, M)},
+                        pnl.MODULATES: {pnl.MODULATES:(pnl.SLOPE, M)},
+                        pnl.PROJECTIONS: {pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                        'mod and gate': {'gate':(pnl.SLOPE, M),
+                                         pnl.MODULATES:(pnl.SLOPE, M)},
+                        'proj and gate': {'gate':(pnl.SLOPE, M),
+                                          pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                        'proj and mod': {pnl.MODULATES:(pnl.SLOPE, M),
+                                         pnl.PROJECTIONS:(pnl.SLOPE, M)}
+                        }
+        if args[0] in {'mod and gate', 'proj and gate', 'proj and mod'}:
+            from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignalError
+            with pytest.raises(GatingSignalError) as err:
+                pnl.GatingSignal(**gating_specs[args[0]])
+            assert args[1] in str(err.value)
+        else:
+            gating_sig = pnl.GatingSignal(**gating_specs[args[0]])
+            assert gating_sig._init_args[pnl.PROJECTIONS][0][0] == pnl.SLOPE
+            assert gating_sig._init_args[pnl.PROJECTIONS][0][1] is M
 
     @pytest.mark.parametrize("control_spec", [pnl.CONTROL, pnl.PROJECTIONS])
     def test_multiple_modulatory_projection_specs(self, control_spec):

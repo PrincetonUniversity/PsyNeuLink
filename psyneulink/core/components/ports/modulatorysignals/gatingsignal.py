@@ -251,7 +251,7 @@ from psyneulink.core.components.ports.outputport import _output_port_variable_ge
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, \
-    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, RECEIVER
+    MODULATES, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -434,6 +434,32 @@ class GatingSignal(ControlSignal):
         # IMPLEMENTATION NOTE:
         # Consider adding self to owner.output_ports here (and removing from GatingProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in GatingProjection._instantiate_sender),
+
+
+        # Deal with **modulates** if specified
+        if MODULATES in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if gate:
+                raise GatingSignalError(f"Both 'gate' and '{MODULATES}' arguments are specified in the "
+                                         f"constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just 'gate'.")
+            # warnings.warn(f"The '{MODULATES}' argument (specified in the constructor for "
+            #               f"'{name if name else self.__class__.__name__}') has been deprecated; "
+            #               f"should use '{'control'}' going forward.")
+
+            if PROJECTIONS in kwargs:
+                raise GatingSignalError(f"Both '{MODULATES}' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just '{PROJECTIONS}' (or 'gate') ")
+            gate = kwargs.pop(MODULATES)
+
+        elif PROJECTIONS in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if gate:
+                raise GatingSignalError(f"Both 'gate' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Must use just one or the other.")
+
 
         # Validate sender (as variable) and params
         super().__init__(owner=owner,
