@@ -338,6 +338,9 @@ class ShowGraph():
     input_color : keyword : default 'green',
         specifies the color in which `INPUT <NodeRole.INPUT>` Nodes of the Composition are displayed.
 
+    probe_color : keyword : default 'pink',
+        specifies the color in which `PROBE <NodeRole.PROBE>` Nodes of the Composition are displayed.
+
     output_color : keyword : default 'red',
         specifies the color in which `OUTPUT <NodeRole.OUTPUT>` Nodes of the Composition are displayed.
 
@@ -410,6 +413,7 @@ class ShowGraph():
                  default_node_color = 'black',
                  active_color=BOLD,
                  input_color='green',
+                 probe_color='pink',
                  output_color='red',
                  input_and_output_color='brown',
                  # feedback_color='yellow',
@@ -448,6 +452,7 @@ class ShowGraph():
         self.default_node_color = default_node_color
         self.active_color = active_color
         self.input_color = input_color
+        self.probe_color=probe_color
         self.output_color = output_color
         self.input_and_output_color = input_and_output_color
         # self.feedback_color = self.feedback_color
@@ -470,6 +475,7 @@ class ShowGraph():
     @tc.typecheck
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
+                   show_all:bool=False,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
@@ -485,9 +491,11 @@ class ShowGraph():
                    active_items=None,
                    output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
                    context=None,
+                   *args,
                    **kwargs):
         """
         show_graph(                                  \
+           show_all=False,                           \
            show_node_structure=False,                \
            show_nested=NESTED,                       \
            show_nested_args=ALL,                     \
@@ -512,6 +520,10 @@ class ShowGraph():
 
         Arguments
         ---------
+
+        show_all : bool : default False
+            if False, defer to specification of all other arguments;  if True, override all show_XXX arguments,
+            automatically specifying them with their most informative settings.
 
         show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, PORT_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
@@ -586,7 +598,8 @@ class ShowGraph():
 
         show_projections_not_in_composition : bool : default False
             specifies whether or not to show `Projections <Projection>` that are not active in the current
-            `Composition`;  these will display in red. This option is for use in debugging.
+            `Composition` (and, accordingly, are *not* listed in its `projections <Composition.projections>`
+            attribute);  these are shown in red.
 
         show_headers : bool : default True
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
@@ -665,6 +678,16 @@ class ShowGraph():
         composition.active_item_rendered = False
 
         # ASSIGN ATTRIBUTES PASSED TO NESTED COMPOSITIONS  -----------------------------------------------
+
+        if show_all:
+            show_node_structure=ALL
+            show_nested=NESTED
+            show_nested_args=ALL
+            show_cim=True
+            show_controller=True
+            show_learning=ALL
+            show_headers=True
+            show_projections_not_in_composition=True
 
         # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
@@ -912,6 +935,8 @@ class ShowGraph():
                     nested_comp_graph.attr(color=self.input_and_output_color)
                 elif rcvr in composition.get_nodes_by_role(NodeRole.INPUT):
                     nested_comp_graph.attr(color=self.input_color)
+                elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+                    nested_comp_graph.attr(color=self.probe_color)
                 elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
                     nested_comp_graph.attr(color=self.output_color)
                 nested_comp_graph.attr(label=rcvr_label)
@@ -990,6 +1015,20 @@ class ShowGraph():
                 rcvr_color = self.input_color
                 rcvr_penwidth = str(self.bold_width)
             rcvr_rank = self.input_rank
+
+        # PROBE Node
+        elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+            if rcvr in active_items:
+                if self.active_color == BOLD:
+                    rcvr_color = self.probe_color
+                else:
+                    rcvr_color = self.active_color
+                rcvr_penwidth = str(self.bold_width + self.active_thicker_by)
+                composition.active_item_rendered = True
+            else:
+                rcvr_color = self.probe_color
+                rcvr_penwidth = str(self.bold_width)
+            rcvr_rank = self.output_rank
 
         # OUTPUT Node
         elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
@@ -1453,6 +1492,11 @@ class ShowGraph():
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
+                        else:
+                            port, node, comp = cim._get_source_node_for_output_CIM(proj.receiver)
+                            if (node in comp.get_nodes_by_role(NodeRole.PROBE)
+                                    and not composition.include_probes_in_output):
+                                proj_color=self.probe_color
 
                         sndr_output_node_proj = proj.sender
                         if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
@@ -1460,8 +1504,7 @@ class ShowGraph():
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
-                        # Validate the Projection is from an OUTPUT node
-                        #  or a PROBE node if allow_probes is set for a controller or its objective_mechanism
+                        # Validate the Projection is from an OUTPUT or PROBE node
                         if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
                              not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE} if
                                      role in composition.nodes_to_roles[sndr_output_node_proj_owner]))):
@@ -1493,7 +1536,7 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
                             rcvr_output_cim_proj_label = cim_label
 
-                        # FIX 6/23/20 PROBLEM POINT:
+                        # FIX 6/23/20 PROBLEM POINT: (SEE MESSAGE FOR COMMIT eb61303808ad2a5ba46fdd18d0e583283397915c)
                         # Render Projection
                         _render_projection(g,
                                            proj,
@@ -1512,7 +1555,6 @@ class ShowGraph():
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-
                         rcvr_node_input_port = proj.receiver
 
                         # Skip if receiver is controller of enclosing_comp (handled by _assign_controller_components)
@@ -1597,16 +1639,25 @@ class ShowGraph():
                               f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
             return
 
+        # Assign colors, penwidth and label displayed for controller and ControlProjections ---------------------
+        ctlr_color = self.controller_color
         if controller in active_items:
-            if self.active_color == BOLD:
-                ctlr_color = self.controller_color
-            else:
+            if self.active_color != BOLD:
                 ctlr_color = self.active_color
             ctlr_width = str(self.default_width + self.active_thicker_by)
             composition.active_item_rendered = True
         else:
             ctlr_color = self.controller_color
             ctlr_width = str(self.default_width)
+
+        ctl_proj_color = self.controller_color
+        if controller in active_items:
+            if self.active_color != BOLD:
+                ctl_proj_color = self.active_color
+            ctl_proj_width = str(self.default_width + self.active_thicker_by)
+            composition.active_item_rendered = True
+        else:
+            ctl_proj_width = str(self.default_width)
 
         # Assign controller node
         node_shape = self.mechanism_shape
@@ -1642,10 +1693,10 @@ class ShowGraph():
                 ctl_proj_rcvr = ctl_proj.receiver
                 # If receiver is a parameter_CIM
                 if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
-                    # PATCH 6/7/20 to deal with ControlProjections across more than one level of nesting:
+                    # Deal with ControlProjections across more than one level of nesting:
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
-                        """Find deepest enclosing composition within range of num_nesting_levels"""
+                        """Find deepest Composition within c that encloses r within range of num_nesting_levels of c"""
                         if (self.num_nesting_levels is not None and l > self.num_nesting_levels):
                             return c, l
                         elif r in c.nodes:
@@ -1673,26 +1724,17 @@ class ShowGraph():
                             rcvr_comp = enclosing_comp
                     else:
                         rcvr_comp = enclosing_comp
-                    # PATCH 6/6/20 END
 
-                    # PATCH 6/6/20:
                     # if show_cim and show_nested is NESTED:
                     if show_cim and project_to_node:
-                    # PATCH 6/6/20 END
                         # Use Composition's parameter_CIM port
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                    # PATCH 6/6/20:
-                    # elif show_nested is NESTED:
                     elif project_to_node:
-                    # PATCH 6/6/20 END
                         ctl_proj_rcvr = self._trace_receivers_for_terminal_receiver(ctl_proj_rcvr)
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
                     else:
                         # Use Composition if show_cim is False
-                        # PATCH 6/6/20:
-                        # ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
                         ctl_proj_rcvr_owner = rcvr_comp
-                        # PATCH 6/6/20 END
                 # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                 else:
                     ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
@@ -1716,17 +1758,6 @@ class ShowGraph():
                     ctl_proj_sndr_label = ctlr_label
                     ctl_proj_rcvr_label = rcvr_label
 
-                # Assign colors, penwidth and label displayed for ControlProjection ---------------------
-                if controller in active_items:
-                    if self.active_color == BOLD:
-                        ctl_proj_color = self.controller_color
-                    else:
-                        ctl_proj_color = self.active_color
-                    ctl_proj_width = str(self.default_width + self.active_thicker_by)
-                    composition.active_item_rendered = True
-                else:
-                    ctl_proj_color = self.controller_color
-                    ctl_proj_width = str(self.default_width)
                 if show_projection_labels:
                     edge_label = ctl_proj.name
                 else:
@@ -1860,16 +1891,6 @@ class ShowGraph():
             # incoming edges (from monitored mechs directly to controller)
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
-                    if controller in active_items:
-                        if self.active_color == BOLD:
-                            proj_color = self.controller_color
-                        else:
-                            proj_color = self.active_color
-                        proj_width = str(self.default_width + self.active_thicker_by)
-                        composition.active_item_rendered = True
-                    else:
-                        proj_color = self.controller_color
-                        proj_width = str(self.default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,
@@ -1903,7 +1924,8 @@ class ShowGraph():
                     else:
                         edge_label = ''
                     g.edge(sndr_proj_label, ctlr_input_proj_label, label=edge_label,
-                           color=proj_color, penwidth=proj_width)
+                           # color=proj_color, penwidth=proj_width)
+                           color=ctl_proj_color, penwidth=ctl_proj_width)
 
         # If controller has an agent_rep, assign its node and edges (not Projections per se)
         if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :

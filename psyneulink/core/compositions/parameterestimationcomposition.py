@@ -118,8 +118,8 @@ Parameter Optimization
     * **objective_function** - specifies a function used to evaluate the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`, according to which combinations of
       `parameters <ParameterEstimationComposition.parameters>` are assessed.  The shape of the `variable
-      <Component.variable>` of the `objective_function (i.e., its first positional argument) must be the same as an
-      array containing the `value <OutputPort.value>` of the OutputPort corresponding to each item specified in
+      <Component.variable>` of the **objective_function** (i.e., its first positional argument) must be the same as
+      an array containing the `value <OutputPort.value>` of the OutputPort corresponding to each  item specified in
       `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
 
     * **optimization_function** - specifies the function used to search over values of the `parameters

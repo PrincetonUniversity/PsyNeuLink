@@ -1,7 +1,6 @@
 CompositionFunctionApproximator
 ===============================
 
-
 .. container:: subclasses
 
     *Subclasses*
@@ -11,8 +10,16 @@ CompositionFunctionApproximator
 
        RegressionCFA
 
-.. toctree::
-   :maxdepth: 2
+    |
+
+.. container:: related
+
+    *Related*
+
+    .. toctree::
+       :maxdepth: 1
+
+       OptimizationControlMechanism
 
 .. automodule:: psyneulink.core.compositions.compositionfunctionapproximator
    :members:

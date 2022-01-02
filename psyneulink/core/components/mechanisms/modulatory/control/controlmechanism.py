@@ -92,7 +92,7 @@ modulates must be specified in some other way.
 *Specifying OutputPorts to be monitored*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
+A ControlMechanism can be configured to monitor the output of other Mechanisms either directly (by receiving direct
 Projections from their OutputPorts), or by way of an `ObjectiveMechanism` that evaluates those outputs and passes the
 result to the ControlMechanism (see `below <ControlMechanism_ObjectiveMechanism>` for more detailed description).
 The following figures show an example of each:
@@ -1282,8 +1282,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  **kwargs
                  ):
 
-        monitor_for_control = convert_to_list(monitor_for_control) or []
         control = convert_to_list(control) or []
+        monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
 
         # For backward compatibility:
@@ -1356,9 +1356,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                        target_set=target_set,
                                                        context=context)
 
-        if OBJECTIVE_MECHANISM in target_set and \
-                target_set[OBJECTIVE_MECHANISM] is not None and\
-                target_set[OBJECTIVE_MECHANISM] is not False:
+        if (MONITOR_FOR_CONTROL in target_set
+                and target_set[MONITOR_FOR_CONTROL] is not None
+                and any(item for item in target_set[MONITOR_FOR_CONTROL]
+                        if (isinstance(item, ObjectiveMechanism) or item is ObjectiveMechanism))):
+            raise ControlMechanismError(f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
+                                        f" an {ObjectiveMechanism.componentType} ({target_set[MONITOR_FOR_CONTROL]}).  "
+                                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument.")
+
+        if (OBJECTIVE_MECHANISM in target_set and
+                target_set[OBJECTIVE_MECHANISM] is not None
+                and target_set[OBJECTIVE_MECHANISM] is not False):
 
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
 
@@ -1385,11 +1393,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     validate_monitored_port_spec(self, obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
-                raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
-                                            "or a list of Mechanisms and/or OutputPorts to be monitored for control".
-                                            format(OBJECTIVE_MECHANISM,
-                                                   self.name, target_set[OBJECTIVE_MECHANISM],
-                                                   ObjectiveMechanism.componentName))
+                raise ControlMechanismError(f"Specification of {OBJECTIVE_MECHANISM} arg for '{self.name}' "
+                                            f"({target_set[OBJECTIVE_MECHANISM].name}) must be an "
+                                            f"{ObjectiveMechanism.componentType} or a list of Mechanisms and/or "
+                                            f"OutputPorts to be monitored for control.")
 
         if CONTROL in target_set and target_set[CONTROL]:
             control = target_set[CONTROL]
@@ -1654,7 +1661,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
         return outcome_input_port_specs, port_value_sizes, monitored_ports
 
     def _validate_monitor_for_control(self, nodes):
-        # Ensure all of the Components being monitored for control are in the Composition being controlled
+        """Ensure all of the Components being monitored for control are in the Composition being controlled
+        If monitor_for_control is specified as an ObjectiveMechanism, warn and move to objective_mecahnism arg
+        """
         from psyneulink.core.components.ports.port import Port
         invalid_outcome_specs = [item for item in self.monitor_for_control
                                  if ((isinstance(item, Mechanism)

@@ -339,21 +339,31 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 
   .. _Composition_Probes:
 
-* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition but project to ones in an
-  outer Composition are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
+* *Probes* -- Nodes that are not `OUTPUT <NodeRole.OUTPUT>` of a nested Composition, but project to ones in an
+  outer Composition, are assigned `PROBE <NodeRole.PROBE>` in addition to their other `roles <NodeRole>` in the
   nested Composition.  The only difference between `PROBE <NodeRole.PROBE>` and `OUTPUT <NodeRole.OUTPUT>` Nodes
   is whether their output is included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` attributes of the outermost Composition to which they project; this is determined by the
+  <Composition.results>` attributes of the *outermost* Composition to which they project; this is determined by the
   `include_probes_in_output <Composition.include_probes_in_output>` attribute of the latter. If
   `include_probes_in_output <Composition.include_probes_in_output>` is False (the default), then the output of any
-  `PROBE <NodeRole.PROBE>` Nodes in any Composition nested within it are *not* included in
-  the `output_values <Composition.output_values>` or `results <Composition.results>` for the Composition to which
-  they project. In this respect, they can be thought of as "probing" - that is, providing access to "latent variables"
-  of -- the Composition to which they belong -- the values of which that are not otherwise reported as part of the
-  Composition's output or results.  If `include_probes_in_output <Composition.include_probes_in_output>` is True,
-  then any `PROBE <NodeRole.PROBE>` Nodes of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>`
-  Nodes: their outputs are included in the `output_values <Composition.output_values>` and `results
-  <Composition.results>` of that Composition.
+  `PROBE <NodeRole.PROBE>` Nodes are *not* included in the `output_values <Composition.output_values>` or `results
+  <Composition.results>` for the outermost Composition to which they project (although they *are* still included
+  in those attributes of the nested Compositions; see note below). In this respect, they can be thought of as
+  "probing" - that is, providing access to "latent variables" of -- the nested Composition to which they belong --
+  the values of which that are not otherwise reported as part of the outermost Composition's output or results. If
+  `include_probes_in_output <Composition.include_probes_in_output>` is True, then any `PROBE <NodeRole.PROBE>` Nodes
+  of any nested Compositions are treated the same as `OUTPUT <NodeRole.OUTPUT>` Nodes: their outputs are included in
+  the `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition.
+  `PROBE <NodeRole.PROBE>` Nodes can be visualized, along with any Projections treated differently from those of
+  `OUTPUT <NodeRole.OUTPUT>` Nodes (i.e., when `include_probes_in_output <Composition.include_probes_in_output>` is
+  False), using the Composition's `show_graph <ShowGraph.show_graph>` method, which displays them in their own color
+  (pink by default).
+
+      .. hint::
+         `PROBE <NodeRole.PROBE>` Nodes are useful for `model-based optimization using an
+         <OptimizationControlMechanism_Model_Based>`, in which the value of one or more Nodes in a nested Composition
+         may need to be `monitored <OptimizationControlMechanism_Monitor_for_Control>` without being considered as
+        part of the output or results of the Composition being optimized.
 
       .. note::
          The specification of `include_probes_in_output <Composition.include_probes_in_output>` only applies to a
@@ -379,7 +389,7 @@ include the InputPorts of the nested Composition.  These can be accessed using t
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 both the `output_values <Composition.output_values>` and `results <Composition.results>` of the nested Composition
 are also included in those attributes of any intervening and the outermost Composition.  If `allow_probes
-<Composition.allow_probes>` is set, then the Composition's `include_probes_in_output
+<Composition.allow_probes>` is set (which it is by default), then the Composition's `include_probes_in_output
 <Composition.include_probes_in_output>` attribute determines whether their values are also included in the
 `output_values <Composition.output_values>` and `results <Composition.results>` of the outermost Composition
 (see `above <Composition_Probes>`).
@@ -458,7 +468,7 @@ First, they too can carry out (restricted) computations, such as matrix transfor
 Second, they can be the receiver of a Projection, as in the case of a MappingProjection that receives a
 `LearningProjection` used to modify its `matrix <MappingProjection.matrix>` parameter.  Nevertheless, since they
 define the connections and therefore dependencies among the Composition's Nodes, they determine the structure of its
-graph.  Subsets of Nodes connected by Projections are often defined as a `Pathway <Pathway>` as decribed under
+graph.  Subsets of Nodes connected by Projections can be defined as a `Pathway <Pathway>` as decribed under
 `Composition_Pathways` below).
 
 .. _Composition_Graph_Projection_Vertices:
@@ -469,12 +479,27 @@ graph.  Subsets of Nodes connected by Projections are often defined as a `Pathwa
 
 Although individual Projections are directed, pairs of Nodes can be connected with Projections in each direction
 (forming a local `cycle <Composition_Cycle>`), and the `AutoAssociativeProjection` class of Projection can even
-connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within it
-<Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
+connect a Node with itself.  Projections can also connect the Node(s) of a Composition to one(s) `nested within
+it <Composition_Nested>`.  In general, these are to the `INPUT <NodeRole.INPUT>` Nodes and from the `OUTPUT
 <NodeRole.OUTPUT>` Nodes of a `nested Composition <Composition_Nested>`, but if the Composition's `allow_probes
 <Composition.allow_probes>` attribute is not False, then Projections can be received from any Nodes within a nested
 Composition (see `Probes <Composition_Probes>` for additional details). A  ControlMechanism can also control (i.e.,
 send a `ControlProjection`) to any Node within a nested Composition.
+
+Projections can be specified between `Mechanisms <Mechanism>` before they are added to a Composition.  If both
+Mechanisms are later added to the same Composition, and the Projection between them is legal for the Composition,
+then the Projection between them is added to it and is used during its `execution <Composition_Execution>`.
+However, if the Projection is not legal for the Composition (e.g., the Mechanisms are not assigned as `INTERNAL
+<NodeRole.INTERNAL>` `Nodes <Composition_Nodes>` of two different `nested Compositions <Composition_Nested>`),
+the Projection will still be associated with the two Mechanisms (i.e., listed in their `afferents
+<Mechanism_Base.afferents>` and `efferents <Mechanism_Base.efferents>` attributes, respectively), but it is not
+added to the Composition and not used during its execution.
+
+    .. hint::
+        Projections that are associated with the `Nodes <Composition_Nodes>` of a Composition but are not in the
+        Composition itself (and, accordingly, *not* listed it is `projections <Composition.projections>` attribute)
+        can still be visualized using the Composition's `show_graph <ShowGraph.show_graph>` method, by specifying its
+        **show_projections_not_in_composition** argument as True; Projections not in the Composition appear in red.
 
 .. technical_note::
 
@@ -3651,10 +3676,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Controller
         self.controller = None
         self._controller_initialization_status = ContextFlags.INITIALIZED
+        self.enable_controller = enable_controller
         if controller:
             self.add_controller(controller)
-        else:
-            self.enable_controller = enable_controller
         self.controller_mode = controller_mode
         self.controller_time_scale = controller_time_scale
         self.controller_condition = controller_condition
@@ -3774,6 +3798,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
+        # FIX: 12/29/21: MOVE TO _update_shadow_projections
         # Call again to accomodate any changes from _update_shadow_projections
         self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
@@ -4323,6 +4348,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         receiver=proj_spec[0].receiver,
                                         feedback=proj_spec[1])
                 del node.aux_components[node.aux_components.index(proj_spec)]
+
+            # MODIFIED 12/29/21 NEW:
+            # # Finally, check for any deferred_init Projections
+            invalid_aux_components.extend([p for p in node.projections
+                                           if p._initialization_status & ContextFlags.DEFERRED_INIT])
+            # MODIFIED 12/29/21 END
 
         return invalid_aux_components
 
@@ -5018,6 +5049,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                           if x in cim_prt_tpl),
                                                          len(self.nodes)))
 
+
             # KDM 4/3/20: should reevluate this some time - is it
             # acceptable to consider _update_default_variable as
             # happening outside of this normal context? This is here as
@@ -5028,6 +5060,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # otherwise, CIM ports will not be initialized properly
             orig_eid = context.execution_id
             context.execution_id = None
+            context_string = context.string
 
             new_default_variable = [
                 deepcopy(input_port.defaults.value)
@@ -5044,6 +5077,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # no input ports in CIM, so assume Composition is blank
 
             context.execution_id = orig_eid
+            context.string = context_string
 
             # verify there is exactly one automatically instantiated input port for each automatically instantiated
             # output port
@@ -5113,7 +5147,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Check if Node is an INPUT or INTERNAL
                 if any(role for role in comp.nodes_to_roles[node] if role in {NodeRole.INPUT, NodeRole.INTERNAL}):
                     comp._add_required_node_role(node, NodeRole.PROBE)
-                    self._analyze_graph()
+                    # Ignore warning since a Projection to the PROBE will not yet have been instantiated
+                    # self._analyze_graph(context=Context(string='IGNORE_NO_AFFERENTS_WARNING'))
+                    self._analyze_graph(context=Context(source=ContextFlags.COMPOSITION,
+                                                        string='IGNORE_NO_AFFERENTS_WARNING'))
                     return
 
             # Failed to assign node as PROBE, so get ControlMechanisms that may be trying to monitor it
@@ -5800,7 +5837,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 projections.append(node)
                 continue
 
-            if context.source != ContextFlags.INITIALIZING:
+            if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
                     if input_port.require_projection_in_composition and not input_port.path_afferents:
                         warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
@@ -5824,10 +5861,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if isinstance(node, Composition):
                 node._check_for_unused_projections(context)
             if isinstance(node, Mechanism):
-                unused_projections.extend([(f"{proj.name} (to '{node.name}' from '{proj.sender.owner.name}')")
-                                           for proj in node.afferents if proj not in self.projections])
-                unused_projections.extend([(f"{proj.name} (from '{node.name}' to '{proj.receiver.owner.name}')")
-                                           for proj in node.efferents if proj not in self.projections])
+                for proj in [p for p in node.projections if p not in self.projections]:
+                    proj_deferred = proj._initialization_status & ContextFlags.DEFERRED_INIT
+                    proj_name = proj._name if proj_deferred else proj.name
+                    if proj in node.afferents:
+                        first_item = '' if proj_deferred else f" (to '{node.name}'"
+                        second_item = '' if proj_deferred else f" from '{proj.sender.owner.name}')."
+                    if proj in node.efferents:
+                        first_item = '' if proj_deferred else f" (from '{node.name}'"
+                        second_item = '' if proj_deferred else f" to '{proj.receiver.owner.name}')."
+                    unused_projections.append(f"{proj_name}{first_item}{second_item}")
         if unused_projections:
             warning = f"\nThe following Projections were specified but are not being used by Nodes in '{self.name}':"
             warnings.warn(warning + "\n\t" + "\n\t".join(unused_projections))
@@ -7599,17 +7642,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return
 
             # Warn for request to assign ControlMechanism that is already the controller of another Composition
-            if hasattr(controller, COMPOSITION) and controller.composition is not self:
-                warnings.warn(f"{controller} has already been assigned as the {CONTROLLER} "
-                              f"for another {COMPOSITION} ({controller.composition.name}); assignment ignored.")
+            if hasattr(controller, 'composition') and controller.composition is not self:
+                warnings.warn(f"'{controller.name}' has already been assigned as the {CONTROLLER} "
+                              f"for '{controller.composition.name}'; assignment to '{self.name}' ignored.")
                 return
 
             # Remove existing controller if there is one
             if self.controller:
                 # Warn if current one is being replaced
-                if self.prefs.verbosePref:
-                    warnings.warn(f"The existing {CONTROLLER} for {self.name} ({self.controller.name}) "
-                                  f"is being replaced by {controller.name}.")
+                warnings.warn(f"The existing {CONTROLLER} for '{self.name}' ('{self.controller.name}') "
+                              f"is being replaced by '{controller.name}'.")
                 # Remove Projections for old one
                 for proj in self.projections.copy():
                     if (proj in self.controller.afferents or proj in self.controller.efferents):
@@ -7620,6 +7662,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Assign mutual references between Composition and controller
         controller.composition = self
         self.controller = controller
+
+        # # MODIFIED 12/30/21 NEW:  FIX: THIS IS NOT CORRECT, BECAUSE WITH REGARD TO EXECUTION SEQUENCING,
+        # #                                                    CONTROLLER IS NOT THE CONTROLLER OF THE AGENT_REP,
+        # #                                                    IT JUST EXECUTES IT.
+        # # Deal with agent_rep of controller that is in a nested Composition
+        # if (hasattr(self.controller, AGENT_REP)
+        #         and self.controller.agent_rep != self
+        #         and self.controller.agent_rep in self._get_nested_compositions()):
+        #     self.controller.agent_rep.controller = self.controller
+        # MODIFIED 12/30/21 END
+
         # Having controller in nodes is not currently supported (due to special handling of scheduling/execution);
         #    its NodeRole assignment is handled directly by the get_nodes_by_role and get_roles_by_node methods.
         # self._add_node_role(controller, NodeRole.CONTROLLER)
@@ -7648,15 +7701,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #    needs to be set here to insure call at run time (to catch any new nodes that may have been added)
             self.needs_update_controller = True
 
-        # Confirm that controller has input, and if not then disable it
-        if not (isinstance(self.controller.input_ports, ContentAddressableList)
-                and self.controller.input_ports):
-            # If controller was enabled, warn that it has been disabled
-            if self.enable_controller:
-                warnings.warn(f"{self.controller.name} for {self.name} has no input_ports, "
-                              f"so controller will be disabled.")
-            self.enable_controller = False
-            return
+        # Warn if controller is enabled but has no inputs
+        if (self.enable_controller
+                and not (isinstance(self.controller.input_ports, ContentAddressableList)
+                         and self.controller.input_ports
+                         and self.controller.afferents)):
+            warnings.warn(f"{self.controller.name} for {self.name} is enabled but has no inputs.")
 
         # ADD MODULATORY COMPONENTS -----------------------------------------------------
 
@@ -7763,6 +7813,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(node, Mechanism):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
+
+    # def _get_controller(comp, context=None):
+    #     """Get controller for which the current Composition is an agent_rep.
+    #     Recursively search enclosing Compositions for controller if self does not have one.
+    #     Use context.composition if there is no controller.
+    #     This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+    #     """
+    #     context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
+    #     if comp.controller:
+    #         return comp.controller
+    #     elif context.composition:
+    #         return context.composition._get_controller(context)
+    #     else:
+    #         assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
 
     def reshape_control_signal(self, arr):
 
@@ -7880,18 +7944,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         owner = component.receiver.owner
                     warnings.warn(
-                            f"The controller of {self.name} has been specified to project to {owner.name}, "
-                            f"but {owner.name} is not in {self.name} or any of its nested Compositions. "
-                            f"This projection will be deactivated until {owner.name} is added to {self.name} "
+                            f"The controller of '{self.name}' has been specified to project to '{owner.name}', "
+                            f"but '{owner.name}' is not in '{self.name}' or any of its nested Compositions. "
+                            f"This projection will be deactivated until '{owner.name}' is added to' {self.name}' "
                             f"in a compatible way."
                     )
+                # FIX: It seems this may never get called, as any specification of a Mechanism in the constructor
+                #      for a ControlMechanism automatically instantiates a Projection that triggers the warning above.
                 elif isinstance(component, Mechanism):
                     warnings.warn(
-                            f"The controller of {self.name} has a specification that includes the Mechanism "
-                            f"{component.name}, but {component.name} is not in {self.name} or any of its "
-                            f"nested Compositions. This Mechanism will be deactivated until {component.name} is "
-                            f"added to {self.name} or one of its nested Compositions in a compatible way."
+                            f"The controller of '{self.name}' has a specification that includes the Mechanism "
+                            f"'{component.name}', but '{component.name}' is not in '{self.name}' or any of its "
+                            f"nested Compositions. This Mechanism will be deactivated until '{component.name}' is "
+                            f"added to '{self.name}' or one of its nested Compositions in a compatible way."
                     )
+                    assert False, "WARNING MESSAGE"
 
         # If Composition is not preparing to execute, allow deferred_inits to persist without warning
         if context and ContextFlags.PREPARING not in context.execution_phase:
@@ -7902,10 +7969,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for projection in node.projections:
                 if projection.initialization_status == ContextFlags.DEFERRED_INIT:
                     if isinstance(projection, ControlProjection):
-                        warnings.warn(f"The {projection.receiver.name} parameter of {projection.receiver.owner.name} \n"
-                                      f"is specified for control, but {self.name} does not have a controller. Please \n"
-                                      f"add a controller to {self.name} or the control specification will be \n"
-                                      f"ignored.")
+                        warnings.warn(f"The '{projection.receiver.name}' parameter of "
+                                      f"'{projection.receiver.owner.name}' is specified for control, "
+                                      f"but the {COMPOSITION} it is in ('{self.name}') does not have a controller; "
+                                      f"if a controller is not added to {self.name} "
+                                      f"the control specification will be ignored.")
 
     def _check_nodes_initialization_status(self, context=None):
 
@@ -7976,28 +8044,43 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
 
-            base_control_allocation = self.reshape_control_signal(self.controller.parameters.value._get(context))
+            def get_controller(comp):
+                """Get controller for which the current Composition is an agent_rep.
+                Recursively search enclosing Compositions for controller if self does not have one.
+                Use context.composition to find controller.
+                This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+                """
+                if comp.controller:
+                    return comp.controller
+                elif context.composition:
+                    return get_controller(context.composition)
+                else:
+                    assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
+            controller = get_controller(self)
+
+            base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
 
             # Get reconfiguration cost for candidate control signal
             reconfiguration_cost = 0.
-            if callable(self.controller.compute_reconfiguration_cost):
-                reconfiguration_cost = self.controller.compute_reconfiguration_cost([candidate_control_allocation,
+            if callable(controller.compute_reconfiguration_cost):
+                reconfiguration_cost = controller.compute_reconfiguration_cost([candidate_control_allocation,
                                                                                      base_control_allocation])
-                self.controller.reconfiguration_cost.set(reconfiguration_cost, context)
+                controller.reconfiguration_cost.set(reconfiguration_cost, context)
 
             # Apply candidate control signal
-            self.controller._apply_control_allocation(candidate_control_allocation,
+            controller._apply_control_allocation(candidate_control_allocation,
                                                                 context=context,
                                                                 runtime_params=runtime_params,
                                                                 )
 
             # Get control signal costs
-            other_costs = self.controller.parameters.costs._get(context) or []
+            other_costs = controller.parameters.costs._get(context) or []
             all_costs = convert_to_np_array(other_costs + [reconfiguration_cost])
             # Compute a total for the candidate control signal(s)
-            total_cost = self.controller.combine_costs(all_costs)
+            total_cost = controller.combine_costs(all_costs)
+
         return total_cost
 
     # endregion CONTROL
@@ -8508,7 +8591,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_port(port)
+                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_CIM(port)
                             v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
@@ -10361,7 +10444,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
                             for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_node_for_input_port(port)
+                                _, mech, __ = node.input_CIM._get_destination_node_for_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
@@ -10450,7 +10533,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_results_by_nodes(); please use that in the future.")
 
         # Get all OUTPUT Nodes in (nested) Composition(s)
-        output_nodes = [self.output_CIM._get_source_node_for_output_port(port)[1]
+        output_nodes = [self.output_CIM._get_source_node_for_output_CIM(port)[1]
                         for port in self.output_CIM.output_ports]
 
         # Get all values for all OUTPUT Nodes
@@ -11121,6 +11204,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # ******************************************************************************************************************
 
     def show_graph(self,
+                   show_all=False,
                    show_node_structure=False,
                    show_nested=NESTED,
                    show_nested_args=ALL,
@@ -11136,7 +11220,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                    output_fmt='pdf',
                    context=None):
 
-        return self._show_graph(show_node_structure=show_node_structure,
+        return self._show_graph(show_all=show_all,
+                                show_node_structure=show_node_structure,
                                 show_nested=show_nested,
                                 show_nested_args=show_nested_args,
                                 show_cim=show_cim,
