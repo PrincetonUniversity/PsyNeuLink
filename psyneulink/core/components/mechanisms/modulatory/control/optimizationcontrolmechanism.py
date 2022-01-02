@@ -295,6 +295,21 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     input to the specified InputPort;  that is, the value of which is used as the corresponding value of the
     OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
 
+    .. note::
+       Only the `INPUT <NodeRole.INPUT>` `Nodes <Component_Nodes>` of a `nested Composition <Composition_Nested>`
+       can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
+       nested Compositions, only its `INPUT <NodeRole.INPUT>` Nodes can be specified for shadowing in the
+       **state_features** argument of the OptimizationControlMechanism's constructor.
+
+    .. hint::
+       Shadowing the input to a Node of a `nested Composition <Composition_Nested>` that is not an `INTERNAL
+       <NodeRole.INTERNAL>` Node of that Composition can be accomplished one or of two ways, by: a) assigning it
+       `INPUT <NodeRole.INPUT>` as a `required NodeRole <Composition_Node_Role_Assignment>` where it is added to
+       the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
+       (this is allowed *within* the *same* Composition), and is assigned as an `OUTPUT <NodeRole.OUTPUT>` Node of
+       that Composition, the `OutputPort` of which which can then be specified in the **state_features** argument of
+       the OptimizationControlMechanism's constructor (see below).
+
     .. technical_note::
       The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
 
@@ -307,7 +322,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, and the Mechanism's `primary InputPort
     <InputPort_Primary>` is used (since in this case the state_feature must correspond to an input to the Composition).
     If the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, then the
-    Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since is the typically usage for specifying an
+    Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since is the typical usage for specifying an
     InputPort);  if the input to the Mechanism is to be shadowed, then its InputPort must be specified explicitly.
 
   COMMENT:
@@ -562,20 +577,25 @@ If an OptimizationControlMechanism is not assigned an `objective_mechanism <Cont
 then its `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` are determined by its
 `monitor_for_control <ControlMechanism.monitor_for_control>` and `outcome_input_ports_option
 <ControlMechanism.outcome_input_ports_option>` attributes, specified in the corresponding arguments of its
-constructor (see `Outcomes arguments <OptimizationControlMechanism_Outcome_Args>`), and the `allow_probes
-<Composition.allow_probes>` attribute of the Composition for which the OptimizationControlMechanism is the
-`controller <Composition.controller>`. The latter allows the values of the items listed in `monitor_for_control
-<ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
-<Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be monitored and included in the computation
-of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
-Composition).  This can be thought of as providing access to "latent variables" of the Composition being evaluated;
-that is, ones that do not contribute directly to the Composition's `results <Composition_Execution_Results>`. This
-applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism
-(see `allow_probes <ControlMechanism_Allow_Probes>` above for additional details).
+constructor (see `Outcomes arguments <OptimizationControlMechanism_Outcome_Args>`). The value(s) of the specified
+Components are assigned as the OptimizationControlMechanism's `outcome <ControlMechanism.outcome>` attribute,
+which is used to compute the `net_outcome <ControlMechanism.net_outcome>` of executing its `agent_rep
+<OptimizationControlMechanism.agent_rep>`.
 
-The value(s) of the specified Components are assigned as the OptimizationControlMechanism's `outcome
-<ControlMechanism.outcome>` attribute, which is used to compute the `net_outcome <ControlMechanism.net_outcome>`
-of executing its `agent_rep <OptimizationControlMechanism.agent_rep>`.
+COMMENT:
+    FIX: 1/1/22
+    .. note::
+        , and the `allow_probes
+        <Composition.allow_probes>` attribute of the Composition for which the OptimizationControlMechanism is the
+        `controller <Composition.controller>`. The latter allows the values of the items listed in `monitor_for_control
+        <ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
+        <Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be monitored and included in the computation
+        of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
+        Composition).  This can be thought of as providing access to "latent variables" of the Composition being evaluated;
+        that is, ones that do not contribute directly to the Composition's `results <Composition_Execution_Results>`. This
+        applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism.
+COMMENT
+
 
 .. _OptimizationControlMechanism_Function:
 
@@ -897,7 +917,6 @@ class OptimizationControlMechanism(ControlMechanism):
         state_features=None,                            \
         state_feature_functions=None,                   \
         monitor_for_control=None,                       \
-        allow_probes=False,                             \
         objective_mechanism=None,                       \
         function=GridSearch,                            \
         num_estimates=1,                                \
@@ -1022,8 +1041,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
     agent_rep_type : None, COMPOSITION or COMPOSITION_FUNCTION_APPROXIMATOR
         identifies whether the agent_rep is a `Composition`, a `CompositionFunctionApproximator` or
-        one of its subclasses, or it has not been assigned (None); see `Agent Representation and Types
-        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details.
+        one of its subclasses, or it has not been assigned (None) (see `Agent Representation and Types
+        of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details).
+
+    state_features : List[Mechanism, InputPort, or OutputPort, Projection, or dict]
+        lists the specifications provided to the **state_features** argument of the OptimizationControlMechanism's
+        constructor, that are used to generate the inputs to `state_input_ports
+        <OptimizationControlMechanism.state_input_ports>` (see `OptimizationControlMechanism_State_Features` for
+        additional details).
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's
@@ -1046,6 +1071,12 @@ class OptimizationControlMechanism(ControlMechanism):
         to compute the `net_outcome <ControlMechanism.net_outcome>` of executing the `agent_rep
         <OptimizationControlMechanism.agent_rep>` in a given `OptimizationControlMechanism_State`
         (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
+
+    COMMENT:
+    state : ndarray
+        lists the values of the current state -- a concatenation of the state_feature_values and control_allocation
+        following the last execution of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+    COMMENT
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to
@@ -1528,48 +1559,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"Projections from the following Components that do not "
                                                         f"belong to its {AGENT_REP} ({self.agent_rep.name}): {e.data}.")
 
-    # FIX: 12/9/21 -- DEPRECATE DIRECT PROJECTIONS FROM PROBES, ELIMINATING THE NEED FOR THIS OVERRIDE
-    # def _parse_monitor_for_control_input_ports(self, context):
-    #     """Override ControlMechanism to implement allow_probes=DIRECT option
-    #
-    #     If is False (default), simply pass results of super()._parse_monitor_for_control_input_ports(context);
-    #         this is restricted to the use of OUTPUT Nodes in nested Compositions, and routes Projections from nodes in
-    #         nested Compositions through their respective output_CIMs.
-    #
-    #     If allow_probes option is True, any INTERNAL Nodes of nested Compositions specified in monitor_for_control
-    #        are assigned NodeRole.OUTPUT, and Projections from them to the OptimizationControlMechanism are routed
-    #        from the nested Composition(s) through the respective output_CIM(s).
-    #
-    #     If allow_probes option is DIRECT, Projection specifications are added to Port specification dictionaries,
-    #        so that the call to super()._instantiate_input_ports in ControlMechanism instantiates Projections from
-    #         monitored node to OptimizationControlMechanism. This allows *direct* Projections from monitored nodes in
-    #         nested Compositions to the OptimizationControlMechanism, bypassing output_CIMs and preventing inclusion
-    #         of their values in the results attribute of those Compositions.
-    #
-    #     Return port specification dictionaries (*with* Projection specifications), their value sizes and null list
-    #     (to suppress Projection assignment to aux_components in ControlMechanism._instantiate_input_ports)
-    #     """
-    #
-    #     outcome_input_port_specs, outcome_value_sizes, monitored_ports \
-    #         = super()._parse_monitor_for_control_input_ports(context)
-    #
-    #     if self.allow_probes == DIRECT:
-    #         # Add Projection specifications to port specification dictionaries for outcome_input_ports
-    #         #    and return monitored_ports = []
-    #
-    #         if self.outcome_input_ports_option == SEPARATE:
-    #             # Add port spec to to each outcome_input_port_spec (so that a Projection is specified directly to each)
-    #             for i in range(self.num_outcome_input_ports):
-    #                 outcome_input_port_specs[i].update({PROJECTIONS: monitored_ports[i]})
-    #         else:
-    #             # Add all ports specs as list to single outcome_input_port
-    #             outcome_input_port_specs[0].update({PROJECTIONS: monitored_ports})
-    #
-    #         # Return [] for ports to suppress creation of Projections in _instantiate_input_ports
-    #         monitored_ports = []
-    #
-    #     return outcome_input_port_specs, outcome_value_sizes, monitored_ports
-
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
 
@@ -1636,7 +1625,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (not (input_port.shadow_inputs.owner in
+                                      if (input_port.shadow_inputs
+                                          and not (input_port.shadow_inputs.owner in
                                                 list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
                                           and (not [input_port.shadow_inputs.owner.composition is x for x in
                                                       comp._get_nested_compositions()
@@ -1651,9 +1641,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Ensure that all  InputPorts shadowed by specified state_input_ports
             #    reference INPUT Nodes of agent_rep or of a nested Composition
             invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (not (input_port.shadow_inputs.owner in _get_all_input_nodes(self.agent_rep))
+                                      if (input_port.shadow_inputs
+                                          and not (input_port.shadow_inputs.owner
+                                                   in _get_all_input_nodes(self.agent_rep))
                                           and (isinstance(input_port.shadow_inputs.owner,
-                                                         CompositionInterfaceMechanism)
+                                                          CompositionInterfaceMechanism)
                                                and not (input_port.shadow_inputs.owner.composition in
                                                         [nested_comp for nested_comp in comp._get_nested_compositions()
                                                          if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])))]
@@ -2330,6 +2322,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.store(builder.load(val_ptr), dest_ptr)
         return oport_input
 
+    # Deprecated - this is now a Parameter
     # @property
     # def state_feature_values(self):
     #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
@@ -2399,6 +2392,10 @@ class OptimizationControlMechanism(ControlMechanism):
             return len(self.state_input_ports)
         except:
             return 0
+
+    @property
+    def state(self):
+        return self.state_feature_values + self.control_allocation
 
     @property
     def _model_spec_parameter_blacklist(self):

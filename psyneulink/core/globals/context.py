@@ -498,7 +498,7 @@ class Context():
         if self.string is None:
             self.string = string
         else:
-            self.string = '{0} {1} {2}'.format(self.string, SEPARATOR_BAR, string)
+            self.string = f'{self.string} {SEPARATOR_BAR} {string}'
 
     def _change_flags(self, *flags, operation=lambda attr, blank_flag, *flags: NotImplemented):
         # split by flag type to avoid extra costly binary operations on enum flags

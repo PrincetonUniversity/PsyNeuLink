@@ -336,17 +336,18 @@ should project to the InputPort. Each of these is described below:
 
       .. note::
          Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
-         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing, unless the
-         `allow_probes <Composition.allow_probes>` attribute of the `Composition` is set to True.  Note also that any
-         Node that shadows an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it
+         `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing.  Note also that
+         any Node that shadows an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition to which it
          belongs is itself also assigned the role of `INPUT <NodeRole.INPUT>` Node.
 
       .. hint::
          If an InputPort needs to be shadowed that belongs to a Mechanism in a `nested <Composition_Nested>` that is
-         not an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, this can be accomplished as
-         follows: 1) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
-         shadowed; 2) specify `OUTPUT <NodeRole.INPUT>` as a `required_role <Composition.add_node.required_roles>`
-         for that Mechanism;  3) use that Mechanism as the `InputPort specification <InputPort_Specification>`
+         not an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, this can be accomplished in
+         one of two ways:  1) by assigning it `INPUT <NodeRole.INPUT>` as a `required NodeRole
+         <Composition_Node_Role_Assignment>` where it is added to the nested Composition; and/or 2) by doing the
+         following: a) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
+         shadowed; b) specify `OUTPUT <NodeRole.INPUT>` as a `required_role <Composition.add_node.required_roles>`
+         for that Mechanism;  c) use that Mechanism as the `InputPort specification <InputPort_Specification>`
          for the shadowing InputPort.
 
 .. _InputPort_Compatability_and_Constraints:
