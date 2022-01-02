@@ -1233,7 +1233,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif (
                     isinstance(output_ports[i], dict)
-                    and PROJECTIONS in output_ports[i]
+                    and any(kw in output_ports[i] for kw in {PROJECTIONS, CONTROL})
                     and is_2tuple(output_ports[i][PROJECTIONS])
                 ):
                     full_spec_dict = {
