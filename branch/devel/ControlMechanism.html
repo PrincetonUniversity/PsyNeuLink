@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.11.g05fcc78 documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.10.g9e88ae4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.11.g05fcc78
+                  0+untagged.10.g9e88ae4
                 </div>
               
             
@@ -282,7 +282,7 @@ those arguments is specified, then only the ControlMechanism is constructed, and
 modulates must be specified in some other way.</p>
 <section id="specifying-outputports-to-be-monitored">
 <span id="controlmechanism-monitor-for-control"></span><h3><em>Specifying OutputPorts to be monitored</em><a class="headerlink" href="#specifying-outputports-to-be-monitored" title="Permalink to this headline">¶</a></h3>
-<p>A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
+<p>A ControlMechanism can be configured to monitor the output of other Mechanisms either directly (by receiving direct
 Projections from their OutputPorts), or by way of an <a class="reference internal" href="ObjectiveMechanism.html"><span class="doc">ObjectiveMechanism</span></a> that evaluates those outputs and passes the
 result to the ControlMechanism (see <a class="reference internal" href="#controlmechanism-objectivemechanism"><span class="std std-ref">below</span></a> for more detailed description).
 The following figures show an example of each:</p>
@@ -987,6 +987,13 @@ and a corresponding MappingProjection from the sender to that InputPort;</p></li
 </dl>
 <p>Return port specification dictionaries (<em>without</em> Projections to them specified), their value sizes,
 and monitored ports (to be used as Projection specifications by _instantiate_input_ports)</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._validate_monitor_for_control">
+<span class="sig-name descname"><span class="pre">_validate_monitor_for_control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism._validate_monitor_for_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure all of the Components being monitored for control are in the Composition being controlled
+If monitor_for_control is specified as an ObjectiveMechanism, warn and move to objective_mecahnism arg</p>
 </dd></dl>
 
 <dl class="py method">
