@@ -584,14 +584,14 @@ which is used to compute the `net_outcome <ControlMechanism.net_outcome>` of exe
 
     .. note::
        If a `Node <Composition_Nodes>` other than an `OUTPUT <NodeRole.OUTPUT>` of a `nested <Composition_Nested>`
-       is specified to be monitored (either in the **monitor_for_control** argument of the
-       OptimizationControlMechanism's  constructor, or the **monitor** argument for an `ObjectiveMechanism`),
-       it is assigned as `PROBE <NodeRole.PROBE>` of that nested Composition. Although `PROBE <NodeRole.PROBE>`
-       Nodes are generally treated like `OUTPUT <NodeRole.OUTPUT>` Nodes (since they project out of the Composition
-       to which they belong), their `value <Mechanism_Base.value>` is not included in the `output_values
-       <Composition.output_values>` or `results <Composition.results>` attributes of the Composition for which the
-       OptimizationControlMechanism is the `controller <Composition.controller>`, unless its `include_probes_in_output
-       <Composition.include_probes_in_output>` attribute is True (see `Composition_Probes` for additional information).
+       Composition is `specified to be monitored <ControlMechanism_Monitor_for_Control>`, it is assigned as a `PROBE
+       <NodeRole.PROBE>` of that nested Composition. Although `PROBE <NodeRole.PROBE>` Nodes are generally treated
+       like `OUTPUT <NodeRole.OUTPUT>` Nodes (since they project out of the Composition to which they belong), their
+       `value <Mechanism_Base.value>` is not included in the `output_values <Composition.output_values>` or `results
+       <Composition.results>` attributes of the Composition for which the OptimizationControlMechanism is the
+       `controller <Composition.controller>`, unless that Composition's `include_probes_in_output
+       <Composition.include_probes_in_output>` attribute is set to True (see `Composition_Probes` for additional
+       information).
 
 .. _OptimizationControlMechanism_Function:
 
