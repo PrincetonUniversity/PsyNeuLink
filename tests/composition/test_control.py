@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.utilities import _SeededPhilox
@@ -108,7 +108,7 @@ class TestControlSpecification:
                            "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
         with pytest.warns(UserWarning, match=expected_warning):
             comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
-                                                                                    PROJECTIONS:('drift_rate', ddm)}))
+                                                                                    CONTROL:('drift_rate', ddm)}))
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
@@ -182,9 +182,9 @@ class TestControlSpecification:
                                  Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                  (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
                 function=pnl.GridSearch(),
-                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                control_signals=[{CONTROL: ("drift_rate", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {PROJECTIONS: ("threshold", Decision),
+                                 {CONTROL: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         )
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
@@ -821,9 +821,9 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[
-                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                    {CONTROL: (pnl.SLOPE, m1),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                    {CONTROL: (pnl.SLOPE, m2),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -845,9 +845,9 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[
-                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                    {CONTROL: (pnl.SLOPE, m1),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                    {CONTROL: (pnl.SLOPE, m2),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -1651,9 +1651,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                                  Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                                                  (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
                                                 function=pnl.GridSearch(),
-                                                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                                control_signals=[{CONTROL: ("drift_rate", Decision),
                                                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                                                 {PROJECTIONS: ("threshold", Decision),
+                                                                 {CONTROL: ("threshold", Decision),
                                                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
                                        )
 
@@ -1940,11 +1940,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 function=pnl.GridSearch(),
                 control_signals=[
                     {
-                        PROJECTIONS: (pnl.DRIFT_RATE, Decision),
+                        CONTROL: (pnl.DRIFT_RATE, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                     {
-                        PROJECTIONS: (pnl.THRESHOLD, Decision),
+                        CONTROL: (pnl.THRESHOLD, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     }
                 ],
@@ -2078,11 +2078,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 function=pnl.GridSearch(),
                 control_signals=[
                     {
-                        PROJECTIONS: (pnl.DRIFT_RATE, Decision),
+                        CONTROL: (pnl.DRIFT_RATE, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                     {
-                        PROJECTIONS: (pnl.THRESHOLD, Decision),
+                        CONTROL: (pnl.THRESHOLD, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     }
                 ],
