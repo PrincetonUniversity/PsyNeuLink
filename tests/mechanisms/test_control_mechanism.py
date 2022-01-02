@@ -257,11 +257,12 @@ class TestLCControlMechanism:
                 name='C3',
                 default_variable=[10],
                 default_allocation=[4],
-                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, m1)),  # tests for assignment to default_allocation
+                # Test various allowed synonyms for control:
+                control_signals=[pnl.ControlSignal(control=(pnl.SLOPE, m1)),  # tests for assignment to default_allocation
                                  pnl.ControlSignal(default_allocation=5,  # tests for override of default_allocation
                                                    modulates=(pnl.SLOPE, m2)),
                                  pnl.ControlSignal(default_allocation=[6],  # as above same but with array
-                                                   modulates=(pnl.SLOPE, m3))])
+                                                   projections=(pnl.SLOPE, m3))])
         comp = pnl.Composition()
         comp.add_nodes([m1,m2,m3])
         comp.add_controller(c2)

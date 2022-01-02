@@ -265,7 +265,7 @@ class TestControlSpecification:
                                 pathways=[initial_node_a, initial_node_b],
                                 controller_mode=pnl.BEFORE)
 
-        member_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, initial_node_a)],
+        member_node_control_signal = pnl.ControlSignal(control=[(pnl.SLOPE, initial_node_a)],
                                                        variable=1.0,
                                                        intensity_cost_function=pnl.Linear(slope=0.0),
                                                        allocation_samples=pnl.SampleSpec(start=1.0,
