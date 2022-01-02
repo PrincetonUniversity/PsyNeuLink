@@ -582,20 +582,15 @@ Components are assigned as the OptimizationControlMechanism's `outcome <ControlM
 which is used to compute the `net_outcome <ControlMechanism.net_outcome>` of executing its `agent_rep
 <OptimizationControlMechanism.agent_rep>`.
 
-COMMENT:
-    FIX: 1/1/22
     .. note::
-        , and the `allow_probes
-        <Composition.allow_probes>` attribute of the Composition for which the OptimizationControlMechanism is the
-        `controller <Composition.controller>`. The latter allows the values of the items listed in `monitor_for_control
-        <ControlMechanism.monitor_for_control>` to be `INPUT <NodeRole.INTERNAL>` or `INTERNAL <NodeRole.INTERNAL>` `Nodes
-        <Composition_Nodes>` of a `nested Composition <Composition_Nested>` to be monitored and included in the computation
-        of `outcome <ControlMechanism.outcome>` (ordinarily, those must be `OUTPUT <NodeRole.OUTPUT>` Nodes of a nested
-        Composition).  This can be thought of as providing access to "latent variables" of the Composition being evaluated;
-        that is, ones that do not contribute directly to the Composition's `results <Composition_Execution_Results>`. This
-        applies both to items that are monitored directly by the OptimizationControlMechanism or via its ObjectiveMechanism.
-COMMENT
-
+       If a `Node <Composition_Nodes>` other than an `OUTPUT <NodeRole.OUTPUT>` of a `nested <Composition_Nested>`
+       is specified to be monitored, it is assigned as `PROBE <NodeRole.PROBE>` of that nested Composition. Although
+       `PROBE <NodeRole.PROBE>` Nodes are generally treated like `OUTPUT <NodeRole.OUTPUT>` Nodes (since they project
+       out of the Composition to which they belong), their `value <Mechanism_Base.value>` is not included in the
+       `output_values <Composition.output_values>` or `results <Composition.results>` attributes of the Composition
+       for which the OptimizationControlMechanism is the `controller <Composition.controller>`, unless its
+       `include_probes_in_output <Composition.include_probes_in_output>` attribute is True (see `Composition_Probes`
+       for additional information).
 
 .. _OptimizationControlMechanism_Function:
 
@@ -2321,14 +2316,6 @@ class OptimizationControlMechanism(ControlMechanism):
         val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
         builder.store(builder.load(val_ptr), dest_ptr)
         return oport_input
-
-    # Deprecated - this is now a Parameter
-    # @property
-    # def state_feature_values(self):
-    #     if hasattr(self.agent_rep, 'model_based_optimizer') and self.agent_rep.model_based_optimizer is self:
-    #         return self.agent_rep._get_predicted_input()
-    #     else:
-    #         return np.array(np.array(self.variable[1:]).tolist())
 
     @property
     def agent_rep_type(self):
