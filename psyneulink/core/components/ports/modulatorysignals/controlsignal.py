@@ -398,17 +398,19 @@ Class Reference
 
 """
 
+import warnings
+
 import numpy as np
 import typecheck as tc
-import warnings
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
+    TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
@@ -417,7 +419,7 @@ from psyneulink.core.globals.keywords import \
     ALLOCATION_SAMPLES, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, \
     INPUT_PORT, INPUT_PORTS, MODULATES, \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
-    PARAMETER_PORT, PARAMETER_PORTS, \
+    PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, \
     RECEIVER, FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -820,10 +822,25 @@ class ControlSignal(ModulatorySignal):
         if MODULATES in kwargs:
             # Don't allow **control** and **modulates** to both be specified
             if control:
-                raise ControlSignalError(f"Both '{CONTROL}' and '{MODULATES}' arguments are specified "
-                                         f"in the constructor for '{name if name else self.name}; "
-                                         f"'{MODULATES}' has been deprecated, use '{CONTROL}'.")
+                raise ControlSignalError(f"Both 'control' and '{MODULATES}' arguments are specified in the "
+                                         f"constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just 'control'.")
+            # warnings.warn(f"The '{MODULATES}' argument (specified in the constructor for "
+            #               f"'{name if name else self.__class__.__name__}') has been deprecated; "
+            #               f"should use '{'control'}' going forward.")
+
+            if PROJECTIONS in kwargs:
+                raise ControlSignalError(f"Both '{MODULATES}' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just '{PROJECTIONS}' (or 'control') ")
             control = kwargs.pop(MODULATES)
+
+        elif PROJECTIONS in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if control:
+                raise ControlSignalError(f"Both 'control' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Must use just one or the other.")
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params

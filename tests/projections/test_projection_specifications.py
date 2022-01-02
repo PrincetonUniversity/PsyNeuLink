@@ -1,10 +1,11 @@
-import psyneulink as pnl
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.distributionfunctions
-import psyneulink.core.components.functions.stateful.integratorfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
+
 
 class TestProjectionSpecificationFormats:
 
@@ -52,32 +53,38 @@ class TestProjectionSpecificationFormats:
         # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
         assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
 
-    @pytest.mark.parametrize('arg', [pnl.MODULATES,
-                                      pnl.CONTROL,
-                                      pnl.PROJECTIONS,
-                                      'mod and ctl',
-                                      'proj and ctrl',
-                                      'proj and mod',
-                                      ])
-    def test_control_signal_projections_arg(self, arg):
+    @pytest.mark.parametrize('args', [
+        (pnl.CONTROL, None),
+        (pnl.MODULATES, None),
+        (pnl.PROJECTIONS, None),
+        ('mod and ctl', '"Both \'control\' and \'modulates\' arguments are specified in ' \
+                        'the constructor for \'ControlSignal; Should use just \'control\'."'),
+        ('proj and ctl', 'Both \'control\' and \'projections\' arguments are specified in the constructor for '
+                         '\'ControlSignal; Must use just one or the other.'),
+        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'ControlSignal; Should use just \'projections\' (or \'control\') "')
+    ])
+    def test_control_signal_projections_arg(self, args):
         M = pnl.ProcessingMechanism()
-        control_specs = {pnl.MODULATES: {pnl.MODULATES:(pnl.SLOPE, M)},
-                         pnl.CONTROL: {pnl.CONTROL:(pnl.SLOPE, M)},
+        control_specs = {pnl.CONTROL: {'control':(pnl.SLOPE, M)},
+                         pnl.MODULATES: {pnl.MODULATES:(pnl.SLOPE, M)},
                          pnl.PROJECTIONS: {pnl.PROJECTIONS:(pnl.SLOPE, M)},
-                         'mod and ctl': {pnl.CONTROL:(pnl.SLOPE, M),
+                         'mod and ctl': {'control':(pnl.SLOPE, M),
                                          pnl.MODULATES:(pnl.SLOPE, M)},
-                         'proj and ctrl': {pnl.CONTROL:(pnl.SLOPE, M),
-                                           pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                         'proj and ctl': {'control':(pnl.SLOPE, M),
+                                          pnl.PROJECTIONS:(pnl.SLOPE, M)},
                          'proj and mod': {pnl.MODULATES:(pnl.SLOPE, M),
-                                           pnl.PROJECTIONS:(pnl.SLOPE, M)}
+                                          pnl.PROJECTIONS:(pnl.SLOPE, M)}
                          }
-        ctl_sig = pnl.ControlSignal(**control_specs[arg])
-        if arg == pnl.CONTROL:
-            ctl_spec = ctl_sig._init_args[pnl.CONTROL]
+        if args[0] in {'mod and ctl', 'proj and ctl', 'proj and mod'}:
+            from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignalError
+            with pytest.raises(ControlSignalError) as err:
+                pnl.ControlSignal(**control_specs[args[0]])
+            assert args[1] in str(err.value)
         else:
-            ctl_spec = ctl_sig._init_args[pnl.PROJECTIONS][0]
-        assert ctl_spec[0] == pnl.SLOPE
-        assert ctl_spec[1] is M
+            ctl_sig = pnl.ControlSignal(**control_specs[args[0]])
+            assert ctl_sig._init_args[pnl.PROJECTIONS][0][0] == pnl.SLOPE
+            assert ctl_sig._init_args[pnl.PROJECTIONS][0][1] is M
 
     @pytest.mark.parametrize("control_spec", [pnl.CONTROL, pnl.PROJECTIONS])
     def test_multiple_modulatory_projection_specs(self, control_spec):
