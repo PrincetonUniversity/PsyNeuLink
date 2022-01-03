@@ -185,10 +185,11 @@ import typecheck as tc
 
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignal
+from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    GATE, GATING, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PROJECTION_TYPE
+    CONTROL, CONTROL_SIGNALS, GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -217,7 +218,7 @@ def _is_gating_spec(spec):
                                                       GatingMechanism,
                                                       ControlMechanism)):
         return True
-    elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
+    elif isinstance(spec, str) and spec in {GATE, GATING_PROJECTION, GATING_SIGNAL}:
         return True
     else:
         return False
@@ -427,7 +428,7 @@ class GatingMechanism(ControlMechanism):
             read_only=True,
             structural=True,
             parse_spec=True,
-            aliases=['control', 'control_signals', 'gate', 'gating_signal'],
+            aliases=[CONTROL, CONTROL_SIGNALS, 'gate', 'gating_signal'],
             constructor_argument='gate'
         )
 
@@ -525,6 +526,16 @@ class GatingMechanism(ControlMechanism):
                           base_class=Port_Base,
                           registry=self._portRegistry,
                           )
+
+    def _validate_control_arg(self, gate):
+        """Overrided to handle GatingMechanism-specific specifications"""
+        assert isinstance(gate, list), \
+            f"PROGRAM ERROR: 'gate' arg ({gate}) of {self.name} should have been converted to a list."
+        for spec in gate:
+            spec = _parse_port_spec(port_type=GatingSignal, owner=self, port_spec=spec)
+            if not (isinstance(spec, GatingSignal)
+                    or (isinstance(spec, dict) and spec[PORT_TYPE] == GatingSignal)):
+                raise GatingMechanismError(f"Invalid specification for '{GATE}' argument of {self.name}: ({spec})")
 
     def _instantiate_control_signal_type(self, gating_signal_spec, context):
         """Instantiate actual ControlSignal, or subclass if overridden"""

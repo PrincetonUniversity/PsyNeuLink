@@ -822,9 +822,9 @@ class ControlSignal(ModulatorySignal):
         if MODULATES in kwargs:
             # Don't allow **control** and **modulates** to both be specified
             if control:
-                raise ControlSignalError(f"Both 'control' and '{MODULATES}' arguments are specified in the "
+                raise ControlSignalError(f"Both '{CONTROL}' and '{MODULATES}' arguments are specified in the "
                                          f"constructor for '{name if name else self.__class__.__name__}; "
-                                         f"Should use just 'control'.")
+                                         f"Should use just '{CONTROL}'.")
             # warnings.warn(f"The '{MODULATES}' argument (specified in the constructor for "
             #               f"'{name if name else self.__class__.__name__}') has been deprecated; "
             #               f"should use '{'control'}' going forward.")
@@ -832,13 +832,13 @@ class ControlSignal(ModulatorySignal):
             if PROJECTIONS in kwargs:
                 raise ControlSignalError(f"Both '{MODULATES}' and '{PROJECTIONS}' arguments are specified "
                                          f"in the constructor for '{name if name else self.__class__.__name__}; "
-                                         f"Should use just '{PROJECTIONS}' (or 'control') ")
+                                         f"Should use just '{PROJECTIONS}' (or '{CONTROL}') ")
             control = kwargs.pop(MODULATES)
 
         elif PROJECTIONS in kwargs:
             # Don't allow **control** and **modulates** to both be specified
             if control:
-                raise ControlSignalError(f"Both 'control' and '{PROJECTIONS}' arguments are specified "
+                raise ControlSignalError(f"Both '{CONTROL}' and '{PROJECTIONS}' arguments are specified "
                                          f"in the constructor for '{name if name else self.__class__.__name__}; "
                                          f"Must use just one or the other.")
 

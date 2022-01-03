@@ -355,7 +355,7 @@ class TestProjectionSpecificationFormats:
                 'ControlProjection for R-CONTROL[gain]'
 
     gating_spec_list = [
-        pnl.GATING,
+        pnl.GATE,
         pnl.CONTROL,
         pnl.GATING_SIGNAL,
         pnl.CONTROL_SIGNAL,
@@ -371,7 +371,7 @@ class TestProjectionSpecificationFormats:
         pnl.ControlMechanism,
         pnl.GatingMechanism(),
         pnl.ControlMechanism(),
-        (0.3, pnl.GATING),
+        (0.3, pnl.GATE),
         (0.3, pnl.CONTROL),
         (0.3, pnl.GATING_SIGNAL),
         (0.3, pnl.CONTROL_SIGNAL),
@@ -411,12 +411,14 @@ class TestProjectionSpecificationFormats:
             IN_NAME = G_IN[1]
         else:
             IN_NAME = G_IN
-        IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        # IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        IN_CONTROL = 'CONTROL' in repr(IN_NAME).split(".")[-1].upper()
         if isinstance(G_OUT, tuple):
             OUT_NAME = G_OUT[1]
         else:
             OUT_NAME = G_OUT
-        OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        # OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        OUT_CONTROL = 'CONTROL' in repr(OUT_NAME).split(".")[-1].upper()
 
         T = pnl.TransferMechanism(
             name='T-GATING',
