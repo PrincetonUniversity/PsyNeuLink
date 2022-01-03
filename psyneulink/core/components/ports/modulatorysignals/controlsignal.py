@@ -1041,16 +1041,19 @@ class ControlSignal(ModulatorySignal):
         port_spec = port_specific_spec
 
         if isinstance(port_specific_spec, dict):
+            # MODIFIED 1/2/22 NEW:
             # Note: if CONTROL is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
             if CONTROL in port_specific_spec and PROJECTIONS in port_specific_spec:
                 raise ControlSignalError(f"Both 'PROJECTIONS' and 'CONTROL' entries found in specification dict "
                                          f"for '{port_dict['port_type'].__name__}' of '{owner.name}'. "
                                          f"Must use only one or the other.")
+            # MODIFIED 1/2/22 END
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
 
             port_spec = None
+            # MODIFIED 1/2/22 NEW:
             # Resolve CONTROL as synonym for PROJECTIONS:
             if CONTROL in params_dict:
                 # CONTROL AND PROJECTIONS can't both be used
@@ -1060,6 +1063,7 @@ class ControlSignal(ModulatorySignal):
                                              f"Must use only one or the other.")
                 # Move CONTROL to PROJECTIONS
                 params_dict[PROJECTIONS] = params_dict.pop(CONTROL)
+            # MODIFIED 1/2/22 END
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,
                                                                connections=port_specific_spec)

@@ -1210,7 +1210,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             constructor_argument='control'
         )
 
-        # MODIFIED 1/2/22 OLD: - COMMENTING OUT ONLY CAUSES PROBLEMS WITH
+        # MODIFIED 1/2/22 OLD: - MUCH OF THIS SEEMS TO BE COVERED ELSEWHERE; COMMENTING OUT ONLY CAUSES PROBLEMS WITH
+        #                        test_control_signal_and_control_projection_names AND
         #                        test_json_results_equivalence (stroop_conflict_monitoring_py)
         def _parse_output_ports(self, output_ports):
             def is_2tuple(o):
@@ -1236,6 +1237,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 elif isinstance(output_ports[i], dict):
                     # Handle CONTROL as synonym of PROJECTIONS
                     if CONTROL in output_ports[i]:
+                        # MODIFIED 1/3/22 NEW:
+                        # CONTROL AND PROJECTIONS can't both be used
+                        if PROJECTIONS in output_ports[i]:
+                            raise ControlMechanismError(f"Both 'CONTROL' and 'PROJECTIONS' entries found in "
+                                                        f"specification dict for {ControlSignal.__name__} of "
+                                                        f"'{self.name}': ({output_ports[i]}).")
+                        # MODIFIED 1/3/22 END
                         # Replace CONTROL with PROJECTIONS
                         output_ports[i][PROJECTIONS] = output_ports[i].pop(CONTROL)
                     if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):

@@ -462,8 +462,8 @@ class GatingMechanism(ControlMechanism):
                         # GATE AND PROJECTIONS can't both be used
                         if PROJECTIONS in output_ports[i]:
                             raise GatingMechanismError(f"Both 'PROJECTIONS' and 'GATE' entries found in "
-                                                        f"specification dict for GatingSignal of '{self.name}': "
-                                                        f"({output_ports[i]}).")
+                                                        f"specification dict for {GatingSignal.__name__} of "
+                                                       f"'{self.name}': ({output_ports[i]}).")
                         # Replace GATE with PROJECTIONS
                         output_ports[i][PROJECTIONS] = output_ports[i].pop(GATE)
                     if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):

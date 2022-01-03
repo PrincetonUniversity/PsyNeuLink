@@ -489,6 +489,7 @@ class GatingSignal(ControlSignal):
         params_dict = {}
         port_spec = port_specific_spec
 
+        # MODIFIED 1/2/22 NEW:
         if isinstance(port_specific_spec, dict):
             # Note: if GATE is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
             if GATE in port_specific_spec and PROJECTIONS in port_specific_spec:
@@ -496,6 +497,7 @@ class GatingSignal(ControlSignal):
                                          f"for '{port_dict['port_type'].__name__}' of '{owner.name}'. "
                                          f"Must use only one or the other.")
             return None, port_specific_spec
+        # MODIFIED 1/2/22 END
 
         elif isinstance(port_specific_spec, tuple):
             port_spec = None
