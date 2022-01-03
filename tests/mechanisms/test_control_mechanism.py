@@ -257,7 +257,7 @@ class TestLCControlMechanism:
                 name='C3',
                 default_variable=[10],
                 default_allocation=[4],
-                # Test various allowed synonyms for control:
+                # Test synonyms allowed for **control**: generic **modulates**, and even more generic **projections**):
                 control_signals=[pnl.ControlSignal(control=(pnl.SLOPE, m1)),  # tests for assignment to default_allocation
                                  pnl.ControlSignal(default_allocation=5,  # tests for override of default_allocation
                                                    modulates=(pnl.SLOPE, m2)),
