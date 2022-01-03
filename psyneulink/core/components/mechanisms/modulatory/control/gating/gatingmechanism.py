@@ -188,7 +188,7 @@ from psyneulink.core.components.ports.modulatorysignals.gatingsignal import Gati
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_SIGNALS, GATE, GATING, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
+    CONTROL, CONTROL_SIGNALS, GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
     INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -218,7 +218,7 @@ def _is_gating_spec(spec):
                                                       GatingMechanism,
                                                       ControlMechanism)):
         return True
-    elif isinstance(spec, str) and spec in {GATING, GATING_PROJECTION, GATING_SIGNAL}:
+    elif isinstance(spec, str) and spec in {GATE, GATING_PROJECTION, GATING_SIGNAL}:
         return True
     else:
         return False

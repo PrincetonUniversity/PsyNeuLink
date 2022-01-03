@@ -355,7 +355,7 @@ class TestProjectionSpecificationFormats:
                 'ControlProjection for R-CONTROL[gain]'
 
     gating_spec_list = [
-        pnl.GATING,
+        pnl.GATE,
         pnl.CONTROL,
         pnl.GATING_SIGNAL,
         pnl.CONTROL_SIGNAL,
@@ -371,7 +371,7 @@ class TestProjectionSpecificationFormats:
         pnl.ControlMechanism,
         pnl.GatingMechanism(),
         pnl.ControlMechanism(),
-        (0.3, pnl.GATING),
+        (0.3, pnl.GATE),
         (0.3, pnl.CONTROL),
         (0.3, pnl.GATING_SIGNAL),
         (0.3, pnl.CONTROL_SIGNAL),

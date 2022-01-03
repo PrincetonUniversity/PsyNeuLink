@@ -1,15 +1,16 @@
 import numpy as np
+
 import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transferfunctions
-
-from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Logistic
+from psyneulink.core.components.functions.stateful.integratorfunctions import AccumulatorIntegrator
 from psyneulink.core.components.mechanisms.modulatory.control.gating.gatingmechanism import GatingMechanism
 from psyneulink.core.components.mechanisms.processing.transfermechanism import TransferMechanism
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
+from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.globals.keywords import \
     DEFAULT_VARIABLE, FUNCTION, FUNCTION_PARAMS, INITIALIZER, RATE, VALUE
-from psyneulink.core.compositions.composition import Composition
+
 
 def test_gating_with_composition():
     """Tests same configuration as control of InputPort in tests/mechansims/test_identicalness_of_control_and_gating
@@ -131,7 +132,7 @@ def test_gating_with_UDF_with_composition():
         output_ports={
             pnl.NAME: 'RESULTS USING UDF',
             # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-            pnl.FUNCTION: psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=pnl.GATING)
+            pnl.FUNCTION: psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=pnl.GATE)
         }
     )
 
