@@ -251,7 +251,7 @@ from psyneulink.core.components.ports.outputport import _output_port_variable_ge
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     GATE, GATING_PROJECTION, GATING_SIGNAL, INPUT_PORT, INPUT_PORTS, \
-    OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, RECEIVER
+    MODULATES, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, PROJECTIONS, RECEIVER
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -296,6 +296,11 @@ class GatingSignal(ControlSignal):
 
     default_allocation : scalar, list or np.ndarray : defaultGatingAllocation
         specifies the template and default value used for `allocation <GatingSignal.allocation>`.
+
+    gate : list of Projection specifications
+        specifies the `GatingProjection(s) <GatingProjection>` to be assigned to the GatingSignal, and that will be
+        listed in its `efferents <ModulatorySignal.efferents>` attribute (see `GatingSignal_Projections` for additional
+        details).
 
     function : Function or method : default Linear
         specifies the function used to determine the value of the GatingSignal from the value of its
@@ -419,7 +424,7 @@ class GatingSignal(ControlSignal):
                  size=None,
                  transfer_function=None,
                  modulation:tc.optional(str)=None,
-                 modulates=None,
+                 gate=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -430,13 +435,39 @@ class GatingSignal(ControlSignal):
         # Consider adding self to owner.output_ports here (and removing from GatingProjection._instantiate_sender)
         #  (test for it, and create if necessary, as per OutputPorts in GatingProjection._instantiate_sender),
 
+
+        # Deal with **modulates** if specified
+        if MODULATES in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if gate:
+                raise GatingSignalError(f"Both 'gate' and '{MODULATES}' arguments are specified in the "
+                                         f"constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just 'gate'.")
+            # warnings.warn(f"The '{MODULATES}' argument (specified in the constructor for "
+            #               f"'{name if name else self.__class__.__name__}') has been deprecated; "
+            #               f"should use '{'control'}' going forward.")
+
+            if PROJECTIONS in kwargs:
+                raise GatingSignalError(f"Both '{MODULATES}' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just '{PROJECTIONS}' (or 'gate') ")
+            gate = kwargs.pop(MODULATES)
+
+        elif PROJECTIONS in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if gate:
+                raise GatingSignalError(f"Both 'gate' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Must use just one or the other.")
+
+
         # Validate sender (as variable) and params
         super().__init__(owner=owner,
                          reference_value=reference_value,
                          default_allocation=default_allocation,
                          size=size,
                          modulation=modulation,
-                         modulates=modulates,
+                         control=gate,
                          params=params,
                          name=name,
                          prefs=prefs,
@@ -458,11 +489,27 @@ class GatingSignal(ControlSignal):
         params_dict = {}
         port_spec = port_specific_spec
 
+        # MODIFIED 1/2/22 NEW:
         if isinstance(port_specific_spec, dict):
+            # Note: if GATE is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
+            if GATE in port_specific_spec and PROJECTIONS in port_specific_spec:
+                raise GatingSignalError(f"Both 'PROJECTIONS' and 'GATE' entries found in specification dict "
+                                         f"for '{port_dict['port_type'].__name__}' of '{owner.name}'. "
+                                         f"Must use only one or the other.")
             return None, port_specific_spec
+        # MODIFIED 1/2/22 END
 
         elif isinstance(port_specific_spec, tuple):
             port_spec = None
+            # Resolve CONTROL as synonym for PROJECTIONS:
+            if GATE in params_dict:
+                # CONTROL AND PROJECTIONS can't both be used
+                if PROJECTIONS in params_dict:
+                    raise GatingSignalError(f"Both 'PROJECTIONS' and 'GATE' entries found in specification dict "
+                                             f"for '{port_dict['port_type'].__name__}' of '{owner.name}'.  "
+                                             f"Must use only one or the other.")
+                # Move GATE to PROJECTIONS
+                params_dict[PROJECTIONS] = params_dict.pop(GATE)
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,
                                                                connections=port_specific_spec)

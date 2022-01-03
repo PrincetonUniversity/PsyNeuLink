@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 
 import psyneulink as pnl
-from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, PROJECTIONS
+from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, PROJECTIONS
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.utilities import _SeededPhilox
@@ -94,7 +94,8 @@ class TestControlSpecification:
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
         assert comp.controller.control_signals[0].allocation_samples is None
 
-    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self):
+    @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
+    def test_redundant_control_spec_add_controller_in_comp_constructor_then_add_node_with_alloc_samples_specified(self,control_spec):
         # First create Composition with controller that has HAS control specification that includes allocation_samples,
         #    then add Mechanism with control specification to Composition;
         # Control specification on controller should supercede one on Mechanism (which should be ignored)
@@ -108,7 +109,7 @@ class TestControlSpecification:
                            "deactivated until 'DDM-0' is added to' Composition-0' in a compatible way."
         with pytest.warns(UserWarning, match=expected_warning):
             comp = pnl.Composition(controller=pnl.ControlMechanism(control_signals={ALLOCATION_SAMPLES:np.arange(0.2,1.01, 0.3),
-                                                                                    PROJECTIONS:('drift_rate', ddm)}))
+                                                                                    control_spec:('drift_rate', ddm)}))
         comp.add_node(ddm)
         assert comp.controller.control_signals[0].efferents[0].receiver == ddm.parameter_ports['drift_rate']
         assert ddm.parameter_ports['drift_rate'].mod_afferents[0].sender.owner == comp.controller
@@ -138,7 +139,8 @@ class TestControlSpecification:
         error_msg = error.value.error_value
         assert expected_error in error_msg
 
-    def test_deferred_init(self):
+    @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
+    def test_deferred_init(self, control_spec):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
 
@@ -182,9 +184,9 @@ class TestControlSpecification:
                                  Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                  (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
                 function=pnl.GridSearch(),
-                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                control_signals=[{control_spec: ("drift_rate", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {PROJECTIONS: ("threshold", Decision),
+                                 {control_spec: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         )
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
@@ -263,7 +265,7 @@ class TestControlSpecification:
                                 pathways=[initial_node_a, initial_node_b],
                                 controller_mode=pnl.BEFORE)
 
-        member_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, initial_node_a)],
+        member_node_control_signal = pnl.ControlSignal(control=[(pnl.SLOPE, initial_node_a)],
                                                        variable=1.0,
                                                        intensity_cost_function=pnl.Linear(slope=0.0),
                                                        allocation_samples=pnl.SampleSpec(start=1.0,
@@ -821,9 +823,9 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[
-                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                    {CONTROL: (pnl.SLOPE, m1),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                    {CONTROL: (pnl.SLOPE, m2),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -845,9 +847,9 @@ class TestControlMechanisms:
                                                     monitor=[m1, m2]),
                                                 function=pnl.GridSearch(max_iterations=1),
                                                 control_signals=[
-                                                    {PROJECTIONS: (pnl.SLOPE, m1),
+                                                    {CONTROL: (pnl.SLOPE, m1),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                                    {PROJECTIONS: (pnl.SLOPE, m2),
+                                                    {CONTROL: (pnl.SLOPE, m2),
                                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         c.add_node(lvoc)
         input_dict = {m1: [[1], [1]], m2: [1]}
@@ -1651,9 +1653,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                                  Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                                                  (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
                                                 function=pnl.GridSearch(),
-                                                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                                                control_signals=[{CONTROL: ("drift_rate", Decision),
                                                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                                                 {PROJECTIONS: ("threshold", Decision),
+                                                                 {CONTROL: ("threshold", Decision),
                                                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
                                        )
 
@@ -1940,11 +1942,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 function=pnl.GridSearch(),
                 control_signals=[
                     {
-                        PROJECTIONS: (pnl.DRIFT_RATE, Decision),
+                        CONTROL: (pnl.DRIFT_RATE, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                     {
-                        PROJECTIONS: (pnl.THRESHOLD, Decision),
+                        CONTROL: (pnl.THRESHOLD, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     }
                 ],
@@ -2078,11 +2080,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 function=pnl.GridSearch(),
                 control_signals=[
                     {
-                        PROJECTIONS: (pnl.DRIFT_RATE, Decision),
+                        CONTROL: (pnl.DRIFT_RATE, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     },
                     {
-                        PROJECTIONS: (pnl.THRESHOLD, Decision),
+                        CONTROL: (pnl.THRESHOLD, Decision),
                         ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                     }
                 ],
