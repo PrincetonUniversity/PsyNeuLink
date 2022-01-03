@@ -490,10 +490,24 @@ class GatingSignal(ControlSignal):
         port_spec = port_specific_spec
 
         if isinstance(port_specific_spec, dict):
+            # Note: if GATE is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
+            if GATE in port_specific_spec and PROJECTIONS in port_specific_spec:
+                raise GatingSignalError(f"Both 'PROJECTIONS' and 'GATE' entries found in specification dict "
+                                         f"for '{port_dict['port_type'].__name__}' of '{owner.name}'. "
+                                         f"Must use only one or the other.")
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
             port_spec = None
+            # Resolve CONTROL as synonym for PROJECTIONS:
+            if GATE in params_dict:
+                # CONTROL AND PROJECTIONS can't both be used
+                if PROJECTIONS in params_dict:
+                    raise GatingSignalError(f"Both 'PROJECTIONS' and 'GATE' entries found in specification dict "
+                                             f"for '{port_dict['port_type'].__name__}' of '{owner.name}'.  "
+                                             f"Must use only one or the other.")
+                # Move GATE to PROJECTIONS
+                params_dict[PROJECTIONS] = params_dict.pop(GATE)
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,
                                                                connections=port_specific_spec)

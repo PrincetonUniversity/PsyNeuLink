@@ -1036,12 +1036,16 @@ class ControlSignal(ModulatorySignal):
 
         """
         from psyneulink.core.components.projections.projection import _parse_connection_specs
-        from psyneulink.core.globals.keywords import CONTROL, PROJECTIONS
 
         params_dict = {}
         port_spec = port_specific_spec
 
         if isinstance(port_specific_spec, dict):
+            # Note: if CONTROL is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
+            if CONTROL in port_specific_spec and PROJECTIONS in port_specific_spec:
+                raise ControlSignalError(f"Both 'PROJECTIONS' and 'CONTROL' entries found in specification dict "
+                                         f"for '{port_dict['port_type'].__name__}' of '{owner.name}'. "
+                                         f"Must use only one or the other.")
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
@@ -1052,8 +1056,9 @@ class ControlSignal(ModulatorySignal):
                 # CONTROL AND PROJECTIONS can't both be used
                 if PROJECTIONS in params_dict:
                     raise ControlSignalError(f"Both 'PROJECTIONS' and 'CONTROL' entries found in specification dict "
-                                             f"for '{self.name}' of '{owner.name}'.")
-                # Replace CONTROL with PROJECTIONS
+                                             f"for '{port_dict['port_type'].__name__}' of '{owner.name}'.  "
+                                             f"Must use only one or the other.")
+                # Move CONTROL to PROJECTIONS
                 params_dict[PROJECTIONS] = params_dict.pop(CONTROL)
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,

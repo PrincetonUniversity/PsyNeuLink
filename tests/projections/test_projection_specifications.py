@@ -119,29 +119,46 @@ class TestProjectionSpecificationFormats:
             assert gating_sig._init_args[pnl.PROJECTIONS][0][0] == pnl.SLOPE
             assert gating_sig._init_args[pnl.PROJECTIONS][0][1] is M
 
-    @pytest.mark.parametrize("control_spec, gating_spec",
-                             [[pnl.CONTROL, pnl.GATE],
-                             [pnl.PROJECTIONS, pnl.PROJECTIONS]],
+    @pytest.mark.parametrize("control_spec, gating_spec, extra_spec",
+                             [
+                                 [pnl.CONTROL, pnl.GATE, ''],
+                                 [pnl.PROJECTIONS, pnl.PROJECTIONS, ''],
+                                 [pnl.CONTROL, pnl.GATE, pnl.PROJECTIONS]
+                             ]
                              )
-    def test_multiple_modulatory_projection_specs(self, control_spec, gating_spec):
+    def test_multiple_modulatory_projection_specs(self, control_spec, gating_spec, extra_spec):
 
         M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{control_spec: [M.parameter_ports[
-                                                                      psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
-                                                                  M.parameter_ports[
-                                                                      psyneulink.core.globals.keywords.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{gating_spec: [M.output_ports[pnl.DECISION_VARIABLE],
-                                                               M.output_ports[pnl.RESPONSE_TIME]]}])
-        assert len(C.control_signals)==1
-        assert len(C.control_signals[0].efferents)==2
-        assert M.parameter_ports[
-                   psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
-        assert M.parameter_ports[
-                   psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
-        assert len(G.gating_signals)==1
-        assert len(G.gating_signals[0].efferents)==2
-        assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
-        assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
+        ctl_sig_spec = {control_spec: [M.parameter_ports[pnl.DRIFT_RATE],
+                                       M.parameter_ports[pnl.THRESHOLD]]}
+        gating_sig_spec = {gating_spec: [M.output_ports[pnl.DECISION_VARIABLE],
+                                         M.output_ports[pnl.RESPONSE_TIME]]}
+        if extra_spec:
+            ctl_sig_spec.update({extra_spec:[M.parameter_ports[pnl.STARTING_POINT]]})
+            gating_sig_spec.update({extra_spec:[M.output_ports[pnl.RESPONSE_TIME]]})
+            ctl_err_msg = '"Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
+                          '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other."'
+            with pytest.raises(pnl.ControlSignalError) as err:
+                pnl.ControlMechanism(control_signals=[ctl_sig_spec])
+            assert ctl_err_msg == str(err.value)
+            gating_err_msg = '"Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
+                             '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other."'
+            with pytest.raises(pnl.GatingSignalError) as err:
+                pnl.GatingMechanism(gating_signals=[gating_sig_spec])
+            assert gating_err_msg == str(err.value)
+        else:
+            C = pnl.ControlMechanism(control_signals=[ctl_sig_spec])
+            G = pnl.GatingMechanism(gating_signals=[gating_sig_spec])
+            assert len(C.control_signals)==1
+            assert len(C.control_signals[0].efferents)==2
+            assert M.parameter_ports[
+                       psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
+            assert M.parameter_ports[
+                       psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
+            assert len(G.gating_signals)==1
+            assert len(G.gating_signals[0].efferents)==2
+            assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
+            assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
     def test_multiple_modulatory_projections_with_port_Name(self):
 
