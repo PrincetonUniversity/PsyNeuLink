@@ -660,8 +660,7 @@ HARD_CLAMP = "hard_clamp"
 PULSE_CLAMP = "pulse_clamp"
 NO_CLAMP = "no_clamp"
 LEARNING_RATE = "learning_rate"
-CONTROL = 'CONTROL'
-GATING = 'gating'
+# CONTROL = 'CONTROL'
 PROCESS_DEFAULT_PROJECTION_FUNCTION = "Default Projection Function"
 PROCESS_EXECUTE = "ProcessExecute"
 MECHANISM_EXECUTED_LOG_ENTRY = "Mechanism Executed"
@@ -764,6 +763,7 @@ PREDICTION_MECHANISM_PARAMS = "prediction_mechanism_params"
 PREDICTION_MECHANISM_OUTPUT = "PredictionMechanismOutput"
 
 MODULATORY_SIGNALS = 'modulatory_signals'
+CONTROL = 'control'
 CONTROL_SIGNALS = 'control_signals'
 CONTROL_SIGNAL_SPECS = 'CONTROL_SIGNAL_SPECS'
 CONTROLLED_PARAMS = 'CONTROLLED_PARAMS'
@@ -778,9 +778,10 @@ EVC_SIMULATION = 'CONTROL SIMULATION'
 ALLOCATION_SAMPLES = "allocation_samples"
 
 # GatingMechanism
+GATE = 'gate'
+GATING = 'gating'
 GATING_SIGNALS = 'gating_signals'
 GATING_SIGNAL_SPECS = 'GATING_SIGNAL_SPECS'
-GATE = 'GATE'
 GATED_PORTS = 'GATED_PORTS'
 GATING_PROJECTIONS = 'GatingProjections'
 GATING_ALLOCATION = 'gating_allocation'

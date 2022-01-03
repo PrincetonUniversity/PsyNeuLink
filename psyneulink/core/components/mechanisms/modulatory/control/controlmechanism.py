@@ -1206,8 +1206,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             read_only=True,
             structural=True,
             parse_spec=True,
-            aliases=['control', 'control_signals'],
-            constructor_argument='control'
+            aliases=[CONTROL, CONTROL_SIGNALS],
+            constructor_argument=CONTROL
         )
 
         # MODIFIED 1/2/22 OLD: - MUCH OF THIS SEEMS TO BE COVERED ELSEWHERE; COMMENTING OUT ONLY CAUSES PROBLEMS WITH
@@ -1308,7 +1308,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
             # These are synonyms, but allowing several to be specified and trying to combine the specifications
             # can cause problems if different forms of specification are used to refer to the same Component(s)
-            control_specified = "'control'" if control else ''
+            control_specified = f"'{CONTROL}'" if control else ''
             modulatory_signals_specified = ''
             if MODULATORY_SIGNALS in kwargs:
                 args = kwargs.pop(MODULATORY_SIGNALS)
@@ -1412,14 +1412,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         if CONTROL in target_set and target_set[CONTROL]:
             control = target_set[CONTROL]
-            assert isinstance(control, list), \
-                f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-            for ctl_spec in control:
-                ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-                if not (isinstance(ctl_spec, ControlSignal)
-                        or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE]==ControlSignal.__name__)):
-                    raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
-                                                f"({ctl_spec})")
+            self._validate_control_arg(control)
+
+    def _validate_control_arg(self, control):
+        """Treat control arg separately so it can be overridden by subclassses (e.g., GatingMechanism)"""
+        assert isinstance(control, list), \
+            f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
+        for ctl_spec in control:
+            ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
+            if not (isinstance(ctl_spec, ControlSignal)
+                    or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == ControlSignal)):
+                raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
+                                            f"({ctl_spec})")
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, input_ports=None, context=None):

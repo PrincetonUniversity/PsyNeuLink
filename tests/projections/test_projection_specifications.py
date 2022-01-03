@@ -411,12 +411,14 @@ class TestProjectionSpecificationFormats:
             IN_NAME = G_IN[1]
         else:
             IN_NAME = G_IN
-        IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        # IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        IN_CONTROL = 'CONTROL' in repr(IN_NAME).split(".")[-1].upper()
         if isinstance(G_OUT, tuple):
             OUT_NAME = G_OUT[1]
         else:
             OUT_NAME = G_OUT
-        OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        # OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        OUT_CONTROL = 'CONTROL' in repr(OUT_NAME).split(".")[-1].upper()
 
         T = pnl.TransferMechanism(
             name='T-GATING',
