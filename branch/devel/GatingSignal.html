@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>GatingSignal &mdash; PsyNeuLink 0+untagged.10.g9e88ae4 documentation</title>
+  <title>GatingSignal &mdash; PsyNeuLink 0+untagged.10.g1fdb95d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.g9e88ae4
+                  0+untagged.10.g1fdb95d
                 </div>
               
             
@@ -435,6 +435,9 @@ of one more <a class="reference internal" href="InputPort.html"><span class="doc
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>default_allocation</strong> (<em>scalar</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : defaultGatingAllocation</em>) – specifies the template and default value used for <a class="reference internal" href="#psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.allocation" title="psyneulink.core.components.ports.modulatorysignals.gatingsignal.GatingSignal.allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allocation</span></code></a>.</p></li>
+<li><p><strong>gate</strong> (<em>list of Projection specifications</em>) – specifies the <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection(s)</span></a> to be assigned to the GatingSignal, and that will be
+listed in its <a class="reference internal" href="ModulatorySignal.html#psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.efferents" title="psyneulink.core.components.ports.modulatorysignals.modulatorysignal.ModulatorySignal.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferents</span></code></a> attribute (see <a class="reference internal" href="#gatingsignal-projections"><span class="std std-ref">Projections</span></a> for additional
+details).</p></li>
 <li><p><strong>function</strong> (<em>Function</em><em> or </em><em>method : default Linear</em>) – specifies the function used to determine the value of the GatingSignal from the value of its
 <code class="xref any docutils literal notranslate"><span class="pre">owner</span></code>.</p></li>
 </ul>

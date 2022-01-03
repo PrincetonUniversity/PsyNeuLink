@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0+untagged.10.g9e88ae4 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0+untagged.10.g1fdb95d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.g9e88ae4
+                  0+untagged.10.g1fdb95d
                 </div>
               
             
@@ -282,12 +282,14 @@ errors like those encountered in parallel programming.</p>
 <li><dl class="simple">
 <dt>each attribute on <em>B</em>.Parameters becomes a parameter (instance of the Parameter class)</dt><dd><ul class="simple">
 <li><p>as with <em>p</em>, specifying only a value uses default values for the attributes of the Parameter</p></li>
-<li><p>as with <em>q</em>, specifying an explicit instance of the Parameter class allows you to modify the <a class="reference internal" href="#parameter-attributes-table"><span class="std std-ref">Parameter attributes</span></a></p></li>
+<li><p>as with <em>q</em>, specifying an explicit instance of the Parameter class allows you to modify the
+<a class="reference internal" href="#parameter-attributes-table"><span class="std std-ref">Parameter attributes</span></a></p></li>
 </ul>
 </dd>
 </dl>
 </li>
-<li><p>if you want assignments to parameter <em>p</em> to be validated, add a method _validate_p(value), that returns None if value is a valid assignment, or an error string if value is not a valid assignment</p></li>
+<li><p>if you want assignments to parameter <em>p</em> to be validated, add a method _validate_p(value),
+that returns None if value is a valid assignment, or an error string if value is not a valid assignment</p></li>
 <li><dl>
 <dt>if you want all values set to <em>p</em> to be parsed beforehand, add a method _parse_p(value) that returns the parsed value</dt><dd><ul>
 <li><p>for example, convert to a numpy array or float</p>

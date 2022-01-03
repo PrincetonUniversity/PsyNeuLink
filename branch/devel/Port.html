@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0+untagged.10.g9e88ae4 documentation</title>
+  <title>Port &mdash; PsyNeuLink 0+untagged.10.g1fdb95d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.10.g9e88ae4
+                  0+untagged.10.g1fdb95d
                 </div>
               
             
@@ -741,20 +741,22 @@ ParameterPorts of a <a class="reference internal" href="DDM.html"><span class="d
     <span class="nb">print</span><span class="p">(</span><span class="n">control_signal</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">control_projection</span> <span class="ow">in</span> <span class="n">control_signal</span><span class="o">.</span><span class="n">efferents</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;     </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="p">))</span>
-<span class="o">&gt;</span> <span class="n">MY</span> <span class="n">DDM</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">AND</span> <span class="n">THREHOLD</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
+<span class="o">&gt;</span> <span class="n">MY</span> <span class="n">DDM</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">AND</span> <span class="n">THRESHOLD</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">drift_rate</span><span class="p">)</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">threshold</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that a ControlMechanism uses a <strong>control_signals</strong> argument in place of an <strong>output_ports</strong> argument (since it
-uses <code class="xref any docutils literal notranslate"><span class="pre">ControlSignal</span></code> for its <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  In the example above,
-both ControlProjections are assigned to a single ControlSignal.  However, they could each be assigned to their own by
-specifying them in separate itesm of the <strong>control_signals</strong> argument:</p>
+uses <code class="xref any docutils literal notranslate"><span class="pre">ControlSignal</span></code> for its <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  Note also that, for specifying Projections
+of a ControlSignal (i.e., its ControlProjections), the keyword <em>CONTROL</em> can be used in place of the more generic
+<em>PROJECTIONS</em> keyword (as shown in the example below).</p>
+<p>In the example above, both ControlProjections are assigned to a single ControlSignal.  However, they could each be
+assigned to their own by specifying them in separate items of the <strong>control_signals</strong> argument:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
 <span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;DRIFT RATE CONTROL SIGNAL&#39;</span><span class="p">,</span>
-                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">]]},</span>
+                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">]]},</span>
                                                     <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;THRESHOLD RATE CONTROL SIGNAL&#39;</span><span class="p">,</span>
-                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]]}])</span>
+                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]]}])</span>
 <span class="c1"># Print ControlSignals and their ControlProjections...</span>
 <span class="o">&gt;</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">drift_rate</span><span class="p">)</span>
