@@ -31,7 +31,7 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
-    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, \
+    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -1264,7 +1264,8 @@ class TestCompositionPathwaysArg:
 
 class TestProperties:
 
-    def test_properties(self):
+    @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
+    def test_properties(self, control_spec):
 
         Input = pnl.TransferMechanism(name='Input')
         Reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward')
@@ -1286,11 +1287,11 @@ class TestProperties:
                                      Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                      Decision.output_ports[pnl.RESPONSE_TIME]],
                 function=pnl.GridSearch(),
-                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                control_signals=[{control_spec: ("drift_rate", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {PROJECTIONS: ("threshold", Decision),
+                                 {control_spec: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {PROJECTIONS: ("slope", Reward),
+                                 {control_spec: ("slope", Reward),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}]))
 
         assert len(comp.nodes) == len(comp.mechanisms) == 3

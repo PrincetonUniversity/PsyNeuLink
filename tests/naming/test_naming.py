@@ -155,7 +155,8 @@ class TestNaming:
     # TEST 11
     # Test that ControlSignals and ControlProjections are properly named
 
-    def test_control_signal_and_control_projection_names(self):
+    @pytest.mark.parametrize('control_spec', [pnl.CONTROL, pnl.PROJECTIONS])
+    def test_control_signal_and_control_projection_names(self, control_spec):
         D1 = pnl.DDM(name='D1')
         D2 = pnl.DDM(name='D2')
 
@@ -166,7 +167,7 @@ class TestNaming:
         assert C1.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
-        C2 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
+        C2 = pnl.ControlMechanism(control_signals=[{control_spec:[D1.parameter_ports[
                                                                          psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
                                                                      D1.parameter_ports[
                                                                          psyneulink.core.globals.keywords.THRESHOLD]]}])
@@ -175,7 +176,7 @@ class TestNaming:
         assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'
 
         # ControlSignal with two ControlProjection to two parameters of different Mechanisms
-        C3 = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS:[D1.parameter_ports[
+        C3 = pnl.ControlMechanism(control_signals=[{control_spec:[D1.parameter_ports[
                                                                          psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
                                                                      D2.parameter_ports[
                                                                          psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE]]}])
