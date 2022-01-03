@@ -1235,9 +1235,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif isinstance(output_ports[i], dict):
                     # Handle CONTROL as synonym of PROJECTIONS
-                    # if CONTROL in output_ports[i]:
-                    #     # Replace CONTROL with PROJECTIONS
-                    #     output_ports[i][PROJECTIONS] = output_ports[i].pop(CONTROL)
+                    if CONTROL in output_ports[i]:
+                        # Replace CONTROL with PROJECTIONS
+                        output_ports[i][PROJECTIONS] = output_ports[i].pop(CONTROL)
                     if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
                         full_spec_dict = {
                             NAME: output_ports[i][PROJECTIONS][0],
