@@ -146,7 +146,7 @@ class TestProjectionSpecificationFormats:
             assert ctl_err_msg == str(err.value)
             gating_err_msg = '"Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
                              '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other."'
-            with pytest.raises(pnl.GatingSignalError) as err:
+            with pytest.raises(pnl.ControlSignalError) as err:
                 pnl.GatingMechanism(gating_signals=[gating_sig_spec])
             assert gating_err_msg == str(err.value)
         else:
