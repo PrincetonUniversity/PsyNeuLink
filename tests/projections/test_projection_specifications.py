@@ -64,6 +64,7 @@ class TestProjectionSpecificationFormats:
         ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
                         '\'ControlSignal; Should use just \'projections\' (or \'control\') "')
     ])
+    @pytest.mark.control
     def test_control_signal_projections_arg(self, args):
         M = pnl.ProcessingMechanism()
         control_specs = {pnl.CONTROL: {'control':(pnl.SLOPE, M)},
@@ -97,6 +98,7 @@ class TestProjectionSpecificationFormats:
         ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
                         '\'GatingSignal; Should use just \'projections\' (or \'gate\') "')
     ])
+    @pytest.mark.control
     def test_gating_signal_projections_arg(self, args):
         M = pnl.ProcessingMechanism()
         gating_specs = {pnl.GATE: {'gate':(pnl.SLOPE, M)},
@@ -126,6 +128,7 @@ class TestProjectionSpecificationFormats:
                                  [pnl.CONTROL, pnl.GATE, pnl.PROJECTIONS]
                              ]
                              )
+    @pytest.mark.control
     def test_multiple_modulatory_projection_specs(self, control_spec, gating_spec, extra_spec):
 
         M = pnl.DDM(name='MY DDM')
@@ -160,6 +163,7 @@ class TestProjectionSpecificationFormats:
             assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
             assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
+    @pytest.mark.control
     def test_multiple_modulatory_projections_with_port_Name(self):
 
         M = pnl.DDM(name='MY DDM')
@@ -182,6 +186,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
         assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
+    @pytest.mark.control
     def test_multiple_modulatory_projections_with_mech_and_port_Name_specs(self):
 
         M = pnl.DDM(name='MY DDM')
@@ -267,6 +272,7 @@ class TestProjectionSpecificationFormats:
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
 
+    @pytest.mark.control
     def test_2_item_tuple_from_parameter_port_to_control_signals(self):
 
         C = pnl.ControlMechanism(control_signals=['a','b'])
@@ -279,6 +285,7 @@ class TestProjectionSpecificationFormats:
         assert D.parameter_ports[
                    psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0].sender == C.control_signals[1]
 
+    @pytest.mark.control
     def test_2_item_tuple_from_gating_signal_to_output_ports(self):
 
         D4 = pnl.DDM(name='D4')
@@ -294,6 +301,7 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
+    @pytest.mark.control
     def test_2_item_tuple_from_input_and_output_ports_to_gating_signals(self):
 
         G = pnl.GatingMechanism(gating_signals=['a','b'])
@@ -331,6 +339,7 @@ class TestProjectionSpecificationFormats:
         'noise, gain',
         [(noise, gain) for noise, gain in [j for j in zip(control_spec_list, reversed(control_spec_list))]]
     )
+    @pytest.mark.control
     def test_formats_for_control_specification_for_mechanism_and_function_params(self, noise, gain):
         # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
         if noise == 'CP_OBJECT':
@@ -394,6 +403,7 @@ class TestProjectionSpecificationFormats:
         'input_port, output_port',
         [(inp, outp) for inp, outp in [j for j in zip(gating_spec_list, reversed(gating_spec_list))]]
     )
+    @pytest.mark.control
     def test_formats_for_gating_specification_of_input_and_output_ports(self, input_port, output_port):
         G_IN, G_OUT = input_port, output_port
 

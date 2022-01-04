@@ -1029,6 +1029,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     """
 
     componentType = "ControlMechanism"
+    controlType = CONTROL
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -1235,17 +1236,19 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif isinstance(output_ports[i], dict):
+                    # MODIFIED 1/4/22 OLD:
                     # Handle CONTROL as synonym of PROJECTIONS
-                    if CONTROL in output_ports[i]:
+                    if self._owner.controlType in output_ports[i]:
                         # MODIFIED 1/3/22 NEW:
                         # CONTROL AND PROJECTIONS can't both be used
                         if PROJECTIONS in output_ports[i]:
-                            raise ControlMechanismError(f"Both 'CONTROL' and 'PROJECTIONS' entries found in "
-                                                        f"specification dict for {ControlSignal.__name__} of "
-                                                        f"'{self.name}': ({output_ports[i]}).")
-                        # MODIFIED 1/3/22 END
+                            raise ControlMechanismError(f"Both {self._owner.controlType.upper()} and 'PROJECTIONS' "
+                                                        f"entries found in specification dict for "
+                                                        f"{self._owner.componentType} of '{self.name}': "
+                                                        f"({output_ports[i]}).")
+                        # MODIFIED 1/3/22 NEW:
                         # Replace CONTROL with PROJECTIONS
-                        output_ports[i][PROJECTIONS] = output_ports[i].pop(CONTROL)
+                        output_ports[i][PROJECTIONS] = output_ports[i].pop(self._owner.controlType)
                     if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
                         full_spec_dict = {
                             NAME: output_ports[i][PROJECTIONS][0],
@@ -1253,7 +1256,24 @@ class ControlMechanism(ModulatoryMechanism_Base):
                             **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
                         }
                         output_ports[i] = full_spec_dict
-
+                    # MODIFIED 1/4/22 NEWER:
+                    # # Handle CONTROL as synonym of PROJECTIONS
+                    # full_spec_dict = output_ports[i]
+                    # if (CONTROL in output_ports[i]):
+                    #     if is_2tuple(output_ports[i][CONTROL]):
+                    #     full_spec_dict.update({
+                    #         NAME: output_ports[i][PROJECTIONS][0],
+                    #         MECHANISM: output_ports[i][PROJECTIONS][1],
+                    #         **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
+                    #     })
+                    # if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
+                    #     full_spec_dict.update({
+                    #         NAME: output_ports[i][PROJECTIONS][0],
+                    #         MECHANISM: output_ports[i][PROJECTIONS][1],
+                    #         **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
+                    #     })
+                    # output_ports[i] = full_spec_dict
+                    # MODIFIED 1/4/22 END
             return output_ports
         # MODIFIED 1/2/22 END
 

@@ -168,9 +168,9 @@ class TestNaming:
 
         # ControlSignal with two ControlProjection to two parameters of same Mechanism
         C2 = pnl.ControlMechanism(control_signals=[{control_spec:[D1.parameter_ports[
-                                                                         psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
-                                                                     D1.parameter_ports[
-                                                                         psyneulink.core.globals.keywords.THRESHOLD]]}])
+                                                                      psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
+                                                                  D1.parameter_ports[
+                                                                      psyneulink.core.globals.keywords.THRESHOLD]]}])
         assert C2.control_signals[0].name == 'D1[drift_rate, threshold] ControlSignal'
         assert C2.control_signals[0].efferents[0].name == 'ControlProjection for D1[drift_rate]'
         assert C2.control_signals[0].efferents[1].name == 'ControlProjection for D1[threshold]'

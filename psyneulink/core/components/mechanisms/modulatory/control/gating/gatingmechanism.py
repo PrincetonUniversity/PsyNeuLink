@@ -373,6 +373,7 @@ class GatingMechanism(ControlMechanism):
     """
 
     componentType = "GatingMechanism"
+    controlType = GATE
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -431,52 +432,6 @@ class GatingMechanism(ControlMechanism):
             aliases=[CONTROL, CONTROL_SIGNALS, 'gate', 'gating_signal'],
             constructor_argument='gate'
         )
-
-        def _parse_output_ports(self, output_ports):
-            from psyneulink.core.globals.keywords import NAME, MECHANISM, PROJECTIONS
-            # # FIX: 1/2/22 - ANY WAY TO CALL SUPER TO CALL ControlMechanism.parameters.output_ports._parse_output_ports
-            # super().output_ports._parse_output_ports(output_ports)
-
-            def is_2tuple(o):
-                return isinstance(o, tuple) and len(o) == 2
-
-            if not isinstance(output_ports, list):
-                output_ports = [output_ports]
-
-            for i in range(len(output_ports)):
-                # handle 2-item tuple
-                if is_2tuple(output_ports[i]):
-
-                    # this is an odd case that uses two names in the name entry
-                    # unsure what it means
-                    if isinstance(output_ports[i][0], list):
-                        continue
-
-                    output_ports[i] = {
-                        NAME: output_ports[i][0],
-                        MECHANISM: output_ports[i][1]
-                    }
-                # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
-                elif isinstance(output_ports[i], dict):
-                    # Handle GATE as synonym of PROJECTIONS
-                    if GATE in output_ports[i]:
-                        # GATE AND PROJECTIONS can't both be used
-                        if PROJECTIONS in output_ports[i]:
-                            raise GatingMechanismError(f"Both 'PROJECTIONS' and 'GATE' entries found in "
-                                                        f"specification dict for {GatingSignal.__name__} of "
-                                                       f"'{self.name}': ({output_ports[i]}).")
-                        # Replace GATE with PROJECTIONS
-                        output_ports[i][PROJECTIONS] = output_ports[i].pop(GATE)
-                    if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
-                        full_spec_dict = {
-                            NAME: output_ports[i][PROJECTIONS][0],
-                            MECHANISM: output_ports[i][PROJECTIONS][1],
-                            **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                        }
-                        output_ports[i] = full_spec_dict
-
-            return output_ports
-
 
     @tc.typecheck
     def __init__(self,
