@@ -102,8 +102,10 @@ To create new Parameters, reference this example of a new class *B*
 - an instance of *B*.Parameters will be assigned to the parameters attribute of the class *B* and all instances of *B*
 - each attribute on *B*.Parameters becomes a parameter (instance of the Parameter class)
     - as with *p*, specifying only a value uses default values for the attributes of the Parameter
-    - as with *q*, specifying an explicit instance of the Parameter class allows you to modify the `Parameter attributes <Parameter_Attributes_Table>`
-- if you want assignments to parameter *p* to be validated, add a method _validate_p(value), that returns None if value is a valid assignment, or an error string if value is not a valid assignment
+    - as with *q*, specifying an explicit instance of the Parameter class allows you to modify the
+      `Parameter attributes <Parameter_Attributes_Table>`
+- if you want assignments to parameter *p* to be validated, add a method _validate_p(value),
+  that returns None if value is a valid assignment, or an error string if value is not a valid assignment
 - if you want all values set to *p* to be parsed beforehand, add a method _parse_p(value) that returns the parsed value
     - for example, convert to a numpy array or float
 
@@ -291,17 +293,18 @@ import collections
 import copy
 import itertools
 import logging
-import toposort
 import types
 import typing
 import weakref
 
+import toposort
 
-from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy, create_union_set
+from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, \
+    get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy, create_union_set
+from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 import psyneulink as pnl
 
 
@@ -19,7 +20,7 @@ def test_gating(benchmark, comp_mode):
         function=pnl.Linear(),
         output_ports={
             pnl.NAME: 'RESULTS USING UDF',
-            pnl.FUNCTION: pnl.Linear(slope=pnl.GATING)
+            pnl.FUNCTION: pnl.Linear(slope=pnl.GATE)
         }
     )
 

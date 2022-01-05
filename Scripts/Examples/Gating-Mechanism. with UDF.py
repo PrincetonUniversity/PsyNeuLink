@@ -1,5 +1,7 @@
 import functools
+
 import numpy as np
+
 import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
@@ -51,7 +53,7 @@ Output_Layer = pnl.TransferMechanism(
         #                pnl.FUNCTION: my_sinusoidal_fct}
         output_ports={pnl.NAME: 'RESULTS USING UDF',
                        # pnl.VARIABLE: (pnl.OWNER_VALUE, 0),
-                       pnl.FUNCTION: psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=pnl.GATING)
+                       pnl.FUNCTION: psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=pnl.GATE)
                        # pnl.FUNCTION: pnl.Logistic(gain=pnl.GATING)
                        # pnl.FUNCTION: my_linear_fct
                        # pnl.FUNCTION: my_exp_fct

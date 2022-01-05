@@ -64,7 +64,7 @@ When a ControlSignal is specified in the **control_signals** argument of the con
 <ControlMechanism>`, the parameter(s) to be controlled must be specified.  If other attributes of the ControlSignal
 need to be specified (e.g., one or more of its `cost functions <ControlSignal_Costs>`), then the Constructor for the
 ControlSignal can be used or a `port specification dictionary <Port_Specification>`, in which the parameter(s) to be
-controlled in the **projections** argument or *PROJECTIONS* entry, respectively, using any of the forms below.
+controlled are specified in the **control** argument or *CONTROL* entry, respectively, using any of the forms below.
 For convenience, the parameters can also be specified on their own in the **control_signals** argument of the
 ControlMechanism's constructor, in which case a default ControlSignal will be created for each.  In all cases, any
 of the following can be use to specify the parameter(s) to be controlled:
@@ -114,10 +114,10 @@ that are described below.
 ~~~~~~~~~~~~~
 
 When a ControlSignal is created, it can be assigned one or more `ControlProjections <ControlProjection>`, using either
-the **projections** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
-with the key *PROJECTIONS*.  These will be assigned to its `efferents  <ModulatorySignal.efferents>` attribute.  See
+the **control** argument of its constructor, or in an entry of a dictionary assigned to the **params** argument
+with the key *CONTROL*.  These are assigned to its `efferents <ModulatorySignal.efferents>` attribute.  See
 `Port Projections <Port_Projections>` for additional details concerning the specification of Projections when
-creating a Port.
+creating a Port, including `examples <Port_Modulatory_Projections_Examples>` of ControlProjection specification.
 
 .. note::
    Although a ControlSignal can be assigned more than one `ControlProjection`, all of those Projections will receive
@@ -347,7 +347,7 @@ function <ControlSignal_Costs>` can be modulated by another ControlSignal::
   >>> from psyneulink import *
   >>> mech = ProcessingMechanism(name='my_mech')
   >>> ctl_mech_A = ControlMechanism(monitor_for_control=mech,
-  ...                               control_signals=ControlSignal(modulates=(INTERCEPT,mech),
+  ...                               control_signals=ControlSignal(control=(INTERCEPT,mech),
   ...                                                             cost_options=CostFunctions.INTENSITY))
   >>> ctl_mech_B = ControlMechanism(monitor_for_control=mech,
   ...                               control_signals=ControlSignal(modulates=ctl_mech_A.control_signals[0],
@@ -398,26 +398,28 @@ Class Reference
 
 """
 
+import warnings
+
 import numpy as np
 import typecheck as tc
-import warnings
 
 # FIX: EVCControlMechanism IS IMPORTED HERE TO DEAL WITH COST FUNCTIONS THAT ARE DEFINED IN EVCControlMechanism
 #            SHOULD THEY BE LIMITED TO EVC??
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.functions.function import is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
+from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, \
+    TransferWithCosts
 from psyneulink.core.components.functions.stateful.integratorfunctions import SimpleIntegrator
-from psyneulink.core.components.functions.nonstateful.transferfunctions import Exponential, Linear, CostFunctions, TransferWithCosts
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import ModulatorySignal
 from psyneulink.core.components.ports.outputport import _output_port_variable_getter
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
-    ALLOCATION_SAMPLES, CONTROL_PROJECTION, CONTROL_SIGNAL, \
-    INPUT_PORT, INPUT_PORTS, \
+    ALLOCATION_SAMPLES, CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, \
+    INPUT_PORT, INPUT_PORTS, MODULATES, \
     OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
-    PARAMETER_PORT, PARAMETER_PORTS, \
+    PARAMETER_PORT, PARAMETER_PORTS, PROJECTIONS, \
     RECEIVER, FUNCTION
 from psyneulink.core.globals.parameters import FunctionParameter, Parameter, get_validator_by_function
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -457,7 +459,7 @@ class ControlSignal(ModulatorySignal):
         duration_cost_function=IntegratorFunction,                 \
         combine_costs_function=Reduce(operation=SUM),              \
         allocation_samples=self.class_defaults.allocation_samples, \
-        modulates=None,                                            \
+        control=None,                                              \
         projections=None)
 
     A subclass of `ModulatorySignal <ModulatorySignal>` used by a `ControlMechanism <ControlMechanism>` to
@@ -499,7 +501,7 @@ class ControlSignal(ModulatorySignal):
         specifies the values used by the ControlSignal's `owner <ModulatorySignal.owner>` to determine its
         `control_allocation <ControlMechanism.control_allocation>` (see `ControlSignal_Execution`).
 
-    modulates : list of Projection specifications
+    control : list of Projection specifications
         specifies the `ControlProjection(s) <ControlProjection>` to be assigned to the ControlSignal, and that will be
         listed in its `efferents <ModulatorySignal.efferents>` attribute (see `ControlSignal_Projections` for additional
         details).
@@ -593,7 +595,29 @@ class ControlSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = CONTROL_SIGNAL
+    componentName = 'ControlSignal'
+    errorType = ControlSignalError
+
     paramsType = OUTPUT_PORT_PARAMS
+    portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
+                                                        COST_OPTIONS,
+                                                        INTENSITY_COST_FUNCTION,
+                                                        ADJUSTMENT_COST_FUNCTION,
+                                                        DURATION_COST_FUNCTION,
+                                                        COMBINE_COSTS_FUNCTION}
+
+    connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
+    connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
+    projectionSocket = RECEIVER
+    modulators = []
+    projection_type = CONTROL_PROJECTION
+
+    classPreferenceLevel = PreferenceLevel.TYPE
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
+    # Note: only need to specify setting;  level will be assigned to TYPE automatically
+    # classPreferences = {
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(ModulatorySignal.Parameters):
         """
@@ -766,26 +790,6 @@ class ControlSignal(ModulatorySignal):
                 # not iterable, so assume single value
                 pass
 
-    portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
-                                                          COST_OPTIONS,
-                                                          INTENSITY_COST_FUNCTION,
-                                                          ADJUSTMENT_COST_FUNCTION,
-                                                          DURATION_COST_FUNCTION,
-                                                          COMBINE_COSTS_FUNCTION}
-
-    connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
-    connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
-    projectionSocket = RECEIVER
-    modulators = []
-    projection_type = CONTROL_PROJECTION
-
-    classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
-    # Note: only need to specify setting;  level will be assigned to TYPE automatically
-    # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
-    #     PREFERENCE_KEYWORD<pref>: <setting>...}
-
     #endregion
 
     @tc.typecheck
@@ -802,7 +806,7 @@ class ControlSignal(ModulatorySignal):
                  combine_costs_function:tc.optional(is_function_type)=None,
                  allocation_samples=None,
                  modulation:tc.optional(str)=None,
-                 modulates=None,
+                 control=None,
                  params=None,
                  name=None,
                  prefs:is_pref_set=None,
@@ -810,13 +814,35 @@ class ControlSignal(ModulatorySignal):
 
         try:
             if kwargs[FUNCTION] is not None:
-                raise TypeError(
-                    f'{self.__class__.__name__} automatically creates a '
-                    'TransferWithCosts function, and does not accept override. '
-                    'TransferWithCosts uses the transfer_function parameter.'
-                )
+                raise TypeError(f'{self.__class__.__name__} automatically creates a '
+                                'TransferWithCosts function, and does not accept override. '
+                                'TransferWithCosts uses the transfer_function parameter.')
         except KeyError:
             pass
+
+        # Deal with **modulates** if specified
+        if MODULATES in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if control:
+                raise ControlSignalError(f"Both '{CONTROL}' and '{MODULATES}' arguments are specified in the "
+                                         f"constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just '{CONTROL}'.")
+            # warnings.warn(f"The '{MODULATES}' argument (specified in the constructor for "
+            #               f"'{name if name else self.__class__.__name__}') has been deprecated; "
+            #               f"should use '{'control'}' going forward.")
+
+            if PROJECTIONS in kwargs:
+                raise ControlSignalError(f"Both '{MODULATES}' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Should use just '{PROJECTIONS}' (or '{CONTROL}') ")
+            control = kwargs.pop(MODULATES)
+
+        elif PROJECTIONS in kwargs:
+            # Don't allow **control** and **modulates** to both be specified
+            if control:
+                raise ControlSignalError(f"Both '{CONTROL}' and '{PROJECTIONS}' arguments are specified "
+                                         f"in the constructor for '{name if name else self.__class__.__name__}; "
+                                         f"Must use just one or the other.")
 
         # This is included in case ControlSignal was created by another Component (such as ControlProjection)
         #    that specified ALLOCATION_SAMPLES in params
@@ -836,7 +862,7 @@ class ControlSignal(ModulatorySignal):
             size=size,
             transfer_function=transfer_function,
             modulation=modulation,
-            modulates=modulates,
+            modulates=control,
             cost_options=cost_options,
             intensity_cost_function=intensity_cost_function,
             adjustment_cost_function=adjustment_cost_function,
@@ -1009,20 +1035,36 @@ class ControlSignal(ModulatorySignal):
             [TBI:] (Mechanism, parameter name, weight, exponent, projection_specs)
 
         Returns params dict with CONNECTIONS entries if any of these was specified.
-
         """
+
         from psyneulink.core.components.projections.projection import _parse_connection_specs
-        from psyneulink.core.globals.keywords import PROJECTIONS
 
         params_dict = {}
         port_spec = port_specific_spec
+        dual_spec_error = self.errorType(f"Both 'PROJECTIONS' and '{owner.controlType.upper()}' entries found in "
+                                         f"specification dict for '{port_dict['port_type'].__name__}' of "
+                                         f"'{owner.name}'. Must use only one or the other.")
 
         if isinstance(port_specific_spec, dict):
+            # Note: if CONTROL is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
+            if owner.controlType in port_specific_spec:
+                # owner.controlType *and* PROJECTIONS can't both be used
+                if PROJECTIONS in port_specific_spec:
+                    raise dual_spec_error
+                # Move owner.controlType entry to PROJECTIONS
+                port_specific_spec[PROJECTIONS] = port_specific_spec.pop(owner.controlType)
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
 
             port_spec = None
+            # Resolve owner.controlType as synonym for PROJECTIONS:
+            if owner.controlType in params_dict:
+                # owner.controlType *and* PROJECTIONS can't both be used
+                if PROJECTIONS in params_dict:
+                    raise dual_spec_error
+                # Move owner.controlType entry to PROJECTIONS
+                params_dict[PROJECTIONS] = params_dict.pop(owner.controlType)
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
                                                                owner=owner,
                                                                connections=port_specific_spec)

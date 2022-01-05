@@ -410,7 +410,7 @@ from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.defaults import defaultModulatoryAllocation
 from psyneulink.core.globals.keywords import \
-    ADDITIVE_PARAM, DISABLE, MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, MULTIPLICATIVE_PARAM, \
+    ADDITIVE_PARAM, CONTROL, DISABLE, MAYBE, MECHANISM, MODULATION, MODULATORY_SIGNAL, MULTIPLICATIVE_PARAM, \
     OVERRIDE, PROJECTIONS, VARIABLE
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 
