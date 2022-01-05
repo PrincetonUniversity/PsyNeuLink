@@ -498,8 +498,11 @@ class GatingMechanism(ControlMechanism):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.gating_allocation.default_value
+
+        # Handle controlType as synonym for PROJECTIONS:
         if isinstance(gating_signal_spec, dict) and self.controlType in gating_signal_spec:
             gating_signal_spec[PROJECTIONS] = gating_signal_spec.pop(self.controlType)
+
         gating_signal = _instantiate_port(port_type=GatingSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value
@@ -508,8 +511,10 @@ class GatingMechanism(ControlMechanism):
                                                modulation=self.defaults.modulation,
                                                port_spec=gating_signal_spec,
                                                context=context)
+
         if not type(gating_signal) in convert_to_list(self.outputPortTypes):
             raise ProjectionError(f'{type(gating_signal)} inappropriate for {self.name}')
+
         return gating_signal
 
     def _check_for_duplicates(self, control_signal, control_signals, context):

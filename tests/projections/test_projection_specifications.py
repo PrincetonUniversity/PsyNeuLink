@@ -150,6 +150,7 @@ class TestProjectionSpecificationFormats:
                 pnl.GatingMechanism(gating_signals=[gating_sig_spec])
             assert gating_err_msg == str(err.value)
         else:
+            # G = pnl.GatingMechanism(gating_signals=[gating_sig_spec])
             C = pnl.ControlMechanism(control_signals=[ctl_sig_spec])
             G = pnl.GatingMechanism(gating_signals=[gating_sig_spec])
             assert len(C.control_signals)==1
