@@ -676,7 +676,7 @@ class UserDefinedFunction(Function_Base):
                "Compiling functions with global variables is not supported! ({})".format(closure_vars.globals)
         func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
 
-        udf_block = builder.append_basic_block(name="post_udf")
+        udf_block = builder.append_basic_block(name="udf_body")
         udf_builder = pnlvm.ir.IRBuilder(udf_block)
 
         pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, udf_builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
