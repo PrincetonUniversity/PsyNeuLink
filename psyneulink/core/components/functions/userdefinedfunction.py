@@ -11,7 +11,7 @@
 
 import numpy as np
 import typecheck as tc
-from inspect import signature, _empty, getsourcelines, getclosurevars
+from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars
 import ast
 
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
@@ -663,12 +663,17 @@ class UserDefinedFunction(Function_Base):
         closure_vars = getclosurevars(self.custom_function)
         assert len(closure_vars.nonlocals) == 0, "Compiling functions with non-local variables is not supported!"
 
-        srclines = getsourcelines(self.custom_function)[0]
-        # strip preceding space characters
-        first_line = srclines[0]
-        prefix_len = len(first_line) - len(first_line.lstrip())
-        formatted_src = ''.join(line[prefix_len:] for line in srclines)
-        func_ast = ast.parse(formatted_src)
+        srcfile = getsourcefile(self.custom_function)
+        first_line = getsourcelines(self.custom_function)[1]
+
+        with open(srcfile) as f:
+            for node in ast.walk(ast.parse(f.read(), srcfile)):
+                if getattr(node, 'lineno', -1) == first_line and isinstance(node, (ast.FunctionDef)):
+                    func_ast = node
+                    break
+                func_ast = None
+
+        assert func_ast is not None, "UDF function source code not found"
 
         func_globals = closure_vars.globals
         assert len(func_globals) == 0 or (
