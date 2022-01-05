@@ -1742,6 +1742,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # FIX: 11/3/21 noise PARAM OF TransferMechanism IS MARKED AS SEED WHEN ASSIGNED A DISTRIBUTION FUNCTION,
             #                BUT IT HAS NO PARAMETER PORT BECAUSE THAT PRESUMABLY IS FOR THE INTEGRATOR FUNCTION,
             #                BUT THAT IS NOT FOUND BY model.all_dependent_parameters
+            # FIX: 1/4/22:  CHECK IF THIS WORKS WITH CFA
+            #               (i.e., DOES IT [make sense to HAVE A random_variables ATTRIBUTE?)
             # Get Components with variables to be randomized across estimates
             #   and construct ControlSignal to modify their seeds over estimates
             if self.random_variables is ALL:

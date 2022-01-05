@@ -1029,6 +1029,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     """
 
     componentType = "ControlMechanism"
+    controlType = CONTROL # Used as key in specification dictionaries;  can be overridden by subclasses
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -1210,9 +1211,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             constructor_argument=CONTROL
         )
 
-        # MODIFIED 1/2/22 OLD: - MUCH OF THIS SEEMS TO BE COVERED ELSEWHERE; COMMENTING OUT ONLY CAUSES PROBLEMS WITH
-        #                        test_control_signal_and_control_projection_names AND
-        #                        test_json_results_equivalence (stroop_conflict_monitoring_py)
         def _parse_output_ports(self, output_ports):
             def is_2tuple(o):
                 return isinstance(o, tuple) and len(o) == 2
@@ -1235,27 +1233,15 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif isinstance(output_ports[i], dict):
-                    # Handle CONTROL as synonym of PROJECTIONS
-                    if CONTROL in output_ports[i]:
-                        # MODIFIED 1/3/22 NEW:
-                        # CONTROL AND PROJECTIONS can't both be used
-                        if PROJECTIONS in output_ports[i]:
-                            raise ControlMechanismError(f"Both 'CONTROL' and 'PROJECTIONS' entries found in "
-                                                        f"specification dict for {ControlSignal.__name__} of "
-                                                        f"'{self.name}': ({output_ports[i]}).")
-                        # MODIFIED 1/3/22 END
-                        # Replace CONTROL with PROJECTIONS
-                        output_ports[i][PROJECTIONS] = output_ports[i].pop(CONTROL)
-                    if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
-                        full_spec_dict = {
-                            NAME: output_ports[i][PROJECTIONS][0],
-                            MECHANISM: output_ports[i][PROJECTIONS][1],
-                            **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                        }
-                        output_ports[i] = full_spec_dict
+                    for PROJ_SPEC_KEYWORD in {PROJECTIONS, self._owner.controlType}:
+                        if (PROJ_SPEC_KEYWORD in output_ports[i] and is_2tuple(output_ports[i][PROJ_SPEC_KEYWORD])):
+                            tuple_spec = output_ports[i].pop(PROJ_SPEC_KEYWORD)
+                            output_ports[i].update({
+                                NAME: tuple_spec[0],
+                                MECHANISM: tuple_spec[1]})
+                    assert True
 
             return output_ports
-        # MODIFIED 1/2/22 END
 
         def _validate_input_ports(self, input_ports):
             if input_ports is None:
