@@ -1791,6 +1791,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.function.parameters.randomization_dimension._set(
                     randomization_control_signal_index, context
                 )
+                self.function.parameters.randomization_dimension._set(randomization_control_signal_index)
 
     def _instantiate_function(self, function, function_params=None, context=None):
         # this indicates a significant peculiarity of OCM, in that its function
