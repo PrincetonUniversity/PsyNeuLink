@@ -1047,8 +1047,12 @@ class ControlSignal(ModulatorySignal):
 
         if isinstance(port_specific_spec, dict):
             # Note: if CONTROL is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
-            if owner.controlType in port_specific_spec and PROJECTIONS in port_specific_spec:
-                raise dual_spec_error
+            if owner.controlType in port_specific_spec:
+                # owner.controlType *and* PROJECTIONS can't both be used
+                if PROJECTIONS in port_specific_spec:
+                    raise dual_spec_error
+                # Move owner.controlType entry to PROJECTIONS
+                port_specific_spec[PROJECTIONS] = port_specific_spec.pop(owner.controlType)
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
@@ -1056,7 +1060,7 @@ class ControlSignal(ModulatorySignal):
             port_spec = None
             # Resolve owner.controlType as synonym for PROJECTIONS:
             if owner.controlType in params_dict:
-                # owner.controlType AND PROJECTIONS can't both be used
+                # owner.controlType *and* PROJECTIONS can't both be used
                 if PROJECTIONS in params_dict:
                     raise dual_spec_error
                 # Move owner.controlType entry to PROJECTIONS

@@ -154,7 +154,7 @@ class TestNaming:
     # ------------------------------------------------------------------------------------------------
     # TEST 11
     # Test that ControlSignals and ControlProjections are properly named
-
+    @pytest.mark.control
     @pytest.mark.parametrize('control_spec', [pnl.CONTROL, pnl.PROJECTIONS])
     def test_control_signal_and_control_projection_names(self, control_spec):
         D1 = pnl.DDM(name='D1')
@@ -188,6 +188,7 @@ class TestNaming:
     # TEST 12
     # Test that GatingSignals and GatingProjections are properly named
 
+    @pytest.mark.control
     def test_gating_signal_and_gating_projection_names(self):
         T3 = pnl.TransferMechanism(name='T3')
         T4 = pnl.TransferMechanism(name='T4', input_ports=['First Port','Second Port'])
