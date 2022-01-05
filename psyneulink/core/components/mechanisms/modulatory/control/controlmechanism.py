@@ -1258,24 +1258,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                         }
                         output_ports[i] = full_spec_dict
 
-                    # # MODIFIED 1/4/22 NEWER:
-                    # # Handle CONTROL as synonym of PROJECTIONS
-                    # full_spec_dict = output_ports[i]
-                    # if (CONTROL in output_ports[i]):
-                    #     if is_2tuple(output_ports[i][CONTROL]):
-                    #     full_spec_dict.update({
-                    #         NAME: output_ports[i][PROJECTIONS][0],
-                    #         MECHANISM: output_ports[i][PROJECTIONS][1],
-                    #         **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                    #     })
-                    # if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
-                    #     full_spec_dict.update({
-                    #         NAME: output_ports[i][PROJECTIONS][0],
-                    #         MECHANISM: output_ports[i][PROJECTIONS][1],
-                    #         **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                    #     })
-                    # output_ports[i] = full_spec_dict
-
                     # # MODIFIED 1/4/22 NEWEST:
                     # CONTROL_TYPE = self._owner.controlType
                     # # Handle CONTROL_TYPE as synonym of PROJECTIONS
