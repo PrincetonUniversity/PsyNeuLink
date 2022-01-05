@@ -11,7 +11,7 @@
 
 import numpy as np
 import typecheck as tc
-from inspect import signature, _empty, getsourcelines
+from inspect import signature, _empty, getsourcelines, getclosurevars
 import ast
 
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
@@ -659,14 +659,21 @@ class UserDefinedFunction(Function_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, state,
                                 arg_in, arg_out, *, tags:frozenset):
 
+        # Check for global and nonlocal vars. we can't compile those.
+        closure_vars = getclosurevars(self.custom_function)
+        assert len(closure_vars.nonlocals) == 0, "Compiling functions with non-local variables is not supported!"
+
         srclines = getsourcelines(self.custom_function)[0]
-        # strip preceeding space characters
+        # strip preceding space characters
         first_line = srclines[0]
         prefix_len = len(first_line) - len(first_line.lstrip())
         formatted_src = ''.join(line[prefix_len:] for line in srclines)
         func_ast = ast.parse(formatted_src)
 
-        func_globals = self.custom_function.__globals__
+        func_globals = closure_vars.globals
+        assert len(func_globals) == 0 or (
+               len(func_globals) == 1 and np in func_globals.values()), \
+               "Compiling functions with global variables is not supported! ({})".format(closure_vars.globals)
         func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
 
         udf_block = builder.append_basic_block(name="post_udf")
