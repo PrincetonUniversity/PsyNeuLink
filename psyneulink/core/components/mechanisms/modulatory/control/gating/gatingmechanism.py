@@ -189,7 +189,7 @@ from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.defaults import defaultGatingAllocation
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_SIGNALS, GATE, GATING_PROJECTION, GATING_SIGNAL, GATING_SIGNALS, \
-    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTION_TYPE
+    INIT_EXECUTE_METHOD_ONLY, MONITOR_FOR_CONTROL, PORT_TYPE, PROJECTIONS, PROJECTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -498,6 +498,8 @@ class GatingMechanism(ControlMechanism):
         from psyneulink.core.components.projections.projection import ProjectionError
 
         allocation_parameter_default = self.parameters.gating_allocation.default_value
+        if isinstance(gating_signal_spec, dict) and self.controlType in gating_signal_spec:
+            gating_signal_spec[PROJECTIONS] = gating_signal_spec.pop(self.controlType)
         gating_signal = _instantiate_port(port_type=GatingSignal,
                                                owner=self,
                                                variable=self.default_allocation           # User specified value
