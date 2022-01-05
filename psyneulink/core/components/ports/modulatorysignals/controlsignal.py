@@ -595,7 +595,29 @@ class ControlSignal(ModulatorySignal):
     #region CLASS ATTRIBUTES
 
     componentType = CONTROL_SIGNAL
+    componentName = 'ControlSignal'
+    errorType = ControlSignalError
+
     paramsType = OUTPUT_PORT_PARAMS
+    portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
+                                                        COST_OPTIONS,
+                                                        INTENSITY_COST_FUNCTION,
+                                                        ADJUSTMENT_COST_FUNCTION,
+                                                        DURATION_COST_FUNCTION,
+                                                        COMBINE_COSTS_FUNCTION}
+
+    connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
+    connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
+    projectionSocket = RECEIVER
+    modulators = []
+    projection_type = CONTROL_PROJECTION
+
+    classPreferenceLevel = PreferenceLevel.TYPE
+    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
+    # Note: only need to specify setting;  level will be assigned to TYPE automatically
+    # classPreferences = {
+    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
+    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     class Parameters(ModulatorySignal.Parameters):
         """
@@ -767,26 +789,6 @@ class ControlSignal(ModulatorySignal):
             except (TypeError, IndexError):
                 # not iterable, so assume single value
                 pass
-
-    portAttributes = ModulatorySignal.portAttributes | {ALLOCATION_SAMPLES,
-                                                        COST_OPTIONS,
-                                                        INTENSITY_COST_FUNCTION,
-                                                        ADJUSTMENT_COST_FUNCTION,
-                                                        DURATION_COST_FUNCTION,
-                                                        COMBINE_COSTS_FUNCTION}
-
-    connectsWith = [PARAMETER_PORT, INPUT_PORT, OUTPUT_PORT]
-    connectsWithAttribute = [PARAMETER_PORTS, INPUT_PORTS, OUTPUT_PORTS]
-    projectionSocket = RECEIVER
-    modulators = []
-    projection_type = CONTROL_PROJECTION
-
-    classPreferenceLevel = PreferenceLevel.TYPE
-    # Any preferences specified below will override those specified in TYPE_DEFAULT_PREFERENCES
-    # Note: only need to specify setting;  level will be assigned to TYPE automatically
-    # classPreferences = {
-    #     PREFERENCE_SET_NAME: 'OutputPortCustomClassPreferences',
-    #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
     #endregion
 
@@ -1039,14 +1041,14 @@ class ControlSignal(ModulatorySignal):
 
         params_dict = {}
         port_spec = port_specific_spec
-        dual_spec_error_msg = f"Both 'PROJECTIONS' and '{owner.controlType.upper()}' entries found in " \
-                              f"specification dict for '{port_dict['port_type'].__name__}' of '{owner.name}'. " \
-                              f"Must use only one or the other."
+        dual_spec_error = self.errorType(f"Both 'PROJECTIONS' and '{owner.controlType.upper()}' entries found in "
+                                         f"specification dict for '{port_dict['port_type'].__name__}' of "
+                                         f"'{owner.name}'. Must use only one or the other.")
 
         if isinstance(port_specific_spec, dict):
             # Note: if CONTROL is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
             if owner.controlType in port_specific_spec and PROJECTIONS in port_specific_spec:
-                raise ControlSignalError(dual_spec_error_msg)
+                raise dual_spec_error
             return None, port_specific_spec
 
         elif isinstance(port_specific_spec, tuple):
@@ -1056,7 +1058,7 @@ class ControlSignal(ModulatorySignal):
             if owner.controlType in params_dict:
                 # owner.controlType AND PROJECTIONS can't both be used
                 if PROJECTIONS in params_dict:
-                    raise ControlSignalError(dual_spec_error_msg)
+                    raise dual_spec_error
                 # Move owner.controlType entry to PROJECTIONS
                 params_dict[PROJECTIONS] = params_dict.pop(owner.controlType)
             params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,

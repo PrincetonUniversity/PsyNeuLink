@@ -1029,7 +1029,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     """
 
     componentType = "ControlMechanism"
-    controlType = CONTROL
+    controlType = CONTROL # Used as key in specification dictionaries;  can be overridden by subclasses
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -1236,6 +1236,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
                 elif isinstance(output_ports[i], dict):
+
                     # MODIFIED 1/4/22 OLD:
                     # Handle CONTROL as synonym of PROJECTIONS
                     if self._owner.controlType in output_ports[i]:
@@ -1256,7 +1257,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                             **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
                         }
                         output_ports[i] = full_spec_dict
-                    # MODIFIED 1/4/22 NEWER:
+
+                    # # MODIFIED 1/4/22 NEWER:
                     # # Handle CONTROL as synonym of PROJECTIONS
                     # full_spec_dict = output_ports[i]
                     # if (CONTROL in output_ports[i]):
@@ -1273,7 +1275,24 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     #         **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
                     #     })
                     # output_ports[i] = full_spec_dict
+
+                    # # MODIFIED 1/4/22 NEWEST:
+                    # CONTROL_TYPE = self._owner.controlType
+                    # # Handle CONTROL_TYPE as synonym of PROJECTIONS
+                    # if ((CONTROL_TYPE in output_ports[i]) and is_2tuple(output_ports[i][CONTROL_TYPE])):
+                    #     output_ports[i][CONTROL_TYPE] = {
+                    #         NAME: output_ports[i][PROJECTIONS][0],
+                    #         MECHANISM: output_ports[i][PROJECTIONS][1],
+                    #         **{k: v for k, v in output_ports[i][PROJECTIONS].items() if k != CONTROL_TYPE}
+                    #     }
+                    # if (PROJECTIONS in output_ports[i] and is_2tuple(output_ports[i][PROJECTIONS])):
+                    #     output_ports[i][PROJECTIONS] = {
+                    #         NAME: output_ports[i][PROJECTIONS][0],
+                    #         MECHANISM: output_ports[i][PROJECTIONS][1],
+                    #         **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
+                    #     }
                     # MODIFIED 1/4/22 END
+
             return output_ports
         # MODIFIED 1/2/22 END
 

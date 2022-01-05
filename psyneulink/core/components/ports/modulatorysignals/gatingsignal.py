@@ -347,8 +347,9 @@ class GatingSignal(ControlSignal):
 
     componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
-    paramsType = OUTPUT_PORT_PARAMS
+    errorType = GatingSignalError
 
+    paramsType = OUTPUT_PORT_PARAMS
     portAttributes = ControlSignal.portAttributes | {GATE}
 
     connectsWith = [INPUT_PORT, OUTPUT_PORT]
