@@ -8040,20 +8040,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if comp in inputs:
                         inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
                     else:
-                        # # MODIFIED 1/5/22 OLD:
-                        # inputs[comp]=[[shadowed_input]]
-                        # # # MODIFIED 1/5/22 NEW: WORKS WITH SCRATCH PAD
-                        # def _get_enclosing_comp_for_node(input_port, comp):
-                        #     """Get the Composition that is a node of self in which node nested in it"""
-                        #     input_port = comp.input_CIM.port_map[input_port][0]
-                        #     if not input_port.path_afferents:
-                        #        return comp
-                        #     comp = input_port.path_afferents[0].sender.owner.composition
-                        #     # Recursively search up through enclosing Compositions until one is a node of self
-                        #     while comp not in self.nodes and comp is not self:
-                        #         comp = _get_enclosing_comp_for_node(input_port, comp)
-                        #     return comp
-                        # MODIFIED 1/5/22 NEWER: WORKS WITH TEST
                         def _get_enclosing_comp_for_node(input_port, comp):
                             """Get the Composition that is a node of self in which node nested in it.
                             - input_port is of node for which enclosing comp is being sought
@@ -8077,7 +8063,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         else:
                             # Create entry in inputs dict for nested comp containing shadowed_input
                             inputs[comp_for_input]=[[shadowed_input]]
-                        # MODIFIED 1/5/22 END
                 else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
