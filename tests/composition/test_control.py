@@ -2690,7 +2690,16 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
     @pytest.mark.control
     @pytest.mark.composition
-    def test_nested_composition_as_agent_rep(self):
+    @pytest.mark.parametrize('nested_agent_rep', [
+        'unnested',
+        # 'nested'  # FIX: RESTORE once nested Composition is supported for agent_rep
+    ])
+    @pytest.mark.parametrize('bad_state_featues', [
+        'good_state_feat',
+        'bad_state_feat'
+    ])
+    def test_nested_composition_as_agent_rep(self, nested_agent_rep, bad_state_featues):
+        from psyneulink.core.compositions.composition import RunError
         I = pnl.ProcessingMechanism(name='I')
         icomp = pnl.Composition(nodes=I, name='INNER COMP')
 
@@ -2699,19 +2708,36 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         C = pnl.ProcessingMechanism(name='C')
         mcomp = pnl.Composition(pathways=[[A,B,C], icomp],
                             name='MIDDLE COMP')
+        agent_rep = mcomp if nested_agent_rep is 'nested' else None
+        state_features = I.input_port if bad_state_featues is 'bad_state_feat' else None
         ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
         ocm = pnl.OptimizationControlMechanism(name='OCM',
-                                           agent_rep=mcomp,  # Nested Composition as agent_rep
-                                           state_features=I.input_port,
+                                           agent_rep=agent_rep,  # Nested Composition as agent_rep
+                                           state_features=state_features,
                                            objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
                                            allow_probes=True,
                                            function=pnl.GridSearch(),
                                            control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
                                                                          allocation_samples=[10, 20, 30]))
         ocomp.add_controller(ocm)
-        # FIX:  CRASHES IN composition._get_total_cost_of_control_allocation()
-        # ocomp.run()
 
+        error_text = 'Input stimulus ([array([0.])]) for MIDDLE COMP is incompatible with its ' \
+                     'external_input_values ([array([0.]), array([0.])]).'
+        if nested_agent_rep == 'unnested':
+            if bad_state_featues == 'bad_state_feat':
+                with pytest.raises(RunError) as error:
+                    ocomp.run()
+                assert error_text in str(error.value)
+            else:
+                ocomp.run()
+        # FIX:  CRASHES IN composition._get_total_cost_of_control_allocation()
+        #        RESTORE 'nested' for nested_agent_rep arg (in params)once nested Composition is supported for agent_rep
+        else:
+            if bad_state_featues == 'bad_state_feat':
+                with pytest.raises(RunError) as error:
+                    ocomp.run()
+                assert error_text in str(error.value)
+                ocomp.run()
 
 class TestSampleIterator:
 
