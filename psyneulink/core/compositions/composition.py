@@ -8008,10 +8008,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
     #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
     def _build_predicted_inputs_dict(self, predicted_input):
-        """Get inputs for evaluate method used to execute simulations of Composition.
+        """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
-        Get values of state_input_ports which receive projections from items providing relevant input (and any
-        processing of those values specified
+        Get values of state_input_ports that receive projections from items providing relevant input (and any
+          processing of those values specified), and format as input_dict suitable for run() method (called in evaluate)
+        Deal with inputs for nodes in nested Compositions
         """
         inputs = {}
         no_predicted_input = (predicted_input is None or not len(predicted_input))
@@ -8034,16 +8035,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         and shadow_input_owner not in nested_nodes \
                         and shadow_input_owner not in self.nodes:
                     continue
-                if shadow_input_owner not in nested_nodes:
+                if shadow_input_owner in nested_nodes:
+                    comp = nested_nodes[shadow_input_owner]
+                    if comp in inputs:
+                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
+                    else:
+                        def _get_enclosing_comp_for_node(input_port, comp):
+                            """Get the Composition that is a node of self in which node nested in it.
+                            - input_port is of node for which enclosing comp is being sought
+                            - comp is one to which that node belongs
+                            """
+                            # Get input_port for comp's CIM corresponding to
+                            cim_input_port = comp.input_CIM.port_map[input_port][0]
+                            # Outermost Composition, so return that
+                            if not cim_input_port.path_afferents:
+                                return comp
+                            enclosing_comp = cim_input_port.path_afferents[0].sender.owner.composition
+                            # Recursively search up through enclosing Compositions until one is a node of self
+                            while comp not in self.nodes and comp is not self:
+                                comp = _get_enclosing_comp_for_node(cim_input_port, enclosing_comp)
+                            return comp
+                        shadow_input_comp = nested_nodes[shadow_input_owner].input_CIM.composition
+                        comp_for_input = _get_enclosing_comp_for_node(input_port.shadow_inputs, shadow_input_comp)
+                        if comp_for_input in inputs:
+                            # If node for nested comp is already in inputs dict, append to its input
+                            inputs[comp_for_input][0].append(shadowed_input)
+                        else:
+                            # Create entry in inputs dict for nested comp containing shadowed_input
+                            inputs[comp_for_input]=[[shadowed_input]]
+                else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
                     inputs[shadow_input_owner] = shadowed_input
-                else:
-                    comp = nested_nodes[shadow_input_owner]
-                    if comp not in inputs:
-                        inputs[comp]=[[shadowed_input]]
-                    else:
-                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
@@ -8137,9 +8160,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an array with the results of each run is also returned.
         """
 
-        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
-        total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
-
         # Build input dictionary for simulation
         input_spec = self.parameters.input_specification.get(context)
         if input_spec and block_simulate and not isgenerator(input_spec):
@@ -8155,8 +8175,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           f"supplied input spec is a generator. Generators can not be used as inputs for block "
                           f"simulation. This evaluation will not use block simulation.")
 
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
-        # Set up aniimation for simulation
+        # Set up animation for simulation
         # HACK: _animate attribute is set in execute method, but Evaluate can be called on a Composition that has not
         # yet called the execute method, so we need to do a check here too.
         # -DTS
