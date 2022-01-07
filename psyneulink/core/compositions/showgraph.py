@@ -1845,7 +1845,7 @@ class ShowGraph():
                     # MODIFIED 1/6/22 NEW:
                     # Get nested source node for direct projection to objective mechanism
                     if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
-                        cim_output_port =  projection.sender
+                        cim_output_port = projection.sender
                         proj_sndr, node, comp = cim_output_port.owner._get_source_node_for_output_CIM(cim_output_port)
                     else:
                         proj_sndr = projection.sender
@@ -1868,7 +1868,7 @@ class ShowGraph():
                         if (proj_sndr.owner not in composition.nodes
                                 # MODIFIED 1/6/22 NEW:
                                 and isinstance(proj_sndr.owner, CompositionInterfaceMechanism)):
-                                # MODIFIED 1/6/22 END
+                            # MODIFIED 1/6/22 END
                             num_nesting_levels = self.num_nesting_levels or 0
                             nested_comp = proj_sndr.owner.composition
                             try:

@@ -702,14 +702,14 @@ class TestControl:
     ]
     num_show_graph_combos = len(_nested_show_graph_kwargs)
     obj_mech = ['monitor_for_control'] * num_show_graph_combos  + ['obj_mech'] * num_show_graph_combos
-    show_graph_args = list(zip(_nested_show_graph_kwargs*2, _nested_comp_to_ocm_or_obj_mech))
+    show_graph_args = list(zip(_nested_show_graph_kwargs * 2, _nested_comp_to_ocm_or_obj_mech))
     test_args = []
     ids = []
     for i in range(len(_nested_comp_to_ocm_or_obj_mech)):
         show_graph_arg, expected_output = show_graph_args[i]
         obj_mech_arg = obj_mech[i]
         test_args.append((show_graph_arg, expected_output, obj_mech_arg))
-        ids.append(obj_mech_arg+'-'+str(show_graph_arg))
+        ids.append(obj_mech_arg + '-' + str(show_graph_arg))
     @pytest.mark.parametrize(
         'show_graph_kwargs, expected_output, obj_mech', test_args,
         # ids=[str(x) for x in _nested_show_graph_kwargs]*2
@@ -755,7 +755,7 @@ class TestControl:
         except AssertionError:
             # ??SAME BUG AS IN MESSAGE FOR COMMIT eb61303808ad2a5ba46fdd18d0e583283397915c ??)
             if ('show_node_structure' in show_graph_kwargs
-                    and not 'show_cim' in show_graph_kwargs
+                    and 'show_cim' not in show_graph_kwargs
                     and ('show_nested' in show_graph_kwargs and show_graph_kwargs['show_nested']==NESTED)
             ):
                 # The test in this condition is for incorrect show_graph output due an as yet undetermined bug
@@ -763,6 +763,7 @@ class TestControl:
                 #    from a the input_port of a nested monitored node (ic) rather than from its output_port to the
                 #    OCM's outcome_input_port.
                 # If the test fails in this condition, it could mean that the bug has been corrected.
+                # The bug may be the same one as in eb61303808ad2a5ba46fdd18d0e583283397915c
                 raise(AssertionError,"FAILURE TO REPLICATE BUGGY SHOW_GRAPH OUTPUT -- SEE COMMENT IN TEST")
             else:
                 raise(AssertionError)
