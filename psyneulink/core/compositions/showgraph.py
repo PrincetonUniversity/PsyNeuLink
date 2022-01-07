@@ -1842,6 +1842,14 @@ class ShowGraph():
             # incoming edges (from monitored mechs to objective mechanism)
             for input_port in objmech.input_ports:
                 for projection in input_port.path_afferents:
+                    # MODIFIED 1/6/22 NEW:
+                    # Get nested source node for direct projection to objective mechanism
+                    if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
+                        cim_output_port =  projection.sender
+                        proj_sndr, node, comp = cim_output_port.owner._get_source_node_for_output_CIM(cim_output_port)
+                    else:
+                        proj_sndr = projection.sender
+                    # MODIFIED 1/6/22 END
                     if objmech in active_items:
                         if self.active_color == BOLD:
                             proj_color = self.controller_color
@@ -1854,12 +1862,15 @@ class ShowGraph():
                         proj_width = str(self.default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
-                                                                projection.sender.owner,
+                                                                proj_sndr.owner,
                                                                 show_types,
                                                                 show_dimensions)
-                        if projection.sender.owner not in composition.nodes:
+                        if (proj_sndr.owner not in composition.nodes
+                                # MODIFIED 1/6/22 NEW:
+                                and isinstance(proj_sndr.owner, CompositionInterfaceMechanism)):
+                                # MODIFIED 1/6/22 END
                             num_nesting_levels = self.num_nesting_levels or 0
-                            nested_comp = projection.sender.owner.composition
+                            nested_comp = proj_sndr.owner.composition
                             try:
                                 nesting_depth = next((k for k, v in comp_hierarchy.items() if v == nested_comp))
                                 sender_visible = nesting_depth <= num_nesting_levels
@@ -1868,11 +1879,11 @@ class ShowGraph():
                         else:
                             sender_visible = True
                         if sender_visible:
-                            sndr_proj_label += ':' + objmech._get_port_name(projection.sender)
+                            sndr_proj_label += ':' + objmech._get_port_name(proj_sndr)
                         objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
                     else:
                         sndr_proj_label = self._get_graph_node_label(composition,
-                                                                projection.sender.owner,
+                                                                proj_sndr.owner,
                                                                 show_types,
                                                                 show_dimensions)
                         objmech_proj_label = self._get_graph_node_label(composition,
@@ -1892,11 +1903,11 @@ class ShowGraph():
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
                     # MODIFIED 1/6/22 NEW:
+                    # Handled by _assign_cim_components()
                     if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
-                        # Handled by _assign_cim_components()
                         continue
                     # MODIFIED 1/6/22 END
-                    if show_node_structure:
+                    if show_node_structure and show_cim:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,
                                                                      show_types,
@@ -1964,10 +1975,12 @@ class ShowGraph():
         # FIX: 11/3/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         for i in controller.input_ports[controller.num_outcome_input_ports:]:
             for p in i.path_afferents:
+                # MODIFIED 1/6/22 NEW:
                 sender = p.sender.owner
                 if isinstance(sender, CompositionInterfaceMechanism) and not show_cim:
                     pass # FIX: 1/6/22 - PLACEMARKER FOR RELABELING INPUT_CIM AS SHADOWING INPUT OF SHADOWED NODE
                     assert True
+                # MODIFIED 1/6/22 END
                 senders.add(sender)
         self._assign_incoming_edges(g,
                                     controller,
@@ -2382,12 +2395,12 @@ class ShowGraph():
                                 enclosing_g = enclosing_comp._show_graph.G
                                 # Skip:
                                 # - cims as sources (handled in _assign_cim_components)
+                                #    unless it is the input_CIM for the outermost Composition and show_cim is not true
                                 # - controller (handled in _assign_controller_components)
-                                # - unless it is the input_CIM for the outermost Composition and show_cim is False
                                 if (isinstance(sndr, CompositionInterfaceMechanism) and
                                         rcvr is not enclosing_comp.controller
                                         and rcvr is not composition.controller
-                                        # MODIFIED 1/6/22 NEW: FIX: ALLOW INPUT_CIM OF OUTERMOST COMP TO PASS
+                                        # MODIFIED 1/6/22 NEW:
                                         and not sndr.afferents and show_cim
                                         # MODIFIED 1/6/22 END
                                         or self._is_composition_controller(sndr, enclosing_comp)):
