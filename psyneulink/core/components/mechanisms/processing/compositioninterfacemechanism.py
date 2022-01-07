@@ -232,11 +232,35 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
                 output_ports_marked_for_deletion.add(port)
         self.user_added_ports[OUTPUT_PORTS] = self.user_added_ports[OUTPUT_PORTS] - output_ports_marked_for_deletion
 
+    def _get_source_node_for_input_CIM(self, port, start_comp=None, end_comp=None):
+        """Return Port, Node and Composition  for source of projection to input_CIM from (possibly nested) outer comp
+        **port** should be an InputPort or OutputPort of the CompositionInterfaceMechanism;
+        **comp** specifies the Composition at which to begin the search (or continue it when called recursively;
+                 assumes the current CompositionInterfaceMechanism's Composition by default
+        """
+        # Ensure method is being called on an output_CIM
+        assert self == self.composition.input_CIM
+        #  CIM MAP ENTRIES:  [SENDER PORT,  [output_CIM InputPort,  output_CIM OutputPort]]
+        # Get sender to input_port of output_CIM
+        comp = start_comp or self.composition
+        port_map = port.owner.port_map
+        idx = 0 if isinstance(port, InputPort) else 1
+        input_port = [port_map[k][0] for k in port_map if port_map[k][idx] is port]
+        assert len(input_port)==1, f"PROGRAM ERROR: Expected exactly 1 input_port for {port.name} " \
+                                   f"in port_map for {port.owner}; found {len(input_port)}."
+        # assert len(input_port[0].path_afferents)==1, f"PROGRAM ERROR: Port ({input_port.name}) expected to have " \
+        #                                              f"just one path_afferent; has {len(input_port.path_afferents)}."
+        if not input_port[0].path_afferents or comp == end_comp:
+            return input_port[0], input_port[0].owner, comp
+        sender = input_port[0].path_afferents[0].sender
+        # if not isinstance(sender.owner, CompositionInterfaceMechanism):
+        return self._get_source_node_for_input_CIM(sender, sender.owner.composition)
+
     def _get_destination_node_for_input_CIM(self, port, comp=None):
         """Return Port, Node and Composition for destination of projection from input_CIM to (possibly nested) node
         **port** should be an InputPort or OutputPort of the CompositionInterfaceMechanism;
-        **comp** specifies the Composition at which to begin the search;  assumes the current
-                 CompositionInterfaceMechanism's Composition by default
+        **comp** specifies the Composition at which to begin the search (or continue it when called recursively;
+                 assumes the current CompositionInterfaceMechanism's Composition by default
         """
         # Ensure method is being called on an input_CIM
         assert self == self.composition.input_CIM
@@ -258,8 +282,8 @@ class CompositionInterfaceMechanism(ProcessingMechanism_Base):
     def _get_source_node_for_output_CIM(self, port, comp=None):
         """Return Port, Node and Composition  for source of projection to output_CIM from (possibly nested) node
         **port** should be an InputPort or OutputPort of the CompositionInterfaceMechanism;
-        **comp** specifies the Composition at which to begin the search;  assumes the current
-                 CompositionInterfaceMechanism's Composition by default
+        **comp** specifies the Composition at which to begin the search (or continue it when called recursively;
+                 assumes the current CompositionInterfaceMechanism's Composition by default
         """
         # Ensure method is being called on an output_CIM
         assert self == self.composition.output_CIM
