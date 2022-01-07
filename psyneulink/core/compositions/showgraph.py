@@ -1891,9 +1891,11 @@ class ShowGraph():
             # incoming edges (from monitored mechs directly to controller)
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
-                    # if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
-                    #     # Handled by _assign_cim_components()
-                    #     continue
+                    # MODIFIED 1/6/22 NEW:
+                    if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
+                        # Handled by _assign_cim_components()
+                        continue
+                    # MODIFIED 1/6/22 END
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,
@@ -1956,12 +1958,17 @@ class ShowGraph():
             g.edge(agent_rep_label, ctlr_label, color=agent_rep_color, penwidth=agent_rep_width)
             g.edge(ctlr_label, agent_rep_label, color=agent_rep_color, penwidth=agent_rep_width)
 
-        # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
+        # get any other incoming edges to controller
+        # (i.e., other than from ObjectiveMechanism or directly monitored nodes)
         senders = set()
         # FIX: 11/3/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         for i in controller.input_ports[controller.num_outcome_input_ports:]:
             for p in i.path_afferents:
-                senders.add(p.sender.owner)
+                sender = p.sender.owner
+                if isinstance(sender, CompositionInterfaceMechanism) and not show_cim:
+                    pass # FIX: 1/6/22 - PLACEMARKER FOR RELABELING INPUT_CIM AS SHADOWING INPUT OF SHADOWED NODE
+                    assert True
+                senders.add(sender)
         self._assign_incoming_edges(g,
                                     controller,
                                     ctlr_label,
@@ -2192,7 +2199,7 @@ class ShowGraph():
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
-            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMOSITION (NOT IN processing_graph)
+            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMPOSITION (NOT IN processing_graph)
 
         def assign_sender_edge(sndr:Union[Mechanism, Composition],
                                proj_color:str, proj_arrowhead:str
@@ -2363,7 +2370,7 @@ class ShowGraph():
                             if not sender.afferents and rcvr is not composition.controller:
                                 continue
                             # FIX: LOOP HERE OVER sndr_spec IF THERE ARE SEVERAL
-                            # Get node(s) from enclosing Comopsition that is/are source(s) of sender(s)
+                            # Get node(s) from enclosing Composition that is/are source(s) of sender(s)
                             sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
                             if not sndrs_specs:
                                 continue
@@ -2374,11 +2381,15 @@ class ShowGraph():
                                 enclosing_comp = comp_hierarchy[sndr_nesting_level]
                                 enclosing_g = enclosing_comp._show_graph.G
                                 # Skip:
-                                # - cims as sources (handled in _assign_cim_componoents)
+                                # - cims as sources (handled in _assign_cim_components)
                                 # - controller (handled in _assign_controller_components)
+                                # - unless it is the input_CIM for the outermost Composition and show_cim is False
                                 if (isinstance(sndr, CompositionInterfaceMechanism) and
                                         rcvr is not enclosing_comp.controller
                                         and rcvr is not composition.controller
+                                        # MODIFIED 1/6/22 NEW: FIX: ALLOW INPUT_CIM OF OUTERMOST COMP TO PASS
+                                        and not sndr.afferents and show_cim
+                                        # MODIFIED 1/6/22 END
                                         or self._is_composition_controller(sndr, enclosing_comp)):
                                     continue
                                 if sender is composition.parameter_CIM:
@@ -2566,7 +2577,12 @@ class ShowGraph():
             nesting_level -= 1
             num_afferents = len(owner.port_map[proj.receiver][0].path_afferents)
             if num_afferents == 0:
+                # MODIFIED 1/6/22 OLD:
                 return None
+                # # MODIFIED 1/6/22 NEW:
+                # # Presumably outermost Composition, so return CIM itself
+                # return [(owner, sender, nesting_level)]
+                # MODIFIED 1/6/22 END
             # # FIX: ITERATE OVER ALL AFFERENTS TO relevant InputPort of cim:
             # # MODIFIED 4/5/21 OLD:
             # outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
@@ -2579,6 +2595,10 @@ class ShowGraph():
                 sndrs = enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
                 if sndrs is not None:
                     senders.extend(sndrs)
+                # MODIFIED 1/6/22 NEW:
+                else:
+                    senders.append((outer_proj.sender.owner, sender, nesting_level))
+                # MODIFIED 1/6/22 END
             return senders
             # MODIFIED 4/5/21 END
         # FIX: RECEIVERS OF THIS RETURN NEED TO HANDLE LIST
