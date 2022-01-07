@@ -1891,6 +1891,9 @@ class ShowGraph():
             # incoming edges (from monitored mechs directly to controller)
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
+                    # if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
+                    #     # Handled by _assign_cim_components()
+                    #     continue
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,
