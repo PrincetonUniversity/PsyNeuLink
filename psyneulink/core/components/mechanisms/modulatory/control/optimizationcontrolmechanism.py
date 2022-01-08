@@ -451,7 +451,9 @@ The current state of the OptimizationControlMechanism -- or, more properly, of i
 These are provided as input to the `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method,
 the results of which are used together with the `costs <ControlMechanism_Costs_NetOutcome>` associated with the
 `control_allocation <ControlMechanism.control_allocation>`, to evaluate the `net_outcome
-<ControlMechanism.net_outcome>` for that state.
+<ControlMechanism.net_outcome>` for that state. The current state is listed in the OptimizationControlMechanism's
+`state <OptimizationControlMechanism.state>` attribute, and `state_dict <OptimizationControlMechanism.state_dict>`
+contains the Components associated with each value of `state <OptimizationControlMechanism.state>`.
 
 .. _OptimizationControlMechanism_Input:
 
@@ -465,16 +467,7 @@ as inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>` when its `
 is used to execute it; and `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` that provide the
 outcome of executing the `agent_rep <OptimizationControlMechanism.agent_rep>`, that is used to compute the `net_outcome
 <ControlMechanism.net_outcome>` for the `control_allocation <ControlMechanism.control_allocation>` under which the
-execution occurred. Each of these is described below. The current state is listed in the OptimizationControlMechanism's
-`state <OptimizationControlMechanism.state>` attribute
-COMMENT:
-; the `state_dict <OptimizationControlMechanism.state_dict>`
-attribute contains a dictionary with the `Nodes <Composition_Nodes>` that are the sources of the `state_feature_values
-<OptimizationControlMechanism.state_feature_values>` and those subject to the `control_allocations
-<ControlMechanism.control_allocation>` of the OptimizationControlMechanism's control_signals, and their corresponding
-values
-COMMENT
-.
+execution occurred. Each of these is described below.
 
 .. _OptimizationControlMechanism_State_Features:
 
@@ -1079,17 +1072,20 @@ class OptimizationControlMechanism(ControlMechanism):
         (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
 
     state : ndarray
-        lists the values of the current state -- a concatenation of the state_feature_values and control_allocation
-        following the last execution of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+        lists the values of the current state -- a concatenation of the `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>` and `control_allocation
+        <ControlMechanism.control_allocation>` following the last execution of `agent_rep
+        <OptimizationControlMechanism.agent_rep>`.
 
-    COMMENT:
     state_dict : Dict[node:value]
-        dictionary of `Nodes <Composition_Nodes>` that are the sources for the `state_feature_values
-        <OptimizationControlMechanism.state_feature_values>`), and those that are subject to control by the
-        OptimizationControlMechanism's `control_signals <OptimizationControlMechanism_Output>` (for the
-        `control_allocations <ControlMechanism.control_allocation>`), and their corresponding values that comprise
-        the current `state <OptimizationControlMechanism.state>`.
-    COMMENT
+        dictionary containing information about the Components corresponding to the values in `state
+        <OptimizationControlMechanism.state>`.  Keys are (`Port`, `Mechanism`, `Composition`) tuples, and values are
+        the corresponding values in `state <OptimizationControlMechanism.state>`. The initial entries are for the
+        OptimizationControlMechanism's `state features <OptimizationControlMechanism_State_Features>`, that are the
+        sources of its `state_feature_values <OptimizationControlMechanism.state_feature_values>`;  they are
+        followed by entries for the parameters modulated by the OptimizationControlMechanism's `control_signals
+        <OptimizationControlMechanism_Output>` using the corresponding values of its `control_allocations
+        <ControlMechanism.control_allocation>`.
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to

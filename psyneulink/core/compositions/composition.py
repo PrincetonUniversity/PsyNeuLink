@@ -5992,7 +5992,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 warnings.warn(warn_str)
 
     def _get_source(self, projection):
-        """Return tuple with port, node and comp of sender for **projection** (that may be in a nested Composition)."""
+        """Return tuple with port, node and comp of sender for **projection** (possibly in a nested Composition)."""
         # Note:  if Projection is shadowing the input to a Node, the information returned will be for
         #        the output_port of the input_CIM that projects to the shadowed Node.
         port = projection.sender
@@ -6002,7 +6002,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return (port, port.owner, self)
 
     def _get_destination(self, projection):
-        """Return tuple with port, node and comp of receiver for **projection** (that may be in nested Composition)."""
+        """Return tuple with port, node and comp of receiver for **projection** (possibly in a nested Composition)."""
         port = projection.receiver
         if isinstance(port.owner, CompositionInterfaceMechanism):
             if isinstance(projection.sender.owner, ModulatoryMechanism_Base):
