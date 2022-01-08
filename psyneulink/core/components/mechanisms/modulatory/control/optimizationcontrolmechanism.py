@@ -444,7 +444,7 @@ OptimizationControlMechanism is the controller, then it must meet the following 
 *State*
 ~~~~~~~
 
-The current state of the OptimizationControlMechanism -- or, more properly, its `agent_rep
+The current state of the OptimizationControlMechanism -- or, more properly, of its `agent_rep
 <OptimizationControlMechanism.agent_rep>` -- is determined by the OptimizationControlMechanism's current
 `state_feature_values <OptimizationControlMechanism.state_feature_values>` (see `below
 <OptimizationControlMechanism_State_Features>`) and `control_allocation <ControlMechanism.control_allocation>`.
@@ -465,7 +465,16 @@ as inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>` when its `
 is used to execute it; and `outcome_input_ports <OptimizationControlMechanism.outcome_input_ports>` that provide the
 outcome of executing the `agent_rep <OptimizationControlMechanism.agent_rep>`, that is used to compute the `net_outcome
 <ControlMechanism.net_outcome>` for the `control_allocation <ControlMechanism.control_allocation>` under which the
-execution occurred.  Each of these is described below.
+execution occurred. Each of these is described below. The current state is listed in the OptimizationControlMechanism's
+`state <OptimizationControlMechanism.state>` attribute
+COMMENT:
+; the `state_dict <OptimizationControlMechanism.state_dict>`
+attribute contains a dictionary with the `Nodes <Composition_Nodes>` that are the sources of the `state_feature_values
+<OptimizationControlMechanism.state_feature_values>` and those subject to the `control_allocations
+<ControlMechanism.control_allocation>` of the OptimizationControlMechanism's control_signals, and their corresponding
+values
+COMMENT
+.
 
 .. _OptimizationControlMechanism_State_Features:
 
@@ -856,6 +865,7 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
     ControlMechanism, ControlMechanismError
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
@@ -942,7 +952,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.state_feature_values>` and used to predict `net_outcome
         <ControlMechanism.net_outcome>`. Any `InputPort specification <InputPort_Specification>`
         can be used that resolves to an `OutputPort` that projects to that InputPort (see
-        `state_features <OptimizationControlMechanism_State_Features_Arg>` for additional details>).
+        `state_features <OptimizationControlMechanism_State_Features_Arg>` for additional details).
 
     state_feature_functions : Function or function : default None
         specifies the `function <InputPort.function>` assigned the `InputPort` in `state_input_ports
@@ -1068,10 +1078,17 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.agent_rep>` in a given `OptimizationControlMechanism_State`
         (see `Outcome <OptimizationControlMechanism_Outcome>` for additional details).
 
-    COMMENT:
     state : ndarray
         lists the values of the current state -- a concatenation of the state_feature_values and control_allocation
         following the last execution of the `agent_rep <OptimizationControlMechanism.agent_rep>`.
+
+    COMMENT:
+    state_dict : Dict[node:value]
+        dictionary of `Nodes <Composition_Nodes>` that are the sources for the `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>`), and those that are subject to control by the
+        OptimizationControlMechanism's `control_signals <OptimizationControlMechanism_Output>` (for the
+        `control_allocations <ControlMechanism.control_allocation>`), and their corresponding values that comprise
+        the current `state <OptimizationControlMechanism.state>`.
     COMMENT
 
     num_estimates : int
@@ -2385,7 +2402,48 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state(self):
-        return self.state_feature_values + self.control_allocation
+        state_feature_values = (self.state_feature_values if len(self.state_feature_values)
+                                else self.state_input_ports.values)
+        return np.append(state_feature_values, self.control_allocation, 0)
+
+    # FIX: 1/6/22 - FINISH IMPLEMENTING:
+    #               - ADD ENTRIES FOR ALL NODES THAT CONTRIBUTE TO STATE_INPUT_PORTS, EVEN IF CONVERGENT
+    #               - ADD ENTRIES FOR ALL NODES MODULATED BY CONTROL_SIGNAL EVEN IF DIVERGENT
+    #               - DEAL WITH CONTROL_SIGNALS THAT PROJECT TO NESTED NODES (GET METHOD FROM parameter_CIM)
+    #               - MODIFY KEYS TO BE (NODE, PORT) TUPLE
+    #               - DOCUMENT CHANGE TO KEYS UNDER ATTRIBUTES (state_dict : )
+    @property
+    def state_dict(self):
+        """Return dict with (node, port, Composition, index) tuples as keys and corresponding state[index] as values.
+        Note: the index is required, since a state_input_port may have more than one afferent Projection
+              (that is, a state_feature_value may be determined by more than one node),
+              and a ControlSignal may have more than one ControlProjection (that is, a given element of the
+              control_allocation may apply to more than one Parameter).
+        """
+
+        state_dict = {}
+
+        # Get sources for state_feature_values of state:
+        get_info_method = self.composition._get_source
+        for state_index, port in enumerate(self.state_input_ports):
+            # composition = self.composition
+            if port.shadow_inputs:
+                port = port.shadow_inputs
+                # composition = n
+                get_info_method = port.path_afferents[0].sender.owner.composition._get_destination
+            for projection in port.path_afferents:
+                # port, node, comp = composition._get_source(projection)
+                port, node, comp = get_info_method(projection)
+                state_dict.update({(port, node, comp, state_index):self.state[state_index]})
+
+        # Get recipients of control_allocations values of state:
+        for ctl_index, control_signal in enumerate(self.control_signals):
+            for projection in control_signal.efferents:
+                port, node, comp = self.composition._get_destination(projection)
+                state_dict.update({(port, node, comp, state_index):self.state[state_index]})
+                state_dict.update({(port, node, comp, state_index):self.state[state_index + ctl_index]})
+
+        return state_dict
 
     @property
     def _model_spec_parameter_blacklist(self):

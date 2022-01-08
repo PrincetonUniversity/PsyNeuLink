@@ -1493,7 +1493,7 @@ class ShowGraph():
                             else:
                                 proj_color=self.inactive_projection_color
                         else:
-                            port, node, comp = cim._get_source_node_for_output_CIM(proj.receiver)
+                            port, node, comp = cim._get_source_info_from_output_CIM(proj.receiver)
                             if (node in comp.get_nodes_by_role(NodeRole.PROBE)
                                     and not composition.include_probes_in_output):
                                 proj_color=self.probe_color
@@ -1846,7 +1846,7 @@ class ShowGraph():
                     # Get nested source node for direct projection to objective mechanism
                     if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
                         cim_output_port = projection.sender
-                        proj_sndr, node, comp = cim_output_port.owner._get_source_node_for_output_CIM(cim_output_port)
+                        proj_sndr, node, comp = cim_output_port.owner._get_source_info_from_output_CIM(cim_output_port)
                     else:
                         proj_sndr = projection.sender
                     # MODIFIED 1/6/22 END
