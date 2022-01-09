@@ -371,9 +371,9 @@ def setup(app):
 autodoc_member_order = 'bysource'
 
 #skip typehints
-# autodoc_typehints = 'none'
-autodoc_typehints = 'signature'
-typehints_defaults = 'comma'
+autodoc_typehints = 'none'
+# autodoc_typehints = 'signature'
+# typehints_defaults = 'comma'
 
 default_role = 'any'
 
