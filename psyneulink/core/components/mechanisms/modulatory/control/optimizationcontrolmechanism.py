@@ -272,12 +272,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     done automatically (see warning below).
 
         .. warning::
-           The **state_features** specified when the `agent_rep <OptimizationControlMechanism.agent_rep>` is a
-           `CompositionFunctionApproximator` must align with the arguments of its `evaluate
-           <CompositionFunctionApproximator.evaluate>` method.  Since the latter cannot always be determined automatically,
-           the `state_input_ports <OptimizationControlMechanism.state_input_ports>` cannot be created automatically, nor
-           can the **state_features** specification be validated;  thus, specifying inappropriate **state_features** may
-           produce errors that are unexpected or difficult to interpret.
+           The **state_features** specified when the `agent_rep <OptimizationControlMechanism.agent_rep>`
+           is a `CompositionFunctionApproximator` must align with the arguments of its `evaluate
+           <CompositionFunctionApproximator.evaluate>` method.  Since the latter cannot always be determined
+           automatically, the `state_input_ports <OptimizationControlMechanism.state_input_ports>` cannot be created
+           automatically, nor can the **state_features** specification be validated;  thus, specifying inappropriate
+           **state_features** may produce errors that are unexpected or difficult to interpret.
 
   COMMENT:
    FIX: CONFIRM (OR IMPLEMENT?) THE FOLLOWING
@@ -1220,7 +1220,8 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlSignal.allocation_samples>` specifications for each of the OptimizationControlMechanism's
         `control_signals <OptimizationControlMechanism.control_signals>`, and includes the
         *RANDOMIZATION_CONTROL_SIGNAL* used to randomize estimates of each `control_allocation
-        <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization_Control_Signal>` above).
+        <ControlMechanism.control_allocation>` (see `note <OptimizationControlMechanism_Randomization_Control_Signal>`
+        above).
 
     saved_samples : list
         contains all values of `control_allocation <ControlMechanism.control_allocation>` sampled by `function
@@ -1494,19 +1495,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
 
         if self.random_variables is not ALL:
-            # invalid_params = [param.name for param in self.random_variables
-            #                   if param not in [r._owner._owner for r in self.agent_rep.random_variables]]
-            # if invalid_params:
-            #     raise OptimizationControlMechanismError(f"The following Parameters were specified for the "
-            #                                             f"{RANDOM_VARIABLES} arg of {self.name} that are do randomizable "
-            #                                             f"(i.e., they do not have a 'seed' attribute: "
-            #                                             f"{invalid_params}.")
             invalid_params = [param.name for param in self.random_variables
                               if param not in self.agent_rep.random_variables]
             if invalid_params:
                 raise OptimizationControlMechanismError(f"The following Parameters were specified for the "
-                                                        f"{RANDOM_VARIABLES} arg of {self.name} that are do randomizable "
-                                                        f"(i.e., they do not have a 'seed' attribute: "
+                                                        f"{RANDOM_VARIABLES} arg of {self.name} that are do"
+                                                        f"randomizable (i.e., they do not have a 'seed' attribute: "
                                                         f"{invalid_params}.")
 
     # FIX: CONSIDER GETTING RID OF THIS METHOD ENTIRELY, AND LETTING state_input_ports
@@ -1585,8 +1579,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 super()._validate_monitor_for_control(self.agent_rep._get_all_nodes())
             except ControlMechanismError as e:
                 raise OptimizationControlMechanismError(f"{self.name} has 'outcome_ouput_ports' that receive "
-                                                        f"Projections from the following Components that do not "
-                                                        f"belong to its {AGENT_REP} ({self.agent_rep.name}): {e.data}.")
+                                                        f"Projections from the following Components that do not belong "
+                                                        f"to its {AGENT_REP} ({self.agent_rep.name}): {e.data}.")
 
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
@@ -1627,7 +1621,8 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type != COMPOSITION:
             return
 
-        from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionInterfaceMechanism
+        from psyneulink.core.compositions.composition import \
+            Composition, NodeRole, CompositionInterfaceMechanism, CompositionError
 
         def _get_all_input_nodes(comp):
             """Return all input_nodes, including those for any Composition nested one level down.
@@ -1645,7 +1640,9 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.state_features:
             # Validate state_features, and instantiate any that are not shadowing nodes
             # Shadowing nodes are instantiated in Composition._update_shadow_projections()
-            # FIX: 1/8/22: NEED TO ALSO VALIDATE, AND IMPLEMENT HERE OR SOMEHWERE, ANY NON-SHADOWING STATE FEATURES
+            # FIX: 1/8/22:
+            #      - CHECK AGAINST self.composition.get_input_format (or expected one?) AND ONLY WARN IF MISMATCH
+            #      - PUT WARNING AT THE END
             warnings.warn(f"The 'state_features' argument has been specified for {self.name}, that is being "
                           f"configured as a model-based {self.__class__.__name__} (i.e, one that uses a "
                           f"{Composition.componentType} as its agent_rep).  This overrides automatic assignment of "
@@ -1665,6 +1662,14 @@ class OptimizationControlMechanism(ControlMechanism):
                                                       comp._get_nested_compositions()
                                                if isinstance(input_port.shadow_inputs.owner,
                                                          CompositionInterfaceMechanism)]))]
+            # Ensure any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions
+            for input_port in self.state_input_ports:
+                try:
+                    all(comp._get_source(p) for p in input_port.path_afferents)
+                # except CompositionError:
+                except CompositionError:
+                    invalid_state_features.append(input_port)
+
             if any(invalid_state_features):
                 raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
                                                         f"optimization of {self.agent_rep.name}, has 'state_features' "
@@ -1689,15 +1694,9 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"are not INPUT nodes for the Composition or any nested "
                                                         f"within it.")
 
-            # # FIX: VALIDATE AND INSTANTIATE STATE FEATURES THAT ARE NOT SHADOWERS (
+            # # FIX: VALIDATE STATE FEATURES THAT ARE NOT SHADOWERS (USE self.composition._get_source ON EACH)
             # for input_port in self.state_input_ports:
             #     if not input_port.shadow_inputs:
-            #         input_port = _instantiate_port(name=input_port_name,
-            #                                        port_type=InputPort,
-            #                                        owner=self,
-            #                                        reference_value=input_port.value,
-            #                                        params=params,
-            #                                        context=local_context)
             return
 
         # agent_rep is Composition, but no state_features have been specified,
@@ -1931,11 +1930,12 @@ class OptimizationControlMechanism(ControlMechanism):
         # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
         optimal_control_allocation, optimal_net_outcome, saved_samples, saved_values = \
-                                                super(ControlMechanism,self)._execute(variable=control_allocation,
-                                                                                      num_estimates=self.parameters.num_estimates._get(context),
-                                                                                      context=context,
-                                                                                      runtime_params=runtime_params
-                                                                                      )
+                                                super(ControlMechanism,self)._execute(
+                                                    variable=control_allocation,
+                                                    num_estimates=self.parameters.num_estimates._get(context),
+                                                    context=context,
+                                                    runtime_params=runtime_params
+                                                )
 
         # clean up frozen values after execution
         self.agent_rep._delete_contexts(self._get_frozen_context(context))
@@ -2096,7 +2096,9 @@ class OptimizationControlMechanism(ControlMechanism):
             data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0),
                                            ctx.int32_ty(0)])
             if data_in.type != data_out.type:
-                warnings.warn("Shape mismatch: Allocation sample '{}' ({}) doesn't match input port input ({}).".format(i, self.parameters.control_allocation_search_space.get(), op.defaults.variable))
+                warnings.warn(f"Shape mismatch: Allocation sample '{i}' "
+                              f"({self.parameters.control_allocation_search_space.get()}) "
+                              f"doesn't match input port input ({op.defaults.variable}).")
                 assert len(data_out.type.pointee) == 1
                 data_out = builder.gep(data_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
@@ -2123,13 +2125,10 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.ret_void()
         return llvm_func
 
-    def _gen_llvm_evaluate_alloc_range_function(self, *, ctx:pnlvm.LLVMBuilderContext,
-                                                   tags=frozenset()):
+    def _gen_llvm_evaluate_alloc_range_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags=frozenset()):
         assert "evaluate" in tags
         assert "alloc_range" in tags
-        evaluate_f = ctx.import_llvm_function(self,
-                                              tags=tags - {"alloc_range"})
-
+        evaluate_f = ctx.import_llvm_function(self, tags=tags - {"alloc_range"})
 
         args = [*evaluate_f.type.pointee.args[:2],
                 ctx.int32_ty, ctx.int32_ty,
@@ -2163,8 +2162,7 @@ class OptimizationControlMechanism(ControlMechanism):
         builder.ret_void()
         return llvm_func
 
-    def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext,
-                                             tags=frozenset()):
+    def _gen_llvm_evaluate_function(self, *, ctx:pnlvm.LLVMBuilderContext, tags=frozenset()):
         assert "evaluate" in tags
         args = [ctx.get_param_struct_type(self.agent_rep).as_pointer(),
                 ctx.get_state_struct_type(self.agent_rep).as_pointer(),
@@ -2399,15 +2397,18 @@ class OptimizationControlMechanism(ControlMechanism):
         for spec in _state_input_ports:
             # MODIFIED 11/29/21 NEW:
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
-            if isinstance(spec, Mechanism) and self.agent_rep_type == COMPOSITION:
-                # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
-                #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
-                if len(spec.input_ports)!=1:
-                    raise OptimizationControlMechanismError(f"A Mechanism ({spec.name}) is specified in the "
-                                                            f"'{STATE_FEATURES}' arg for {self.name} that has "
-                                                            f"more than one InputPort; a specific one or subset "
-                                                            f"of them must be specified.")
-                spec = spec.input_port
+            if isinstance(spec, Mechanism):
+                if self.agent_rep_type == COMPOSITION:
+                    # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
+                    #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
+                    if len(spec.input_ports)!=1:
+                        raise OptimizationControlMechanismError(f"A Mechanism ({spec.name}) is specified in the "
+                                                                f"'{STATE_FEATURES}' arg for {self.name} that has "
+                                                                f"more than one InputPort; a specific one or subset "
+                                                                f"of them must be specified.")
+                    spec = spec.input_port
+                else:
+                    spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
             if not parsed_spec[NAME]:
                 parsed_spec[NAME] = spec.full_name

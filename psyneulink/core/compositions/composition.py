@@ -6006,7 +6006,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node:
                 return(port, node, comp)
             else:
-                assert False, f"PROGRAM ERROR: No source found for {projection.name}."
+                raise CompositionError(f"No source found for {projection.name} in {self.name}.")
 
     def _get_destination(self, projection):
         """Return tuple with port, node and comp of receiver for **projection** (possibly in a nested Composition)."""
