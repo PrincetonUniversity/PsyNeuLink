@@ -1664,6 +1664,8 @@ class OptimizationControlMechanism(ControlMechanism):
                                                          CompositionInterfaceMechanism)]))]
             # Ensure any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions
             for input_port in self.state_input_ports:
+                if input_port.shadow_inputs:
+                    continue
                 try:
                     all(comp._get_source(p) for p in input_port.path_afferents)
                 # except CompositionError:
