@@ -744,6 +744,45 @@ class TestControlSpecification:
 
 class TestControlMechanisms:
 
+    @pytest.mark.control
+    def test_ocm_state_and_state_dict(self):
+        ia = pnl.ProcessingMechanism(name='IA')
+        ib = pnl.ProcessingMechanism(name='IB')
+        ic = pnl.ProcessingMechanism(name='IC')
+        oa = pnl.ProcessingMechanism(name='OA')
+        ob = pnl.ProcessingMechanism(name='OB')
+        oc = pnl.ProcessingMechanism(name='OC')
+        icomp = pnl.Composition(pathways=[ia,ib,ic], name='INNER COMP')
+        ocomp = pnl.Composition(pathways=[icomp], name='OUTER COMP')
+        ocomp.add_linear_processing_pathway([oa,oc])
+        ocomp.add_linear_processing_pathway([ob,oc])
+        ocm = pnl.OptimizationControlMechanism(
+            state_features=[ia.input_port,   # Note: these state_features will not execute properly
+                            ib.output_port,  #       they are only for testing
+                            oc],
+            objective_mechanism=[ic,ib],
+            function=pnl.GridSearch(),
+            allow_probes=True,
+            control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
+                                          allocation_samples=[10, 20, 30]),
+                             pnl.ControlSignal(modulates=[(pnl.INTERCEPT,oc),(pnl.SLOPE, oc)],
+                                          allocation_samples=[10, 20, 30]),
+                             ]
+        )
+        ocomp.add_controller(ocm)
+        assert np.allclose(ocm.state, [[0.], [0.], [0.], [1.], [1.]])
+        assert len(ocm.state_dict) == 6
+        keys = list(ocm.state_dict.keys())
+        values = list(ocm.state_dict.values())
+        for key, value in ocm.state_dict.items():
+            ocm.state[key[3]] == value
+        assert keys[0] == (ia.input_port, ia, icomp ,0)
+        assert keys[1] == (ib.output_port, ib, icomp, 1)
+        assert keys[2] == (oc.input_port, oc, ocomp, 2)
+        assert keys[3] == (ia.parameter_ports[pnl.SLOPE], ia, icomp, 3)
+        assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
+        assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
+
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
         # tests multiplicative modulation of default intensity_cost_function (Exponential) of
         #    a ControlMechanism's default function (TransferWithCosts);
@@ -2738,6 +2777,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                     ocomp.run()
                 assert error_text in str(error.value)
                 ocomp.run()
+
 
 class TestSampleIterator:
 

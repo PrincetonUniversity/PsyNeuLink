@@ -5996,10 +5996,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Note:  if Projection is shadowing the input to a Node, the information returned will be for
         #        the output_port of the input_CIM that projects to the shadowed Node.
         port = projection.sender
-        if isinstance(port.owner, CompositionInterfaceMechanism):
+        if port.owner in self.nodes:
+            return (port, port.owner, self)
+        elif isinstance(port.owner, CompositionInterfaceMechanism):
             return port.owner._get_source_info_from_output_CIM(port)
         else:
-            return (port, port.owner, self)
+            # Get info for nested node
+            node, comp = next((item for item in self._get_nested_nodes() if item[0] is port.owner), (None, None))
+            if node:
+                return(port, node, comp)
+            else:
+                assert False, f"PROGRAM ERROR: No source found for {projection.name}."
 
     def _get_destination(self, projection):
         """Return tuple with port, node and comp of receiver for **projection** (possibly in a nested Composition)."""

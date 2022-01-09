@@ -1283,6 +1283,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         control = convert_to_list(control) or []
         monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
+        self._sim_counts = {}
 
         # For backward compatibility:
         if kwargs:
@@ -1321,8 +1322,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control = convert_to_list(args)
 
         function = function or DefaultAllocationFunction
-
-        self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
