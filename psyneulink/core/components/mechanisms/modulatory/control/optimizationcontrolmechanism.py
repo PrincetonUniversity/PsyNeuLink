@@ -1693,10 +1693,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
                                                         f"are not INPUT nodes for the Composition or any nested "
                                                         f"within it.")
-
-            # # FIX: VALIDATE STATE FEATURES THAT ARE NOT SHADOWERS (USE self.composition._get_source ON EACH)
-            # for input_port in self.state_input_ports:
-            #     if not input_port.shadow_inputs:
             return
 
         # agent_rep is Composition, but no state_features have been specified,
