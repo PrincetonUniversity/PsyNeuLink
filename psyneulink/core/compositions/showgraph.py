@@ -1969,8 +1969,7 @@ class ShowGraph():
             g.edge(agent_rep_label, ctlr_label, color=agent_rep_color, penwidth=agent_rep_width)
             g.edge(ctlr_label, agent_rep_label, color=agent_rep_color, penwidth=agent_rep_width)
 
-        # get any other incoming edges to controller
-        # (i.e., other than from ObjectiveMechanism or directly monitored nodes)
+        # get any state_feature projections and any other incoming edges to controller
         senders = set()
         # FIX: 11/3/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         for i in controller.input_ports[controller.num_outcome_input_ports:]:
