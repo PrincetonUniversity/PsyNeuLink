@@ -7608,7 +7608,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
+                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ONE LEVEL DEEP
                 #      REMOVING "if not i[1] in self.nodes" crashes in test_multilevel_control
                 if ((proj.sender.owner not in self.nodes
                      and proj.sender.owner in [i[0] for i in nested_nodes])

@@ -1993,6 +1993,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
         for proj in deeply_nested_aux_components.values():
             composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
 
+        # Add any remaining afferent Projections that have been assigned and are from nodes in composition
+        remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)
+        for proj in remaining_projections:
+            # Projection is afferent:
+            if proj in self.afferents:
+                # Confirm sender is in composition
+                port, node, comp = composition._get_source(proj)
+            elif proj in self.efferents:
+                # Confirm receiver is in composition
+                port, node, comp = composition._get_destination(proj)
+            else:
+                assert False, f"PROGRAM ERROR: Attempt to activate Projection ('{proj.name}') in '{composition.name}'" \
+                              f" associated with its controller '{self.name}' that is neither an afferent nor " \
+                              f"efferent of '{self.name}' -- May be as yet unaccounted for condition."
+            if node in composition._get_all_nodes():
+                proj._activate_for_compositions(composition)
+
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`
         based on specified `control_allocation <ControlMechanism.control_allocation>`
