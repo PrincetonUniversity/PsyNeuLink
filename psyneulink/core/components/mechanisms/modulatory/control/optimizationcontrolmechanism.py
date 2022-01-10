@@ -1697,12 +1697,13 @@ class OptimizationControlMechanism(ControlMechanism):
             #         f"to allow their automatic assignment.")
             # MODIFIED 1/9/22 END
 
-            warnings.warn(f"The 'state_features' argument has been specified for {self.name}, that is being "
-                          f"configured as a model-based {self.__class__.__name__} (i.e, one that uses a "
-                          f"{Composition.componentType} as its agent_rep).  This overrides automatic assignment of "
-                          f"all inputs to its agent_rep ({self.agent_rep.name}) as the 'state_features'; only the "
-                          f"ones specified will be used ({self.state_features}).  Remove this specification from the "
-                          f"constructor for {self.name} if automatic assignment is preferred.")
+            warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
+                          f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
+                          f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
+                          f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
+                          f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
+                          f"automatically configure its 'state_features' to be the external inputs to "
+                          f"'{self.agent_rep.name}'.")
             return
 
         # agent_rep is Composition, but no state_features have been specified,
