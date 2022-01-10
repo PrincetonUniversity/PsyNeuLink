@@ -878,7 +878,6 @@ from psyneulink.core.components.functions.nonstateful.optimizationfunctions impo
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
-from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
     ControlMechanism, ControlMechanismError
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
@@ -1684,6 +1683,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
                                                         f"are not INPUT nodes for the Composition or any nested "
                                                         f"within it.")
+            # MODIFIED 1/9/22 NEW:
             try:
                 # Test whether state_features specified are compatible with inputs format required by agent_rep
                 self.agent_rep._build_predicted_inputs_dict(None)
@@ -1695,6 +1695,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
                     f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
                     f"to allow their automatic assignment.")
+            # MODIFIED 1/9/22 END
 
             warnings.warn(f"The 'state_features' argument has been specified for {self.name}, that is being "
                           f"configured as a model-based {self.__class__.__name__} (i.e, one that uses a "
