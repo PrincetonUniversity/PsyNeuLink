@@ -744,14 +744,12 @@ class TestControlSpecification:
 
 class TestControlMechanisms:
 
-    messages = ["The 'state_features' argument has been specified for OptimizationControlMechanism-0, "
-                "that is being configured as a model-based OptimizationControlMechanism "
-                "(i.e, one that uses a Composition as its agent_rep).  "
-                "This overrides automatic assignment of all inputs to its agent_rep (OUTER COMP) "
-                "as the 'state_features'; only the ones specified will be used ([(InputPort InputPort-0)]), "
-                "and they must match the shape of the input to OUTER COMP when it is run.  "
-                "Remove this specification from the constructor for OptimizationControlMechanism-0 i"
-                "f automatic assignment is preferred.",
+    messages = ["The 'state_features' argument has been specified for 'OptimizationControlMechanism-0', "
+                "that is being configured to use a Composition ('OUTER COMP') as its 'agent_rep'). "
+                "This overrides automatic assignment of its 'state_features' as inputs to 'OUTER COMP' "
+                "when it is executed.  If they are not properly configured, it will cause an error. "
+                "Remove this specification from the constructor for 'OptimizationControlMechanism-0' "
+                "to automatically configure its 'state_features' to be the external inputs to 'OUTER COMP'.",
 
                 '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
                 'that is not an INPUT Node of that Composition is not currently supported.\'',
