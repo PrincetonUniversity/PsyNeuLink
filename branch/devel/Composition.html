@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0+untagged.24.g21e685c documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0+untagged.24.g6765320 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.24.g21e685c
+                  0+untagged.24.g6765320
                 </div>
               
             
@@ -3683,6 +3683,18 @@ If <strong>in_composition</strong> is False, return only Projections that are fo
 <span class="sig-name descname"><span class="pre">_check_for_unnecessary_feedback_projections</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._check_for_unnecessary_feedback_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Warn if there exist projections in the graph that the user
 labeled as EdgeType.FEEDBACK (True) but are not in a cycle</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_source">
+<span class="sig-name descname"><span class="pre">_get_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_source" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return tuple with port, node and comp of sender for <strong>projection</strong> (possibly in a nested Composition).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_destination">
+<span class="sig-name descname"><span class="pre">_get_destination</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">projection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_destination" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return tuple with port, node and comp of receiver for <strong>projection</strong> (possibly in a nested Composition).</p>
 </dd></dl>
 
 <dl class="py method">
