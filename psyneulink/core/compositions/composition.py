@@ -8035,28 +8035,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
     #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
-    def _build_predicted_inputs_dict(self, predicted_input):
+    def _build_predicted_inputs_dict(self, predicted_inputs, controller=None):
         """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
         Get values of state_input_ports that receive projections from items providing relevant input (and any
           processing of those values specified), and format as input_dict suitable for run() method (called in evaluate)
         Deal with inputs for nodes in nested Compositions
         """
+        controller = controller or self.controller
         inputs = {}
-        no_predicted_input = (predicted_input is None or not len(predicted_input))
+        no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
         if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
         nested_nodes = dict(self._get_nested_nodes())
         # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        shadow_inputs_start_index = self.controller.num_outcome_input_ports
-        for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
-            input_port = self.controller.input_ports[j + shadow_inputs_start_index]
+        shadow_inputs_start_index = controller.num_outcome_input_ports
+        for j in range(len(controller.input_ports) - shadow_inputs_start_index):
+            input_port = controller.input_ports[j + shadow_inputs_start_index]
             if no_predicted_input:
-                shadowed_input = input_port.defaults.value
+                predicted_input = input_port.defaults.value
             else:
-                shadowed_input = predicted_input[j]
+                predicted_input = predicted_inputs[j]
 
+            # Shadow input specified
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 shadow_input_owner = input_port.shadow_inputs.owner
                 if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
@@ -8066,8 +8068,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if shadow_input_owner in nested_nodes:
                     comp = nested_nodes[shadow_input_owner]
                     if comp in inputs:
-                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
+                        inputs[comp]=np.concatenate([[predicted_input],inputs[comp][0]])
                     else:
+                        # FIX 1/9/22: CAN THIS BE REPLACED BY CALL TO _get_source?
                         def _get_enclosing_comp_for_node(input_port, comp):
                             """Get the Composition that is a node of self in which node nested in it.
                             - input_port is of node for which enclosing comp is being sought
@@ -8087,14 +8090,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         comp_for_input = _get_enclosing_comp_for_node(input_port.shadow_inputs, shadow_input_comp)
                         if comp_for_input in inputs:
                             # If node for nested comp is already in inputs dict, append to its input
-                            inputs[comp_for_input][0].append(shadowed_input)
+                            inputs[comp_for_input][0].append(predicted_input)
                         else:
                             # Create entry in inputs dict for nested comp containing shadowed_input
-                            inputs[comp_for_input]=[[shadowed_input]]
+                            inputs[comp_for_input]=[[predicted_input]]
                 else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
-                    inputs[shadow_input_owner] = shadowed_input
+                    inputs[shadow_input_owner] = predicted_input
+
+            # Regular input specified (i.e., projection from an OutputPort)
+            else:
+                assert len(input_port.path_afferents)==1
+                source = input_port.path_afferents[0].sender.owner
+                inputs[source] = predicted_input
+
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):

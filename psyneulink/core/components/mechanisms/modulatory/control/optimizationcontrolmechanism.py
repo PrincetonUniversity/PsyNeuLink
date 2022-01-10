@@ -1661,10 +1661,10 @@ class OptimizationControlMechanism(ControlMechanism):
                     invalid_state_features.append(input_port)
 
             if any(invalid_state_features):
-                raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
-                                                        f"optimization of {self.agent_rep.name}, has 'state_features' "
-                                                        f"specified ({[d.name for d in invalid_state_features]}) that "
-                                                        f"are missing from the Composition or any nested within it.")
+                raise OptimizationControlMechanismError(
+                    f"{self.name}, being used as controller for model-based optimization of {self.agent_rep.name}, "
+                    f"has 'state_features' specified ({[d.name for d in invalid_state_features]}) "
+                    f"that are missing from the Composition or any nested within it.")
 
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    reference INPUT Nodes of agent_rep or of a nested Composition
@@ -1678,27 +1678,12 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         [nested_comp for nested_comp in comp._get_nested_compositions()
                                                          if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])))]
             if any(invalid_state_features):
-                raise OptimizationControlMechanismError(f"{self.name}, being used as controller for model-based "
-                                                        f"optimization of {self.agent_rep.name}, has 'state_features' "
-                                                        f"specified ({[d.name for d in invalid_state_features]}) that "
-                                                        f"are not INPUT nodes for the Composition or any nested "
-                                                        f"within it.")
-            # # MODIFIED 1/9/22 NEW:
-            # try:
-            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
-            #     # inputs = self.agent_rep._build_predicted_inputs_dict(None)
-            #     inputs = self.composition._build_predicted_inputs_dict(None)
-            #     inputs = self.agent_rep._validate_input_shapes(inputs)
-            # except:
-            #     raise OptimizationControlMechanismError(
-            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
-            #         f"({self.state_features}) specified are not compatible with the inputs required by 'agent_rep' "
-            #         f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
-            #         f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
-            #         f"to allow their automatic assignment.")
-            # MODIFIED 1/9/22 END
+                raise OptimizationControlMechanismError(
+                    f"{self.name}, being used as controller for model-based optimization of {self.agent_rep.name}, "
+                    f"has 'state_features' specified ({[d.name for d in invalid_state_features]}) "
+                    f"that are not INPUT nodes for the Composition or any nested within it.")
 
+            # # MODIFIED 1/9/22 OLD:
             warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
                           f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
                           f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
@@ -1706,6 +1691,22 @@ class OptimizationControlMechanism(ControlMechanism):
                           f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
                           f"automatically configure its 'state_features' to be the external inputs to "
                           f"'{self.agent_rep.name}'.")
+            # # MODIFIED 1/9/22 NEW: FIX: WARN IF FEWER INPUTS SPECIFIED (OTHERS WILL RECEIVE DEFAULT VALUES)
+            # try:
+            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
+            #     # inputs = self.agent_rep._build_predicted_inputs_dict(None)
+            #     inputs = self.composition._build_predicted_inputs_dict(None, self)
+            #     # FIX: NEED TO VALIDATE formatted_inputs AGAINST WHAT agent_rep EXPECTS (E.G., get_input_format()??
+            #     formatted_inputs = self.agent_rep._validate_input_shapes(inputs)
+            # except:
+            #     raise OptimizationControlMechanismError(
+            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
+            #         f"({[f.full_name for f in self.state_features]}) specified are not compatible with the inputs "
+            #         f"required by 'agent_rep' when it is executed. It's get_inputs_format() method can be used to see "
+            #         f"the format required; You can also remove the specification of 'state_features' from the "
+            #         f"constructor for {self.name} to have them be assigned automatically.")
+            # MODIFIED 1/9/22 END
             return
 
         # agent_rep is Composition, but no state_features have been specified,
