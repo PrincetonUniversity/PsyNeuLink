@@ -1683,18 +1683,18 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"specified ({[d.name for d in invalid_state_features]}) that "
                                                         f"are not INPUT nodes for the Composition or any nested "
                                                         f"within it.")
-            # MODIFIED 1/9/22 NEW:
-            try:
-                # Test whether state_features specified are compatible with inputs format required by agent_rep
-                self.agent_rep._build_predicted_inputs_dict(None)
-            except:
-                raise OptimizationControlMechanismError(
-                    f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
-                    f"({self.state_features}) specified are not compatible with the inputs required by 'agent_rep' "
-                    f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
-                    f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
-                    f"to allow their automatic assignment.")
+            # # MODIFIED 1/9/22 NEW:
+            # try:
+            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
+            #     self.agent_rep._build_predicted_inputs_dict(None)
+            # except:
+            #     raise OptimizationControlMechanismError(
+            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
+            #         f"({self.state_features}) specified are not compatible with the inputs required by 'agent_rep' "
+            #         f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
+            #         f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
+            #         f"to allow their automatic assignment.")
             # MODIFIED 1/9/22 END
 
             warnings.warn(f"The 'state_features' argument has been specified for {self.name}, that is being "
