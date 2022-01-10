@@ -7259,3 +7259,26 @@ class TestInputSpecsDocumentationExamples:
         )
 
         assert np.allclose(check_inputs, [[[1.0, 2.0, 3.0], [1.0, 2.0, 3.0]]])
+
+    @pytest.mark.parametrize("shape",[
+        (2, 2),
+        (2, 2, 2),
+        (3, 3, 3, 3),
+        (3, 3, 3, 3, 3),
+    ])
+    def test_multidim(self, shape):
+        a = pnl.ProcessingMechanism(name='a', function=pnl.Linear(slope=4), default_variable=np.ones(shape=shape))
+        b = pnl.ProcessingMechanism(name='b', function=pnl.Linear(slope=4), default_variable=np.ones(shape=shape))
+        proj = pnl.MappingProjection(sender=a, receiver=b)
+        comp = pnl.Composition()
+        comp.add_node(a)
+        comp.add_node(b)
+        comp.add_projection(proj)
+        input_list = {a: [np.ones(shape=shape)]}
+
+        res = comp.run(
+            inputs=input_list,
+        )
+        res = np.array(res)
+        assert res.shape == shape
+        assert np.allclose(res, np.ones(shape=shape) * 4)

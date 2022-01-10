@@ -4827,8 +4827,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if input_port not in set(self.input_CIM_ports.keys()):
                     # instantiate the input port on the input CIM to correspond to the node's input port
                     interface_input_port = InputPort(owner=self.input_CIM,
-                                                     variable=input_port.defaults.value,
-                                                     reference_value=input_port.defaults.value,
+                                                     variable=input_port.defaults.variable,
+                                                     reference_value=input_port.defaults.variable,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
 
@@ -8449,7 +8449,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
-        node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
+        node_variable = [self.input_CIM_ports[input_port][0].defaults.variable for input_port in node.input_ports if not input_port.internal_only]
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
@@ -8497,8 +8497,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if True in [i is None for i in node_input]:
                     incompatible_stimulus = stimulus[node_input.index(None)]
                     node_name = node.name
-                    node_variable = [input_port.defaults.value for input_port in node.input_ports
-                                if not input_port.internal_only]
+                    node_variable = [self.input_CIM_ports[input_port][0].defaults.variable for input_port in node.input_ports if not input_port.internal_only]
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"its external_input_values ({node_variable})."
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
