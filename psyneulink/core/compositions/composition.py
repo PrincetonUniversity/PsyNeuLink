@@ -10439,6 +10439,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
 
+    # Alias of get_input_format(easy mistake to make)
     def get_inputs_format(self, **kwargs):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
