@@ -681,17 +681,9 @@ class UserDefinedFunction(Function_Base):
                "Compiling functions with global variables is not supported! ({})".format(closure_vars.globals)
         func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
 
-        udf_block = builder.append_basic_block(name="udf_body")
-        udf_builder = pnlvm.ir.IRBuilder(udf_block)
+        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
 
-        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, udf_builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
-        # After we're done with allocating variable stack space, jump to the code
-        builder.branch(udf_block)
-
+        # The generic '_gen_llvm' will append another ret void to this block
         post_block = builder.append_basic_block(name="post_udf")
-        # If the function didn't use return as the last statement jump back to the outer block
-        if not udf_builder.block.is_terminated:
-            udf_builder.branch(post_block)
-
         builder.position_at_start(post_block)
         return builder
