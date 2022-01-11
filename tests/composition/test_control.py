@@ -744,37 +744,60 @@ class TestControlSpecification:
 
 class TestControlMechanisms:
 
-    messages = ["The 'state_features' argument has been specified for 'OptimizationControlMechanism-0', "
-                "that is being configured to use a Composition ('OUTER COMP') as its 'agent_rep'). "
-                "This overrides automatic assignment of its 'state_features' as inputs to 'OUTER COMP' "
-                "when it is executed.  If they are not properly configured, it will cause an error. "
-                "Remove this specification from the constructor for 'OptimizationControlMechanism-0' "
-                "to automatically configure its 'state_features' to be the external inputs to 'OUTER COMP'.",
+    messages = [
+        # "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0', "
+        # "that is being configured to use a Composition ('OUTER COMP') as its 'agent_rep'). "
+        # "This overrides automatic assignment of its 'state_features' as inputs to 'OUTER COMP' "
+        # "when it is executed.  If they are not properly configured, it will cause an error. "
+        # "Remove this specification from the constructor for 'OptimizationControlMechanism-0' "
+        # "to automatically configure its 'state_features' to be the external inputs to 'OUTER COMP'.",
 
-                '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
-                'that is not an INPUT Node of that Composition is not currently supported.\'',
+        "The 'state_features' specified for 'OptimizationControlMechanism-0' are legal, "
+        "but there are fewer than the number of input_nodes for its agent_rep ('OUTER COMP'); "
+        "the remaining inputs will be assigned default values.  "
+        "Use the agent_rep's get_inputs_format() method to see the format for its inputs.",
 
-                '"OptimizationControlMechanism-0, being used as controller for model-based optimization of OUTER COMP, '
-                'has \'state_features\' specified ([\'Shadowed input of EXT\']) that are missing from the '
-                'Composition or any nested within it."',
+        '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
+        'that is not an INPUT Node of that Composition is not currently supported.\'',
 
-                '"OptimizationControlMechanism-0, being used as controller for model-based optimization of OUTER COMP, '
-                'has \'state_features\' specified ([\'EXT[OutputPort-0]\']) that are missing from the '
-                'Composition or any nested within it."'
-                ]
+        '"OptimizationControlMechanism-0, being used as controller for model-based optimization of OUTER COMP, '
+        'has \'state_features\' specified ([\'Shadowed input of EXT\']) that are missing from the '
+        'Composition or any nested within it."',
 
-    state_feature_specs = ['legal_feature', 'misplaced_shadow', 'ext_shadow', 'ext_output_port']
+        '"OptimizationControlMechanism-0, being used as controller for model-based optimization of OUTER COMP, '
+        'has \'state_features\' specified ([\'EXT[OutputPort-0]\']) that are missing from the '
+        'Composition or any nested within it."',
+
+        "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' "
+        "that is using a Composition ('OUTER COMP') as its agent_rep, but the 'state_features' "
+        "(['IA[InputPort-0]', 'OA[OutputPort-0]', 'OB[OutputPort-0]', 'OC[OutputPort-0]']) specified "
+        "are not compatible with the inputs required by 'agent_rep' when it is executed. "
+        "Use its get_inputs_format() method to see the required format, "
+        "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
+        "to have them assigned automatically."
+    ]
+
+    state_feature_specs = ['partial_legal_ports_spec',
+                           'full_legal_ports_spec',
+                           'dict_spec',
+                           'misplaced_shadow',
+                           'ext_shadow',
+                           'ext_output_port',
+                           'bad_input_format_spec']
 
     state_feature_args = [
         (state_feature_specs[0], messages[0], UserWarning),
-        (state_feature_specs[1], messages[1], pnl.CompositionError),
-        (state_feature_specs[2], messages[2], pnl.OptimizationControlMechanismError),
-        (state_feature_specs[3], messages[3], pnl.OptimizationControlMechanismError)
+        (state_feature_specs[1], None, None),
+        (state_feature_specs[2], None, None),
+        (state_feature_specs[3], messages[1], pnl.CompositionError),
+        (state_feature_specs[4], messages[2], pnl.OptimizationControlMechanismError),
+        (state_feature_specs[5], messages[3], pnl.OptimizationControlMechanismError),
+        (state_feature_specs[6], messages[4], pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
-    @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x for x in state_feature_specs])
-    def test_ocm_state_input_ports_warnings_and_errors(self, state_feature_args):
+    @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
+    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args):
         ia = pnl.ProcessingMechanism(name='IA')
         ib = pnl.ProcessingMechanism(name='IB')
         ic = pnl.ProcessingMechanism(name='IC')
@@ -786,10 +809,22 @@ class TestControlMechanisms:
         ocomp = pnl.Composition(pathways=[icomp], name='OUTER COMP')
         ocomp.add_linear_processing_pathway([oa,oc])
         ocomp.add_linear_processing_pathway([ob,oc])
-        state_features_dict = {'legal_feature':ia.input_port,
-                               'misplaced_shadow':ib.input_port,
-                               'ext_shadow':ext.input_port,
-                               'ext_output_port':ext.output_port}
+        state_features_dict = {
+            'partial_legal_ports_spec': [oa.output_port],
+            'full_legal_ports_spec': [ia.input_port,
+                                      oa.output_port,
+                                      ob.output_port],
+            'dict_spec': {icomp:ia.input_port,
+                              oa:oc.input_port,
+                              ob:oc.output_port},
+            'misplaced_shadow':ib.input_port,
+            'ext_shadow':ext.input_port,
+            'ext_output_port':ext.output_port,
+            'bad_input_format_spec': [ia.input_port,
+                                      oa.output_port,
+                                      ob.output_port,
+                                      oc.output_port]
+        }
         state_features = state_features_dict[state_feature_args[0]]
         message = state_feature_args[1]
         ocm = pnl.OptimizationControlMechanism(state_features=state_features,
@@ -799,11 +834,30 @@ class TestControlMechanisms:
                                                                                   allocation_samples=[10, 20, 30]),
                                                                 pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
                                                                                   allocation_samples=[10, 20, 30])])
-        if state_feature_args[2] is UserWarning:
+
+        if not state_feature_args[1]:
+
+            ocomp.add_controller(ocm)
+            ocomp.run()
+
+            if state_feature_args[0] == 'partial_legal_ports_spec':
+                assert len(ocm.state_input_ports) == 1
+                assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
+
+            elif state_feature_args[0] == 'full_legal_ports_spec':
+                assert len(ocm.state_input_ports) == 3
+                assert ocm.state_input_ports.names == ['Shadowed input of IA', 'OA[OutputPort-0]', 'OB[OutputPort-0]']
+
+            elif state_feature_args[0] == 'dict_spec':
+                assert len(ocm.state_input_ports) == 3
+                assert ocm.state_input_ports.names == ['INNER COMP', 'OA', 'OB']
+
+        elif state_feature_args[2] is UserWarning:
             with pytest.warns(UserWarning) as warning:
                 ocomp.add_controller(ocm)
                 ocomp.run()
-            assert warning[9].message.args[0] == message
+            assert warning[10].message.args[0] == message
+
         else:
             with pytest.raises(state_feature_args[2]) as error:
                 ocomp.add_controller(ocm)

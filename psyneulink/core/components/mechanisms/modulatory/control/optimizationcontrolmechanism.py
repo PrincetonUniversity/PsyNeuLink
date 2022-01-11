@@ -1688,7 +1688,15 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Test if state_features specified are compatible with inputs format for agent_rep Composition
                 inputs = self.composition._build_predicted_inputs_dict(None, self)
                 inputs_dict, num_inputs = self.agent_rep._parse_dict(inputs)
-            except:
+                assert True
+                if len(self.state_input_ports) < len(inputs_dict):
+                    warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+                                  f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+                                  f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
+                                  f"get_inputs_format() method to see the format for its inputs.")
+            except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
+                pass                    # and will issue the corresponding error message.
+            except:  # Legal Node specifications, but incorrect for input to agent_rep
                 raise OptimizationControlMechanismError(
                     f"The 'state_features' argument has been specified for '{self.name}' that is using a "
                     f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
