@@ -5991,6 +5991,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if warn:
                 warnings.warn(warn_str)
 
+    def _get_source(self, projection):
+        """Return tuple with port, node and comp of sender for **projection** (possibly in a nested Composition)."""
+        # Note:  if Projection is shadowing the input to a Node, the information returned will be for
+        #        the output_port of the input_CIM that projects to the shadowed Node.
+        port = projection.sender
+        if port.owner in self.nodes:
+            return (port, port.owner, self)
+        elif isinstance(port.owner, CompositionInterfaceMechanism):
+            return port.owner._get_source_info_from_output_CIM(port)
+        else:
+            # Get info for nested node
+            node, comp = next((item for item in self._get_nested_nodes() if item[0] is port.owner), (None, None))
+            if node:
+                return(port, node, comp)
+            else:
+                raise CompositionError(f"No source found for {projection.name} in {self.name}.")
+
+    def _get_destination(self, projection):
+        """Return tuple with port, node and comp of receiver for **projection** (possibly in a nested Composition)."""
+        port = projection.receiver
+        if isinstance(port.owner, CompositionInterfaceMechanism):
+            if isinstance(projection.sender.owner, ModulatoryMechanism_Base):
+                return port.owner._get_modulated_info_from_parameter_CIM(port)
+            else:
+                return port.owner._get_destination_info_from_input_CIM(port)
+        else:
+            return (port, port.owner, self)
+
     # endregion PROJECTIONS
 
     # ******************************************************************************************************************
@@ -7580,7 +7608,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
+                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ONE LEVEL DEEP
                 #      REMOVING "if not i[1] in self.nodes" crashes in test_multilevel_control
                 if ((proj.sender.owner not in self.nodes
                      and proj.sender.owner in [i[0] for i in nested_nodes])
@@ -7718,6 +7746,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
 
+        # MODIFIED 1/4/22 OLD:
         if hasattr(self.controller, NUM_ESTIMATES) and self.controller.num_estimates:
             if RANDOMIZATION_CONTROL_SIGNAL not in self.controller.output_ports.names:
                 try:
@@ -7730,6 +7759,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
                     context
                 )
+            self.controller.function.parameters.randomization_dimension._set(
+                self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
+                context
+            )
+        # MODIFIED 1/4/22 END
 
         # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
@@ -8002,10 +8036,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
     #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
     def _build_predicted_inputs_dict(self, predicted_input):
-        """Get inputs for evaluate method used to execute simulations of Composition.
+        """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
-        Get values of state_input_ports which receive projections from items providing relevant input (and any
-        processing of those values specified
+        Get values of state_input_ports that receive projections from items providing relevant input (and any
+          processing of those values specified), and format as input_dict suitable for run() method (called in evaluate)
+        Deal with inputs for nodes in nested Compositions
         """
         inputs = {}
         no_predicted_input = (predicted_input is None or not len(predicted_input))
@@ -8028,16 +8063,38 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         and shadow_input_owner not in nested_nodes \
                         and shadow_input_owner not in self.nodes:
                     continue
-                if shadow_input_owner not in nested_nodes:
+                if shadow_input_owner in nested_nodes:
+                    comp = nested_nodes[shadow_input_owner]
+                    if comp in inputs:
+                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
+                    else:
+                        def _get_enclosing_comp_for_node(input_port, comp):
+                            """Get the Composition that is a node of self in which node nested in it.
+                            - input_port is of node for which enclosing comp is being sought
+                            - comp is one to which that node belongs
+                            """
+                            # Get input_port for comp's CIM corresponding to
+                            cim_input_port = comp.input_CIM.port_map[input_port][0]
+                            # Outermost Composition, so return that
+                            if not cim_input_port.path_afferents:
+                                return comp
+                            enclosing_comp = cim_input_port.path_afferents[0].sender.owner.composition
+                            # Recursively search up through enclosing Compositions until one is a node of self
+                            while comp not in self.nodes and comp is not self:
+                                comp = _get_enclosing_comp_for_node(cim_input_port, enclosing_comp)
+                            return comp
+                        shadow_input_comp = nested_nodes[shadow_input_owner].input_CIM.composition
+                        comp_for_input = _get_enclosing_comp_for_node(input_port.shadow_inputs, shadow_input_comp)
+                        if comp_for_input in inputs:
+                            # If node for nested comp is already in inputs dict, append to its input
+                            inputs[comp_for_input][0].append(shadowed_input)
+                        else:
+                            # Create entry in inputs dict for nested comp containing shadowed_input
+                            inputs[comp_for_input]=[[shadowed_input]]
+                else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
                     inputs[shadow_input_owner] = shadowed_input
-                else:
-                    comp = nested_nodes[shadow_input_owner]
-                    if comp not in inputs:
-                        inputs[comp]=[[shadowed_input]]
-                    else:
-                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
@@ -8131,9 +8188,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an array with the results of each run is also returned.
         """
 
-        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
-        total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
-
         # Build input dictionary for simulation
         input_spec = self.parameters.input_specification.get(context)
         if input_spec and block_simulate and not isgenerator(input_spec):
@@ -8149,8 +8203,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                           f"supplied input spec is a generator. Generators can not be used as inputs for block "
                           f"simulation. This evaluation will not use block simulation.")
 
+        # Apply candidate control to signal(s) for the upcoming simulation and determine its cost
+        total_cost = self._get_total_cost_of_control_allocation(control_allocation, context, runtime_params)
 
-        # Set up aniimation for simulation
+        # Set up animation for simulation
         # HACK: _animate attribute is set in execute method, but Evaluate can be called on a Composition that has not
         # yet called the execute method, so we need to do a check here too.
         # -DTS
@@ -8591,7 +8647,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_CIM(port)
+                            _, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(port)
                             v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
@@ -10444,7 +10500,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
                             for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_node_for_input_CIM(port)
+                                _, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
@@ -10533,7 +10589,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_results_by_nodes(); please use that in the future.")
 
         # Get all OUTPUT Nodes in (nested) Composition(s)
-        output_nodes = [self.output_CIM._get_source_node_for_output_CIM(port)[1]
+        output_nodes = [self.output_CIM._get_source_info_from_output_CIM(port)[1]
                         for port in self.output_CIM.output_ports]
 
         # Get all values for all OUTPUT Nodes

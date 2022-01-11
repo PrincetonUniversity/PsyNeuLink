@@ -347,8 +347,9 @@ class GatingSignal(ControlSignal):
 
     componentType = GATING_SIGNAL
     componentName = 'GatingSignal'
-    paramsType = OUTPUT_PORT_PARAMS
+    errorType = GatingSignalError
 
+    paramsType = OUTPUT_PORT_PARAMS
     portAttributes = ControlSignal.portAttributes | {GATE}
 
     connectsWith = [INPUT_PORT, OUTPUT_PORT]
@@ -473,55 +474,6 @@ class GatingSignal(ControlSignal):
                          prefs=prefs,
                          transfer_function=transfer_function,
                          **kwargs)
-
-    def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
-        """Get connections specified in a ParameterPort specification tuple
-
-        Tuple specification can be:
-            (Port name, Mechanism)
-        [TBI:] (Mechanism, Port name, weight, exponent, projection_specs)
-
-        Returns params dict with CONNECTIONS entries if any of these was specified.
-
-        """
-        from psyneulink.core.components.projections.projection import _parse_connection_specs
-
-        params_dict = {}
-        port_spec = port_specific_spec
-
-        # MODIFIED 1/2/22 NEW:
-        if isinstance(port_specific_spec, dict):
-            # Note: if GATE is specified alone, it is moved to PROJECTIONS in Port._parse_ort_spec()
-            if GATE in port_specific_spec and PROJECTIONS in port_specific_spec:
-                raise GatingSignalError(f"Both 'PROJECTIONS' and 'GATE' entries found in specification dict "
-                                         f"for '{port_dict['port_type'].__name__}' of '{owner.name}'. "
-                                         f"Must use only one or the other.")
-            return None, port_specific_spec
-        # MODIFIED 1/2/22 END
-
-        elif isinstance(port_specific_spec, tuple):
-            port_spec = None
-            # Resolve CONTROL as synonym for PROJECTIONS:
-            if GATE in params_dict:
-                # CONTROL AND PROJECTIONS can't both be used
-                if PROJECTIONS in params_dict:
-                    raise GatingSignalError(f"Both 'PROJECTIONS' and 'GATE' entries found in specification dict "
-                                             f"for '{port_dict['port_type'].__name__}' of '{owner.name}'.  "
-                                             f"Must use only one or the other.")
-                # Move GATE to PROJECTIONS
-                params_dict[PROJECTIONS] = params_dict.pop(GATE)
-            params_dict[PROJECTIONS] = _parse_connection_specs(connectee_port_type=self,
-                                                               owner=owner,
-                                                               connections=port_specific_spec)
-        elif port_specific_spec is not None:
-            raise GatingSignalError("PROGRAM ERROR: Expected tuple or dict for {}-specific params but, got: {}".
-                                  format(self.__class__.__name__, port_specific_spec))
-
-        if params_dict[PROJECTIONS] is None:
-            raise GatingSignalError("PROGRAM ERROR: No entry found in {} params dict for {} "
-                                     "with specification of {}, {} or GatingProjection(s) to it".
-                                        format(GATING_SIGNAL, INPUT_PORT, OUTPUT_PORT, owner.name))
-        return port_spec, params_dict
 
     def _instantiate_cost_functions(self, context):
         """Override ControlSignal as GatingSignal has not cost functions"""
