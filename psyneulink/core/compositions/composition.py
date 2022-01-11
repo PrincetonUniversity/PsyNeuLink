@@ -2597,7 +2597,7 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import I
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
-    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES
+    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES, STATE_FEATURES
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -8043,6 +8043,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Deal with inputs for nodes in nested Compositions
         """
         controller = controller or self.controller
+        # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
+        input_dict_keys = (list(controller.state_features.keys())
+                           if (hasattr(controller, STATE_FEATURES) and isinstance(controller.state_features, dict))
+                           else None)
         inputs = {}
         no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
         if no_predicted_input:
@@ -8097,13 +8101,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
-                    inputs[shadow_input_owner] = predicted_input
+                    # Use key from OptimizationControlMechanism state_features dict if specified, else the source node
+                    key = input_dict_keys[j] if input_dict_keys else shadow_input_owner
+                    inputs[key] = predicted_input
 
             # Regular input specified (i.e., projection from an OutputPort)
             else:
                 assert len(input_port.path_afferents)==1
                 source = input_port.path_afferents[0].sender.owner
-                inputs[source] = predicted_input
+                # Use key from OptimizationControlMechanism state_features dict if specified, else the source node
+                key = input_dict_keys[j] if input_dict_keys else source
+                inputs[key] = predicted_input
 
         return inputs
 
@@ -8684,7 +8692,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_dict(self, inputs, context=None):
         """
-        Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout
+        Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
 
         Returns
@@ -8708,8 +8716,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _validate_input_dict_node_roles(self, inputs):
         """
-        Validates that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
-            included, adds them to the input dict using their default values as entries
+        Validate that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
+            included, add them to the input dict using their default values as entries
 
         Returns
         -------

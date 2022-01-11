@@ -1417,7 +1417,8 @@ class OptimizationControlMechanism(ControlMechanism):
                     state_feature_functions = kwargs['feature_function']
                 kwargs.pop('feature_function')
                 continue
-        self.state_features = convert_to_list(state_features)
+
+        self.state_features = state_features if isinstance(state_features, dict) else convert_to_list(state_features)
 
         function = function or GridSearch
 
@@ -1607,10 +1608,8 @@ class OptimizationControlMechanism(ControlMechanism):
         #               TRY TESTS WITHOUT THIS
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete)
-        # MODIFIED 11/29/21 OLD:
         if context.flags & ContextFlags.METHOD:
             return
-        # MODIFIED 11/29/21 END
 
         # Don't bother for model-free optimization (see OptimizationControlMechanism_Model_Free)
         #    since state_input_ports specified or model-free optimization are entirely the user's responsibility;
@@ -1640,6 +1639,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # Validate state_features, and instantiate any that are not shadowing nodes
             # Shadowing nodes are instantiated in Composition._update_shadow_projections()
             comp = self.agent_rep
+            state_features = (list(self.state_features.values()) if isinstance(self.state_features, dict)
+                              else self.state_features)
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
@@ -1683,64 +1684,53 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"has 'state_features' specified ({[d.name for d in invalid_state_features]}) "
                     f"that are not INPUT nodes for the Composition or any nested within it.")
 
-            # # MODIFIED 1/9/22 OLD:
-            warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
-                          f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
-                          f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
-                          f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
-                          f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
-                          f"automatically configure its 'state_features' to be the external inputs to "
-                          f"'{self.agent_rep.name}'.")
-            # # MODIFIED 1/9/22 NEW: FIX: WARN IF FEWER INPUTS SPECIFIED (OTHERS WILL RECEIVE DEFAULT VALUES)
-            # try:
-            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
-            #     # inputs = self.agent_rep._build_predicted_inputs_dict(None)
-            #     inputs = self.composition._build_predicted_inputs_dict(None, self)
-            #     # FIX: NEED TO VALIDATE formatted_inputs AGAINST WHAT agent_rep EXPECTS (E.G., get_input_format()??
-            #     formatted_inputs = self.agent_rep._validate_input_shapes(inputs)
-            # except:
-            #     raise OptimizationControlMechanismError(
-            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
-            #         f"({[f.full_name for f in self.state_features]}) specified are not compatible with the inputs "
-            #         f"required by 'agent_rep' when it is executed. It's get_inputs_format() method can be used to see "
-            #         f"the format required; You can also remove the specification of 'state_features' from the "
-            #         f"constructor for {self.name} to have them be assigned automatically.")
-            # MODIFIED 1/9/22 END
+            try:
+                # Test if state_features specified are compatible with inputs format for agent_rep Composition
+                inputs = self.composition._build_predicted_inputs_dict(None, self)
+                inputs_dict, num_inputs = self.agent_rep._parse_dict(inputs)
+            except:
+                raise OptimizationControlMechanismError(
+                    f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
+                    f"({[f.full_name for f in state_features]}) specified are not compatible with the inputs "
+                    f"required by 'agent_rep' when it is executed. Use its get_inputs_format() method to see "
+                    f"the required format, or remove the specification of 'state_features' from the constructor "
+                    f"for {self.name} to have them assigned automatically.")
             return
 
-        # agent_rep is Composition, but no state_features have been specified,
-        #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
-        shadow_input_ports = []
-        for node in _get_all_input_nodes(self.agent_rep):
-            for input_port in node.input_ports:
-                if input_port.internal_only:
-                    continue
-                # if isinstance(input_port.owner, CompositionInterfaceMechanism):
-                #     input_port = input_port.
-                shadow_input_ports.append(input_port)
+        else:
+            # agent_rep is Composition, but no state_features have been specified,
+            #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
+            shadow_input_ports = []
+            for node in _get_all_input_nodes(self.agent_rep):
+                for input_port in node.input_ports:
+                    if input_port.internal_only:
+                        continue
+                    # if isinstance(input_port.owner, CompositionInterfaceMechanism):
+                    #     input_port = input_port.
+                    shadow_input_ports.append(input_port)
 
-        local_context = Context(source=ContextFlags.METHOD)
-        state_input_ports_to_add = []
-        # for input_port in input_ports_not_specified:
-        for input_port in shadow_input_ports:
-            input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
-            params = {SHADOW_INPUTS: input_port,
-                      INTERNAL_ONLY:True}
-            # Note: state_feature_functions has been validated _validate_params
-            #       to have only a single function in for model-based agent_rep
-            if self.state_feature_functions:
-                params.update({FUNCTION: self._parse_state_feature_function(self.state_feature_functions)})
-            state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
-                                                              port_type=InputPort,
-                                                              owner=self,
-                                                              reference_value=input_port.value,
-                                                              params=params,
-                                                              context=local_context))
-        self.add_ports(state_input_ports_to_add,
-                             update_variable=False,
-                             context=local_context)
-        self.state_input_ports.extend(state_input_ports_to_add)
+            local_context = Context(source=ContextFlags.METHOD)
+            state_input_ports_to_add = []
+            # for input_port in input_ports_not_specified:
+            for input_port in shadow_input_ports:
+                input_port_name = f"{SHADOW_INPUT_NAME} of {input_port.owner.name}[{input_port.name}]"
+                params = {SHADOW_INPUTS: input_port,
+                          INTERNAL_ONLY:True}
+                # Note: state_feature_functions has been validated _validate_params
+                #       to have only a single function in for model-based agent_rep
+                if self.state_feature_functions:
+                    params.update({FUNCTION: self._parse_state_feature_function(self.state_feature_functions)})
+                state_input_ports_to_add.append(_instantiate_port(name=input_port_name,
+                                                                  port_type=InputPort,
+                                                                  owner=self,
+                                                                  reference_value=input_port.value,
+                                                                  params=params,
+                                                                  context=local_context))
+            self.add_ports(state_input_ports_to_add,
+                                 update_variable=False,
+                                 context=local_context)
+            self.state_input_ports.extend(state_input_ports_to_add)
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
@@ -2394,17 +2384,25 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def _parse_state_feature_specs(self, state_features, feature_functions, context=None):
         """Parse entries of state_features into InputPort spec dictionaries
-        Set INTERNAL_ONLY entry of params dict of InputPort spec dictionary to True
-            (so that inputs to Composition are not required if the specified state is on an INPUT Mechanism)
+        For entries specifying shadowing, set INTERNAL_ONLY entry of params dict for InputPort spec dictionary to True
+            (so that inputs to Composition are not required if the specified state feature is on an INPUT Mechanism)
         Assign functions specified in **state_feature_functions** to InputPorts for all state_features
-        Return list of InputPort specification dictionaries
+        Return list of InputPort specification dictionaries for state_input_ports
         """
+
+        # FIX: 1/10/22 - PARSE DICTIONARY SPEC HERE
+        # MODIFIED 1/10/22 NEW:
+        input_port_names = None
+        if isinstance(state_features, dict):
+            input_port_names = [k.name for k in list(state_features.keys())]
+            state_features = list(state_features.values())
+        # MODIFIED 1/10/22 END
 
         _state_input_ports = _parse_shadow_inputs(self, state_features)
 
         parsed_features = []
 
-        for spec in _state_input_ports:
+        for i, spec in enumerate(_state_input_ports):
             # MODIFIED 11/29/21 NEW:
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):
@@ -2420,8 +2418,15 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
-            if not parsed_spec[NAME]:
+            # # MODIFIED 1/10/22 OLD:
+            # if not parsed_spec[NAME]:
+            #     parsed_spec[NAME] = spec.full_name
+            # MODIFIED 1/10/22 NEW:
+            if input_port_names:
+                parsed_spec[NAME] = input_port_names[i]
+            elif not parsed_spec[NAME]:
                 parsed_spec[NAME] = spec.full_name
+            # MODIFIED 1/10/22 END
             if SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
                 parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
