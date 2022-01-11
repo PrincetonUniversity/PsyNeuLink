@@ -1735,6 +1735,27 @@ class OptimizationControlMechanism(ControlMechanism):
                           f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
                           f"automatically configure its 'state_features' to be the external inputs to "
                           f"'{self.agent_rep.name}'.")
+            # # MODIFIED 1/9/22 NEW:
+            # try:
+            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
+            #     self.agent_rep._build_predicted_inputs_dict(None)
+            # except:
+            #     raise OptimizationControlMechanismError(
+            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
+            #         f"({self.state_features}) specified are not compatible with the inputs required by 'agent_rep' "
+            #         f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
+            #         f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
+            #         f"to allow their automatic assignment.")
+            # MODIFIED 1/9/22 END
+
+            warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
+                          f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
+                          f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
+                          f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
+                          f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
+                          f"automatically configure its 'state_features' to be the external inputs to "
+                          f"'{self.agent_rep.name}'.")
             return
 
         else:
