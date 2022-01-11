@@ -39,7 +39,7 @@ Compilation modifiers:
 Compiled code dump:
  * "llvm" -- dumps LLVM IR into a file (named after the dumped module).
            Code is dumped both after module generation and linking into global module.
- * "opt" -- dump LLVM IR after running through the optimization passes
+ * "llvm-opt" -- dump LLVM IR after running through the optimization passes
  * "isa" -- dump machine specific ISA
 """
 
