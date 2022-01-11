@@ -1098,7 +1098,7 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
-from psyneulink.core.globals.json import _get_variable_parameter_name
+from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
@@ -4126,14 +4126,15 @@ class Mechanism_Base(Mechanism):
                     )
                 )
                 combination_function_id = f'{parse_valid_identifier(self.name)}_{MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION}'
+                combination_function_args = {
+                    'data': "combination_function_input_data",
+                    'axes': 0
+                }
                 model.functions.append(
                     mdf.Function(
                         id=combination_function_id,
-                        function='onnx::ReduceSum',
-                        args={
-                            'data': "combination_function_input_data",
-                            'axes': 0
-                        }
+                        function={'onnx::ReduceSum': combination_function_args},
+                        args=combination_function_args
                     )
                 )
                 combination_function_dimreduce_id = f'{combination_function_id}_dimreduce'
@@ -4168,8 +4169,13 @@ class Mechanism_Base(Mechanism):
         else:
             primary_function_input_name = model.input_ports[0].id
 
-        function_model.args[_get_variable_parameter_name(self.function)] = primary_function_input_name
+        self.function._set_mdf_arg(
+            function_model, _get_variable_parameter_name(self.function), primary_function_input_name
+        )
         model.functions.append(function_model)
+
+        for func_model in model.functions:
+            _substitute_expression_args(func_model)
 
         return model
 

@@ -53,7 +53,7 @@ class DistributionFunction(Function_Base):
 
     def as_mdf_model(self):
         model = super().as_mdf_model()
-        model.args['shape'] = self.defaults.variable.shape
+        self._set_mdf_arg(model, 'shape', self.defaults.variable.shape)
         return model
 
 

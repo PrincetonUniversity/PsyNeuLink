@@ -842,7 +842,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
-from psyneulink.core.globals.json import _get_variable_parameter_name
+from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
@@ -1820,9 +1820,18 @@ class TransferMechanism(ProcessingMechanism_Base):
 
         if self.defaults.integrator_mode:
             integrator_function_model = self.integrator_function.as_mdf_model()
+
             primary_input = function_model.args[_get_variable_parameter_name(self.function)]
-            integrator_function_model.args[_get_variable_parameter_name(self.function)] = primary_input
-            function_model.args[_get_variable_parameter_name(self.function)] = integrator_function_model.id
+            self.integrator_function._set_mdf_arg(
+                integrator_function_model,
+                _get_variable_parameter_name(self.integrator_function),
+                primary_input
+            )
+            self.function._set_mdf_arg(
+                function_model,
+                _get_variable_parameter_name(self.function),
+                integrator_function_model.id
+            )
 
             for _, func_param in integrator_function_model.metadata['function_stateful_params'].items():
                 model.parameters.append(mdf.Parameter(**func_param))
@@ -1838,6 +1847,12 @@ class TransferMechanism(ProcessingMechanism_Base):
                 main_noise_function.id = f'{model.id}_{main_noise_function.id}'
                 model.functions.append(main_noise_function)
                 model.functions.extend(extra_noise_functions)
-                integrator_function_model.args['noise'] = main_noise_function.id
+
+                self.integrator_function._set_mdf_arg(
+                    integrator_function_model, 'noise', main_noise_function.id
+                )
+
+            for func_model in model.functions:
+                _substitute_expression_args(func_model)
 
         return model

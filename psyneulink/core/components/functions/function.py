@@ -897,7 +897,7 @@ class Function_Base(Function):
             if typ not in mdf_functions.mdf_functions:
                 warnings.warn(f'{typ} is not an MDF standard function, this is likely to produce an incompatible model.')
 
-            model.function = typ
+            model.function = {typ: parameters[self._model_spec_id_parameters]}
 
         return model
 

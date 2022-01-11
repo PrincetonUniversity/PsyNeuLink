@@ -3881,6 +3881,17 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             }
         }
 
+    def _set_mdf_arg(self, model, arg, value):
+        # must set both args attr and args in function because otherwise
+        # mdf dependency tracking doesn't work
+        try:
+            if model.function is not None:
+                model.function[list(model.function.keys())[0]][arg] = value
+        except AttributeError:
+            pass
+
+        model.args[arg] = value
+
     @property
     def logged_items(self):
         """Dictionary of all items that have entries in the log, and their currently assigned `ContextFlags`\\s

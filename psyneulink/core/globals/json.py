@@ -173,6 +173,13 @@ def _get_variable_parameter_name(obj):
     return MODEL_SPEC_ID_MDF_VARIABLE
 
 
+def _substitute_expression_args(model):
+    # currently cannot use args with value expressions
+    if model.value is not None:
+        for arg, val in model.args.items():
+            model.value = model.value.replace(arg, str(val))
+
+
 def _parse_component_type(component_dict):
     def get_pnl_component_type(s):
         from psyneulink.core.components.component import ComponentsMeta
@@ -207,6 +214,16 @@ def _parse_component_type(component_dict):
         except TypeError:
             # actually a str
             type_str = type_dict
+    elif isinstance(type_str, dict):
+        if len(type_str) != 1:
+            raise PNLJSONError
+        else:
+            elem = list(type_str.keys())[0]
+            # not a function_type: args dict
+            if MODEL_SPEC_ID_METADATA in type_str[elem]:
+                raise PNLJSONError
+            else:
+                type_str = elem
 
     try:
         # gets the actual psyneulink type (Component, etc..) from the module
@@ -251,6 +268,11 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
         component_identifiers = {}
 
     exec('import numpy')
+    try:
+        pnl_type = _parse_component_type(value)
+    except (KeyError, TypeError, PNLJSONError):
+        # ignore parameters that aren't components
+        pnl_type = None
 
     if isinstance(value, list):
         new_val = [_parse_parameter_value(x, component_identifiers, name, parent_parameters) for x in value]
@@ -303,7 +325,7 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
                 name,
                 parent_parameters
             )
-        elif MODEL_SPEC_ID_PARAMETER_VALUE in value:
+        elif MODEL_SPEC_ID_PARAMETER_VALUE in value and pnl_type is None:
             # is a standard mdf Parameter class with value
             value = _parse_parameter_value(
                 value[MODEL_SPEC_ID_PARAMETER_VALUE],
@@ -486,7 +508,7 @@ def _generate_component_string(
         try:
             parameters = dict(component_dict[component_type._model_spec_id_parameters])
         except KeyError:
-            pass
+            parameters = {}
         parameters['custom_function'] = f'{custom_func}'
         try:
             del component_dict[MODEL_SPEC_ID_METADATA]['custom_function']
@@ -496,6 +518,12 @@ def _generate_component_string(
     try:
         parameters.update(component_dict[component_type._model_spec_id_stateful_parameters])
     except KeyError:
+        pass
+
+    try:
+        # args in function dict
+        parameters.update(component_dict['function'][list(component_dict['function'].keys())[0]])
+    except (AttributeError, KeyError):
         pass
 
     parameter_names = {}

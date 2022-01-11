@@ -708,7 +708,6 @@ class UserDefinedFunction(Function_Base):
 
         if ext_function_str is not None:
             model.metadata['custom_function'] = ext_function_str
-            model.function = ext_function_str
             del model.metadata['type']
 
         return model
