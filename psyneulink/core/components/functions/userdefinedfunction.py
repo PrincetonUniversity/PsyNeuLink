@@ -668,7 +668,7 @@ class UserDefinedFunction(Function_Base):
 
         with open(srcfile) as f:
             for node in ast.walk(ast.parse(f.read(), srcfile)):
-                if getattr(node, 'lineno', -1) == first_line and isinstance(node, (ast.FunctionDef)):
+                if getattr(node, 'lineno', -1) == first_line and isinstance(node, (ast.FunctionDef, ast.Lambda)):
                     func_ast = node
                     break
                 func_ast = None

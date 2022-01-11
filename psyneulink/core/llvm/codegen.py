@@ -120,6 +120,16 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         self.var_builder.branch(udf_block)
         return self.builder
 
+    def visit_Lambda(self, node):
+        self.visit(node.args)
+        expr = self.visit(node.body)
+
+        # store the lambda expression in the result and terminate
+        self.builder.store(expr, self.arg_out)
+        self.builder.ret_void()
+
+        return self.builder
+
     def visit_Add(self, node):
         def _add(builder, x, y):
             assert helpers.is_floating_point(x)
