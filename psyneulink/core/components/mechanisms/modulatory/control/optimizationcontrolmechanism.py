@@ -1639,20 +1639,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # Validate state_features, and instantiate any that are not shadowing nodes
             # Shadowing nodes are instantiated in Composition._update_shadow_projections()
             comp = self.agent_rep
-            # MODIFIED 1/10/22 OLD:
             state_features = (list(self.state_features.values()) if isinstance(self.state_features, dict)
                               else self.state_features)
-            # # # MODIFIED 1/10/22 NEW:
-            # # FIX: 1/10/22:  PARSE SHADOW_INPUTS AS WELL (SAFE TO DO SO SINCE MECH SPECS ARE TREATED THAT WAY
-            # #  ANYWHERE HERE
-            # if isinstance(self.state_features, dict):
-            #     if SHADOW_INPUTS in self.state_features:
-            #         state_features = self.state_features[SHADOW_INPUTS]
-            #     else:
-            #         state_features = list(self.state_features.values())
-            # else:
-            #     state_features = self.state_features
-            # MODIFIED 1/10/22 END
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
@@ -1698,8 +1686,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             try:
                 # Test if state_features specified are compatible with inputs format for agent_rep Composition
-                # inputs = self.composition._build_predicted_inputs_dict(None, self)
-                # FIX: 1/10/22 - USE self.agent_rep.external_input_values FOR CHECK?
+                # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
                 inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
                 inputs_dict, num_inputs = self.agent_rep._parse_dict(inputs)
                 assert True
@@ -2421,31 +2408,19 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries for state_input_ports
         """
 
-        # # MODIFIED 1/10/22 NEW:
-        # input_port_names = None
-        # if isinstance(state_features, dict):
-        #     # FIX: 1/10/22 - HANDLE SHADOW_INPUTS DICT FORMAT:  (per test_predator_prey)
-        #     input_port_names = [k.name for k in list(state_features.keys())]
-        #     state_features = list(state_features.values())
-        # MODIFIED 1/11/22 NEWER:
         input_port_names = None
         if isinstance(state_features, dict):
             if SHADOW_INPUTS in self.state_features:
-                # state_features = state_features[SHADOW_INPUTS]
-                pass
-            # FIX: 1/10/22 - HANDLE SHADOW_INPUTS DICT FORMAT:  (per test_predator_prey)
+                pass  # handled below
             else:
                 input_port_names = [k.name for k in list(state_features.keys())]
                 state_features = list(state_features.values())
-        # MODIFIED 1/11/22 END
-        # MODIFIED 1/10/22 END
 
         _state_input_ports = _parse_shadow_inputs(self, state_features)
 
         parsed_features = []
 
         for i, spec in enumerate(_state_input_ports):
-            # MODIFIED 11/29/21 NEW:
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):
                 if self.agent_rep_type == COMPOSITION:
@@ -2460,15 +2435,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
-            # # MODIFIED 1/10/22 OLD:
-            # if not parsed_spec[NAME]:
-            #     parsed_spec[NAME] = spec.full_name
-            # MODIFIED 1/10/22 NEW:
             if input_port_names:
                 parsed_spec[NAME] = input_port_names[i]
             elif not parsed_spec[NAME]:
                 parsed_spec[NAME] = spec.full_name
-            # MODIFIED 1/10/22 END
             if SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
                 parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
