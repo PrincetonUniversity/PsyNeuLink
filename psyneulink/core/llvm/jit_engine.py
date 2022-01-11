@@ -177,7 +177,7 @@ class jit_engine:
         if "time_stat" in debug_env:
             print("Time to optimize LLVM module bundle '{}': {}".format(module.name, finish - start))
 
-        if "opt" in self.__debug_env:
+        if "llvm-opt" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
 
