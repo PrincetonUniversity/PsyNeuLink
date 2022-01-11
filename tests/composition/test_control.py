@@ -774,7 +774,7 @@ class TestControlMechanisms:
         "are not compatible with the inputs required by 'agent_rep' when it is executed. "
         "Use its get_inputs_format() method to see the required format, "
         "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
-        "to have them assigned automatically."
+        "to have them automatically assigned."
     ]
 
     state_feature_specs = ['partial_legal_ports_spec',
@@ -877,9 +877,9 @@ class TestControlMechanisms:
         ocomp.add_linear_processing_pathway([oa,oc])
         ocomp.add_linear_processing_pathway([ob,oc])
         ocm = pnl.OptimizationControlMechanism(
-            state_features=[ia.input_port,   # Note: these state_features will not execute properly
-                            ib.output_port,  #       they are only for testing
-                            oc],
+            state_features=[ia.input_port,
+                            oa.output_port,
+                            ob],
             objective_mechanism=[ic,ib],
             function=pnl.GridSearch(),
             allow_probes=True,
@@ -897,8 +897,8 @@ class TestControlMechanisms:
         for key, value in ocm.state_dict.items():
             ocm.state[key[3]] == value
         assert keys[0] == (ia.input_port, ia, icomp ,0)
-        assert keys[1] == (ib.output_port, ib, icomp, 1)
-        assert keys[2] == (oc.input_port, oc, ocomp, 2)
+        assert keys[1] == (oa.output_port, oa, ocomp, 1)
+        assert keys[2] == (ob.input_port, ob, ocomp, 2)
         assert keys[3] == (ia.parameter_ports[pnl.SLOPE], ia, icomp, 3)
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
@@ -2878,13 +2878,19 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            function=pnl.GridSearch(),
                                            control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
                                                                          allocation_samples=[10, 20, 30]))
-        ocomp.add_controller(ocm)
 
-        error_text = 'Input stimulus ([array([0.])]) for MIDDLE COMP is incompatible with its ' \
-                     'external_input_values ([array([0.]), array([0.])]).'
+        # error_text = 'Input stimulus ([array([0.])]) for MIDDLE COMP is incompatible with its ' \
+        #              'external_input_values ([array([0.]), array([0.])]).'
+        error_text = "The 'state_features' argument has been specified for 'OCM' that is using a Composition " \
+                     "('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by its " \
+                     "'agent_rep': 'Input stimulus ([array([0.])]) for MIDDLE COMP is incompatible with its " \
+                     "external_input_values ([array([0.]), array([0.])]).' Use the get_inputs_format() method of " \
+                     "'OUTER COMP' to see the required format, or remove the specification of 'state_features' from " \
+                     "the constructor for OCM to have them automatically assigned."
         if nested_agent_rep == 'unnested':
             if bad_state_featues == 'bad_state_feat':
-                with pytest.raises(RunError) as error:
+                with pytest.raises(pnl.OptimizationControlMechanismError) as error:
+                    ocomp.add_controller(ocm)
                     ocomp.run()
                 assert error_text in str(error.value)
             else:

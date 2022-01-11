@@ -8044,8 +8044,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         controller = controller or self.controller
         # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
+        # (unless it has SHADOW_INPUTS entry, in which case that is handled below)
         input_dict_keys = (list(controller.state_features.keys())
-                           if (hasattr(controller, STATE_FEATURES) and isinstance(controller.state_features, dict))
+                           if (hasattr(controller, STATE_FEATURES)
+                               and isinstance(controller.state_features, dict)
+                               and SHADOW_INPUTS not in controller.state_features)
                            else None)
         inputs = {}
         no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))

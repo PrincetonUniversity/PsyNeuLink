@@ -1620,7 +1620,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return
 
         from psyneulink.core.compositions.composition import \
-            Composition, NodeRole, CompositionInterfaceMechanism, CompositionError
+            Composition, NodeRole, CompositionInterfaceMechanism, CompositionError, RunError
 
         def _get_all_input_nodes(comp):
             """Return all input_nodes, including those for any Composition nested one level down.
@@ -1639,8 +1639,20 @@ class OptimizationControlMechanism(ControlMechanism):
             # Validate state_features, and instantiate any that are not shadowing nodes
             # Shadowing nodes are instantiated in Composition._update_shadow_projections()
             comp = self.agent_rep
+            # MODIFIED 1/10/22 OLD:
             state_features = (list(self.state_features.values()) if isinstance(self.state_features, dict)
                               else self.state_features)
+            # # # MODIFIED 1/10/22 NEW:
+            # # FIX: 1/10/22:  PARSE SHADOW_INPUTS AS WELL (SAFE TO DO SO SINCE MECH SPECS ARE TREATED THAT WAY
+            # #  ANYWHERE HERE
+            # if isinstance(self.state_features, dict):
+            #     if SHADOW_INPUTS in self.state_features:
+            #         state_features = self.state_features[SHADOW_INPUTS]
+            #     else:
+            #         state_features = list(self.state_features.values())
+            # else:
+            #     state_features = self.state_features
+            # MODIFIED 1/10/22 END
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
@@ -1686,7 +1698,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             try:
                 # Test if state_features specified are compatible with inputs format for agent_rep Composition
-                inputs = self.composition._build_predicted_inputs_dict(None, self)
+                # inputs = self.composition._build_predicted_inputs_dict(None, self)
+                # FIX: 1/10/22 - USE self.agent_rep.external_input_values FOR CHECK?
+                inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
                 inputs_dict, num_inputs = self.agent_rep._parse_dict(inputs)
                 assert True
                 if len(self.state_input_ports) < len(inputs_dict):
@@ -1694,16 +1708,25 @@ class OptimizationControlMechanism(ControlMechanism):
                                   f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
                                   f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
                                   f"get_inputs_format() method to see the format for its inputs.")
+            except RunError as error:
+                raise OptimizationControlMechanismError(
+                    f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but "
+                    f"they are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
+                    f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
+                    f"remove the specification of 'state_features' from the constructor for {self.name} "
+                    f"to have them automatically assigned.")
             except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
                 pass                    # and will issue the corresponding error message.
             except:  # Legal Node specifications, but incorrect for input to agent_rep
+                names = [f.full_name if hasattr(f, 'full_name') else f.name for f in state_features]
                 raise OptimizationControlMechanismError(
                     f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
-                    f"({[f.full_name for f in state_features]}) specified are not compatible with the inputs "
-                    f"required by 'agent_rep' when it is executed. Use its get_inputs_format() method to see "
-                    f"the required format, or remove the specification of 'state_features' from the constructor "
-                    f"for {self.name} to have them assigned automatically.")
+                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the "
+                    f"'state_features' ({names}) specified are not compatible with the inputs required by 'agent_rep' "
+                    f"when it is executed. Use its get_inputs_format() method to see the required format, "
+                    f"or remove the specification of 'state_features' from the constructor for {self.name} "
+                    f"to have them automatically assigned.")
             return
 
         else:
@@ -2398,12 +2421,23 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries for state_input_ports
         """
 
-        # FIX: 1/10/22 - PARSE DICTIONARY SPEC HERE
-        # MODIFIED 1/10/22 NEW:
+        # # MODIFIED 1/10/22 NEW:
+        # input_port_names = None
+        # if isinstance(state_features, dict):
+        #     # FIX: 1/10/22 - HANDLE SHADOW_INPUTS DICT FORMAT:  (per test_predator_prey)
+        #     input_port_names = [k.name for k in list(state_features.keys())]
+        #     state_features = list(state_features.values())
+        # MODIFIED 1/11/22 NEWER:
         input_port_names = None
         if isinstance(state_features, dict):
-            input_port_names = [k.name for k in list(state_features.keys())]
-            state_features = list(state_features.values())
+            if SHADOW_INPUTS in self.state_features:
+                # state_features = state_features[SHADOW_INPUTS]
+                pass
+            # FIX: 1/10/22 - HANDLE SHADOW_INPUTS DICT FORMAT:  (per test_predator_prey)
+            else:
+                input_port_names = [k.name for k in list(state_features.keys())]
+                state_features = list(state_features.values())
+        # MODIFIED 1/11/22 END
         # MODIFIED 1/10/22 END
 
         _state_input_ports = _parse_shadow_inputs(self, state_features)
