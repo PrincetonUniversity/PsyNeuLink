@@ -244,11 +244,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     .. _OptimizationControlMechanism_State_Features_Shapes:
 
         .. note::
-           If **state_features** *are* specified explicitly when the `agent_rep <OptimizationControlMechanism.agent_rep>`
+           If **state_features** are specified explicitly when the `agent_rep <OptimizationControlMechanism.agent_rep>`
            is a Composition, there must be one for every `InputPort` of every `INPUT <NodeRole.INPUT>` `Node
            <Composition_Nodes>` in that Composition, and these must match -- both individually, and in their order --
            the `inputs to the Composition <Composition_Execution_Inputs>`) required by its `run <Composition.run>`
-           method.  Failure to do so generates an error indicating this.
+           method.  Failure to do so generates an error.
 
         .. _OptimizationControlMechanism_Selective_Input:
 
@@ -260,9 +260,9 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
            <OptimizationControlMechanism_State_Feature_Functions_Arg>`) such that those assigned to the desired
            inputs pass their values unmodified, while those for the inputs that are to be ignored return a constant value.
            Another approach, for cases in which the desired inputs pertain to a subset of Components in the Composition
-           that solely responsible for determining its `net_outcome <ControlMechanism.net_outcome>`, is to assign those
+           solely responsible for determining its `net_outcome <ControlMechanism.net_outcome>`, is to assign those
            Components to a `nested Composition <Composition_Nested>` and assign that Composition as the `agent_rep
-           <OptimizationControlMechanism.agent_rep>`.  A third, more sophisticated approach, would be to assign
+           <OptimizationControlMechanism.agent_rep>`.  A third, more sophisticated approach, is to assign
            ControlSignals to the InputPorts for the irrelevant features, and specify them to suppress their values.
 
   .. _OptimizationControlMechanism_Agent_Rep_CFA:
