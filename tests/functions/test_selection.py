@@ -19,6 +19,7 @@ test_philox /= sum(test_philox)
 test_data = [
     (Functions.OneHot, test_var, {'mode':kw.MAX_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.]),
     (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.]),
+    (Functions.OneHot, -test_var, {'mode':kw.MAX_ABS_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0.92732552, 0.]),
     (Functions.OneHot, test_var, {'mode':kw.MAX_INDICATOR}, [0., 0., 0., 0., 0., 0., 0., 0., 1., 0.]),
     (Functions.OneHot, test_var, {'mode':kw.MAX_ABS_INDICATOR}, [0., 0., 0., 0., 0., 0., 0., 0., 1., 0.]),
     (Functions.OneHot, test_var, {'mode':kw.MIN_VAL}, [0., 0., 0., 0., 0., 0., 0., 0., 0., -0.23311696]),
@@ -35,6 +36,7 @@ test_data = [
 names = [
     "OneHot MAX_VAL",
     "OneHot MAX_ABS_VAL",
+    "OneHot MAX_ABS_VAL_NEG",
     "OneHot MAX_INDICATOR",
     "OneHot MAX_ABS_INDICATOR",
     "OneHot MIN_VAL",
