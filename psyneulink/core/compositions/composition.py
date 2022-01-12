@@ -7848,19 +7848,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
-    # def _get_controller(comp, context=None):
-    #     """Get controller for which the current Composition is an agent_rep.
-    #     Recursively search enclosing Compositions for controller if self does not have one.
-    #     Use context.composition if there is no controller.
-    #     This is needed for agent_rep that is nested within the Composition to which the controller belongs.
-    #     """
-    #     context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
-    #     if comp.controller:
-    #         return comp.controller
-    #     elif context.composition:
-    #         return context.composition._get_controller(context)
-    #     else:
-    #         assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
+    # MODIFIED 1/12/22 NEWISH:
+    def _get_controller(self, comp=None, context=None):
+        """Get controller for which the current Composition is an agent_rep.
+        Recursively search enclosing Compositions for controller if self does not have one.
+        Use context.composition if there is no controller.
+        This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+        """
+        comp = comp or self
+        context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
+        if comp.controller:
+            return comp.controller
+        elif context.composition:
+            return context.composition._get_controller(context=context)
+        else:
+            assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
+    # MODIFIED 1/12/22 END
 
     def reshape_control_signal(self, arr):
 
@@ -8135,7 +8138,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
-            controller = get_controller(self)
+            # # MODIFIED 1/12/22 OLD:
+            # controller = get_controller(self)
+            # MODIFIED 1/12/22 NEW:
+            controller = self._get_controller(self)
+            # MODIFIED 1/12/22 END
 
             base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
@@ -8217,7 +8224,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(input_spec, dict):
                 inputs = input_spec
         else:
-            inputs = self._build_predicted_inputs_dict(predicted_input)
+            inputs = self._build_predicted_inputs_dict(predicted_input,
+                                                       controller=self._get_controller(context=context))
 
         if hasattr(self, '_input_spec') and block_simulate and isgenerator(input_spec):
             warnings.warn(f"The evaluate method of {self.name} is attempting to use block simulation, but the "
