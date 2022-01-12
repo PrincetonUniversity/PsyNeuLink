@@ -8141,7 +8141,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # # MODIFIED 1/12/22 OLD:
             # controller = get_controller(self)
             # MODIFIED 1/12/22 NEW:
-            controller = self._get_controller(self)
+            controller = self._get_controller(context=context)
             # MODIFIED 1/12/22 END
 
             base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
