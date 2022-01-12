@@ -1283,6 +1283,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         control = convert_to_list(control) or []
         monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
+        self._sim_counts = {}
 
         # For backward compatibility:
         if kwargs:
@@ -1321,8 +1322,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control = convert_to_list(args)
 
         function = function or DefaultAllocationFunction
-
-        self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
@@ -1993,6 +1992,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         for proj in deeply_nested_aux_components.values():
             composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
+
+        # Add any remaining afferent Projections that have been assigned and are from nodes in composition
+        remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)
+        for proj in remaining_projections:
+            # Projection is afferent:
+            if proj in self.afferents:
+                # Confirm sender is in composition
+                port, node, comp = composition._get_source(proj)
+            elif proj in self.efferents:
+                # Confirm receiver is in composition
+                port, node, comp = composition._get_destination(proj)
+            else:
+                assert False, f"PROGRAM ERROR: Attempt to activate Projection ('{proj.name}') in '{composition.name}'" \
+                              f" associated with its controller '{self.name}' that is neither an afferent nor " \
+                              f"efferent of '{self.name}' -- May be as yet unaccounted for condition."
+            if node in composition._get_all_nodes():
+                proj._activate_for_compositions(composition)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`
