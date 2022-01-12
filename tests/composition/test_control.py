@@ -2864,7 +2864,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                      f"'state_features' from the constructor for OCM to have them automatically assigned."
 
         ocm = pnl.OptimizationControlMechanism(name='OCM',
-                                           agent_rep=agent_rep,  # Nested Composition as agent_rep
+                                           agent_rep=agent_rep,
                                            state_features=state_features,
                                            objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
                                            allow_probes=True,
