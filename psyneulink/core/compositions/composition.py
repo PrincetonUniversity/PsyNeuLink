@@ -8216,6 +8216,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an array with the results of each run is also returned.
         """
 
+        controller = self._get_controller(context=context)
+
         # Build input dictionary for simulation
         input_spec = self.parameters.input_specification.get(context)
         if input_spec and block_simulate and not isgenerator(input_spec):
@@ -8225,7 +8227,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inputs = input_spec
         else:
             inputs = self._build_predicted_inputs_dict(predicted_input,
-                                                       controller=self._get_controller(context=context))
+                                                       controller=controller)
 
         if hasattr(self, '_input_spec') and block_simulate and isgenerator(input_spec):
             warnings.warn(f"The evaluate method of {self.name} is attempting to use block simulation, but the "
@@ -8282,22 +8284,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # COMPUTE net_outcome and aggregate in net_outcomes
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_ports(runtime_params, context)
+        controller._update_input_ports(runtime_params, context)
 
         # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-        outcome_is_array = self.controller.num_outcome_input_ports > 1
+        outcome_is_array = controller.num_outcome_input_ports > 1
         if not outcome_is_array:
-            outcome = self.controller.input_port.parameters.value._get(context)
+            outcome = controller.input_port.parameters.value._get(context)
         else:
             outcome = []
-            for i in range(self.controller.num_outcome_input_ports):
-                outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
+            for i in range(controller.num_outcome_input_ports):
+                outcome.append(controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
 
         if outcome is None:
             net_outcome = 0.0
         else:
             # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-            net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+            net_outcome = controller.compute_net_outcome(outcome, total_cost)
 
         if return_results:
             return net_outcome, result
