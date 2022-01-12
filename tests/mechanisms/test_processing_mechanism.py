@@ -246,6 +246,7 @@ class TestProcessingMechanismStandardOutputPorts:
     @pytest.mark.parametrize("op, expected", [(MAX_ONE_HOT, [0, 2, 0]),
                                               (MAX_INDICATOR, [0, 1, 0]),
                                               (MAX_ABS_INDICATOR, [0, 0, 1]),
+                                              (MAX_ABS_ONE_HOT, [0, 0, 4]),
                                               (MAX_VAL, [2]),
                                              ],
                              ids=lambda x: x if isinstance(x, str) else "")
@@ -264,7 +265,6 @@ class TestProcessingMechanismStandardOutputPorts:
                                               (STANDARD_DEVIATION, [1.24721913]),
                                               (VARIANCE, [1.55555556]),
                                               (MAX_ABS_VAL, [4]),
-                                              (MAX_ABS_ONE_HOT, [0, 0, 4]),
                                               (PROB, [0, 2, 0]),
                                              ],
                              ids=lambda x: x if isinstance(x, str) else "")

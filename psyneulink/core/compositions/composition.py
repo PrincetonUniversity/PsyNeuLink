@@ -10925,6 +10925,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 self.scheduler._delete_counts(c)
 
+    def _initialize_as_agent_rep(self, context, base_context, alt_controller=None):
+        assert self.controller is None or alt_controller is None
+
+        _initialized = set()  # avoid reinitializing shared dependencies below
+        self._initialize_from_context(
+            context, base_context=base_context, override=True, visited=_initialized
+        )
+        if alt_controller is not None:
+            # evaluation will be done with a controller from another composition
+            alt_controller._initialize_from_context(
+                context, base_context=base_context, override=True, visited=_initialized
+            )
+
+    def _clean_up_as_agent_rep(self, context, alt_controller=None):
+        _deleted = set()  # avoid traversing shared dependencies below
+        self._delete_contexts(context, visited=_deleted, check_simulation_storage=True)
+        if alt_controller is not None:
+            alt_controller._delete_contexts(
+                context, visited=_deleted, check_simulation_storage=True
+            )
+
     # endregion EXECUTION
 
     # ******************************************************************************************************************

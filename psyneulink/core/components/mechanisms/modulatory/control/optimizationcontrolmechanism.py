@@ -1983,9 +1983,18 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # freeze the values of current context, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
-        self.agent_rep._initialize_from_context(self._get_frozen_context(context),
-                                                base_context=context,
-                                                override=True)
+        frozen_context = self._get_frozen_context(context)
+
+        alt_controller = None
+        if self.agent_rep.controller is None:
+            try:
+                alt_controller = context.composition.controller
+            except AttributeError:
+                pass
+
+        self.agent_rep._initialize_as_agent_rep(
+            frozen_context, base_context=context, alt_controller=alt_controller
+        )
 
         # Get control_allocation that optimizes net_outcome using OptimizationControlMechanism's function
         # IMPLEMENTATION NOTE: skip ControlMechanism._execute since it is a stub method that returns input_values
@@ -1998,7 +2007,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                 )
 
         # clean up frozen values after execution
-        self.agent_rep._delete_contexts(self._get_frozen_context(context))
+        self.agent_rep._clean_up_as_agent_rep(frozen_context, alt_controller=alt_controller)
 
         optimal_control_allocation = np.array(optimal_control_allocation).reshape((len(self.defaults.value), 1))
         if self.function.save_samples:
@@ -2012,7 +2021,12 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_frozen_context(self, context=None):
         return Context(execution_id=f'{context.execution_id}{EID_FROZEN}')
 
-    def _set_up_simulation(self, base_context=Context(execution_id=None), control_allocation=None):
+    def _set_up_simulation(
+        self,
+        base_context=Context(execution_id=None),
+        control_allocation=None,
+        alt_controller=None
+    ):
         sim_context = copy.copy(base_context)
         sim_context.execution_id = self.get_next_sim_id(base_context, control_allocation)
 
@@ -2021,13 +2035,17 @@ class OptimizationControlMechanism(ControlMechanism):
         except AttributeError:
             self.parameters.simulation_ids._set([sim_context.execution_id], base_context)
 
-        self.agent_rep._initialize_from_context(sim_context, self._get_frozen_context(base_context), override=False)
+        self.agent_rep._initialize_as_agent_rep(
+            sim_context,
+            base_context=self._get_frozen_context(base_context),
+            alt_controller=alt_controller
+        )
 
         return sim_context
 
-    def _tear_down_simulation(self, sim_context=None):
+    def _tear_down_simulation(self, sim_context, alt_controller=None):
         if not self.agent_rep.parameters.retain_old_simulation_data._get():
-            self.agent_rep._delete_contexts(sim_context, check_simulation_storage=True)
+            self.agent_rep._clean_up_as_agent_rep(sim_context, alt_controller=alt_controller)
 
     def evaluate_agent_rep(self, control_allocation, context=None, return_results=False):
         """Call `evaluate <Composition.evaluate>` method of `agent_rep <OptimizationControlMechanism.agent_rep>`
@@ -2061,11 +2079,17 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # agent_rep is a Composition (since runs_simulations = True)
         if self.agent_rep.runs_simulations:
+            alt_controller = None
+            if self.agent_rep.controller is None:
+                try:
+                    alt_controller = context.composition.controller
+                except AttributeError:
+                    pass
             # KDM 5/20/19: crudely using default here because it is a stateless parameter
             # and there is a bug in setting parameter values on init, see TODO note above
             # call to self._instantiate_defaults around component.py:1115
             if self.defaults.search_statefulness:
-                new_context = self._set_up_simulation(context, control_allocation)
+                new_context = self._set_up_simulation(context, control_allocation, alt_controller)
             else:
                 new_context = context
 
@@ -2084,7 +2108,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                               return_results=return_results)
             context.composition = old_composition
             if self.defaults.search_statefulness:
-                self._tear_down_simulation(new_context)
+                self._tear_down_simulation(new_context, alt_controller)
 
             # FIX: THIS SHOULD BE REFACTORED TO BE HANDLED THE SAME AS A Composition AS agent_rep
             # If results of the simulation should be returned then, do so. agent_rep's evaluate method will
