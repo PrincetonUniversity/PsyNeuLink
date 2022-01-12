@@ -2945,16 +2945,16 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                            function=pnl.GridSearch(),
                                            control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
                                                                          allocation_samples=[10, 20, 30]))
-        ocomp.add_controller(ocm)
 
         error_text = 'Input stimulus ([array([0.])]) for MIDDLE COMP is incompatible with its ' \
                      'external_input_values ([array([0.]), array([0.])]).'
         if nested_agent_rep == 'unnested':
             if bad_state_featues == 'bad_state_feat':
-                with pytest.raises(RunError) as error:
-                    ocomp.run()
+                with pytest.raises(pnl.OptimizationControlMechanismError) as error:
+                    ocomp.add_controller(ocm)
                 assert error_text in str(error.value)
             else:
+                ocomp.add_controller(ocm)
                 ocomp.run()
         # FIX:  CRASHES IN composition._get_total_cost_of_control_allocation()
         #        RESTORE 'nested' for nested_agent_rep arg (in params)once nested Composition is supported for agent_rep
@@ -2964,6 +2964,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             #         ocomp.run()
             #     assert error_text in str(error.value)
             #     ocomp.run()
+            ocomp.add_controller(ocm)
             ocomp.run()
 
 class TestSampleIterator:
