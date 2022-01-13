@@ -2596,8 +2596,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
-    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -7745,25 +7744,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Instantiate any
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
-
-        # MODIFIED 1/4/22 OLD:
-        if hasattr(self.controller, NUM_ESTIMATES) and self.controller.num_estimates:
-            if RANDOMIZATION_CONTROL_SIGNAL not in self.controller.output_ports.names:
-                try:
-                    self.controller._create_randomization_control_signal(context)
-                except AttributeError:
-                    # ControlMechanism does not use RANDOMIZATION_CONTROL_SIGNAL
-                    pass
-            else:
-                self.controller.function.parameters.randomization_dimension._set(
-                    self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                    context
-                )
-            self.controller.function.parameters.randomization_dimension._set(
-                self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                context
-            )
-        # MODIFIED 1/4/22 END
 
         # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
