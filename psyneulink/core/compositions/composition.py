@@ -8714,7 +8714,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Parsed and standardized input dict
 
         `int` :
-            Number of input sets in dict for each input node in the Composition
+            Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
 
         """
         # parse a user-provided input dict to format it properly for execution.

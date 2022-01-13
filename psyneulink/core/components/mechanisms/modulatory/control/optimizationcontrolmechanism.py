@@ -919,7 +919,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList
+from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList, is_numeric
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -2495,6 +2495,8 @@ class OptimizationControlMechanism(ControlMechanism):
         parsed_features = []
 
         for i, spec in enumerate(_state_input_ports):
+            if isinstance(spec, numbers.Number):
+                spec = {DEFAULT_VARIABLE=spec}
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):
                 if self.agent_rep_type == COMPOSITION:
