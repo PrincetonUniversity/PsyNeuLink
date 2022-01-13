@@ -1662,12 +1662,18 @@ class OptimizationControlMechanism(ControlMechanism):
             state_features = (list(self.state_features.values()) if isinstance(self.state_features, dict)
                               else self.state_features)
             # # MODIFIED 1/13/22 NEW:
-            # isinstance(self.state_features, list):
-            #     # Assume list is in order of INPUT Nodes, and assign as keys for use in _build_predicted_inputs_dict
-            #     input_nodes =
-            # elif isinstance(self.state_features, dict):
+            # if isinstance(self.state_features, list):
+            #     # Convert list to dict, assuming list is in order of INPUT Nodes,
+            #     #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
+            #     input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            #     input_dict = {}
+            #     for i, spec in enumerate(self.state_features):
+            #         input_dict[input_nodes[i]] = spec
+            #     self.state_features = input_dict
+            # if isinstance(self.state_features, dict):
             #     # If dict is specified, get values for checks below
-            #     state_features = (list(self.state_features.values())
+            #     state_features = list(self.state_features.values())
+            # assert isinstance(self.state_features, dict)
             # MODIFIED 1/13/22 END
 
             # Ensure that all InputPorts shadowed by specified state_input_ports
