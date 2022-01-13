@@ -233,11 +233,14 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     <OptimizationControlMechanism.agent_rep>` for the optimization process; if the `controller_mode
     <Composition.controller_mode>` is *BEFORE*, then the inputs from the previous trial are used.
 
+    .. _OptimizationControlMechanism_State_Features_Explicit_Specification:
+
     The **state_features** argument can also be specified explicitly, using the formats described below.  This is
-    useful if different functions need to be assigned to different `state_input_ports
-    <OptimizationControlMechanism.state_input_ports>` used to generate the corresponding `state_feature_values
-    state_feature_values <OptimizationControlMechanism.state_feature_values>` (see `below
-    <OptimizationControlMechanism_State_Feature_Functions_Arg>`). However, doing so overrides the automatic
+    useful if the values of the `state_input_ports <OptimizationControlMechanism.state_input_ports>` are something
+    other than the inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>`, or if different functions need
+    to be assigned to different `state_input_ports <OptimizationControlMechanism.state_input_ports>` used to generate
+    the corresponding `state_feature_values state_feature_values <OptimizationControlMechanism.state_feature_values>`
+    (see `below <OptimizationControlMechanism_State_Feature_Functions_Arg>`). However, doing so overrides the automatic
     assignment of all state_features, and so a complete and appropriate set of specifications must be provided
     (see note below).
 
@@ -287,63 +290,75 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_State_Features_Shadow_Inputs:
 
+  FIX: 1/12/22 EDITING HERE
   The specifications in the **state_features** argument are used to construct the `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>`, and can be any of the following, used either singly or in a list:
+  <OptimizationControlMechanism.state_input_ports>`.  As noted
+  `above <OptimizationControlMechanism_State_Features_Explicit_Specification>`, this overrides automatic
+  specification, and can be any of the following:
 
-  .. _Optimization_Control_Mechanism_Input_Port_State_Feature:
-  * *InputPort specification* -- this creates an `InputPort` as one of the OptimizationControlMechanism's
-    `state_input_ports <OptimizationControlMechanism.state_input_ports>` that `shadows <InputPort_Shadow_Inputs>` the
-    input to the specified InputPort;  that is, the value of which is used as the corresponding value of the
-    OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
+  .. _Optimization_Control_Mechanism_State_Feature_Input_Dict:
 
-    .. note::
-       Only the `INPUT <NodeRole.INPUT>` `Nodes <Component_Nodes>` of a `nested Composition <Composition_Nested>`
-       can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
-       nested Compositions, only its `INPUT <NodeRole.INPUT>` Nodes can be specified for shadowing in the
-       **state_features** argument of the OptimizationControlMechanism's constructor.
+  * *Inputs dictionary* -- a dictionary that conforms to the format used to `specify inputs
+  <Composition_Input_Dictionary>` to the `agent_rep <OptimizationControlMechanism.agent_rep>`.  The format can be
+  seen using the `agent_rep <OptimizationControlMechanism.agent_rep>`'s. This is the most reliable and straightforward
+  way to specify **state_features**.
 
-    .. hint::
-       Shadowing the input to a Node of a `nested Composition <Composition_Nested>` that is not an `INTERNAL
-       <NodeRole.INTERNAL>` Node of that Composition can be accomplished one or of two ways, by: a) assigning it
-       `INPUT <NodeRole.INPUT>` as a `required NodeRole <Composition_Node_Role_Assignment>` where it is added to
-       the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
-       (this is allowed *within* the *same* Composition), and is assigned as an `OUTPUT <NodeRole.OUTPUT>` Node of
-       that Composition, the `OutputPort` of which which can then be specified in the **state_features** argument of
-       the OptimizationControlMechanism's constructor (see below).
+  * any of the following can be used either singly, or in a list:
 
-    .. technical_note::
-      The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
+      .. _Optimization_Control_Mechanism_Input_Port_State_Feature:
+      * *InputPort specification* -- this creates an `InputPort` as one of the OptimizationControlMechanism's
+        `state_input_ports <OptimizationControlMechanism.state_input_ports>` that `shadows <InputPort_Shadow_Inputs>` the
+        input to the specified InputPort;  that is, the value of which is used as the corresponding value of the
+        OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
 
-  .. _Optimization_Control_Mechanism_Output_Port_State_Feature:
-  * *OutputPort specification* -- this can be any form of `OutputPort specification <OutputPort_Specification>`
-    for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition; the `value <OutputPort.value>`
-    of the specified OutputPort is used as the corresponding value of the OptimizationControlMechanism's
-    `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
+        .. note::
+           Only the `INPUT <NodeRole.INPUT>` `Nodes <Component_Nodes>` of a `nested Composition <Composition_Nested>`
+           can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
+           nested Compositions, only its `INPUT <NodeRole.INPUT>` Nodes can be specified for shadowing in the
+           **state_features** argument of the OptimizationControlMechanism's constructor.
 
-  .. _Optimization_Control_Mechanism_Mechanism_State_Feature:
-  * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, the Mechanism must
-    be an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, and the Mechanism's `primary
-    InputPort <InputPort_Primary>` is `shadowed <Optimization_Control_Mechanism_Input_Port_State_Feature>` (since in
-    this case the state_feature must correspond to an input to the Composition). If the Mechanism is not an `INPUT
-    <NodeRole.INPUT>` Node, an error is generated; if its OutputPort is to be used, that needs to be specified
-    explicitly (as described `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In contrast, if the
-    `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator, then the Mechanism's
-    `primary OutputPort <OutputPort_Primary>` *is* used (since that is the typical usage for specifying an `InputPort
-    <InputPort_Specification>`); if the input to the Mechanism is to be shadowed, then its InputPort must be
-    specified explicitly (as described `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
+        .. hint::
+           Shadowing the input to a Node of a `nested Composition <Composition_Nested>` that is not an `INTERNAL
+           <NodeRole.INTERNAL>` Node of that Composition can be accomplished one or of two ways, by: a) assigning it
+           `INPUT <NodeRole.INPUT>` as a `required NodeRole <Composition_Node_Role_Assignment>` where it is added to
+           the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
+           (this is allowed *within* the *same* Composition), and is assigned as an `OUTPUT <NodeRole.OUTPUT>` Node of
+           that Composition, the `OutputPort` of which which can then be specified in the **state_features** argument of
+           the OptimizationControlMechanism's constructor (see below).
 
-  * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, the Mechanism's
-    `primary InputPort <InputPort_Primary>` is shadowed in same way as if it had been explicit `input_port
-    specification <Optimization_Control_Mechanism_Input_Port_State_Feature>`.  If the Mechanism is in a `nested
-    Composition <Composition_Nested>`, it must be an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that
-    Composition (see note above);  if its OutputPort needs to be used, it must be specified explicitly (as described
-    `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In contrast, if the `agent_rep
-    <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, then the Mechanism's
-    `primary OutputPort <OutputPort_Primary>` *is* used (since that is typical usage, and there are no assumptions
-    made about the state features of a `CompositionFunctionApproximator`); if the input to the Mechanism *is* to be
-    shadowed, then its InputPort must be specified explicitly (as described `above
-    <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
+        .. technical_note::
+          The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
 
+      .. _Optimization_Control_Mechanism_Output_Port_State_Feature:
+      * *OutputPort specification* -- this can be any form of `OutputPort specification <OutputPort_Specification>`
+        for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition; the `value <OutputPort.value>`
+        of the specified OutputPort is used as the corresponding value of the OptimizationControlMechanism's
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
+
+      # FIX - 1/12/22: CHOOSE ONE OF THESE:
+      .. _Optimization_Control_Mechanism_Mechanism_State_Feature:
+      * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, the Mechanism must
+        be an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition, and the Mechanism's `primary
+        InputPort <InputPort_Primary>` is `shadowed <Optimization_Control_Mechanism_Input_Port_State_Feature>` (since in
+        this case the state_feature must correspond to an input to the Composition). If the Mechanism is not an `INPUT
+        <NodeRole.INPUT>` Node, an error is generated; if its OutputPort is to be used, that needs to be specified
+        explicitly (as described `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In contrast, if the
+        `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator, then the Mechanism's
+        `primary OutputPort <OutputPort_Primary>` *is* used (since that is the typical usage for specifying an `InputPort
+        <InputPort_Specification>`); if the input to the Mechanism is to be shadowed, then its InputPort must be
+        specified explicitly (as described `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
+
+      * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, the Mechanism's
+        `primary InputPort <InputPort_Primary>` is shadowed in same way as if it had been explicit `input_port
+        specification <Optimization_Control_Mechanism_Input_Port_State_Feature>`.  If the Mechanism is in a `nested
+        Composition <Composition_Nested>`, it must be an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that
+        Composition (see note above);  if its OutputPort needs to be used, it must be specified explicitly (as described
+        `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In contrast, if the `agent_rep
+        <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, then the Mechanism's
+        `primary OutputPort <OutputPort_Primary>` *is* used (since that is typical usage, and there are no assumptions
+        made about the state features of a `CompositionFunctionApproximator`); if the input to the Mechanism *is* to be
+        shadowed, then its InputPort must be specified explicitly (as described `above
+        <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
   COMMENT:
       FIX: CONFIRM THAT THE FOLLOWING ALL WORK
