@@ -8721,25 +8721,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
         _inputs = self._parse_labels(_inputs)
-        _inputs = self._implement_input_dict(_inputs)
+        _inputs = self._instantiate_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
         num_inputs_sets = len(next(iter(_inputs.values())))
         return _inputs, num_inputs_sets
 
-    def _implement_input_dict(self, inputs):
-        """
-        Validate that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
-            included, add them to the input dict using their default values as entries
+    def _instantiate_input_dict(self, inputs):
+        """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
+        Validate that all Nodes included in input dict are INPUT nodes of Composition.
+        If any input nodes of Composition are not included, add them to the input dict using their default values.
 
         Returns
         -------
 
         `dict` :
-            The input dict, with added entries for any input nodes for which input was not provided
-
+            Input dict, with added entries for any input Nodes for which input was not provided
         """
-        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
+
+        # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in inputs.keys():
             if node not in input_nodes:
@@ -8749,7 +8749,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
 
-        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
+        # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
             if node not in inputs:
                 inputs[node] = node.default_external_input_values
@@ -9818,7 +9818,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if execute was called from command line and no inputs were specified,
             # assign default inputs to highest level composition (i.e. not on any nested Compositions)
             if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
-                inputs = self._implement_input_dict({})
+                inputs = self._instantiate_input_dict({})
             # Skip initialization if possible (for efficiency):
             # - and(context has not changed
             # -     structure of the graph has not changed
