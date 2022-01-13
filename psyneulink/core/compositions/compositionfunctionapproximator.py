@@ -27,10 +27,10 @@ Overview
 A `CompositionFunctionApproximator` is an abstract subclass of `Composition` that, over calls to its `adapt
 <CompositionFunctionApproximator.adapt>` method, parameterizes its `function <Composition.function>` to predict the
 `net_outcome <ControlMechanism.net_outcome>` of the Composition (or part of one) controlled by an
-`OptimizationControlMechanism`, for a given set of `state_feature_values <OptimizationControlMechanism.state_feature_values>`
-and a `control_allocation <ControlMechanism.control_allocation>` provided by the OptimizationControlMechanism.
-Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls its `function
-<CompositionFunctionApproximator.function>` to generate and return the predicted `net_outcome
+`OptimizationControlMechanism`, for a given set of `state_feature_values
+<OptimizationControlMechanism.state_feature_values>` and a `control_allocation <ControlMechanism.control_allocation>`
+provided by the OptimizationControlMechanism. Its `evaluate <CompositionFunctionApproximator.evaluate>` method calls
+its `function <CompositionFunctionApproximator.function>` to generate and return the predicted `net_outcome
 <ControlMechanism.net_outcome>` for a given set of `state_feature_values
 <OptimizationControlMechanism.state_feature_values>`, `control_allocation <ControlMechanism.control_allocation>`,
 `num_estimates <OptimizationControlMechanism.num_estimates>`, and `num_trials_per_estimate
@@ -54,8 +54,8 @@ Class Reference
 """
 
 from psyneulink.core.compositions.composition import Composition
-from psyneulink.core.globals.keywords import COMPOSITION_FUNCTION_APPROXIMATOR
 from psyneulink.core.globals.context import Context
+from psyneulink.core.globals.keywords import COMPOSITION_FUNCTION_APPROXIMATOR
 
 __all__ = ['CompositionFunctionApproximator']
 
