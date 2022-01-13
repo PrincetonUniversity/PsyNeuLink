@@ -8721,13 +8721,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
         _inputs = self._parse_labels(_inputs)
-        _inputs = self._validate_input_dict_node_roles(_inputs)
+        _inputs = self._implement_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
         num_inputs_sets = len(next(iter(_inputs.values())))
         return _inputs, num_inputs_sets
 
-    def _validate_input_dict_node_roles(self, inputs):
+    def _implement_input_dict(self, inputs):
         """
         Validate that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
             included, add them to the input dict using their default values as entries
@@ -9818,7 +9818,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if execute was called from command line and no inputs were specified,
             # assign default inputs to highest level composition (i.e. not on any nested Compositions)
             if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
-                inputs = self._validate_input_dict_node_roles({})
+                inputs = self._implement_input_dict({})
             # Skip initialization if possible (for efficiency):
             # - and(context has not changed
             # -     structure of the graph has not changed

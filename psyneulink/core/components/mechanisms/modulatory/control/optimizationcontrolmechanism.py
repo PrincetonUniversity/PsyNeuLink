@@ -293,8 +293,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   FIX: 1/12/22 EDITING HERE
   The specifications in the **state_features** argument are used to construct the `state_input_ports
   <OptimizationControlMechanism.state_input_ports>`.  As noted
-  `above <OptimizationControlMechanism_State_Features_Explicit_Specification>`, this overrides automatic
-  specification, and can be any of the following:
+  `above <OptimizationControlMechanism_State_Features_Explicit_Specification>`, specifying them explicitly overrided
+  their automatic construction, and can be any of the following:
 
   .. _Optimization_Control_Mechanism_State_Feature_Input_Dict:
 
@@ -302,6 +302,9 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   <Composition_Input_Dictionary>` to the `agent_rep <OptimizationControlMechanism.agent_rep>`.  The format can be
   seen using the `agent_rep <OptimizationControlMechanism.agent_rep>`'s. This is the most reliable and straightforward
   way to specify **state_features**.
+
+  * *List* -- a list of
+  ?? PARTIAL SPECIFICATION
 
   * any of the following can be used either singly, or in a list:
 
