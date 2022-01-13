@@ -1629,11 +1629,10 @@ class OptimizationControlMechanism(ControlMechanism):
         if context.flags & ContextFlags.METHOD:
             return
 
-        # Don't bother for model-free optimization (see OptimizationControlMechanism_Model_Free)
-        #    since state_input_ports specified or model-free optimization are entirely the user's responsibility;
-        #    this is because they can't be programmatically validated against the agent_rep's evaluate() method.
-        #    (This contrast with model-based optimization, for which there must be a state_input_port for every
-        #    InputPort of every INPUT node of the agent_rep (see OptimizationControlMechanism_Model_Based).
+        # Don't bother for agent_rep that is not a Composition, since state_input_ports specified can be validated
+        #    or assigned by default for a CompositionApproximator, and so are either up to its implementation or to
+        #    do the validation and/or default assignment (this contrasts with agent_rep that is a Composition, for
+        #    which there must be a state_input_port for every InputPort of every INPUT node of the agent_rep.
         if self.agent_rep_type != COMPOSITION:
             return
 
@@ -1657,8 +1656,20 @@ class OptimizationControlMechanism(ControlMechanism):
             # Validate state_features, and instantiate any that are not shadowing nodes
             # Shadowing nodes are instantiated in Composition._update_shadow_projections()
             comp = self.agent_rep
+
+            # MODIFIED 1/13/22 OLD:
+            # If dict is specified, get values for checks below
             state_features = (list(self.state_features.values()) if isinstance(self.state_features, dict)
                               else self.state_features)
+            # # MODIFIED 1/13/22 NEW:
+            # isinstance(self.state_features, list):
+            #     # Assume list is in order of INPUT Nodes, and assign as keys for use in _build_predicted_inputs_dict
+            #     input_nodes =
+            # elif isinstance(self.state_features, dict):
+            #     # If dict is specified, get values for checks below
+            #     state_features = (list(self.state_features.values())
+            # MODIFIED 1/13/22 END
+
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
@@ -1705,8 +1716,9 @@ class OptimizationControlMechanism(ControlMechanism):
             try:
                 # Test if state_features specified are compatible with inputs format for agent_rep Composition
                 # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
+                # Note:  if state_features is a dict, keys are used in _build_predicc_inputs to identify INPUT Nodes
                 inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-                inputs_dict, num_inputs = self.agent_rep._parse_dict(inputs)
+                inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
                 assert True
                 if len(self.state_input_ports) < len(inputs_dict):
                     warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
@@ -1732,40 +1744,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"when it is executed. Use its get_inputs_format() method to see the required format, "
                     f"or remove the specification of 'state_features' from the constructor for {self.name} "
                     f"to have them automatically assigned.")
-            # # MODIFIED 1/9/22 NEW:
-            # try:
-            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
-            #     self.agent_rep._build_predicted_inputs_dict(None)
-            # except:
-            #     raise OptimizationControlMechanismError(
-            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
-            #         f"({self.state_features}) specified are not compatible with the inputs required by 'agent_rep' "
-            #         f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
-            #         f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
-            #         f"to allow their automatic assignment.")
-            # MODIFIED 1/9/22 END
-
-            warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
-                          f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
-                          f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
-                          f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
-                          f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
-                          f"automatically configure its 'state_features' to be the external inputs to "
-                          f"'{self.agent_rep.name}'.")
-            # # MODIFIED 1/9/22 NEW:
-            # try:
-            #     # Test whether state_features specified are compatible with inputs format required by agent_rep
-            #     self.agent_rep._build_predicted_inputs_dict(None)
-            # except:
-            #     raise OptimizationControlMechanismError(
-            #         f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-            #         f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the 'state_features' "
-            #         f"({self.state_features}) specified are not compatible with the inputs required by 'agent_rep' "
-            #         f"when it is executed. It's get_inputs_format() method can be used to see the format required; "
-            #         f"You can also remove the specification of 'state_features' from the constructor for {self.name} "
-            #         f"to allow their automatic assignment.")
-            # MODIFIED 1/9/22 END
 
             warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
                           f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "

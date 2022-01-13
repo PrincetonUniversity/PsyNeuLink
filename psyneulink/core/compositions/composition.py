@@ -8381,7 +8381,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
-        inputs, num_inputs_sets = self._parse_dict(inputs)
+        inputs, num_inputs_sets = self._parse_input_dict(inputs)
 
         return inputs, num_inputs_sets
 
@@ -8445,7 +8445,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        input_dict, num_inputs_sets = self._parse_input_dict(_inputs)
         return input_dict, num_inputs_sets
 
     def _parse_string(self, inputs):
@@ -8474,7 +8474,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        input_dict, num_inputs_sets = self._parse_input_dict(_inputs)
         return input_dict, num_inputs_sets
 
     def _parse_function(self, inputs):
@@ -8608,7 +8608,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node.componentType == 'Composition' and type(inp) == dict:
                 # If there are multiple levels of nested dicts, we need to convert them starting from the deepest level,
                 # so recurse down the chain here
-                inp, num_trials = node._parse_dict(inp)
+                inp, num_trials = node._parse_input_dict(inp)
                 translated_stimulus_dict = {}
 
                 # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
@@ -8703,7 +8703,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _inputs.append(stimulus)
         return _inputs
 
-    def _parse_dict(self, inputs, context=None):
+    def _parse_input_dict(self, inputs, context=None):
         """
         Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
@@ -8741,6 +8741,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+
         for node in inputs.keys():
             if node not in input_nodes:
                 if not isinstance(node, (Mechanism, Composition)):
@@ -8768,7 +8769,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # handle user-provided input based on input type. return processd inputs and num_inputs_sets
         if not inputs:
-            _inputs, num_inputs_sets = self._parse_dict({})
+            _inputs, num_inputs_sets = self._parse_input_dict({})
         elif isgeneratorfunction(inputs):
             _inputs, num_inputs_sets = self._parse_generator_function(inputs)
         elif isgenerator(inputs):
@@ -8778,7 +8779,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif type(inputs) == list:
             _inputs, num_inputs_sets = self._parse_list(inputs)
         elif type(inputs) == dict:
-            _inputs, num_inputs_sets = self._parse_dict(inputs)
+            _inputs, num_inputs_sets = self._parse_input_dict(inputs)
         elif type(inputs) == str:
             _inputs, num_inputs_sets = self._parse_string(inputs)
         else:
@@ -8805,7 +8806,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # this method is intended to run BEFORE a call to Composition.execute
         if callable(inputs):
             try:
-                inputs, _ = self._parse_dict(inputs(trial_num))
+                inputs, _ = self._parse_input_dict(inputs(trial_num))
                 i = 0
             except TypeError as e:
                 error_text = e.args[0]
@@ -8814,7 +8815,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
         elif isgenerator(inputs):
-            inputs, _ = self._parse_dict(inputs.__next__())
+            inputs, _ = self._parse_input_dict(inputs.__next__())
             i = 0
         else:
             num_inputs_sets = len(next(iter(inputs.values())))
@@ -8838,7 +8839,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _inputs = {}
         for node, inp in inputs.items():
             if isinstance(node, Composition) and type(inp) == dict:
-                inp = node._parse_dict(inp)
+                inp = node._parse_input_dict(inp)
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
