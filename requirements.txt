@@ -8,7 +8,7 @@ grpcio-tools<1.43.0
 llvmlite<0.38
 matplotlib<3.4.4
 networkx<2.6
-numpy<1.21.4, >=1.17.0
+numpy>=1.17.0, <1.22.1
 pillow<9.1.0
 pint<0.18
 toposort<1.8
