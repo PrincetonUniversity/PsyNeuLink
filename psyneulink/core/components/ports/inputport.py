@@ -209,7 +209,7 @@ should project to the InputPort. Each of these is described below:
     * **InputPort specification dictionary** -- this can be used to specify the attributes of an InputPort, using
       any of the entries that can be included in a `Port specification dictionary <Port_Specification>` (see
       `examples <Port_Specification_Dictionary_Examples>` in Port).  If the dictionary is used to specify an
-      InputPort in the constructor for a Mechanism, and it includes a *VARIABLE* and/or *VALUE* or entry, the value
+      InputPort in the constructor for a Mechanism, and it includes a *VARIABLE* and/or *VALUE* entry, the value
       must be compatible with the item of the owner Mechanism's `variable <Mechanism_Base.variable>` to which the
       InputPort is assigned (see `Mechanism InputPort specification <Mechanism_InputPort_Specification>`).
 

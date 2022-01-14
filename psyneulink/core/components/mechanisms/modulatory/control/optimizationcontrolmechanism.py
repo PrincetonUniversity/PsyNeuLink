@@ -919,13 +919,14 @@ Class Reference
 import ast
 import copy
 import warnings
+import numbers
 from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.component import DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility, Component
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
@@ -936,7 +937,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.port import _parse_port_spec, _instantiate_port
+from psyneulink.core.components.ports.port import _parse_port_spec, _instantiate_port, Port
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
@@ -944,7 +945,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, \
-    SHADOW_INPUTS, SHADOW_INPUT_NAME
+    SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -1672,20 +1673,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return
 
         from psyneulink.core.compositions.composition import \
-            Composition, NodeRole, CompositionInterfaceMechanism, CompositionError, RunError
-
-        def _get_all_input_nodes(comp):
-            """Return all input_nodes, including those for any Composition nested one level down.
-            Note: more deeply nested Compositions will either be served by their containing one(s) or own controllers
-            """
-            _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
-            input_nodes = []
-            for node in _input_nodes:
-                if isinstance(node, Composition):
-                    input_nodes.extend(_get_all_input_nodes(node))
-                else:
-                    input_nodes.append(node)
-            return input_nodes
+            Composition, CompositionInterfaceMechanism, CompositionError, RunError
 
         if self.state_features:
             # Validate state_features, and instantiate any that are not shadowing nodes
@@ -1700,7 +1688,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # if isinstance(self.state_features, list):
             #     # Convert list to dict, assuming list is in order of INPUT Nodes,
             #     #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
-            #     input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            #     input_nodes = self._get_agent_rep_input_nodes()
             #     input_dict = {}
             #     for i, spec in enumerate(self.state_features):
             #         input_dict[input_nodes[i]] = spec
@@ -1727,7 +1715,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     continue
                 try:
                     all(comp._get_source(p) for p in input_port.path_afferents)
-                # except CompositionError:
                 except CompositionError:
                     invalid_state_features.append(input_port)
 
@@ -1742,7 +1729,7 @@ class OptimizationControlMechanism(ControlMechanism):
             invalid_state_features = [input_port for input_port in self.state_input_ports
                                       if (input_port.shadow_inputs
                                           and not (input_port.shadow_inputs.owner
-                                                   in _get_all_input_nodes(self.agent_rep))
+                                                   in self._get_agent_rep_input_nodes())
                                           and (isinstance(input_port.shadow_inputs.owner,
                                                           CompositionInterfaceMechanism)
                                                and not (input_port.shadow_inputs.owner.composition in
@@ -1777,11 +1764,12 @@ class OptimizationControlMechanism(ControlMechanism):
             except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
                 pass                    # and will issue the corresponding error message.
             except:  # Legal Node specifications, but incorrect for input to agent_rep
-                names = [f.full_name if hasattr(f, 'full_name') else f.name for f in state_features]
+                specs = [f.full_name if hasattr(f, 'full_name') else (f.name if isinstance(f, Component) else f)
+                         for f in state_features]
                 raise OptimizationControlMechanismError(
                     f"The 'state_features' argument has been specified for '{self.name}' that is using a "
                     f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the "
-                    f"'state_features' ({names}) specified are not compatible with the inputs required by 'agent_rep' "
+                    f"'state_features' ({specs}) specified are not compatible with the inputs required by 'agent_rep' "
                     f"when it is executed. Use its get_inputs_format() method to see the required format, "
                     f"or remove the specification of 'state_features' from the constructor for {self.name} "
                     f"to have them automatically assigned.")
@@ -1799,7 +1787,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # agent_rep is Composition, but no state_features have been specified,
             #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
             shadow_input_ports = []
-            for node in _get_all_input_nodes(self.agent_rep):
+            for node in self._get_agent_rep_input_nodes():
                 for input_port in node.input_ports:
                     if input_port.internal_only:
                         continue
@@ -2496,6 +2484,22 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             return None
 
+    def _get_agent_rep_input_nodes(self, comp=None):
+        """Return all input_nodes of agent_rep, including those for any Composition nested one level down.
+        Note: more deeply nested Compositions will either be served by their containing one(s) or own controllers
+        """
+        from psyneulink.core.compositions.composition import Composition, NodeRole
+        comp = comp or self.agent_rep
+        _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+        input_nodes = []
+        for node in _input_nodes:
+            if isinstance(node, Composition):
+                input_nodes.extend(self._get_agent_rep_input_nodes(node))
+            else:
+                input_nodes.append(node)
+        return input_nodes
+
+
     def _parse_state_feature_function(self, feature_function):
         if isinstance(feature_function, Function):
             return copy.deepcopy(feature_function)
@@ -2510,7 +2514,7 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign functions specified in **state_feature_functions** to InputPorts for all state_features
         Return list of InputPort specification dictionaries for state_input_ports
         """
-
+        input_node_names = [n.name for n in self._get_agent_rep_input_nodes()]
         input_port_names = None
         if isinstance(state_features, dict):
             if SHADOW_INPUTS in self.state_features:
@@ -2525,7 +2529,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         for i, spec in enumerate(_state_input_ports):
             if isinstance(spec, numbers.Number):
-                spec = {DEFAULT_VARIABLE=spec}
+                spec = {VALUE:spec}
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):
                 if self.agent_rep_type == COMPOSITION:
@@ -2540,11 +2544,18 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
+            
             if input_port_names:
+                # Use keys from input dict as names of state_input_ports
+                # (needed by comp._build_predicted_inputs_dict to identify INPUT nodes)
                 parsed_spec[NAME] = input_port_names[i]
             elif not parsed_spec[NAME]:
-                parsed_spec[NAME] = spec.full_name
-            if SHADOW_INPUTS in parsed_spec[PARAMS]:
+                if isinstance(spec, Port):
+                    parsed_spec[NAME] = spec.full_name
+                else:
+                    # Assumes specs specified in order of agent_rep's INPUT Nodes
+                    parsed_spec[NAME] = input_node_names[i]
+            if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
                 parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
                                             PROJECTIONS:None})
