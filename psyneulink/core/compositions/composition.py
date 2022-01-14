@@ -7746,25 +7746,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
 
-        # MODIFIED 1/4/22 OLD:
-        if hasattr(self.controller, NUM_ESTIMATES) and self.controller.num_estimates:
-            if RANDOMIZATION_CONTROL_SIGNAL not in self.controller.output_ports.names:
-                try:
-                    self.controller._create_randomization_control_signal(context)
-                except AttributeError:
-                    # ControlMechanism does not use RANDOMIZATION_CONTROL_SIGNAL
-                    pass
-            else:
-                self.controller.function.parameters.randomization_dimension._set(
-                    self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                    context
-                )
-            self.controller.function.parameters.randomization_dimension._set(
-                self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                context
-            )
-        # MODIFIED 1/4/22 END
-
         # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
         self.node_ordering.append(controller)

@@ -928,7 +928,7 @@ from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
-    GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE
+    GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -1873,11 +1873,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # MODIFIED 11/20/21 END
             self.output_ports[i] = control_signal
 
-        self._create_randomization_control_signal(context, set_control_signal_index=False)
+        self._create_randomization_control_signal(context)
         self.defaults.value = np.tile(control_signal.parameters.variable.default_value, (len(self.output_ports), 1))
         self.parameters.control_allocation._set(copy.deepcopy(self.defaults.value), context)
 
-    def _create_randomization_control_signal(self, context, set_control_signal_index=True):
+    def _create_randomization_control_signal(self, context):
         if self.num_estimates:
             # must be SampleSpec in allocation_samples arg
             randomization_seed_mod_values = SampleSpec(start=1, stop=self.num_estimates, step=1)
@@ -1926,15 +1926,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 # search_space must be a SampleIterator
                 function_search_space.append(SampleIterator(randomization_seed_mod_values))
 
-            # workaround for fact that self.function.reset call in
-            # _instantiate_attributes_after_function expects to use
-            # old/unset values when running _update_default_variable,
-            # which calls self.agent_rep.evaluate and is brittle.
-            if set_control_signal_index:
-                self.function.parameters.randomization_dimension._set(
-                    randomization_control_signal_index, context
-                )
-
     def _instantiate_function(self, function, function_params=None, context=None):
         # this indicates a significant peculiarity of OCM, in that its function
         # corresponds to its value (control_allocation) rather than anything to
@@ -1972,13 +1963,22 @@ class OptimizationControlMechanism(ControlMechanism):
                 corrected_search_space = [SampleIterator(specification=search_space)]
             self.parameters.search_space._set(corrected_search_space, context)
 
+        try:
+            randomization_control_signal_index = self.control_signals.names.index(RANDOMIZATION_CONTROL_SIGNAL)
+        except ValueError:
+            randomization_control_signal_index = None
+
         # Assign parameters to function (OptimizationFunction) that rely on OptimizationControlMechanism
+        # NOTE: as in this call, randomization_dimension must be set
+        # after search_space to avoid IndexError when getting
+        # num_estimates of function
         self.function.reset(**{
             DEFAULT_VARIABLE: self.parameters.control_allocation._get(context),
             OBJECTIVE_FUNCTION: self.evaluate_agent_rep,
             # SEARCH_FUNCTION: self.search_function,
             # SEARCH_TERMINATION_FUNCTION: self.search_termination_function,
             SEARCH_SPACE: self.parameters.control_allocation_search_space._get(context),
+            RANDOMIZATION_DIMENSION: randomization_control_signal_index
         })
 
         if isinstance(self.agent_rep, type):
