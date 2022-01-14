@@ -2630,9 +2630,17 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     composition = port.path_afferents[0].sender.owner.composition
                 get_info_method = composition._get_destination
-            assert port.path_afferents, f"PROGRAM ERROR: state_input_port {state_index} ('{port.name}')" \
-                                        f"for {self.name} does not have any Projections to it"
-            source_port, node, comp = get_info_method(port.path_afferents[0])
+            if not port.path_afferents:
+                if port.default_input is DEFAULT_VARIABLE:
+                    # FIX: 1/14/22 DOUBLECHECK THAT THE FOLLWING IS CORRECT:
+                    source_port = DEFAULT_VARIABLE
+                    node = None
+                    comp = None
+                else:
+                    assert port.path_afferents, f"PROGRAM ERROR: state_input_port {state_index} ('{port.name}')" \
+                                                f"for {self.name} does not have any Projections to it"
+            else:
+                source_port, node, comp = get_info_method(port.path_afferents[0])
             state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
             # # MODIFIED 1/8/22 ALT: SEPARATELY LISTS OUTPUT_PORTS THAT PROJECT TO SAME SHADOWED INPUT_PORT
             # if port.shadow_inputs:
