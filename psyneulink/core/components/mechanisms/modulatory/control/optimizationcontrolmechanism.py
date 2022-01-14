@@ -1117,15 +1117,15 @@ class OptimizationControlMechanism(ControlMechanism):
         one of its subclasses, or it has not been assigned (None) (see `Agent Representation and Types
         of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details).
 
-    state_features : Dict[Mechanism:Port]
+    state_features : Dict[Node:Port]
         dictionary listing the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of `agent_rep
-        <OptimizationControlMechanism>` (keys) and the specifications in the **state_features**
-        argument (values) of the sources of their inputs, used to construct `state_input_ports
+        <OptimizationControlMechanism.agent_rep>` (keys) and the specifications in the **state_features**
+        argument (values) of the sources of their inputs used to construct `state_input_ports
         <OptimizationControlMechanism.state_input_ports>`, the values of which are assigned to
         `state_feature_values <OptimizationControlMechanism.state_feature_values>` and provided as
         input to the `agent_rep <OptimizationControlMechanism.agent_rep>'s `evaluate <Composition.evaluate>`
-        method (see `state_features <OptimizationControlMechanism_State_Features_Arg>` and
-        `OptimizationControlMechanism_State_Features` for additional details).
+        method when it is executed (see `state_features <OptimizationControlMechanism_State_Features_Arg>`
+        and `OptimizationControlMechanism_State_Features` for additional details).
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's `state_input_ports
@@ -1679,7 +1679,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return
 
         from psyneulink.core.compositions.composition import \
-            Composition, CompositionInterfaceMechanism, CompositionError, RunError
+            Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
 
         if self.state_features:
             # Validate state_features, and instantiate any that are not shadowing nodes
@@ -1694,7 +1694,12 @@ class OptimizationControlMechanism(ControlMechanism):
             if isinstance(self.state_features, list):
                 # Convert list to dict, assuming list is in order of INPUT Nodes,
                 #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
-                input_nodes = self._get_agent_rep_input_nodes()
+                input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+                if len(self.state_features) > len(input_nodes):
+                    raise OptimizationControlMechanismError(
+                        f"The number of 'state_features' specified for {self.name} ({len(self.state_features)}) "
+                        f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
+                        f"as its {AGENT_REP} ('{self.agent_rep.name}').")
                 input_dict = {}
                 for i, spec in enumerate(self.state_features):
                     input_dict[input_nodes[i]] = spec
@@ -1753,7 +1758,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Note:  if state_features is a dict, keys are used in _build_predicc_inputs to identify INPUT Nodes
                 inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
                 inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-                assert True
                 if len(self.state_input_ports) < len(inputs_dict):
                     warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
                                   f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
@@ -2534,9 +2538,11 @@ class OptimizationControlMechanism(ControlMechanism):
         parsed_features = []
 
         for i, spec in enumerate(_state_input_ports):
+            # If spec is numeric, assign as default value and InputPort function that simply returns that value
             if is_numeric(spec):
-                spec = {VALUE:spec,
-                        FUNCTION:UserDefinedFunction(lambda x:spec)}
+                spec_val = copy.copy(spec)
+                spec = {VALUE: spec_val,
+                        FUNCTION: UserDefinedFunction(lambda x: spec_val)}
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):
                 if self.agent_rep_type == COMPOSITION:
