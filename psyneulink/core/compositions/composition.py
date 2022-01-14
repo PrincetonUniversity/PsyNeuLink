@@ -8084,7 +8084,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             inputs[comp_for_input][0].append(predicted_input)
                         else:
                             # Create entry in inputs dict for nested comp containing shadowed_input
-                            inputs[comp_for_input]=[[predicted_input]]
+                            inputs[comp_for_input] = [[predicted_input]]
                 else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
@@ -8094,8 +8094,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Regular input specified (i.e., projection from an OutputPort)
             else:
-                assert len(input_port.path_afferents)==1
-                source = input_port.path_afferents[0].sender.owner
+                # assert len(input_port.path_afferents) == 1
+                if input_port.path_afferents:
+                    source = input_port.path_afferents[0].sender.owner
                 # Use key from OptimizationControlMechanism state_features dict if specified, else the source node
                 key = input_dict_keys[j] if input_dict_keys else source
                 inputs[key] = predicted_input
@@ -8695,7 +8696,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Parsed and standardized input dict
 
         `int` :
-            Number of input sets in dict for each input node in the Composition
+            Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
 
         """
         # parse a user-provided input dict to format it properly for execution.

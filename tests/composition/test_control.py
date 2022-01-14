@@ -761,13 +761,16 @@ class TestControlMechanisms:
         'has \'state_features\' specified ([\'EXT[OutputPort-0]\']) that are missing from the '
         'Composition or any nested within it."',
 
-        "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' "
-        "that is using a Composition ('OUTER COMP') as its agent_rep, but the 'state_features' "
-        "(['IA[InputPort-0]', 'OA[OutputPort-0]', 'OB[OutputPort-0]', 'OC[OutputPort-0]']) specified "
-        "are not compatible with the inputs required by 'agent_rep' when it is executed. "
-        "Use its get_inputs_format() method to see the required format, "
-        "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
-        "to have them automatically assigned."
+        '"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
+        'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."'
+
+        # "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' "
+        # "that is using a Composition ('OUTER COMP') as its agent_rep, but the 'state_features' "
+        # "(['IA[InputPort-0]', 'OA[OutputPort-0]', 'OB[OutputPort-0]', 'OC[OutputPort-0]']) specified "
+        # "are not compatible with the inputs required by 'agent_rep' when it is executed. "
+        # "Use its get_inputs_format() method to see the required format, "
+        # "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
+        # "to have them automatically assigned."
     ]
 
     state_feature_specs = ['partial_legal_ports_spec',

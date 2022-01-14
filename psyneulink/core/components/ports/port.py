@@ -449,8 +449,7 @@ Ports created by the Mechanism when none are specified (see `note <Mechanism_Def
 
 .. _port_value_Spec_Example:
 
-For example, the following specifies the InputPort by a value to use as its `default_variable
-<InputPort.default_variable>` attribute::
+For example, the following specifies the InputPort by a value to use as its `variable <InputPort.variable>` attribute::
 
     my_mech = pnl.TransferMechanism(input_ports=[[0,0])
 
@@ -787,9 +786,9 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, DISABLE, EXPONENT, \
-    FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE,\
+    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
@@ -857,7 +856,7 @@ class PortError(Exception):
         return repr(self.error_value)
 
 
-# DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
+# DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
     """
@@ -2121,6 +2120,8 @@ class Port_Base(Port):
             # return None, so that this port is ignored
             # KDM 8/2/19: double check the relevance of this branch
             if variable is None:
+                if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
+                    return self.defaults.variable
                 return None
 
         return super()._execute(
