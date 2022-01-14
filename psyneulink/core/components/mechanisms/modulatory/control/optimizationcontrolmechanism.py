@@ -919,7 +919,6 @@ Class Reference
 import ast
 import copy
 import warnings
-import numbers
 from collections.abc import Iterable
 
 import numpy as np
@@ -930,7 +929,6 @@ from psyneulink.core.components.component import DefaultsFlexibility, Component
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import \
     GridSearch, OBJECTIVE_FUNCTION, SEARCH_SPACE, RANDOMIZATION_DIMENSION
-from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.functions.nonstateful.transferfunctions import CostFunctions
 from psyneulink.core.components.mechanisms.mechanism import Mechanism
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import \
@@ -2501,6 +2499,8 @@ class OptimizationControlMechanism(ControlMechanism):
         Note: more deeply nested Compositions will either be served by their containing one(s) or own controllers
         """
         from psyneulink.core.compositions.composition import Composition, NodeRole
+        if not self.agent_rep_type:
+           return [None]
         comp = comp or self.agent_rep
         _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
         input_nodes = []
@@ -2526,7 +2526,7 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign functions specified in **state_feature_functions** to InputPorts for all state_features
         Return list of InputPort specification dictionaries for state_input_ports
         """
-        input_node_names = [n.name for n in self._get_agent_rep_input_nodes()]
+        input_node_names = [n.name if n else None for n in self._get_agent_rep_input_nodes()]
         input_port_names = None
         if isinstance(state_features, dict):
             if SHADOW_INPUTS in self.state_features:
