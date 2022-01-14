@@ -1710,6 +1710,8 @@ class OptimizationControlMechanism(ControlMechanism):
             assert isinstance(self.state_features, dict)
             # MODIFIED 1/13/22 END
 
+            # FIX: 1/14/21:  MOVE ALL OF THIS TO ITS OWN METHOD: _validate_state_feature_specs:
+
             # Ensure that all InputPorts shadowed by specified state_input_ports
             #    are in agent_rep or one of its nested Compositions
             invalid_state_features = [input_port for input_port in self.state_input_ports
