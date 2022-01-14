@@ -97,7 +97,11 @@ class TestInputPorts:
         assert m.input_values == [[ 0.],[ 0.]]
         assert m.external_input_values == [[0.]]
 
-    @pytest.mark.parametrize('default_input', [None, pnl.DEFAULT_VARIABLE])
+    @pytest.mark.parametrize('default_input',
+                             [
+                                 None,
+                                 pnl.DEFAULT_VARIABLE
+                             ])
     def test_default_input(self, default_input):
         variable = [22]
         m = pnl.TransferMechanism(input_ports=[pnl.InputPort(name='DEFAULT_INPUT',
@@ -109,10 +113,11 @@ class TestInputPorts:
         comp = pnl.Composition(nodes=m)
         if default_input is None:
             proj = m.path_afferents[0]
-            comp.remove_projection(proj)
-            pnl.Projection_Base._delete_projection(proj)
+            comp.remove_projection(proj)    # m was treated as ORIGIN;  remove to precipitate expected error
+            pnl.Projection_Base._delete_projection(proj)  # FIX: <- EVEN THOUGH THIS IS NO LONGER IN comp.projections
+                                                          #         MIGHT HAVE BEEN CAUSING PROBLEM BELOW
             with pytest.raises(AssertionError):   # FIX: <- NOT GENERATING THE EXPECTED ERROR
-                comp.run()                        #         default value of variable is getting assigned
+                comp.run()                        #         default value OF variable *IS* GETTING ASSIGNED
         else:
             assert not m.path_afferents
             comp.run()  # FIX: <- CRASHES IN Composition._input_matches_variable()
