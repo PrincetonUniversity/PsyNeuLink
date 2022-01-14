@@ -2596,8 +2596,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
-    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -5991,6 +5990,34 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if warn:
                 warnings.warn(warn_str)
 
+    def _get_source(self, projection):
+        """Return tuple with port, node and comp of sender for **projection** (possibly in a nested Composition)."""
+        # Note:  if Projection is shadowing the input to a Node, the information returned will be for
+        #        the output_port of the input_CIM that projects to the shadowed Node.
+        port = projection.sender
+        if port.owner in self.nodes:
+            return (port, port.owner, self)
+        elif isinstance(port.owner, CompositionInterfaceMechanism):
+            return port.owner._get_source_info_from_output_CIM(port)
+        else:
+            # Get info for nested node
+            node, comp = next((item for item in self._get_nested_nodes() if item[0] is port.owner), (None, None))
+            if node:
+                return(port, node, comp)
+            else:
+                raise CompositionError(f"No source found for {projection.name} in {self.name}.")
+
+    def _get_destination(self, projection):
+        """Return tuple with port, node and comp of receiver for **projection** (possibly in a nested Composition)."""
+        port = projection.receiver
+        if isinstance(port.owner, CompositionInterfaceMechanism):
+            if isinstance(projection.sender.owner, ModulatoryMechanism_Base):
+                return port.owner._get_modulated_info_from_parameter_CIM(port)
+            else:
+                return port.owner._get_destination_info_from_input_CIM(port)
+        else:
+            return (port, port.owner, self)
+
     # endregion PROJECTIONS
 
     # ******************************************************************************************************************
@@ -7580,7 +7607,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     aux_projections[i] = i
             nested_nodes = self._get_nested_nodes()
             for spec, proj in aux_projections.items():
-                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ON LEVEL DEEP
+                # FIX: TREATMENT OF RECEIVERS SEEMS TO DEAL WITH ONLY RECEIVERS IN COMPS NESTED MORE THAN ONE LEVEL DEEP
                 #      REMOVING "if not i[1] in self.nodes" crashes in test_multilevel_control
                 if ((proj.sender.owner not in self.nodes
                      and proj.sender.owner in [i[0] for i in nested_nodes])
@@ -7717,25 +7744,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Instantiate any
         for node in self.nodes:
             self._instantiate_deferred_init_control(node, context)
-
-        # MODIFIED 1/4/22 OLD:
-        if hasattr(self.controller, NUM_ESTIMATES) and self.controller.num_estimates:
-            if RANDOMIZATION_CONTROL_SIGNAL not in self.controller.output_ports.names:
-                try:
-                    self.controller._create_randomization_control_signal(context)
-                except AttributeError:
-                    # ControlMechanism does not use RANDOMIZATION_CONTROL_SIGNAL
-                    pass
-            else:
-                self.controller.function.parameters.randomization_dimension._set(
-                    self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                    context
-                )
-            self.controller.function.parameters.randomization_dimension._set(
-                self.controller.output_ports.names.index(RANDOMIZATION_CONTROL_SIGNAL),
-                context
-            )
-        # MODIFIED 1/4/22 END
 
         # ACTIVATE FOR COMPOSITION -----------------------------------------------------
 
@@ -8619,7 +8627,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_node_for_input_CIM(port)
+                            _, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(port)
                             v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
                         _inputs.update({k:v})
                     else:
@@ -10472,7 +10480,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
                             for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_node_for_input_CIM(port)
+                                _, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
                                     labels = list(labels_dict[0].keys())
@@ -10561,7 +10569,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_results_by_nodes(); please use that in the future.")
 
         # Get all OUTPUT Nodes in (nested) Composition(s)
-        output_nodes = [self.output_CIM._get_source_node_for_output_CIM(port)[1]
+        output_nodes = [self.output_CIM._get_source_info_from_output_CIM(port)[1]
                         for port in self.output_CIM.output_ports]
 
         # Get all values for all OUTPUT Nodes
@@ -10866,6 +10874,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 self.scheduler._delete_counts(c.execution_id)
             except AttributeError:
                 self.scheduler._delete_counts(c)
+
+    def _initialize_as_agent_rep(self, context, base_context, alt_controller=None):
+        assert self.controller is None or alt_controller is None
+
+        _initialized = set()  # avoid reinitializing shared dependencies below
+        self._initialize_from_context(
+            context, base_context=base_context, override=True, visited=_initialized
+        )
+        if alt_controller is not None:
+            # evaluation will be done with a controller from another composition
+            alt_controller._initialize_from_context(
+                context, base_context=base_context, override=True, visited=_initialized
+            )
+
+    def _clean_up_as_agent_rep(self, context, alt_controller=None):
+        _deleted = set()  # avoid traversing shared dependencies below
+        self._delete_contexts(context, visited=_deleted, check_simulation_storage=True)
+        if alt_controller is not None:
+            alt_controller._delete_contexts(
+                context, visited=_deleted, check_simulation_storage=True
+            )
 
     # endregion EXECUTION
 
