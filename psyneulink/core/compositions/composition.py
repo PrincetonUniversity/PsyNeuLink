@@ -8038,11 +8038,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         controller = controller or self.controller
         # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
         # (unless it has SHADOW_INPUTS entry, in which case that is handled below)
-        input_dict_keys = (list(controller.state_features.keys())
-                           if (hasattr(controller, STATE_FEATURES)
-                               and isinstance(controller.state_features, dict)
-                               and SHADOW_INPUTS not in controller.state_features)
-                           else None)
+        # # MODIFIED 1/15/22 OLD:
+        # input_dict_keys = (list(controller.state_features.keys())
+        #                    if (hasattr(controller, STATE_FEATURES)
+        #                        and isinstance(controller.state_features, dict)
+        #                        and SHADOW_INPUTS not in controller.state_features)
+        #                    else None)
+        # MODIFIED 1/15/22 NEW:
+        input_dict_keys = controller.agent_rep.get_nodes_by_role(NodeRole.INPUT)[:len(controller.state_input_ports)]
+        # MODIFIED 1/15/22 END
         inputs = {}
         no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
         if no_predicted_input:
