@@ -853,7 +853,8 @@ class TestControlMechanisms:
         ocm = pnl.OptimizationControlMechanism(
             state_features=[ia.input_port,
                             oa.output_port,
-                            ob],
+                            # ob],
+                            [3,1,2]],
             objective_mechanism=[ic,ib],
             function=pnl.GridSearch(),
             allow_probes=True,
@@ -864,7 +865,7 @@ class TestControlMechanisms:
                              ]
         )
         ocomp.add_controller(ocm)
-        assert np.allclose(ocm.state, [[0.], [0.], [0.], [1.], [1.]])
+        assert all(np.allclose(x,y) for x,y in zip(ocm.state, [[0.0], [0.0], [3.0, 1.0, 2.0], [1.0], [1.0]]))
         assert len(ocm.state_dict) == 6
         keys = list(ocm.state_dict.keys())
         values = list(ocm.state_dict.values())
@@ -872,7 +873,7 @@ class TestControlMechanisms:
             ocm.state[key[3]] == value
         assert keys[0] == (ia.input_port, ia, icomp ,0)
         assert keys[1] == (oa.output_port, oa, ocomp, 1)
-        assert keys[2] == (ob.input_port, ob, ocomp, 2)
+        assert keys[2] == ('default_variable', None, None, 2)
         assert keys[3] == (ia.parameter_ports[pnl.SLOPE], ia, icomp, 3)
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
