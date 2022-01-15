@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0+untagged.16.ga64bbc5 documentation</title>
+  <title>Index &mdash; PsyNeuLink 0+untagged.15.g1f5a70d documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.ga64bbc5
+                  0+untagged.15.g1f5a70d
                 </div>
               
             
@@ -450,6 +450,8 @@
 </li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GaussianProcess._gaussian_process_satisfied">_gaussian_process_satisfied() (psyneulink.core.components.functions.optimizationfunctions.GaussianProcess method)</a>
 </li>
+      <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._get_agent_rep_input_nodes">_get_agent_rep_input_nodes() (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism method)</a>
+</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_all_nodes">_get_all_nodes() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_back_prop_error_sources">_get_back_prop_error_sources() (psyneulink.core.compositions.composition.Composition method)</a>
@@ -463,6 +465,8 @@
       <li><a href="Context.html#psyneulink.core.globals.context.ContextFlags._get_context_string">_get_context_string() (psyneulink.core.globals.context.ContextFlags class method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_control_signals_for_composition">_get_control_signals_for_composition() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_controller">_get_controller() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._get_destination">_get_destination() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -640,6 +644,8 @@
       </ul></li>
       <li><a href="ObjectiveMechanism.html#psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism._instantiate_function_weights_and_exponents">_instantiate_function_weights_and_exponents() (psyneulink.core.components.mechanisms.processing.objectivemechanism.ObjectiveMechanism method)</a>
 </li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._instantiate_input_dict">_instantiate_input_dict() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
       <li><a href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base._instantiate_input_ports">_instantiate_input_ports() (psyneulink.core.components.mechanisms.mechanism.Mechanism_Base method)</a>
 
       <ul>
@@ -772,8 +778,6 @@
         <li><a href="OutputPort.html#psyneulink.core.components.ports.outputport.OutputPort._parse_arg_variable">(psyneulink.core.components.ports.outputport.OutputPort method)</a>
 </li>
       </ul></li>
-      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._parse_dict">_parse_dict() (psyneulink.core.compositions.composition.Composition method)</a>
-</li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._parse_function">_parse_function() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Component.html#psyneulink.core.components.component.Component._parse_function_variable">_parse_function_variable() (psyneulink.core.components.component.Component method)</a>
@@ -799,6 +803,8 @@
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._parse_generator">_parse_generator() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._parse_generator_function">_parse_generator_function() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._parse_input_dict">_parse_input_dict() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._parse_labels">_parse_labels() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -927,8 +933,6 @@
       <li><a href="Component.html#psyneulink.core.components.component.Component._validate_function">_validate_function() (psyneulink.core.components.component.Component method)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator._validate_initializers">_validate_initializers() (psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator method)</a>
-</li>
-      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._validate_input_dict_node_roles">_validate_input_dict_node_roles() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._validate_input_shapes">_validate_input_shapes() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -1730,6 +1734,8 @@
       </ul></li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.default_external_input_values">default_external_input_values (psyneulink.core.compositions.composition.Composition property)</a>
 </li>
+      <li><a href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input">default_input (psyneulink.core.components.ports.inputport.InputPort attribute)</a>
+</li>
       <li><a href="LearningFunctions.html#psyneulink.core.components.functions.learningfunctions.BackPropagation.default_learning_rate">default_learning_rate (psyneulink.core.components.functions.learningfunctions.BackPropagation attribute)</a>
 
       <ul>
@@ -1790,6 +1796,8 @@
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Graph.dependency_dict">dependency_dict (psyneulink.core.compositions.composition.Graph attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.derivative">derivative() (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical method)</a>
 
       <ul>
@@ -1808,8 +1816,6 @@
         <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.Tanh.derivative">(psyneulink.core.components.functions.transferfunctions.Tanh method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="MemoryFunctions.html#psyneulink.core.components.functions.stateful.memoryfunctions.DictionaryMemory">DictionaryMemory (class in psyneulink.core.components.functions.stateful.memoryfunctions)</a>
 </li>
       <li><a href="Keywords.html#psyneulink.core.globals.keywords.DistanceMetrics.DIFFERENCE">DIFFERENCE (psyneulink.core.globals.keywords.DistanceMetrics attribute)</a>

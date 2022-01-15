@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0+untagged.16.ga64bbc5 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0+untagged.15.g1f5a70d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.ga64bbc5
+                  0+untagged.15.g1f5a70d
                 </div>
               
             
@@ -4028,6 +4028,15 @@ are completed in the call to controller_instantiate_control_signal() in add_cont
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_controller">
+<span class="sig-name descname"><span class="pre">_get_controller</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_controller" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get controller for which the current Composition is an agent_rep.
+Recursively search enclosing Compositions for controller if self does not have one.
+Use context.composition if there is no controller.
+This is needed for agent_rep that is nested within the Composition to which the controller belongs.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._instantiate_control_projections">
 <span class="sig-name descname"><span class="pre">_instantiate_control_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._instantiate_control_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add any ControlProjections for control specified locally on nodes in Composition</p>
@@ -4050,7 +4059,7 @@ located in the same level of nesting.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._build_predicted_inputs_dict">
-<span class="sig-name descname"><span class="pre">_build_predicted_inputs_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicted_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._build_predicted_inputs_dict" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_build_predicted_inputs_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicted_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">controller</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._build_predicted_inputs_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.</p>
 <dl class="simple">
 <dt>Get values of state_input_ports that receive projections from items providing relevant input (and any</dt><dd><p>processing of those values specified), and format as input_dict suitable for run() method (called in evaluate)</p>
@@ -4264,17 +4273,17 @@ to the input</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._parse_dict">
-<span class="sig-name descname"><span class="pre">_parse_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._parse_dict" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._parse_input_dict">
+<span class="sig-name descname"><span class="pre">_parse_input_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._parse_input_dict" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout</dt><dd><p>its execution</p>
+<dt>Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout</dt><dd><p>its execution</p>
 </dd>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code> – Parsed and standardized input dict</p></li>
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">int</span></code> – Number of input sets in dict for each input node in the Composition</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">int</span></code> – Number of input sets (i.e., trials’ worths of inputs) in dict for each input node in the Composition</p></li>
 </ul>
 </p>
 </dd>
@@ -4282,15 +4291,14 @@ to the input</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._validate_input_dict_node_roles">
-<span class="sig-name descname"><span class="pre">_validate_input_dict_node_roles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._validate_input_dict_node_roles" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Validates that all nodes included in input dict are input nodes. Additionally, if any input nodes are not</dt><dd><p>included, adds them to the input dict using their default values as entries</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._instantiate_input_dict">
+<span class="sig-name descname"><span class="pre">_instantiate_input_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._instantiate_input_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
+Validate that all Nodes included in input dict are INPUT nodes of Composition.
+If any input nodes of Composition are not included, add them to the input dict using their default values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The input dict, with added entries for any input nodes for which input was not provided</p>
+<dd class="field-odd"><p>Input dict, with added entries for any input Nodes for which input was not provided</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></p>
@@ -4853,8 +4861,8 @@ programmatically.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.NodeRole.INTERNAL">
 <span class="sig-name descname"><span class="pre">INTERNAL</span></span><a class="headerlink" href="#psyneulink.core.compositions.composition.NodeRole.INTERNAL" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that is neither <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> nor <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a>.  This role cannot be modified
-programmatically.</p>
+<dd><p>A <a class="reference internal" href="#composition-nodes"><span class="std std-ref">Node</span></a> that is neither <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> nor <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a>.  Note that it <em>can</em> also be <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a>,
+<a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.TERMINAL" title="psyneulink.core.compositions.composition.NodeRole.TERMINAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TERMINAL</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.SINGLETON" title="psyneulink.core.compositions.composition.NodeRole.SINGLETON"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">SINGLETON</span></code></a>, if it has no <a class="reference internal" href="Mechanism.html#id14" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">afferent</span></code></a> or <a class="reference internal" href="Mechanism.html#id15" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.efferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">efferent</span></code></a> Projections or neither, respectively. This role cannot be modified programmatically.</p>
 </dd></dl>
 
 <dl class="py attribute">
