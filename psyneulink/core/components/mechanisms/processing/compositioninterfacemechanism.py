@@ -35,7 +35,7 @@ environment, or the Components of another Composition within which it is `nested
     `compilation <Composition_Compilation>`. By providing the standard Components for communication among `Mechanisms
     <Mechanism>` (`InputPorts <InputPort>` and `OutputPorts <OutputPort>`), Mechanisms (and/or other Compositions) that
     are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a Composition can receive inputs from the environment
-    in the same way that any other Node receives inputs, from `afferent Projections <Mechanism_Base.efferents>` (in
+    in the same way that any other Node receives inputs, from `afferent Projections <Mechanism_Base.afferents>` (in
     this case, the `input_CIM  <Composition.input_CIM>` of the Composition to which they belong);  and, similarly,
     Components that are `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of a Composition can either report their
     outputs to the Composition or, if they are in a `nested Composition <Composition_Nested>`, send their outputs to
