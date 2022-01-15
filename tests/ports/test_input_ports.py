@@ -118,9 +118,9 @@ class TestInputPorts:
         # assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(m)  # <- DESIRED BUT NOT CURRENT BEHAVIOR
         # assert not m.path_afferents                                 # <- DESIRED BUT NOT CURRENT BEHAVIOR
         if default_input is None:
-            proj = m.path_afferents[0]                   # Needed until above is implemented,
+            proj = m.path_afferents[0]                   # NEEDED UNTIL DESIRED BEHAVIOR ABOVE IS IMPLEMENTED
             comp.remove_projection(proj)                 #  since m is treated as INPUT and internal_only is not set
-            pnl.Projection_Base._delete_projection(proj) # remove to precipitate warning
+            pnl.Projection_Base._delete_projection(proj) # Remove afferent Projection to precipitate warning
             with pytest.warns(UserWarning) as warning:
                 comp.run()
             assert repr(warning[0].message.args[0]) == '"InputPort (\'DEFAULT_INPUT\') of \'TransferMechanism-0\' ' \
