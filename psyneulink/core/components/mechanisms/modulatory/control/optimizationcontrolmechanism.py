@@ -1677,117 +1677,8 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type != COMPOSITION:
             return
 
-        from psyneulink.core.compositions.composition import \
-            Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
-
         if self.state_features:
-            # Validate state_features, and instantiate any that are not shadowing nodes
-            # Shadowing nodes are instantiated in Composition._update_shadow_projections()
-            comp = self.agent_rep
-
-            if isinstance(self.state_features, list):
-                # Convert list to dict, assuming list is in order of INPUT Nodes,
-                #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
-                input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
-                if len(self.state_features) > len(input_nodes):
-                    raise OptimizationControlMechanismError(
-                        f"The number of 'state_features' specified for {self.name} ({len(self.state_features)}) "
-                        f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
-                        f"as its {AGENT_REP} ('{self.agent_rep.name}').")
-                input_dict = {}
-                for i, spec in enumerate(self.state_features):
-                    input_dict[input_nodes[i]] = spec
-                self.state_features = input_dict
-            if isinstance(self.state_features, dict):
-                # If dict is specified, get values for checks below
-                state_features = list(self.state_features.values())
-            assert isinstance(self.state_features, dict)
-
-            # FIX: 1/14/21:  MOVE ALL OF THIS TO ITS OWN METHOD: _validate_state_feature_specs:
-
-            # Include agent rep in error messages if it is not the same as self.composition
-            self_has_state_features_str = f"'{self.name}' has 'state_features' specified "
-            agent_rep_str = ('' if self.agent_rep == self.composition
-                             else f"both its `{AGENT_REP}` ('{self.agent_rep.name}') as well as ")
-            not_in_comps_str = f"that are missing from {agent_rep_str}'{self.composition.name}' and any " \
-                          f"{Composition.componentCategory}s nested within it."
-
-            # Ensure that all InputPorts shadowed by specified state_input_ports
-            #    are in agent_rep or one of its nested Compositions
-            invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (input_port.shadow_inputs
-                                          and not (input_port.shadow_inputs.owner in
-                                                list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
-                                          and (not [input_port.shadow_inputs.owner.composition is x for x in
-                                                      comp._get_nested_compositions()
-                                               if isinstance(input_port.shadow_inputs.owner,
-                                                         CompositionInterfaceMechanism)]))]
-            # Ensure any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions
-            for input_port in self.state_input_ports:
-                if input_port.shadow_inputs:
-                    continue
-                try:
-                    all(comp._get_source(p) for p in input_port.path_afferents)
-                except CompositionError:
-                    invalid_state_features.append(input_port)
-            if any(invalid_state_features):
-                raise OptimizationControlMechanismError(
-                    self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
-
-            # Ensure that all InputPorts shadowed by specified state_input_ports
-            #    reference INPUT Nodes of agent_rep or of a nested Composition
-            invalid_state_features = [input_port for input_port in self.state_input_ports
-                                      if (input_port.shadow_inputs
-                                          and not (input_port.shadow_inputs.owner
-                                                   in self._get_agent_rep_input_nodes())
-                                          and (isinstance(input_port.shadow_inputs.owner,
-                                                          CompositionInterfaceMechanism)
-                                               and not (input_port.shadow_inputs.owner.composition in
-                                                        [nested_comp for nested_comp in comp._get_nested_compositions()
-                                                         if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])))]
-            if any(invalid_state_features):
-                raise OptimizationControlMechanismError(
-                    self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
-
-            try:
-                # Test if state_features specified are compatible with inputs format for agent_rep Composition
-                # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
-                # Note:  if state_features is a dict, keys are used in _build_predicc_inputs to identify INPUT Nodes
-                inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-                inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-                if len(self.state_input_ports) < len(inputs_dict):
-                    warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
-                                  f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-                                  f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
-                                  f"get_inputs_format() method to see the format for its inputs.")
-            except RunError as error:
-                raise OptimizationControlMechanismError(
-                    f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but "
-                    f"they are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
-                    f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
-                    f"remove the specification of 'state_features' from the constructor for {self.name} "
-                    f"to have them automatically assigned.")
-            except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
-                pass                    # and will issue the corresponding error message.
-            except:  # Legal Node specifications, but incorrect for input to agent_rep
-                specs = [f.full_name if hasattr(f, 'full_name') else (f.name if isinstance(f, Component) else f)
-                         for f in state_features]
-                raise OptimizationControlMechanismError(
-                    f"The 'state_features' argument has been specified for '{self.name}' that is using a "
-                    f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the "
-                    f"'state_features' ({specs}) specified are not compatible with the inputs required by 'agent_rep' "
-                    f"when it is executed. Use its get_inputs_format() method to see the required format, "
-                    f"or remove the specification of 'state_features' from the constructor for {self.name} "
-                    f"to have them automatically assigned.")
-
-            # warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
-            #               f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
-            #               f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
-            #               f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
-            #               f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
-            #               f"automatically configure its 'state_features' to be the external inputs to "
-            #               f"'{self.agent_rep.name}'.")
+            self._validate_state_features()
             return
 
         else:
@@ -1823,6 +1714,116 @@ class OptimizationControlMechanism(ControlMechanism):
                                  update_variable=False,
                                  context=local_context)
             self.state_input_ports.extend(state_input_ports_to_add)
+
+    def _validate_state_features(self):
+        from psyneulink.core.compositions.composition import \
+            Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
+
+        # Validate state_features, and instantiate any that are not shadowing nodes
+        # Shadowing nodes are instantiated in Composition._update_shadow_projections()
+        comp = self.agent_rep
+
+        if isinstance(self.state_features, list):
+            # Convert list to dict, assuming list is in order of INPUT Nodes,
+            #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
+            input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            if len(self.state_features) > len(input_nodes):
+                raise OptimizationControlMechanismError(
+                    f"The number of 'state_features' specified for {self.name} ({len(self.state_features)}) "
+                    f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
+                    f"as its {AGENT_REP} ('{self.agent_rep.name}').")
+            input_dict = {}
+            for i, spec in enumerate(self.state_features):
+                input_dict[input_nodes[i]] = spec
+            self.state_features = input_dict
+        if isinstance(self.state_features, dict):
+            # If dict is specified, get values for checks below
+            state_features = list(self.state_features.values())
+        assert isinstance(self.state_features, dict)
+
+        # Include agent rep in error messages if it is not the same as self.composition
+        self_has_state_features_str = f"'{self.name}' has 'state_features' specified "
+        agent_rep_str = ('' if self.agent_rep == self.composition
+                         else f"both its `{AGENT_REP}` ('{self.agent_rep.name}') as well as ")
+        not_in_comps_str = f"that are missing from {agent_rep_str}'{self.composition.name}' and any " \
+                      f"{Composition.componentCategory}s nested within it."
+
+        # Ensure that all InputPorts shadowed by specified state_input_ports
+        #    are in agent_rep or one of its nested Compositions
+        invalid_state_features = [input_port for input_port in self.state_input_ports
+                                  if (input_port.shadow_inputs
+                                      and not (input_port.shadow_inputs.owner in
+                                            list(comp.nodes) + [n[0] for n in comp._get_nested_nodes()])
+                                      and (not [input_port.shadow_inputs.owner.composition is x for x in
+                                                  comp._get_nested_compositions()
+                                           if isinstance(input_port.shadow_inputs.owner,
+                                                     CompositionInterfaceMechanism)]))]
+        # Ensure any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions
+        for input_port in self.state_input_ports:
+            if input_port.shadow_inputs:
+                continue
+            try:
+                all(comp._get_source(p) for p in input_port.path_afferents)
+            except CompositionError:
+                invalid_state_features.append(input_port)
+        if any(invalid_state_features):
+            raise OptimizationControlMechanismError(
+                self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
+
+        # Ensure that all InputPorts shadowed by specified state_input_ports
+        #    reference INPUT Nodes of agent_rep or of a nested Composition
+        invalid_state_features = [input_port for input_port in self.state_input_ports
+                                  if (input_port.shadow_inputs
+                                      and not (input_port.shadow_inputs.owner
+                                               in self._get_agent_rep_input_nodes())
+                                      and (isinstance(input_port.shadow_inputs.owner,
+                                                      CompositionInterfaceMechanism)
+                                           and not (input_port.shadow_inputs.owner.composition in
+                                                    [nested_comp for nested_comp in comp._get_nested_compositions()
+                                                     if nested_comp in comp.get_nodes_by_role(NodeRole.INPUT)])))]
+        if any(invalid_state_features):
+            raise OptimizationControlMechanismError(
+                self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
+
+        try:
+            # Test if state_features specified are compatible with inputs format for agent_rep Composition
+            # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
+            # Note:  if state_features is a dict, keys are used in _build_predicc_inputs to identify INPUT Nodes
+            inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
+            inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
+            if len(self.state_input_ports) < len(inputs_dict):
+                warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+                              f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+                              f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
+                              f"get_inputs_format() method to see the format for its inputs.")
+        except RunError as error:
+            raise OptimizationControlMechanismError(
+                f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+                f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but "
+                f"they are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
+                f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
+                f"remove the specification of 'state_features' from the constructor for {self.name} "
+                f"to have them automatically assigned.")
+        except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
+            pass                    # and will issue the corresponding error message.
+        except:  # Legal Node specifications, but incorrect for input to agent_rep
+            specs = [f.full_name if hasattr(f, 'full_name') else (f.name if isinstance(f, Component) else f)
+                     for f in state_features]
+            raise OptimizationControlMechanismError(
+                f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+                f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the "
+                f"'state_features' ({specs}) specified are not compatible with the inputs required by 'agent_rep' "
+                f"when it is executed. Use its get_inputs_format() method to see the required format, "
+                f"or remove the specification of 'state_features' from the constructor for {self.name} "
+                f"to have them automatically assigned.")
+
+        # warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
+        #               f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
+        #               f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
+        #               f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
+        #               f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
+        #               f"automatically configure its 'state_features' to be the external inputs to "
+        #               f"'{self.agent_rep.name}'.")
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
@@ -2507,7 +2508,6 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 input_nodes.append(node)
         return input_nodes
-
 
     def _parse_state_feature_function(self, feature_function):
         if isinstance(feature_function, Function):
