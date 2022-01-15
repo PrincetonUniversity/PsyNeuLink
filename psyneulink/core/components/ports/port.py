@@ -2284,12 +2284,12 @@ class Port_Base(Port):
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        state_f = ctx.import_llvm_function(self.function)
+        port_f = ctx.import_llvm_function(self.function)
 
         # Create a local copy of the function parameters
         base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                   "function")
-        f_params = builder.alloca(state_f.args[0].type.pointee)
+        f_params = builder.alloca(port_f.args[0].type.pointee)
         builder.store(builder.load(base_params), f_params)
 
         # FIXME: Handle and combine multiple afferents
@@ -2338,13 +2338,13 @@ class Port_Base(Port):
                 builder.store(param_val, f_mod_param_ptr)
 
         # OutputPort returns 1D array even for scalar functions
-        if arg_out.type != state_f.args[3].type:
+        if arg_out.type != port_f.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        builder.call(state_f, [f_params, f_state, f_input, arg_out])
+        builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder
 
     @staticmethod
