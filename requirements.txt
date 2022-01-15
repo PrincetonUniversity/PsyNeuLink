@@ -5,7 +5,7 @@ elfi<0.8.3
 graphviz<0.20.0
 grpcio<1.43.0
 grpcio-tools<1.43.0
-llvmlite<0.38
+llvmlite<0.39
 matplotlib<3.4.4
 networkx<2.6
 numpy<1.21.4, >=1.17.0
