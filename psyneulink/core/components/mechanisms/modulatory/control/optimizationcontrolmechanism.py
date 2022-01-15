@@ -1662,11 +1662,8 @@ class OptimizationControlMechanism(ControlMechanism):
           are specified or only one state_function is specified;  otherwise, use dict for specifications).
         """
 
-        # FIX: 11/15/21 - REPLACE WITH ContextFlags.PROCESSING ??
-        #               TRY TESTS WITHOUT THIS
-        # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
+        # Don't instantiate unless being called by Composition.run()
         # This avoids error messages if called prematurely (i.e., before run is complete)
-        # if context.flags & ContextFlags.METHOD:
         if context.flags & ContextFlags.PROCESSING:
             return
 
@@ -1816,14 +1813,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"when it is executed. Use its get_inputs_format() method to see the required format, "
                 f"or remove the specification of 'state_features' from the constructor for {self.name} "
                 f"to have them automatically assigned.")
-
-        # warnings.warn(f"The 'state_features' argument has been specified for '{self.name}', that is being "
-        #               f"configured to use a {Composition.componentType} ('{self.agent_rep.name}') as its "
-        #               f"'{AGENT_REP}'). This overrides automatic assignment of its 'state_features' as inputs to "
-        #               f"'{self.agent_rep.name}' when it is executed.  If they are not properly configured, it "
-        #               f"will cause an error. Remove this specification from the constructor for '{self.name}' to "
-        #               f"automatically configure its 'state_features' to be the external inputs to "
-        #               f"'{self.agent_rep.name}'.")
 
     def _instantiate_output_ports(self, context=None):
         """Assign CostFunctions.DEFAULTS as default for cost_option of ControlSignals.
