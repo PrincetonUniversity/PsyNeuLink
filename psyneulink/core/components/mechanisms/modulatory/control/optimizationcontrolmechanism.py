@@ -2548,7 +2548,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 spec_val = copy.copy(spec)
                 spec = {VALUE: spec_val,
                         PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}
-                        # FUNCTION: UserDefinedFunction(lambda x: spec_val)
                 }
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):

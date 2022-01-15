@@ -4975,6 +4975,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  variable=receiver.defaults.value,
                                                  reference_value=receiver.defaults.value,
                                                  name= PARAMETER_CIM_NAME + "_" + owner.name + "_" + receiver.name,
+                                                 # default_input=DEFAULT_VARIABLE,
                                                  context=context)
                 self.parameter_CIM.add_ports([interface_input_port], context=context)
                 # control signal for parameter CIM that will project directly to inner Composition's parameter
@@ -5839,7 +5840,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
-                    if input_port.require_projection_in_composition and not input_port.path_afferents:
+                    if input_port.require_projection_in_composition \
+                            and not input_port.path_afferents and not input_port.default_input:
                         warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
                                       f"doesn't have any afferent {Projection.__name__}s.")
                 for output_port in node.output_ports:
@@ -8490,7 +8492,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
-        node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
+        node_variable = [input_port.defaults.value for input_port in node.input_ports
+                         if not input_port.internal_only or input_port.default_input]
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
