@@ -2640,11 +2640,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_features(self):
-        # input_values = self.state_input_ports.values
-        # input_nodes = self.composition._build_predicted_inputs_dict(input_values)
         from psyneulink.core.compositions.composition import NodeRole
         input_nodes = self.composition.get_nodes_by_role(NodeRole.INPUT)
-        sources = [self.composition._get_source(n.path_afferents[0])[0] for n in self.state_input_ports]
+        sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
+                   for source_tuple,value in list(self.state_dict.items())[:len(self.state_input_ports)]]
         return {k:v for k,v in zip(input_nodes, sources)}
 
     @property

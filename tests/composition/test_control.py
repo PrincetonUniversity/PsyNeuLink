@@ -775,7 +775,7 @@ class TestControlMechanisms:
                            ]
 
     state_feature_args = [
-        # (state_feature_specs[0], messages[0], UserWarning),                          # partial_legal_ports_spec
+        (state_feature_specs[0], messages[0], UserWarning),                          # partial_legal_ports_spec
         (state_feature_specs[1], None, None),                                        # full_legal_ports_spec
         (state_feature_specs[2], None, None),                                        # input_dict_spec
         (state_feature_specs[3], None, None),                                        # automatic_assignment
@@ -835,7 +835,7 @@ class TestControlMechanisms:
             elif state_feature_args[0] == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['INNER COMP', 'OA', 'OB']
-                assert ocm.state_features ==  {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
+                assert ocm.state_features == {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
 
             elif state_feature_args[0] == 'automatic_assignment':
                 assert len(ocm.state_input_ports) == 3
@@ -853,6 +853,7 @@ class TestControlMechanisms:
                     assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
                     assert ocm.state_features == {icomp: oa.output_port}
             assert warning[10].message.args[0] == message
+            assert ocm.state_features == {icomp: oa.output_port}
 
         else:
             with pytest.raises(state_feature_args[2]) as error:
