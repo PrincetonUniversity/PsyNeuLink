@@ -1397,6 +1397,10 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
         """
+        # MODIFIED 1/15/22 NEW:
+        outcome_input_ports = Parameter(None, reference=True, stateful=False, loggable=False)
+        state_input_ports = Parameter(None, reference=True, stateful=False, loggable=False)
+        # MODIFIED 1/15/22 END
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         function = Parameter(GridSearch, stateful=False, loggable=False)
         state_feature_functions = Parameter(None, reference=True, stateful=False, loggable=False)
