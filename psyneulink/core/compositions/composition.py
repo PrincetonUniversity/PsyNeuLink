@@ -3858,10 +3858,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway_arg_str = " in " + context.string
             raise CompositionError(f"Attempt to add Composition as a Node to itself{pathway_arg_str}.")
 
+        required_roles = convert_to_list(required_roles)
+
         if isinstance(node, Composition):
             # IMPLEMENTATION NOTE: include_probes_in_output=False is not currently supported for nested Nodes
             #                    (they require get_output_value() to return value of all output_ports of output_CIM)
             node.include_probes_in_output = True
+
+        # MODIFIED 1/15/22 NEW:
+        else:
+            if NodeRole.INTERNAL in required_roles:
+                for input_port in node.input_ports:
+                    input_port.internal_only = True
+        # MODIFIED 1/15/22 END
 
         try:
             node._analyze_graph(context = context)
@@ -4566,6 +4575,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
         for node in self.get_nodes_by_role(NodeRole.ORIGIN):
+            # MODIFIED 1/15/22 NEW:
+            # Don't allow INTERNAL Nodes to be INPUTS
+            if NodeRole.INTERNAL in self.get_roles_by_node(node):
+                continue
+            # MODIFIED 1/15/22 END
             self._add_node_role(node, NodeRole.INPUT)
 
         # CYCLE
@@ -8673,7 +8687,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _inputs = self._validate_input_dict_node_roles(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
-        num_inputs_sets = len(next(iter(_inputs.values())))
+        # # MODIFIED 1/15/22 OLD:
+        # num_inputs_sets = len(next(iter(_inputs.values())))
+        # MODIFIED 1/15/22 NEW:
+        num_inputs_sets = len(next(iter(_inputs.values()),[]))
+        # MODIFIED 1/15/22 END
         return _inputs, num_inputs_sets
 
     def _validate_input_dict_node_roles(self, inputs):
