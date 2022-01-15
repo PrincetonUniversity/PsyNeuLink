@@ -1666,7 +1666,8 @@ class OptimizationControlMechanism(ControlMechanism):
         #               TRY TESTS WITHOUT THIS
         # Don't instantiate unless being called by Composition.run() (which does not use ContextFlags.METHOD)
         # This avoids error messages if called prematurely (i.e., before run is complete)
-        if context.flags & ContextFlags.METHOD:
+        # if context.flags & ContextFlags.METHOD:
+        if context.flags & ContextFlags.PROCESSING:
             return
 
         # Don't bother for agent_rep that is not a Composition, since state_input_ports specified can be validated
@@ -2627,7 +2628,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 get_info_method = composition._get_destination
             if not port.path_afferents:
                 if port.default_input is DEFAULT_VARIABLE:
-                    # FIX: 1/14/22 DOUBLECHECK THAT THE FOLLWING IS CORRECT:
                     source_port = DEFAULT_VARIABLE
                     node = None
                     comp = None
@@ -2637,7 +2637,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 source_port, node, comp = get_info_method(port.path_afferents[0])
             state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
-            # # MODIFIED 1/8/22 ALT: SEPARATELY LISTS OUTPUT_PORTS THAT PROJECT TO SAME SHADOWED INPUT_PORT
+            # # ALT: SEPARATELY LISTS OUTPUT_PORTS THAT PROJECT TO SAME SHADOWED INPUT_PORT
             # if port.shadow_inputs:
             #     port = port.shadow_inputs
             #     if port.owner in self.composition.nodes:
