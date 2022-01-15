@@ -1146,6 +1146,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
+                outcome_input_ports
+                    see `outcome_input_ports <ControlMechanism.outcome_input_ports>`
+
+                    :default value: None
+                    :type:  ``list``
+
                 output_ports
                     see `output_ports <Mechanism_Base.output_ports>`
 
@@ -1183,6 +1189,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
         outcome_input_ports_option = Parameter(SEPARATE, stateful=False, loggable=False, structural=True)
+        outcome_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
 
         input_ports = Parameter(
             [OUTCOME],
@@ -1550,7 +1557,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         other_input_ports = input_ports or []
 
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
-        self.outcome_input_ports = ContentAddressableList(component_type=OutputPort)
+        self.parameters.outcome_input_ports.set(ContentAddressableList(component_type=OutputPort),
+                                                override=True)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:

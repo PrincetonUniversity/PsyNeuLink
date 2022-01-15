@@ -1336,12 +1336,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     :default value: None
                     :type:
 
-                state_feature_functions
-                    see `state_feature_functions <OptimizationControlMechanism_Feature_Function>`
-
-                    :default value: None
-                    :type:
-
                 function
                     see `function <OptimizationControlMechanism_Function>`
 
@@ -1363,6 +1357,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 num_trials_per_estimate
                     see `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>`
+
+                    :default value: None
+                    :type:
+
+                outcome_input_ports_option
+                    see `outcome_input_ports_option <OptimizationControlMechanism.outcome_input_ports_option>`
 
                     :default value: None
                     :type:
@@ -1396,12 +1396,28 @@ class OptimizationControlMechanism(ControlMechanism):
 
                     :default value: None
                     :type:
+
+                state_features
+                    see `state_features <Optimization.state_features>`
+
+                    :default value: None
+                    :type: ``dict``
+
+                state_feature_functions
+                    see `state_feature_functions <OptimizationControlMechanism_Feature_Function>`
+
+                    :default value: None
+                    :type:
+
+                state_input_ports
+                    see `state_input_ports <OptimizationControlMechanism.state_input_ports>`
+
+                    :default value: None
+                    :type:  ``list``
         """
-        # MODIFIED 1/15/22 NEW:
-        outcome_input_ports = Parameter(None, reference=True, stateful=False, loggable=False)
-        state_input_ports = Parameter(None, reference=True, stateful=False, loggable=False)
-        # MODIFIED 1/15/22 END
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
+        state_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
+        # state_features = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
         function = Parameter(GridSearch, stateful=False, loggable=False)
         state_feature_functions = Parameter(None, reference=True, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
@@ -1480,7 +1496,13 @@ class OptimizationControlMechanism(ControlMechanism):
                 kwargs.pop('feature_function')
                 continue
 
+        # MODIFIED 1/15/22 OLD:
         self.state_features = state_features if isinstance(state_features, dict) else convert_to_list(state_features)
+        # # MODIFIED 1/15/22 NEW:
+        # self.parameters.state_features.set((state_features if isinstance(state_features, dict)
+        #                                    else convert_to_list(state_features)),
+        #                                    override=True)
+        # MODIFIED 1/15/22 END
 
         function = function or GridSearch
 
@@ -1503,6 +1525,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super().__init__(
             function=function,
+            state_features=state_features,
             state_feature_functions=state_feature_functions,
             num_estimates=num_estimates,
             num_trials_per_estimate = num_trials_per_estimate,
@@ -1622,8 +1645,9 @@ class OptimizationControlMechanism(ControlMechanism):
         start = self.num_outcome_input_ports # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         stop = start + len(state_input_ports_specs) if state_input_ports_specs else 0
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
-        self.state_input_ports = ContentAddressableList(component_type=InputPort,
-                                                          list=self.input_ports[start:stop])
+        self.parameters.state_input_ports.set(ContentAddressableList(component_type=InputPort,
+                                                                     list=self.input_ports[start:stop]),
+                                              override=True)
 
         # Ensure that every state_input_port has no more than one afferent projection
         # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
@@ -1736,7 +1760,11 @@ class OptimizationControlMechanism(ControlMechanism):
             input_dict = {}
             for i, spec in enumerate(self.state_features):
                 input_dict[input_nodes[i]] = spec
+            # MODIFIED 1/15/22 OLD:
             self.state_features = input_dict
+            # # MODIFIED 1/15/22 NEW:
+            # self.parameters.state_features.set(input_dict, override=True)
+            # MODIFIED 1/15/22 END
         if isinstance(self.state_features, dict):
             # If dict is specified, get values for checks below
             state_features = list(self.state_features.values())
