@@ -97,14 +97,10 @@ class TestInputPorts:
         assert m.input_values == [[ 0.],[ 0.]]
         assert m.external_input_values == [[0.]]
 
-    @pytest.mark.parametrize('default_input',
-                             [
-                                 None,
-                                 pnl.DEFAULT_VARIABLE
-                             ])
+    @pytest.mark.parametrize('default_input', [None, pnl.DEFAULT_VARIABLE])
     def test_default_input(self, default_input):
         variable = [22]
-        m = pnl.TransferMechanism(input_ports=[pnl.InputPort(name='DEFAULT_INPUT',
+        m = pnl.TransferMechanism(input_ports=[pnl.InputPort(name='INTERNAL_NODE',
                                                              default_input=default_input,
                                                              variable=variable)])
         m.execute()
@@ -115,15 +111,12 @@ class TestInputPorts:
             assert m.input_port.internal_only is False
         comp = pnl.Composition(nodes=(m, pnl.NodeRole.INTERNAL))
         assert pnl.NodeRole.INTERNAL in comp.get_roles_by_node(m)
-        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(m)  # <- DESIRED BUT NOT CURRENT BEHAVIOR
-        assert not m.path_afferents                                 # <- DESIRED BUT NOT CURRENT BEHAVIOR
+        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(m)
+        assert not m.path_afferents
         if default_input is None:
-            # proj = m.path_afferents[0]                   # NEEDED UNTIL DESIRED BEHAVIOR ABOVE IS IMPLEMENTED
-            # comp.remove_projection(proj)                 #  since m is treated as INPUT and internal_only is not set
-            # pnl.Projection_Base._delete_projection(proj) # Remove afferent Projection to precipitate warning
-            with pytest.warns(UserWarning) as warning:
+            with pytest.warns(UserWarning) as warning:  # Warn, since default_input is NOT set
                 comp.run()
-            assert repr(warning[1].message.args[0]) == '"InputPort (\'DEFAULT_INPUT\') of \'TransferMechanism-0\' ' \
+            assert repr(warning[1].message.args[0]) == '"InputPort (\'INTERNAL_NODE\') of \'TransferMechanism-0\' ' \
                                                        'doesn\'t have any afferent Projections."'
             assert m.input_port.value == variable # For Mechanisms other than controller, default_variable seems
             assert m.value == variable            #     to still be used even though default_input is NOT set
