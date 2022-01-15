@@ -2596,7 +2596,8 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
+    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES, STATE_FEATURES
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -4988,6 +4989,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                  variable=receiver.defaults.value,
                                                  reference_value=receiver.defaults.value,
                                                  name= PARAMETER_CIM_NAME + "_" + owner.name + "_" + receiver.name,
+                                                 # default_input=DEFAULT_VARIABLE,
                                                  context=context)
                 self.parameter_CIM.add_ports([interface_input_port], context=context)
                 # control signal for parameter CIM that will project directly to inner Composition's parameter
@@ -5852,7 +5854,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if context.source != ContextFlags.INITIALIZING and context.string != 'IGNORE_NO_AFFERENTS_WARNING':
                 for input_port in node.input_ports:
-                    if input_port.require_projection_in_composition and not input_port.path_afferents:
+                    if input_port.require_projection_in_composition \
+                            and not input_port.path_afferents and not input_port.default_input:
                         warnings.warn(f"{InputPort.__name__} ('{input_port.name}') of '{node.name}' "
                                       f"doesn't have any afferent {Projection.__name__}s.")
                 for output_port in node.output_ports:
@@ -7842,19 +7845,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
-    # def _get_controller(comp, context=None):
-    #     """Get controller for which the current Composition is an agent_rep.
-    #     Recursively search enclosing Compositions for controller if self does not have one.
-    #     Use context.composition if there is no controller.
-    #     This is needed for agent_rep that is nested within the Composition to which the controller belongs.
-    #     """
-    #     context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
-    #     if comp.controller:
-    #         return comp.controller
-    #     elif context.composition:
-    #         return context.composition._get_controller(context)
-    #     else:
-    #         assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
+    # MODIFIED 1/12/22 NEWISH:
+    def _get_controller(self, comp=None, context=None):
+        """Get controller for which the current Composition is an agent_rep.
+        Recursively search enclosing Compositions for controller if self does not have one.
+        Use context.composition if there is no controller.
+        This is needed for agent_rep that is nested within the Composition to which the controller belongs.
+        """
+        comp = comp or self
+        context = context or Context(source=ContextFlags.COMPOSITION, composition=None)
+        if comp.controller:
+            return comp.controller
+        elif context.composition:
+            return context.composition._get_controller(context=context)
+        else:
+            assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
+    # MODIFIED 1/12/22 END
 
     def reshape_control_signal(self, arr):
 
@@ -8029,28 +8035,37 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
     #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
-    def _build_predicted_inputs_dict(self, predicted_input):
+    def _build_predicted_inputs_dict(self, predicted_inputs, controller=None):
         """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
         Get values of state_input_ports that receive projections from items providing relevant input (and any
           processing of those values specified), and format as input_dict suitable for run() method (called in evaluate)
         Deal with inputs for nodes in nested Compositions
         """
+        controller = controller or self.controller
+        # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
+        # (unless it has SHADOW_INPUTS entry, in which case that is handled below)
+        input_dict_keys = (list(controller.state_features.keys())
+                           if (hasattr(controller, STATE_FEATURES)
+                               and isinstance(controller.state_features, dict)
+                               and SHADOW_INPUTS not in controller.state_features)
+                           else None)
         inputs = {}
-        no_predicted_input = (predicted_input is None or not len(predicted_input))
+        no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
         if no_predicted_input:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
         nested_nodes = dict(self._get_nested_nodes())
         # FIX: 11/3/21 NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        shadow_inputs_start_index = self.controller.num_outcome_input_ports
-        for j in range(len(self.controller.input_ports) - shadow_inputs_start_index):
-            input_port = self.controller.input_ports[j + shadow_inputs_start_index]
+        shadow_inputs_start_index = controller.num_outcome_input_ports
+        for j in range(len(controller.input_ports) - shadow_inputs_start_index):
+            input_port = controller.input_ports[j + shadow_inputs_start_index]
             if no_predicted_input:
-                shadowed_input = input_port.defaults.value
+                predicted_input = input_port.defaults.value
             else:
-                shadowed_input = predicted_input[j]
+                predicted_input = predicted_inputs[j]
 
+            # Shadow input specified
             if hasattr(input_port, SHADOW_INPUTS) and input_port.shadow_inputs is not None:
                 shadow_input_owner = input_port.shadow_inputs.owner
                 if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
@@ -8060,8 +8075,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if shadow_input_owner in nested_nodes:
                     comp = nested_nodes[shadow_input_owner]
                     if comp in inputs:
-                        inputs[comp]=np.concatenate([[shadowed_input],inputs[comp][0]])
+                        inputs[comp]=np.concatenate([[predicted_input],inputs[comp][0]])
                     else:
+                        # FIX 1/9/22: CAN THIS BE REPLACED BY CALL TO _get_source?
                         def _get_enclosing_comp_for_node(input_port, comp):
                             """Get the Composition that is a node of self in which node nested in it.
                             - input_port is of node for which enclosing comp is being sought
@@ -8081,14 +8097,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         comp_for_input = _get_enclosing_comp_for_node(input_port.shadow_inputs, shadow_input_comp)
                         if comp_for_input in inputs:
                             # If node for nested comp is already in inputs dict, append to its input
-                            inputs[comp_for_input][0].append(shadowed_input)
+                            inputs[comp_for_input][0].append(predicted_input)
                         else:
                             # Create entry in inputs dict for nested comp containing shadowed_input
-                            inputs[comp_for_input]=[[shadowed_input]]
+                            inputs[comp_for_input] = [[predicted_input]]
                 else:
                     if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
                         shadow_input_owner = shadow_input_owner.composition
-                    inputs[shadow_input_owner] = shadowed_input
+                    # Use key from OptimizationControlMechanism state_features dict if specified, else the source node
+                    key = input_dict_keys[j] if input_dict_keys else shadow_input_owner
+                    inputs[key] = predicted_input
+
+            # Regular input specified (i.e., projection from an OutputPort)
+            else:
+                # assert len(input_port.path_afferents) == 1
+                if input_port.path_afferents:
+                    source = input_port.path_afferents[0].sender.owner
+                # Use key from OptimizationControlMechanism state_features dict if specified, else the source node
+                key = input_dict_keys[j] if input_dict_keys else source
+                inputs[key] = predicted_input
+
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
@@ -8108,7 +8136,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
-            controller = get_controller(self)
+            # # MODIFIED 1/12/22 OLD:
+            # controller = get_controller(self)
+            # MODIFIED 1/12/22 NEW:
+            controller = self._get_controller(context=context)
+            # MODIFIED 1/12/22 END
 
             base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
@@ -8182,6 +8214,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         an array with the results of each run is also returned.
         """
 
+        controller = self._get_controller(context=context)
+
         # Build input dictionary for simulation
         input_spec = self.parameters.input_specification.get(context)
         if input_spec and block_simulate and not isgenerator(input_spec):
@@ -8190,7 +8224,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(input_spec, dict):
                 inputs = input_spec
         else:
-            inputs = self._build_predicted_inputs_dict(predicted_input)
+            inputs = self._build_predicted_inputs_dict(predicted_input,
+                                                       controller=controller)
 
         if hasattr(self, '_input_spec') and block_simulate and isgenerator(input_spec):
             warnings.warn(f"The evaluate method of {self.name} is attempting to use block simulation, but the "
@@ -8247,22 +8282,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # COMPUTE net_outcome and aggregate in net_outcomes
 
         # Update input ports in order to get correct value for "outcome" (from objective mech)
-        self.controller._update_input_ports(runtime_params, context)
+        controller._update_input_ports(runtime_params, context)
 
         # FIX: REFACTOR TO CREATE ARRAY OF INPUT_PORT VALUES FOR OUTCOME_INPUT_PORTS
-        outcome_is_array = self.controller.num_outcome_input_ports > 1
+        outcome_is_array = controller.num_outcome_input_ports > 1
         if not outcome_is_array:
-            outcome = self.controller.input_port.parameters.value._get(context)
+            outcome = controller.input_port.parameters.value._get(context)
         else:
             outcome = []
-            for i in range(self.controller.num_outcome_input_ports):
-                outcome.append(self.controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
+            for i in range(controller.num_outcome_input_ports):
+                outcome.append(controller.parameters.input_ports._get(context)[i].parameters.value._get(context))
 
         if outcome is None:
             net_outcome = 0.0
         else:
             # Compute net outcome based on the cost of the simulated control allocation (usually, net = outcome - cost)
-            net_outcome = self.controller.compute_net_outcome(outcome, total_cost)
+            net_outcome = controller.compute_net_outcome(outcome, total_cost)
 
         if return_results:
             return net_outcome, result
@@ -8344,7 +8379,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # 3) Resize inputs to be of the form [[[]]],
         # where each level corresponds to: <TRIALS <PORTS <INPUTS> > >
-        inputs, num_inputs_sets = self._parse_dict(inputs)
+        inputs, num_inputs_sets = self._parse_input_dict(inputs)
 
         return inputs, num_inputs_sets
 
@@ -8408,7 +8443,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        input_dict, num_inputs_sets = self._parse_input_dict(_inputs)
         return input_dict, num_inputs_sets
 
     def _parse_string(self, inputs):
@@ -8437,7 +8472,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(
                 f"Inputs to {self.name} must be specified in a dictionary with a key for each of its "
                 f"{len(input_nodes)} INPUT nodes ({[n.name for n in input_nodes]}).")
-        input_dict, num_inputs_sets = self._parse_dict(_inputs)
+        input_dict, num_inputs_sets = self._parse_input_dict(_inputs)
         return input_dict, num_inputs_sets
 
     def _parse_function(self, inputs):
@@ -8471,7 +8506,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
-        node_variable = [input_port.defaults.value for input_port in node.input_ports if not input_port.internal_only]
+        node_variable = [input_port.defaults.value for input_port in node.input_ports
+                         if not input_port.internal_only or input_port.default_input]
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
@@ -8571,7 +8607,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node.componentType == 'Composition' and type(inp) == dict:
                 # If there are multiple levels of nested dicts, we need to convert them starting from the deepest level,
                 # so recurse down the chain here
-                inp, num_trials = node._parse_dict(inp)
+                inp, num_trials = node._parse_input_dict(inp)
                 translated_stimulus_dict = {}
 
                 # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
@@ -8666,9 +8702,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     _inputs.append(stimulus)
         return _inputs
 
-    def _parse_dict(self, inputs, context=None):
+    def _parse_input_dict(self, inputs, context=None):
         """
-        Validates and parses a dict provided as input to a Composition into a standardized form to be used throughout
+        Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
             its execution
 
         Returns
@@ -8677,14 +8713,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Parsed and standardized input dict
 
         `int` :
-            Number of input sets in dict for each input node in the Composition
+            Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
 
         """
         # parse a user-provided input dict to format it properly for execution.
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
         _inputs = self._parse_labels(_inputs)
-        _inputs = self._validate_input_dict_node_roles(_inputs)
+        _inputs = self._instantiate_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
         # # MODIFIED 1/15/22 OLD:
@@ -8694,20 +8730,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # MODIFIED 1/15/22 END
         return _inputs, num_inputs_sets
 
-    def _validate_input_dict_node_roles(self, inputs):
-        """
-        Validates that all nodes included in input dict are input nodes. Additionally, if any input nodes are not
-            included, adds them to the input dict using their default values as entries
+    def _instantiate_input_dict(self, inputs):
+        """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
+        Validate that all Nodes included in input dict are INPUT nodes of Composition.
+        If any input nodes of Composition are not included, add them to the input dict using their default values.
 
         Returns
         -------
 
         `dict` :
-            The input dict, with added entries for any input nodes for which input was not provided
-
+            Input dict, with added entries for any input Nodes for which input was not provided
         """
-        # STEP 1A: Check that all of the nodes listed in the inputs dict are INPUT nodes in the composition
+
+        # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+
         for node in inputs.keys():
             if node not in input_nodes:
                 if not isinstance(node, (Mechanism, Composition)):
@@ -8716,7 +8753,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
 
-        # STEP 1B: Check that all of the INPUT nodes are represented - if not, use default_external_input_values
+        # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
             if node not in inputs:
                 inputs[node] = node.default_external_input_values
@@ -8735,7 +8772,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # handle user-provided input based on input type. return processd inputs and num_inputs_sets
         if not inputs:
-            _inputs, num_inputs_sets = self._parse_dict({})
+            _inputs, num_inputs_sets = self._parse_input_dict({})
         elif isgeneratorfunction(inputs):
             _inputs, num_inputs_sets = self._parse_generator_function(inputs)
         elif isgenerator(inputs):
@@ -8745,7 +8782,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif type(inputs) == list:
             _inputs, num_inputs_sets = self._parse_list(inputs)
         elif type(inputs) == dict:
-            _inputs, num_inputs_sets = self._parse_dict(inputs)
+            _inputs, num_inputs_sets = self._parse_input_dict(inputs)
         elif type(inputs) == str:
             _inputs, num_inputs_sets = self._parse_string(inputs)
         else:
@@ -8772,7 +8809,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # this method is intended to run BEFORE a call to Composition.execute
         if callable(inputs):
             try:
-                inputs, _ = self._parse_dict(inputs(trial_num))
+                inputs, _ = self._parse_input_dict(inputs(trial_num))
                 i = 0
             except TypeError as e:
                 error_text = e.args[0]
@@ -8781,7 +8818,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"Problem with function provided to 'inputs' arg of {self.name}.run")
         elif isgenerator(inputs):
-            inputs, _ = self._parse_dict(inputs.__next__())
+            inputs, _ = self._parse_input_dict(inputs.__next__())
             i = 0
         else:
             num_inputs_sets = len(next(iter(inputs.values())))
@@ -8805,7 +8842,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _inputs = {}
         for node, inp in inputs.items():
             if isinstance(node, Composition) and type(inp) == dict:
-                inp = node._parse_dict(inp)
+                inp = node._parse_input_dict(inp)
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
@@ -9785,7 +9822,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # if execute was called from command line and no inputs were specified,
             # assign default inputs to highest level composition (i.e. not on any nested Compositions)
             if not inputs and not nested and ContextFlags.COMMAND_LINE in context.source:
-                inputs = self._validate_input_dict_node_roles({})
+                inputs = self._instantiate_input_dict({})
             # Skip initialization if possible (for efficiency):
             # - and(context has not changed
             # -     structure of the graph has not changed
@@ -10437,6 +10474,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
 
+    # Alias of get_input_format(easy mistake to make)
     def get_inputs_format(self, **kwargs):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
