@@ -765,14 +765,14 @@ class TestControlMechanisms:
                            'bad_input_format_spec']
 
     state_feature_args = [
-        # (state_feature_specs[0], messages[0], UserWarning),
+        (state_feature_specs[0], messages[0], UserWarning),
         (state_feature_specs[1], None, None),
-        # (state_feature_specs[2], None, None),
-        # (state_feature_specs[3], None, None),
-        # (state_feature_specs[4], messages[1], pnl.CompositionError),
-        # (state_feature_specs[5], messages[2], pnl.OptimizationControlMechanismError),
-        # (state_feature_specs[6], messages[3], pnl.OptimizationControlMechanismError),
-        # (state_feature_specs[7], messages[4], pnl.OptimizationControlMechanismError)
+        (state_feature_specs[2], None, None),
+        (state_feature_specs[3], None, None),
+        (state_feature_specs[4], messages[1], pnl.CompositionError),
+        (state_feature_specs[5], messages[2], pnl.OptimizationControlMechanismError),
+        (state_feature_specs[6], messages[3], pnl.OptimizationControlMechanismError),
+        (state_feature_specs[7], messages[4], pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
