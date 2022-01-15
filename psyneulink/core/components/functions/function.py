@@ -163,7 +163,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len,
-    SeededRandomState
+    SeededRandomState, contains_type, is_instance_or_subclass
 )
 
 __all__ = [
@@ -366,6 +366,39 @@ def _random_state_getter(self, owning_component, context):
         return type(current_state)(seed_value)
 
     return current_state
+
+
+def _noise_setter(value, owning_component, context):
+    def has_function(x):
+        return (
+            is_instance_or_subclass(x, (Function_Base, types.FunctionType))
+            or contains_type(x, (Function_Base, types.FunctionType))
+        )
+
+    noise_param = owning_component.parameters.noise
+    value_has_function = has_function(value)
+    # initial set
+    if owning_component.is_initializing:
+        if value_has_function:
+            # is changing a parameter attribute like this ok?
+            noise_param.stateful = False
+    else:
+        default_value_has_function = has_function(noise_param.default_value)
+
+        if default_value_has_function and not value_has_function:
+            warnings.warn(
+                'Setting noise to a numeric value after instantiation'
+                ' with a value containing functions will not remove the'
+                ' noise ParameterPort or make noise stateful.'
+            )
+        elif not default_value_has_function and value_has_function:
+            warnings.warn(
+                'Setting noise to a value containing functions after'
+                ' instantiation with a numeric value will not create a'
+                ' noise ParameterPort or make noise stateless.'
+            )
+
+    return value
 
 
 class Function_Base(Function):

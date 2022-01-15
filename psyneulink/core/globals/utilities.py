@@ -1379,9 +1379,15 @@ class ContentAddressableList(UserList):
 
 
 def is_value_spec(spec):
+    from psyneulink.core.components.component import Component
+
     if isinstance(spec, (numbers.Number, np.ndarray)):
         return True
-    elif isinstance(spec, list) and is_numeric(spec):
+    elif (
+        isinstance(spec, list)
+        and is_numeric(spec)
+        and not contains_type(spec, (Component, types.FunctionType))
+    ):
         return True
     else:
         return False

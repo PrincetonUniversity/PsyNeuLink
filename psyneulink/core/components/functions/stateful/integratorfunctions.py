@@ -36,7 +36,7 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter,
-    _seed_setter,
+    _seed_setter, _noise_setter
 )
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -214,7 +214,9 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
-        noise = Parameter(0.0, modulable=True, function_arg=True)
+        noise = Parameter(
+            0.0, modulable=True, function_arg=True, setter=_noise_setter
+        )
         previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
