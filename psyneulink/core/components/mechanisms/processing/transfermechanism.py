@@ -1410,8 +1410,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
             integration_rate = np.array(target_set[INTEGRATION_RATE])
-            if (not np.isscalar(integration_rate.tolist())
-                    and integration_rate.shape != self.defaults.variable.squeeze().shape):
+            if (
+                not np.isscalar(integration_rate.tolist())
+                and integration_rate.shape != self.defaults.variable.shape
+                and integration_rate.shape != self.defaults.variable.squeeze().shape
+            ):
                 raise TransferError(f"{repr(INTEGRATION_RATE)} arg for {self.name} ({integration_rate}) "
                                     f"must be either an int or float, or have the same shape "
                                     f"as its {VARIABLE} ({self.defaults.variable}).")
