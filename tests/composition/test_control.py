@@ -751,6 +751,13 @@ class TestControlMechanisms:
         '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'EXT[OutputPort-0]\']) '
         'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
+        "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' that is using a "
+        "Composition ('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by its "
+        "'agent_rep': 'Input stimulus (0.0) for OB is incompatible with its external_input_values "
+        "([array([0., 0., 0.])]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, "
+        "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 to "
+        "have them automatically assigned.",
+
         '"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
         'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."'
     ]
@@ -762,7 +769,9 @@ class TestControlMechanisms:
                            'misplaced_shadow',
                            'ext_shadow',
                            'ext_output_port',
-                           'bad_input_format_spec']
+                           'bad_input_format_spec_wrong_shape',
+                           'bad_input_format_spec_too_many'
+                           ]
 
     state_feature_args = [
         (state_feature_specs[0], messages[0], UserWarning),
@@ -772,7 +781,8 @@ class TestControlMechanisms:
         (state_feature_specs[4], messages[1], pnl.CompositionError),
         (state_feature_specs[5], messages[2], pnl.OptimizationControlMechanismError),
         (state_feature_specs[6], messages[3], pnl.OptimizationControlMechanismError),
-        (state_feature_specs[7], messages[4], pnl.OptimizationControlMechanismError)
+        (state_feature_specs[7], messages[4], pnl.OptimizationControlMechanismError),
+        (state_feature_specs[8], messages[5], pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
@@ -792,12 +802,13 @@ class TestControlMechanisms:
         state_features_dict = {
             'partial_legal_ports_spec': [oa.output_port],
             'full_legal_ports_spec': [ia.input_port, oa.output_port, [3,1,2]],
-            'input_dict_spec': {icomp:ia.input_port, oa:oc.input_port, ob:oc.output_port},
+            'input_dict_spec': {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port},
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
             'misplaced_shadow':ib.input_port,
             'ext_shadow':ext.input_port,
             'ext_output_port':ext.output_port,
-            'bad_input_format_spec': [ia.input_port, oa.output_port, ob.output_port, oc.output_port]
+            'bad_input_format_spec_wrong_shape': [ia.input_port, oa.output_port, oc.output_port],
+            'bad_input_format_spec_too_many': [ia.input_port, oa.output_port, ob.output_port, oc.output_port]
         }
         state_features = state_features_dict[state_feature_args[0]]
         message = state_feature_args[1]

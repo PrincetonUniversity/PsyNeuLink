@@ -1684,11 +1684,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # Shadowing nodes are instantiated in Composition._update_shadow_projections()
             comp = self.agent_rep
 
-            # # MODIFIED 1/13/22 OLD:
-            # # If dict is specified, get values for checks below
-            # state_features = (list(self.state_features.values()) if isinstance(self.state_features, dict)
-            #                   else self.state_features)
-            # MODIFIED 1/13/22 NEW:
             if isinstance(self.state_features, list):
                 # Convert list to dict, assuming list is in order of INPUT Nodes,
                 #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
@@ -1706,10 +1701,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 # If dict is specified, get values for checks below
                 state_features = list(self.state_features.values())
             assert isinstance(self.state_features, dict)
-            # MODIFIED 1/13/22 END
 
             # FIX: 1/14/21:  MOVE ALL OF THIS TO ITS OWN METHOD: _validate_state_feature_specs:
-
 
             # Include agent rep in error messages if it is not the same as self.composition
             self_has_state_features_str = f"'{self.name}' has 'state_features' specified "

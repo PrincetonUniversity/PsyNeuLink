@@ -3057,8 +3057,9 @@ class NodeRole(enum.Enum):
         programmatically.
 
     INTERNAL
-        A `Node <Composition_Nodes>` that is neither `ORIGIN` nor `TERMINAL`.  This role cannot be modified
-        programmatically.
+        A `Node <Composition_Nodes>` that is neither `INPUT` nor `OUTPUT`.  Note that it *can* also be `ORIGIN`,
+        `TERMINAL` or `SINGLETON`, if it has no `afferent <Mechanism_Base.afferents>` or `efferent
+        <Mechanism_Base.efferents>` Projections or neither, respectively. This role cannot be modified programmatically.
 
     CYCLE
         A `Node <Composition_Nodes>` that belongs to a cycle. This role cannot be modified programmatically.
@@ -3865,14 +3866,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # IMPLEMENTATION NOTE: include_probes_in_output=False is not currently supported for nested Nodes
             #                    (they require get_output_value() to return value of all output_ports of output_CIM)
             node.include_probes_in_output = True
-
-        # MODIFIED 1/15/22 NEW:
         else:
-            if NodeRole.INTERNAL in required_roles:
+            if required_roles and NodeRole.INTERNAL in required_roles:
                 for input_port in node.input_ports:
                     input_port.internal_only = True
-        # MODIFIED 1/15/22 END
-
         try:
             node._analyze_graph(context = context)
         except AttributeError:
@@ -4576,11 +4573,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # INPUT
         for node in self.get_nodes_by_role(NodeRole.ORIGIN):
-            # MODIFIED 1/15/22 NEW:
             # Don't allow INTERNAL Nodes to be INPUTS
             if NodeRole.INTERNAL in self.get_roles_by_node(node):
                 continue
-            # MODIFIED 1/15/22 END
             self._add_node_role(node, NodeRole.INPUT)
 
         # CYCLE
@@ -7845,7 +7840,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 control_signal_specs.extend(node._get_parameter_port_deferred_init_control_specs())
         return control_signal_specs
 
-    # MODIFIED 1/12/22 NEWISH:
     def _get_controller(self, comp=None, context=None):
         """Get controller for which the current Composition is an agent_rep.
         Recursively search enclosing Compositions for controller if self does not have one.
@@ -7860,7 +7854,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return context.composition._get_controller(context=context)
         else:
             assert False, f"PROGRAM ERROR: Can't find controller for {comp.name}."
-    # MODIFIED 1/12/22 END
 
     def reshape_control_signal(self, arr):
 
@@ -8136,11 +8129,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     assert False, f"PROGRAM ERROR: Can't find controller for {self.name}."
 
-            # # MODIFIED 1/12/22 OLD:
-            # controller = get_controller(self)
-            # MODIFIED 1/12/22 NEW:
             controller = self._get_controller(context=context)
-            # MODIFIED 1/12/22 END
 
             base_control_allocation = self.reshape_control_signal(controller.parameters.value._get(context))
             candidate_control_allocation = self.reshape_control_signal(control_allocation)
@@ -8723,11 +8712,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _inputs = self._instantiate_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
-        # # MODIFIED 1/15/22 OLD:
-        # num_inputs_sets = len(next(iter(_inputs.values())))
-        # MODIFIED 1/15/22 NEW:
         num_inputs_sets = len(next(iter(_inputs.values()),[]))
-        # MODIFIED 1/15/22 END
         return _inputs, num_inputs_sets
 
     def _instantiate_input_dict(self, inputs):
