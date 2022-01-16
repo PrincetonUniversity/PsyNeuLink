@@ -2534,15 +2534,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 input_nodes.append(node)
         return input_nodes
 
-    def _parse_state_feature_function(self, feature_function):
-        if isinstance(feature_function, Function):
-            return copy.deepcopy(feature_function)
-        else:
-            return feature_function
-
-    @tc.typecheck
-    def _parse_state_feature_specs(self, state_features, feature_functions, context=None):
-        """Parse entries of state_features into InputPort spec dictionaries
+    def _parse_state_feature_specs(self, state_feature_specs, feature_functions, context=None):
+        """Parse entries of state_features specifications into InputPort spec dictionaries
         For entries specifying shadowing, set INTERNAL_ONLY entry of params dict for InputPort spec dictionary to True
             (so that inputs to Composition are not required if the specified state feature is on an INPUT Mechanism)
         Assign functions specified in **state_feature_functions** to InputPorts for all state_features
@@ -2550,14 +2543,14 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         input_node_names = [n.name if n else None for n in self._get_agent_rep_input_nodes()]
         input_port_names = None
-        if isinstance(state_features, dict):
+        if isinstance(state_feature_specs, dict):
             if SHADOW_INPUTS in self.state_feature_specs:
                 pass  # handled below
             else:
-                input_port_names = [k.name for k in list(state_features.keys())]
-                state_features = list(state_features.values())
+                input_port_names = [k.name for k in list(state_feature_specs.keys())]
+                state_feature_specs = list(state_feature_specs.values())
 
-        _state_input_ports = _parse_shadow_inputs(self, state_features)
+        _state_input_ports = _parse_shadow_inputs(self, state_feature_specs)
 
         parsed_features = []
 
@@ -2608,6 +2601,12 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_features.extend(parsed_spec)
 
         return parsed_features
+
+    def _parse_state_feature_function(self, feature_function):
+        if isinstance(feature_function, Function):
+            return copy.deepcopy(feature_function)
+        else:
+            return feature_function
 
     @property
     def num_state_input_ports(self):
