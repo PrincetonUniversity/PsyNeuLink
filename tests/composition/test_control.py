@@ -409,7 +409,7 @@ class TestControlSpecification:
             comp.add_controller(ctlr)
         assert expected_warning in repr(warning[0].message.args[0])
 
-    def test_agent_rep_assignement_as_controller_and_replacement(self):
+    def test_agent_rep_assignment_as_controller_and_replacement(self):
         mech = pnl.ProcessingMechanism()
         comp = pnl.Composition(name='comp',
                                pathways=[mech],
@@ -783,17 +783,17 @@ class TestControlMechanisms:
 
     state_feature_args = [
         # (state_feature_specs[0], messages[0], UserWarning),                           # partial_legal_list_spec
-        # (state_feature_specs[1], None, None),                                         # full_legal_list_spec
-        # (state_feature_specs[2], None, None),                                         # input_dict_spec
-        # (state_feature_specs[3], None, None),                                         # set_spec
-        # (state_feature_specs[4], None, None),                                         # automatic_assignment
-        # (state_feature_specs[5], None, None),                                         # shadow_inputs_dict_spec
-        # (state_feature_specs[6], messages[1], pnl.CompositionError),                  # misplaced_shadow
-        # (state_feature_specs[7], messages[2], pnl.OptimizationControlMechanismError), # ext_shadow
-        # (state_feature_specs[8], messages[3], pnl.OptimizationControlMechanismError), # ext_output_port
-        # (state_feature_specs[9], messages[4], pnl.OptimizationControlMechanismError),# bad_input_format_spec_wrong_shape
-        # (state_feature_specs[10], messages[5], pnl.OptimizationControlMechanismError),# bad_input_format_spec_too_many
-        # (state_feature_specs[11], messages[6], pnl.OptimizationControlMechanismError), # bad_dict_spec
+        (state_feature_specs[1], None, None),                                         # full_legal_list_spec
+        (state_feature_specs[2], None, None),                                         # input_dict_spec
+        (state_feature_specs[3], None, None),                                         # set_spec
+        (state_feature_specs[4], None, None),                                         # automatic_assignment
+        (state_feature_specs[5], None, None),                                         # shadow_inputs_dict_spec
+        (state_feature_specs[6], messages[1], pnl.CompositionError),                  # misplaced_shadow
+        (state_feature_specs[7], messages[2], pnl.OptimizationControlMechanismError), # ext_shadow
+        (state_feature_specs[8], messages[3], pnl.OptimizationControlMechanismError), # ext_output_port
+        (state_feature_specs[9], messages[4], pnl.OptimizationControlMechanismError),# bad_input_format_spec_wrong_shape
+        (state_feature_specs[10], messages[5], pnl.OptimizationControlMechanismError),# bad_input_format_spec_too_many
+        (state_feature_specs[11], messages[6], pnl.OptimizationControlMechanismError), # bad_dict_spec
         (state_feature_specs[12], messages[6], pnl.OptimizationControlMechanismError)  # bad_set_spec
     ]
 
@@ -876,6 +876,7 @@ class TestControlMechanisms:
                 if state_feature_args[0] == 'partial_legal_list_spec':
                     assert len(ocm.state_input_ports) == 1
                     assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
+                    # assert ocm.state_input_ports.names == ['INNER COMP']
                     assert ocm.state_features == {icomp: oa.output_port}
             assert warning[10].message.args[0] == message
             assert ocm.state_features == {icomp: oa.output_port}
