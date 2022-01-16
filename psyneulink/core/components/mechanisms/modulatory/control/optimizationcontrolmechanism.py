@@ -2631,17 +2631,17 @@ class OptimizationControlMechanism(ControlMechanism):
         # return np.append(state_feature_values, self.control_allocation, 0)
         return [v.tolist() for v in state_feature_values] + self.control_allocation.tolist()
 
-    # FIX: 1/6/22 - FINISH IMPLEMENTING:
-    #               - ADD ENTRIES FOR ALL NODES THAT CONTRIBUTE TO STATE_INPUT_PORTS, EVEN IF CONVERGENT
-    #               - ADD ENTRIES FOR ALL NODES MODULATED BY CONTROL_SIGNAL EVEN IF DIVERGENT
-    #               - DEAL WITH CONTROL_SIGNALS THAT PROJECT TO NESTED NODES (GET METHOD FROM parameter_CIM)
     @property
     def state_dict(self):
         """Return dict with (node, port, Composition, index) tuples as keys and corresponding state[index] as values.
         Note: the index is required, since a state_input_port may have more than one afferent Projection
-              (that is, a state_feature_value may be determined by more than one node),
+              (that is, a state_feature_value may be determined by Projections from more than one Node),
               and a ControlSignal may have more than one ControlProjection (that is, a given element of the
-              control_allocation may apply to more than one Parameter).
+              control_allocation may apply to more than one Parameter).  However, for state_input_ports that shadow
+              a Node[InputPort], only that Node[InputPort] is listed in state_dict even if the Node[InputPort] being
+              shadowed has more than one afferent Projection (this is because it is the value of the Node[InputPort]
+              (after it has processed the value of its afferent Projections) that determines the input to the
+              state_input_port.
         """
 
         state_dict = {}
@@ -2668,19 +2668,6 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 source_port, node, comp = get_info_method(port.path_afferents[0])
             state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
-            # # ALT: SEPARATELY LISTS OUTPUT_PORTS THAT PROJECT TO SAME SHADOWED INPUT_PORT
-            # if port.shadow_inputs:
-            #     port = port.shadow_inputs
-            #     if port.owner in self.composition.nodes:
-            #         composition = self.composition
-            #         get_info_method = composition._get_source
-            #     else:
-            #         composition = port.path_afferents[0].sender.owner.composition
-            #         get_info_method = composition._get_destination
-            # for projection in port.path_afferents:
-            #     source_port, node, comp = get_info_method(projection)
-            #     state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
-            # MODIFIED 1/8/22 END
 
         state_index += 1
         # Get recipients of control_allocations values of state:
