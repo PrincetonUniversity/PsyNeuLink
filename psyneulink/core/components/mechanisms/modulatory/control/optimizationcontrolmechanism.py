@@ -1819,6 +1819,15 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
+        # # FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY)
+        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
+        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
+        # if len(self.state_input_ports) < len(inputs_dict):
+        #     warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+        #                   f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+        #                   f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
+        #                   f"get_inputs_format() method to see the format for its inputs.")
+
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
             # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
@@ -1826,9 +1835,10 @@ class OptimizationControlMechanism(ControlMechanism):
             inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
             if len(self.state_input_ports) < len(inputs_dict):
                 warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
-                              f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-                              f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
-                              f"get_inputs_format() method to see the format for its inputs.")
+                              f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+                              f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
+                              f"'evaluate' method is executed. If this is not the desired conifiguration, use its "
+                              f"get_inputs_format() method to see the format for all of its inputs.")
         except RunError as error:
             raise OptimizationControlMechanismError(
                 f"The 'state_features' argument has been specified for '{self.name}' that is using a "
@@ -2541,17 +2551,37 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign functions specified in **state_feature_functions** to InputPorts for all state_features
         Return list of InputPort specification dictionaries for state_input_ports
         """
-        input_nodes = self._get_agent_rep_input_nodes()
-        input_node_names = [n.name if n else None for n in input_nodes]
+        from psyneulink.core.compositions.composition import NodeRole
+        input_mechs = self._get_agent_rep_input_nodes() # Note: this has INPUT Nodes of nested comp if it is INPUT Node
+        input_nodes = self.agent_rep.get_nodes_by_role(NodeRole.INPUT) # Note: this has nested Comp if it is INPUT Node
+        input_mech_names = [n.name if n else None for n in input_mechs]
         input_port_names = None
+        ordered_node_specs = []
 
-        # MODIFIED 1/16/22 END
+        # FIX: 1/16/22 - HANDLE COMP AS INPUT NODE SPEC
         if isinstance(state_feature_specs, set):
             # All nodes must be INPUT nodes of agent_rep, that are to be shadowed, so reformat as SHADOW_INPUTS dict
             # Order the set and place in list
-            ordered_specs = [node for node in input_nodes if node in state_feature_specs]
-            # FIX: HANDLE COMP AS INPUT NODE SPEC AND REORDER IN PROPER ORDER
-            state_feature_specs = {SHADOW_INPUTS:ordered_specs}
+            # MODIFIED 1/16/22 OLD:
+            # FIX: 1/16/22: REMOVE ONCE IMPLEMENTED FOR dict
+            ordered_node_specs = [node for node in input_mechs if node in state_feature_specs]
+            non_input_node_specs = state_feature_specs - set(ordered_node_specs)
+            if non_input_node_specs:
+                items = ', '.join([n._name for n in non_input_node_specs])
+                if len(non_input_node_specs) == 1:
+                    items_str = f"contains an item ({items}) that is not an INPUT Node"
+                else:
+                    items_str = f"contains items ({items}) that are not INPUT Nodes"
+                raise OptimizationControlMechanismError(
+                    f"The 'state_features' specified for '{self.name}' {items_str} "
+                    f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
+                    f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'."
+                )
+            state_feature_specs = {SHADOW_INPUTS:ordered_node_specs}
+            # MODIFIED 1/16/22 NEW:
+            ordered_node_specs = [node for node in input_mechs if node in state_feature_specs]
+            state_feature_specs = {SHADOW_INPUTS:ordered_node_specs}
+            # MODIFIED 1/16/22 END
 
         # Get node refs state_features_specs in list arranged by their order in agent_rep.node
         if isinstance(state_feature_specs, dict):
@@ -2569,10 +2599,26 @@ class OptimizationControlMechanism(ControlMechanism):
                 for i, feature_spec in enumerate([(input_node, state_feature_specs[input_node])
                                                   for input_node in self.agent_rep.nodes
                                                   if input_node in state_feature_specs]):
+                    ordered_node_specs.append(feature_spec[0])
                     node_names.append(feature_spec[0].name)
                     feature_specs.append(feature_spec[1])
                 input_port_names = node_names
                 state_feature_specs = feature_specs
+
+        # # FIX: 1/16/22: MAKE THIS WORK FOR DICT AS WELL:
+        # non_input_node_specs = state_feature_specs - set(ordered_node_specs)
+        # if non_input_node_specs:
+        #     items = ', '.join([n._name for n in non_input_node_specs])
+        #     if len(non_input_node_specs) == 1:
+        #         items_str = f"contains an item ({items}) that is not an INPUT Node"
+        #     else:
+        #         items_str = f"contains items ({items}) that are not INPUT Nodes"
+        #     raise OptimizationControlMechanismError(
+        #         f"The 'state_features' specified for '{self.name}' {items_str} "
+        #         f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
+        #         f"only INPUT Nodes can be included when using a dict or a set to specify 'state_features'."
+        #     )
+
 
         _state_input_ports = _parse_shadow_inputs(self, state_feature_specs)
 
@@ -2609,7 +2655,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     parsed_spec[NAME] = spec.full_name
                 else:
                     # Assumes specs specified in order of agent_rep's INPUT Nodes
-                    parsed_spec[NAME] = input_node_names[i]
+                    parsed_spec[NAME] = input_mech_names[i]
             if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
                 parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
