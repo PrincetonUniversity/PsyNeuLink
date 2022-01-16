@@ -627,8 +627,8 @@ class TestControlMechanisms:
          ),
         ("state_features_test_not_in_agent_rep",
          "icomp", "A", "I", True, None, pnl.OptimizationControlMechanismError,
-         '\'OCM\' has \'state_features\' specified ([\'Shadowed input of A\']) that are missing from both its '
-         '`agent_rep` (\'INNER COMP\') as well as \'OUTER COMP\' and any Compositions nested within it.'
+         '\'OCM\' has \'state_features\' specified ([\'Shadowed input of A[InputPort-0]\']) that are missing '
+         'from both its `agent_rep` (\'INNER COMP\') as well as \'OUTER COMP\' and any Compositions nested within it.'
          ),
         ("monitor_for_control_test_not_in_agent_rep",
          "icomp", "I", "B", True, None, pnl.OptimizationControlMechanismError,
@@ -745,8 +745,8 @@ class TestControlMechanisms:
         '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
         'that is not an INPUT Node of that Composition is not currently supported.\'',
 
-        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'Shadowed input of EXT\']) that '
-        'are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'Shadowed input of '
+        'EXT[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'EXT[OutputPort-0]\']) '
         'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
@@ -765,6 +765,7 @@ class TestControlMechanisms:
     state_feature_specs = ['partial_legal_ports_spec',
                            'full_legal_ports_spec',
                            'input_dict_spec',
+                           'set_spec',
                            'automatic_assignment',
                            'shadow_inputs_dict_spec',
                            'misplaced_shadow',
@@ -778,13 +779,14 @@ class TestControlMechanisms:
         (state_feature_specs[0], messages[0], UserWarning),                          # partial_legal_ports_spec
         (state_feature_specs[1], None, None),                                        # full_legal_ports_spec
         (state_feature_specs[2], None, None),                                        # input_dict_spec
-        (state_feature_specs[3], None, None),                                        # automatic_assignment
-        (state_feature_specs[4], None, None),                                        # shadow_inputs_dict_spec
-        (state_feature_specs[5], messages[1], pnl.CompositionError),                 # misplaced_shadow
-        (state_feature_specs[6], messages[2], pnl.OptimizationControlMechanismError),# ext_shadow
-        (state_feature_specs[7], messages[3], pnl.OptimizationControlMechanismError),# ext_output_port
-        (state_feature_specs[8], messages[4], pnl.OptimizationControlMechanismError),# bad_input_format_spec_wrong_shape
-        (state_feature_specs[9], messages[5], pnl.OptimizationControlMechanismError) # bad_input_format_spec_too_many
+        (state_feature_specs[3], None, None),                                        # set_spec
+        (state_feature_specs[4], None, None),                                        # automatic_assignment
+        (state_feature_specs[5], None, None),                                        # shadow_inputs_dict_spec
+        (state_feature_specs[6], messages[1], pnl.CompositionError),                 # misplaced_shadow
+        (state_feature_specs[7], messages[2], pnl.OptimizationControlMechanismError),# ext_shadow
+        (state_feature_specs[8], messages[3], pnl.OptimizationControlMechanismError),# ext_output_port
+        (state_feature_specs[9], messages[4], pnl.OptimizationControlMechanismError),# bad_input_format_spec_wrong_shape
+        (state_feature_specs[10], messages[5], pnl.OptimizationControlMechanismError) # bad_input_format_spec_too_many
     ]
 
     @pytest.mark.control
@@ -804,7 +806,8 @@ class TestControlMechanisms:
         state_features_dict = {
             'partial_legal_ports_spec': [oa.output_port],
             'full_legal_ports_spec': [ia.input_port, oa.output_port, [3,1,2]],
-            'input_dict_spec': {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port},
+            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
+            'set_spec': {ob, ia, oa},  # Note: out of order is OK
             'automatic_assignment': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
             'misplaced_shadow':ib.input_port,
@@ -829,13 +832,22 @@ class TestControlMechanisms:
 
             if state_feature_args[0] == 'full_legal_ports_spec':
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA', 'OA[OutputPort-0]', 'OB']
+                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
+                                                       'OA[OutputPort-0]',
+                                                       'OB']
                 assert ocm.state_features == {icomp: ia.input_port, oa: oa.output_port, ob: [3, 1, 2]}
 
             elif state_feature_args[0] == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['INNER COMP', 'OA', 'OB']
                 assert ocm.state_features == {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
+
+            elif state_feature_args[0] == 'set_spec':
+                assert len(ocm.state_input_ports) == 3
+                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
+                                                       'Shadowed input of OA[InputPort-0]',
+                                                       'Shadowed input of OB[InputPort-0]']
+                assert ocm.state_features == {icomp:ia.input_port, oa:oa.input_port, ob:ob.input_port}
 
             elif state_feature_args[0] == 'automatic_assignment':
                 assert len(ocm.state_input_ports) == 3

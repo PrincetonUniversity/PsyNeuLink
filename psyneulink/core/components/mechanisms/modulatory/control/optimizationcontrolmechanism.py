@@ -1498,7 +1498,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 kwargs.pop('feature_function')
                 continue
 
-        self.state_feature_specs = (state_features if isinstance(state_features, dict)
+        self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
                                     else convert_to_list(state_features))
 
         function = function or GridSearch
@@ -2541,14 +2541,38 @@ class OptimizationControlMechanism(ControlMechanism):
         Assign functions specified in **state_feature_functions** to InputPorts for all state_features
         Return list of InputPort specification dictionaries for state_input_ports
         """
-        input_node_names = [n.name if n else None for n in self._get_agent_rep_input_nodes()]
+        input_nodes = self._get_agent_rep_input_nodes()
+        input_node_names = [n.name if n else None for n in input_nodes]
         input_port_names = None
+
+        # MODIFIED 1/16/22 END
+        if isinstance(state_feature_specs, set):
+            # All nodes must be INPUT nodes of agent_rep, that are to be shadowed, so reformat as SHADOW_INPUTS dict
+            # Order the set and place in list
+            ordered_specs = [node for node in input_nodes if node in state_feature_specs]
+            # FIX: HANDLE COMP AS INPUT NODE SPEC AND REORDER IN PROPER ORDER
+            state_feature_specs = {SHADOW_INPUTS:ordered_specs}
+
+        # Get node refs state_features_specs in list arranged by their order in agent_rep.node
         if isinstance(state_feature_specs, dict):
-            if SHADOW_INPUTS in self.state_feature_specs:
+            # if SHADOW_INPUTS in self.state_feature_specs:
+            if SHADOW_INPUTS in state_feature_specs:
                 pass  # handled below
             else:
-                input_port_names = [k.name for k in list(state_feature_specs.keys())]
-                state_feature_specs = list(state_feature_specs.values())
+                # # MODIFIED 1/16/22 OLD:
+                # input_port_names = [k.name for k in state_feature_specs]
+                # state_feature_specs = list(state_feature_specs.values())
+                # MODIFIED 1/16/22 NEW:
+                node_names = []
+                feature_specs = []
+                # Get specs for nodes in order listed in agent_rep.nodes
+                for i, feature_spec in enumerate([(input_node, state_feature_specs[input_node])
+                                                  for input_node in self.agent_rep.nodes
+                                                  if input_node in state_feature_specs]):
+                    node_names.append(feature_spec[0].name)
+                    feature_specs.append(feature_spec[1])
+                input_port_names = node_names
+                state_feature_specs = feature_specs
 
         _state_input_ports = _parse_shadow_inputs(self, state_feature_specs)
 
@@ -2600,6 +2624,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(parsed_spec)
 
+        # MODIFIED 1/16/22 NEW:
+        self.state_feature_specs = state_feature_specs
+        # MODIFIED 1/16/22 END
         return parsed_features
 
     def _parse_state_feature_function(self, feature_function):
