@@ -1155,15 +1155,17 @@ class OptimizationControlMechanism(ControlMechanism):
         <ControlMechanism.control_allocation>` following the last execution of `agent_rep
         <OptimizationControlMechanism.agent_rep>`.
 
-    state_dict : Dict[node:value]
+    state_dict : Dict[(Port, Mechanism, Composition, index)):value]
         dictionary containing information about the Components corresponding to the values in `state
-        <OptimizationControlMechanism.state>`.  Keys are (`Port`, `Mechanism`, `Composition`) tuples, and values are
-        the corresponding values in `state <OptimizationControlMechanism.state>`. The initial entries are for the
-        OptimizationControlMechanism's `state features <OptimizationControlMechanism_State_Features>`, that are the
-        sources of its `state_feature_values <OptimizationControlMechanism.state_feature_values>`;  they are
-        followed by entries for the parameters modulated by the OptimizationControlMechanism's `control_signals
-        <OptimizationControlMechanism_Output>` using the corresponding values of its `control_allocations
-        <ControlMechanism.control_allocation>`.
+        <OptimizationControlMechanism.state>`.  Keys are (`Port`, `Mechanism`, `Composition`, index) tuples,
+        identifying the source of the value for each item at the corresponding index in
+        `state <OptimizationControlMechanism.state>`, and values are its value in `state
+        <OptimizationControlMechanism.state>`. The initial entries are for the OptimizationControlMechanism's
+        `state features <OptimizationControlMechanism.state_features>`, that are the sources of its
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>`;  they are followed
+        by entries for the parameters modulated by the OptimizationControlMechanism's `control_signals
+        <OptimizationControlMechanism_Output>` with the corresponding `control_allocation
+        <ControlMechanism.control_allocation>` values.
 
     num_estimates : int
         determines the number independent runs of `agent_rep <OptimizationControlMechanism.agent_rep>` (i.e., calls to
@@ -1496,16 +1498,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 kwargs.pop('feature_function')
                 continue
 
-        # # MODIFIED 1/15/22 OLD:
-        # self.state_features = state_features if isinstance(state_features, dict) else convert_to_list(state_features)
-        # # MODIFIED 1/15/22 NEW:
-        # self.parameters.state_features.set((state_features if isinstance(state_features, dict)
-        #                                    else convert_to_list(state_features)),
-        #                                    override=True)
-        # # MODIFIED 1/15/22 NEWER:
         self.state_feature_specs = (state_features if isinstance(state_features, dict)
                                     else convert_to_list(state_features))
-        # MODIFIED 1/15/22 END
 
         function = function or GridSearch
 
@@ -1776,25 +1770,10 @@ class OptimizationControlMechanism(ControlMechanism):
             input_dict = {}
             for i, spec in enumerate(self.state_feature_specs):
                 input_dict[input_nodes[i]] = spec
-            # # MODIFIED 1/15/22 OLD:
-            # self.state_features = input_dict
-            # # MODIFIED 1/15/22 NEW:
-            # self.parameters.state_features.set(input_dict, override=True)
-            # MODIFIED 1/15/22 NEWER:
-            # DON"T ASSIGN!
-            # MODIFIED 1/15/22 END
-        # # MODIFIED 1/15/22 OLD:
-        # if isinstance(self.state_features, dict):
-        #     # If dict is specified, get values for checks below
-        #     state_features = list(self.state_features.values())
-        # assert isinstance(self.state_features, dict)
-        # MODIFIED 1/15/22 NEW:
-        if isinstance(self.state_feature_specs, dict):
+            state_features = self.state_feature_specs
+        elif isinstance(self.state_feature_specs, dict):
             # If dict is specified, get values for checks below
             state_features = list(self.state_feature_specs.values())
-        else:
-            state_features = self.state_feature_specs
-        # MODIFIED 1/15/22 END
 
         # Include agent rep in error messages if it is not the same as self.composition
         self_has_state_features_str = f"'{self.name}' has 'state_features' specified "
@@ -1840,10 +1819,9 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
+        # Ensure state_features are compatible with input format for agent_rep Composition
         try:
-            # Test if state_features specified are compatible with inputs format for agent_rep Composition
             # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
-            # Note:  if state_features is a dict, keys are used in _build_predicc_inputs to identify INPUT Nodes
             inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
             inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
             if len(self.state_input_ports) < len(inputs_dict):
@@ -2657,8 +2635,6 @@ class OptimizationControlMechanism(ControlMechanism):
     #               - ADD ENTRIES FOR ALL NODES THAT CONTRIBUTE TO STATE_INPUT_PORTS, EVEN IF CONVERGENT
     #               - ADD ENTRIES FOR ALL NODES MODULATED BY CONTROL_SIGNAL EVEN IF DIVERGENT
     #               - DEAL WITH CONTROL_SIGNALS THAT PROJECT TO NESTED NODES (GET METHOD FROM parameter_CIM)
-    #               - MODIFY KEYS TO BE (NODE, PORT) TUPLE
-    #               - DOCUMENT CHANGE TO KEYS UNDER ATTRIBUTES (state_dict : )
     @property
     def state_dict(self):
         """Return dict with (node, port, Composition, index) tuples as keys and corresponding state[index] as values.
