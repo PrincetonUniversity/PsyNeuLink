@@ -739,7 +739,7 @@ class TestControlMechanisms:
     messages = [
         "The 'state_features' specified for 'OptimizationControlMechanism-0' are legal, but there are fewer than the "
         "number of INPUT Nodes for its agent_rep ('OUTER COMP'); the remaining inputs will be assigned default values "
-        "when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired conifiguration, use its "
+        "when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired configuration, use its "
         "get_inputs_format() method to see the format for all of its inputs.",
 
         '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
@@ -799,7 +799,7 @@ class TestControlMechanisms:
     state_feature_args = [
         (state_feature_specs[0], messages[0], UserWarning),                           # partial_legal_list_spec
         (state_feature_specs[1], None, None),                                         # full_legal_list_spec
-        # (state_feature_specs[2], None, None),                                         # legal_list_spec_with_none
+        (state_feature_specs[2], None, None),                                         # legal_list_spec_with_none
         (state_feature_specs[3], None, None),                                         # input_dict_spec
         (state_feature_specs[4], None, None),                                         # set_spec
         (state_feature_specs[5], None, None),                                         # automatic_assignment
