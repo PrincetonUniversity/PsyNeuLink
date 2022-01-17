@@ -768,6 +768,14 @@ class TestControlMechanisms:
         '"The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
         'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); '
         'only INPUT Nodes can be included when using a dict or set to specify \'state_features\'."',
+
+        "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
+        "('INNER COMP') in the the list specified for its 'state_features' argument; these must be replaced by "
+        "direct references to the Components within them to be used.",
+
+        "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
+        "('INNER COMP') in the SHADOW_INPUTS dict specified for its 'state_features' argument; these must be "
+        "replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed."
     ]
 
     state_feature_specs = ['partial_legal_list_spec',
@@ -782,7 +790,9 @@ class TestControlMechanisms:
                            'bad_input_format_spec_wrong_shape',
                            'bad_input_format_spec_too_many',
                            'bad_dict_spec',
-                           'bad_set_spec'
+                           'bad_set_spec',
+                           'comp_in_list_spec',
+                           'comp_in_shadow_inupts_spec'
                            ]
 
     state_feature_args = [
@@ -798,7 +808,9 @@ class TestControlMechanisms:
         (state_feature_specs[9], messages[4], pnl.OptimizationControlMechanismError),# bad_input_format_spec_wrong_shape
         (state_feature_specs[10], messages[5], pnl.OptimizationControlMechanismError),# bad_input_format_spec_too_many
         (state_feature_specs[11], messages[6], pnl.OptimizationControlMechanismError), # bad_dict_spec
-        (state_feature_specs[12], messages[7], pnl.OptimizationControlMechanismError)  # bad_set_spec
+        (state_feature_specs[12], messages[7], pnl.OptimizationControlMechanismError), # bad_set_spec
+        (state_feature_specs[13], messages[8], pnl.OptimizationControlMechanismError), # comp_in_list_spec
+        (state_feature_specs[14], messages[9], pnl.OptimizationControlMechanismError)  # comp_in_shadow_inupts_spec
     ]
 
     @pytest.mark.control
@@ -834,6 +846,8 @@ class TestControlMechanisms:
             'bad_input_format_spec_too_many': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
             'bad_dict_spec': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_set_spec': {ob, ia},  # oc is not an INPUT Node
+            'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],
+            'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
         state_features = state_features_dict[state_feature_args[0]]
         message = state_feature_args[1]
