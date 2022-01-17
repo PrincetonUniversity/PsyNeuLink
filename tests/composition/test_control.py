@@ -823,8 +823,8 @@ class TestControlMechanisms:
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK
             'automatic_assignment': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
-            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[icomp, oa, ob]},
-            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, oc]}, <- BAD SHADOW SPEC
+            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[icomp, oa, ob]}, <- BAD SHADOW SPEC
+            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, oc]}, <- OK BECAUSE IT IS JUST FOR SHADOWING
             # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:{ia, oa, ob}},
             # Illegal state_features specifications
             'misplaced_shadow':ib.input_port,
