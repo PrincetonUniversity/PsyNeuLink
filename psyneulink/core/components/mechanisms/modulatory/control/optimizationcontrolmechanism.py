@@ -1617,6 +1617,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # If any state_features were specified parse them and pass to ControlMechanism._instantiate_input_ports()
         state_input_ports_specs = None
+        self._specified_input_nodes_in_order = []
 
         # FIX: 11/3/21 :
         #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
@@ -1708,13 +1709,20 @@ class OptimizationControlMechanism(ControlMechanism):
             # agent_rep is Composition, but no state_features have been specified,
             #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
             shadow_input_ports = []
-            for node in self._get_agent_rep_input_nodes():
+
+            # Get list of nodes with any nested Comps that are INPUT Nodes replaced with their respective INPUT Nodes
+            #   (as those are what need to be shadowed)
+            for node in self._get_agent_rep_input_nodes(comp_as_node=False):
                 for input_port in node.input_ports:
                     if input_port.internal_only:
                         continue
                     # if isinstance(input_port.owner, CompositionInterfaceMechanism):
                     #     input_port = input_port.
                     shadow_input_ports.append(input_port)
+
+            # Get list of nodes with any nested Comps that are INPUT Nodes listed as the node
+            #     (this is what is used in the state_features dict)
+            self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
 
             local_context = Context(source=ContextFlags.METHOD)
             state_input_ports_to_add = []
@@ -2562,8 +2570,7 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.composition import Composition, NodeRole
         input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         input_port_names = None
-        specified_nodes_in_order = []
-        self._input_nodes_for_state_feature_specs = None
+        all_specified_nodes = None
 
         # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
         if len(self.state_feature_specs) > len(input_nodes):
@@ -2580,8 +2587,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
             #   so reformat as SHADOW_INPUTS dict for handling below
             # Order the set and place in list
-            self._input_nodes_for_state_feature_specs = state_feature_specs
-            specified_nodes_in_order = [node for node in input_nodes if node in state_feature_specs]
+            all_specified_nodes = state_feature_specs
+            self._specified_input_nodes_in_order = [node for node in input_nodes if node in state_feature_specs]
             # Expand nested Comp to its INPUT Nodes for SHADOW_INPUTS spec so that all of its INPUT Nodes are shadowed
             shadowed_nodes = []
             # FIX: MAKE THIS expand_input_comp METHOD, AND CALL FOR LIST AS WELL AS ENTRY OF SHADOW_INPUTS DICT
@@ -2608,12 +2615,8 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"({comp_names}) in the the list specified for its 'state_features' argument; "
                     f"these must be replaced by direct references to the Components within them to be used.")
             input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-            # # MODIFIED 1/17/22 OLD:
-            # state_feature_specs = {k:v for k,v in zip(input_nodes, state_feature_specs)}
-            # MODIFIED 1/17/22 NEW:
             state_feature_specs = {k:v for k,v in zip(input_nodes, state_feature_specs) if v is not None}
-            # MODIFIED 1/17/22 END
-            self._input_nodes_for_state_feature_specs = list(state_feature_specs.keys())
+            all_specified_nodes = list(state_feature_specs.keys())
 
         # Spec should now all be formatted as dict, with {INPUT Node: spec} entries
         assert isinstance(state_feature_specs, dict), f"PROGRAM ERROR: state_feature_specs for {self.name} " \
@@ -2622,17 +2625,17 @@ class OptimizationControlMechanism(ControlMechanism):
         # If it is a SHADOW_INPUTS dict:
         if SHADOW_INPUTS in state_feature_specs:
             # Handle case that SHADOW_INPUTS was specified by user (i.e., not created for set spec above)
-            if not self._input_nodes_for_state_feature_specs:
+            if not all_specified_nodes:  # No nodes specified, since SHADOW_INPUTS is the key at the top level
                 if isinstance(state_feature_specs[SHADOW_INPUTS], set):
                     # Catch here to provide context-relevant error message
                     raise OptimizationControlMechanismError(
                         f"The 'state_features' argument for '{self.name}' uses a set in a '{SHADOW_INPUTS.upper()}' "
                         f"dict;  this must be a single item or list of specifications in the order of the INPUT Nodes"
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
-                self._input_nodes_for_state_feature_specs = state_feature_specs[SHADOW_INPUTS]
-                specified_nodes_in_order = state_feature_specs[SHADOW_INPUTS]
+                all_specified_nodes = state_feature_specs[SHADOW_INPUTS]
+                self._specified_input_nodes_in_order = state_feature_specs[SHADOW_INPUTS]
                 # FIX: MAKE THIS expand_input_comp METHOD
-                nested_comps = [node for node in specified_nodes_in_order if isinstance(node, Composition)]
+                nested_comps = [node for node in self._specified_input_nodes_in_order if isinstance(node, Composition)]
                 if nested_comps:
                     comp_names = ", ".join([f"'{n.name}'" for n in nested_comps])
                     raise OptimizationControlMechanismError(
@@ -2654,7 +2657,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 if feature_spec[1] is None:
                     continue
                 # MODIFIED 1/17/21 END
-                specified_nodes_in_order.append(feature_spec[0])
+                self._specified_input_nodes_in_order.append(feature_spec[0])
                 if is_numeric(feature_spec[1]):
                     source_names.append(f"{feature_spec[0].name} {DEFAULT_VARIABLE.upper()}")
                 else:
@@ -2664,11 +2667,11 @@ class OptimizationControlMechanism(ControlMechanism):
                         source_names.append(feature_spec[1].name)
                 feature_specs.append(feature_spec[1])
             input_port_names = source_names
-            self._input_nodes_for_state_feature_specs = list(state_feature_specs.keys())
+            all_specified_nodes = list(state_feature_specs.keys())
             state_feature_specs = feature_specs
 
         # Ensure that all keys in dict are input_nodes
-        non_input_node_specs = [node for node in self._input_nodes_for_state_feature_specs if node not in specified_nodes_in_order]
+        non_input_node_specs = [node for node in all_specified_nodes if node not in self._specified_input_nodes_in_order]
         if non_input_node_specs:
             items = ', '.join([n._name for n in non_input_node_specs])
             if len(non_input_node_specs) == 1:
@@ -2742,8 +2745,7 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def state_features(self):
         """Return dict with {INPUT Node: source} entries for specifications in **state_features** arg of constructor."""
-        # input_nodes = self.composition.get_nodes_by_role(NodeRole.INPUT)
-        input_nodes = self._input_nodes_for_state_feature_specs
+        input_nodes = self._specified_input_nodes_in_order
         sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
                    for source_tuple,value in list(self.state_dict.items())[:len(self.state_input_ports)]]
         return {k:v for k,v in zip(input_nodes, sources)}
