@@ -2574,14 +2574,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # FIX: 1/16/22 - MOVE SHORT WARNING HERE FROM _validate_feature_specs
 
-        # FIX: 1/16/22 - HANDLE DICT KEY ORDERING
-
-        # FIX: 1/16/22 - HANDLE COMP AS INPUT NODE SPEC
         if isinstance(state_feature_specs, set):
             # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
             #   so reformat as SHADOW_INPUTS dict for handling below
             # Order the set and place in list
-            # MODIFIED 1/16/22 OLD:
             input_nodes_for_orig_specs = state_feature_specs
             ordered_node_specs = [node for node in input_nodes if node in state_feature_specs]
             # Expand nested Comp to its INPUT Nodes for SHADOW_INPUTS spec so that all of its INPUT Nodes are shadowed
@@ -2593,8 +2589,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     else:
                         shadowed_nodes.append(node)
             state_feature_specs = {SHADOW_INPUTS:shadowed_nodes}
-            # # MODIFIED 1/16/22 END
-            # state_feature_specs = {SHADOW_INPUTS:state_feature_specs}
 
         elif isinstance(state_feature_specs, list):
             # List assumes items are in order of INPUT Nodes of agent_rep,
@@ -2611,23 +2605,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # if SHADOW_INPUTS in self.state_feature_specs:
         if SHADOW_INPUTS in state_feature_specs:
-            # MODIFIED 1/16/22 OLD:
+            if not input_nodes_for_orig_specs:
+                input_nodes_for_orig_specs = state_feature_specs[SHADOW_INPUTS]
+                ordered_node_specs = state_feature_specs[SHADOW_INPUTS]
             # input_nodes_for_orig_specs = input_nodes_for_orig_specs or state_feature_specs[SHADOW_INPUTS]
             # ordered_node_specs = state_feature_specs[SHADOW_INPUTS]
-            pass  # handled below
-            # # MODIFIED 1/16/22 NEW:
-            # input_nodes_for_orig_specs = state_feature_specs[SHADOW_INPUTS]
-            # ordered_node_specs = [node for node in input_nodes if node in input_nodes_for_orig_specs]
-            # # Expand nested Comp to its INPUT Nodes for SHADOW_INPUTS sspec
-            # shadowed_nodes = []
-            # for node in input_nodes:
-            #     if node in input_nodes_for_orig_specs:
-            #         if isinstance(node, Composition):
-            #             shadowed_nodes.extend(node.get_nodes_by_role(NodeRole.INPUT))
-            #         else:
-            #             shadowed_nodes.append(node)
-            # state_feature_specs = {SHADOW_INPUTS:shadowed_nodes}
-            # MODIFIED 1/16/22 END
+            pass  # handled by _parse_shadow_inputs() below
+
         else:
             source_names = []
             feature_specs = []
