@@ -782,7 +782,7 @@ class TestControlMechanisms:
                            ]
 
     state_feature_args = [
-        # (state_feature_specs[0], messages[0], UserWarning),                           # partial_legal_list_spec
+        (state_feature_specs[0], messages[0], UserWarning),                           # partial_legal_list_spec
         (state_feature_specs[1], None, None),                                         # full_legal_list_spec
         (state_feature_specs[2], None, None),                                         # input_dict_spec
         (state_feature_specs[3], None, None),                                         # set_spec
@@ -816,7 +816,7 @@ class TestControlMechanisms:
             'partial_legal_list_spec': [oa.output_port],
             'full_legal_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-            'set_spec': {ob, ia, oa},  # Note: out of order is OK
+            'set_spec': {ob, icomp, oa},  # Note: out of order is OK
             'automatic_assignment': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
             # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:{ia, oa, ob}},
@@ -847,12 +847,14 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OA[OutputPort-0]',
-                                                       'OB']
+                                                       'OB DEFAULT_VARIABLE']
                 assert ocm.state_features == {icomp: ia.input_port, oa: oa.output_port, ob: [3, 1, 2]}
 
             elif state_feature_args[0] == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['INNER COMP', 'OA', 'OB']
+                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
+                                                       'Shadowed input of OC[InputPort-0]',
+                                                       'OB[OutputPort-0]']
                 assert ocm.state_features == {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
 
             elif state_feature_args[0] == 'set_spec':
@@ -876,7 +878,6 @@ class TestControlMechanisms:
                 if state_feature_args[0] == 'partial_legal_list_spec':
                     assert len(ocm.state_input_ports) == 1
                     assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
-                    # assert ocm.state_input_ports.names == ['INNER COMP']
                     assert ocm.state_features == {icomp: oa.output_port}
             assert warning[10].message.args[0] == message
             assert ocm.state_features == {icomp: oa.output_port}

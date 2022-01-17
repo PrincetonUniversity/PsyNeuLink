@@ -2560,8 +2560,6 @@ class OptimizationControlMechanism(ControlMechanism):
         Return list of InputPort specification dictionaries for state_input_ports
         """
         input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-        # input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
-        input_node_names = [n.name if n else None for n in input_nodes]
         input_port_names = None
         ordered_node_specs = []
 
@@ -2585,14 +2583,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # FIX: ??NO LONGER NEED TO WORRY ABOUT ORDER, SINCE TAKEN CARE OF ABOVE
         # Get node refs state_features_specs in list arranged by their order in agent_rep.node
-        # if isinstance(state_feature_specs, dict):
+
         # if SHADOW_INPUTS in self.state_feature_specs:
         if SHADOW_INPUTS in state_feature_specs:
             pass  # handled below
         else:
-            node_names = []
             source_names = []
             feature_specs = []
+
             # Get specs for INPUT nodes in order listed in agent_rep.nodes
             for i, feature_spec in enumerate([(input_node, state_feature_specs[input_node])
                                               for input_node in input_nodes
@@ -2601,9 +2599,11 @@ class OptimizationControlMechanism(ControlMechanism):
                 if is_numeric(feature_spec[1]):
                     source_names.append(f"{feature_spec[0].name} {DEFAULT_VARIABLE.upper()}")
                 else:
-                    source_names.append(feature_spec[1])
+                    if hasattr(feature_spec[1], 'full_name'):
+                        source_names.append(feature_spec[1].full_name)
+                    else:
+                        source_names.append(feature_spec[1].name)
                 feature_specs.append(feature_spec[1])
-            # input_port_names = node_names
             input_port_names = source_names
             orig_specs = set(state_feature_specs.keys())
             state_feature_specs = feature_specs
@@ -2647,16 +2647,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
-            if input_port_names:
-                # Use keys from input dict as names of state_input_ports
-                # (needed by comp._build_predicted_inputs_dict to identify INPUT nodes)
+            if not parsed_spec[NAME]:
                 parsed_spec[NAME] = input_port_names[i]
-            elif not parsed_spec[NAME]:
-                if isinstance(spec, Port):
-                    parsed_spec[NAME] = spec.full_name
-                else:
-                    # Assumes specs specified in order of agent_rep's INPUT Nodes
-                    parsed_spec[NAME] = input_node_names[i]
+
             if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
                 parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
@@ -2671,9 +2664,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(parsed_spec)
 
-        # MODIFIED 1/16/22 NEW:
         self.state_feature_specs = state_feature_specs
-        # MODIFIED 1/16/22 END
         return parsed_features
 
     def _parse_state_feature_function(self, feature_function):
