@@ -1771,11 +1771,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # Convert list to dict, assuming list is in order of INPUT Nodes,
             #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
-            # if len(self.state_feature_specs) > len(input_nodes):
-            #     raise OptimizationControlMechanismError(
-            #         f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
-            #         f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
-            #         f"as its {AGENT_REP} ('{self.agent_rep.name}').")
             input_dict = {}
             for i, spec in enumerate(self.state_feature_specs):
                 input_dict[input_nodes[i]] = spec
@@ -1842,12 +1837,14 @@ class OptimizationControlMechanism(ControlMechanism):
             # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
             inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
             inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-            if len(self.state_input_ports) < len(inputs_dict):
-                warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
-                              f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-                              f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
-                              f"'evaluate' method is executed. If this is not the desired configuration, use its "
-                              f"get_inputs_format() method to see the format for all of its inputs.")
+            # # MODIFIED 1/17/22 OLD: FIX - MOVED TO _parse_state_feature_specs
+            # if len(self.state_input_ports) < len(inputs_dict):
+            #     warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+            #                   f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+            #                   f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
+            #                   f"'evaluate' method is executed. If this is not the desired configuration, use its "
+            #                   f"get_inputs_format() method to see the format for all of its inputs.")
+            # MODIFIED 1/17/22 END
         except RunError as error:
             raise OptimizationControlMechanismError(
                 f"The 'state_features' argument has been specified for '{self.name}' that is using a "
@@ -2578,6 +2575,15 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
                 f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
                 f"as its {AGENT_REP} ('{self.agent_rep.name}').")
+
+        # MODIFIED 1/17/22 NEW:  FIX - MOVED FROM _validate_state_features
+        if len(self.state_feature_specs) < len(input_nodes):
+            warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+                          f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+                          f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
+                          f"'evaluate' method is executed. If this is not the desired configuration, use its "
+                          f"get_inputs_format() method to see the format for all of its inputs.")
+        # MODIFIED 1/17/22 END
 
         # FIX: 1/16/22 - MOVE SHORT WARNING HERE FROM _validate_feature_specs
 

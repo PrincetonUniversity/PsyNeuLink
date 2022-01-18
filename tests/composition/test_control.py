@@ -910,7 +910,11 @@ class TestControlMechanisms:
                     assert len(ocm.state_input_ports) == 1
                     assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
                     assert ocm.state_features == {icomp: oa.output_port} # Note: oa is assigned to icomp due to ordering
-            assert warning[10].message.args[0] == message
+            # # MODIFIED 1/17/22 OLD:
+            # assert warning[10].message.args[0] == message
+            # MODIFIED 1/17/22 NEW:
+            assert warning[0].message.args[0] == message
+            # MODIFIED 1/17/22 END
             assert ocm.state_features == {icomp: oa.output_port}
 
         else:
