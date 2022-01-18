@@ -1835,16 +1835,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
             # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
+            # Call these to check for errors in construcing inputs dict
             inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-            inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-            # # MODIFIED 1/17/22 OLD: FIX - MOVED TO _parse_state_feature_specs
-            # if len(self.state_input_ports) < len(inputs_dict):
-            #     warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
-            #                   f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-            #                   f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
-            #                   f"'evaluate' method is executed. If this is not the desired configuration, use its "
-            #                   f"get_inputs_format() method to see the format for all of its inputs.")
-            # MODIFIED 1/17/22 END
+            self.agent_rep._parse_input_dict(inputs)
         except RunError as error:
             raise OptimizationControlMechanismError(
                 f"The 'state_features' argument has been specified for '{self.name}' that is using a "
@@ -2576,16 +2569,12 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
                 f"as its {AGENT_REP} ('{self.agent_rep.name}').")
 
-        # MODIFIED 1/17/22 NEW:  FIX - MOVED FROM _validate_state_features
         if len(self.state_feature_specs) < len(input_nodes):
             warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
                           f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
                           f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
                           f"'evaluate' method is executed. If this is not the desired configuration, use its "
                           f"get_inputs_format() method to see the format for all of its inputs.")
-        # MODIFIED 1/17/22 END
-
-        # FIX: 1/16/22 - MOVE SHORT WARNING HERE FROM _validate_feature_specs
 
         # Treat as INPUT Node specs:
         # - construct as SHADOW_INPUTS dict using items in set as keys
@@ -2659,10 +2648,9 @@ class OptimizationControlMechanism(ControlMechanism):
             for i, feature_spec in enumerate([(input_node, state_feature_specs[input_node])
                                               for input_node in input_nodes
                                               if input_node in state_feature_specs]):
-                # MODIFIED 1/17/21 NEW:
                 if feature_spec[1] is None:
+                    # Skip items in list marked None
                     continue
-                # MODIFIED 1/17/21 END
                 self._specified_input_nodes_in_order.append(feature_spec[0])
                 if is_numeric(feature_spec[1]):
                     source_names.append(f"{feature_spec[0].name} {DEFAULT_VARIABLE.upper()}")
