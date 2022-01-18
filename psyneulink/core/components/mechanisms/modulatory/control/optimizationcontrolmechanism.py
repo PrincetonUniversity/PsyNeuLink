@@ -2561,6 +2561,7 @@ class OptimizationControlMechanism(ControlMechanism):
         input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         input_port_names = None
         all_specified_nodes = None
+        self._specified_input_nodes_in_order = []
 
         # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
         if len(self.state_feature_specs) > len(input_nodes):
@@ -2609,7 +2610,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"The 'state_features' argument for '{self.name}' includes one or more Compositions "
                     f"({comp_names}) in the the list specified for its 'state_features' argument; "
                     f"these must be replaced by direct references to the Components within them to be used.")
-            input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+            # input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
             state_feature_specs = {k:v for k,v in zip(input_nodes, state_feature_specs) if v is not None}
             all_specified_nodes = list(state_feature_specs.keys())
 
@@ -2627,10 +2628,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         f"The 'state_features' argument for '{self.name}' uses a set in a '{SHADOW_INPUTS.upper()}' "
                         f"dict;  this must be a single item or list of specifications in the order of the INPUT Nodes"
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
-                all_specified_nodes = state_feature_specs[SHADOW_INPUTS]
-                self._specified_input_nodes_in_order = state_feature_specs[SHADOW_INPUTS]
-                # FIX: MAKE THIS expand_input_comp METHOD
-                nested_comps = [node for node in self._specified_input_nodes_in_order if isinstance(node, Composition)]
+                nested_comps = [node for node in state_feature_specs[SHADOW_INPUTS] if isinstance(node, Composition)]
                 if nested_comps:
                     comp_names = ", ".join([f"'{n.name}'" for n in nested_comps])
                     raise OptimizationControlMechanismError(
@@ -2638,6 +2636,10 @@ class OptimizationControlMechanism(ControlMechanism):
                         f"({comp_names}) in the {SHADOW_INPUTS.upper()} dict specified for its 'state_features' "
                         f"argument; these must be replaced by direct references to the "
                         f"Mechanisms (or their InputPorts) within them to be shadowed.")
+                node_specs = [(k, v) for k,v in zip(input_nodes, state_feature_specs[SHADOW_INPUTS]) if v is not None]
+                self._specified_input_nodes_in_order = [n[0] for n in node_specs]
+                all_specified_nodes = self._specified_input_nodes_in_order
+                state_feature_specs = [n[1] for n in node_specs]
 
         # If it is a user-specified dict:
         # FIX: IS THIS STILL NEEDED, GIVEN HANDLING ABOVE?
