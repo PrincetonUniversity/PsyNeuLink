@@ -737,20 +737,25 @@ class TestControlMechanisms:
             assert err.value.error_value == err_msg
 
     messages = [
+        # 0
         "The 'state_features' specified for 'OptimizationControlMechanism-0' are legal, but there are fewer than the "
         "number of INPUT Nodes for its agent_rep ('OUTER COMP'); the remaining inputs will be assigned default values "
         "when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired configuration, use its "
         "get_inputs_format() method to see the format for all of its inputs.",
 
+        # 1
         '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
         'that is not an INPUT Node of that Composition is not currently supported.\'',
 
+        # 2
         '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'Shadowed input of '
         'EXT[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
+        # 3
         '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'EXT[OutputPort-0]\']) '
         'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
+        # 4
         "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' that is using a "
         "Composition ('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by its "
         "'agent_rep': 'Input stimulus (0.0) for OB is incompatible with its external_input_values "
@@ -758,21 +763,27 @@ class TestControlMechanisms:
         "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 to "
         "have them automatically assigned.",
 
-        '"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
-        'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
+        # 5
+        "The number of 'state_features' specified for OptimizationControlMechanism-0 (4) is more than the number "
+        "of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP').  "
+        "If other Nodes are to be assigned to it, do that before constructing OptimizationControlMechanism-0.",
 
+        # 6
         '"The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OC) '
         'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); '
         'only INPUT Nodes can be included when using a dict or set to specify \'state_features\'."',
 
+        # 7
         '"The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
         'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); '
         'only INPUT Nodes can be included when using a dict or set to specify \'state_features\'."',
 
+        # 8
         "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
         "('INNER COMP') in the the list specified for its 'state_features' argument; these must be replaced by "
         "direct references to the Components within them to be used.",
 
+        # 9
         "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
         "('INNER COMP') in the SHADOW_INPUTS dict specified for its 'state_features' argument; these must be "
         "replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed."
