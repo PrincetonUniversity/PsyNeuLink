@@ -1771,6 +1771,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Convert list to dict, assuming list is in order of INPUT Nodes,
             #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            if len(self.state_feature_specs) > len(input_nodes):
+                raise OptimizationControlMechanismError(
+                    f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
+                    f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
+                    f"as its {AGENT_REP} ('{self.agent_rep.name}').")
             input_dict = {}
             for i, spec in enumerate(self.state_feature_specs):
                 input_dict[input_nodes[i]] = spec
@@ -2519,7 +2524,8 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def agent_rep_type(self):
         from psyneulink.core.compositions.compositionfunctionapproximator import CompositionFunctionApproximator
-        if isinstance(self.agent_rep, CompositionFunctionApproximator):
+        if (isinstance(self.agent_rep, CompositionFunctionApproximator)
+                or self.agent_rep.componentCategory is COMPOSITION_FUNCTION_APPROXIMATOR):
             return COMPOSITION_FUNCTION_APPROXIMATOR
         elif self.agent_rep.componentCategory=='Composition':
             return COMPOSITION
@@ -2534,7 +2540,7 @@ class OptimizationControlMechanism(ControlMechanism):
         - ALL, include the nested Composition AND its INPUT Nodes
         """
         from psyneulink.core.compositions.composition import Composition, NodeRole
-        if not self.agent_rep_type:
+        if not self.agent_rep_type or self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             return [None]
         comp = comp or self.agent_rep
         _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
@@ -2583,16 +2589,17 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"{AGENT_REP} of a controller before specifying its 'state_features'.")
 
         else:
-            # FIX: 1/18/22 - THIS MAY FAIL IF NODES ARE ADDED LATER; ??REFORMULATE AS WARNINGS AND SET input_nodes TO NONE?
-            # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
+            # # FIX: 1/18/22 - THIS MAY FAIL IF NODES ARE ADDED LATER; ??REFORMULATE AS WARNINGS AND SET input_nodes TO NONE?
+            # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
             if len(state_feature_specs) > len(agent_rep_input_nodes):
-                raise OptimizationControlMechanismError(
+                warnings.warn(
                     f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
                     f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-                    f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  If other Nodes are to be assigned "
-                    f"to it, do that before constructing {self.name}.")
+                    f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
+                    f"additional Nodes are added will generate an error.")
+                agent_rep_input_nodes = None
 
-            if len(state_feature_specs) < len(agent_rep_input_nodes):
+            elif len(state_feature_specs) < len(agent_rep_input_nodes):
                 warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
                               f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
                               f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
@@ -2647,7 +2654,7 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_names.append(spec.full_name)
                         else:
                             spec_names.append(spec.name)
-            return nodes or None, specs, spec_names  or None
+            return nodes or None, specs, spec_names or None
 
         # Ensure that all keys in dict are INPUT Nodes
         def ensure_all_specified_nodes_are_input_nodes(nodes):
