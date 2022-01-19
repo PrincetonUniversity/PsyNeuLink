@@ -780,8 +780,8 @@ class TestControlMechanisms:
 
         # 8
         "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
-        "('INNER COMP') in the the list specified for its 'state_features' argument; these must be replaced by "
-        "direct references to the Components within them to be used.",
+        "('INNER COMP') in the list specified for its 'state_features' argument; these must be replaced by direct "
+        "references to the Mechanisms (or their InputPorts) within them to be shadowed.",
 
         # 9
         "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
