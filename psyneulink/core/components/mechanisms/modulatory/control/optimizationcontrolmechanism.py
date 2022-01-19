@@ -2755,8 +2755,11 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
+            # MODIFIED 1/18/22 OLD:
             if not parsed_spec[NAME]:
                 parsed_spec[NAME] = input_port_names[i]
+            # MODIFIED 1/18/22 NEW:
+            # MODIFIED 1/18/22 END
 
             if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
