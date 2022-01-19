@@ -937,7 +937,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.ports.inputport import InputPort, _parse_shadow_inputs
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
-from psyneulink.core.components.ports.port import _parse_port_spec, _instantiate_port
+from psyneulink.core.components.ports.port import _parse_port_spec, _instantiate_port, Port
 from psyneulink.core.components.shellclasses import Function
 from psyneulink.core.globals.context import Context, ContextFlags
 from psyneulink.core.globals.context import handle_external_context
@@ -2567,6 +2567,8 @@ class OptimizationControlMechanism(ControlMechanism):
         # Agent rep's input Nodes and their names
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True) or None
 
+        # VALIDATION AND WARNINGS -----------------------------------------------------------------------------------
+
         assert state_feature_specs == self.state_feature_specs, \
             f"PROGRAM ERROR: self.state_feature_specs for {self.name} not passed to _parse_state_feature_specs()."
 
@@ -2589,8 +2591,8 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"{AGENT_REP} of a controller before specifying its 'state_features'.")
 
         else:
-            # # FIX: 1/18/22 - THIS MAY FAIL IF NODES ARE ADDED LATER; ??REFORMULATE AS WARNINGS AND SET input_nodes TO NONE?
             # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
+            # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
             if len(state_feature_specs) > len(agent_rep_input_nodes):
                 warnings.warn(
                     f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
@@ -2606,6 +2608,7 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"'evaluate' method is executed. If this is not the desired configuration, use its "
                               f"get_inputs_format() method to see the format for all of its inputs.")
 
+        # HELPER METHODS ------------------------------------------------------------------------------------------
 
         def expand_nested_input_comp_to_input_nodes(comp):
             input_nodes = []
@@ -2670,6 +2673,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
                     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
 
+        # PARSE SPECS  ------------------------------------------------------------------------------------------
+        # Generate parallel lists of INPUT Nodes and corresponding feature specs (for sources of inputs)
+
         # LIST spec
         #   Treat as source specs:
         #   - construct a regular dict using INPUT Nodes as keys and specs as values
@@ -2728,6 +2734,7 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_specs = {SHADOW_INPUTS:source_specs_for_input_nodes}
             # FIX: 1/18/22 NEED input_port_names ASSIGNED HERE
 
+        # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 
         _state_input_ports = _parse_shadow_inputs(self, state_feature_specs)
 
@@ -2755,16 +2762,33 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
-            # MODIFIED 1/18/22 OLD:
+            # # MODIFIED 1/18/22 OLD:
+            # if not parsed_spec[NAME]:
+            #     parsed_spec[NAME] = input_port_names[i]
+            # # MODIFIED 1/18/22 NEW:
+            # if input_port_names:
+            #     # Use keys from input dict as names of state_input_ports
+            #     # (needed by comp._build_predicted_inputs_dict to identify INPUT nodes)
+            #     parsed_spec[NAME] = input_port_names[i]
+            # elif not parsed_spec[NAME]:
+            #     parsed_spec[NAME] = spec.full_name if isinstance(spec, Port) else spec.name
+            # MODIFIED 1/18/22 NEWER:
             if not parsed_spec[NAME]:
-                parsed_spec[NAME] = input_port_names[i]
-            # MODIFIED 1/18/22 NEW:
+                if input_port_names:
+                    # Use keys from input dict as names of state_input_ports
+                    # (needed by comp._build_predicted_inputs_dict to identify INPUT nodes)
+                    parsed_spec[NAME] = input_port_names[i]
+                else:
+                    parsed_spec[NAME] = spec.full_name if isinstance(spec, Port) else spec.name
             # MODIFIED 1/18/22 END
 
             if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
                 parsed_spec[PARAMS].update({INTERNAL_ONLY:True,
                                             PROJECTIONS:None})
+
+        # GET FEATURE FUNCTIONS -----------------------------------------------------------------------------
+
             if feature_functions:
                 if isinstance(feature_functions, dict) and spec in feature_functions:
                     feat_fct = feature_functions.pop(spec)
