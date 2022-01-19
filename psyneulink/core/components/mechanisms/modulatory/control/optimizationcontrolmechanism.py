@@ -1520,6 +1520,21 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 assert False, f"PROGRAM ERROR: 'agent_rep' arg should have been specified " \
                               f"in internal call to constructor for {self.name}."
+        # MODIFIED 1/19/22 NEW:
+        # elif self.agent_rep_type == COMPOSITION:
+        elif agent_rep.componentCategory=='Composition':
+            if len(state_features) > len(agent_rep.get_nodes_by_role(NodeRole.INPUT)):
+                # FIX: ADD WARNING HERE
+                # Temporarily name InputPort
+                self._assign_deferred_init_name(self.__class__.__name__)
+                # Store args for deferred initialization
+                self._store_deferred_init_args(**locals())
+
+                # Flag for deferred initialization
+                self.initialization_status = ContextFlags.DEFERRED_INIT
+                return
+
+        # MODIFIED 1/19/22 END
 
         super().__init__(
             function=function,
