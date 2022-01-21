@@ -1523,6 +1523,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # MODIFIED 1/19/22 NEW:
         # elif self.agent_rep_type == COMPOSITION:
         elif agent_rep.componentCategory=='Composition':
+            from psyneulink.core.compositions.composition import NodeRole
             if len(state_features) > len(agent_rep.get_nodes_by_role(NodeRole.INPUT)):
                 # FIX: ADD WARNING HERE
                 # Temporarily name InputPort
@@ -1533,7 +1534,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Flag for deferred initialization
                 self.initialization_status = ContextFlags.DEFERRED_INIT
                 return
-
         # MODIFIED 1/19/22 END
 
         super().__init__(
