@@ -526,8 +526,12 @@ class AutodiffComposition(Composition):
             context.execution_phase = ContextFlags.PROCESSING
 
             self.output_CIM.execute(output, context=context)
-            # FIX 5/28/20:
-            context.execution_phase = execution_phase
+            # # MODIFIED 1/21/22 OLD:
+            # # FIX 5/28/20:
+            # context.execution_phase = execution_phase
+            # MODIFIED 1/21/22 NEW:
+            context.execution_phase = ContextFlags.IDLE
+            # MODIFIED 1/21/22 END
 
             report(self,
                    # [LEARN_REPORT],
