@@ -1524,7 +1524,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # elif self.agent_rep_type == COMPOSITION:
         elif agent_rep.componentCategory=='Composition':
             from psyneulink.core.compositions.composition import NodeRole
-            if len(state_features) > len(agent_rep.get_nodes_by_role(NodeRole.INPUT)):
+            if state_features and len(state_features) > len(agent_rep.get_nodes_by_role(NodeRole.INPUT)):
                 # FIX: ADD WARNING HERE
                 # Temporarily name InputPort
                 self._assign_deferred_init_name(self.__class__.__name__)
