@@ -2608,20 +2608,23 @@ class OptimizationControlMechanism(ControlMechanism):
         else:
             # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
             # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
-            if len(state_feature_specs) > len(agent_rep_input_nodes):
-                warnings.warn(
-                    f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
-                    f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-                    f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
-                    f"additional Nodes are added will generate an error.")
-                agent_rep_input_nodes = None
-
-            elif len(state_feature_specs) < len(agent_rep_input_nodes):
+            if len(state_feature_specs) < len(agent_rep_input_nodes):
                 warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
                               f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
                               f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
                               f"'evaluate' method is executed. If this is not the desired configuration, use its "
                               f"get_inputs_format() method to see the format for all of its inputs.")
+
+            elif len(state_feature_specs) > len(agent_rep_input_nodes):
+                # IMPLEMENTATION NOTE: This warning duplicates error exception for same in _validate_state_features,
+                #                      but may be useful in the future if deferred_init can be made to handle it
+                # warnings.warn(
+                #     f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
+                #     f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
+                #     f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
+                #     f"additional Nodes are added will generate an error.")
+                agent_rep_input_nodes = None
+
 
         # HELPER METHODS ------------------------------------------------------------------------------------------
 
@@ -2777,17 +2780,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = spec.output_port
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
-            # # MODIFIED 1/18/22 OLD:
-            # if not parsed_spec[NAME]:
-            #     parsed_spec[NAME] = input_port_names[i]
-            # # MODIFIED 1/18/22 NEW:
-            # if input_port_names:
-            #     # Use keys from input dict as names of state_input_ports
-            #     # (needed by comp._build_predicted_inputs_dict to identify INPUT nodes)
-            #     parsed_spec[NAME] = input_port_names[i]
-            # elif not parsed_spec[NAME]:
-            #     parsed_spec[NAME] = spec.full_name if isinstance(spec, Port) else spec.name
-            # MODIFIED 1/18/22 NEWER:
             if not parsed_spec[NAME]:
                 if input_port_names:
                     # Use keys from input dict as names of state_input_ports
@@ -2795,7 +2787,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     parsed_spec[NAME] = input_port_names[i]
                 else:
                     parsed_spec[NAME] = spec.full_name if isinstance(spec, Port) else spec.name
-            # MODIFIED 1/18/22 END
 
             if parsed_spec[PARAMS] and SHADOW_INPUTS in parsed_spec[PARAMS]:
                 # Composition._update_shadow_projections will take care of PROJECTIONS specification
