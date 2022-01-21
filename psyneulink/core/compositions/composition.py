@@ -9095,6 +9095,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
+        # MODIFIED 1/21/22 NEW:
+        context.execution_phase = ContextFlags.PREPARING
+        # MODIFIED 1/21/22 END
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
