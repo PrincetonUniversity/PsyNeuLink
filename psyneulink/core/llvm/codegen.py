@@ -238,7 +238,7 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         for t in node.targets:
             target = self.visit(t)
             if target is None: # Allocate space for new variable
-                target = self.var_builder.alloca(value.type)
+                target = self.var_builder.alloca(value.type, name=str(t.id) + '_local_variable')
                 self.register[t.id] = target
             assert self.is_lval(target)
             self.builder.store(value, target)
