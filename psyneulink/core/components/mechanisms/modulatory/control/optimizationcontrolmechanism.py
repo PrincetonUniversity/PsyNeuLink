@@ -1703,6 +1703,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         - assign state_feature_functions to relevant state_input_ports (same function for all if no state_features
           are specified or only one state_function is specified;  otherwise, use dict for specifications).
+
+        Return True if successful, None if not performed.
         """
 
         # Don't instantiate unless being called by Composition.run()
@@ -1768,6 +1770,12 @@ class OptimizationControlMechanism(ControlMechanism):
             return True
 
     def _validate_state_features(self):
+        """Validate state_features are legal and consistent with agent_rep
+
+        :return: None or bool
+        True if state_features are valid
+        None if any
+        """
         from psyneulink.core.compositions.composition import \
             Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
 
