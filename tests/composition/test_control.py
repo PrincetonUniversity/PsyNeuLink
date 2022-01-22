@@ -735,6 +735,7 @@ class TestControlMechanisms:
                                                        )
                 ocomp.add_controller(ocm)
                 ocomp._analyze_graph()
+                ocomp.run()
             assert err.value.error_value == err_msg
 
     messages = [
@@ -827,7 +828,7 @@ class TestControlMechanisms:
         (state_feature_specs[9], messages[2], pnl.OptimizationControlMechanismError),   # ext_shadow
         (state_feature_specs[10], messages[3], pnl.OptimizationControlMechanismError),  # ext_output_port
         (state_feature_specs[11], messages[4], pnl.OptimizationControlMechanismError),  # input_format_wrong_shape
-        # (state_feature_specs[12], messages[5], UserWarning),                            # too_many_inputs_warning
+        (state_feature_specs[12], messages[5], UserWarning),                            # too_many_inputs_warning
         (state_feature_specs[13], messages[6], pnl.OptimizationControlMechanismError),  # too_many_inputs_error
         (state_feature_specs[14], messages[7], pnl.OptimizationControlMechanismError),  # bad_dict_spec
         (state_feature_specs[15], messages[8], pnl.OptimizationControlMechanismError),  # bad_set_spec

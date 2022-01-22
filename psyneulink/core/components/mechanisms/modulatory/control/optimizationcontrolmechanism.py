@@ -1706,7 +1706,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         # Don't instantiate unless being called by Composition.run()
-        # This avoids error messages if called prematurely (i.e., before run is complete)
+        # This avoids error messages if called prematurely (i.e., before construction of Composition is complete)
         if context.flags & ContextFlags.PROCESSING:
             return
 
@@ -1718,7 +1718,10 @@ class OptimizationControlMechanism(ControlMechanism):
             return
 
         if self.state_feature_specs:
-            self._validate_state_features()
+            # Restrict validation and any further instantation of state_input_ports
+            #    until run time, when the Composition is expected to be fully constructed
+            if context._execution_phase == ContextFlags.PREPARING:
+                self._validate_state_features()
             return
 
         else:
@@ -1762,18 +1765,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                  context=local_context)
             self.state_input_ports.extend(state_input_ports_to_add)
 
-            # input_values = self.state_input_ports.values
-            # input_nodes = self.composition._build_predicted_inputs_dict(input_values)
-            # sources = [self.composition._get_source(n.path_afferents[0]) for n in self.state_input_ports]
-            #
-            # # MODIFIED 1/15 OLD:
-            # # FIX: NEEDS TO USE _get_source() for INPUT nodes
-            # # self.state_features = self.composition._parse_input_dict(input_nodes)
-            # self.state_features = {k:v for k,v in zip(input_nodes, sources)}
-            # # # MODIFIED 1/15 NEW:
-            # # self.parameters.state_features.set(self.composition._parse_input_dict(input_nodes),
-            # #                                    override=True)
-            # # MODIFIED 1/15 END
+            return True
 
     def _validate_state_features(self):
         from psyneulink.core.compositions.composition import \
@@ -2619,11 +2611,11 @@ class OptimizationControlMechanism(ControlMechanism):
             elif len(state_feature_specs) > len(agent_rep_input_nodes):
                 # IMPLEMENTATION NOTE: This warning duplicates error exception for same in _validate_state_features,
                 #                      but may be useful in the future if deferred_init can be made to handle it
-                # warnings.warn(
-                #     f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
-                #     f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-                #     f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
-                #     f"additional Nodes are added will generate an error.")
+                warnings.warn(
+                    f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
+                    f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
+                    f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
+                    f"additional Nodes are added will generate an error.")
                 agent_rep_input_nodes = None
 
 

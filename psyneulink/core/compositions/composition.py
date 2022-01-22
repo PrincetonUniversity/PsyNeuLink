@@ -4444,13 +4444,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 and self.needs_update_controller
                 and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
             if hasattr(self.controller, 'state_input_ports'):
-                self.controller._update_state_input_ports_for_controller(context=context)
-                # self._instantiate_controller_shadow_projections(context=context)
+                self.needs_update_controller = \
+                    not self.controller._update_state_input_ports_for_controller(context=context)
             self.controller._validate_monitor_for_control(self._get_all_nodes())
             self._instantiate_control_projections(context=context)
-            # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
-            #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
-            self.needs_update_controller = False
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -9095,8 +9092,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
-        # # MODIFIED 1/21/22 NEW:
-        # context.execution_phase = ContextFlags.PREPARING
+        # MODIFIED 1/21/22 NEW:
+        execution_phase = context.execution_phase
+        context.execution_phase = ContextFlags.PREPARING
         # MODIFIED 1/21/22 END
 
         for node in self.nodes:
@@ -9277,6 +9275,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             trial_output = np.atleast_2d(self.env.reset())
         else:
             trial_output = None
+
+        # MODIFIED 1/21/22 NEW:
+        context.execution_phase = execution_phase
+        # MODIFIED 1/21/22 END
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
