@@ -163,13 +163,13 @@ class UserDefinedFunctionVisitor(ast.NodeVisitor):
         return _div
 
     def visit_Pow(self, node):
-        def _div(builder, x, y):
+        def _pow(builder, x, y):
             assert helpers.is_floating_point(x)
             assert helpers.is_floating_point(y)
-            pow_f = ctx.get_builtin("pow", [x.type, y.type])
+            pow_f = self.ctx.get_builtin("pow", [x.type, y.type])
             return builder.call(pow_f, [x, y])
 
-        return _div
+        return _pow
 
     def visit_USub(self, node):
         def _usub(builder, x):
