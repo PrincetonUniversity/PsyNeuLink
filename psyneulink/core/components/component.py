@@ -1320,6 +1320,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Only mechanisms use "value" state
         if not hasattr(self, 'ports'):
             blacklist.add("value")
+
+        # Only mechanisms and compositions need 'num_executions'
+        if not hasattr(self, 'ports') and not hasattr(self, 'nodes'):
+            blacklist.add("num_executions")
+
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
