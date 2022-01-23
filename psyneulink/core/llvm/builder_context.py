@@ -354,8 +354,6 @@ class LLVMBuilderContext:
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
             elif p.name == 'matrix':   # Flatten matrix
                 val = np.asfarray(val).flatten()
-            elif p.name == NUM_ESTIMATES:  # Should always be int
-                val = np.int32(0) if val is None else np.int32(val)
             elif p.name == 'num_trials_per_estimate':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
             elif np.ndim(val) == 0 and component._is_param_modulated(p):
