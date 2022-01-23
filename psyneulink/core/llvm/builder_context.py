@@ -179,15 +179,20 @@ class LLVMBuilderContext:
     def get_uniform_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_double")
-        if len(state.type.pointee) == 7:
+        elif len(state.type.pointee) == 7:
+            # we have different versions based on selected FP precision
             return self.import_llvm_function("__pnl_builtin_philox_rand_{}".format(str(self.float_ty)))
+        else:
+            assert False, "Unknown PRNG type!"
 
     def get_normal_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_normal")
-        if len(state.type.pointee) == 7:
+        elif len(state.type.pointee) == 7:
             # Normal exists only for self.float_ty
             return self.import_llvm_function("__pnl_builtin_philox_rand_normal")
+        else:
+            assert False, "Unknown PRNG type!"
 
     def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:
@@ -272,6 +277,8 @@ class LLVMBuilderContext:
                 reseed_f = self.get_builtin("mt_rand_init")
             elif seed_idx == 6:
                 reseed_f = self.get_builtin("philox_rand_init")
+            else:
+                assert False, "Unknown PRNG type!"
 
             builder.call(reseed_f, [random_state_ptr, new_seed])
 
