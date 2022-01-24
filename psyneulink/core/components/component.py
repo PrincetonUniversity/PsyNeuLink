@@ -1389,7 +1389,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # autodiff specific types
                      "pytorch_representation", "optimizer",
                      # duplicate
-                     "allocation_samples"}
+                     "allocation_samples", "control_allocation_search_space"}
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
