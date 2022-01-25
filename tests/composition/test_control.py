@@ -763,7 +763,7 @@ class TestControlMechanisms:
         "INPUT Nodes of its agent_rep ('OUTER COMP'); the remaining inputs will be assigned default values "
         "when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired configuration, use its "
         "get_inputs_format() method to see the format for all of its inputs.",
-        
+
         # 1
         '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
         'that is not an INPUT Node of that Composition is not currently supported.\'',

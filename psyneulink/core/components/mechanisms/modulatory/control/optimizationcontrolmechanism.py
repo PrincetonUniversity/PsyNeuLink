@@ -1740,9 +1740,9 @@ class OptimizationControlMechanism(ControlMechanism):
             #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
             #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
             # MODIFIED 1/24/22 NEW:
-            message =  f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} " \
-                       f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before " \
-                       f"{'they' if singular else 'it'} are added will generate an error ."
+            message = f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} " \
+                      f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before " \
+                      f"{'they' if singular else 'it'} are added will generate an error ."
             if enforce:
                 raise OptimizationControlMechanismError(message)
             else:
@@ -1758,7 +1758,11 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         from psyneulink.core.compositions.composition import Composition, NodeRole
         # Agent rep's input Nodes and their names
-        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True) or None
+        # # MODIFIED 1/25/22 OLD:
+        # agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True) or None
+        # MODIFIED 1/25/22 NEW:
+        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+        # MODIFIED 1/25/22 END
 
         # VALIDATION AND WARNINGS -----------------------------------------------------------------------------------
 
@@ -1766,7 +1770,11 @@ class OptimizationControlMechanism(ControlMechanism):
             f"PROGRAM ERROR: self.state_feature_specs for {self.name} not passed to _parse_state_feature_specs()."
 
         # agent_rep has not yet been (fully) constructed
-        if agent_rep_input_nodes is None:
+        # # MODIFIED 1/25/22 OLD:
+        # if agent_rep_input_nodes is None:
+        # MODIFIED 1/25/22 NEW:
+        if not agent_rep_input_nodes:
+        # MODIFIED 1/25/22 END
             if (isinstance(state_feature_specs, set)
                     or isinstance(state_feature_specs, dict) and SHADOW_INPUTS not in state_feature_specs):
                 # Dict and set specs reference Nodes of agent_rep, and so must that must be constructed first
@@ -1787,31 +1795,15 @@ class OptimizationControlMechanism(ControlMechanism):
             # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
             # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
             if len(state_feature_specs) < len(agent_rep_input_nodes):
-                # MODIFIED 1/25/22 OLD:
-                # warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
-                #               f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-                #               f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
-                #               f"'evaluate' method is executed. If this is not the desired configuration, use its "
-                #               f"get_inputs_format() method to see the format for all of its inputs.")
-                # MODIFIED 1/25/22 NEW:
                 warnings.warn(f"There are fewer 'state_features' specified for '{self.name}' than the number of INPUT "
                               f"Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
                               f"assigned default values when '{self.agent_rep.name}`s 'evaluate' method is executed. "
                               f"If this is not the desired configuration, use its get_inputs_format() method to see "
                               f"the format for all of its inputs.")
-                # MODIFIED 1/25/22 END
-            # # MODIFIED 1/24/22 OLD:  HANDLED SEPARATELY FOR LIST AND DICT SPECS
-            # elif len(state_feature_specs) > len(agent_rep_input_nodes):
-            #     warnings.warn(
-            #         f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
-            #         f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-            #         f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
-            #         f"additional Nodes are added as INPUT Nodes will generate an error.")
-            # MODIFIED 1/24/22 END
-                # # MODIFIED 1/23/22 OLD:
-                # agent_rep_input_nodes = None
-                # MODIFIED 1/23/22 END
 
+        # # MODIFIED 1/25/22 NEW:
+        # agent_rep_input_nodes = agent_rep_input_nodes or []
+        # MODIFIED 1/25/22 END
 
         # HELPER METHODS ------------------------------------------------------------------------------------------
 
@@ -1885,55 +1877,6 @@ class OptimizationControlMechanism(ControlMechanism):
                         else:
                             spec_names.append(spec.name)
             return nodes or None, specs, spec_names or []
-
-        # # Ensure that all keys in dict are INPUT Nodes
-        # def ensure_all_specified_nodes_are_input_nodes(nodes):
-        #     # # MODIFIED 1/24/22 OLD:
-        #     # non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
-        #     # # MODIFIED 1/24/22 NEW:
-        #     # non_input_node_specs = [node for node in nodes
-        #     #                         if (node in self.agent_rep._get_all_nodes()
-        #     #                             and node not in self._specified_input_nodes_in_order)]
-        #     # MODIFIED 1/24/22 NEWER:
-        #     non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
-        #     non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
-        #     # MODIFIED 1/24/22 END
-        #     if non_input_node_specs:
-        #         items = ', '.join([n._name for n in non_input_node_specs])
-        #         if len(non_input_node_specs) == 1:
-        #             items_str = f"contains an item ({items}) that is not an INPUT Node"
-        #         else:
-        #             items_str = f"contains items ({items}) that are not INPUT Nodes"
-        #         # # MODIFIED 1/24/22 OLD:
-        #         # raise OptimizationControlMechanismError(
-        #         #     f"The 'state_features' specified for '{self.name}' {items_str} "
-        #         #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
-        #         #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
-        #         # MODIFIED 1/24/22 NEW:
-        #         warnings.warn(
-        #             f"The 'state_features' specified for '{self.name}' {items_str} "
-        #             f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set "
-        #             f"or used as keys in a dict used to specify 'state_features'.")
-        #         # MODIFIED 1/24/22 END
-        #
-        #     if non_agent_rep_node_specs:
-        #         items = ', '.join([n._name for n in non_agent_rep_node_specs])
-        #         singular = len(non_agent_rep_node_specs) == 1
-        #         if singular:
-        #             items_str = f"contains an item ({items}) that is"
-        #         else:
-        #             items_str = f"contains items ({items}) that are"
-        #         # # MODIFIED 1/24/22 OLD:
-        #         # raise OptimizationControlMechanismError(
-        #         #     f"The 'state_features' specified for '{self.name}' {items_str} "
-        #         #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
-        #         #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
-        #         # MODIFIED 1/24/22 NEW:
-        #         warnings.warn(
-        #             f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} "
-        #             f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before "
-        #             f"{'they' if singular else 'it'} are added will generate an error .")
-        #         # MODIFIED 1/24/22 END
 
         # PARSE SPECS  ------------------------------------------------------------------------------------------
         # Generate parallel lists of INPUT Nodes and corresponding feature specs (for sources of inputs)
@@ -2062,6 +2005,7 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_features.extend(parsed_spec)
 
         # # MODIFIED 1/24/22 OLD:
+        #  FIX - 1/25/22: REINSTATE ONCE self.state_feature_specs IS A PARAMETER WITH structural=True
         # self.state_feature_specs = state_feature_specs
         # MODIFIED 1/24/22 END
         return parsed_features

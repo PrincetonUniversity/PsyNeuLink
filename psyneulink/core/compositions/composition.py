@@ -4442,7 +4442,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    this avoids unnecessary calls on repeated calls to run().
         if (self.controller
                 and self.needs_update_controller
-                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
+                # MODIFIED 1/25/22 OLD:
+                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
+                # # MODIFIED 1/25/22 NEW:
+                #  FIX: REQUIRED TO UPDATING OCM.state_input_ports FOR ADDED NODES
+                #       BUT CAUSES TROUBLE WITH test_deferred_init() (AND OTHER TESTS)
+                # and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
+                # MODIFIED 1/25/22 END
             if hasattr(self.controller, 'state_input_ports'):
                 self.needs_update_controller = \
                     not self.controller._update_state_input_ports_for_controller(context=context)
