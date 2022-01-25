@@ -2646,12 +2646,14 @@ class OptimizationControlMechanism(ControlMechanism):
         source_specs_for_input_nodes = []
 
         def instantiate_list_spec(state_feature_specs, spec_str="list"):
+            # MODIFIED 1/24/22 NEW:
             if len(state_feature_specs) > len(agent_rep_input_nodes):
                 warnings.warn(
                     f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
                     f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
                     f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
                     f"additional Nodes are added as INPUT Nodes will generate an error.")
+            # MODIFIED 1/24/22 END
             # Nested Compositions not allowed to be specified in a list spec
             nested_comps = [node for node in state_feature_specs if isinstance(node, Composition)]
             if nested_comps:
@@ -2856,7 +2858,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(parsed_spec)
 
-        self.state_feature_specs = state_feature_specs
+        # # MODIFIED 1/24/22 OLD:
+        # self.state_feature_specs = state_feature_specs
+        # MODIFIED 1/24/22 END
         return parsed_features
 
     def _parse_state_feature_function(self, feature_function):
@@ -2907,10 +2911,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Get sources for state_feature_values of state:
         for state_index, port in enumerate(self.state_input_ports):
-            # MODIFIED 1/23/22 NEW:
-            # FIX: INSTEAD OF SKIPPING, MAKE APPROPRIATE "NONE" ASSIGNMENTS (PARALLELING state_features)
-            if not port.path_afferents:
-                continue
+            # # MODIFIED 1/23/22 NEW:
+            # # FIX: INSTEAD OF SKIPPING, MAKE APPROPRIATE "NONE" ASSIGNMENTS (PARALLELING state_features)
+            #        1/24/22: THIS IS NEEDED FOR test_deferred_init AND partial_deferred_init BUT IT
+            #                 BREAKS test_ocm_state_feature_specs_and_warnings_and_errors FOR full_list_spec CONDITION
+            # if not port.path_afferents:
+            #     continue
             # MODIFIED 1/23/22 END
             get_info_method = self.composition._get_source
             # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
