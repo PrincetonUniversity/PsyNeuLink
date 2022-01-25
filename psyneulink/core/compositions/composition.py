@@ -4442,7 +4442,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #    this avoids unnecessary calls on repeated calls to run().
         if (self.controller
                 and self.needs_update_controller
-                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
+                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
             if hasattr(self.controller, 'state_input_ports'):
                 self.needs_update_controller = \
                     not self.controller._update_state_input_ports_for_controller(context=context)
@@ -7717,6 +7717,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         invalid_aux_components = self._get_invalid_aux_components(controller)
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
+            self._analyze_graph(context=context) # to ensure that controller.state_dict and state_features are callable
             return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
@@ -9092,10 +9093,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
-        # MODIFIED 1/21/22 NEW:
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
-        # MODIFIED 1/21/22 END
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -9276,9 +9275,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             trial_output = None
 
-        # MODIFIED 1/21/22 NEW:
         context.execution_phase = execution_phase
-        # MODIFIED 1/21/22 END
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
