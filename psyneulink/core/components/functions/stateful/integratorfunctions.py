@@ -666,6 +666,30 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
         return self.convert_output_type(value)
 
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        increment = self._gen_llvm_load_param(ctx, builder, params, index, INCREMENT)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+                                          state=state)
+
+        # Get the only context member -- previous value
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        res = builder.fmul(prev_val, rate)
+        res = builder.fadd(res, noise)
+        res = builder.fadd(res, increment)
+
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(res, vo_ptr)
+        builder.store(res, prev_ptr)
+
 
 class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
     """
