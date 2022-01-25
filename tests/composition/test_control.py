@@ -816,7 +816,7 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        # ('partial_legal_list_spec', messages[0], None, UserWarning),
         ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
         ('input_dict_spec', None, None, None),

@@ -3014,30 +3014,48 @@ class OptimizationControlMechanism(ControlMechanism):
         for state_index, port in enumerate(self.state_input_ports):
             # MODIFIED 1/25/22 NEW:
             # FIX: INSTEAD OF SKIPPING, MAKE APPROPRIATE "NONE" ASSIGNMENTS (PARALLELING state_features)
-            #        1/24/22: THIS IS NEEDED FOR test_deferred_init AND partial_deferred_init BUT IT
+            #        1/25/22: THIS IS NEEDED FOR test_deferred_init AND partial_deferred_init BUT IT
             #                 BREAKS test_ocm_state_feature_specs_and_warnings_and_errors FOR full_list_spec CONDITION
-            if not port.path_afferents:
-                continue
-            # MODIFIED 1/25/22 END
-            get_info_method = self.composition._get_source
-            # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
-            if port.shadow_inputs:
-                port = port.shadow_inputs
-                if port.owner in self.composition.nodes:
-                    composition = self.composition
-                else:
-                    composition = port.path_afferents[0].sender.owner.composition
-                get_info_method = composition._get_destination
             if not port.path_afferents:
                 if port.default_input is DEFAULT_VARIABLE:
                     source_port = DEFAULT_VARIABLE
                     node = None
                     comp = None
                 else:
-                    assert False, f"PROGRAM ERROR: state_input_port {state_index} ('{port.name}')" \
-                                  f"for {self.name} does not have any Projections to it"
+                    continue
             else:
+                get_info_method = self.composition._get_source
+                # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
+                if port.shadow_inputs:
+                    port = port.shadow_inputs
+                    if port.owner in self.composition.nodes:
+                        composition = self.composition
+                    else:
+                        composition = port.path_afferents[0].sender.owner.composition
+                    get_info_method = composition._get_destination
                 source_port, node, comp = get_info_method(port.path_afferents[0])
+            # # MODIFIED 1/25/22 OLD:
+            # get_info_method = self.composition._get_source
+            # # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
+            # if port.shadow_inputs:
+            #     port = port.shadow_inputs
+            #     if port.owner in self.composition.nodes:
+            #         composition = self.composition
+            #     else:
+            #         composition = port.path_afferents[0].sender.owner.composition
+            #     get_info_method = composition._get_destination
+            # # MODIFIED 1/25/22 OLD:
+            # if not port.path_afferents:
+            #     if port.default_input is DEFAULT_VARIABLE:
+            #         source_port = DEFAULT_VARIABLE
+            #         node = None
+            #         comp = None
+            #     else:
+            #         assert False, f"PROGRAM ERROR: state_input_port {state_index} ('{port.name}')" \
+            #                       f"for {self.name} does not have any Projections to it"
+            # else:
+            #     source_port, node, comp = get_info_method(port.path_afferents[0])
+            # MODIFIED 1/25/22 END
             state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
 
         state_index += 1
