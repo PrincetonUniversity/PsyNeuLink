@@ -2601,11 +2601,19 @@ class OptimizationControlMechanism(ControlMechanism):
             # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
             # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
             if len(state_feature_specs) < len(agent_rep_input_nodes):
-                warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
-                              f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-                              f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
-                              f"'evaluate' method is executed. If this is not the desired configuration, use its "
-                              f"get_inputs_format() method to see the format for all of its inputs.")
+                # MODIFIED 1/25/22 OLD:
+                # warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+                #               f"than the number of INPUT Nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+                #               f"the remaining inputs will be assigned default values when '{self.agent_rep.name}`s "
+                #               f"'evaluate' method is executed. If this is not the desired configuration, use its "
+                #               f"get_inputs_format() method to see the format for all of its inputs.")
+                # MODIFIED 1/25/22 NEW:
+                warnings.warn(f"There are fewer 'state_features' specified for '{self.name}' than the number of INPUT "
+                              f"Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
+                              f"assigned default values when '{self.agent_rep.name}`s 'evaluate' method is executed. "
+                              f"If this is not the desired configuration, use its get_inputs_format() method to see "
+                              f"the format for all of its inputs.")
+                # MODIFIED 1/25/22 END
             # # MODIFIED 1/24/22 OLD:  HANDLED SEPARATELY FOR LIST AND DICT SPECS
             # elif len(state_feature_specs) > len(agent_rep_input_nodes):
             #     warnings.warn(
