@@ -816,26 +816,26 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
-        # ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('automatic_assignment', None, None, None),
-        # ('shadow_inputs_dict_spec', None, None, None),
-        # ('shadow_inputs_dict_spec_w_none', None, None, None),
-        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        # ('too_many_inputs_warning', messages[5], None, UserWarning),
-        # ('too_many_inputs_error', messages[6], None, pnl.OptimizationControlMechanismError),
-        # ('bad_dict_spec_warning', messages[7], None, UserWarning),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('full_list_spec', None, None, None),
+        ('list_spec_with_none', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
+        ('too_many_inputs_warning', messages[5], None, UserWarning),
+        ('too_many_inputs_error', messages[6], None, pnl.OptimizationControlMechanismError),
+        ('bad_dict_spec_warning', messages[7], None, UserWarning),
         ('bad_dict_spec_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        # ('bad_set_spec_warning', messages[0], messages[8], UserWarning),
-        ('bad_set_spec_error', messages[0], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_list_spec', messages[9], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_shadow_inupts_spec', messages[10], None, pnl.OptimizationControlMechanismError)
+        ('bad_set_spec_warning', messages[0], messages[8], UserWarning),
+        ('bad_set_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_list_spec', messages[9], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_shadow_inupts_spec', messages[10], None, pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
@@ -950,7 +950,7 @@ class TestControlMechanisms:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
                     assert warning[0].message.args[0] == message_1
-                if state_feature_args[0] == 'bad_set_spec_warning':
+                if state_feature_args[0] in 'bad_set_spec_warning':
                     assert message_2 in warning[1].message.args[0] # since set, order of ob and ia is not reliable
                     assert 'OB' in warning[1].message.args[0]
                     assert 'IA' in warning[1].message.args[0]

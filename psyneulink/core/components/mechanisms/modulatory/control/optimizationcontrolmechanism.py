@@ -1694,6 +1694,61 @@ class OptimizationControlMechanism(ControlMechanism):
                 input_nodes.append(node)
         return input_nodes
 
+    def _validate_input_nodes(self, nodes, enforce=None):
+        """Check if nodes are INPUT Nodes of agent_rep"""
+        # # MODIFIED 1/24/22 OLD:
+        # non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
+        # # MODIFIED 1/24/22 NEW:
+        # non_input_node_specs = [node for node in nodes
+        #                         if (node in self.agent_rep._get_all_nodes()
+        #                             and node not in self._specified_input_nodes_in_order)]
+        # MODIFIED 1/24/22 NEWER:
+        non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
+        non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
+        # MODIFIED 1/24/22 END
+        if non_input_node_specs:
+            items = ', '.join([n._name for n in non_input_node_specs])
+            if len(non_input_node_specs) == 1:
+                items_str = f"contains an item ({items}) that is not an INPUT Node"
+            else:
+                items_str = f"contains items ({items}) that are not INPUT Nodes"
+            # # MODIFIED 1/24/22 OLD:
+            # raise OptimizationControlMechanismError(
+            #     f"The 'state_features' specified for '{self.name}' {items_str} "
+            #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
+            #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
+            # MODIFIED 1/24/22 NEW:
+            message = f"The 'state_features' specified for '{self.name}' {items_str} " \
+                      f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set " \
+                      f"or used as keys in a dict used to specify 'state_features'."
+            if enforce:
+                raise OptimizationControlMechanismError(message)
+            else:
+                warnings.warn(message)
+            # MODIFIED 1/24/22 END
+
+        if non_agent_rep_node_specs:
+            items = ', '.join([n._name for n in non_agent_rep_node_specs])
+            singular = len(non_agent_rep_node_specs) == 1
+            if singular:
+                items_str = f"contains an item ({items}) that is"
+            else:
+                items_str = f"contains items ({items}) that are"
+            # # MODIFIED 1/24/22 OLD:
+            # raise OptimizationControlMechanismError(
+            #     f"The 'state_features' specified for '{self.name}' {items_str} "
+            #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
+            #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
+            # MODIFIED 1/24/22 NEW:
+            message =  f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} " \
+                       f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before " \
+                       f"{'they' if singular else 'it'} are added will generate an error ."
+            if enforce:
+                raise OptimizationControlMechanismError(message)
+            else:
+                warnings.warn(message)
+            # MODIFIED 1/24/22 END
+
     def _parse_state_feature_specs(self, state_feature_specs, feature_functions, context=None):
         """Parse entries of state_features specifications into InputPort spec dictionaries
         For entries specifying shadowing, set INTERNAL_ONLY entry of params dict for InputPort spec dictionary to True
@@ -1831,54 +1886,54 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_names.append(spec.name)
             return nodes or None, specs, spec_names or []
 
-        # Ensure that all keys in dict are INPUT Nodes
-        def ensure_all_specified_nodes_are_input_nodes(nodes):
-            # # MODIFIED 1/24/22 OLD:
-            # non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
-            # # MODIFIED 1/24/22 NEW:
-            # non_input_node_specs = [node for node in nodes
-            #                         if (node in self.agent_rep._get_all_nodes()
-            #                             and node not in self._specified_input_nodes_in_order)]
-            # MODIFIED 1/24/22 NEWER:
-            non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
-            non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
-            # MODIFIED 1/24/22 END
-            if non_input_node_specs:
-                items = ', '.join([n._name for n in non_input_node_specs])
-                if len(non_input_node_specs) == 1:
-                    items_str = f"contains an item ({items}) that is not an INPUT Node"
-                else:
-                    items_str = f"contains items ({items}) that are not INPUT Nodes"
-                # # MODIFIED 1/24/22 OLD:
-                # raise OptimizationControlMechanismError(
-                #     f"The 'state_features' specified for '{self.name}' {items_str} "
-                #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
-                #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
-                # MODIFIED 1/24/22 NEW:
-                warnings.warn(
-                    f"The 'state_features' specified for '{self.name}' {items_str} "
-                    f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set "
-                    f"or used as keys in a dict used to specify 'state_features'.")
-                # MODIFIED 1/24/22 END
-
-            if non_agent_rep_node_specs:
-                items = ', '.join([n._name for n in non_agent_rep_node_specs])
-                singular = len(non_agent_rep_node_specs) == 1
-                if singular:
-                    items_str = f"contains an item ({items}) that is"
-                else:
-                    items_str = f"contains items ({items}) that are"
-                # # MODIFIED 1/24/22 OLD:
-                # raise OptimizationControlMechanismError(
-                #     f"The 'state_features' specified for '{self.name}' {items_str} "
-                #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
-                #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
-                # MODIFIED 1/24/22 NEW:
-                warnings.warn(
-                    f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} "
-                    f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before "
-                    f"{'they' if singular else 'it'} are added will generate an error .")
-                # MODIFIED 1/24/22 END
+        # # Ensure that all keys in dict are INPUT Nodes
+        # def ensure_all_specified_nodes_are_input_nodes(nodes):
+        #     # # MODIFIED 1/24/22 OLD:
+        #     # non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
+        #     # # MODIFIED 1/24/22 NEW:
+        #     # non_input_node_specs = [node for node in nodes
+        #     #                         if (node in self.agent_rep._get_all_nodes()
+        #     #                             and node not in self._specified_input_nodes_in_order)]
+        #     # MODIFIED 1/24/22 NEWER:
+        #     non_input_node_specs = [node for node in nodes if node not in self._specified_input_nodes_in_order]
+        #     non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
+        #     # MODIFIED 1/24/22 END
+        #     if non_input_node_specs:
+        #         items = ', '.join([n._name for n in non_input_node_specs])
+        #         if len(non_input_node_specs) == 1:
+        #             items_str = f"contains an item ({items}) that is not an INPUT Node"
+        #         else:
+        #             items_str = f"contains items ({items}) that are not INPUT Nodes"
+        #         # # MODIFIED 1/24/22 OLD:
+        #         # raise OptimizationControlMechanismError(
+        #         #     f"The 'state_features' specified for '{self.name}' {items_str} "
+        #         #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
+        #         #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
+        #         # MODIFIED 1/24/22 NEW:
+        #         warnings.warn(
+        #             f"The 'state_features' specified for '{self.name}' {items_str} "
+        #             f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set "
+        #             f"or used as keys in a dict used to specify 'state_features'.")
+        #         # MODIFIED 1/24/22 END
+        #
+        #     if non_agent_rep_node_specs:
+        #         items = ', '.join([n._name for n in non_agent_rep_node_specs])
+        #         singular = len(non_agent_rep_node_specs) == 1
+        #         if singular:
+        #             items_str = f"contains an item ({items}) that is"
+        #         else:
+        #             items_str = f"contains items ({items}) that are"
+        #         # # MODIFIED 1/24/22 OLD:
+        #         # raise OptimizationControlMechanismError(
+        #         #     f"The 'state_features' specified for '{self.name}' {items_str} "
+        #         #     f"of its {AGENT_REP} ('{self.agent_rep.name}'); "
+        #         #     f"only INPUT Nodes can be included when using a dict or set to specify 'state_features'.")
+        #         # MODIFIED 1/24/22 NEW:
+        #         warnings.warn(
+        #             f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} "
+        #             f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before "
+        #             f"{'they' if singular else 'it'} are added will generate an error .")
+        #         # MODIFIED 1/24/22 END
 
         # PARSE SPECS  ------------------------------------------------------------------------------------------
         # Generate parallel lists of INPUT Nodes and corresponding feature specs (for sources of inputs)
@@ -1918,7 +1973,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 # MODIFIED 1/23/22 NEW:
                 self._specified_input_nodes_in_order = get_input_nodes_for_state_feature_specs()
                 # MODIFIED 1/23/22 END
-                ensure_all_specified_nodes_are_input_nodes(state_feature_specs.keys())
+                self._validate_input_nodes(state_feature_specs.keys())
                 # Get specs in the same order:
                 specs = [state_feature_specs[node] for node in self._specified_input_nodes_in_order]
                 # Get parsed specs and names (don't care about nodes since those are specified by keys
@@ -1936,7 +1991,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # MODIFIED 1/23/22 NEW:
             self._specified_input_nodes_in_order = get_input_nodes_for_state_feature_specs()
             # MODIFIED 1/23/22 END
-            ensure_all_specified_nodes_are_input_nodes(state_feature_specs)
+            self._validate_input_nodes(state_feature_specs)
             # Replace any nested Comps that are INPUT Nodes of agent_comp with their INPUT Nodes so they are shadowed
             all_nested_input_nodes = []
             for node in self._specified_input_nodes_in_order:
@@ -2105,34 +2160,57 @@ class OptimizationControlMechanism(ControlMechanism):
             return True
 
     def _instantiate_pending_state_features(self):
-        assert False, 'TBI: _instantiate_pending_state_features'
+        # assert False, 'TBI: _instantiate_pending_state_features'
+        pass
 
     def _validate_state_features(self):
-        """Validate that state_features are legal and consistent with agent_rep."""
+        """Validate that state_features are legal and consistent with agent_rep.
+        Called by _update_state_input_ports_for_controller,
+        - after new Nodes have been added to Composition
+        - and/or in run() as final check before execution.
+        Ensure that:
+        - if state_feature_specs are speified as a user dict, keys are valid INPUT Nodes of agent_rep;
+        - all InputPorts shadowed by specified state_input_ports are in agent_rep or one of its nested Compositions;
+        - any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions;
+        - all InputPorts shadowed by state_input_ports reference INPUT Nodes of agent_rep or of a nested Composition;
+        - state_features are compatible with input format for agent_rep Composition
+        """
 
         from psyneulink.core.compositions.composition import \
             Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
 
         comp = self.agent_rep
 
-        if isinstance(self.state_feature_specs, list):
+        if isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS in self.state_feature_specs:
+            state_feature_specs = self.state_feature_specs[SHADOW_INPUTS]
+        else:
+            state_feature_specs = self.state_feature_specs
+
+        if isinstance(state_feature_specs, list):
             # Convert list to dict, assuming list is in order of INPUT Nodes,
             #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
-            if len(self.state_feature_specs) > len(input_nodes):
+            if len(state_feature_specs) > len(input_nodes):
                 raise OptimizationControlMechanismError(
-                    f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
+                    f"The number of 'state_features' specified for {self.name} ({len(state_feature_specs)}) "
                     f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
                     f"as its {AGENT_REP} ('{self.agent_rep.name}').")
             input_dict = {}
-            for i, spec in enumerate(self.state_feature_specs):
+            for i, spec in enumerate(state_feature_specs):
                 input_dict[input_nodes[i]] = spec
-            state_features = self.state_feature_specs
-        elif isinstance(self.state_feature_specs, dict):
+            state_features = state_feature_specs
+        elif isinstance(state_feature_specs, dict):
             # If user dict is specified, check that keys are legal INPUT nodes:
-            assert False, 'TBI: CHECK USER DICT FOR LEGAL INPUT NODES'
+            self._validate_input_nodes(state_feature_specs.keys(), enforce=True)
             # If dict is specified, get values for checks below
-            state_features = list(self.state_feature_specs.values())
+            state_features = list(state_feature_specs.values())
+        elif isinstance(state_feature_specs, set):
+            # FIX: DEAL WITH SHADOW_INPUTS DICT
+            # If user dict is specified, check that keys are legal INPUT nodes:
+            self._validate_input_nodes(state_feature_specs, enforce=True)
+            # FIX: 1/25/22: NEEDS TO BE  WITH:  return?  OR FUTHER VALIDATION FOR TOO MANY OR TOO FEW?
+            # If dict is specified, get values for checks below
+            state_features = list(state_feature_specs.values())
 
         # Include agent rep in error messages if it is not the same as self.composition
         self_has_state_features_str = f"'{self.name}' has 'state_features' specified "
