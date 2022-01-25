@@ -2653,6 +2653,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
                     f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
                     f"additional Nodes are added as INPUT Nodes will generate an error.")
+                # agent_rep_input_nodes = None
             # MODIFIED 1/24/22 END
             # Nested Compositions not allowed to be specified in a list spec
             nested_comps = [node for node in state_feature_specs if isinstance(node, Composition)]
@@ -2671,9 +2672,13 @@ class OptimizationControlMechanism(ControlMechanism):
                     continue
                 # Assign spec
                 specs.append(spec)
+                # # MODIFIED 1/24/22 OLD
+                # if agent_rep_input_nodes:
+                # MODIFIED 1/24/22 NEW:
                 # Only process specs for which there are already INPUT Nodes in agent_rep
                 #     (others may be added to Composition later)
                 if i < len(agent_rep_input_nodes):
+                # MODIFIED 1/24/22 END
                     # Assign node
                     node = agent_rep_input_nodes[i]
                     nodes.append(node)
@@ -2685,7 +2690,7 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_names.append(spec.full_name)
                         else:
                             spec_names.append(spec.name)
-            return nodes or None, specs, spec_names or None
+            return nodes or None, specs, spec_names or []
 
         # Ensure that all keys in dict are INPUT Nodes
         def ensure_all_specified_nodes_are_input_nodes(nodes):
@@ -2834,7 +2839,11 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
             if not parsed_spec[NAME]:
-                if input_port_names:
+                # # MODIFIED 1/24/22 OLD:
+                # if input_port_names:
+                # MODIFIED 1/24/22 NEW:
+                if i < len(input_port_names):
+                # MODIFIED 1/24/22 END
                     # Use keys from input dict as names of state_input_ports
                     # (needed by comp._build_predicted_inputs_dict to identify INPUT nodes)
                     parsed_spec[NAME] = input_port_names[i]
