@@ -3012,13 +3012,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # Get sources for state_feature_values of state:
         for state_index, port in enumerate(self.state_input_ports):
-            # # MODIFIED 1/23/22 NEW:
-            # # FIX: INSTEAD OF SKIPPING, MAKE APPROPRIATE "NONE" ASSIGNMENTS (PARALLELING state_features)
+            # MODIFIED 1/25/22 NEW:
+            # FIX: INSTEAD OF SKIPPING, MAKE APPROPRIATE "NONE" ASSIGNMENTS (PARALLELING state_features)
             #        1/24/22: THIS IS NEEDED FOR test_deferred_init AND partial_deferred_init BUT IT
             #                 BREAKS test_ocm_state_feature_specs_and_warnings_and_errors FOR full_list_spec CONDITION
-            # if not port.path_afferents:
-            #     continue
-            # MODIFIED 1/23/22 END
+            if not port.path_afferents:
+                continue
+            # MODIFIED 1/25/22 END
             get_info_method = self.composition._get_source
             # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
             if port.shadow_inputs:
