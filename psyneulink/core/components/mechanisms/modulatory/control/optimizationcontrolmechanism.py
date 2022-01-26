@@ -1477,12 +1477,12 @@ class OptimizationControlMechanism(ControlMechanism):
         for k in kwargs.copy():
             if k == 'features':
                 if state_features:
-                    warnings.warn(f"Both 'features' and 'state_features' were specified in the constructor for an"
-                                  f" {self.__class__.__name__}. Note: 'features' has been deprecated; "
-                                  f"'state_features' ({state_features}) will be used.")
+                    warnings.warn(f"Both 'features' and '{STATE_FEATURES}' were specified in the constructor "
+                                  f"for an {self.__class__.__name__}. Note: 'features' has been deprecated; "
+                                  f"'{STATE_FEATURES}' ({state_features}) will be used.")
                 else:
                     warnings.warn(f"'features' was specified in the constructor for an {self.__class__.__name__}; "
-                                  f"Note: 'features' has been deprecated; please use 'state_features' in the future.")
+                                  f"Note: 'features' has been deprecated; please use '{STATE_FEATURES}' in the future.")
                     state_features = kwargs['features']
                 kwargs.pop('features')
                 continue
@@ -1640,7 +1640,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # Note: if agent rep is Composition, state_input_ports and any state_feature_functions specified
             #       are assigned in _update_state_input_ports_for_controller.
             if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
-                warnings.warn(f"No 'state_features' specified for use with `agent_rep' of {self.name}")
+                warnings.warn(f"No '{STATE_FEATURES}' specified for use with `agent_rep' of {self.name}")
 
         else:
             # Implement any specified state_features
@@ -1709,9 +1709,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 items_str = f"contains an item ({items}) that is not an INPUT Node"
             else:
                 items_str = f"contains items ({items}) that are not INPUT Nodes"
-            message = f"The 'state_features' specified for '{self.name}' {items_str} " \
+            message = f"The '{STATE_FEATURES}' specified for '{self.name}' {items_str} " \
                       f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set " \
-                      f"or used as keys in a dict used to specify 'state_features'."
+                      f"or used as keys in a dict used to specify '{STATE_FEATURES}'."
             if enforce:
                 raise OptimizationControlMechanismError(message)
             else:
@@ -1725,7 +1725,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 items_str = f"contains an item ({items}) that is"
             else:
                 items_str = f"contains items ({items}) that are"
-            message = f"The 'state_features' specified for '{self.name}' {items_str} not in its {AGENT_REP} " \
+            message = f"The '{STATE_FEATURES}' specified for '{self.name}' {items_str} not in its {AGENT_REP} " \
                       f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before " \
                       f"{'they' if singular else 'it'} are added will generate an error ."
             if enforce:
@@ -1735,6 +1735,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _parse_state_feature_specs(self, state_feature_specs, feature_functions, context=None):
         """Parse entries of state_features specifications into InputPort spec dictionaries.
+
+        Called from _instantiate_input_ports()
 
         state_features specify sources of values assigned to state_feature_values, and passed to agent_rep.evaluate()
             as the inputs to its INPUT Nodes.
@@ -1778,23 +1780,23 @@ class OptimizationControlMechanism(ControlMechanism):
                     or isinstance(state_feature_specs, dict) and SHADOW_INPUTS not in state_feature_specs):
                 # Dict and set specs reference Nodes of agent_rep, and so must that must be constructed first
                 raise OptimizationControlMechanismError(
-                    f"The 'state_features' arg for {self.name} has been assigned a dict or set specification "
+                    f"The '{STATE_FEATURES}' arg for {self.name} has been assigned a dict or set specification "
                     f"before any Nodes have been assigned to its {AGENT_REP} ('{self.agent_rep.name}').  Either"
                     f"those should be assigned before construction of {self.name}, or a list specification "
                     f"should be used (though that is not advised).")
             else:
                 # List and SHADOW_INPUTS specs are dangerous before agent_rep has been fully constructed
-                warnings.warn(f"The 'state_features' arg for {self.name} has been specified before any Nodes have been "
-                              f"assigned to its {AGENT_REP} ('{self.agent_rep.name}').  Their order must be the same as "
-                              f"the order of the corresponding INPUT Nodes for '{self.agent_rep.name}' once they are "
-                              f"added, or unexpected results may occur.  It is safer to assign all Nodes to the "
-                              f"{AGENT_REP} of a controller before specifying its 'state_features'.")
+                warnings.warn(f"The {STATE_FEATURES}' arg for {self.name} has been specified before any Nodes have "
+                              f"been assigned to its {AGENT_REP} ('{self.agent_rep.name}').  Their order must be the "
+                              f"same as the order of the corresponding INPUT Nodes for '{self.agent_rep.name}' once "
+                              f"they are added, or unexpected results may occur.  It is safer to assign all Nodes to "
+                              f"the {AGENT_REP} of a controller before specifying its '{STATE_FEATURES}'.")
         else:
             # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
             # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
             if len(state_feature_specs) < len(agent_rep_input_nodes):
-                warnings.warn(f"There are fewer 'state_features' specified for '{self.name}' than the number of INPUT "
-                              f"Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
+                warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number of "
+                              f"INPUT Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
                               f"assigned default values when '{self.agent_rep.name}`s 'evaluate' method is executed. "
                               f"If this is not the desired configuration, use its get_inputs_format() method to see "
                               f"the format for all of its inputs.")
@@ -1833,7 +1835,7 @@ class OptimizationControlMechanism(ControlMechanism):
         def instantiate_list_spec(state_feature_specs, spec_str="list"):
             if len(state_feature_specs) > len(agent_rep_input_nodes):
                 warnings.warn(
-                    f"The number of 'state_features' specified for {self.name} ({len(self.state_feature_specs)}) "
+                    f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(self.state_feature_specs)}) "
                     f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
                     f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
                     f"additional Nodes are added as INPUT Nodes will generate an error.")
@@ -1842,9 +1844,10 @@ class OptimizationControlMechanism(ControlMechanism):
             if nested_comps:
                 comp_names = ", ".join([f"'{n.name}'" for n in nested_comps])
                 raise OptimizationControlMechanismError(
-                    f"The 'state_features' argument for '{self.name}' includes one or more Compositions ({comp_names}) "
-                    f"in the {spec_str} specified for its 'state_features' argument; these must be replaced by direct "
-                    f"references to the Mechanisms (or their InputPorts) within them to be shadowed.")
+                    f"The '{STATE_FEATURES}' argument for '{self.name}' includes one or more Compositions "
+                    f"({comp_names}) in the {spec_str} specified for its '{STATE_FEATURES}' argument; these must be "
+                    f"replaced by direct references to the Mechanisms (or their InputPorts) within them to be "
+                    f"shadowed.")
             # Get INPUT Nodes for items in list (assuming items are in order of INPUT Nodes of agent_rep)
             nodes = []
             specs = []
@@ -1889,7 +1892,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 if isinstance(state_feature_specs[SHADOW_INPUTS], set):
                     # Catch here to provide context-relevant error message
                     raise OptimizationControlMechanismError(
-                        f"The 'state_features' argument for '{self.name}' uses a set in a '{SHADOW_INPUTS.upper()}' "
+                        f"The '{STATE_FEATURES}' argument for '{self.name}' uses a set in a '{SHADOW_INPUTS.upper()}' "
                         f"dict;  this must be a single item or list of specifications in the order of the INPUT Nodes"
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
                 nodes, specs, names = instantiate_list_spec(state_feature_specs[SHADOW_INPUTS],
@@ -2081,9 +2084,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _validate_state_features(self):
         """Validate that state_features are legal and consistent with agent_rep.
+
         Called by _update_state_input_ports_for_controller,
         - after new Nodes have been added to Composition
         - and/or in run() as final check before execution.
+
         Ensure that:
         - if state_feature_specs are speified as a user dict, keys are valid INPUT Nodes of agent_rep;
         - all InputPorts shadowed by specified state_input_ports are in agent_rep or one of its nested Compositions;
@@ -2108,7 +2113,7 @@ class OptimizationControlMechanism(ControlMechanism):
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             if len(state_feature_specs) > len(input_nodes):
                 raise OptimizationControlMechanismError(
-                    f"The number of 'state_features' specified for {self.name} ({len(state_feature_specs)}) "
+                    f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(state_feature_specs)}) "
                     f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
                     f"as its {AGENT_REP} ('{self.agent_rep.name}').")
             input_dict = {}
@@ -2127,7 +2132,7 @@ class OptimizationControlMechanism(ControlMechanism):
             state_features = list(state_feature_specs)
 
         # Include agent rep in error messages if it is not the same as self.composition
-        self_has_state_features_str = f"'{self.name}' has 'state_features' specified "
+        self_has_state_features_str = f"'{self.name}' has '{STATE_FEATURES}' specified "
         agent_rep_str = ('' if self.agent_rep == self.composition
                          else f"both its `{AGENT_REP}` ('{self.agent_rep.name}') as well as ")
         not_in_comps_str = f"that are missing from {agent_rep_str}'{self.composition.name}' and any " \
@@ -2174,7 +2179,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
         # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
         # if len(self.state_input_ports) < len(inputs_dict):
-        #     warnings.warn(f"The 'state_features' specified for '{self.name}' are legal, but there are fewer "
+        #     warnings.warn(f"The '{STATE_FEATURES}' specified for '{self.name}' are legal, but there are fewer "
         #                   f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
         #                   f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
         #                   f"get_inputs_format() method to see the format for its inputs.")
@@ -2187,11 +2192,11 @@ class OptimizationControlMechanism(ControlMechanism):
             self.agent_rep._parse_input_dict(inputs)
         except RunError as error:
             raise OptimizationControlMechanismError(
-                f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+                f"The '{STATE_FEATURES}' argument has been specified for '{self.name}' that is using a "
                 f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but "
                 f"they are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
                 f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
-                f"remove the specification of 'state_features' from the constructor for {self.name} "
+                f"remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
                 f"to have them automatically assigned.")
         except KeyError as error:   # This occurs if a Node is illegal for a reason other than above,
             pass                    # and will issue the corresponding error message.
@@ -2199,11 +2204,11 @@ class OptimizationControlMechanism(ControlMechanism):
             specs = [f.full_name if hasattr(f, 'full_name') else (f.name if isinstance(f, Component) else f)
                      for f in state_features]
             raise OptimizationControlMechanismError(
-                f"The 'state_features' argument has been specified for '{self.name}' that is using a "
+                f"The '{STATE_FEATURES}' argument has been specified for '{self.name}' that is using a "
                 f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but the "
-                f"'state_features' ({specs}) specified are not compatible with the inputs required by 'agent_rep' "
+                f"'{STATE_FEATURES}' ({specs}) specified are not compatible with the inputs required by 'agent_rep' "
                 f"when it is executed. Use its get_inputs_format() method to see the required format, "
-                f"or remove the specification of 'state_features' from the constructor for {self.name} "
+                f"or remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
                 f"to have them automatically assigned.")
 
     def _validate_monitor_for_control(self, nodes):

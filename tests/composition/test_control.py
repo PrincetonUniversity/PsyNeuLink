@@ -771,60 +771,60 @@ class TestControlMechanisms:
 
     messages = [
         # 0
-        "There are fewer 'state_features' specified for 'OptimizationControlMechanism-0' than the number of "
-        "INPUT Nodes of its agent_rep ('OUTER COMP'); the remaining inputs will be assigned default values "
-        "when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired configuration, use its "
-        "get_inputs_format() method to see the format for all of its inputs.",
+        f"There are fewer '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' than the number of "
+        f"INPUT Nodes of its agent_rep ('OUTER COMP'); the remaining inputs will be assigned default values "
+        f"when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired configuration, use its "
+        f"get_inputs_format() method to see the format for all of its inputs.",
 
         # 1
-        '\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
-        'that is not an INPUT Node of that Composition is not currently supported.\'',
+        f'\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
+        f'that is not an INPUT Node of that Composition is not currently supported.\'',
 
         # 2
-        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'Shadowed input of '
-        'EXT[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'Shadowed input of '
+        f'EXT[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         # 3
-        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'EXT[OutputPort-0]\']) '
-        'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'EXT[OutputPort-0]\']) '
+        f'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         # 4
-        "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' that is using a "
-        "Composition ('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by its "
-        "'agent_rep': 'Input stimulus (0.0) for OB is incompatible with its external_input_values "
-        "([array([0., 0., 0.])]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, "
-        "or remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 to "
-        "have them automatically assigned.",
+        f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' "
+        f"that is using a Composition ('OUTER COMP') as its agent_rep, but they are not compatible with "
+        f"the inputs required by its 'agent_rep': 'Input stimulus (0.0) for OB is incompatible with its "
+        f"external_input_values ([array([0., 0., 0.])]).' Use the get_inputs_format() method of 'OUTER COMP' "
+        f"to see the required format, or remove the specification of '{pnl.STATE_FEATURES}' from the constructor "
+        f"for OptimizationControlMechanism-0 to have them automatically assigned.",
 
         # 5
-        "The number of 'state_features' specified for OptimizationControlMechanism-0 (4) is more than "
-        "the number of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP').  "
-        "Executing OptimizationControlMechanism-0 before the additional Nodes are added as INPUT Nodes "
-        "will generate an error.",
+        f"The number of '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 (4) is more than "
+        f"the number of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP').  "
+        f"Executing OptimizationControlMechanism-0 before the additional Nodes are added as INPUT Nodes "
+        f"will generate an error.",
 
         # 6
-        '"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
-        'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
+        f'"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
+        f'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
 
         # 7
-        'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OC) '
-        'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
-        'used as keys in a dict used to specify \'state_features\'.',
+        f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OC) '
+        f'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
+        f'used as keys in a dict used to specify \'state_features\'.',
 
         # 8
-        'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
-        'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
-        'or used as keys in a dict used to specify \'state_features\'.',
+        f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
+        f'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
+        f'or used as keys in a dict used to specify \'state_features\'.',
 
         # 9
-        "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
-        "('INNER COMP') in the list specified for its 'state_features' argument; these must be replaced by direct "
-        "references to the Mechanisms (or their InputPorts) within them to be shadowed.",
+        f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
+        f"('INNER COMP') in the list specified for its '{pnl.STATE_FEATURES}' argument; these must be replaced by "
+        f"direct references to the Mechanisms (or their InputPorts) within them to be shadowed.",
 
         # 10
-        "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
-        "('INNER COMP') in the SHADOW_INPUTS dict specified for its 'state_features' argument; these must be "
-        "replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed."
+        f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
+        f"('INNER COMP') in the SHADOW_INPUTS dict specified for its '{pnl.STATE_FEATURES}' argument; these must be "
+        f"replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed."
     ]
 
     state_feature_args = [
@@ -2994,7 +2994,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # Test args:
         if nested_agent_rep is True:
             agent_rep = mcomp
-            error_text = f"'OCM' has 'state_features' specified (['D[OutputPort-0]']) that are missing from both " \
+            error_text = f"'OCM' has '{STATE_FEATURES}' specified (['D[OutputPort-0]']) that are missing from both " \
                          f"its `agent_rep` ('{nested_agent_rep[1]}') as well as 'OUTER COMP' and any " \
                          f"Compositions nested within it."
         else:
