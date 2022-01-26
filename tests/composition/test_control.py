@@ -800,9 +800,9 @@ class TestControlMechanisms:
         'used as keys in a dict used to specify \'state_features\'.',
 
         # 8
-        # 'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OB) '
-        'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
-        'used as keys in a dict used to specify \'state_features\'.',
+        'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
+        'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
+        'or used as keys in a dict used to specify \'state_features\'.',
 
         # 9
         "The 'state_features' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
@@ -816,11 +816,11 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
         ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
         ('input_dict_spec', None, None, None),
-        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
         ('automatic_assignment', None, None, None),
         ('shadow_inputs_dict_spec', None, None, None),
         ('shadow_inputs_dict_spec_w_none', None, None, None),
@@ -858,7 +858,8 @@ class TestControlMechanisms:
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
             'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-            # 'input_dict_spec': {oa:oc.input_port, ia:ia, ob:ob.output_port}, # <- ia is in nested Comp doesnt work
+            'input_dict_spec_short': {oa:oc.input_port, ob:ob.output_port}, # Note: missing oa spec
+            # 'input_dict_spec': {oa:oc.input_port, ia:ia, ob:ob.output_port}, # <- ia is in nested Comp doesn't work
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK
             'automatic_assignment': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
@@ -916,6 +917,12 @@ class TestControlMechanisms:
                 # 'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
                 assert ocm.state_features == {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
 
+            elif state_feature_args[0] == 'input_dict_spec_short':
+                assert len(ocm.state_input_ports) == 2
+                assert ocm.state_input_ports.names == ['Shadowed input of OC[InputPort-0]',
+                                                       'OB[OutputPort-0]']
+                assert ocm.state_features == {oa:oc.input_port, ob:ob.output_port}
+
             elif state_feature_args[0] == 'set_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
@@ -951,9 +958,7 @@ class TestControlMechanisms:
                     ocomp.add_controller(ocm)
                     assert warning[0].message.args[0] == message_1
                 if state_feature_args[0] in 'bad_set_spec_warning':
-                    assert message_2 in warning[1].message.args[0] # since set, order of ob and ia is not reliable
-                    assert 'OB' in warning[1].message.args[0]
-                    assert 'IA' in warning[1].message.args[0]
+                    assert message_2 == warning[1].message.args[0] # since set, order of ob and ia is not reliable
             else:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)

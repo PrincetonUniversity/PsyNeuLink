@@ -1807,7 +1807,11 @@ class OptimizationControlMechanism(ControlMechanism):
             return input_nodes
 
         def get_input_nodes_for_state_feature_specs():
-            return [node for node in agent_rep_input_nodes[:len(state_feature_specs)] if node in state_feature_specs]
+            # MODIFIED 1/25/22 OLD:
+            # return [node for node in agent_rep_input_nodes[:len(state_feature_specs)] if node in state_feature_specs]
+            # MODIFIED 1/25/22 NEW:
+            return [node for node in agent_rep_input_nodes if node in state_feature_specs]
+            # MODIFIED 1/25/22 END
 
         def get_inputs_for_nested_comp(comp):
             # FIX: 1/18/22 - NEEDS TO BE MODIFIED TO RETURN TUPLE IF > INPUT NODE, ONCE THAT CAN BE HANDLED BY LIST SPEC
@@ -1968,8 +1972,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_features.extend(parsed_spec)
 
-        # # MODIFIED 1/24/22 OLD:
-        #  FIX - 1/25/22: REINSTATE ONCE self.state_feature_specs IS A PARAMETER WITH structural=True
+        # # # MODIFIED 1/24/22 OLD:
+        # #  FIX - 1/25/22: REINSTATE ONCE self.state_feature_specs IS A PARAMETER WITH structural=True
         # self.state_feature_specs = state_feature_specs
         # MODIFIED 1/24/22 END
         return parsed_features
@@ -2882,9 +2886,48 @@ class OptimizationControlMechanism(ControlMechanism):
     def state_features(self):
         """Return dict with {INPUT Node: source} entries for specifications in **state_features** arg of constructor."""
         num_feats = len(self.state_input_ports)
-        input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)[:num_feats]
+        # # # MODIFIED 1/25/22 ORIG:
+        # input_nodes = self._specified_input_nodes_in_order
+        # sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
+        #            for source_tuple,value in list(self.state_dict.items())[:len(self.state_input_ports)]]
+        # return {k:v for k,v in zip(input_nodes, sources)}
+        # # # MODIFIED 1/25/22 OLD:
+        # input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)[:num_feats]
+        # # # MODIFIED 1/25/22 NEW:
+        # input_nodes = [node for i, node in enumerate(self._get_agent_rep_input_nodes(comp_as_node=True))
+        #                if self.state_feature_specs[i] is not None]
+        # # MODIFIED 1/25/22 NEWER:
+        # input_nodes = self._specified_input_nodes_in_order
+        # # # MODIFIED 1/25/22 NEWEST:
+        # input_nodes = []
+        # agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+        # for i in range(num_feats):
+        #     if self.state_feature_specs:
+        #         input_nodes.append(agent_rep_input_nodes[i])
+        # # # # MODIFIED 1/25/22 NEWESTER:
+        input_nodes = None
+        state_features = None
+        if isinstance(self.state_feature_specs, dict):
+            # if SHADOW_INPUTS in self.state_feature_specs:
+            #     # SHADOW_INPUTS dict spec
+            #     # state_features = self.state_feature_specs[SHADOW_INPUTS]
+            #     input_nodes = self._specified_input_nodes_in_order
+            # else:
+            #     # User dict spec
+            #     input_nodes = self.state_feature_specs.keys()
+            input_nodes = self._specified_input_nodes_in_order
+        else:
+            # List spec
+            state_features = self.state_feature_specs
+        if not self.state_feature_specs:
+            # Automatic assignment
+            input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+        elif not input_nodes:
+            # List spec
+            input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
+                                                      state_features) if spec is not None]
         sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-                   for source_tuple,value in list(self.state_dict.items())[:num_feats]]
+                   for source_tuple,value in list(self.state_dict.items())[:len(self.state_input_ports)]]
         return {k:v for k,v in zip(input_nodes, sources)}
 
     @property
