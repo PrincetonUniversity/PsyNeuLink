@@ -1320,6 +1320,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Only mechanisms use "value" state
         if not hasattr(self, 'ports'):
             blacklist.add("value")
+
+        # Only mechanisms and compositions need 'num_executions'
+        if not hasattr(self, 'ports') and not hasattr(self, 'nodes'):
+            blacklist.add("num_executions")
+
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1382,7 +1387,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "auto", "hetero", "cost", "costs", "combined_costs",
                      "control_signal",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer"}
+                     "pytorch_representation", "optimizer",
+                     # duplicate
+                     "allocation_samples", "control_allocation_search_space"}
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
