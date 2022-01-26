@@ -728,7 +728,13 @@ class ConditionGenerator:
 
             val = builder.load(param_ptr)
             val = convert_type(builder, val, ir.DoubleType())
+            threshold = val.type(threshold)
 
-            return builder.fcmp_ordered(comparator, val, val.type(threshold))
+            if comparator == '==':
+                return is_close(self.ctx, builder, val, threshold, condition.rtol, condition.atol)
+            elif comparator == '!=':
+                return builder.not_(is_close(self.ctx, builder, val, threshold, condition.rtol, condition.atol))
+            else:
+                return builder.fcmp_ordered(comparator, val, threshold)
 
         assert False, "Unsupported scheduling condition: {}".format(condition)
