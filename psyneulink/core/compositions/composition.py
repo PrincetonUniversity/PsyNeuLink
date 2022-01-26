@@ -4438,22 +4438,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 completed_nodes.append(node)
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
 
-        # Don't instantiate unless flagged for updating (if nodes have been added to the graph);
-        #    this avoids unnecessary calls on repeated calls to run().
-        if (self.controller
-                and self.needs_update_controller
-                # MODIFIED 1/25/22 OLD:
-                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
-                # # MODIFIED 1/25/22 NEW:
-                #  FIX: REQUIRED TO UPDATING OCM.state_input_ports FOR ADDED NODES
-                #       BUT CAUSES TROUBLE WITH test_deferred_init() (AND OTHER TESTS)
-                # and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE | ContextFlags.METHOD)):
-                # MODIFIED 1/25/22 END
-            if hasattr(self.controller, 'state_input_ports'):
+        if self.controller:
+            # Avoid unnecessary updating on repeated calls to run()
+            if self.needs_update_controller and hasattr(self.controller, 'state_input_ports'):
                 self.needs_update_controller = \
                     not self.controller._update_state_input_ports_for_controller(context=context)
-            self.controller._validate_monitor_for_control(self._get_all_nodes())
-            self._instantiate_control_projections(context=context)
+
+            # Make sure all is in order at run time
+            if context.flags & ContextFlags.PREPARING:
+                self.controller._validate_monitor_for_control(self._get_all_nodes())
+                self._instantiate_control_projections(context=context)
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -7723,7 +7717,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         invalid_aux_components = self._get_invalid_aux_components(controller)
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
-            self._analyze_graph(context=context) # to ensure that controller.state_dict and state_features are callable
+            # # MODIFIED 1/25/22 NEW:
+            # # FIX: THE FOLLOWING IS NEEDED TO INSURE PROJECTIONS TO state_input_ports HAVE BEEN ASSIGNED
+            #        SO THAT state_features PROPERTY CAN PROPERLY REPORT WHICH ONES HAVE BEEN INSTANTIATED
+            self._analyze_graph(context=context)
+            # MODIFIED 1/25/22 END
             return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------

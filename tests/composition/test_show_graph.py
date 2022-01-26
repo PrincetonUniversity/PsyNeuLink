@@ -448,6 +448,7 @@ class TestControl:
         assert len(target.efferents) == 1
         assert target.efferents[0].receiver == icomp.input_CIM.input_ports['INPUT_CIM_Target_InputPort-0']
         assert icomp.input_CIM.output_ports['INPUT_CIM_Target_InputPort-0'].efferents[0].receiver.owner == p.target
+        assert ocomp.controller.num_state_input_ports == 1
 
         gv = ocomp.show_graph(output_fmt='source', **show_graph_kwargs)
         assert gv.strip() == expected_output

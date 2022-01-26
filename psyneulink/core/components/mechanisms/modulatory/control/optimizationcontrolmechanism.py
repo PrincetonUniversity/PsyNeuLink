@@ -2060,7 +2060,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._instantiate_pending_state_features()
             return
 
-        else:
+        elif not self.state_input_ports:
             # agent_rep is Composition, but no state_features have been specified,
             #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
             shadow_input_ports = []
