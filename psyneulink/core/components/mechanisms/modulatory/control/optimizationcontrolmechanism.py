@@ -2919,8 +2919,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # List spec
             input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
                                                       state_features) if spec is not None]
-        # sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-        #            for source_tuple,value in list(self.state_dict.items())[:len(self.state_input_ports)]]
         sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
                    for source_tuple,value in list(self.state_dict.items())[:num_instantiated_state_features]]
         return {k:v for k,v in zip(input_nodes, sources)}
