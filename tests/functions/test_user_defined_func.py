@@ -31,7 +31,7 @@ def binDiv(_, param1, param2):
 
 
 def binPow(_, param1, param2):
-    return param1 / param2
+    return param1 ** param2
 
 
 @pytest.mark.parametrize("param1", [1, np.ones(2), np.ones((2, 2))], ids=['scalar', 'vector', 'matrix'])
