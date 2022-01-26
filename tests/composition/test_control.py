@@ -259,8 +259,9 @@ class TestControlSpecification:
 
     @pytest.mark.parametrize('state_features_option', [
         'list',
-        # 'set',
-        # 'dict'
+        'set',
+        'dict',
+        'shadow_inputs_dict'
     ])
     def test_partial_deferred_init(self, state_features_option):
         initial_node_a = pnl.TransferMechanism(name='ia')
@@ -289,7 +290,8 @@ class TestControlSpecification:
             'set': {initial_node_a,
                     deferred_node},
             'dict': {initial_node_a: initial_node_a.input_port,
-                     deferred_node: deferred_node.input_port}
+                     deferred_node: deferred_node.input_port},
+            'shadow_inputs_dict': {pnl.SHADOW_INPUTS: [initial_node_a, deferred_node]}
         }[state_features_option]
 
         ocomp.add_controller(
@@ -314,8 +316,18 @@ class TestControlSpecification:
         )
         assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port}
 
-        expected_text = 'The number of \'state_features\' specified for Controller (2) is more ' \
-                        'than the number of INPUT Nodes (1) of the Composition assigned as its agent_rep (\'ocomp\').'
+        if state_features_option in {'list', 'shadow_inputs_dict'}:
+            expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
+                            'number of INPUT Nodes (1) of the Composition assigned as its agent_rep (\'ocomp\').'
+
+        else:
+            expected_text = 'The \'state_features\' specified for \'Controller\' contains an item (deferred) ' \
+                            'that is not an INPUT Node of its agent_rep (\'ocomp\'); only INPUT Nodes can be ' \
+                            'in a set or used as keys in a dict used to specify \'state_features\'.'
+            # expected_text = 'The \'state_features\' specified for \'Controller\' contains an item (deferred) ' \
+            #                 'that is not in its agent_rep (\'ocomp\'). Executing \'ocomp\' before they are added ' \
+            #                 'will generate an error .'
+
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
             ocomp.run({initial_node_a: [1]})
         assert expected_text in error_text.value.error_value
