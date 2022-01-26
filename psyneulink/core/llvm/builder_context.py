@@ -483,17 +483,70 @@ def _gen_cuda_kernel_wrapper_module(function):
     tid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.tid.x")
     ntid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ntid.x")
     ctaid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ctaid.x")
-    global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
-    global_id = builder.add(global_id, builder.call(tid_x_f, []))
+    ntid = builder.call(ntid_x_f, [])
+    tid = builder.call(tid_x_f, [])
+    global_id = builder.mul(builder.call(ctaid_x_f, []), ntid)
+    global_id = builder.add(global_id, tid)
+
+    # Index all pointer arguments. Ignore the thread count argument
+    args = list(kernel_func.args)[:-1]
+    indexed_args = []
+
+    # pointer args do not alias
+    for a in args:
+        if isinstance(a.type, ir.PointerType):
+            a.attributes.add('noalias')
+
+    def _upload_to_shared(b, ptr, name):
+        shared = ir.GlobalVariable(module, ptr.type.pointee,
+                                   name=function.name + "_shared_" + name,
+                                   addrspace=3)
+        shared.alignment = 128
+        shared.linkage = "internal"
+        shared_ptr = b.addrspacecast(shared, shared.type.pointee.as_pointer())
+
+        char_ptr_ty = ir.IntType(8).as_pointer()
+        bool_ty = ir.IntType(1)
+
+        ptr_src = b.bitcast(ptr, char_ptr_ty)
+        ptr_dst = b.bitcast(shared_ptr, char_ptr_ty)
+
+        obj_size_ty = ir.FunctionType(ir.IntType(32), [char_ptr_ty, bool_ty, bool_ty, bool_ty])
+        obj_size_f = module.declare_intrinsic("llvm.objectsize.i32", [], obj_size_ty)
+        # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
+        obj_size = b.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
+
+        if "unaligned_copy" not in debug_env:
+            int_ty = ir.IntType(32)
+            int_ptr_ty = int_ty.as_pointer()
+            obj_size = builder.add(obj_size, obj_size.type((int_ty.width // 8) - 1))
+            obj_size = builder.udiv(obj_size, obj_size.type(int_ty.width // 8))
+            ptr_src = builder.bitcast(ptr, int_ptr_ty)
+            ptr_dst = builder.bitcast(shared_ptr, int_ptr_ty)
+
+
+        # copy data using as many threads as available in thread group
+        with helpers.for_loop(b, tid, obj_size, ntid, id="copy_" + name) as (b1, i):
+            src = b1.gep(ptr_src, [i])
+            dst = b1.gep(ptr_dst, [i])
+            b1.store(b1.load(src), dst)
+
+        sync_threads_ty = ir.FunctionType(ir.VoidType(), [])
+        sync_threads = module.declare_intrinsic("llvm.nvvm.barrier0", [], sync_threads_ty)
+        builder.call(sync_threads, [])
+
+        return b, shared_ptr
+
+    if is_grid_ranged and "cuda_no_shared" not in debug_env:
+        builder, args[0] = _upload_to_shared(builder, args[0], "params")
+        builder, args[1] = _upload_to_shared(builder, args[1], "state")
+        builder, args[3] = _upload_to_shared(builder, args[3], "inputs")
+        builder, args[4] = _upload_to_shared(builder, args[4], "data")
 
     # Check global id and exit if we're over
     should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
     with builder.if_then(should_quit):
         builder.ret_void()
-
-    # Index all pointer arguments. Ignore the thread count argument
-    args = list(kernel_func.args)[:-1]
-    indexed_args = []
 
     # If we're calling ranged search there are no offsets
     if is_grid_ranged:
@@ -527,6 +580,7 @@ def _gen_cuda_kernel_wrapper_module(function):
             arg = builder.gep(arg, [offset])
 
         indexed_args.append(arg)
+
     builder.call(decl_f, indexed_args)
     builder.ret_void()
 
