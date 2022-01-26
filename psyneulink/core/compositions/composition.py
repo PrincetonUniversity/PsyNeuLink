@@ -7717,11 +7717,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         invalid_aux_components = self._get_invalid_aux_components(controller)
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
-            # # MODIFIED 1/25/22 NEW:
-            # # FIX: THE FOLLOWING IS NEEDED TO INSURE PROJECTIONS TO state_input_ports HAVE BEEN ASSIGNED
-            #        SO THAT state_features PROPERTY CAN PROPERLY REPORT WHICH ONES HAVE BEEN INSTANTIATED
+            # Need update here so state_features remains up to date
             self._analyze_graph(context=context)
-            # MODIFIED 1/25/22 END
             return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
