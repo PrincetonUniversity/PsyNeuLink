@@ -2055,9 +2055,9 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.state_feature_specs:
             # Restrict validation and any further instantation of state_input_ports
             #    until run time, when the Composition is expected to be fully constructed
+            self._instantiate_pending_state_features()
             if context._execution_phase == ContextFlags.PREPARING:
                 self._validate_state_features()
-                self._instantiate_pending_state_features()
             return
 
         elif not self.state_input_ports:
@@ -2103,9 +2103,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
             return True
 
+    # MODIFIED 1/25/22 NEW:
     def _instantiate_pending_state_features(self):
         # assert False, 'TBI: _instantiate_pending_state_features'
-        pass
+        assert True
+    # MODIFIED 1/25/22 END
 
     def _validate_state_features(self):
         """Validate that state_features are legal and consistent with agent_rep.
@@ -2924,9 +2926,10 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def state_features(self):
         """Return dict with {INPUT Node: source} entries for specifications in **state_features** arg of constructor."""
-        input_nodes = self._specified_input_nodes_in_order
+        num_feats = len(self.state_input_ports)
+        input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)[:num_feats]
         sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-                   for source_tuple,value in list(self.state_dict.items())[:len(self.state_input_ports)]]
+                   for source_tuple,value in list(self.state_dict.items())[:num_feats]]
         return {k:v for k,v in zip(input_nodes, sources)}
 
     @property

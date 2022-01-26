@@ -319,19 +319,19 @@ class TestControlSpecification:
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
             ocomp.run({initial_node_a: [1]})
         assert expected_text in error_text.value.error_value
-        #
-        # ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
-        # assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
-        #                                            deferred_node: deferred_node.input_port}
-        #
-        # result = ocomp.run({
-        #     initial_node_a: [1],
-        #     deferred_node: [1]
-        # })
-        # # result = 10, the sum of the input (1) multiplied by the value of the ControlSignals projecting, respectively, to Node "ia" and Node "deferred_node"
-        # # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
-        # # Control Signal "deferred_node": Maximizes over the search space consisting of ints 1-5
-        # assert result == [[10]]
+
+        ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
+        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
+                                                   deferred_node: deferred_node.input_port}
+
+        result = ocomp.run({
+            initial_node_a: [1],
+            deferred_node: [1]
+        })
+        # result = 10, the sum of the input (1) multiplied by the value of the ControlSignals projecting, respectively, to Node "ia" and Node "deferred_node"
+        # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
+        # Control Signal "deferred_node": Maximizes over the search space consisting of ints 1-5
+        assert result == [[10]]
 
     def test_deferred_objective_mech(self):
         initial_node = pnl.TransferMechanism(name='initial_node')
