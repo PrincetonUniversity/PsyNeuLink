@@ -1833,12 +1833,30 @@ class OptimizationControlMechanism(ControlMechanism):
         source_specs_for_input_nodes = []
 
         def instantiate_list_spec(state_feature_specs, spec_str="list"):
+
             if len(state_feature_specs) > len(agent_rep_input_nodes):
-                warnings.warn(
-                    f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(self.state_feature_specs)}) "
-                    f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-                    f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
-                    f"additional Nodes are added as INPUT Nodes will generate an error.")
+                agent_rep_nodes = self.agent_rep._get_all_nodes()
+                nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
+                                          for spec in state_feature_specs
+                                          if ((isinstance(spec, (Mechanism, Composition))
+                                               and spec not in agent_rep_nodes)
+                                              or (isinstance(spec, Port)
+                                                  and spec.owner not in agent_rep_nodes))]
+                if nodes_not_in_agent_rep:
+                    node_str = ", ".join(nodes_not_in_agent_rep)
+                    warnings.warn(
+                        f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(self.state_feature_specs)}) "
+                        f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
+                        f"assigned as its {AGENT_REP} ('{self.agent_rep.name}'), which includes the following that "
+                        f"are not in '{self.agent_rep.name}': {node_str}.  Executing {self.name} before the "
+                        f"additional Node(s) are added as INPUT Nodes will generate an error.")
+                else:
+                    warnings.warn(
+                        f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(self.state_feature_specs)}) "
+                        f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
+                        f"assigned as its {AGENT_REP} ('{self.agent_rep.name}').  Executing {self.name} before the "
+                        f"additional Nodes are added as INPUT Nodes will generate an error.")
+
             # Nested Compositions not allowed to be specified in a list spec
             nested_comps = [node for node in state_feature_specs if isinstance(node, Composition)]
             if nested_comps:
@@ -1871,6 +1889,7 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_names.append(spec.full_name)
                         else:
                             spec_names.append(spec.name)
+
             return nodes or None, specs, spec_names or []
 
         # PARSE SPECS  ------------------------------------------------------------------------------------------
@@ -2112,10 +2131,21 @@ class OptimizationControlMechanism(ControlMechanism):
             #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             if len(state_feature_specs) > len(input_nodes):
+                agent_rep_nodes = self.agent_rep._get_all_nodes()
+                # FIX: 1/26/22 - MAKE THIS A PROPERTY (AND USE IN _parse_state_feature_specs._instantiate_list_spec()
+                nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
+                                          for spec in state_feature_specs
+                                          if ((isinstance(spec, (Mechanism, Composition))
+                                               and spec not in agent_rep_nodes)
+                                              or (isinstance(spec, Port)
+                                                  and spec.owner not in agent_rep_nodes))]
+                missing_nodes_str = (f", that includes the following: {', '.join(nodes_not_in_agent_rep)} "
+                                     f"missing from {self.agent_rep.name}"
+                                     if nodes_not_in_agent_rep else '')
                 raise OptimizationControlMechanismError(
                     f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(state_feature_specs)}) "
                     f"is more than the number of INPUT Nodes ({len(input_nodes)}) of the Composition assigned "
-                    f"as its {AGENT_REP} ('{self.agent_rep.name}').")
+                    f"as its {AGENT_REP} ('{self.agent_rep.name}'){missing_nodes_str}.")
             input_dict = {}
             for i, spec in enumerate(state_feature_specs):
                 input_dict[input_nodes[i]] = spec

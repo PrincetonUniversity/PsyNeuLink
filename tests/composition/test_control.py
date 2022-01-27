@@ -317,16 +317,17 @@ class TestControlSpecification:
         assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
+            # expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
+            #                 'number of INPUT Nodes (1) of the Composition assigned as its agent_rep (\'ocomp\').'
+            #
             expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
-                            'number of INPUT Nodes (1) of the Composition assigned as its agent_rep (\'ocomp\').'
+                            'number of INPUT Nodes (1) of the Composition assigned as its agent_rep (\'ocomp\'), ' \
+                            'that includes the following: \'deferred\' missing from ocomp.'
 
         else:
             expected_text = 'The \'state_features\' specified for \'Controller\' contains an item (deferred) ' \
                             'that is not an INPUT Node of its agent_rep (\'ocomp\'); only INPUT Nodes can be ' \
                             'in a set or used as keys in a dict used to specify \'state_features\'.'
-            # expected_text = 'The \'state_features\' specified for \'Controller\' contains an item (deferred) ' \
-            #                 'that is not in its agent_rep (\'ocomp\'). Executing \'ocomp\' before they are added ' \
-            #                 'will generate an error .'
 
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
             ocomp.run({initial_node_a: [1]})
@@ -803,28 +804,34 @@ class TestControlMechanisms:
         f"will generate an error.",
 
         # 6
+        f"The number of 'state_features' specified for OptimizationControlMechanism-0 (4) is more than the number "
+        f"of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP'), which includes the "
+        f"following that are not in 'OUTER COMP': 'EXT'.  Executing OptimizationControlMechanism-0 before the "
+        f"additional Node(s) are added as INPUT Nodes will generate an error.",
+
+        # 7
         f'"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
         f'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
 
-        # 7
+        # 8
         f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OC) '
         f'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
         f'used as keys in a dict used to specify \'state_features\'.',
 
-        # 8
+        # 9
         f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
         f'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
         f'or used as keys in a dict used to specify \'state_features\'.',
 
-        # 9
+        # 10
         f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
         f"('INNER COMP') in the list specified for its '{pnl.STATE_FEATURES}' argument; these must be replaced by "
         f"direct references to the Mechanisms (or their InputPorts) within them to be shadowed.",
 
-        # 10
+        # 11
         f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
         f"('INNER COMP') in the SHADOW_INPUTS dict specified for its '{pnl.STATE_FEATURES}' argument; these must be "
-        f"replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed."
+        f"replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed.",
     ]
 
     state_feature_args = [
@@ -841,13 +848,14 @@ class TestControlMechanisms:
         ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
         ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
         ('too_many_inputs_warning', messages[5], None, UserWarning),
-        ('too_many_inputs_error', messages[6], None, pnl.OptimizationControlMechanismError),
-        ('bad_dict_spec_warning', messages[7], None, UserWarning),
-        ('bad_dict_spec_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        ('bad_set_spec_warning', messages[0], messages[8], UserWarning),
-        ('bad_set_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        ('comp_in_list_spec', messages[9], None, pnl.OptimizationControlMechanismError),
-        ('comp_in_shadow_inupts_spec', messages[10], None, pnl.OptimizationControlMechanismError)
+        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
+        ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
@@ -886,6 +894,7 @@ class TestControlMechanisms:
             'input_format_wrong_shape': [ia.input_port, oa.output_port, oc.output_port],
             'too_many_inputs_warning': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
             'too_many_inputs_error': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
+            'too_many_w_node_not_in_composition_warning': [ia, oa, ob, ext],
             'bad_dict_spec_warning': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_set_spec_warning': {ob, ia},  # elicits both short spec and not INPUT Node warnings (for both ob and ia)
@@ -965,7 +974,10 @@ class TestControlMechanisms:
 
         elif state_feature_args[3] is UserWarning:
             # These also produce errors, tested below
-            if state_feature_args[0] in {'too_many_inputs_warning', 'bad_dict_spec_warning', 'bad_set_spec_warning'}:
+            if state_feature_args[0] in {'too_many_inputs_warning',
+                                         'too_many_w_node_not_in_composition_warning',
+                                         'bad_dict_spec_warning',
+                                         'bad_set_spec_warning'}:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
                     assert warning[0].message.args[0] == message_1
