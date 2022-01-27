@@ -1783,6 +1783,14 @@ class OptimizationControlMechanism(ControlMechanism):
         state_feature_specs = state_feature_specs.copy()
         # MODIFIED 1/26/22 END
 
+        # Only list spec allowed if agent_rep is a CompositionFunctionApproximator
+        if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR and not isinstance(state_feature_specs, list):
+            agent_rep_name = f" ({self.agent_rep.name})" if not isinstance(self.agent_rep, type) else ''
+            raise OptimizationControlMechanismError(
+                f"The {AGENT_REP} specified for {self.name}{agent_rep_name} is a {COMPOSITION_FUNCTION_APPROXIMATOR}, "
+                f"so its '{STATE_FEATURES}' argument must be a list, not a {type(state_feature_specs).__name__} "
+                f"({state_feature_specs}).")
+
         # agent_rep has not yet been (fully) constructed
         if not agent_rep_input_nodes and self.agent_rep_type is COMPOSITION:
             if (isinstance(state_feature_specs, set)
@@ -1842,24 +1850,26 @@ class OptimizationControlMechanism(ControlMechanism):
         source_specs_for_input_nodes = []
 
         def instantiate_list_spec(state_feature_specs, spec_str="list"):
-
-            if len(state_feature_specs) > len(agent_rep_input_nodes):
-                nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
-                                          for spec in self._get_nodes_not_in_agent_rep(state_feature_specs)]
-                if nodes_not_in_agent_rep:
-                    node_str = ", ".join(nodes_not_in_agent_rep)
-                    warnings.warn(
-                        f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(self.state_feature_specs)}) "
-                        f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-                        f"assigned as its {AGENT_REP} ('{self.agent_rep.name}'), which includes the following that "
-                        f"are not in '{self.agent_rep.name}': {node_str}. Executing {self.name} before the "
-                        f"additional Node(s) are added as INPUT Nodes will generate an error.")
-                else:
-                    warnings.warn(
-                        f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(self.state_feature_specs)}) "
-                        f"is more than the number of INPUT Nodes ({len(agent_rep_input_nodes)}) of the Composition "
-                        f"assigned as its {AGENT_REP} ('{self.agent_rep.name}'). Executing {self.name} before the "
-                        f"additional Nodes are added as INPUT Nodes will generate an error.")
+            if self.agent_rep_type == COMPOSITION:
+                if len(state_feature_specs) > len(agent_rep_input_nodes):
+                    nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
+                                              for spec in self._get_nodes_not_in_agent_rep(state_feature_specs)]
+                    if nodes_not_in_agent_rep:
+                        node_str = ", ".join(nodes_not_in_agent_rep)
+                        warnings.warn(
+                            f"The number of '{STATE_FEATURES}' specified for {self.name} "
+                            f"({len(self.state_feature_specs)}) is more than the number of INPUT Nodes "
+                            f"({len(agent_rep_input_nodes)}) of the Composition assigned as its {AGENT_REP} "
+                            f"('{self.agent_rep.name}'), which includes the following that "
+                            f"are not in '{self.agent_rep.name}': {node_str}. Executing {self.name} before the "
+                            f"additional Node(s) are added as INPUT Nodes will generate an error.")
+                    else:
+                        warnings.warn(
+                            f"The number of '{STATE_FEATURES}' specified for {self.name} "
+                            f"({len(self.state_feature_specs)}) is more than the number of INPUT Nodes "
+                            f"({len(agent_rep_input_nodes)}) of the Composition assigned as its {AGENT_REP} "
+                            f"('{self.agent_rep.name}'). Executing {self.name} before the "
+                            f"additional Nodes are added as INPUT Nodes will generate an error.")
 
             # Nested Compositions not allowed to be specified in a list spec
             nested_comps = [node for node in state_feature_specs if isinstance(node, Composition)]

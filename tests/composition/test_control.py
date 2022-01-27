@@ -682,6 +682,12 @@ class TestControlMechanisms:
          "mcomp", "I", None, False, True, pnl.CompositionError,
          "B found in nested Composition of OUTER COMP (MIDDLE COMP) but without required NodeRole.OUTPUT. "
          "Try setting 'allow_probes' argument of ObjectiveMechanism for OCM to 'True'."
+         ),
+        ("cfa_as_agent_rep_error",
+         "cfa", "dict", None, False, True, pnl.OptimizationControlMechanismError,
+         'The agent_rep specified for OCM is a CompositionFunctionApproximator, so its \'state_features\' argument '
+         'must be a list, not a dict ({(ProcessingMechanism A): (InputPort InputPort-0), '
+         '(ProcessingMechanism B): (InputPort InputPort-0)}).'
          )
     ]
     @pytest.mark.parametrize('id, agent_rep, state_features, monitor_for_control, allow_probes, '
@@ -712,15 +718,18 @@ class TestControlMechanisms:
         mcomp = pnl.Composition(pathways=[[A,B,C],icomp],
                                 name='MIDDLE COMP')
         ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP', allow_probes=allow_probes)
+        cfa = pnl.RegressionCFA
 
         agent_rep = {"mcomp":mcomp,
-                     "icomp":icomp
+                     "icomp":icomp,
+                     "cfa": cfa
                      }[agent_rep]
 
         state_features = {"I":I,
                           "Ii A":[I.input_port, A],
                           "A":A,
                           "B":B,
+                          "dict":{A:A.input_port, B:B.input_port}
                           }[state_features]
 
         if monitor_for_control:
