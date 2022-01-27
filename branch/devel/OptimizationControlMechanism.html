@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.21.gb207320 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0+untagged.19.gc8f5f89 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.21.gb207320
+                  0+untagged.19.gc8f5f89
                 </div>
               
             
@@ -341,7 +341,7 @@ estimate the <a class="reference internal" href="ControlMechanism.html#psyneulin
 the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.controller" title="psyneulink.core.compositions.composition.Composition.controller"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">controller</span></code></a>.  These different types of <a class="reference internal" href="#optimizationcontrolmechanism-agent-rep"><span class="std std-ref">agent representation</span></a> correspond closely to the distinction between <em>model-based</em> and
 <em>model-free</em> optimization in the <a class="reference external" href="https://www.google.com/books/edition/Reinforcement_Learning_second_edition/uWV0DwAAQBAJ?hl=en&amp;gbpv=1&amp;dq=Sutton,+R.+S.,+%26+Barto,+A.+G.+(2018).+Reinforcement+learning:+An+introduction.+MIT+press.&amp;pg=PR7&amp;printsec=frontcover">machine learning</a>
 and <a class="reference external" href="https://www.nature.com/articles/nn1560">cognitive neuroscience</a> literatures, as described below.</p>
-<figure class="align-default" id="id4">
+<figure class="align-default" id="id5">
 <a class="reference internal image-reference" href="_static/Optimization_fig.svg"><img alt="OptimizationControlMechanism" src="_static/Optimization_fig.svg" /></a>
 <figcaption>
 <p><span class="caption-text"><strong>Functional Anatomy of an OptimizationControlMechanism.</strong> <em>Panel A:</em> Examples of use in fully model-based
@@ -351,7 +351,7 @@ the example of <a class="reference internal" href="#optimizationcontrolmechanism
 the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> is a <a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a>. The <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a> can also be another (presumably simpler) Composition that can be used
 to implement forms of optimization intermediate between fully model-based and model-free. <em>Panel B:</em> Flow of
 execution during optimization.  In both panels, faded items show process of adaptation when using a
-<a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a> as the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a>.</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<a class="reference internal" href="CompositionFunctionApproximator.html"><span class="doc">CompositionFunctionApproximator</span></a> as the <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.agent_rep"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">agent_rep</span></code></a>.</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
 </figcaption>
 </figure>
 <div class="line-block">
@@ -557,7 +557,6 @@ Mechanism <em>is</em> to be shadowed, then its InputPort must be specified expli
 </ul>
 </li>
 </ul>
-<p>State features can also be added to an existing OptimizationControlMechanism using its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_state_features" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_state_features"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">add_state_features</span></code></a> method.</p>
 </li>
 </ul>
 <ul id="optimizationcontrolmechanism-state-feature-functions-arg">
@@ -1044,7 +1043,7 @@ to compute the <a class="reference internal" href="ControlMechanism.html#psyneul
 <dd><p>dictionary containing information about the Components corresponding to the values in <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state</span></code></a>.  Keys are (<a class="reference internal" href="Port.html"><span class="doc">Port</span></a>, <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>, <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, index) tuples,
 identifying the source of the value for each item at the corresponding index in
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state</span></code></a>, and values are its value in <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state</span></code></a>. The initial entries are for the OptimizationControlMechanism’s
-<a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_features" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_features"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state</span> <span class="pre">features</span></code></a>, that are the sources of its
+<a class="reference internal" href="#id4" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_features"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state</span> <span class="pre">features</span></code></a>, that are the sources of its
 <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values" title="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state_feature_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">state_feature_values</span></code></a>;  they are followed
 by entries for the parameters modulated by the OptimizationControlMechanism’s <a class="reference internal" href="#optimizationcontrolmechanism-output"><span class="std std-ref">control_signals</span></a> with the corresponding <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.control_allocation"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">control_allocation</span></code></a> values.</p>
 <dl class="field-list simple">
@@ -1304,10 +1303,52 @@ or **monitor_for_control</strong> ports (if <strong>objective_mechanism</strong>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_monitor_for_control">
-<span class="sig-name descname"><span class="pre">_validate_monitor_for_control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_monitor_for_control" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ensure all of the Components being monitored for control are in the Composition being controlled
-If monitor_for_control is specified as an ObjectiveMechanism, warn and move to objective_mecahnism arg</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._get_agent_rep_input_nodes">
+<span class="sig-name descname"><span class="pre">_get_agent_rep_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp_as_node</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._get_agent_rep_input_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all input_nodes of agent_rep, including those for any Composition nested one level down.
+If an INPUT Node is a Composition, and include_comp_as_node is:
+- False, include the nested Composition’s INPUT Nodes, but not the Composition
+- True, include the nested Composition but not its INPUT Nodes
+- ALL, include the nested Composition AND its INPUT Nodes</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_input_nodes">
+<span class="sig-name descname"><span class="pre">_validate_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enforce</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_input_nodes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check that nodes are INPUT Nodes of agent_rep
+Raise exception for non-INPUT Nodes if <strong>enforce</strong> is specified; else warn.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._parse_state_feature_specs">
+<span class="sig-name descname"><span class="pre">_parse_state_feature_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_feature_specs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._parse_state_feature_specs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse entries of state_features specifications into InputPort spec dictionaries.</p>
+<p>Called from _instantiate_input_ports()</p>
+<dl class="simple">
+<dt>state_features specify sources of values assigned to state_feature_values, and passed to agent_rep.evaluate()</dt><dd><p>as the inputs to its INPUT Nodes.</p>
+</dd>
+</dl>
+<p>Each is used to create Projection(s) from specified source (may be direct or indirect from a nested Composition)
+If the number of state_features specified is less than the number of agent_rep INPUT Nodes,</p>
+<blockquote>
+<div><p>do not construct a state_input_port (as a result, no input is provided to the corresponding INPUT Node
+when agent_rep.evaluate() executes, and the value of that NODE from its last execution is used.</p>
+</div></blockquote>
+<dl class="simple">
+<dt>If shadowing is specified, set INTERNAL_ONLY to True in entry of params dict for state_input_port’s InputPort</dt><dd><p>specification dictionary (so that inputs to Composition are not required if the specified state_feature
+is for an INPUT Node).</p>
+</dd>
+<dt>If an INPUT Node is specified that is not (yet) in agent_rep, and/or a source is specified that is not yet</dt><dd><p>in the self.composition, warn and defer creating a state_input_port;  final check is made (and error
+generated for unresolved specifications at run time.</p>
+</dd>
+</dl>
+<p>Handle four formats:
+- list:  list of sources; must be listed in same order as INPUT Nodes of agent_rep to which they correspond;
+- dict:  keys are INPUT Nodes of agent_rep and values are corresponding sources;
+- set: INPUT Nodes for which shadowing is specified
+- SHADOW_INPUTS dict:  single entry with key=’SHADOW_INPUTS” and values=list of sources (see above).</p>
+<p>Assign functions specified in <strong>state_feature_functions</strong> to InputPorts for all state_features</p>
+<p>Return list of InputPort specification dictionaries for state_input_ports</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1331,6 +1372,29 @@ or from the output_port of a Node that is not somewhere in the agent_rep Composi
 <li><p>assign state_feature_functions to relevant state_input_ports (same function for all if no state_features
 are specified or only one state_function is specified;  otherwise, use dict for specifications).</p></li>
 </ul>
+<p>Return True if successful, None if not performed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_state_features">
+<span class="sig-name descname"><span class="pre">_validate_state_features</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_state_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that state_features are legal and consistent with agent_rep.</p>
+<p>Called by _update_state_input_ports_for_controller,
+- after new Nodes have been added to Composition
+- and/or in run() as final check before execution.</p>
+<p>Ensure that:
+- if state_feature_specs are speified as a user dict, keys are valid INPUT Nodes of agent_rep;
+- all InputPorts shadowed by specified state_input_ports are in agent_rep or one of its nested Compositions;
+- any Projections received from output_ports are from Nodes in agent_rep or its nested Compositions;
+- all InputPorts shadowed by state_input_ports reference INPUT Nodes of agent_rep or of a nested Composition;
+- state_features are compatible with input format for agent_rep Composition</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_monitor_for_control">
+<span class="sig-name descname"><span class="pre">_validate_monitor_for_control</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._validate_monitor_for_control" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure all of the Components being monitored for control are in the Composition being controlled
+If monitor_for_control is specified as an ObjectiveMechanism, warn and move to objective_mecahnism arg</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1388,23 +1452,15 @@ estimation as determined by its implementation, and returns a single estimated n
 <p>(See <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.evaluate" title="psyneulink.core.compositions.composition.Composition.evaluate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">evaluate</span></code></a> for additional details.)</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._get_agent_rep_input_nodes">
-<span class="sig-name descname"><span class="pre">_get_agent_rep_input_nodes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._get_agent_rep_input_nodes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return all input_nodes of agent_rep, including those for any Composition nested one level down.
-Note: more deeply nested Compositions will either be served by their containing one(s) or own controllers</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._parse_state_feature_specs">
-<span class="sig-name descname"><span class="pre">_parse_state_feature_specs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">state_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_functions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._parse_state_feature_specs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Parse entries of state_features into InputPort spec dictionaries
-For entries specifying shadowing, set INTERNAL_ONLY entry of params dict for InputPort spec dictionary to True</p>
-<blockquote>
-<div><p>(so that inputs to Composition are not required if the specified state feature is on an INPUT Mechanism)</p>
-</div></blockquote>
-<p>Assign functions specified in <strong>state_feature_functions</strong> to InputPorts for all state_features
-Return list of InputPort specification dictionaries for state_input_ports</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="id4">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">state_features</span></span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<dd><p>source} entries for specifications in <strong>state_features</strong> arg of constructor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>Return dict with {INPUT Node</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
@@ -1418,14 +1474,6 @@ constructor string</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._initialize_composition_function_approximator">
 <span class="sig-name descname"><span class="pre">_initialize_composition_function_approximator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._initialize_composition_function_approximator" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize CompositionFunctionApproximator</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_state_features">
-<span class="sig-name descname"><span class="pre">add_state_features</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.add_state_features" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add InputPorts and Projections to OptimizationControlMechanism for state_features used to
-predict <a class="reference internal" href="ControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.net_outcome"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">net_outcome</span></code></a></p>
-<p><strong>state_features</strong> argument can use any of the forms of specification allowed for InputPort(s)</p>
 </dd></dl>
 
 </dd></dl>
