@@ -132,6 +132,33 @@ def LeakyFun(init, value, iterations, noise, **kwargs):
                     2.19281309, 1.61148745, 3.23404557, 2.81418859, 2.63042344]
 
 
+def AccumulatorFun(init, value, iterations, noise, **kwargs):
+    assert iterations == 3
+
+    if np.isscalar(noise):
+        if "initializer" not in kwargs:
+            # variable is not used in Accumulator
+            return [[1.38631136, 1.38631136, 1.38631136, 1.38631136, 1.38631136,
+                     1.38631136, 1.38631136, 1.38631136, 1.38631136, 1.38631136]]
+        else:
+            return [[1.40097107, 1.39610447, 1.39682937, 1.40344986, 1.38762668,
+                     1.38792466, 1.38668573, 1.40172829, 1.40071984, 1.40242065]]
+    elif isinstance(noise, pnl.DistributionFunction):
+        if "initializer" not in kwargs:
+            return [[1.46381634, 0.97440038, 0.54931704, 0.28681701, 0.26162584,
+                     0.66800459, 1.1010486, 0.02587729, 0.38761176, -0.56452977]]
+        else:
+            return [[1.47847605, 0.98419348, 0.55983505, 0.30395551, 0.26294116,
+                     0.66961789, 1.10142297, 0.04129421, 0.40202024, -0.54842049]]
+    else:
+        if "initializer" not in kwargs:
+            return [[1.65907194, 1.41957474, 0.96892655, 1.39471298, 0.51090402,
+                     1.20706503, 0.5443729, 1.61376489, 1.04949166, 0.90644658]]
+        else:
+            return [[1.67373165, 1.42936784, 0.97944456, 1.41185147, 0.51221934,
+                     1.20867833, 0.54474727, 1.62918182, 1.06390014, 0.92255587]]
+
+
 GROUP_PREFIX="IntegratorFunction "
 
 
@@ -149,6 +176,7 @@ GROUP_PREFIX="IntegratorFunction "
     (Functions.DriftDiffusionIntegrator, DriftIntFun),
     (Functions.DriftOnASphereIntegrator, DriftSphereFun),
     (Functions.LeakyCompetingIntegrator, LeakyFun),
+    (Functions.AccumulatorIntegrator, AccumulatorFun),
     ], ids=lambda x: x[0])
 @pytest.mark.benchmark
 def test_execute(func, func_mode, variable, noise, params, benchmark):
@@ -170,6 +198,13 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
     else:
         if 'dimension' in params:
             params.pop('dimension')
+
+    if 'AccumulatorIntegrator' in func[0].componentName:
+        params = {
+            **params,
+            'increment': RAND0_1,
+        }
+        params.pop('offset')
 
     f = func[0](default_variable=variable, noise=noise, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)

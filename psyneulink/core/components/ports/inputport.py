@@ -1282,11 +1282,7 @@ class InputPort(Port_Base):
                                  f"with non-InputPort specification ({input_port}).")
 
         sender_output_ports = [p.sender for p in input_port.path_afferents]
-        # MODIFIED 1/12/22 OLD:
-        port_spec = {NAME: SHADOW_INPUT_NAME + input_port.owner.name,
-        # # MODIFIED 1/12/22 NEW:
-        # port_spec = {NAME: SHADOW_INPUT_NAME + input_port.full_name,
-        # MODIFIED 1/12/22 END
+        port_spec = {NAME: SHADOW_INPUT_NAME + input_port.full_name,
                      VARIABLE: np.zeros_like(input_port.variable),
                      PORT_TYPE: InputPort,
                      PROJECTIONS: sender_output_ports,

@@ -2487,31 +2487,10 @@ class Mechanism_Base(Mechanism):
                 else:
                     if context.source & ContextFlags.COMMAND_LINE:
                         context.execution_phase = ContextFlags.PROCESSING
-
                         if input is not None:
                             input = convert_all_elements_to_np_array(input)
-                        # MODIFIED 1/14/22 NEW:
-                        else:
-                            input = self.defaults.variable
-                        # MODIFIED 1/14/22 END
-
                     if input is None:
-                        # MODIFIED 1/14/22 OLD:
                         input = self.defaults.variable
-                        # # MODIFIED 1/14/22 NEW:  Handle None on port-by-port basis (using default_input attribute)
-                        # if 'Parameter_CIM' in self.name:
-                        #     input = self.defaults.variable
-                        # else:
-                        #     input = self._update_input_ports(context=context)
-                        # # MODIFIED 1/14/22 NEWER:  Handle None on port-by-port basis (using default_input attribute)
-                        # if self.path_afferents:
-                        #     input = []
-                        #     for input_port in self.input_ports:
-                        #         if input_port.path_afferents or input_port.default_input:
-                        #             input.append(self.defaults.variable[i])
-                        #         else:
-                        #             input.append(None)
-                        # MODIFIED 1/14/22 END
                     #     FIX:  this input value is sent to input CIMs when compositions are nested
                     #           variable should be based on afferent projections
                     variable = self._get_variable_from_input(input, context)
