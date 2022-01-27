@@ -4438,19 +4438,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 completed_nodes.append(node)
         self._partially_added_nodes = list(set(self._partially_added_nodes) - set(completed_nodes))
 
-        # Don't instantiate unless flagged for updating (if nodes have been added to the graph);
-        #    this avoids unnecessary calls on repeated calls to run().
-        if (self.controller
-                and self.needs_update_controller
-                and context.flags & (ContextFlags.COMPOSITION | ContextFlags.COMMAND_LINE)):
-            if hasattr(self.controller, 'state_input_ports'):
-                self.controller._update_state_input_ports_for_controller(context=context)
-                # self._instantiate_controller_shadow_projections(context=context)
-            self.controller._validate_monitor_for_control(self._get_all_nodes())
-            self._instantiate_control_projections(context=context)
-            # FIX: 11/15/21 - CAN'T SET TO FALSE HERE, AS THIS IS CALLED BY _analyze_graph() FROM add_node()
-            #                 BEFORE PROJECTIONS TO THE NODE HAS BEEN ADDED (AFTER CALL TO add_node())
-            self.needs_update_controller = False
+        if self.controller:
+            # Avoid unnecessary updating on repeated calls to run()
+            if self.needs_update_controller and hasattr(self.controller, 'state_input_ports'):
+                self.needs_update_controller = \
+                    not self.controller._update_state_input_ports_for_controller(context=context)
+
+            # Make sure all is in order at run time
+            if context.flags & ContextFlags.PREPARING:
+                self.controller._validate_monitor_for_control(self._get_all_nodes())
+                self._instantiate_control_projections(context=context)
 
     def _determine_node_roles(self, context=None):
         """Assign NodeRoles to Nodes in Composition
@@ -7720,6 +7717,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         invalid_aux_components = self._get_invalid_aux_components(controller)
         if invalid_aux_components:
             self._controller_initialization_status = ContextFlags.DEFERRED_INIT
+            # Need update here so state_features remains up to date
+            self._analyze_graph(context=context)
             return
 
         # ADD MONITORING COMPONENTS -----------------------------------------------------
@@ -9095,6 +9094,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         """
         context.source = ContextFlags.COMPOSITION
+        execution_phase = context.execution_phase
+        context.execution_phase = ContextFlags.PREPARING
 
         for node in self.nodes:
             num_execs = node.parameters.num_executions._get(context)
@@ -9274,6 +9275,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             trial_output = np.atleast_2d(self.env.reset())
         else:
             trial_output = None
+
+        context.execution_phase = execution_phase
 
         # EXECUTE TRIALS -------------------------------------------------------------
 
