@@ -1784,7 +1784,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # MODIFIED 1/26/22 END
 
         # agent_rep has not yet been (fully) constructed
-        if not agent_rep_input_nodes:
+        if not agent_rep_input_nodes and self.agent_rep_type is COMPOSITION:
             if (isinstance(state_feature_specs, set)
                     or isinstance(state_feature_specs, dict) and SHADOW_INPUTS not in state_feature_specs):
                 # Dict and set specs reference Nodes of agent_rep, and so must that must be constructed first
