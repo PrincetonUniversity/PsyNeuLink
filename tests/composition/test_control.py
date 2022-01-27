@@ -799,14 +799,14 @@ class TestControlMechanisms:
 
         # 5
         f"The number of '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 (4) is more than "
-        f"the number of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP').  "
+        f"the number of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP'). "
         f"Executing OptimizationControlMechanism-0 before the additional Nodes are added as INPUT Nodes "
         f"will generate an error.",
 
         # 6
         f"The number of 'state_features' specified for OptimizationControlMechanism-0 (4) is more than the number "
         f"of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP'), which includes the "
-        f"following that are not in 'OUTER COMP': 'EXT'.  Executing OptimizationControlMechanism-0 before the "
+        f"following that are not in 'OUTER COMP': 'EXT'. Executing OptimizationControlMechanism-0 before the "
         f"additional Node(s) are added as INPUT Nodes will generate an error.",
 
         # 7
