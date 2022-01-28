@@ -3915,6 +3915,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._handle_allow_probes_for_control(node)
 
         self._need_check_for_unused_projections = True
+        if context.source != ContextFlags.METHOD:
+            # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
+            self._analyze_graph(context=Context(source=ContextFlags.METHOD))
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """

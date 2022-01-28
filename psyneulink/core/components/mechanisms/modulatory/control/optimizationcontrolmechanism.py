@@ -1736,7 +1736,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 items_str = f"contains items ({items}) that are"
             message = f"The '{STATE_FEATURES}' specified for '{self.name}' {items_str} not in its {AGENT_REP} " \
                       f"('{self.agent_rep.name}'). Executing '{self.agent_rep.name}' before " \
-                      f"{'they' if singular else 'it'} are added will generate an error ."
+                      f"{'they are' if singular else 'it is'} added will generate an error ."
             if enforce:
                 raise OptimizationControlMechanismError(message)
             else:
@@ -1830,7 +1830,6 @@ class OptimizationControlMechanism(ControlMechanism):
             return input_nodes
 
         def get_nodes_in_agent_rep_order():
-            # FIX: 1/26/22 - MAKES ASSUMPTION THAT NODES NOT YET IN agent_rep WILL BE ADDED IN ORDER LISTED
             # Re-order nodes according to their order in agent_rep.nodes, and append any not (yet) in agent_rep at end
             #    (assumes that ones not listed in order will be added to agent_rep later in the order listed)
             node_specs = list(state_feature_specs)
@@ -2950,7 +2949,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
                                                           state_features) if spec is not None]
             else:
-                # FIX: NOT SURE THIS IS SAFE;  ASSUMES ITEMS ARE INSTANTIATED IN ORDER LISTED IN Composition.nodes
                 input_nodes = self._specified_input_nodes_in_order[:num_instantiated_state_features]
         else:
             # List spec
