@@ -1420,9 +1420,9 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         state_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
-        # state_features = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
-        function = Parameter(GridSearch, stateful=False, loggable=False)
+        # state_feature_specs = Parameter(None, stateful=False, loggable=False, read_only=True, structural=True)
         state_feature_functions = Parameter(None, reference=True, stateful=False, loggable=False)
+        function = Parameter(GridSearch, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
         search_space = Parameter(None, read_only=True)
         search_termination_function = Parameter(None, stateful=False, loggable=False)
@@ -1644,8 +1644,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         else:
             # Implement any specified state_features
-            state_input_ports_specs = self._parse_state_feature_specs(self.state_feature_specs,
-                                                                      self.state_feature_functions)
+            state_input_ports_specs = self._parse_state_feature_specs()
             # Note:
             #   if state_features were specified and agent_rep is a CompositionFunctionApproximator,
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
@@ -1742,7 +1741,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 warnings.warn(message)
 
-    def _parse_state_feature_specs(self, state_feature_specs, feature_functions, context=None):
+    def _parse_state_feature_specs(self, context=None):
         """Parse entries of state_features specifications into InputPort spec dictionaries.
 
         Called from _instantiate_input_ports()
@@ -1777,10 +1776,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # VALIDATION AND WARNINGS -----------------------------------------------------------------------------------
 
-        assert state_feature_specs == self.state_feature_specs, \
-            f"PROGRAM ERROR: self.state_feature_specs for {self.name} not passed to _parse_state_feature_specs()."
-        # MODIFIED 1/26/22 NEW:  FIX: MODIFY ONCE self.state_feature_specs is a Parameter(structural=True)
-        state_feature_specs = state_feature_specs.copy()
+        # assert state_feature_specs == self.state_feature_specs, \
+        #     f"PROGRAM ERROR: self.state_feature_specs for {self.name} not passed to _parse_state_feature_specs()."
+        # MODIFIED 1/26/22 NEW:
+        #  FIX: MODIFY TO state_feature_specs = self.state_feature_spec.spec ONCE it is a Parameter(structural=True)
+        state_feature_specs = self.state_feature_specs.copy()
         # MODIFIED 1/26/22 END
 
         # Only list spec allowed if agent_rep is a CompositionFunctionApproximator
@@ -2006,11 +2006,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # GET FEATURE FUNCTIONS -----------------------------------------------------------------------------
 
-            if feature_functions:
-                if isinstance(feature_functions, dict) and spec in feature_functions:
+            if self.state_feature_functions:
+                if isinstance(self.state_feature_functions, dict) and spec in self.state_feature_functions:
+                    feature_functions = self.feature_functions.copy()
                     feat_fct = feature_functions.pop(spec)
                 else:
-                    feat_fct = feature_functions
+                    feat_fct = self.state_feature_functions
                 parsed_spec.update({FUNCTION: self._parse_state_feature_function(feat_fct)})
             parsed_spec = [parsed_spec] # so that extend works below
 
