@@ -2456,6 +2456,7 @@ class OptimizationControlMechanism(ControlMechanism):
             return [defaultControlAllocation]
 
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
+        # FIX 1/28/22:  THIS NEEDS TO TAKE ACCOUNT OF None OR MISSING SPECIFICATIONS IN state_feature_specs
         # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         self.parameters.state_feature_values._set(_parse_state_feature_values_from_variable(
             self.num_outcome_input_ports,
