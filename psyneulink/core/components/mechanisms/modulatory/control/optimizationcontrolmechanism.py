@@ -321,8 +321,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     of individual input specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.
     The full format required for inputs to `agent_rep <OptimizationControlMechanism.agent_rep>` can be seen using
     its `get_input_format <Composition.get_input_format>` method.  If only some `INPUT <NodeRole.INPUT>` Nodes are
-    specified, the remaining ones are assigned their `default values <Component.defaults>` when the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.
+    specified, the remaining ones are assigned their `default variable <Component.defaults>` as input when the
+    `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.
     This is the most reliable and straightforward way to specify **state_features**.
 
   .. _Optimization_Control_Mechanism_State_Feature_List_Inputs:
@@ -334,18 +334,18 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     that `INPUT <NodeRole.INPUT>` Nodes are listed in the `nodes <Composition.nodes>` attribute of the `agent_rep
     <OptimizationControlMechanism.agent_rep>` Composition (and returned by a call to its
     `get_nodes_by_role(NodeRole.INPUT) <Composition.get_nodes_by_role>` method).  If the list is incomplete,
-    the remaining INPUT Nodes are assigned their `default values <Component.defaults>` when the `agent_rep
+    the remaining INPUT Nodes are assigned their `default variable <Component.defaults>` as input when the `agent_rep
     <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.  If `agent_rep
     <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, the list must have the same
     number of items and in the same order as their values are expected to be in the **feature_values** argument of
-    the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute <CompositionFunctionApproximator.evaluate>`
+    the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <CompositionFunctionApproximator.evaluate>`
     method.
 
   .. _Optimization_Control_Mechanism_State_Feature_Set_Inputs:
 
   * *Set* -- a set of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the `agent_rep
     <OptimizationControlMechanism.agent_rep>`.  All of the Nodes specified will be FIX SHADOWED [GET PHRASISNG RIGHT]
-    Any Nodes not included in the set will be assigned their `default values <Component.defaults>` when the `agent_rep
+    Any Nodes not included in the set will be assigned their `default variable <Component.defaults>` when the `agent_rep
     <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.
     FIX: ??NOTE RELATIONSHIP OF THIS TO SHADOW_INPUTS FORMAT, ?WITH THE ADVANTAGE THAT ORDER DOESN'T MATTER
 
@@ -362,10 +362,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
        If only a single input specification is provided to **state_features**, it is treated as a list with a single
        item (see `above <Optimization_Control_Mechanism_State_Feature_List_Inputs>`), and assigned as the input to the
        first `INPUT <NodeRole.INPUT>` Node of `agent_rep <OptimizationControlMechanism.agent_rep>`; if the latter has
-       any additional `INPUT <NodeRole.INPUT>` Nodes, they are assigned their `default values <Component.defaults>`.
+       any additional `INPUT <NodeRole.INPUT>` Nodes, they are assigned their `default variable <Component.defaults>`
+       as inputs when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>`
+       method is executed.
 
     .. _Optimization_Control_Mechanism_Numeric_State_Feature:
-    * *numeric value* -- create an `InputPort` with the specified value as its `default value <Component.defaults>`
+    * *numeric value* -- create an `InputPort` with the specified value as its `default variable <Component.defaults>`
       and no `afferent Projections <Mechanism_Base.afferents>`;  as a result, the specified value is assigned as the
       input to the corresponding `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
       <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
@@ -994,9 +996,12 @@ RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
 RANDOM_VARIABLES = 'random_variables'
 NUM_ESTIMATES = 'num_estimates'
 
-def _parse_state_feature_values_from_variable(index, variable):
-    """Return values of state_input_ports"""
-    return convert_to_np_array(np.array(variable[index:]).tolist())
+# # MODIFIED 1/28/22 OLD:
+# def _parse_state_feature_values_from_variable(index, variable):
+#     """Return values of state_input_ports"""
+#     return convert_to_np_array(np.array(variable[index:]).tolist())
+# MODIFIED 1/28/22 END
+
 
 class OptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
@@ -1462,9 +1467,13 @@ class OptimizationControlMechanism(ControlMechanism):
         agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True, structural=True)
 
         # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED (CHANGE 1 to 0? IF STATE_INPUT_PORTS ARE FIRST)
-        state_feature_values = Parameter(_parse_state_feature_values_from_variable(1, [defaultControlAllocation]),
-                                         user=False,
-                                         pnl_internal=True)
+        # # MODIFIED 1/28/22 OLD:
+        # state_feature_values = Parameter(_parse_state_feature_values_from_variable(1, [defaultControlAllocation]),
+        #                                  user=False,
+        #                                  pnl_internal=True)
+        # MODIFIED 1/28/22 NEW:
+        state_feature_values = Parameter(None, user=False, pnl_internal=True)
+        # MODIFIED 1/28/22 END
 
         # FIX: Should any of these be stateful?
         random_variables = ALL
@@ -1532,6 +1541,10 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 1/26/22: PUT IN CONSTRUCTOR FOR Parameter OR _parse_state_feature_specs() METHOD ON IT
         self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
                                     else convert_to_list(state_features))
+
+        # MODIFIED 1/28/22 NEW:
+        self.state_feature_values = self._parse_state_feature_values_from_variable([defaultControlAllocation])
+        # MODIFIED 1/28/22 END
 
         function = function or GridSearch
 
@@ -1778,11 +1791,14 @@ class OptimizationControlMechanism(ControlMechanism):
         Called from _instantiate_input_ports()
 
         state_features specify sources of values assigned to state_feature_values, and passed to agent_rep.evaluate()
-            as the inputs to its INPUT Nodes.
-        Each is used to create Projection(s) from specified source (may be direct or indirect from a nested Composition)
-        If the number of state_features specified is less than the number of agent_rep INPUT Nodes,
-            do not construct a state_input_port (as a result, no input is provided to the corresponding INPUT Node
-            when agent_rep.evaluate() executes, and the value of that NODE from its last execution is used.
+            as the inputs to its INPUT Nodes (**predicted_inputs argument if agent_rep is a Composition;
+            **feature_values** argument if it is a CompositionFunctionApproximator.
+        Each is used to create Projection(s) from specified source; these may be direct, or indirect by way of a CIM
+            if the source is in a nested Composition).
+        If the number of state_features specified is less than the number of agent_rep INPUT Nodes, only construct
+            state_input_ports for the INPUT Nodes specified (for a list spec, the first n INPUT Nodes listed in
+            agent_rep.nodes, where n is the length of the list spec); as a result, the remaining INPUT Nodes are
+            provided their default variables as input when agent_rep.evaluate() executes.
         If shadowing is specified, set INTERNAL_ONLY to True in entry of params dict for state_input_port's InputPort
             specification dictionary (so that inputs to Composition are not required if the specified state_feature
             is for an INPUT Node).
@@ -2448,6 +2464,30 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             self._initialize_composition_function_approximator(context)
 
+    def _parse_state_feature_values_from_variable(self, variable):
+        """Return value of state_input_ports for specified state_features and default_values for unspecified inputs."""
+        # # MODIFIED 1/28/22 OLD:
+        # return convert_to_np_array(np.array(variable[index:]).tolist())
+        # MODIFIED 1/28/22 NEW:
+        values_for_specified_features = np.array(variable[self.num_outcome_input_ports:]).tolist()
+        if not self.num_state_input_ports:
+            return values_for_specified_features
+        # state_feature_values = [v if f is not None else self._get_agent_rep_input_nodes[i].defaults.variable
+        #                         for v, f, i in zip(np.array(variable[index:]).tolist(),
+        #                                            self.state_feature_specs)]
+        input_nodes = self._get_agent_rep_input_nodes()
+        full_set_of_feature_values = []
+        j=0
+        for i in range(len(self.state_feature_specs)):
+            if self.state_feature_specs[i] is not None:
+                feature_value = values_for_specified_features[j]
+                j += 1
+            else:
+                feature_value = input_nodes[i].defaults.variable
+            full_set_of_feature_values.append(feature_value)
+        return convert_to_np_array(full_set_of_feature_values)
+        # MODIFIED 1/28/22 END
+
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of agent_rep.evaluate().
         """
@@ -2458,9 +2498,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
         # FIX 1/28/22:  THIS NEEDS TO TAKE ACCOUNT OF None OR MISSING SPECIFICATIONS IN state_feature_specs
         # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        self.parameters.state_feature_values._set(_parse_state_feature_values_from_variable(
-            self.num_outcome_input_ports,
-            variable), context)
+        self.parameters.state_feature_values._set(self._parse_state_feature_values_from_variable(variable), context)
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation._get(context)
@@ -2475,10 +2513,14 @@ class OptimizationControlMechanism(ControlMechanism):
             net_outcome = self.parameters.net_outcome._get(context)
 
             # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-            self.agent_rep.adapt(_parse_state_feature_values_from_variable(self.num_outcome_input_ports, variable),
-                                 control_allocation,
-                                 net_outcome,
-                                 context=context)
+            # # MODIFIED 1/28/22 OLD:
+            # self.agent_rep.adapt(_parse_state_feature_values_from_variable(self.num_outcome_input_ports, variable),
+            #                      control_allocation,
+            #                      net_outcome,
+            #                      context=context)
+            # MODIFIED 1/28/22 NEW:
+            self.agent_rep.adapt(_parse_state_feature_values_from_variable(variable))
+            # MODIFIED 1/28/22 END
 
         # freeze the values of current context, because they can be changed in between simulations,
         # and the simulations must start from the exact spot
