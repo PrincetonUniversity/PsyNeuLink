@@ -3915,9 +3915,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             self._handle_allow_probes_for_control(node)
 
         self._need_check_for_unused_projections = True
-        if context.source != ContextFlags.METHOD:
-            # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
-            self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+
+        # # MODIFIED 1/27/22 NEW: FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
+        # if context.source != ContextFlags.METHOD:
+        #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
+        #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        # MODIFIED 1/27/22 END
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
@@ -7459,7 +7462,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
 
-        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
         try:
             act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                                 receiver=learning_mechanism.input_ports[0])

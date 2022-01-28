@@ -2937,29 +2937,24 @@ class OptimizationControlMechanism(ControlMechanism):
     def state_features(self):
         """Return dict with {INPUT Node: source} entries for specifications in **state_features** arg of constructor."""
 
-        input_nodes = None
-        state_features = None
         num_instantiated_state_features = len([p for p in self.state_input_ports
                                                if p.path_afferents or p.default_input])
-        # dict spec
-        if isinstance(self.state_feature_specs, dict):
-            if SHADOW_INPUTS in self.state_feature_specs:
-                state_features = self.state_feature_specs[SHADOW_INPUTS]
-                input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
-                                                          state_features) if spec is not None]
-            else:
-                input_nodes = self._specified_input_nodes_in_order[:num_instantiated_state_features]
-        else:
-            # list or set spec
-            state_features = self.state_feature_specs
-
         if not self.state_feature_specs:
             # Automatic assignment
             input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-        elif not input_nodes:
-            # List spec
-            input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
-                                                      state_features) if spec is not None]
+        else:
+            if isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS not in self.state_feature_specs:
+                # User dict spec
+                input_nodes = self._specified_input_nodes_in_order[:num_instantiated_state_features]
+            else:
+                if isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS in self.state_feature_specs:
+                    # SHADOW_INPUTS dict
+                    state_feature_specs = self.state_feature_specs[SHADOW_INPUTS]
+                else:
+                    # list and set specs
+                    state_feature_specs = self.state_feature_specs
+                input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
+                                                          state_feature_specs) if spec is not None]
         sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
                    for source_tuple,value in list(self.state_dict.items())[:num_instantiated_state_features]]
         return {k:v for k,v in zip(input_nodes, sources)}
