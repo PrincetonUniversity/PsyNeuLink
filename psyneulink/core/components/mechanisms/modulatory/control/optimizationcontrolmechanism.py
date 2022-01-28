@@ -2937,22 +2937,22 @@ class OptimizationControlMechanism(ControlMechanism):
     def state_features(self):
         """Return dict with {INPUT Node: source} entries for specifications in **state_features** arg of constructor."""
 
-        num_instantiated_state_features = len([p for p in self.state_input_ports
-                                               if p.path_afferents or p.default_input])
         input_nodes = None
         state_features = None
+        num_instantiated_state_features = len([p for p in self.state_input_ports
+                                               if p.path_afferents or p.default_input])
+        # dict spec
         if isinstance(self.state_feature_specs, dict):
             if SHADOW_INPUTS in self.state_feature_specs:
-                # FIX: 1/26/22 - NEED TO DEAL WITH None
-                # input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
                 state_features = self.state_feature_specs[SHADOW_INPUTS]
                 input_nodes = [node for node, spec in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
                                                           state_features) if spec is not None]
             else:
                 input_nodes = self._specified_input_nodes_in_order[:num_instantiated_state_features]
         else:
-            # List spec
+            # list or set spec
             state_features = self.state_feature_specs
+
         if not self.state_feature_specs:
             # Automatic assignment
             input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
