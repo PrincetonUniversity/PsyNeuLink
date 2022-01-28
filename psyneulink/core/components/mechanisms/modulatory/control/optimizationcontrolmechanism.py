@@ -222,6 +222,13 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_Agent_Rep_Composition:
 
+  FIX: - MAKE IT CLEAR THAT SHADOWING IS THE DEFAULT ASSUMPTION, THAT IS USED FOR AUTOMATIC INSTANTIATION, AND ASSUMED
+          FOR ANY MISSING SPECIFICATIONS WHEN SPECIFIED EXPLICITLY
+       - MENTION BEING PASSED AS predicted_input ARG OF agent_rep.evaluate() METHOD
+       - ARE UN-SPECIFIED VALUES ASSIGNED DEFAULT OR LAST EXECUTED VALUE?
+       - EXPLAIN THAT agent_rep.evaluate() USES:
+         > **predicted_input** FOR agent_rep THAT IS A Compasition,
+         > **feature_values** FOR agent_rep THAT IS A CompasitionFunctionApproximator
   * *agent_rep is a Composition* -- the **state_features** specify the inputs to the Composition when it is executed
     by the OptimizationControlMechanism to `evaluate <OptimizationControlMechanism_Evaluation>` its performance.
     If **state_features** is not specified, this is done automatically by constructing a set of `state_input_ports
@@ -269,24 +276,33 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
            <OptimizationControlMechanism.agent_rep>`.  A third, more sophisticated approach, is to assign
            ControlSignals to the InputPorts for the irrelevant features, and specify them to suppress their values.
 
+  COMMENT:
+  FIX: MOVE THE FOLLOWING TO AFTER LIST SPECIFICATION AND REFER BACK UP TO THAT.
+       SAY UP FRONT THEY MUST ALWAYS BE EXPLICIT
+  COMMENT
+
   .. _OptimizationControlMechanism_Agent_Rep_CFA:
 
-  * *agent_rep is a CompositionFunctionApproximator* -- the **state_features** specify the inputs to the
-    CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` method.  This is not
-    done automatically (see warning below).
+  * *agent_rep is a CompositionFunctionApproximator* -- the **state_features** specify the **feature_values**
+    argument to the CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` method.
+    This is not done automatically; they must be specified as a list, with the correct number of items in the same
+    order they are expected be in the array passed to the **feature_values** argument of the
+    `evaluate<CompositionFunctionApproximator.evaluate>` method (see warning below).
 
         .. warning::
-           The **state_features** specified when the `agent_rep <OptimizationControlMechanism.agent_rep>`
-           is a `CompositionFunctionApproximator` must align with the arguments of its `evaluate
-           <CompositionFunctionApproximator.evaluate>` method.  Since the latter cannot always be determined
-           automatically, the `state_input_ports <OptimizationControlMechanism.state_input_ports>` cannot be created
-           automatically, nor can the **state_features** specification be validated;  thus, specifying inappropriate
-           **state_features** may produce errors that are unexpected or difficult to interpret.
+           The **state_features** for an `agent_rep <OptimizationControlMechanism.agent_rep>` that is a
+           `CompositionFunctionApproximator` cannot be created automatically nor can they be validated;
+           thus specifying the wrong number or invalid **state_features**, or specifying them in an incorrect
+           order may produce errors that are unexpected or difficult to interpret.
 
   COMMENT:
    FIX: CONFIRM (OR IMPLEMENT?) THE FOLLOWING
    If all of the inputs to the Composition are still required, these can be specified using the keyword *INPUTS*,
    in which case they are retained along with any others specified.
+  COMMENT
+
+  COMMENT:
+  FIX: MOVE THE FOLLOWING UP TO UNDER agent_rep = Composition
   COMMENT
 
   .. _OptimizationControlMechanism_State_Features_Shadow_Inputs:
@@ -311,13 +327,27 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _Optimization_Control_Mechanism_State_Feature_List_Inputs:
 
+  FIX: METNION USE OF None TO SKIP ITEM IN LIST
   * *List* -- a list of individual input source specifications, that can be any of the forms of individual input
-    specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`. These are assumed
-    to be listed in the order that `INPUT <NodeRole.INPUT>` Nodes are listed in the of the `nodes <Composition.nodes>`
-    attribute of `agent_rep <OptimizationControlMechanism.agent_rep>`  (and returned by a call to its
+    specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.  If `agent_rep
+    `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, then the items must be listed in the order
+    that `INPUT <NodeRole.INPUT>` Nodes are listed in the `nodes <Composition.nodes>` attribute of the `agent_rep
+    <OptimizationControlMechanism.agent_rep>` Composition (and returned by a call to its
     `get_nodes_by_role(NodeRole.INPUT) <Composition.get_nodes_by_role>` method).  If the list is incomplete,
-    the remaining ones are assigned their `default values <Component.defaults>` when the `agent_rep
+    the remaining INPUT Nodes are assigned their `default values <Component.defaults>` when the `agent_rep
+    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.  If `agent_rep
+    <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, the list must have the same
+    number of items and in the same order as their values are expected to be in the **feature_values** argument of
+    the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evalute <CompositionFunctionApproximator.evaluate>`
+    method.
+
+  .. _Optimization_Control_Mechanism_State_Feature_Set_Inputs:
+
+  * *Set* -- a set of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the `agent_rep
+    <OptimizationControlMechanism.agent_rep>`.  All of the Nodes specified will be FIX SHADOWED [GET PHRASISNG RIGHT]
+    Any Nodes not included in the set will be assigned their `default values <Component.defaults>` when the `agent_rep
     <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.
+    FIX: ??NOTE RELATIONSHIP OF THIS TO SHADOW_INPUTS FORMAT, ?WITH THE ADVANTAGE THAT ORDER DOESN'T MATTER
 
   .. _Optimization_Control_Mechanism_State_Feature_Individual_Inputs:
 
@@ -346,7 +376,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       `state_input_port <OptimizationControlMechanism.state_input_ports>` (see `state feature functions
       <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
 
-    .. _Optimization_Control_Mechanism_Tuple_State_Feature:
+    .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
     * *specification dictionary* -- an `InputPort specification dictionary <InputPort_Specification_Dictionary>` can be
       used to configure the corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`, if
       `Parameters <Parameter>` other than its `function <InputPort.function>` need to be specified (e.g., its `name
@@ -1499,6 +1529,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 kwargs.pop('feature_function')
                 continue
 
+        # FIX: 1/26/22: PUT IN CONSTRUCTOR FOR Parameter OR _parse_state_feature_specs() METHOD ON IT
         self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
                                     else convert_to_list(state_features))
 
