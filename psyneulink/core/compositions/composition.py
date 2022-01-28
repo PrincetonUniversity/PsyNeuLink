@@ -8033,6 +8033,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
     #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
+    # FIX: 1/28/22 - NEED TO ACCOMODATE None OR MISSING state_feature_values, EITHER HERE OR IN predicted_inputs
     def _build_predicted_inputs_dict(self, predicted_inputs, controller=None):
         """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
