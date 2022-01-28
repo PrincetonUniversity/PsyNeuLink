@@ -994,6 +994,9 @@ RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
 RANDOM_VARIABLES = 'random_variables'
 NUM_ESTIMATES = 'num_estimates'
 
+# FIX 1/28/22: ** THIS NEEDS TO TAKE ACCOUNT OF None OR MISSING SPECIFICATIONS IN state_feature_specs
+#                 I.E., VALUES OF ITEMS FOR WHICH THERE ARE NOT state_input_ports
+#                 CHECK HOW THIS IS HANDLED BY composition._parse_input_dict FOR MISSING ITEMS IN inputs TO run()
 def _parse_state_feature_values_from_variable(index, variable):
     """Return values of state_input_ports"""
     return convert_to_np_array(np.array(variable[index:]).tolist())
@@ -2455,8 +2458,8 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.is_initializing:
             return [defaultControlAllocation]
 
-        # # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
-        # FIX 1/28/22:  THIS NEEDS TO TAKE ACCOUNT OF None OR MISSING SPECIFICATIONS IN state_feature_specs
+        # FIX 1/28/22: ** THIS NEEDS TO TAKE ACCOUNT OF None OR MISSING SPECIFICATIONS IN state_feature_specs
+        # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
         # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
         self.parameters.state_feature_values._set(_parse_state_feature_values_from_variable(
             self.num_outcome_input_ports,
