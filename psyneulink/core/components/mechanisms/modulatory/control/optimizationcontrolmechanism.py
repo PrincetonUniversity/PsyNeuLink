@@ -1003,30 +1003,35 @@ NUM_ESTIMATES = 'num_estimates'
 # def _parse_state_feature_values_from_variable(index, variable):
 #     """Return values of state_input_ports"""
 #     return convert_to_np_array(np.array(variable[index:]).tolist())
-# MODIFIED 1/28/22 NEW:
+# MODIFIED 1/28/22 NEW: ZZZ
 def _state_feature_values_getter(owning_component=None, context=None):
-    # variable = owning_component.parameters.variable.get(context)
-    # values_for_specified_features = np.array(variable[owning_component.num_outcome_input_ports:]).tolist()
-    # if (not owning_component.num_state_input_ports
-    #         or not any(p.path_afferents for p in owning_component.state_input_ports)):
     if (not owning_component.num_state_input_ports):
         return owning_component.defaults.variable
-    # state_feature_values = [v if f is not None else self._get_agent_rep_input_nodes[i].defaults.variable
-    #                         for v, f, i in zip(np.array(variable[index:]).tolist(),
-    #                                            self.state_feature_specs)]
-    values_for_specified_features = [p.parameters.value.get(context) for p in owning_component.state_input_ports]
-    input_nodes = owning_component._get_agent_rep_input_nodes()
-    full_set_of_feature_values = []
-    j=0
-    for i in range(len(owning_component.state_feature_specs)):
-        if owning_component.state_feature_specs[i] is not None:
-            feature_value = values_for_specified_features[j]
-            j += 1
-        else:
-            assert input_nodes[i].defaults.variable.ndim ==2 and len(input_nodes[i].defaults.variable)==1
-            feature_value = input_nodes[i].defaults.variable[0]
-        full_set_of_feature_values.append(feature_value)
-    return convert_to_np_array(full_set_of_feature_values)
+    elif context.source == ContextFlags.CONSTRUCTOR:
+        return owning_component.input_values[owning_component.num_outcome_input_ports:]
+    state_input_port_values = [p.parameters.value.get(context) for p in owning_component.state_input_ports]
+    num_state_input_ports = owning_component.num_state_input_ports
+
+    # FIX: REFACTOR TO USE state_features ONCE THAT HAS ENTRIES FOR UNSPECIFIED INPUT NODES
+
+    num_feat_specs =  0 if owning_component.state_feature_specs is None else len(owning_component.state_feature_specs)
+    if num_feat_specs in {0, num_state_input_ports}:
+        state_feature_values = state_input_port_values
+    else:
+        input_nodes = owning_component._get_agent_rep_input_nodes()
+
+        state_feature_values = []
+        j=0
+        for i in range(num_feat_specs):
+            # if owning_component.state_feature_specs[i] is not None:
+            if owning_component.state_features[i] is not None:
+                feature_value = state_feature_values[j]
+                j += 1
+            else:
+                assert input_nodes[i].defaults.variable.ndim ==2 and len(input_nodes[i].defaults.variable)==1
+                feature_value = input_nodes[i].defaults.variable[0]
+            state_feature_values.append(feature_value)
+    return convert_to_np_array(state_feature_values)
 # MODIFIED 1/28/22 END
 
 class OptimizationControlMechanismError(Exception):
