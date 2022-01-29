@@ -1003,6 +1003,30 @@ NUM_ESTIMATES = 'num_estimates'
 # def _parse_state_feature_values_from_variable(index, variable):
 #     """Return values of state_input_ports"""
 #     return convert_to_np_array(np.array(variable[index:]).tolist())
+# MODIFIED 1/28/22 NEW:
+def _state_feature_values_getter(owning_component=None, context=None):
+    # variable = owning_component.parameters.variable.get(context)
+    # values_for_specified_features = np.array(variable[owning_component.num_outcome_input_ports:]).tolist()
+    # if (not owning_component.num_state_input_ports
+    #         or not any(p.path_afferents for p in owning_component.state_input_ports)):
+    if (not owning_component.num_state_input_ports):
+        return owning_component.defaults.variable
+    # state_feature_values = [v if f is not None else self._get_agent_rep_input_nodes[i].defaults.variable
+    #                         for v, f, i in zip(np.array(variable[index:]).tolist(),
+    #                                            self.state_feature_specs)]
+    values_for_specified_features = [p.parameters.value.get(context) for p in owning_component.state_input_ports]
+    input_nodes = owning_component._get_agent_rep_input_nodes()
+    full_set_of_feature_values = []
+    j=0
+    for i in range(len(owning_component.state_feature_specs)):
+        if owning_component.state_feature_specs[i] is not None:
+            feature_value = values_for_specified_features[j]
+            j += 1
+        else:
+            assert input_nodes[i].defaults.variable.ndim ==2 and len(input_nodes[i].defaults.variable)==1
+            feature_value = input_nodes[i].defaults.variable[0]
+        full_set_of_feature_values.append(feature_value)
+    return convert_to_np_array(full_set_of_feature_values)
 # MODIFIED 1/28/22 END
 
 class OptimizationControlMechanismError(Exception):
@@ -1474,7 +1498,7 @@ class OptimizationControlMechanism(ControlMechanism):
         #                                  user=False,
         #                                  pnl_internal=True)
         # MODIFIED 1/28/22 NEW:
-        state_feature_values = Parameter(None, user=False, pnl_internal=True)
+        state_feature_values = Parameter(None, getter=_state_feature_values_getter, user=False, pnl_internal=True)
         # MODIFIED 1/28/22 END
 
         # FIX: Should any of these be stateful?
@@ -1544,8 +1568,8 @@ class OptimizationControlMechanism(ControlMechanism):
         self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
                                     else convert_to_list(state_features))
 
-        # MODIFIED 1/28/22 NEW:
-        self.state_feature_values = self._parse_state_feature_values_from_variable([defaultControlAllocation])
+        # # MODIFIED 1/28/22 NEW:
+        # self.state_feature_values = self._parse_state_feature_values_from_variable([defaultControlAllocation])
         # MODIFIED 1/28/22 END
 
         function = function or GridSearch
@@ -2466,29 +2490,31 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             self._initialize_composition_function_approximator(context)
 
-    def _parse_state_feature_values_from_variable(self, variable):
-        """Return value of state_input_ports for specified state_features and default_values for unspecified inputs."""
-        # # MODIFIED 1/28/22 OLD:
-        # return convert_to_np_array(np.array(variable[index:]).tolist())
-        # MODIFIED 1/28/22 NEW:
-        values_for_specified_features = np.array(variable[self.num_outcome_input_ports:]).tolist()
-        if not self.num_state_input_ports:
-            return values_for_specified_features
-        # state_feature_values = [v if f is not None else self._get_agent_rep_input_nodes[i].defaults.variable
-        #                         for v, f, i in zip(np.array(variable[index:]).tolist(),
-        #                                            self.state_feature_specs)]
-        input_nodes = self._get_agent_rep_input_nodes()
-        full_set_of_feature_values = []
-        j=0
-        for i in range(len(self.state_feature_specs)):
-            if self.state_feature_specs[i] is not None:
-                feature_value = values_for_specified_features[j]
-                j += 1
-            else:
-                feature_value = input_nodes[i].defaults.variable
-            full_set_of_feature_values.append(feature_value)
-        return convert_to_np_array(full_set_of_feature_values)
-        # MODIFIED 1/28/22 END
+    # # MODIFIED 1/28/22 OLD:
+    # def _parse_state_feature_values_from_variable(self, variable):
+    #     """Return value of state_input_ports for specified state_features and default_values for unspecified inputs."""
+    #     # # MODIFIED 1/28/22 OLD:
+    #     # return convert_to_np_array(np.array(variable[index:]).tolist())
+    #     # MODIFIED 1/28/22 NEW:
+    #     values_for_specified_features = np.array(variable[self.num_outcome_input_ports:]).tolist()
+    #     if not self.num_state_input_ports:
+    #         return values_for_specified_features
+    #     # state_feature_values = [v if f is not None else self._get_agent_rep_input_nodes[i].defaults.variable
+    #     #                         for v, f, i in zip(np.array(variable[index:]).tolist(),
+    #     #                                            self.state_feature_specs)]
+    #     input_nodes = self._get_agent_rep_input_nodes()
+    #     full_set_of_feature_values = []
+    #     j=0
+    #     for i in range(len(self.state_feature_specs)):
+    #         if self.state_feature_specs[i] is not None:
+    #             feature_value = values_for_specified_features[j]
+    #             j += 1
+    #         else:
+    #             feature_value = input_nodes[i].defaults.variable
+    #         full_set_of_feature_values.append(feature_value)
+    #     return convert_to_np_array(full_set_of_feature_values)
+    #     # MODIFIED 1/28/22 END
+    # MODIFIED 1/28/22 END
 
     def _execute(self, variable=None, context=None, runtime_params=None):
         """Find control_allocation that optimizes result of agent_rep.evaluate().
@@ -2500,7 +2526,9 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX 1/28/22: ** THIS NEEDS TO TAKE ACCOUNT OF None OR MISSING SPECIFICATIONS IN state_feature_specs
         # FIX: THESE NEED TO BE FOR THE PREVIOUS TRIAL;  ARE THEY FOR FUNCTION_APPROXIMATOR?
         # FIX: NEED TO MODIFY IF OUTCOME InputPorts ARE MOVED
-        self.parameters.state_feature_values._set(self._parse_state_feature_values_from_variable(variable), context)
+        # # MODIFIED 1/28/22 OLD:
+        # self.parameters.state_feature_values._set(self._parse_state_feature_values_from_variable(variable), context)
+        # MODIFIED 1/28/22 END
 
         # Assign default control_allocation if it is not yet specified (presumably first trial)
         control_allocation = self.parameters.control_allocation._get(context)
@@ -2521,7 +2549,7 @@ class OptimizationControlMechanism(ControlMechanism):
             #                      net_outcome,
             #                      context=context)
             # MODIFIED 1/28/22 NEW:
-            self.agent_rep.adapt(_parse_state_feature_values_from_variable(variable))
+            self.agent_rep.adapt(self.parameters.state_feature_values._get(context))
             # MODIFIED 1/28/22 END
 
         # freeze the values of current context, because they can be changed in between simulations,
