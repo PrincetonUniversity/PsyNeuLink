@@ -314,7 +314,8 @@ class TestControlSpecification:
                     deferred_node_control_signal
                 ])
         )
-        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port}
+        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
+                                                   'DEFERRED 1':deferred_node.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             # expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
@@ -844,27 +845,29 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
         ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
         ('input_dict_spec', None, None, None),
         ('input_dict_spec_short', None, None, None),
-        # ('automatic_assignment', None, None, None),
-        # ('shadow_inputs_dict_spec', None, None, None),
-        # ('shadow_inputs_dict_spec_w_none', None, None, None),
-        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        # ('too_many_inputs_warning', messages[5], None, UserWarning),
-        # ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
-        # ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        # ('bad_dict_spec_warning', messages[8], None, UserWarning),
-        # ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        # ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
-        # ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
+        ('set_spec', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),  # FIX
+        ('too_many_inputs_warning', messages[5], None, UserWarning),
+        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
+        ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
@@ -896,7 +899,8 @@ class TestControlMechanisms:
             'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
             'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing oa spec and out of order
             # 'input_dict_spec': {oa:oc.input_port, ia:ia, ob:ob.output_port}, # <- ia is in nested Comp doesn't work
-            'set_spec': {ob, icomp, oa},  # Note: out of order is OK
+            'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
+            'set_spec_short': {oa},
             'automatic_assignment': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
             'shadow_inputs_dict_spec_w_none': {pnl.SHADOW_INPUTS:[ia, None, ob]},
@@ -915,7 +919,7 @@ class TestControlMechanisms:
             'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_set_spec_warning': {ob, ia},  # elicits both short spec and not INPUT Node warnings (for both ob and ia)
             'bad_set_spec_error': {ob, ia},  # elicits both short spec and not INPUT Node warnings (for both ob and ia)
-            'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],
+            'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
         state_features = state_features_dict[test_condition]
@@ -956,15 +960,20 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
-                assert ocm.state_features == {oa:oc.input_port, ob:ob.output_port}
+                assert ocm.state_features == {icomp: None, oa:oc.input_port, ob:ob.output_port}
 
             elif test_condition == 'set_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
                 assert ocm.state_features == {icomp:ia.input_port, oa:oa.input_port, ob:ob.input_port}
+
+            elif test_condition == 'set_spec_short':
+                assert len(ocm.state_input_ports) == 1
+                assert ocm.state_input_ports.names == ['Shadowed input of OA[InputPort-0]']
+                # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
+                assert ocm.state_features == {icomp:None, oa:oa.input_port, ob:None}
 
             elif test_condition == 'automatic_assignment':
                 assert len(ocm.state_input_ports) == 3
@@ -984,7 +993,7 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {icomp: ia.input_port, ob: ob.input_port}
+                assert ocm.state_features == {icomp: ia.input_port, oa: None, ob: ob.input_port}
 
         elif exception_type is UserWarning:
             # These also produce errors, tested below
