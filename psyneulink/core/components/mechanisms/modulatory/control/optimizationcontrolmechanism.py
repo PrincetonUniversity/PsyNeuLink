@@ -2143,7 +2143,11 @@ class OptimizationControlMechanism(ControlMechanism):
             #    until run time, when the Composition is expected to be fully constructed
             if context._execution_phase == ContextFlags.PREPARING:
                 self._validate_state_features()
+            # MODIFIED 1/28/22 OLD:
             return
+            # # MODIFIED 1/28/22 NEW:
+            # return True
+            # MODIFIED 1/28/22 END
 
         elif not self.state_input_ports:
             # agent_rep is Composition, but no state_features have been specified,
