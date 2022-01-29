@@ -845,26 +845,26 @@ class TestControlMechanisms:
 
     state_feature_args = [
         # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
+        ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec_short', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
         # ('automatic_assignment', None, None, None),
-        ('shadow_inputs_dict_spec', None, None, None),
-        ('shadow_inputs_dict_spec_w_none', None, None, None),
-        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        ('too_many_inputs_warning', messages[5], None, UserWarning),
-        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
-        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        ('bad_dict_spec_warning', messages[8], None, UserWarning),
-        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
-        ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
-        ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
-        ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
+        # ('shadow_inputs_dict_spec', None, None, None),
+        # ('shadow_inputs_dict_spec_w_none', None, None, None),
+        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
+        # ('too_many_inputs_warning', messages[5], None, UserWarning),
+        # ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        # ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        # ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        # ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        # ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
+        # ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
+        # ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
+        # ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
@@ -894,7 +894,7 @@ class TestControlMechanisms:
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
             'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-            'input_dict_spec_short': {oa:oc.input_port, ob:ob.output_port}, # Note: missing oa spec
+            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing oa spec and out of order
             # 'input_dict_spec': {oa:oc.input_port, ia:ia, ob:ob.output_port}, # <- ia is in nested Comp doesn't work
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK
             'automatic_assignment': None,
@@ -942,7 +942,7 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OB DEFAULT_VARIABLE']
-                assert ocm.state_features == {icomp: ia.input_port, ob: [3, 1, 2]}
+                assert ocm.state_features == {icomp: ia.input_port, oa: None, ob: [3, 1, 2]}
 
             elif test_condition == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
@@ -1004,9 +1004,10 @@ class TestControlMechanisms:
                     if test_condition == 'partial_legal_list_spec':
                         assert len(ocm.state_input_ports) == 1
                         assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
-                        assert ocm.state_features == {icomp: oa.output_port} # Note: oa is assigned to icomp due to ordering
+                        # Note: oa is assigned to icomp due to ordering:
+                        assert ocm.state_features == {icomp: oa.output_port, oa: None, ob: None}
                 assert warning[0].message.args[0] == message_1
-                assert ocm.state_features == {icomp: oa.output_port}
+                assert ocm.state_features == {icomp: oa.output_port, oa: None, ob: None}
 
         else:
             with pytest.raises(exception_type) as error:
