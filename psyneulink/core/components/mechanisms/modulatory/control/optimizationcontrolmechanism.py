@@ -11,7 +11,6 @@
 # FIX: REWORK WITH REFERENCES TO `outcome <OptimizationControlMechanism.outcome>`
 #      INTRODUCE SIMULATION INTO DISCUSSION OF COMPOSITION-BASED
 
-
 """
 
 Contents
@@ -210,57 +209,67 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_State_Features_Arg:
 
-* **state_features** -- specifies the values provided by the OptimizationControlMechanism as the input to the
-  `agent_rep <OptimizationControlMechanism.agent_rep>` when used, together with a selected `control_allocation
-  <ControlMechanism.control_allocation>`, to estimate or predict the Composition's `net_outcome
-  <ControlMechanism.net_outcome>`.  These are used to construct the `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>` for the OptimizationControlMechanism, the `values <InputPort.value>`
-  of which are assigned to `state_feature_values <OptimizationControlMechanism.state_feature_values>` and provided to
-  the `agent_rep <OptimizationControlMechanism.agent_rep>` as its input when it is evaluated.  Accordingly, the
-  specification requirements for **state_features** depend on whether the
-  `agent_rep<OptimizationControlMechanism.agent_rep>` is a `Composition` or a `CompositionFunctionApproximator`:
+* **state_features** -- specifies the values provided by the OptimizationControlMechanism as the input to its
+  `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method, together
+  with a selected `control_allocation <ControlMechanism.control_allocation>`, when that is called to estimate
+  or predict the Composition's `net_outcome <ControlMechanism.net_outcome>`. These are used to construct the
+  `state_input_ports <OptimizationControlMechanism.state_input_ports>` for the OptimizationControlMechanism,
+  the `values <InputPort.value>` of which are assigned as the `state_feature_values
+  <OptimizationControlMechanism.state_feature_values>` and provided to the **predicted_inputs** argument of the
+  `evaluate <Composition.evaluate>` method if `agent_rep <OptimizationControlMechanism.agent_rep>` is a `Composition`,
+  or the **feature_values** argument if it is a `CompositionFunctionApproximator`.  Accordingly, the specification
+  requirements for **state_features** depend on whether the `agent_rep<OptimizationControlMechanism.agent_rep>` is a
+  `Composition` or a `CompositionFunctionApproximator`:
 
   .. _OptimizationControlMechanism_Agent_Rep_Composition:
 
-  FIX: - MAKE IT CLEAR THAT SHADOWING IS THE DEFAULT ASSUMPTION, THAT IS USED FOR AUTOMATIC INSTANTIATION, AND ASSUMED
-          FOR ANY MISSING SPECIFICATIONS WHEN SPECIFIED EXPLICITLY
-       - MENTION BEING PASSED AS predicted_input ARG OF agent_rep.evaluate() METHOD
-       - ARE UN-SPECIFIED VALUES ASSIGNED DEFAULT OR LAST EXECUTED VALUE?
-       - EXPLAIN THAT agent_rep.evaluate() USES:
-         > **predicted_input** FOR agent_rep THAT IS A Compasition,
-         > **feature_values** FOR agent_rep THAT IS A CompasitionFunctionApproximator
-  * *agent_rep is a Composition* -- the **state_features** specify the inputs to the Composition when it is executed
-    by the OptimizationControlMechanism to `evaluate <OptimizationControlMechanism_Evaluation>` its performance.
-    If **state_features** is not specified, this is done automatically by constructing a set of `state_input_ports
-    <OptimizationControlMechanism.state_input_ports>` that `shadow the input <InputPort_Shadow_Inputs>` to every
-    `InputPort` of every `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the Composition assigned as
-    the `agent_rep <OptimizationControlMechanism.agent_rep>`.  In this case, if `controller_mode
-    <Composition.controller_mode>` of the Composition for which the OptimizationControlMechanism is the `controller
+  * *agent_rep is a Composition* -- the **state_features** specify the inputs to the  Composition assigned as the
+    `agent_rep <OptimizationControlMechanism.agent_rep>` when it is executed by the OptimizationControlMechanism to
+    `evaluate <OptimizationControlMechanism_Evaluation>` its performance.  The default is for the evaluation to use the
+    same values received by the `agent_rep <OptimizationControlMechanism.agent_rep>` as its `external inputs
+    <Composition_Execution_Inputs>` during its last `TRIAL <time_scale.TRIAL>` of execution. Accordingly, if
+    **state_features** is not specified, a set of `state_input_ports <OptimizationControlMechanism.state_input_ports>`
+    is constructed automatically that `shadow the input <InputPort_Shadow_Inputs>` to every `InputPort` of every
+    `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`
+    Composition.
+
+    COMMENT:
+    FIX: MOVE THIS TO EXECUTION:
+    In this case, if `controller_mode <Composition.controller_mode>` of the Composition for which the
+    OptimizationControlMechanism is the `controller
     <Composition_Controller>` is set to *AFTER* (the default), the `input <Composition.input_values>` to
     the Composition on the current trial is used as its input to the `agent_rep
     <OptimizationControlMechanism.agent_rep>` for the optimization process; if the `controller_mode
     <Composition.controller_mode>` is *BEFORE*, then the inputs from the previous trial are used.
+    COMMENT
 
     .. _OptimizationControlMechanism_State_Features_Explicit_Specification:
 
     The **state_features** argument can also be specified explicitly, using the formats described below.  This is
-    useful if the values of the `state_input_ports <OptimizationControlMechanism.state_input_ports>` are something
-    other than the inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>`, or if different functions need
-    to be assigned to different `state_input_ports <OptimizationControlMechanism.state_input_ports>` used to generate
-    the corresponding `state_feature_values state_feature_values <OptimizationControlMechanism.state_feature_values>`
-    (see `below <OptimizationControlMechanism_State_Feature_Functions_Arg>`). However, doing so overrides the automatic
-    assignment of all state_features, and so a complete and appropriate set of specifications must be provided
-    (see note below).
+    useful if values other than the `external inputs <Composition_Execution_Inputs>` to the `agent_rep
+    <OptimizationControlMechanism.agent_rep>` Composition are to be used to evaluate it, to restrict evaluation
+    This allows values other than the `external inputs <Composition_Execution_Inputs>` to the `agent_rep
+    <OptimizationControlMechanism.agent_rep>` Composition to be used to evaluate it; to restrict evaluation to a
+    subset of inputs (while others are held constant); and/or to assign specific functions to one or more
+    `state_input_ports <OptimizationControlMechanism.state_input_ports>` that allow them to process inputs
+    (e.g., modulate and/or intergrate them) before them as `state_feature_values state_feature_values
+    <OptimizationControlMechanism.state_feature_values>` (see `below
+    <OptimizationControlMechanism_State_Feature_Functions_Arg>`). Note that assigning **state_features** explicilty
+    overrides their automatic assignment, so that all required values must be specified, and this must be done
+    accurate, as described below.
 
     .. _OptimizationControlMechanism_State_Features_Shapes:
 
         .. note::
-           If **state_features** are specified explicitly when the `agent_rep <OptimizationControlMechanism.agent_rep>`
-           is a Composition, there must be one for every `InputPort` of every `INPUT <NodeRole.INPUT>` `Node
-           <Composition_Nodes>` in that Composition, and these must match -- both individually, and in their order --
-           the `inputs to the Composition <Composition_Execution_Inputs>`) required by its `run <Composition.run>`
-           method.  Failure to do so generates an error.
+           If **state_features** are specified explicitly, the shapes of the `value <Component.value>`\\s of the
+           specified Components must match those required as `external inputs <Composition_Execution_Inputs>` to
+           the corresponding `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the `agent_rep
+           <OptimizationControlMechanism.agent_rep>`. An example of the input format required by the `INPUT
+           <NodeRole.INPUT>` `Nodes <Composition_Nodes>` can be generated using the `agent_rep
+           <OptimizationControlMechanism.agent_rep>`\\'s `get_input_format <Composition.get_input_format>` method.
+           A failure to properly meet these requirements generates an error.
 
+        COMMENT:
         .. _OptimizationControlMechanism_Selective_Input:
 
         .. hint::
@@ -275,160 +284,150 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
            Components to a `nested Composition <Composition_Nested>` and assign that Composition as the `agent_rep
            <OptimizationControlMechanism.agent_rep>`.  A third, more sophisticated approach, is to assign
            ControlSignals to the InputPorts for the irrelevant features, and specify them to suppress their values.
+        COMMENT
 
-  COMMENT:
-  FIX: MOVE THE FOLLOWING TO AFTER LIST SPECIFICATION AND REFER BACK UP TO THAT.
-       SAY UP FRONT THEY MUST ALWAYS BE EXPLICIT
-  COMMENT
+    .. _OptimizationControlMechanism_State_Features_Shadow_Inputs:
+
+    The specifications in the **state_features** argument are used to construct the `state_input_ports
+    <OptimizationControlMechanism.state_input_ports>`.  As noted `above
+    <OptimizationControlMechanism_State_Features_Explicit_Specification>`, specifying these explicitly overrides
+    their automatic construction.  They can be specified using any of the following:
+
+    .. _Optimization_Control_Mechanism_State_Feature_Input_Dict:
+
+    * *Inputs dictionary* -- a dictionary that conforms to the format used to `specify external inputs
+      <Composition_Input_Dictionary>` to the `agent_rep <OptimizationControlMechanism.agent_rep>`, in which entries
+      consist of a key specifying an `INPUT <NodeRole.INPUT>` Node of `agent_rep
+      <OptimizationControlMechanism.agent_rep>`, and its value is the source of the input, that can be any of the forms
+      of individual input specifications listed `below
+      <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`. This is the most straightforward and reliable
+      way to specify **state_features**.  The full format required for inputs to `agent_rep
+      <OptimizationControlMechanism.agent_rep>` can be seen using its `get_input_format <Composition.get_input_format>`
+      method.  If only some `INPUT <NodeRole.INPUT>` Nodes are specified, the remaining ones are assigned their
+      `default variable <Component.defaults>` as input when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
+      `evaluate <Composition.evaluate>` method is called, irrespective of the input to the `agent_rep
+      <OptimizationControlMechanism.agent_rep>` during the last `TRIAL <time_scale.TRIAL>`.
+
+    .. _Optimization_Control_Mechanism_State_Feature_List_Inputs:
+
+    * *List* -- a list of individual input source specifications, that can be any of the forms of individual input
+      specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.  The items
+      must be listed in the order that `INPUT <NodeRole.INPUT>` Nodes are listed in the `agent_rep
+      <OptimizationControlMechanism.agent_rep>`\\'s `nodes <Composition.nodes>` attribute (and returned by its
+      `get_nodes_by_role(NodeRole.INPUT) <Composition.get_nodes_by_role>` method).  If the list is incomplete,
+      the remaining INPUT Nodes are assigned their `default variable <Component.defaults>` as input when the `agent_rep
+      <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called;  ``None`` can
+      be used as an entry to "skip" items in the list (i.e., specify that they receive their `default variable
+      <Component.defaults>` as input).
+
+    .. _Optimization_Control_Mechanism_State_Feature_Set_Inputs:
+
+    * *Set* -- a set of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the `agent_rep
+      <OptimizationControlMechanism.agent_rep>` to receive the same inputs during evaluation as when
+      the `agent_rep  <OptimizationControlMechanism.agent_rep>` is fully executed; the `state_input_ports
+      OptimizationControlMechanism.state_input_ports>` constructed for these state_features are assigned
+      Projections that `shadow `<InputPort_Shadow_Inputs>` the specified `INPUT <NodeRole.INPUT>` `Node
+      <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`. The order of their
+      specification does not matter;  however, any of the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
+       `INPUT NodeRole.INPUT>` Nodes that are *not* included in the set will be assigned their `default variable
+      <Component.defaults>` when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate
+      <Composition.evaluate>` method is called.
+
+    .. _Optimization_Control_Mechanism_State_Feature_Individual_Inputs:
+
+    * *Individual inputs* -- any of the forms below can be used singly, or in a dict or list as described
+      `above <Optimization_Control_Mechanism_State_Feature_Input_Dict>`, to configure a `state_input_port
+      <OptimizationControlMechanism.state_input_ports>`, the value of which is assigned as the corresponding element
+      of `state_feature_values <OptimizationControlMechanism.state_feature_values>` provided as input to the `INPUT
+      <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>` when it
+      is `evaluated <Composition.evaluate>` method is called.
+
+      .. note::
+         If only a single input specification is provided to **state_features**, it is treated as a list with a single
+         item (see `above <Optimization_Control_Mechanism_State_Feature_List_Inputs>`), and assigned as the input to the
+         first `INPUT <NodeRole.INPUT>` Node of `agent_rep <OptimizationControlMechanism.agent_rep>`; if the latter has
+         any additional `INPUT <NodeRole.INPUT>` Nodes, they are assigned their `default variable <Component.defaults>`
+         as inputs when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>`
+         method is executed.
+
+      .. _Optimization_Control_Mechanism_Numeric_State_Feature:
+      * *numeric value* -- create an `InputPort` with the specified value as its `default variable <Component.defaults>`
+        and no `afferent Projections <Mechanism_Base.afferents>`;  as a result, the specified value is assigned as the
+        input to the corresponding `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
+        <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
+
+      .. _Optimization_Control_Mechanism_Tuple_State_Feature:
+      * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below; the
+        second item must be a `Function` that is assigned as the `function <InputPort.function>` of the corresponding
+        `state_input_port <OptimizationControlMechanism.state_input_ports>` (see `state feature functions
+        <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
+
+      .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
+      * *specification dictionary* -- an `InputPort specification dictionary <InputPort_Specification_Dictionary>`
+      can be
+        used to configure the corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`, if
+        `Parameters <Parameter>` other than its `function <InputPort.function>` need to be specified (e.g., its `name
+        <InputPort.name>` or more than a single `afferent Projection <Mechanism_Base.afferents>`).
+
+      .. _Optimization_Control_Mechanism_Input_Port_State_Feature:
+      * *InputPort specification* -- create an `InputPort` that `shadows <InputPort_Shadow_Inputs>` the
+        input to the specified InputPort, ,the value of which is used as the corresponding value of the
+        OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
+
+        .. note::
+           Only the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a `nested Composition <Composition_Nested>`
+           can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
+           nested Compositions, only its `INPUT <NodeRole.INPUT>` Nodes can be specified for shadowing in the
+           **state_features** argument of the OptimizationControlMechanism's constructor.
+
+        .. hint::
+           Shadowing the input to a Node of a `nested Composition <Composition_Nested>` that is not an `INTERNAL
+           <NodeRole.INTERNAL>` Node of that Composition can be accomplished one or of two ways, by: a) assigning it
+           `INPUT <NodeRole.INPUT>` as a `required NodeRole <Composition_Node_Role_Assignment>` where it is added to
+           the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
+           (this is allowed *within* the *same* Composition), and is assigned as an `OUTPUT <NodeRole.OUTPUT>` Node of
+           that Composition, the `OutputPort` of which which can then be specified in the **state_features** argument of
+           the OptimizationControlMechanism's constructor (see below).
+
+        .. technical_note::
+          The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
+
+      .. _Optimization_Control_Mechanism_Output_Port_State_Feature:
+      * *OutputPort specification* -- this creates an `InputPort` that receives a `MappingProjection` from the
+        specified `OutputPort`;  it can be any form of `OutputPort specification <OutputPort_Specification>`
+        for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition. The `value <OutputPort.value>`
+        of the specified OutputPort is used as the corresponding value of the OptimizationControlMechanism's
+        `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
+
+      .. _Optimization_Control_Mechanism_Mechanism_State_Feature:
+
+      * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, the Mechanism's
+        `primary InputPort <InputPort_Primary>` is shadowed;  that is, it is assumed that its' input should be used
+        as the corresponding value of the OptimizationControlMechanism's `state_feature_values
+        <OptimizationControlMechanism.state_feature_values>`. This has the same result as explicitly specifying the
+        Mechanism's  input_port, as described `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`.  If
+        the Mechanism is in a `nested Composition <Composition_Nested>`, it must be an `INPUT <NodeRole.INPUT>` `Node
+        <Composition_Nodes>` of that Composition (see note above).  If its OutputPort needs to be used, it must be
+        specified explicitly (as described `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In
+        contrast, if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`,
+        then the Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since that is typical usage, and there
+        are no assumptions made about the state features of a `CompositionFunctionApproximator`); if the input to the
+        Mechanism *is* to be shadowed, then its InputPort must be specified explicitly (as described `above
+        <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
   .. _OptimizationControlMechanism_Agent_Rep_CFA:
 
-  * *agent_rep is a CompositionFunctionApproximator* -- the **state_features** specify the **feature_values**
+  * *agent_rep is a CompositionFunctionApproximator* -- **state_features** specify the **feature_values**
     argument to the CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` method.
-    This is not done automatically; they must be specified as a list, with the correct number of items in the same
-    order they are expected be in the array passed to the **feature_values** argument of the
-    `evaluate<CompositionFunctionApproximator.evaluate>` method (see warning below).
+    These cannot be determined automatically and so they *must be specified explicity*, in a list, with the correct
+    number of items in the same order and with the same shapes they are expected have in the array passed to the
+    **feature_values** argument of the `evaluate<CompositionFunctionApproximator.evaluate>` method (see warning below).
 
         .. warning::
            The **state_features** for an `agent_rep <OptimizationControlMechanism.agent_rep>` that is a
            `CompositionFunctionApproximator` cannot be created automatically nor can they be validated;
            thus specifying the wrong number or invalid **state_features**, or specifying them in an incorrect
            order may produce errors that are unexpected or difficult to interpret.
-
-  COMMENT:
-   FIX: CONFIRM (OR IMPLEMENT?) THE FOLLOWING
-   If all of the inputs to the Composition are still required, these can be specified using the keyword *INPUTS*,
-   in which case they are retained along with any others specified.
-  COMMENT
-
-  COMMENT:
-  FIX: MOVE THE FOLLOWING UP TO UNDER agent_rep = Composition
-  COMMENT
-
-  .. _OptimizationControlMechanism_State_Features_Shadow_Inputs:
-
-  The specifications in the **state_features** argument are used to construct the `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>`.  As noted
-  `above <OptimizationControlMechanism_State_Features_Explicit_Specification>`, specifying these explicitly overrides
-  their automatic construction.  They can be specified using any of the following:
-
-  .. _Optimization_Control_Mechanism_State_Feature_Input_Dict:
-
-  * *Inputs dictionary* -- a dictionary that conforms to the format used to `specify inputs
-    <Composition_Input_Dictionary>` to the `agent_rep <OptimizationControlMechanism.agent_rep>`, in which entries
-    consist of a key specifying an `INPUT <NodeRole.INPUT>` Node of `agent_rep
-    <OptimizationControlMechanism.agent_rep>`, and its value is the source of the input, that can be any of the forms
-    of individual input specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.
-    The full format required for inputs to `agent_rep <OptimizationControlMechanism.agent_rep>` can be seen using
-    its `get_input_format <Composition.get_input_format>` method.  If only some `INPUT <NodeRole.INPUT>` Nodes are
-    specified, the remaining ones are assigned their `default variable <Component.defaults>` as input when the
-    `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.
-    This is the most reliable and straightforward way to specify **state_features**.
-
-  .. _Optimization_Control_Mechanism_State_Feature_List_Inputs:
-
-  FIX: METNION USE OF None TO SKIP ITEM IN LIST
-  * *List* -- a list of individual input source specifications, that can be any of the forms of individual input
-    specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.  If `agent_rep
-    `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, then the items must be listed in the order
-    that `INPUT <NodeRole.INPUT>` Nodes are listed in the `nodes <Composition.nodes>` attribute of the `agent_rep
-    <OptimizationControlMechanism.agent_rep>` Composition (and returned by a call to its
-    `get_nodes_by_role(NodeRole.INPUT) <Composition.get_nodes_by_role>` method).  If the list is incomplete,
-    the remaining INPUT Nodes are assigned their `default variable <Component.defaults>` as input when the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.  If `agent_rep
-    <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`, the list must have the same
-    number of items and in the same order as their values are expected to be in the **feature_values** argument of
-    the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <CompositionFunctionApproximator.evaluate>`
-    method.
-
-  .. _Optimization_Control_Mechanism_State_Feature_Set_Inputs:
-
-  * *Set* -- a set of `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`.  All of the Nodes specified will be FIX SHADOWED [GET PHRASISNG RIGHT]
-    Any Nodes not included in the set will be assigned their `default variable <Component.defaults>` when the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called.
-    FIX: ??NOTE RELATIONSHIP OF THIS TO SHADOW_INPUTS FORMAT, ?WITH THE ADVANTAGE THAT ORDER DOESN'T MATTER
-
-  .. _Optimization_Control_Mechanism_State_Feature_Individual_Inputs:
-
-  * *Individual inputs* -- any of the forms below can be used singly, or in a dict or list as described
-    `above <Optimization_Control_Mechanism_State_Feature_Input_Dict>`, to configure a `state_input_port
-    <OptimizationControlMechanism.state_input_ports>`, the value of which is assigned as the corresponding element
-    of `state_feature_values <OptimizationControlMechanism.state_feature_values>` provided as input to the `INPUT
-    <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>` when it
-    is `evaluated <Composition.evaluate>` method is called.
-
-    .. note::
-       If only a single input specification is provided to **state_features**, it is treated as a list with a single
-       item (see `above <Optimization_Control_Mechanism_State_Feature_List_Inputs>`), and assigned as the input to the
-       first `INPUT <NodeRole.INPUT>` Node of `agent_rep <OptimizationControlMechanism.agent_rep>`; if the latter has
-       any additional `INPUT <NodeRole.INPUT>` Nodes, they are assigned their `default variable <Component.defaults>`
-       as inputs when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>`
-       method is executed.
-
-    .. _Optimization_Control_Mechanism_Numeric_State_Feature:
-    * *numeric value* -- create an `InputPort` with the specified value as its `default variable <Component.defaults>`
-      and no `afferent Projections <Mechanism_Base.afferents>`;  as a result, the specified value is assigned as the
-      input to the corresponding `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
-      <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
-
-    .. _Optimization_Control_Mechanism_Tuple_State_Feature:
-    * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below; the
-      second item must be a `Function` that is assigned as the `function <InputPort.function>` of the corresponding
-      `state_input_port <OptimizationControlMechanism.state_input_ports>` (see `state feature functions
-      <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
-
-    .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
-    * *specification dictionary* -- an `InputPort specification dictionary <InputPort_Specification_Dictionary>` can be
-      used to configure the corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`, if
-      `Parameters <Parameter>` other than its `function <InputPort.function>` need to be specified (e.g., its `name
-      <InputPort.name>` or more than a single `afferent Projection <Mechanism_Base.afferents>`).
-
-    .. _Optimization_Control_Mechanism_Input_Port_State_Feature:
-    * *InputPort specification* -- create an `InputPort` that `shadows <InputPort_Shadow_Inputs>` the
-      input to the specified InputPort, ,the value of which is used as the corresponding value of the
-      OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
-
-      .. note::
-         Only the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a `nested Composition <Composition_Nested>`
-         can shadowed.  Therefore, if the Composition that an OptimizationControlMechanism controls contains any
-         nested Compositions, only its `INPUT <NodeRole.INPUT>` Nodes can be specified for shadowing in the
-         **state_features** argument of the OptimizationControlMechanism's constructor.
-
-      .. hint::
-         Shadowing the input to a Node of a `nested Composition <Composition_Nested>` that is not an `INTERNAL
-         <NodeRole.INTERNAL>` Node of that Composition can be accomplished one or of two ways, by: a) assigning it
-         `INPUT <NodeRole.INPUT>` as a `required NodeRole <Composition_Node_Role_Assignment>` where it is added to
-         the nested Composition; and/or b) adding an additional Node to that Composition that shadows the desired one
-         (this is allowed *within* the *same* Composition), and is assigned as an `OUTPUT <NodeRole.OUTPUT>` Node of
-         that Composition, the `OutputPort` of which which can then be specified in the **state_features** argument of
-         the OptimizationControlMechanism's constructor (see below).
-
-      .. technical_note::
-        The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
-
-    .. _Optimization_Control_Mechanism_Output_Port_State_Feature:
-    * *OutputPort specification* -- this creates an `InputPort` that receives a `MappingProjection` from the
-      specified `OutputPort`;  it can be any form of `OutputPort specification <OutputPort_Specification>`
-      for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition. The `value <OutputPort.value>`
-      of the specified OutputPort is used as the corresponding value of the OptimizationControlMechanism's
-      `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
-
-    .. _Optimization_Control_Mechanism_Mechanism_State_Feature:
-
-    * *Mechanism* -- if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a Composition, the Mechanism's
-      `primary InputPort <InputPort_Primary>` is shadowed;  that is, it is assumed that its' input should be used
-      as the corresponding value of the OptimizationControlMechanism's `state_feature_values
-      <OptimizationControlMechanism.state_feature_values>`. This has the same result as explicitly specifying the
-      Mechanism's  input_port, as described `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`.  If
-      the Mechanism is in a `nested Composition <Composition_Nested>`, it must be an `INPUT <NodeRole.INPUT>` `Node
-      <Composition_Nodes>` of that Composition (see note above).  If its OutputPort needs to be used, it must be
-      specified explicitly (as described `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In
-      contrast, if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`,
-      then the Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since that is typical usage, and there
-      are no assumptions made about the state features of a `CompositionFunctionApproximator`); if the input to the
-      Mechanism *is* to be shadowed, then its InputPort must be specified explicitly (as described `above
-      <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
   COMMENT:
       FIX: CONFIRM THAT THE FOLLOWING ALL WORK
