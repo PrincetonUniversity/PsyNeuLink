@@ -1063,6 +1063,10 @@ class TestControlMechanisms:
         assert keys[3] == (ia.parameter_ports[pnl.SLOPE], ia, icomp, 3)
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
+        ocomp.run()
+        assert all(np.allclose(expected,actual)
+                   for expected,actual in zip(ocm.state_feature_values,
+                                              [[0.], [0.], [3, 1, 2]]))
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
         # tests multiplicative modulation of default intensity_cost_function (Exponential) of
