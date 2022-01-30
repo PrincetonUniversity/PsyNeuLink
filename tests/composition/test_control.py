@@ -858,7 +858,7 @@ class TestControlMechanisms:
         ('misplaced_shadow', messages[1], None, pnl.CompositionError),
         ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
         ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),  # FIX
+        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
         ('too_many_inputs_warning', messages[5], None, UserWarning),
         ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
         ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
@@ -1052,10 +1052,10 @@ class TestControlMechanisms:
         )
         ocomp.add_controller(ocm)
         assert all(np.allclose(x,y) for x,y in zip(ocm.state, [[0.0], [0.0], [3.0, 1.0, 2.0], [1.0], [1.0]]))
-        assert len(ocm.state_dict) == 6
-        keys = list(ocm.state_dict.keys())
-        values = list(ocm.state_dict.values())
-        for key, value in ocm.state_dict.items():
+        assert len(ocm.state_distal_sources_and_destinations_dict) == 6
+        keys = list(ocm.state_distal_sources_and_destinations_dict.keys())
+        values = list(ocm.state_distal_sources_and_destinations_dict.values())
+        for key, value in ocm.state_distal_sources_and_destinations_dict.items():
             ocm.state[key[3]] == value
         assert keys[0] == (ia.input_port, ia, icomp ,0)
         assert keys[1] == (oa.output_port, oa, ocomp, 1)
