@@ -315,7 +315,7 @@ class TestControlSpecification:
                 ])
         )
         assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
-                                                   'DEFERRED 1':deferred_node.input_port}
+                                                   'deferred DEFERRED':deferred_node.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             # expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
@@ -874,11 +874,11 @@ class TestControlMechanisms:
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
     def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args):
 
-        test_condition = state_feature_args[0] 
+        test_condition = state_feature_args[0]
         message_1 = state_feature_args[1]
         message_2 = state_feature_args[2]
-        exception_type = state_feature_args[3] 
-        
+        exception_type = state_feature_args[3]
+
         ia = pnl.ProcessingMechanism(name='IA')
         ib = pnl.ProcessingMechanism(name='IB')
         ic = pnl.ProcessingMechanism(name='IC')

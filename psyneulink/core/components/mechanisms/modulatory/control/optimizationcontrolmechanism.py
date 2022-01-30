@@ -1041,7 +1041,7 @@ def _state_feature_values_getter(owning_component=None, context=None):
         j = 0
         state_feature_values = []
         # for node, spec in owning_component.state_feature_spec_dict.items():
-        for node, spec in owning_component.state_features.items():
+        for node, spec in owning_component._state_features.items():
             if spec is not None:
                 state_feature_values.append(state_input_port_values[j])
                 j += 1
@@ -1593,7 +1593,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 1/26/22: PUT IN CONSTRUCTOR FOR Parameter OR _parse_state_feature_specs() METHOD ON IT
         self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
                                     else convert_to_list(state_features))
-        self.state_features = {}
+        self._state_features = {}
 
         # # MODIFIED 1/28/22 NEW:
         # self.state_feature_values = self._parse_state_feature_values_from_variable([defaultControlAllocation])
@@ -1979,11 +1979,14 @@ class OptimizationControlMechanism(ControlMechanism):
                 # NODE & NODE_NAME
                 spec_name = None
                 if i < num_nodes:
-                    # Assign node
+                    # Node should be in agent_rep, so use that to be sure
                     node = agent_rep_input_nodes[i]
                     node_name = node.name
                 else:
-                    node = node_name = f"DEFERRED {i}"
+                    # Node not (yet) in agent_rep, so uses its node name
+                    spec = state_feature_specs[i]
+                    node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                    node_name = node.name
                 # SPEC
                 # Assign specs
                 # Only process specs for which there are already INPUT Nodes in agent_rep
@@ -2005,7 +2008,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 nodes.append(node)
                 specs.append(spec)
                 spec_names.append(spec_name)
-            self.state_features = {k:v for k,v in zip(nodes, specs)}
+            self._state_features = {k:v for k,v in zip(nodes, specs)}
             return spec_names or []
 
         # PARSE SPECS  ------------------------------------------------------------------------------------------
@@ -2037,8 +2040,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._validate_input_nodes(specified_input_nodes)
                 nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
                 # Get specs in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
-                specs = [state_feature_specs[node] if node in specified_input_nodes else None
-                         for node in nodes]
+                #   as well as to any not in agent_rep at end which are placed at the end of the list
+                nodes.extend([node for node in specified_input_nodes if node not in nodes])
+                specs = [state_feature_specs[node] if node in specified_input_nodes else None for node in nodes]
                 # Get parsed specs and names (don't care about nodes since those are specified by keys
                 input_port_names = _parse_specs(specs)
 
@@ -2048,26 +2052,31 @@ class OptimizationControlMechanism(ControlMechanism):
         elif isinstance(state_feature_specs, set):
             # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
             self._validate_input_nodes(state_feature_specs)
-            # Replace any nested Comps that are INPUT Nodes of agent_comp with their INPUT Nodes so they are shadowed
+            # specs = [node if node in state_feature_specs else None for node in agent_rep_input_nodes]
             # FIX: 1/29/22 -
             #      THIS IS DANGEROUS -- SHOULD REPLACE ONCE TUPLE FORMAT IS IMPLEMENTED OR USE INPUTPORT SPECIF DICT
             #      IT WORKS FOR NESTED COMPS WITH A SIGNLE INPUT NODE OF THEIR OWN
             #      BUT IF A NESTED COMP HAS MORE THAN ONE INPUT NODE, THIS WILL RETURN MORE THAN ONE NODE IN PLACE OF
             #      THE NESTED COMP AND THUS GET OUT OF ALIGNMENT WITH NUMBER OF INPUT NODES FOR AGENT_REP
             #      ONCE FIXED, EXTEND FOR USE WITH COMP AS SPEC IN LIST AND DICT FORMATS
-            specs = [node if node in state_feature_specs else None for node in agent_rep_input_nodes]
+            # Replace any nested Comps that are INPUT Nodes of agent_comp with their INPUT Nodes so they are shadowed
             all_nested_input_nodes = []
-            for node in specs:
+            for node in state_feature_specs:
                 if isinstance(node, Composition):
                     all_nested_input_nodes.extend(get_inputs_for_nested_comp(node))
                 else:
                     all_nested_input_nodes.append(node)
-            input_port_names = _parse_specs(all_nested_input_nodes)
+            # Get specs in order of agent_rep INPUT Nodes, with any not in agent_rep at end
+            # NEED TO ADD Nones TO LIST IF NOT SPECIFIED
+            agent_rep_nodes = self._get_agent_rep_input_nodes()
+            nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_nodes]
+            nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_nodes])
+            input_port_names = _parse_specs(nodes)
 
         # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 
         state_input_port_specs = []
-        for i, item in enumerate(self.state_features.items()):
+        for i, item in enumerate(self._state_features.items()):
             node = item[0]
             spec = item[1]
             if spec is None:
@@ -2095,7 +2104,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     spec = spec.output_port
                 # Update Mechanism spec with Port
-                self.state_features[node] = spec
+                self._state_features[node] = spec
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
             if not parsed_spec[NAME]:
@@ -2126,6 +2135,36 @@ class OptimizationControlMechanism(ControlMechanism):
             return copy.deepcopy(feature_function)
         else:
             return feature_function
+
+    def _update_state_features_dict(self):
+        # FIX: 1/29/22 - ??REFACTOR TO USE Composition aux_components??
+        #                 OR IMPLEMENT LIST WITH DEFERRED ITEMS STORED THERE (THAT WAY DON'T HAVE TO RELY ON NAME BELOW)
+        #                 OR IMPLEMENT INTERNAL _state_features dict THEN state_features AS A PROPERTY
+        #                 THAT TRACKS state_input_ports AS BEFORE
+        # FIX: MODIFY THIS TO INDICATE WHICH SPECS ARE STILL MISSING
+        # if len([p for p in self.state_input_ports if p.path_afferents]) != len(self.state_features):
+        #     raise OptimizationControlMechanismError(f"MISSING THE FOLLOWING STATE FEATURES:  "
+        #                                             f"XXX MUST BE ADDED TO BE ABLE TO RUN")
+        # added_items = []
+        # deferred_entry_keys = [n for n in self.state_features.keys() if isinstance(n, str) and 'DEFERRED' in n]
+        # for item in deferred_entry_keys:
+        #     port = self.state_features.pop(item)
+        #     if port.owner in self.agent_rep._get_all_nodes:
+        #         self.state_features.update({port.owner.name})
+        # FIX: 1/29/22 - HANDLE ERRORS HERE INSTEAD OF _validate_state_features OR EXECUTE THAT FIRST AND CAPTURE HERE
+        state_features = self._state_features.copy()
+        for i, stuff in enumerate(zip(self.state_input_ports, state_features.items())):
+            port = stuff[0]
+            node = stuff[1][0]
+            feature = stuff[1][1]
+            if not (isinstance(node, str) and 'DEFERRED' in node):
+                continue
+            if feature.owner not in self._get_agent_rep_input_nodes():
+                # assert False, f"PROGRAM ERROR: Node not in {self.agent_rep.name} should have been caught above."
+                continue
+            self._state_features.pop(node)
+            self._state_features[feature.owner.name] = feature
+
 
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
@@ -2167,6 +2206,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Restrict validation and any further instantiation of state_input_ports
             #    until run time, when the Composition is expected to be fully constructed
             if context._execution_phase == ContextFlags.PREPARING:
+                # MODIFIED 1/29/22 NEW:
+                # FIX: 1/29/22 - NEEDS TO EXECUTE ON UPDATES WITHOUT RUN,
+                #                BUT MANAGE ERRORS WRT TO _validate_state_features
+                self._update_state_features_dict()
+                # MODIFIED 1/29/22 END
                 self._validate_state_features()
             # MODIFIED 1/28/22 OLD:
             return
@@ -2218,7 +2262,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self.state_input_ports.extend(state_input_ports_to_add)
 
             # MODIFIED 1/29/22 NEW:
-            self.state_features = {k:v.shadow_inputs
+            self._state_features = {k:v.shadow_inputs
                                    for k,v in zip(self._get_agent_rep_input_nodes(comp_as_node=True),
                                                   self.state_input_ports)}
             # MODIFIED 1/29/22 END
@@ -3073,6 +3117,13 @@ class OptimizationControlMechanism(ControlMechanism):
             return len(self.state_input_ports)
         except:
             return 0
+
+    @property
+    def state_features(self):
+        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+        state_features_dict = {(k if k in agent_rep_input_nodes else f"{k.name} DEFERRED"):v
+                               for k,v in self._state_features.items()}
+        return state_features_dict
 
     @property
     def state_feature_sources(self):
