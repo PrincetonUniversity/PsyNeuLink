@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Parameters &mdash; PsyNeuLink 0+untagged.17.g3458e64 documentation</title>
+  <title>Parameters &mdash; PsyNeuLink 0+untagged.16.g3a8bf9d documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.17.g3458e64
+                  0+untagged.16.g3a8bf9d
                 </div>
               
             
@@ -223,6 +223,10 @@ class, and are used to validate compatibility between this instance and other Ps
 <p><code class="docutils literal notranslate"><span class="pre">t.defaults.noise</span></code> is shorthand for <code class="docutils literal notranslate"><span class="pre">t.parameters.noise.default_value</span></code>, and they both refer to the default
 <code class="docutils literal notranslate"><span class="pre">noise</span></code> value for <em>t</em></p>
 </div>
+<p>Default values are sometimes also used when the parameters value has not been specified; for example, a Component’s
+<code class="docutils literal notranslate"><span class="pre">defaults.variable</span></code> is used as the input to a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> if its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> method is called
+without any input specified, and similarly it is used for the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of
+a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a> which are not specified in the <strong>inputs</strong> argument of its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> method.</p>
 </section>
 <section id="statefulness-of-parameters">
 <span id="parameter-statefulness"></span><h2>Statefulness of Parameters<a class="headerlink" href="#statefulness-of-parameters" title="Permalink to this headline">¶</a></h2>
