@@ -356,20 +356,20 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       input to the corresponding `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
       <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
 
+    COMMENT:
+        FIX: TBI - CONFIRM THAT THIS WORKS
     .. _Optimization_Control_Mechanism_Tuple_State_Feature:
     * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below; the
       second item must be a `Function` that is assigned as the `function <InputPort.function>` of the corresponding
       `state_input_port <OptimizationControlMechanism.state_input_ports>` (see `state feature functions
       <OptimizationControlMechanism_State_Feature_Functions_Arg>` for additional details).
+    COMMENT
 
-    COMMENT:
-        FIX: CONFIRM THAT THIS WORKS
     .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
     * *specification dictionary* -- an `InputPort specification dictionary <InputPort_Specification_Dictionary>`
       can be used to configure the corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`,
       if `Parameters <Parameter>` other than its `function <InputPort.function>` need to be specified (e.g., its `name
       <InputPort.name>` or more than a single `afferent Projection <Mechanism_Base.afferents>`).
-    COMMENT
 
     .. _Optimization_Control_Mechanism_Input_Port_State_Feature:
     * *InputPort specification* -- creates an `InputPort` that `shadows <InputPort_Shadow_Inputs>` the input to
@@ -437,7 +437,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
          order may produce errors that are unexpected or difficult to interpret.
 
   COMMENT:
-      FIX: CONFIRM THAT THE FOLLOWING ALL WORK
+      FIX: CONFIRM THAT THE FOLLOWING WORKS
   State features can also be added to an existing OptimizationControlMechanism using its `add_state_features` method.
   COMMENT
 
