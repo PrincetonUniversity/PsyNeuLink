@@ -1535,7 +1535,8 @@ class OptimizationControlMechanism(ControlMechanism):
         saved_samples = None
         saved_values = None
 
-        # # MODIFIED 1/30/22 NEW:  MAY BE NEEDED IF  state_feature_specs IS MADE A PARAMETER; SHOULD SET spec ATTRIBUTE
+        # # MODIFIED 1/30/22 NEW:  FIX - MAY BE NEEDED IF state_feature_specs -> Parameter,
+        #                                WHICH SHOULD SET spec ATTRIBUTE
         # def _parse_state_feature_specs(self, state_features):
         #     return (state_features if isinstance(state_features, (dict, set)) else convert_to_list(state_features))
         # MODIFIED 1/30/22 END
@@ -1558,6 +1559,8 @@ class OptimizationControlMechanism(ControlMechanism):
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
+
+        from psyneulink.core.compositions.composition import Composition
 
         # Legacy warnings and conversions
         for k in kwargs.copy():
@@ -1585,9 +1588,19 @@ class OptimizationControlMechanism(ControlMechanism):
                 kwargs.pop('feature_function')
                 continue
 
-        # MODIFIED 1/30/22 OLD: REMOVE IF state_feature_specs -> Parameter AND SET IN Parameter._parse_state_feature_specs
-        self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
+        # FIX: 1/30/22 - REMOVE IF state_feature_specs -> Parameter AND SET IN Parameter._parse_state_feature_specs
+        # # MODIFIED 1/30/22 OLD:
+        # self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
+        #                             else convert_to_list(state_features))
+        # MODIFIED 1/30/22 NEW:
+        # Enclose state_features in a list unless it is already a list, set, or state_feature specification dict
+        self.state_feature_specs = (state_features if (isinstance(state_features, set)
+                                                       or (isinstance(state_features, dict)
+                                                           and (any(isinstance(key, (Port, Mechanism, Composition))
+                                                                   for key in state_features)
+                                                                or SHADOW_INPUTS in state_features)))
                                     else convert_to_list(state_features))
+
         # MODIFIED 1/30/22 END
 
         function = function or GridSearch
@@ -1624,7 +1637,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super().__init__(
             agent_rep=agent_rep,
-            # # MODIFIED 1/30/22 NEW: MAY NEED IF state_feature_specs -> Parameter
+            # # MODIFIED 1/30/22 NEW: FIX - MAY NEED IF state_feature_specs -> Parameter
             # state_feature_specs=state_features,
             # MODIFIED 1/30/22 END
             state_feature_functions=state_feature_functions,
@@ -1830,7 +1843,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 warnings.warn(message)
 
-    # FIX: 1/29/22 - REFACTOR TO SUPPORT TUPLE AND InportPort SPECIFICATIONI DICT FOR MULT. PROJS. TO STATE_INPUT_PORT
+    # FIX: 1/29/22 - REFACTOR TO SUPPORT TUPLE AND InportPort SPECIFICATION DICT FOR MULT. PROJS. TO STATE_INPUT_PORT
     def _parse_state_feature_specs(self, context=None):
         """Parse entries of state_features specifications into InputPort spec dictionaries.
 
@@ -1982,6 +1995,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     # Node should be in agent_rep, so use that to be sure
                     if self.agent_rep_type == COMPOSITION:
                         node = agent_rep_input_nodes[i]
+                    # Assign spec as node for CompositionFunctionApproximator
                     else:
                         spec = state_feature_specs[i]
                         node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
@@ -2006,6 +2020,10 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_name = spec.full_name
                         else:
                             spec_name = spec.name
+                    elif isinstance(spec, dict):
+                        spec_name = spec[NAME] if NAME in spec else f"STATE FEATURE INPUT for {node_name}"
+                    elif spec is not None:
+                        assert False, f"PROGRAM ERROR: unrecognized form of state_feature specification for {self.name}"
                 else:
                     # Fewer specifications than number of INPUT Nodes,
                     #  the remaining ones may be specified later, but for now assume they are meant to be ignored
@@ -2090,7 +2108,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}
                 }
             else:
-                spec = spec[0]
+                spec = spec[0] # _parse_shadow_inputs(self, spec) returns a list, even when passed a single item
             # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
             if isinstance(spec, Mechanism):
                 if self.agent_rep_type == COMPOSITION:
