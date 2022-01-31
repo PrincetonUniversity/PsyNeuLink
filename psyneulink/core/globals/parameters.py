@@ -30,6 +30,10 @@ class, and are used to validate compatibility between this instance and other Ps
     ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default
     ``noise`` value for *t*
 
+Default values are sometimes also used when the parameters value has not been specified; for example, a Component's
+``defaults.variable`` is used as the input to a `Mechanism` if its `execute <Mechanism_Base.execute>` method is called
+without any input specified, and similarly it is used for the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of
+a `Composition` which are not specified in the **inputs** argument of its `run <Composition.run>` method.
 
 .. _Parameter_Statefulness:
 
