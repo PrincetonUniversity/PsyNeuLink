@@ -1596,7 +1596,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 
-            self.aux_components = []
+            # MODIFIED 1/31/22 OLD:
+            # self.aux_components = []
+            # MODIFIED 1/31/22 END
             for i in range(len(projection_specs)):
                 if option == SEPARATE:
                     # Each outcome_input_port get its own Projection

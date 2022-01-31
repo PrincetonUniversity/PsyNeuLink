@@ -845,34 +845,39 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        ('partial_legal_list_spec', messages[0], None, UserWarning),
-        ('full_list_spec', None, None, None),
-        ('list_spec_with_none', None, None, None),
-        ('input_dict_spec', None, None, None),
-        ('input_dict_spec_short', None, None, None),
-        ('set_spec', None, None, None),
-        ('set_spec_short', None, None, None),
-        ('automatic_assignment', None, None, None),
-        ('shadow_inputs_dict_spec', None, None, None),
-        ('shadow_inputs_dict_spec_w_none', None, None, None),
-        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        # ('partial_legal_list_spec', messages[0], None, UserWarning),
+        # ('full_list_spec', None, None, None),
+        # ('list_spec_with_none', None, None, None),
+        # ('input_dict_spec', None, None, None),
+        # ('input_dict_spec_short', None, None, None),
+        # ('set_spec', None, None, None),
+        # ('set_spec_short', None, None, None),
+        # ('automatic_assignment', None, None, None),
+        # ('shadow_inputs_dict_spec', None, None, None),
+        # ('shadow_inputs_dict_spec_w_none', None, None, None),
+        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
         ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        ('too_many_inputs_warning', messages[5], None, UserWarning),
-        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
-        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        ('bad_dict_spec_warning', messages[8], None, UserWarning),
-        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
-        ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
-        ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
-        ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
+        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
+        # ('too_many_inputs_warning', messages[5], None, UserWarning),
+        # ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        # ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        # ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        # ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        # ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
+        # ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
+        # ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
+        # ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
-    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args):
+    @pytest.mark.parametrize('obj_mech', [
+        # 'obj_mech',
+        'mtr_for_ctl',
+        # None
+    ])
+    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
 
         test_condition = state_feature_args[0]
         message_1 = state_feature_args[1]
@@ -922,9 +927,13 @@ class TestControlMechanisms:
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
+        objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
+        monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
+
         ocm = pnl.OptimizationControlMechanism(state_features=state_features,
-                                               objective_mechanism=[ic,ib],
+                                               objective_mechanism=objective_mechanism,
+                                               monitor_for_control=monitor_for_control,
                                                function=pnl.GridSearch(),
                                                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
                                                                                   allocation_samples=[10, 20, 30]),
