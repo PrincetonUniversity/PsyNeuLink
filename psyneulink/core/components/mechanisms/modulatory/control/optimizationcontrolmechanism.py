@@ -443,21 +443,20 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_State_Feature_Function_Arg:
 
-* **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default 
-  function for `state_input_ports <OptimizationControlMechanism.state_input_ports>`; if **state_feature_function** is 
-  not specified, the identity function used.  This can be overridden, to specify a different function for individual
-  state_input_ports, by using the `2-item tuple format <Optimization_Control_Mechanism_Tuple_State_Feature>` for 
-  specifying individual `state_features <OptimizationControlMechanism_State_Features_Arg>`.
-  FIX: MENTION PORT SPECIF DICT HERE
-  Specifying functions
-  for `state_input_ports <OptimizationControlMechanism.state_input_ports>` can be useful, for example to provide an
-  average or integrated value of prior inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate
-  <Composition.evaluate>` method during the optimization process, or to use a generative model of the environment to 
-  provide those inputs.
-  
+* **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default function for
+  `state_input_ports <OptimizationControlMechanism.state_input_ports>`.  If it is not specified, the `Identity`
+  `Function` is used. If it *is* specified, and functions are specified for any individual `state_input_ports
+  <OptimizationControlMechanism.state_input_ports` using either an `InputPort specification dictionary
+  <InputPort_Specification_Dictionary>` or a `2-item tuple <Optimization_Control_Mechanism_Tuple_State_Feature>` in
+  the **state_features** argument (see `state_features <OptimizationControlMechanism_State_Features_Arg>`), those
+  override the function specified in **state_features**.  Specifying functions for `state_input_ports
+  <OptimizationControlMechanism.state_input_ports>` can be useful, for example to provide an average or integrated value
+  of prior inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>`
+  method during the optimization process, or to use a generative model of the environment to provide those inputs.
+
     .. note::
        The value returned by a function assigned to the **state_feature_function** agument must preserve the
-       shape of its input, and must also accommodate the shape of the inputs to all of the `state_input_ports 
+       shape of its input, and must also accommodate the shape of the inputs to all of the `state_input_ports
        <OptimizationControlMechanism.state_input_ports>` to which it is assigned (see `note
        <OptimizationControlMechanism_State_Features_Shapes>` above).
 
@@ -2056,7 +2055,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                             f"{SHADOW_INPUTS.upper()} dict")
 
             # User {node:spec} dict spec
-            # FIX 2/1/22 - HANDLE self._state_feature_functions
             else:
                 specified_input_nodes = state_feature_specs.keys()
                 self._validate_input_nodes(specified_input_nodes)
@@ -2069,9 +2067,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 input_port_names = _parse_specs(specs)
 
         # SET spec
-        # FIX 2/1/22 - HANDLE self._state_feature_functions
-        #   Treat as specification of INPUT Nodes to be shadowed:
-        #   - construct an InputPort dict with SHADOW_INPUTS as its key, and specs in a list as its value
+        # Treat as specification of INPUT Nodes to be shadowed:
+        # - construct an InputPort dict with SHADOW_INPUTS as its key, and specs in a list as its value
         elif isinstance(state_feature_specs, set):
             # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
             self._validate_input_nodes(state_feature_specs)
@@ -2137,59 +2134,44 @@ class OptimizationControlMechanism(ControlMechanism):
                 parsed_spec[PARAMS][INTERNAL_ONLY]=True,
                 parsed_spec[PARAMS][PROJECTIONS]=None
 
-            # MODIFIED 2/1/22 OLD:
             # Assign function for state_input_port if specified---------------------------------------------------
-            # FIX: CONSIDER MOVING THIS OUT OF LOOP AND MODIFYING _parse_state_feature_function FOR BACH PROCESSSING
-            #      THAT WAY, _update_state_input_ports_for_controller CAN ALSO USE IT
-            # FIX: 1/31/22:  ADD CALL TO _assign_state_feature_functions(state_input_ports) HERE
-            if self.state_feature_function:
-                if isinstance(self.state_feature_function, dict) and spec in self.state_feature_function:
-                    feature_functions = self.feature_functions.copy()
-                    feat_fct = feature_functions.pop(spec)
-                else:
-                    feat_fct = self.state_feature_function
-                parsed_spec.update({FUNCTION: self._parse_state_feature_function(feat_fct)})
-            # MODIFIED 2/1/22 END
+            parsed_spec = self._assign_state_feature_function(parsed_spec, i)
 
-            # MODIFIED 2/1/22 NEW:
             parsed_spec = [parsed_spec] # so that extend works below
-            # MODIFIED 2/1/22 END
             state_input_port_specs.extend(parsed_spec)
 
-        state_input_port_specs = self._assign_state_feature_functions(state_input_port_specs)
+        # state_input_port_specs = self._assign_state_feature_function(state_input_port_specs)
         return state_input_port_specs
 
-    # MODIFIED 1/31/22 NEW:
-    def _assign_state_feature_functions(self, state_input_port_dicts):
+    def _assign_state_feature_function(self, specification_dict, idx=None):
         """Assign any specified state_feature_function to corresponding state_input_ports
-        Specifications in InputPort specification dictionary and **state_features** tuples
-            take precedence over **state_feature_function** specification.
+        idx is index into self._state_feature_functions; if None, use self.state_feature_function specified by user
+        Specification in InputPort specification dictionary or **state_features** tuple
+            takes precedence over **state_feature_function** specification.
         Return state_input_port_dicts with FUNCTION entries added as appropriate.
         """
 
+        # Note: state_feature_function has been validated in _validate_params
         default_function = self.state_feature_function  # User specified in constructor
         try:
             if self._state_feature_functions:
-                assert len(self._state_feature_functions) == len(state_input_port_dicts), \
+                assert len(self._state_feature_functions) == self._num_state_feature_specs, \
                     f"PROGRAM ERROR: Length of _state_feature_functions for {self.name} should be same " \
-                    f"as number of state_input_port_dicts passed to _assign_state_feature_functions"
+                    f"as number of state_input_port_dicts passed to _assign_state_feature_function"
             state_feature_functions = self._state_feature_functions
         except AttributeError:
             # state_features assigned automatically in _update_state_input_ports_for_controller,
             #    so _state_feature_functions (for individual state_features) not created
             state_feature_functions = None
 
-        for i, port in enumerate(state_input_port_dicts):
-            fct = state_feature_functions[i] if state_feature_functions else None
-            if FUNCTION in port:
-                assert fct is None
-                continue
-            if fct:
-                port[FUNCTION] = self._parse_state_feature_function(fct)
-            elif default_function:
-                port[FUNCTION] = default_function
-        return(state_input_port_dicts)
-    # MODIFIED 1/31/22 END
+        fct = state_feature_functions[idx] if state_feature_functions else None
+        if FUNCTION in specification_dict:
+            assert fct is None
+        if fct:
+            specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
+        elif default_function:
+            specification_dict[FUNCTION] = default_function
+        return specification_dict
 
     def _parse_state_feature_function(self, feature_function):
         if isinstance(feature_function, Function):
@@ -2289,24 +2271,16 @@ class OptimizationControlMechanism(ControlMechanism):
                 input_port_name = f"{SHADOW_INPUT_NAME}{input_port.owner.name}[{input_port.name}]"
                 params = {SHADOW_INPUTS: input_port,
                           INTERNAL_ONLY:True}
-                # Note: state_feature_function has been validated in _validate_params
-                #       to have only a single function for model-based agent_rep
-                # # MODIFIED 2/1/22 OLD:
-                # if self.state_feature_function:
-                #     params.update({FUNCTION: self._parse_state_feature_function(self.state_feature_function)})
-                # state_input_port = _instantiate_port(name=input_port_name,
-                #                                      port_type=InputPort,
-                #                                      owner=self,
-                #                                      reference_value=input_port.value,
-                #                                      params=params,
-                #                                      context=local_context)
-                # state_input_ports.append(state_input_port)
-                # MODIFIED 2/1/22 END
-
-            # FIX: 1/31/22:  ADD CALL TO _assign_state_feature_functions(state_input_ports) HERE
-            # MODIFIED 2/1/22 NEW
-            state_input_ports = self._assign_state_feature_functions(state_input_ports)
-            # MODIFIED 2/1/22 END
+                if self.state_feature_function:
+                    # Use **state_feature_function** if specified by user in constructor
+                    params = self._assign_state_feature_function(params)
+                state_input_port = _instantiate_port(name=input_port_name,
+                                                     port_type=InputPort,
+                                                     owner=self,
+                                                     reference_value=input_port.value,
+                                                     params=params,
+                                                     context=local_context)
+                state_input_ports.append(state_input_port)
 
             self.add_ports(state_input_ports,
                                  update_variable=False,

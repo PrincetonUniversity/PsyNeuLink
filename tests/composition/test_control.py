@@ -845,12 +845,12 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
-        # ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec_short', None, None, None),
-        # ('set_spec', None, None, None),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('full_list_spec', None, None, None),
+        ('list_spec_with_none', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
+        ('set_spec', None, None, None),
         ('set_spec_short', None, None, None),
         ('automatic_assignment', None, None, None),
         ('shadow_inputs_dict_spec', None, None, None),
