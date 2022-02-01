@@ -254,7 +254,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   `state_input_ports <OptimizationControlMechanism.state_input_ports>` that allow them to process inputs
   (e.g., modulate and/or intergrate them) before them as `state_feature_values state_feature_values
   <OptimizationControlMechanism.state_feature_values>` (see `below
-  <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning **state_features** explicilty
+  <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning **state_features** explicitly
   overrides their automatic assignment, so that all required values must be specified, and this must be done
   accurate, as described below.
 
@@ -356,14 +356,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       input to the corresponding `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
       <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
 
-    COMMENT:
-        FIX: TBI - CONFIRM THAT THIS WORKS
     .. _Optimization_Control_Mechanism_Tuple_State_Feature:
     * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below; the
       second item must be a `Function` that is assigned as the `function <InputPort.function>` of the corresponding
       `state_input_port <OptimizationControlMechanism.state_input_ports>` (see `state_feature_function
       <OptimizationControlMechanism_State_Feature_Function_Arg>` for additional details).
-    COMMENT
 
     .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
     * *specification dictionary* -- an `InputPort specification dictionary <InputPort_Specification_Dictionary>`
@@ -1101,11 +1098,10 @@ class OptimizationControlMechanism(ControlMechanism):
         <OptimizationControlMechanism.agent_rep>'s `evaluate <Composition.evaluate>` method whent it is executed.
         See `state_features <OptimizationControlMechanism_State_Features_Arg>` for details of specification.
 
-    state_feature_function : Function, function or Dict[<state_features specification: Function]: default None
-        specifies the `function <InputPort.function>` assigned the `InputPort` in `state_input_ports
-        <OptimizationControlMechanism.state_input_ports>` assigned to each **state_feature**
-        (see `state_feature_function <OptimizationControlMechanism_State_Feature_Function_Arg>`
-        for additional details).
+    state_feature_function : Function or function : default None
+        specifies the `function <InputPort.function>` to use as the default function for the `state_input_ports
+        <OptimizationControlMechanism.state_input_ports>` created for the corresponding **state_features** (see
+        `state_feature_function <OptimizationControlMechanism_State_Feature_Function_Arg>` for additional details).
 
     agent_rep : None or Composition  : default None or Composition to which OptimizationControlMechanism is assigned
         specifies the `Composition` used by `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>`
@@ -1209,8 +1205,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's `state_input_ports
-        <OptimizationControlMechanism.state_input_ports>  (see `OptimizationControlMechanism_State_Features` for
-        additional details).
+        <OptimizationControlMechanism.state_input_ports>  (see `OptimizationControlMechanism_State_Features`
+        for additional details).
+
+    state_feature_function : Function of function
+        determines the `function <InputPort.function>` used as the default function for
+        `state_input_ports <OptimizationControlMechanism.state_input_ports>` (see `state_feature_function
+        <OptimizationControlMechanism_State_Feature_Function_Arg>` for additional details).
 
     state_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `InputPorts <InputPort>` that receive `Projections <Projection>`
@@ -1221,7 +1222,7 @@ class OptimizationControlMechanism(ControlMechanism):
         <Composition.evaluate>` method (see `OptimizationControlMechanism_State_Features` for additional details).
 
     num_state_input_ports : int
-        cantains the number of `state_input_ports <OptimizationControlMechanism.state_input_ports>`.
+        contains the number of `state_input_ports <OptimizationControlMechanism.state_input_ports>`.
 
     outcome_input_ports : ContentAddressableList
         lists the OptimizationControlMechanism's `OutputPorts <OutputPort>` that receive `Projections <Projection>`
