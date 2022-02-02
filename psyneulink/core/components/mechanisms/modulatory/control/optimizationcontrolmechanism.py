@@ -357,10 +357,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
 
     .. _Optimization_Control_Mechanism_Tuple_State_Feature:
-    * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below; the
-      second item must be a `Function` that is assigned as the `function <InputPort.function>` of the corresponding
-      `state_input_port <OptimizationControlMechanism.state_input_ports>`;  this takes precedence over any other
-      state_feature_function specifications (see `state_feature_function
+    * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below;
+      the second item must be a `Function`, that is assigned as the `function <InputPort.function>` of the
+      corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`;
+      this takes precedence over any other state_feature_function specifications (e.g., in an `InputPort
+      specification dictionary <InputPort_Specification_Dictionary>` or the **state_feature_function** argument
+      of the OptimizationControlMechanism's constructor; see `state_feature_function
       <OptimizationControlMechanism_State_Feature_Function_Arg>` for additional details).
 
     .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
@@ -441,21 +443,22 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_State_Feature_Function_Arg:
 
-* **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default function
-  for `state_input_ports <OptimizationControlMechanism.state_input_ports>`.  If it is not specified, and no other
-  `Function` is specified (e.g., in an InputPort specification dictionary <InputPort_Specification_Dictionary>`,
-  then `LinearCombination` (the standard default `Function` for an `InputPort`) is used. If it *is* specified,
-  and functions are specified for any individual `state_input_ports <OptimizationControlMechanism.state_input_ports`
-  using either an `InputPort specification dictionary <InputPort_Specification_Dictionary>` or a `2-item tuple
+* **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default
+  function for `state_input_ports <OptimizationControlMechanism.state_input_ports>`. This is assigned as
+  the `function <InputPort.function>` to any state_input_ports for which no other `Function` is specified;
+  i.e., in an InputPort specification dictionary <InputPort_Specification_Dictionary>` or `2-item tuple
   <Optimization_Control_Mechanism_Tuple_State_Feature>` in the **state_features** argument (see `state_features
-  <OptimizationControlMechanism_State_Features_Arg>`), those override the function specified in **state_features**.
+  <OptimizationControlMechanism_State_Features_Arg>`).  If either of the latter is specified, they override
+  the specification in **state_feature_function**.  If it is *not* specified, then `LinearCombination`
+  (the standard default `Function` for an `InputPort`) is assigned to any `state_input_ports
+  <OptimizationControlMechanism.state_input_ports>` that are not otherwise assigned a `Function`.
   Specifying functions for `state_input_ports <OptimizationControlMechanism.state_input_ports>` can be useful,
   for example to provide an average or integrated value of prior inputs to the `agent_rep
   <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method during the optimization
   process, or to use a generative model of the environment to provide those inputs.
 
     .. note::
-       The value returned by a function assigned to the **state_feature_function** agument must preserve the
+       The value returned by a function assigned to the **state_feature_function** argument must preserve the
        shape of its input, and must also accommodate the shape of the inputs to all of the `state_input_ports
        <OptimizationControlMechanism.state_input_ports>` to which it is assigned (see `note
        <OptimizationControlMechanism_State_Features_Shapes>` above).
