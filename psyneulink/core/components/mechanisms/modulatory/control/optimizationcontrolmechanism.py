@@ -359,7 +359,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     .. _Optimization_Control_Mechanism_Tuple_State_Feature:
     * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below; the
       second item must be a `Function` that is assigned as the `function <InputPort.function>` of the corresponding
-      `state_input_port <OptimizationControlMechanism.state_input_ports>` (see `state_feature_function
+      `state_input_port <OptimizationControlMechanism.state_input_ports>`;  this takes precedence over any other
+      state_feature_function specifications (see `state_feature_function
       <OptimizationControlMechanism_State_Feature_Function_Arg>` for additional details).
 
     .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
@@ -440,11 +441,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
 .. _OptimizationControlMechanism_State_Feature_Function_Arg:
 
-* **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default function for
-  `state_input_ports <OptimizationControlMechanism.state_input_ports>`.  If it is not specified, `LinearCombination`
-  (the standard default `Function` for an `InputPort`) is used. If it *is* specified, and functions are specified for
-  any individual `state_input_ports <OptimizationControlMechanism.state_input_ports` using either an `InputPort
-  specification dictionary <InputPort_Specification_Dictionary>` or a `2-item tuple
+* **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default function
+  for `state_input_ports <OptimizationControlMechanism.state_input_ports>`.  If it is not specified, and no other
+  `Function` is specified (e.g., in an InputPort specification dictionary <InputPort_Specification_Dictionary>`,
+  then `LinearCombination` (the standard default `Function` for an `InputPort`) is used. If it *is* specified,
+  and functions are specified for any individual `state_input_ports <OptimizationControlMechanism.state_input_ports`
+  using either an `InputPort specification dictionary <InputPort_Specification_Dictionary>` or a `2-item tuple
   <Optimization_Control_Mechanism_Tuple_State_Feature>` in the **state_features** argument (see `state_features
   <OptimizationControlMechanism_State_Features_Arg>`), those override the function specified in **state_features**.
   Specifying functions for `state_input_ports <OptimizationControlMechanism.state_input_ports>` can be useful,
