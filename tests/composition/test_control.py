@@ -1054,6 +1054,57 @@ class TestControlMechanisms:
             assert message_1 in str(error.value)
 
     @pytest.mark.control
+    @pytest.mark.parametrize('state_fct_assignments', ['partial','all',None])
+    def test_state_feature_function_specs(self, state_fct_assignments):
+
+        fct_a = pnl.AdaptiveIntegrator
+        fct_b = pnl.Buffer(history=2)
+        fct_c = pnl.SimpleIntegrator
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        R = pnl.ProcessingMechanism(name='D')
+        
+        if state_fct_assignments == 'partial':
+            state_features = [(A, fct_a), (B, fct_b), C]
+            state_feature_function = fct_c
+        elif state_fct_assignments == 'all':
+            state_features = [(A, fct_a), (B, fct_b), (C, fct_c)]
+            state_feature_function = None
+        else:
+            state_features = [A, B, C]
+            state_feature_function = None
+            
+        comp = pnl.Composition(name='comp', pathways=[[A,R],[B,R],[C,R]])
+        ocm = pnl.OptimizationControlMechanism(state_features=state_features,
+                                               state_feature_function=state_feature_function,
+                                               function=pnl.GridSearch(),
+                                               monitor_for_control=A,
+                                               control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, A),
+                                                                                  allocation_samples=[10, 20, 30])])
+        comp.add_controller(ocm)
+        if state_fct_assignments:
+            assert isinstance(ocm.state_input_ports[0].function, fct_a)
+            assert isinstance(ocm.state_input_ports[1].function, fct_b.__class__)
+            assert isinstance(ocm.state_input_ports[2].function, fct_c)
+            inputs = {A:[1,2], B:[1,2], C:[1,2]}
+            result = comp.run(inputs=inputs, context='test')
+            assert result == [[64.]]
+            assert all(np.allclose(expected, actual)
+                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+                                                   [[2],[[1],[2]],[3]]))
+        else:
+            assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
+            assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)
+            assert isinstance(ocm.state_input_ports[2].function, pnl.LinearCombination)
+            inputs = {A:[1,2], B:[1,2], C:[1,2]}
+            result = comp.run(inputs=inputs, context='test')
+            assert result == [[64.]]
+            assert all(np.allclose(expected, actual)
+                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+                                                   [[2],[2],[2]]))
+
+    @pytest.mark.control
     def test_ocm_state_and_state_dict(self):
         ia = pnl.ProcessingMechanism(name='IA')
         ib = pnl.ProcessingMechanism(name='IB')
@@ -3088,6 +3139,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         else:
             ocomp.add_controller(ocm)
             ocomp.run()
+
 
 class TestSampleIterator:
 

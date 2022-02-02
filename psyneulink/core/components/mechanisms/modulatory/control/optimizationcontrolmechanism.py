@@ -441,15 +441,16 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 .. _OptimizationControlMechanism_State_Feature_Function_Arg:
 
 * **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default function for
-  `state_input_ports <OptimizationControlMechanism.state_input_ports>`.  If it is not specified, the `Identity`
-  `Function` is used. If it *is* specified, and functions are specified for any individual `state_input_ports
-  <OptimizationControlMechanism.state_input_ports` using either an `InputPort specification dictionary
-  <InputPort_Specification_Dictionary>` or a `2-item tuple <Optimization_Control_Mechanism_Tuple_State_Feature>` in
-  the **state_features** argument (see `state_features <OptimizationControlMechanism_State_Features_Arg>`), those
-  override the function specified in **state_features**.  Specifying functions for `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>` can be useful, for example to provide an average or integrated value
-  of prior inputs to the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>`
-  method during the optimization process, or to use a generative model of the environment to provide those inputs.
+  `state_input_ports <OptimizationControlMechanism.state_input_ports>`.  If it is not specified, `LinearCombination`
+  (the standard default `Function` for an `InputPort`) is used. If it *is* specified, and functions are specified for
+  any individual `state_input_ports <OptimizationControlMechanism.state_input_ports` using either an `InputPort
+  specification dictionary <InputPort_Specification_Dictionary>` or a `2-item tuple
+  <Optimization_Control_Mechanism_Tuple_State_Feature>` in the **state_features** argument (see `state_features
+  <OptimizationControlMechanism_State_Features_Arg>`), those override the function specified in **state_features**.
+  Specifying functions for `state_input_ports <OptimizationControlMechanism.state_input_ports>` can be useful,
+  for example to provide an average or integrated value of prior inputs to the `agent_rep
+  <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method during the optimization
+  process, or to use a generative model of the environment to provide those inputs.
 
     .. note::
        The value returned by a function assigned to the **state_feature_function** agument must preserve the
@@ -2018,15 +2019,15 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_name = spec.name
                     elif isinstance(spec, dict):
                         spec_name = spec[NAME] if NAME in spec else f"STATE FEATURE INPUT for {node_name}"
+                    elif isinstance(spec, tuple):
+                        state_feature_fct = spec[1]
+                        spec = spec[0]
                     elif spec is not None:
                         assert False, f"PROGRAM ERROR: unrecognized form of state_feature specification for {self.name}"
                 else:
                     # Fewer specifications than number of INPUT Nodes,
                     #  the remaining ones may be specified later, but for now assume they are meant to be ignored
                     spec = None
-                if isinstance(spec, tuple):
-                    state_feature_fct = spec[1]
-                    spec = spec[0]
 
                 self._state_feature_specs_parsed.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
