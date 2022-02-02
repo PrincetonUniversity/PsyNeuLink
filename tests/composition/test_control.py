@@ -930,7 +930,6 @@ class TestControlMechanisms:
         objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
         monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
-
         ocm = pnl.OptimizationControlMechanism(state_features=state_features,
                                                objective_mechanism=objective_mechanism,
                                                monitor_for_control=monitor_for_control,

@@ -1599,6 +1599,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                    for key in state_features)
                                                                 or SHADOW_INPUTS in state_features)))
                                     else convert_to_list(state_features))
+        # MODIFIED 1/30/22 END
 
         # MODIFIED 1/30/22 END
 
@@ -2293,6 +2294,8 @@ class OptimizationControlMechanism(ControlMechanism):
             self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
             self._state_feature_specs_parsed = [input_port.shadow_inputs for input_port in self.state_input_ports]
 
+            self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
+            self._state_feature_specs_parsed = [input_port.shadow_inputs for input_port in self.state_input_ports]
             return True
 
     def _validate_state_features(self):
