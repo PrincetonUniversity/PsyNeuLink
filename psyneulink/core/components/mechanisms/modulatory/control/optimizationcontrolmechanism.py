@@ -2167,16 +2167,27 @@ class OptimizationControlMechanism(ControlMechanism):
             #    so _state_feature_functions (for individual state_features) not created
             state_feature_functions = None
 
+        # # MODIFIED 2/2/22 OLD:
+        # fct = state_feature_functions[idx] if state_feature_functions else None
+        # # FIX 2/2/22: SHOULD ASSERT THAT PARAMS IS IN specification_dict, OR AT LEAST TEST FOR IT FIRST
+        # if FUNCTION in specification_dict[PARAMS]:
+        #     # FIX 2/2/22: SHOULD ASSIGN TUPLE SPEC HERE IF NOT NONE
+        #     assert fct is None
+        #     # FIX 2/2/22: SHOULD RETURN TO AVOID ASSIGNING default_function BELOW
+        # if fct:
+        #     specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
+        # elif default_function:
+        #     specification_dict[FUNCTION] = default_function
+
+        # MODIFIED 2/2/22 NEW:
         fct = state_feature_functions[idx] if state_feature_functions else None
         # FIX 2/2/22: SHOULD ASSERT THAT PARAMS IS IN specification_dict, OR AT LEAST TEST FOR IT FIRST
-        if FUNCTION in specification_dict[PARAMS]:
-            # FIX 2/2/22: SHOULD ASSIGN TUPLE SPEC HERE IF NOT NONE
-            assert fct is None
-            # FIX 2/2/22: SHOULD RETURN TO AVOID ASSIGNING default_function BELOW
         if fct:
-            specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
-        elif default_function:
+            specification_dict[PARAMS][FUNCTION] = self._parse_state_feature_function(fct)
+        elif default_function and not FUNCTION in specification_dict[PARAMS]:
             specification_dict[FUNCTION] = default_function
+        # MODIFIED 2/2/22 END
+
         return specification_dict
 
     def _parse_state_feature_function(self, feature_function):

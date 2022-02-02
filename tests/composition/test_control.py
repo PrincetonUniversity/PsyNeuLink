@@ -1053,7 +1053,12 @@ class TestControlMechanisms:
             assert message_1 in str(error.value)
 
     @pytest.mark.control
-    @pytest.mark.parametrize('state_fct_assignments', ['partial','all',None])
+    @pytest.mark.parametrize('state_fct_assignments', [
+        # 'partial',
+        'tuple_override',
+        # 'all',
+        # None
+    ])
     def test_state_feature_function_specs(self, state_fct_assignments):
 
         fct_a = pnl.AdaptiveIntegrator
@@ -1064,14 +1069,21 @@ class TestControlMechanisms:
         C = pnl.ProcessingMechanism(name='C')
         R = pnl.ProcessingMechanism(name='D')
 
+        # FIX: ALSO TEST TUPLE OVERRIDE OF SPECIFICATION DICT
         if state_fct_assignments == 'partial':
             state_features = [{pnl.PROJECTIONS: A,
                                pnl.FUNCTION: fct_a},
                               (B, fct_b),
                               C]
             state_feature_function = fct_c
+        elif state_fct_assignments == 'tuple_override':
+            state_features = [({pnl.PROJECTIONS: A,
+                               pnl.FUNCTION: pnl.Buffer}, fct_a),
+                              (B, fct_b),
+                              C]
+            state_feature_function = fct_c
         elif state_fct_assignments == 'all':
-            state_features = [(A, fct_a), (B, fct_b), (C, fct_c)]
+            state_features = [(A.output_port, fct_a), (B, fct_b), (C, fct_c)]
             state_feature_function = None
         else:
             state_features = [A, B, C]
@@ -1081,7 +1093,7 @@ class TestControlMechanisms:
         ocm = pnl.OptimizationControlMechanism(state_features=state_features,
                                                state_feature_function=state_feature_function,
                                                function=pnl.GridSearch(),
-                                               monitor_for_control=A,
+                                               # monitor_for_control=A,
                                                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, A),
                                                                                   allocation_samples=[10, 20, 30])])
         comp.add_controller(ocm)
@@ -1091,17 +1103,17 @@ class TestControlMechanisms:
             assert isinstance(ocm.state_input_ports[2].function, fct_c)
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
-            assert result == [[64.]]
+            assert result == [[24.]]
             assert all(np.allclose(expected, actual)
                        for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
-                                                   [[2],[[1],[2]],[3]]))
+                                                   [[20],[[1],[2]],[3]]))
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[2].function, pnl.LinearCombination)
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
-            assert result == [[64.]]
+            assert result == [[24.]]
             assert all(np.allclose(expected, actual)
                        for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
                                                    [[2],[2],[2]]))
