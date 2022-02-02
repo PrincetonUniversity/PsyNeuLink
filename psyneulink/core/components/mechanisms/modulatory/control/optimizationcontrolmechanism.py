@@ -1601,8 +1601,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                     else convert_to_list(state_features))
         # MODIFIED 1/30/22 END
 
-        # MODIFIED 1/30/22 END
-
         function = function or GridSearch
 
         # If agent_rep hasn't been specified, put into deferred init
@@ -2127,6 +2125,15 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = spec.output_port
                 # Update Mechanism spec with Port
                 self._state_feature_specs_parsed[i] = spec
+            if isinstance(spec, dict):
+                # Note : need to handle this here so that FUNCTION is taken into account when VALUE is assigned
+                #        in call to _parse_port_spec() below
+                if self._state_feature_functions[i]:
+                    # Assign function to dict
+                    spec[FUNCTION] = self._state_feature_functions[i]
+                    # Clear function from PARAMS subdict if specified
+                    if PARAMS in spec:
+                        spec[PARAMS].pop(FUNCTION, None)
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
             if not parsed_spec[NAME]:
@@ -2143,7 +2150,6 @@ class OptimizationControlMechanism(ControlMechanism):
             parsed_spec = [parsed_spec] # so that extend works below
             state_input_port_specs.extend(parsed_spec)
 
-        # state_input_port_specs = self._assign_state_feature_function(state_input_port_specs)
         return state_input_port_specs
 
     def _assign_state_feature_function(self, specification_dict, idx=None):
@@ -2167,26 +2173,13 @@ class OptimizationControlMechanism(ControlMechanism):
             #    so _state_feature_functions (for individual state_features) not created
             state_feature_functions = None
 
-        # # MODIFIED 2/2/22 OLD:
-        # fct = state_feature_functions[idx] if state_feature_functions else None
-        # # FIX 2/2/22: SHOULD ASSERT THAT PARAMS IS IN specification_dict, OR AT LEAST TEST FOR IT FIRST
-        # if FUNCTION in specification_dict[PARAMS]:
-        #     # FIX 2/2/22: SHOULD ASSIGN TUPLE SPEC HERE IF NOT NONE
-        #     assert fct is None
-        #     # FIX 2/2/22: SHOULD RETURN TO AVOID ASSIGNING default_function BELOW
-        # if fct:
-        #     specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
-        # elif default_function:
-        #     specification_dict[FUNCTION] = default_function
-
-        # MODIFIED 2/2/22 NEW:
         fct = state_feature_functions[idx] if state_feature_functions else None
-        # FIX 2/2/22: SHOULD ASSERT THAT PARAMS IS IN specification_dict, OR AT LEAST TEST FOR IT FIRST
         if fct:
-            specification_dict[PARAMS][FUNCTION] = self._parse_state_feature_function(fct)
+            # Don't worry about original FUNCTION spec in PARAMS entry of InputPort specification dict -- handled above
+            specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
         elif default_function and not FUNCTION in specification_dict[PARAMS]:
-            specification_dict[FUNCTION] = default_function
-        # MODIFIED 2/2/22 END
+            # Assign **state_feature_function** (aka default_function) if specified and no other has been specified
+            specification_dict[FUNCTION] = self._parse_state_feature_function(default_function)
 
         return specification_dict
 
