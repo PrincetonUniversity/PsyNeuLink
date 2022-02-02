@@ -1079,7 +1079,7 @@ class TestControlMechanisms:
         ocm = pnl.OptimizationControlMechanism(state_features=state_features,
                                                state_feature_function=state_feature_function,
                                                function=pnl.GridSearch(),
-                                               monitor_for_control=A,
+                                               # monitor_for_control=A,
                                                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, A),
                                                                                   allocation_samples=[10, 20, 30])])
         comp.add_controller(ocm)
