@@ -1079,6 +1079,7 @@ class TestControlMechanisms:
                                                state_feature_function=state_feature_function,
                                                function=pnl.GridSearch(),
                                                monitor_for_control=A,
+                                               # objective_mechanism=[A],
                                                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, A),
                                                                                   allocation_samples=[10, 20, 30])])
         comp.add_controller(ocm)
