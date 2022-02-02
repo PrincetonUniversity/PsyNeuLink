@@ -1065,7 +1065,10 @@ class TestControlMechanisms:
         R = pnl.ProcessingMechanism(name='D')
 
         if state_fct_assignments == 'partial':
-            state_features = [(A, fct_a), (B, fct_b), C]
+            state_features = [{pnl.PROJECTIONS: A,
+                               pnl.FUNCTION: fct_a},
+                              (B, fct_b),
+                              C]
             state_feature_function = fct_c
         elif state_fct_assignments == 'all':
             state_features = [(A, fct_a), (B, fct_b), (C, fct_c)]
@@ -1079,7 +1082,6 @@ class TestControlMechanisms:
                                                state_feature_function=state_feature_function,
                                                function=pnl.GridSearch(),
                                                monitor_for_control=A,
-                                               # objective_mechanism=[A],
                                                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, A),
                                                                                   allocation_samples=[10, 20, 30])])
         comp.add_controller(ocm)

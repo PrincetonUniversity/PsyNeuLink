@@ -2168,8 +2168,11 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_functions = None
 
         fct = state_feature_functions[idx] if state_feature_functions else None
-        if FUNCTION in specification_dict:
+        # FIX 2/2/22: SHOULD ASSERT THAT PARAMS IS IN specification_dict, OR AT LEAST TEST FOR IT FIRST
+        if FUNCTION in specification_dict[PARAMS]:
+            # FIX 2/2/22: SHOULD ASSIGN TUPLE SPEC HERE IF NOT NONE
             assert fct is None
+            # FIX 2/2/22: SHOULD RETURN TO AVOID ASSIGNING default_function BELOW
         if fct:
             specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
         elif default_function:
