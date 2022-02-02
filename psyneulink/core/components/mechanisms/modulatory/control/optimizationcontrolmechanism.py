@@ -2177,7 +2177,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if fct:
             # Don't worry about original FUNCTION spec in PARAMS entry of InputPort specification dict -- handled above
             specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
-        elif default_function and not FUNCTION in specification_dict[PARAMS]:
+        elif default_function and FUNCTION not in specification_dict[PARAMS]:
             # Assign **state_feature_function** (aka default_function) if specified and no other has been specified
             specification_dict[FUNCTION] = self._parse_state_feature_function(default_function)
 
