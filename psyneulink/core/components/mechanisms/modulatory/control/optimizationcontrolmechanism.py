@@ -2023,6 +2023,10 @@ class OptimizationControlMechanism(ControlMechanism):
                             spec_name = spec.name
                     elif isinstance(spec, dict):
                         spec_name = spec[NAME] if NAME in spec else f"STATE FEATURE INPUT for {node_name}"
+                        if FUNCTION in spec:
+                            state_feature_fct = spec[FUNCTION]
+                        elif PARAMS in spec and FUNCTION in spec[PARAMS]:
+                            state_feature_fct = spec[PARAMS][FUNCTION]
                     elif isinstance(spec, tuple):
                         state_feature_fct = spec[1]
                         spec = spec[0]
@@ -2119,7 +2123,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if isinstance(spec, Mechanism):
                 if self.agent_rep_type == COMPOSITION:
                     # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
-                    #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICTING TO INPUTPORTS IN GENERAL)
+                    #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICT TO InputPorts IN GENERAL)
                     if len(spec.input_ports)!=1:
                         raise OptimizationControlMechanismError(f"A Mechanism ({spec.name}) is specified in the "
                                                                 f"'{STATE_FEATURES}' arg for {self.name} that has "
@@ -2132,11 +2136,11 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._state_feature_specs_parsed[i] = spec
             if isinstance(spec, dict):
                 # Note : need to handle this here so that FUNCTION is taken into account when VALUE is assigned
-                #        in call to _parse_port_spec() below
+                #        in call to _parse_port_spec() just below
                 if self._state_feature_functions[i]:
                     # Assign function to dict
-                    spec[FUNCTION] = self._state_feature_functions[i]
-                    # Clear function from PARAMS subdict if specified
+                    spec[FUNCTION] = self._parse_state_feature_function(self._state_feature_functions[i])
+                    # Clear function from PARAMS subdict if specified (will be added in _parse_port_spec)
                     if PARAMS in spec:
                         spec[PARAMS].pop(FUNCTION, None)
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
@@ -2162,6 +2166,7 @@ class OptimizationControlMechanism(ControlMechanism):
         idx is index into self._state_feature_functions; if None, use self.state_feature_function specified by user
         Specification in InputPort specification dictionary or **state_features** tuple
             takes precedence over **state_feature_function** specification.
+        Assignment of function to dict specs handled above, so skip here
         Return state_input_port_dicts with FUNCTION entries added as appropriate.
         """
 
@@ -2180,8 +2185,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         fct = state_feature_functions[idx] if state_feature_functions else None
         if fct:
-            # Don't worry about original FUNCTION spec in PARAMS entry of InputPort specification dict -- handled above
-            specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
+            # Function assignment to dict spec handled above, so skip here
+            if (FUNCTION in specification_dict
+                    or (PARAMS in specification_dict and FUNCTION in specification_dict[PARAMS])):
+                pass
+            else:
+                specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
         elif default_function and FUNCTION not in specification_dict[PARAMS]:
             # Assign **state_feature_function** (aka default_function) if specified and no other has been specified
             specification_dict[FUNCTION] = self._parse_state_feature_function(default_function)
