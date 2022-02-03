@@ -2480,17 +2480,15 @@ class Mechanism_Base(Mechanism):
                 # Executing or simulating Composition, so get input by updating input_ports
                 if (input is None
                     and (context.execution_phase is not ContextFlags.IDLE)
-                    and (self.input_port.path_afferents != [])):
+                    and any(p.path_afferents for p in self.input_ports)):
                     variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
                 # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
                 else:
                     if context.source & ContextFlags.COMMAND_LINE:
                         context.execution_phase = ContextFlags.PROCESSING
-
                         if input is not None:
                             input = convert_all_elements_to_np_array(input)
-
                     if input is None:
                         input = self.defaults.variable
                     #     FIX:  this input value is sent to input CIMs when compositions are nested

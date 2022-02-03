@@ -166,7 +166,7 @@ A Port can be specified using any of the following:
       <Projection_Specification>`:
 
       * *PROJECTIONS*:List[<`projection specification <Projection_Specification>`>,...]
-          the list must contain a one or more `Projection specifications <Projection_Specification>` to or from
+          the list must contain one or more `Projection specifications <Projection_Specification>` to or from
           the Port, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
           `Port_Projections` below).
 
@@ -449,8 +449,7 @@ Ports created by the Mechanism when none are specified (see `note <Mechanism_Def
 
 .. _port_value_Spec_Example:
 
-For example, the following specifies the InputPort by a value to use as its `default_variable
-<InputPort.default_variable>` attribute::
+For example, the following specifies the InputPort by a value to use as its `variable <InputPort.variable>` attribute::
 
     my_mech = pnl.TransferMechanism(input_ports=[[0,0])
 
@@ -787,9 +786,9 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, \
-    CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, DISABLE, EXPONENT, \
-    FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE,\
+    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
@@ -857,7 +856,7 @@ class PortError(Exception):
         return repr(self.error_value)
 
 
-# DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
+# DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
     """
@@ -2121,6 +2120,8 @@ class Port_Base(Port):
             # return None, so that this port is ignored
             # KDM 8/2/19: double check the relevance of this branch
             if variable is None:
+                if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
+                    return self.defaults.variable
                 return None
 
         return super()._execute(
@@ -2283,12 +2284,12 @@ class Port_Base(Port):
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        state_f = ctx.import_llvm_function(self.function)
+        port_f = ctx.import_llvm_function(self.function)
 
         # Create a local copy of the function parameters
         base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                   "function")
-        f_params = builder.alloca(state_f.args[0].type.pointee)
+        f_params = builder.alloca(port_f.args[0].type.pointee)
         builder.store(builder.load(base_params), f_params)
 
         # FIXME: Handle and combine multiple afferents
@@ -2337,13 +2338,13 @@ class Port_Base(Port):
                 builder.store(param_val, f_mod_param_ptr)
 
         # OutputPort returns 1D array even for scalar functions
-        if arg_out.type != state_f.args[3].type:
+        if arg_out.type != port_f.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        builder.call(state_f, [f_params, f_state, f_input, arg_out])
+        builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder
 
     @staticmethod

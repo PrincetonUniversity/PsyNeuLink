@@ -65,7 +65,7 @@ evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep
                                                                        state_features=[target_stim.input_port,
                                                                                        flanker_stim.input_port,
                                                                                        reward.input_port],
-                                                                       state_feature_functions=pnl.AdaptiveIntegrator(
+                                                                       state_feature_function=pnl.AdaptiveIntegrator(
                                                                                      rate=1.0),
                                                                        objective_mechanism=objective_mech,
                                                                        function=pnl.GridSearch(),
