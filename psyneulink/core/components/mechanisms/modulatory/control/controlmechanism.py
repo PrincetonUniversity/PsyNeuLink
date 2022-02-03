@@ -1567,6 +1567,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             #       of the objective_mechanism's constructor
             self._instantiate_objective_mechanism(input_ports, context=context)
 
+        # FIX: CONSOLIDATE THIS WITH SIMILAR HANDLING IN _instantiate_objective_mechanism AND ELSE BELOW
         # If no ObjectiveMechanism is specified, but items to monitor are specified,
         #    assign an outcome_input_port for each item specified
         elif self.monitor_for_control:
@@ -1595,7 +1596,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 
-            self.aux_components = []
             for i in range(len(projection_specs)):
                 if option == SEPARATE:
                     # Each outcome_input_port get its own Projection
@@ -1606,10 +1606,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 self.aux_components.append(MappingProjection(sender=projection_specs[i],
                                                              receiver=self.outcome_input_ports[outcome_port_index]))
 
-        # Nothing has been specified, so just instantiate the default OUTCOME InputPort
+        # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
-            super()._instantiate_input_ports(context=context)
+            # # MODIFIED 1/30/21 OLD:
+            # super()._instantiate_input_ports(context=context)
+            # self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            # MODIFIED 1/30/21 NEW:
+            other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
+            # Construct full list of InputPort specifications and sizes
+            input_ports = self.input_ports + other_input_ports
+            input_port_value_sizes = [[0]] + other_input_port_value_sizes
+            super()._instantiate_input_ports(context=context,
+                                             input_ports=input_ports,
+                                             reference_value=input_port_value_sizes)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            # MODIFIED 1/30/21 END
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
@@ -1714,7 +1725,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                           )
 
     def _instantiate_control_signals(self, context):
-        """Subclassess can override for class-specific implementation (see OptimizationControlMechanism for example)"""
+        """Subclasses can override for class-specific implementation (see OptimizationControlMechanism for example)"""
         output_port_specs = list(enumerate(self.output_ports))
 
         for i, control_signal in output_port_specs:

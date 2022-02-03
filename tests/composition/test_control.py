@@ -177,7 +177,7 @@ class TestControlSpecification:
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 state_features=[reward.input_port, Input.input_port],
-                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.5),
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                 objective_mechanism=pnl.ObjectiveMechanism(
                         function=pnl.LinearCombination(operation=pnl.PRODUCT),
                         monitor=[reward,
@@ -872,7 +872,12 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
-    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args):
+    @pytest.mark.parametrize('obj_mech', [
+        'obj_mech',
+        'mtr_for_ctl',
+        None
+    ])
+    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
 
         test_condition = state_feature_args[0]
         message_1 = state_feature_args[1]
@@ -922,9 +927,12 @@ class TestControlMechanisms:
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
+        objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
+        monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
         ocm = pnl.OptimizationControlMechanism(state_features=state_features,
-                                               objective_mechanism=[ic,ib],
+                                               objective_mechanism=objective_mechanism,
+                                               monitor_for_control=monitor_for_control,
                                                function=pnl.GridSearch(),
                                                control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
                                                                                   allocation_samples=[10, 20, 30]),
@@ -1043,6 +1051,86 @@ class TestControlMechanisms:
                 ocomp.add_controller(ocm)
                 ocomp.run()
             assert message_1 in str(error.value)
+
+    @pytest.mark.control
+    @pytest.mark.parametrize('state_fct_assignments', [
+        'partial_w_dict',
+        'partial_w_params_dict',
+        'tuple_override_dict',
+        'tuple_override_params_dict',
+        'all',
+        None
+    ])
+    def test_state_feature_function_specs(self, state_fct_assignments):
+
+        fct_a = pnl.AdaptiveIntegrator
+        fct_b = pnl.Buffer(history=2)
+        fct_c = pnl.SimpleIntegrator
+        A = pnl.ProcessingMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C')
+        R = pnl.ProcessingMechanism(name='D')
+
+        # FIX: ALSO TEST TUPLE OVERRIDE OF SPECIFICATION DICT
+        if state_fct_assignments == 'partial_w_dict':
+            state_features = [{pnl.PROJECTIONS: A,
+                               pnl.FUNCTION: fct_a},
+                              (B, fct_b),
+                              C]
+            state_feature_function = fct_c
+        elif state_fct_assignments == 'partial_w_params_dict':
+            state_features = [{pnl.PARAMS: {pnl.PROJECTIONS: A,
+                                            pnl.FUNCTION: fct_a}},
+                              (B, fct_b),
+                              C]
+            state_feature_function = fct_c
+        elif state_fct_assignments == 'tuple_override_dict':
+            state_features = [({pnl.PROJECTIONS: A,
+                               pnl.FUNCTION: pnl.Buffer}, fct_a),
+                              (B, fct_b),
+                              C]
+            state_feature_function = fct_c
+        elif state_fct_assignments == 'tuple_override_params_dict':
+            state_features = [({pnl.PARAMS: {pnl.PROJECTIONS: A,
+                                             pnl.FUNCTION: pnl.Buffer}}, fct_a),
+                              (B, fct_b),
+                              C]
+            state_feature_function = fct_c
+        elif state_fct_assignments == 'all':
+            state_features = [(A.output_port, fct_a), (B, fct_b), (C, fct_c)]
+            state_feature_function = None
+        else:
+            state_features = [A, B, C]
+            state_feature_function = None
+
+        comp = pnl.Composition(name='comp', pathways=[[A,R],[B,R],[C,R]])
+        ocm = pnl.OptimizationControlMechanism(state_features=state_features,
+                                               state_feature_function=state_feature_function,
+                                               function=pnl.GridSearch(),
+                                               # monitor_for_control=A,
+                                               control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE, A),
+                                                                                  allocation_samples=[10, 20, 30])])
+        comp.add_controller(ocm)
+        if state_fct_assignments:
+            assert isinstance(ocm.state_input_ports[0].function, fct_a)
+            assert isinstance(ocm.state_input_ports[1].function, fct_b.__class__)
+            assert isinstance(ocm.state_input_ports[2].function, fct_c)
+            inputs = {A:[1,2], B:[1,2], C:[1,2]}
+            result = comp.run(inputs=inputs, context='test')
+            assert result == [[24.]]
+            assert all(np.allclose(expected, actual)
+                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+                                                   [[20],[[1],[2]],[3]]))
+        else:
+            assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
+            assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)
+            assert isinstance(ocm.state_input_ports[2].function, pnl.LinearCombination)
+            inputs = {A:[1,2], B:[1,2], C:[1,2]}
+            result = comp.run(inputs=inputs, context='test')
+            assert result == [[24.]]
+            assert all(np.allclose(expected, actual)
+                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+                                                   [[2],[2],[2]]))
 
     @pytest.mark.control
     def test_ocm_state_and_state_dict(self):
@@ -1211,7 +1299,7 @@ class TestControlMechanisms:
         c._analyze_graph()
         lvoc = pnl.OptimizationControlMechanism(agent_rep=pnl.RegressionCFA,
                                                 state_features=[m1.input_ports[0], m1.input_ports[1], m2.input_port, m2],
-                                                state_feature_functions=pnl.LinearCombination(offset=10.0),
+                                                state_feature_function=pnl.LinearCombination(offset=10.0),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                     monitor=[m1, m2]),
                                                 function=pnl.GradientOptimization(max_iterations=1),
@@ -1253,7 +1341,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
@@ -1270,7 +1358,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
@@ -1316,7 +1404,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
@@ -1335,7 +1423,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
@@ -1383,7 +1471,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="oController",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
@@ -1402,7 +1490,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="iController",
                 objective_mechanism=pnl.ObjectiveMechanism(
                     monitor=ib.output_port,
@@ -1541,7 +1629,7 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                              state_features=[taskLayer.input_port,
                                                              stimulusInfo.input_port],
-                                             state_feature_functions=pnl.Buffer(history=2),
+                                             state_feature_function=pnl.Buffer(history=2),
                                              name="Controller",
                                              objective_mechanism=pnl.ObjectiveMechanism(
                                                  monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -1567,7 +1655,7 @@ class TestControlMechanisms:
         outerComposition.add_controller(
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                              state_features=[taskLayer.input_port, stimulusInfo.input_port],
-                                             state_feature_functions=pnl.Buffer(history=2),
+                                             state_feature_function=pnl.Buffer(history=2),
                                              name="OuterController",
                                              objective_mechanism=pnl.ObjectiveMechanism(
                                                  monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker)],
@@ -1990,7 +2078,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
                                                 agent_rep=comp,
                                                 state_features=[reward.input_port, Input.input_port],
-                                                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.5),
+                                                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                                 objective_mechanism=pnl.ObjectiveMechanism(
                                                         function=pnl.LinearCombination(operation=pnl.PRODUCT),
                                                         monitor=[reward,
@@ -2129,7 +2217,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                                                state_features=[target_stim.input_port,
                                                                                                flanker_stim.input_port,
                                                                                                reward.input_port],
-                                                                               state_feature_functions=pnl.AdaptiveIntegrator(
+                                                                               state_feature_function=pnl.AdaptiveIntegrator(
                                                                                              rate=1.0),
                                                                                objective_mechanism=objective_mech,
                                                                                function=pnl.GridSearch(),
@@ -2274,7 +2362,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 state_features=[reward.input_port, Input.input_port],
-                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.5),
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                 objective_mechanism=pnl.ObjectiveMechanism(
                     function=pnl.LinearCombination(operation=pnl.PRODUCT),
                     monitor=[
@@ -2412,7 +2500,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 state_features=[reward.input_port, Input.input_port],
-                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.5),
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                 objective_mechanism=pnl.ObjectiveMechanism(
                     function=pnl.LinearCombination(operation=pnl.PRODUCT),
                     monitor=[
@@ -2622,7 +2710,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         objective_mech = pnl.ObjectiveMechanism(monitor=[B])
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                state_features=[A.input_port],
-                                               state_feature_functions=pnl.Buffer(history=2),
+                                               state_feature_function=pnl.Buffer(history=2),
                                                objective_mechanism=objective_mech,
                                                function=pnl.GridSearch(),
                                                control_signals=[control_signal])
@@ -2822,7 +2910,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         #  Sets trial history for simulations over specified signal search parameters
         metaController = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                                           state_features=[taskLayer.input_port, stimulusInfo.input_port],
-                                                          state_feature_functions=pnl.Buffer(history=10),
+                                                          state_feature_function=pnl.Buffer(history=10),
                                                           name="Controller",
                                                           objective_mechanism=objectiveMechanism,
                                                           function=pnl.GridSearch(),
@@ -3079,6 +3167,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         else:
             ocomp.add_controller(ocm)
             ocomp.run()
+
 
 class TestSampleIterator:
 

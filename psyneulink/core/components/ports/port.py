@@ -166,7 +166,7 @@ A Port can be specified using any of the following:
       <Projection_Specification>`:
 
       * *PROJECTIONS*:List[<`projection specification <Projection_Specification>`>,...]
-          the list must contain a one or more `Projection specifications <Projection_Specification>` to or from
+          the list must contain one or more `Projection specifications <Projection_Specification>` to or from
           the Port, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
           `Port_Projections` below).
 
