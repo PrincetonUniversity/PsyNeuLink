@@ -3882,16 +3882,21 @@ class Mechanism_Base(Mechanism):
     # MODIFIED 2/3/22 NEW:
     @property
     def external_input_variables(self):
-        """Returns variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Returns variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism
+        """
         try:
-            return [input_port.variable for input_port in self.input_ports if not input_port.internal_only]
+            # Use only first item as it is assumed that InputPort will aggregate inputs from multiple afferents,
+            #   preserving length of individual ones
+            return [np.atleast_2d(input_port.defaults.variable)[0]
+                    for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def default_external_input_variables(self):
         try:
-            return [input_port.defaults.variable for input_port in self.input_ports if not input_port.internal_only]
+            return [np.atleast_2d(input_port.defaults.variable)[0]
+                    for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
     # MODIFIED 2/3/22 END

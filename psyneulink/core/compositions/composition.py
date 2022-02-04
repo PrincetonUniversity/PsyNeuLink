@@ -2613,8 +2613,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
-    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES, STATE_FEATURES
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -4859,7 +4858,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      # # MODIFIED 2/3/22 OLD:
                                                      # variable=input_port.defaults.value,
                                                      # MODIFIED 2/3/22 NEW:
-                                                     variable=input_port.defaults.variable,
+                                                     variable=np.atleast_2d(input_port.defaults.variable)[0],
                                                      # MODIFIED 2/3/22 END
                                                      reference_value=input_port.defaults.value,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
