@@ -503,11 +503,6 @@ def _gen_cuda_kernel_wrapper_module(function):
         builder.ret_void()
         return module
 
-
-    # There are 6 arguments to evaluate:
-    # comp_param, comp_state, allocations, output, input, comp_data
-    is_grid_evaluate = len(args) == 6
-
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
     # comp_state, comp_params, comp_data, comp_in, comp_out, #trials, #inputs
@@ -528,10 +523,6 @@ def _gen_cuda_kernel_wrapper_module(function):
                     offset = builder.mul(global_id, runs_count)
                 elif i == 3:  # data_in
                     offset = builder.mul(global_id, input_count)
-            elif is_grid_evaluate:
-                # all but #2 and #3 are shared
-                if i != 2 and i != 3:
-                    offset = ir.IntType(32)(0)
 
             arg = builder.gep(arg, [offset])
 
