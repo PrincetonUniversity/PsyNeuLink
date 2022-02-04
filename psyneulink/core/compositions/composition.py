@@ -1165,7 +1165,7 @@ to one (i.e., its `name <Component.name>` attribute).  The value must an input t
 `InputPorts <InputPort>` that receive external input for that Node. These are listed in its ``external_input_ports``
 (`here <Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it
 is a Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
-`external_input_variables` attribute (`here <Mechanism_Base.external_input_variable>` if it is Mechanism, or `here
+`external_input_variables` attribute (`here <Mechanism_Base.external_input_variables>` if it is Mechanism, or `here
 <Composition.external_input_variables>` if it is a Composition). While these are always 2d arrays, the number and size
 of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed, as illustrated
 in the `examples <Composition_Examples_Input_Dictionary>` below.
