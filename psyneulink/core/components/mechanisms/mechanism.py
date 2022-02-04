@@ -1301,6 +1301,11 @@ class Mechanism_Base(Mechanism):
         `internal_only <InputPort.internal_only>`;  these receive `inputs from a Composition
         <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
 
+    external_input_shape : List[List or 1d np.array]
+        list showing shapes of inputs expected for the Mechanism's `input_ports <Mechanism_Base.input_ports>`.
+        Each item corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>` and its shape the
+        expected `value <Projection_Base.value>` of that `Projection`.
+
     external_input_variables : List[List or 1d np.array]
         list of the `variable <InputPort.variable>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
@@ -2608,8 +2613,16 @@ class Mechanism_Base(Mechanism):
             # # MODIFIED 2/4/22 OLD:
             # if len(input_port.defaults.value) == len(input_item):
             #     input_port.parameters.value._set(input_item, context)
-            # MODIFIED 2/4/22 NEW:
-            if len(input_port.defaults.variable) == len(input_item):
+            # # MODIFIED 2/4/22 NEW:
+            # if len(input_port.defaults.variable) == len(input_item):
+            #     input_port.parameters.variable._set(input_item, context)
+            # MODIFIED 2/4/22 NEWER
+            if len(input_port.default_input_shape) == len(input_item):
+                # FIX: ?NECESSARY (OR IS ASSIGNMENT TO VARIABLE ALWAYS OK, AS BELOW):
+                # if self._input_shape_template == VARIABLE:
+                #     input_port.parameters.variable._set(input_item, context)
+                # elif self._input_shape_template == VALUE:
+                #     input_port.parameters.value._set(input_item, context)
                 input_port.parameters.variable._set(input_item, context)
             # MODIFIED 2/4/22 OLD:
             else:
@@ -2619,8 +2632,10 @@ class Mechanism_Base(Mechanism):
 
         # # MODIFIED 2/4/22 OLD:
         # return convert_to_np_array(self.get_input_values(context))
-        # MODIFIED 2/4/22 NEW:
-        return convert_to_np_array(self.get_input_variables(context))
+        # # MODIFIED 2/4/22 NEW:
+        # return convert_to_np_array(self.get_input_variables(context))
+        # MODIFIED 2/4/22 NEWER
+        return convert_to_np_array(self.get_input_shape(context))
         # MODIFIED 2/4/22 END
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
@@ -3837,8 +3852,47 @@ class Mechanism_Base(Mechanism):
 
     # MODIFIED 2/4/22 NEW:
     @property
+    def _input_shape_template(self):
+        try:
+            return self.function.input_shape_template
+        except:
+            assert False, f"PROGRAM ERROR: Unrecognized _input_shape_template for " \
+                          f"('{self.function.name}') of '{self.name}'."
+
+    @property
+    def default_input_shape(self):
+        if self._input_shape_template == VARIABLE:
+            return self.defaults.variable
+        elif self._input_shape_template == VALUE:
+            return self.defaults.value
+        assert False, f"PROGRAM ERROR: bad input_shape assignment for '{self.name}'."
+
+    @property
+    def input_shape(self):
+        template = self.function.input_shape_template
+        if self._input_shape_template == VARIABLE:
+            try:
+                return self.input_variables
+            except (TypeError, AttributeError):
+                return None
+        elif self._input_shape_template == VALUE:
+            try:
+                return self.input_values
+            except (TypeError, AttributeError):
+                return None
+        assert False, f"PROGRAM ERROR: bad input_shape assignment for '{self.name}'."
+
+    def get_input_shape(self, context=None):
+        if self._input_shape_template == VARIABLE:
+            return self.get_input_variables(context)
+        elif self._input_shape_template == VALUE:
+            return self.get_input_values(context)
+        assert False, f"PROGRAM ERROR: bad input_shape assignment for '{self.name}'."
+
+    @property
     def input_variables(self):
         try:
+            # FIX: 2/4/22 NO variables ATTRIBUTE OF ContentAddressable CLASS;  NEED TO CONSTRUCT
             return self.input_ports.variables
         except (TypeError, AttributeError):
             return None
@@ -3853,7 +3907,6 @@ class Mechanism_Base(Mechanism):
         #         input_variables.append(input_port.parameters.variable.get(context))
         # return input_variables
         return [input_port.parameters.variable.get(context) for input_port in self.input_ports]
-
     # MODIFIED 2/4/22 END
 
     @property
@@ -3880,6 +3933,22 @@ class Mechanism_Base(Mechanism):
             return None
 
     # MODIFIED 2/3/22 NEW:
+    @property
+    def external_input_shape(self):
+        if self._input_shape_template == VARIABLE:
+            return self.external_input_variables
+        elif self._input_shape_template == VALUE:
+            return self.external_input_values
+        assert False, f"PROGRAM ERROR: bad external_input_shape assignment for '{self.name}'."
+
+    @property
+    def default_external_input_shape(self):
+        if self._input_shape_template == VARIABLE:
+            return self.default_external_input_variables
+        elif self._input_shape_template == VALUE:
+            return self.default_external_input_values
+        assert False, f"PROGRAM ERROR: bad default_external_input_shape assignment for '{self.name}'."
+
     @property
     def external_input_variables(self):
         """Returns variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism

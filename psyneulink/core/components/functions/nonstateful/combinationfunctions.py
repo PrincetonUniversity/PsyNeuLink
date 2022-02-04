@@ -42,7 +42,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, ARRANGEMENT, COMBINATION_FUNCTION_TYPE, COMBINE_MEANS_FUNCTION, CONCATENATE_FUNCTION, \
     DEFAULT_VARIABLE, EXPONENTS, LINEAR_COMBINATION_FUNCTION, MULTIPLICATIVE_PARAM, OFFSET, OPERATION, \
     PREDICTION_ERROR_DELTA_FUNCTION, PRODUCT, REARRANGE_FUNCTION, REDUCE_FUNCTION, SCALE, SUM, WEIGHTS, \
-    PREFERENCE_SET_NAME
+    PREFERENCE_SET_NAME, VARIABLE
 from psyneulink.core.globals.utilities import convert_to_np_array, is_numeric, np_array_less_than_2d, parameter_spec
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.parameters import Parameter
@@ -179,6 +179,12 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             Attributes
             ----------
 
+                input_shape_template
+                    see `input_shape_template <Function_Base.input_shape_template>`
+
+                    :default value: VARIABLE
+                    :type: Enum
+
                 offset
                     see `offset <Concatenate.offset>`
 
@@ -193,6 +199,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        input_shape_template = Parameter(VARIABLE, stateful=False, loggable=False, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,
@@ -679,6 +686,12 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                     :default value: None
                     :type:
 
+                input_shape_template
+                    see `input_shape_template <Function_Base.input_shape_template>`
+
+                    :default value: VARIABLE
+                    :type: Enum
+
                 offset
                     see `offset <Reduce.offset>`
 
@@ -708,6 +721,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         operation = SUM
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        input_shape_template = Parameter(VARIABLE, stateful=False, loggable=False, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,

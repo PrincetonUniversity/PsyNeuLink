@@ -573,7 +573,7 @@ class Function_Base(Function):
                     :type: ``bool``
 
                 input_shape_template
-                    see `variable_shape_template <Function_Base.variable_template_base>`
+                    see `input_shape_template <Function_Base.input_shape_template>`
 
                     :default value: VALUE
                     :type: Enum
