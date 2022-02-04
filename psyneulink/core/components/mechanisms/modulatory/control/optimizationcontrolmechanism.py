@@ -2135,12 +2135,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Update Mechanism spec with Port
                 self._state_feature_specs_parsed[i] = spec
             if isinstance(spec, dict):
-                # Note : need to handle this here so that FUNCTION is taken into account when VALUE is assigned
-                #        in call to _parse_port_spec() just below
+                # Note: clear any functions specified; will be assigned in _assign_state_feature_function
                 if self._state_feature_functions[i]:
-                    # Assign function to dict
-                    spec[FUNCTION] = self._parse_state_feature_function(self._state_feature_functions[i])
-                    # Clear function from PARAMS subdict if specified (will be added in _parse_port_spec)
+                    spec.pop(FUNCTION, None)
                     if PARAMS in spec:
                         spec[PARAMS].pop(FUNCTION, None)
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
@@ -2182,19 +2179,12 @@ class OptimizationControlMechanism(ControlMechanism):
             # state_features assigned automatically in _update_state_input_ports_for_controller,
             #    so _state_feature_functions (for individual state_features) not created
             state_feature_functions = None
-
         fct = state_feature_functions[idx] if state_feature_functions else None
         if fct:
-            # Function assignment to dict spec handled above, so skip here
-            if (FUNCTION in specification_dict
-                    or (PARAMS in specification_dict and FUNCTION in specification_dict[PARAMS])):
-                pass
-            else:
-                specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
+            specification_dict[FUNCTION] = self._parse_state_feature_function(fct)
         elif default_function and FUNCTION not in specification_dict[PARAMS]:
             # Assign **state_feature_function** (aka default_function) if specified and no other has been specified
             specification_dict[FUNCTION] = self._parse_state_feature_function(default_function)
-
         return specification_dict
 
     def _parse_state_feature_function(self, feature_function):

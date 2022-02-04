@@ -1055,11 +1055,11 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.parametrize('state_fct_assignments', [
         'partial_w_dict',
-        # 'partial_w_params_dict',
-        # 'tuple_override_dict',
-        # 'tuple_override_params_dict',
+        'partial_w_params_dict',
+        'tuple_override_dict',
+        'tuple_override_params_dict',
         'port_spec_dict_in_feat_dict',
-        # 'all',
+        'all',
         None
     ])
     def test_state_feature_function_specs(self, state_fct_assignments):
