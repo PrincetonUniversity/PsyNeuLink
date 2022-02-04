@@ -1301,6 +1301,10 @@ class Mechanism_Base(Mechanism):
         `internal_only <InputPort.internal_only>`;  these receive `inputs from a Composition
         <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
 
+    external_input_variables : List[List or 1d np.array]
+        list of the `variable <InputPort.variable>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
+
     external_input_values : List[List or 1d np.array]
         list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
@@ -2601,14 +2605,23 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_ports ({2})".
                                   format(num_inputs, self.name,  num_input_ports ))
         for input_item, input_port in zip(input, self.input_ports):
-            if len(input_port.defaults.value) == len(input_item):
-                input_port.parameters.value._set(input_item, context)
+            # # MODIFIED 2/4/22 OLD:
+            # if len(input_port.defaults.value) == len(input_item):
+            #     input_port.parameters.value._set(input_item, context)
+            # MODIFIED 2/4/22 NEW:
+            if len(input_port.defaults.variable) == len(input_item):
+                input_port.parameters.variable._set(input_item, context)
+            # MODIFIED 2/4/22 OLD:
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({len(input_port.defaults.variable)}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
-        return convert_to_np_array(self.get_input_values(context))
+        # # MODIFIED 2/4/22 OLD:
+        # return convert_to_np_array(self.get_input_values(context))
+        # MODIFIED 2/4/22 NEW:
+        return convert_to_np_array(self.get_input_variables(context))
+        # MODIFIED 2/4/22 END
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
         """Update value for each InputPort in self.input_ports:
@@ -3822,6 +3835,27 @@ class Mechanism_Base(Mechanism):
     def input_port(self):
         return self.input_ports[0]
 
+    # MODIFIED 2/4/22 NEW:
+    @property
+    def input_variables(self):
+        try:
+            return self.input_ports.variables
+        except (TypeError, AttributeError):
+            return None
+
+    def get_input_variables(self, context=None):
+        # FIX: 2/4/22 THIS WOULD PARALLEL get_input_values BUT MAY NOT BE NEEDED:
+        # input_variables = []
+        # for input_port in self.input_ports:
+        #     if "LearningSignal" in input_port.name:
+        #         input_variables.append(input_port.parameters.variable.get(context).flatten())
+        #     else:
+        #         input_variables.append(input_port.parameters.variable.get(context))
+        # return input_variables
+        return [input_port.parameters.variable.get(context) for input_port in self.input_ports]
+
+    # MODIFIED 2/4/22 END
+
     @property
     def input_values(self):
         try:
@@ -3844,6 +3878,23 @@ class Mechanism_Base(Mechanism):
             return [input_port for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
+
+    # MODIFIED 2/3/22 NEW:
+    @property
+    def external_input_variables(self):
+        """Returns variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        try:
+            return [input_port.variable for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_input_variables(self):
+        try:
+            return [input_port.defaults.variable for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+    # MODIFIED 2/3/22 END
 
     @property
     def external_input_values(self):
