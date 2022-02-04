@@ -2958,16 +2958,19 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_param_ports_for_obj(self, obj, params_in, ctx, builder,
                                       mech_params, mech_state, mech_input):
-        # Allocate a shadow structure to overload user supplied parameters
-        params_out = builder.alloca(params_in.type.pointee)
-        # Copy original values. This handles params without param ports.
-        # Few extra copies will be eliminated by the compiler.
-        builder.store(builder.load(params_in), params_out)
-
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
         # Filter out param ports without corresponding param for this function
         param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
+
+        # Exit early if there's no modulation. LLVM is not aliminating
+        # the redundant copy created below.
+        if len(param_ports) == 0:
+            return params_in, builder
+
+        # Allocate a shadow structure to overload user supplied parameters
+        params_out = builder.alloca(params_in.type.pointee)
+        builder.store(builder.load(params_in), params_out)
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,

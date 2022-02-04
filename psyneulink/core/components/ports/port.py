@@ -2286,11 +2286,17 @@ class Port_Base(Port):
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
         port_f = ctx.import_llvm_function(self.function)
 
-        # Create a local copy of the function parameters
         base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                   "function")
-        f_params = builder.alloca(port_f.args[0].type.pointee)
-        builder.store(builder.load(base_params), f_params)
+
+        if len(self.mod_afferents) > 0:
+            # Create a local copy of the function parameters
+            # only if there are modulating projections
+            # LLVM is not eliminating the redundant copy
+            f_params = builder.alloca(port_f.args[0].type.pointee)
+            builder.store(builder.load(base_params), f_params)
+        else:
+            f_params = base_params
 
         # FIXME: Handle and combine multiple afferents
         assert len(self.mod_afferents) <= 1
