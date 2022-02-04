@@ -10463,9 +10463,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_inputs_format(self, **kwargs):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
-    def get_input_format(self, num_trials:int=1,
+    def get_input_format(self,
+                         num_trials:int=1,
                          use_labels:bool=False,
                          show_nested_input_nodes:bool=False,
+                         template:bool=False,
+                         use_names:bool=False,
                          alias:str=None):
         """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
@@ -10476,16 +10479,31 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies number of trials' worth of inputs to included in format.
 
         use_labels : bool : default False
-            if True, shows labels instead of values for Mechanisms that have an `input_label_dict
+            if True, show labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
-            shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
+            shown; for **num_trials** > 1, use a different label for each trial shown, cycling
             through the set if **num_trials** is greater than the number of labels.
 
         show_nested_input_nodes : bool : default False
-            shows hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
+            show hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
             with names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` and representative inputs,
             followed by the actual format used for the `run <Composition.run>` method.
+
+        template : bool : default False
+            return dict (with **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node
+            <Composition_Nodes>`) properly formatted for use inputs arg of `run <Composition.run>` method.
+
+        use_names : bool : default False
+            use `Node <Composition_Nodes>` name as key for Node in template dict.
         """
+
+        if template:
+            input_dict = {}
+            for node in self.get_nodes_by_role(NodeRole.INPUT):
+                node_key = node.name if use_names else node
+                inputs_for_node = [port.variable for port in node.external_input_ports]
+                input_dict[node.name]=[inputs_for_node]*num_trials
+            return input_dict
 
         if alias:
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
@@ -10506,6 +10524,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     trials = []
                     for t in range(num_trials):
 
+                        # FIX: 2/3/22 - SHOULD REFACTOR TO USE InputPort.variable RATHER THAN input_values
+                        #               IN CASE AN InputPort'S FUNCTION CHANGES ITS SHAPE
+                        #               (SEE ABOVE FOR template)
                         # Mechanism with labels
                         if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                             input_values = []
