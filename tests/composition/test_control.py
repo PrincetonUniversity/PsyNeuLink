@@ -1058,6 +1058,7 @@ class TestControlMechanisms:
         'partial_w_params_dict',
         'tuple_override_dict',
         'tuple_override_params_dict',
+        'port_spec_dict_in_feat_dict',
         'all',
         None
     ])
@@ -1071,7 +1072,6 @@ class TestControlMechanisms:
         C = pnl.ProcessingMechanism(name='C')
         R = pnl.ProcessingMechanism(name='D')
 
-        # FIX: ALSO TEST TUPLE OVERRIDE OF SPECIFICATION DICT
         if state_fct_assignments == 'partial_w_dict':
             state_features = [{pnl.PROJECTIONS: A,
                                pnl.FUNCTION: fct_a},
@@ -1095,6 +1095,12 @@ class TestControlMechanisms:
                                              pnl.FUNCTION: pnl.Buffer}}, fct_a),
                               (B, fct_b),
                               C]
+            state_feature_function = fct_c
+        elif state_fct_assignments == 'port_spec_dict_in_feat_dict':
+            state_features = {A:{pnl.PROJECTIONS: A,
+                                 pnl.FUNCTION: fct_a},
+                              B: ({pnl.PROJECTIONS: B}, fct_b),
+                              C: C}
             state_feature_function = fct_c
         elif state_fct_assignments == 'all':
             state_features = [(A.output_port, fct_a), (B, fct_b), (C, fct_c)]
