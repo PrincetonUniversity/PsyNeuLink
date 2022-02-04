@@ -3916,6 +3916,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._need_check_for_unused_projections = True
 
+        # # MODIFIED 1/27/22 NEW: FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
+        # if context.source != ContextFlags.METHOD:
+        #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
+        #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        # MODIFIED 1/27/22 END
+
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
             Add a list of `Nodes <Composition_Nodes>` to the Composition.
@@ -7456,7 +7462,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                      receiver=learning_mechanism.error_signal_input_ports[i])
                 error_projections.append(error_projection)
 
-        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING)
+        self.add_node(learning_mechanism, required_roles=NodeRole.LEARNING, context=context)
         try:
             act_in_projection = MappingProjection(sender=input_source.output_ports[0],
                                                 receiver=learning_mechanism.input_ports[0])
@@ -8027,6 +8033,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     # FIX: 11/3/21 ??GET RID OF THIS AND CALL TO IT ONCE PROJECTIONS HAVE BEEN IMPLEMENTED FOR SHADOWED INPUTS
     #      CHECK WHETHER state_input_ports ADD TO OR REPLACE shadowed_inputs
+    # FIX: 1/28/22 - NEED TO ACCOMODATE None OR MISSING state_feature_values, EITHER HERE OR IN predicted_inputs
     def _build_predicted_inputs_dict(self, predicted_inputs, controller=None):
         """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
@@ -8035,9 +8042,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Deal with inputs for nodes in nested Compositions
         """
         controller = controller or self.controller
+        # FIX: 1/29/22 - REFACTOR TO USE OCM.state_features DICT?
         # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
         # (unless it has SHADOW_INPUTS entry, in which case that is handled below)
-        input_dict_keys = controller.agent_rep.get_nodes_by_role(NodeRole.INPUT)[:len(controller.state_input_ports)]
+        # # MODIFIED 1/29/22 OLD:
+        # input_dict_keys = controller.agent_rep.get_nodes_by_role(NodeRole.INPUT)[:len(controller.state_input_ports)]
+        # MODIFIED 1/29/22 NEW:
+        input_dict_keys = list(controller.state_features.keys())
+        # MODIFIED 1/29/22 END
         inputs = {}
 
         no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))

@@ -1282,7 +1282,7 @@ class TestProperties:
                 agent_rep=comp,
                 num_estimates=2,
                 state_features=[Input.input_port, Reward.input_port],
-                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.1),
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.1),
                 monitor_for_control=[Reward,
                                      Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                      Decision.output_ports[pnl.RESPONSE_TIME]],
@@ -4255,7 +4255,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=ocomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
@@ -4275,7 +4275,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=icomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
