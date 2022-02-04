@@ -1072,7 +1072,6 @@ class TestControlMechanisms:
         C = pnl.ProcessingMechanism(name='C')
         R = pnl.ProcessingMechanism(name='D')
 
-        # FIX: ALSO TEST TUPLE OVERRIDE OF SPECIFICATION DICT
         if state_fct_assignments == 'partial_w_dict':
             state_features = [{pnl.PROJECTIONS: A,
                                pnl.FUNCTION: fct_a},
