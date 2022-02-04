@@ -10498,6 +10498,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         if template:
+            # Return dict that can be used as inputs arg to run()
             input_dict = {}
             for node in self.get_nodes_by_role(NodeRole.INPUT):
                 node_key = node.name if use_names else node
