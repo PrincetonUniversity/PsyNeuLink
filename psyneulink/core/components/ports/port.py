@@ -2293,7 +2293,8 @@ class Port_Base(Port):
             # Create a local copy of the function parameters
             # only if there are modulating projections
             # LLVM is not eliminating the redundant copy
-            f_params = builder.alloca(port_f.args[0].type.pointee)
+            f_params = builder.alloca(port_f.args[0].type.pointee,
+                                      name="modulated_port_params")
             builder.store(builder.load(base_params), f_params)
         else:
             f_params = base_params

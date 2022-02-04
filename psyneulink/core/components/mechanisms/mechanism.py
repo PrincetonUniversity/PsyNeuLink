@@ -2896,7 +2896,8 @@ class Mechanism_Base(Mechanism):
             builder, p_output = get_output_ptr(builder, i)
 
             # Allocate the input structure (data + modulation)
-            p_input = builder.alloca(p_function.args[2].type.pointee)
+            p_input = builder.alloca(p_function.args[2].type.pointee,
+                                     name=group + "_port_" + str(i) + "_input")
 
             # Copy input data to input structure
             builder = fill_input_data(builder, p_input, i)
@@ -2936,7 +2937,7 @@ class Mechanism_Base(Mechanism):
         else:
             ip_output_type = pnlvm.ir.LiteralStructType(ip_output_list)
 
-        ip_output = builder.alloca(ip_output_type)
+        ip_output = builder.alloca(ip_output_type, name="input_ports_out")
 
         def _get_output_ptr(b, i):
             ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2969,7 +2970,7 @@ class Mechanism_Base(Mechanism):
             return params_in, builder
 
         # Allocate a shadow structure to overload user supplied parameters
-        params_out = builder.alloca(params_in.type.pointee)
+        params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
         builder.store(builder.load(params_in), params_out)
 
         def _get_output_ptr(b, i):
@@ -3040,7 +3041,7 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_out = builder.alloca(fun.args[3].type.pointee)
+        fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
 
         builder.call(fun, [params, state, variable, fun_out])
 
@@ -3107,8 +3108,8 @@ class Mechanism_Base(Mechanism):
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
-        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 

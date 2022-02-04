@@ -2800,7 +2800,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                 "output_ports", None)
 
         # calculate cost function
-        total_cost = builder.alloca(ctx.float_ty)
+        total_cost = builder.alloca(ctx.float_ty, name="total_cost")
         builder.store(ctx.float_ty(-0.0), total_cost)
         for i, op in enumerate(self.output_ports):
             op_i_params = builder.gep(op_params, [ctx.int32_ty(0),
@@ -2810,7 +2810,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             op_f = ctx.import_llvm_function(op, tags=frozenset({"costs"}))
 
-            op_in = builder.alloca(op_f.args[2].type.pointee)
+            op_in = builder.alloca(op_f.args[2].type.pointee,
+                                   name="output_port_cost_in")
 
             # copy allocation_sample, the input is 1-element array in a struct
             data_in = builder.gep(allocation_sample, [ctx.int32_ty(0),
@@ -2873,7 +2874,7 @@ class OptimizationControlMechanism(ControlMechanism):
         search_space = pnlvm.helpers.get_param_ptr(builder, self.function,
                                                    func_params, "search_space")
 
-        allocation = builder.alloca(evaluate_f.args[2].type.pointee)
+        allocation = builder.alloca(evaluate_f.args[2].type.pointee, name="allocation")
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
             func_out = b.gep(arg_out, [idx])
@@ -3065,7 +3066,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
-        fun_out = builder.alloca(fun.args[3].type.pointee)
+        fun_out = builder.alloca(fun.args[3].type.pointee, name="func_out")
 
         args = [params, context, variable, fun_out]
         # If we're calling compiled version of Composition.evaluate,
@@ -3079,7 +3080,8 @@ class OptimizationControlMechanism(ControlMechanism):
     def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, port):
         i = self.output_ports.index(port)
         # Allocate the only member of the port input struct
-        oport_input = builder.alloca(ctx.get_input_struct_type(port).elements[0])
+        oport_input = builder.alloca(ctx.get_input_struct_type(port).elements[0],
+                                     name="output_port_in")
         # FIXME: workaround controller signals occasionally being 2d
         dest_ptr = pnlvm.helpers.unwrap_2d_array(builder, oport_input)
         dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])

@@ -192,7 +192,7 @@ def is_close(ctx, builder, val1, val2, rtol=1e-05, atol=1e-08):
 
 def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     assert arr1.type == arr2.type
-    all_ptr = builder.alloca(ir.IntType(1))
+    all_ptr = builder.alloca(ir.IntType(1), name="all_close_slot")
     builder.store(all_ptr.type.pointee(1), all_ptr)
     with array_ptr_loop(builder, arr1, "all_close") as (b1, idx):
         val1_ptr = b1.gep(arr1, [idx.type(0), idx])

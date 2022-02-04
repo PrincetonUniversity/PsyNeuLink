@@ -1152,9 +1152,10 @@ class ControlSignal(ModulatorySignal):
         assert self.cost_options & ~CostFunctions.INTENSITY == 0
 
         cfunc = ctx.import_llvm_function(self.function.combine_costs_fct)
-        cfunc_in = builder.alloca(cfunc.args[2].type.pointee)
+        cfunc_in = builder.alloca(cfunc.args[2].type.pointee,
+                                  name="combine_costs_func_in")
 
-        # Set to 0 be default
+        # Set to 0 by default
         builder.store(cfunc_in.type.pointee(None), cfunc_in)
 
         cost_funcs = 0
@@ -1189,7 +1190,8 @@ class ControlSignal(ModulatorySignal):
         cfunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
                                                   func_state,
                                                   "combine_costs_fct")
-        cfunc_out = builder.alloca(cfunc.args[3].type.pointee)
+        cfunc_out = builder.alloca(cfunc.args[3].type.pointee,
+                                   name="combine_costs_func_out")
         builder.call(cfunc, [cfunc_params, cfunc_state, cfunc_in, cfunc_out])
 
 
