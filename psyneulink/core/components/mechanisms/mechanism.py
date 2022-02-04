@@ -2480,7 +2480,7 @@ class Mechanism_Base(Mechanism):
                 # Executing or simulating Composition, so get input by updating input_ports
                 if (input is None
                     and (context.execution_phase is not ContextFlags.IDLE)
-                    and (self.input_port.path_afferents != [])):
+                    and any(p.path_afferents for p in self.input_ports)):
                     variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
                 # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
