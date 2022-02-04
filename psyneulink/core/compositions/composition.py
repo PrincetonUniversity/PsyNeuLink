@@ -10503,7 +10503,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for node in self.get_nodes_by_role(NodeRole.INPUT):
                 node_key = node.name if use_names else node
                 inputs_for_node = [port.variable for port in node.external_input_ports]
-                input_dict[node.name]=[inputs_for_node]*num_trials
+                input_dict[node_key]=[inputs_for_node]*num_trials
             return input_dict
 
         if alias:
