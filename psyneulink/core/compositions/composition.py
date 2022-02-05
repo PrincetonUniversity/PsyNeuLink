@@ -8595,10 +8595,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
-                    # MODIFIED 2/4/22 OLD:
-                    incompatible_stimulus = stimulus[node_input.index(None)]
-                    # # MODIFIED 2/4/22 NEW:
-                    # incompatible_stimulus = [stimulus[node_input.index(None)]]
+                    # # MODIFIED 2/4/22 OLD:
+                    # incompatible_stimulus = stimulus[node_input.index(None)]
+                    # MODIFIED 2/4/22 NEW:
+                    incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
+                    correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
                     # MODIFIED 2/4/22 OLD:
                     node_name = node.name
                     # # MODIFIED 2/4/22 OLD:
@@ -8611,9 +8612,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #             if not input_port.internal_only]
                     # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                     #           f"its external_input_variables ({node_variable})."
-                    # MODIFIED 2/4/22 NEWER:
+                    # # MODIFIED 2/4/22 NEWER:
+                    # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
+                    #           f"the shape of its external input ({node.external_input_shape})."
+                    # MODIFIED 2/4/22 NEWEST:
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                              f"its external_input ({node.external_input_shape})."
+                              f"the shape of its external input ({correct_stimulus})."
                     # MODIFIED 2/4/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
