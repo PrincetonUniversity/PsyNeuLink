@@ -62,6 +62,37 @@ def array_ptr_loop(builder, array, id):
     stop = ir.IntType(32)(array.type.pointee.count)
     return for_loop_zero_inc(builder, stop, id)
 
+def memcpy(builder, dst, src):
+
+    bool_ty = ir.IntType(1)
+    char_ptr_ty = ir.IntType(8).as_pointer()
+    ptr_src = builder.bitcast(src, char_ptr_ty)
+    ptr_dst = builder.bitcast(dst, char_ptr_ty)
+
+    obj_size_ty = ir.FunctionType(ir.IntType(64), [char_ptr_ty, bool_ty, bool_ty, bool_ty])
+    obj_size_f = builder.function.module.declare_intrinsic("llvm.objectsize.i64", [], obj_size_ty)
+    # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
+    obj_size = builder.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
+
+    if "unaligned_copy" in debug_env:
+        memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
+        memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
+        builder.call(memcpy_f, [ptr_dst, ptr_src, obj_size, bool_ty(0)])
+    else:
+        int_ty = ir.IntType(32)
+        int_ptr_ty = int_ty.as_pointer()
+        obj_size = builder.add(obj_size, obj_size.type((int_ty.width // 8) - 1))
+        obj_size = builder.udiv(obj_size, obj_size.type(int_ty.width // 8))
+        ptr_src = builder.bitcast(src, int_ptr_ty)
+        ptr_dst = builder.bitcast(dst, int_ptr_ty)
+
+        with for_loop_zero_inc(builder, obj_size, id="memcopy_loop") as (b, idx):
+            src = b.gep(ptr_src, [idx])
+            dst = b.gep(ptr_dst, [idx])
+            b.store(b.load(src), dst)
+
+    return builder
+
 
 def fclamp(builder, val, min_val, max_val):
     min_val = min_val if isinstance(min_val, ir.Value) else val.type(min_val)

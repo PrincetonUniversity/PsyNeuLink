@@ -34,6 +34,7 @@ Compilation modifiers:
  * "const_state" -- hardcode base context values into generate code,
                  instead of laoding them from the context argument
  * "opt" -- Set compiler optimization level (0,1,2,3)
+ * "unaligned_copy" -- Do not assume structures are 4B aligned
  * "cuda_max_regs" -- Set maximum allowed GPU arch registers
 
 Compiled code dump:

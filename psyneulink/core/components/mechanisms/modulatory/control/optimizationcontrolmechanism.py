@@ -2912,7 +2912,7 @@ class OptimizationControlMechanism(ControlMechanism):
             const_state = self.agent_rep._get_state_initializer(None)
             builder.store(comp_state.type.pointee(const_state), comp_state)
         else:
-            builder.store(builder.load(base_comp_state), comp_state)
+            builder = pnlvm.helpers.memcpy(builder, comp_state, base_comp_state)
 
         # Create a simulation copy of composition data
         comp_data = builder.alloca(base_comp_data.type.pointee, name="data_copy")
@@ -2920,7 +2920,7 @@ class OptimizationControlMechanism(ControlMechanism):
             const_data = self.agent_rep._get_data_initializer(None)
             builder.store(comp_data.type.pointee(const_data), comp_data)
         else:
-            builder.store(builder.load(base_comp_data), comp_data)
+            builder = pnlvm.helpers.memcpy(builder, comp_data, base_comp_data)
 
         # Evaluate is called on composition controller
         assert self.composition.controller is self
