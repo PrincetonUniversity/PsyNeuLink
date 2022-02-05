@@ -225,7 +225,11 @@ class TestOutputPorts:
             output_ports=[SELECTED_INPUT_ARRAY],
             name='DDM'
         )
-        action_selection.execute([1.0])
+        # # MODIFIED 2/4/22 OLD:
+        # action_selection.execute([1.0])
+        # MODIFIED 2/4/22 NEW:
+        action_selection.execute([1.0, 0.0])
+        # MODIFIED 2/4/22 END
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2

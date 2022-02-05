@@ -2617,7 +2617,8 @@ class Mechanism_Base(Mechanism):
             # if len(input_port.defaults.variable) == len(input_item):
             #     input_port.parameters.variable._set(input_item, context)
             # MODIFIED 2/4/22 NEWER
-            if len(input_port.default_input_shape) == len(input_item):
+            # if len(input_port.default_input_shape) == len(input_item):
+            if input_port.default_input_shape.size == input_item.size:
                 # FIX: ?NECESSARY (OR IS ASSIGNMENT TO VARIABLE ALWAYS OK, AS BELOW):
                 # if self._input_shape_template == VARIABLE:
                 #     input_port.parameters.variable._set(input_item, context)
