@@ -2611,6 +2611,7 @@ class Mechanism_Base(Mechanism):
                                   format(num_inputs, self.name,  num_input_ports ))
         for input_item, input_port in zip(input, self.input_ports):
             # # MODIFIED 2/4/22 OLD:
+            # FIX: ??WHY IS InputPort.value BEING SET HERE, RATHER THAN IN port.update??
             # if len(input_port.defaults.value) == len(input_item):
             #     input_port.parameters.value._set(input_item, context)
             # # MODIFIED 2/4/22 NEW:
@@ -2625,7 +2626,7 @@ class Mechanism_Base(Mechanism):
                 # elif self._input_shape_template == VALUE:
                 #     input_port.parameters.value._set(input_item, context)
                 input_port.parameters.variable._set(input_item, context)
-            # MODIFIED 2/4/22 OLD:
+            # MODIFIED 2/4/22 END
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({len(input_port.defaults.variable)}) for input "
