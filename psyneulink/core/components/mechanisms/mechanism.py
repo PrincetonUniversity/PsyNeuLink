@@ -3850,6 +3850,7 @@ class Mechanism_Base(Mechanism):
     def input_port(self):
         return self.input_ports[0]
 
+    # MODIFIED 2/4/22 NEW:
     @property
     def input_variables(self):
         try:
@@ -3896,37 +3897,49 @@ class Mechanism_Base(Mechanism):
     # MODIFIED 2/3/22 NEW:
     @property
     def external_input_shape(self):
-        if self._input_shape_template == VARIABLE:
-            return self.external_input_variables
-        elif self._input_shape_template == VALUE:
-            return self.external_input_values
-        assert False, f"PROGRAM ERROR: bad external_input_shape assignment for '{self.name}'."
+        shape = []
+        for input_port in self.input_ports:
+            if input_port.internal_only:
+                continue
+            if input_port._input_shape_template == VARIABLE:
+                shape.append(input_port.variable)
+            elif input_port._input_shape_template == VALUE:
+                shape.append(input_port.value)
+            else:
+                assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
+                              f"external_input_shape for '{input_port.name}' of '{self.name}."
+        return shape
 
     @property
     def default_external_input_shape(self):
-        if self._input_shape_template == VARIABLE:
-            return self.default_external_input_variables
-        elif self._input_shape_template == VALUE:
-            return self.default_external_input_values
-        assert False, f"PROGRAM ERROR: bad default_external_input_shape assignment for '{self.name}'."
+        try:
+            shape = []
+            for input_port in self.input_ports:
+                if input_port.internal_only:
+                    continue
+                if input_port._input_shape_template == VARIABLE:
+                    shape.append(input_port.variable)
+                elif input_port._input_shape_template == VALUE:
+                    shape.append(input_port.value)
+                else:
+                    assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
+                                  f"default_external_input_shape for '{input_port.name}' of '{self.name}."
+            return shape
+        except (TypeError, AttributeError):
+            return None
 
     @property
     def external_input_variables(self):
-        """Returns variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism
-        """
+        """Returns variables of all external InputPorts that belong to the Mechanism"""
         try:
-            # Use only first item as it is assumed that InputPort will aggregate inputs from multiple afferents,
-            #   preserving length of individual ones
-            return [np.atleast_2d(input_port.defaults.variable)[0]
-                    for input_port in self.input_ports if not input_port.internal_only]
+            return [input_port.variable for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def default_external_input_variables(self):
         try:
-            return [np.atleast_2d(input_port.defaults.variable)[0]
-                    for input_port in self.input_ports if not input_port.internal_only]
+            return [input_port.defaults.variable for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
     # MODIFIED 2/3/22 END
