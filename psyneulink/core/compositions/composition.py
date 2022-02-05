@@ -5100,9 +5100,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #     deepcopy(input_port.defaults.value)
             #     for input_port in cim.input_ports
             # ]
-            # MODIFIED 2/4/22 NEW:
+            # # MODIFIED 2/4/22 NEW:
+            # new_default_variable = [
+            #     deepcopy(input_port.defaults.variable)
+            #     for input_port in cim.input_ports
+            # ]
+            # MODIFIED 2/4/22 NEWER:
             new_default_variable = [
-                deepcopy(input_port.defaults.variable)
+                deepcopy(input_port.default_input_shape)
                 for input_port in cim.input_ports
             ]
             # MODIFIED 2/4/22 END
@@ -8091,8 +8096,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if no_predicted_input:
                 # # MODIFIED 2/4/22 OLD:
                 # predicted_input = input_port.defaults.value
-                # MODIFIED 2/4/22 NEW:
-                predicted_input = input_port.defaults.variable
+                # # MODIFIED 2/4/22 NEW:
+                # predicted_input = input_port.defaults.variable
+                # MODIFIED 2/4/22 NEWER:
+                predicted_input = input_port.default_input_shape
                 # MODIFIED 2/4/22 END
             else:
                 predicted_input = predicted_inputs[j]
@@ -8537,9 +8544,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # # MODIFIED 2/4/22 OLD:
         # node_variable = [input_port.defaults.value for input_port in node.input_ports
         #                  if not input_port.internal_only or input_port.default_input]
-        # MODIFIED 2/4/22 NEW:
-        node_variable = [input_port.defaults.variable for input_port in node.input_ports
-                         if not input_port.internal_only or input_port.default_input]
+        # # MODIFIED 2/4/22 NEW:
+        # node_variable = [input_port.defaults.variable for input_port in node.input_ports
+        #                  if not input_port.internal_only or input_port.default_input]
+        # MODIFIED 2/4/22 NEWER:
+        node_variable = node.default_external_input_shape
         # MODIFIED 2/4/22 END
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
@@ -8593,11 +8602,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #             if not input_port.internal_only]
                     # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                     #           f"its external_input_values ({node_variable})."
-                    # MODIFIED 2/4/22 NEW:
-                    node_variable = [input_port.defaults.variable for input_port in node.input_ports
-                                if not input_port.internal_only]
+                    # # MODIFIED 2/4/22 NEW:
+                    # node_variable = [input_port.defaults.variable for input_port in node.input_ports
+                    #             if not input_port.internal_only]
+                    # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
+                    #           f"its external_input_variables ({node_variable})."
+                    # MODIFIED 2/4/22 NEWER:
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                              f"its external_input_variables ({node_variable})."
+                              f"its external_input ({node.default_external_input_shape})."
                     # MODIFIED 2/4/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
@@ -8794,8 +8806,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node not in inputs:
                 # # MODIFIED 2/4/22 OLD:
                 # inputs[node] = node.default_external_input_values
-                # MODIFIED 2/4/22 NEW:
-                inputs[node] = node.default_external_input_variables
+                # # MODIFIED 2/4/22 NEW:
+                # inputs[node] = node.default_external_input_variables
+                # MODIFIED 2/4/22 NEWER:
+                inputs[node] = node.default_external_input_shape
                 # MODIFIED 2/4/22 END
         return inputs
 
@@ -8888,9 +8902,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # # MODIFIED 2/4/22 OLD:
                 # raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
                 #                        f"with its variable ({node.default_external_input_values}).")
-                # MODIFIED 2/4/22 NEW:
+                # # MODIFIED 2/4/22 NEW:
+                # raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
+                #                        f"with its variable ({node.default_external_input_variables}).")
+                # MODIFIED 2/4/22 NEWER:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
-                                       f"with its variable ({node.default_external_input_variables}).")
+                                       f"with its variable ({node.default_external_input_shape}).")
                 # MODIFIED 2/4/22 END
             _inputs[node] = inp
         return _inputs
@@ -11251,6 +11268,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     @property
     def simulation_results(self):
         return self.parameters.simulation_results.get(self.default_execution_id)
+
     #     FIX: 2/4/22 SHOULD external_input_variables REPLACE OR BE ADDED TO external_input_values HERE?
     #  For now, external_input_ports == input_ports and external_input_values == input_values
     #  They could be different in the future depending on new state_features (ex. if we introduce recurrent compositions)
@@ -11264,9 +11282,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return None
 
     # MODIFIED 2/3/22 NEW:
+
+    @property
+    def default_external_input_shape(self):
+        """Returns default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
+        try:
+            return [input_port.default_input_shape for input_port in self.input_CIM.input_ports
+                    # FIX: 2/4/22 - IS THIS NEEDED (HERE OR BELOW -- DO input_CIM.input_ports EVER GET ASSIGNED THIS?
+                    if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
     @property
     def external_input_variables(self):
-        """Returns variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
             return [input_port.variable for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
@@ -11274,7 +11303,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def default_external_input_variables(self):
-        """Return the default values of all external InputPorts that belong to the Input CompositionInterfaceMechanism
+        """Return default variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism
         """
 
         try:
@@ -11286,7 +11315,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def external_input_values(self):
-        """Returns values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
             #  FIX: 2/4/22 SHOULD input_port.variable REPLACE input_port.value HERE?
             return [input_port.value for input_port in self.input_CIM.input_ports if not input_port.internal_only]

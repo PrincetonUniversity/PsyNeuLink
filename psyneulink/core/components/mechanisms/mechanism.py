@@ -2632,10 +2632,10 @@ class Mechanism_Base(Mechanism):
 
         # # MODIFIED 2/4/22 OLD:
         # return convert_to_np_array(self.get_input_values(context))
-        # # MODIFIED 2/4/22 NEW:
-        # return convert_to_np_array(self.get_input_variables(context))
-        # MODIFIED 2/4/22 NEWER
-        return convert_to_np_array(self.get_input_shape(context))
+        # MODIFIED 2/4/22 NEW:
+        return convert_to_np_array(self.get_input_variables(context))
+        # # MODIFIED 2/4/22 NEWER
+        # return convert_to_np_array(self.external_input_shape())
         # MODIFIED 2/4/22 END
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
@@ -3915,7 +3915,7 @@ class Mechanism_Base(Mechanism):
         try:
             shape = []
             for input_port in self.input_ports:
-                if input_port.internal_only:
+                if input_port.internal_only or input_port.default_input:
                     continue
                 if input_port._input_shape_template == VARIABLE:
                     shape.append(input_port.variable)
