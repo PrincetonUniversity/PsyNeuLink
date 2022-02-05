@@ -3850,45 +3850,6 @@ class Mechanism_Base(Mechanism):
     def input_port(self):
         return self.input_ports[0]
 
-    # MODIFIED 2/4/22 NEW:
-    @property
-    def _input_shape_template(self):
-        try:
-            return self.function.input_shape_template
-        except:
-            assert False, f"PROGRAM ERROR: Unrecognized _input_shape_template for " \
-                          f"('{self.function.name}') of '{self.name}'."
-
-    @property
-    def default_input_shape(self):
-        if self._input_shape_template == VARIABLE:
-            return self.defaults.variable
-        elif self._input_shape_template == VALUE:
-            return self.defaults.value
-        assert False, f"PROGRAM ERROR: bad input_shape assignment for '{self.name}'."
-
-    @property
-    def input_shape(self):
-        template = self.function.input_shape_template
-        if self._input_shape_template == VARIABLE:
-            try:
-                return self.input_variables
-            except (TypeError, AttributeError):
-                return None
-        elif self._input_shape_template == VALUE:
-            try:
-                return self.input_values
-            except (TypeError, AttributeError):
-                return None
-        assert False, f"PROGRAM ERROR: bad input_shape assignment for '{self.name}'."
-
-    def get_input_shape(self, context=None):
-        if self._input_shape_template == VARIABLE:
-            return self.get_input_variables(context)
-        elif self._input_shape_template == VALUE:
-            return self.get_input_values(context)
-        assert False, f"PROGRAM ERROR: bad input_shape assignment for '{self.name}'."
-
     @property
     def input_variables(self):
         try:
