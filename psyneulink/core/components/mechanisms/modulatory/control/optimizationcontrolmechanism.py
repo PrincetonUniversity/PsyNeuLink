@@ -2419,7 +2419,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
             # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
-            # Call these to check for errors in construcing inputs dict
+            # Call these to check for errors in constructing inputs dict
             inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
             self.agent_rep._parse_input_dict(inputs)
         except RunError as error:

@@ -8548,7 +8548,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # node_variable = [input_port.defaults.variable for input_port in node.input_ports
         #                  if not input_port.internal_only or input_port.default_input]
         # MODIFIED 2/4/22 NEWER:
-        node_variable = node.default_external_input_shape
+        node_variable = node.external_input_shape
         # MODIFIED 2/4/22 END
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
@@ -8595,7 +8595,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
+                    # MODIFIED 2/4/22 OLD:
                     incompatible_stimulus = stimulus[node_input.index(None)]
+                    # # MODIFIED 2/4/22 NEW:
+                    # incompatible_stimulus = [stimulus[node_input.index(None)]]
+                    # MODIFIED 2/4/22 OLD:
                     node_name = node.name
                     # # MODIFIED 2/4/22 OLD:
                     # node_variable = [input_port.defaults.value for input_port in node.input_ports
@@ -8609,7 +8613,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #           f"its external_input_variables ({node_variable})."
                     # MODIFIED 2/4/22 NEWER:
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                              f"its external_input ({node.default_external_input_shape})."
+                              f"its external_input ({node.external_input_shape})."
                     # MODIFIED 2/4/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
@@ -8809,7 +8813,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # # MODIFIED 2/4/22 NEW:
                 # inputs[node] = node.default_external_input_variables
                 # MODIFIED 2/4/22 NEWER:
-                inputs[node] = node.default_external_input_shape
+                inputs[node] = node.external_input_shape
                 # MODIFIED 2/4/22 END
         return inputs
 
@@ -8907,7 +8911,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                        f"with its variable ({node.default_external_input_variables}).")
                 # MODIFIED 2/4/22 NEWER:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
-                                       f"with its variable ({node.default_external_input_shape}).")
+                                       f"with its variable ({node.external_input_shape}).")
                 # MODIFIED 2/4/22 END
             _inputs[node] = inp
         return _inputs
@@ -11284,7 +11288,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     # MODIFIED 2/3/22 NEW:
 
     @property
-    def default_external_input_shape(self):
+    def external_input_shape(self):
+        """Alias for _default_external_input_shape"""
+        return self._default_external_input_shape
+
+    @property
+    def _default_external_input_shape(self):
         """Returns default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
         try:
             return [input_port.default_input_shape for input_port in self.input_CIM.input_ports

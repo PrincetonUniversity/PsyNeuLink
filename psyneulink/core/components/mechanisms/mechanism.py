@@ -3895,32 +3895,37 @@ class Mechanism_Base(Mechanism):
             return None
 
     # MODIFIED 2/3/22 NEW:
-    @property
-    def external_input_shape(self):
-        shape = []
-        for input_port in self.input_ports:
-            if input_port.internal_only:
-                continue
-            if input_port._input_shape_template == VARIABLE:
-                shape.append(input_port.variable)
-            elif input_port._input_shape_template == VALUE:
-                shape.append(input_port.value)
-            else:
-                assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
-                              f"external_input_shape for '{input_port.name}' of '{self.name}."
-        return shape
+    # @property
+    # def external_input_shape(self):
+    #     shape = []
+    #     for input_port in self.input_ports:
+    #         if input_port.internal_only:
+    #             continue
+    #         if input_port._input_shape_template == VARIABLE:
+    #             shape.append(input_port.variable)
+    #         elif input_port._input_shape_template == VALUE:
+    #             shape.append(input_port.value)
+    #         else:
+    #             assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
+    #                           f"external_input_shape for '{input_port.name}' of '{self.name}."
+    #     return shape
 
     @property
-    def default_external_input_shape(self):
+    def external_input_shape(self):
+        """Alias for _default_external_input_shape"""
+        return self._default_external_input_shape
+
+    @property
+    def _default_external_input_shape(self):
         try:
             shape = []
             for input_port in self.input_ports:
                 if input_port.internal_only or input_port.default_input:
                     continue
                 if input_port._input_shape_template == VARIABLE:
-                    shape.append(input_port.variable)
+                    shape.append(input_port.defaults.variable)
                 elif input_port._input_shape_template == VALUE:
-                    shape.append(input_port.value)
+                    shape.append(input_port.defaults.value)
                 else:
                     assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
                                   f"default_external_input_shape for '{input_port.name}' of '{self.name}."
