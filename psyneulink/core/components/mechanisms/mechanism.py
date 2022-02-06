@@ -2637,8 +2637,11 @@ class Mechanism_Base(Mechanism):
                 # Assign input item to input_port.variable (for reference and reporting)
                 input_port.parameters.variable._set(input_item, context)
                 # Set input_port.value to result of executing its function with its variable
+                # input_port.parameters.value._set(
+                #     input_port.function(input_port.parameters.variable.get(context), context),
+                #     context)
                 input_port.parameters.value._set(
-                    input_port.function(input_port.parameters.variable.get(context), context),
+                    input_port._execute(input_port.parameters.variable.get(context), context),
                     context)
             # MODIFIED 2/4/22 END
             else:

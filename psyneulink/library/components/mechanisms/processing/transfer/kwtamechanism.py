@@ -402,10 +402,13 @@ class KWTAMechanism(RecurrentTransferMechanism):
         )
 
     def _parse_function_variable(self, variable, context=None):
-        if variable.dtype.char == "U":
-            raise KWTAError(f"input ({variable}) to {self.name} is a string, "
-                            f"which is not supported for {self.__class__.__name__}.")
         return self._kwta_scale(variable, context=context)
+
+    # def execute(self, variable, context=None, runtime_params=None, **kwargs):
+    #     if np.array(variable).dtype.char == "U":
+    #         raise KWTAError(f"input ({variable}) to {self.name} is a string, "
+    #                         f"which is not supported for {self.__class__.__name__}.")
+    #     return super().execute(variable, context, runtime_params, **kwargs)
 
     # adds indexOfInhibitionInputPort to the attributes of KWTAMechanism
     def _instantiate_attributes_before_function(self, function=None, context=None):
