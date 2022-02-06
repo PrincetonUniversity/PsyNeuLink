@@ -1086,6 +1086,7 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
+import psyneulink
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
@@ -2619,47 +2620,25 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_ports ({2})".
                                   format(num_inputs, self.name,  num_input_ports ))
         for input_item, input_port in zip(input, self.input_ports):
-            # # MODIFIED 2/4/22 OLD:
-            # FIX: ??WHY IS InputPort.value BEING SET HERE, RATHER THAN IN port.update??
-            # if len(input_port.defaults.value) == len(input_item):
-            #     input_port.parameters.value._set(input_item, context)
-            # # MODIFIED 2/4/22 NEW:
-            # if len(input_port.defaults.variable) == len(input_item):
-            #     input_port.parameters.variable._set(input_item, context)
-            # MODIFIED 2/4/22 NEWER
-            # if len(input_port.default_input_shape) == len(input_item):
             if input_port.default_input_shape.size == np.array(input_item).size:
-                # FIX: ?NECESSARY (OR IS ASSIGNMENT TO VARIABLE ALWAYS OK, AS BELOW):
-                # if self._input_shape_template == VARIABLE:
-                #     input_port.parameters.variable._set(input_item, context)
-                # elif self._input_shape_template == VALUE:
-                #     input_port.parameters.value._set(input_item, context)
-                # Assign input item to input_port.variable (for reference and reporting)
-                input_port.parameters.variable._set(input_item, context)
-                # Set input_port.value to result of executing its function with its variable
-                # input_port.parameters.value._set(
-                #     input_port.function(input_port.parameters.variable.get(context), context),
-                #     context)
+                from psyneulink.core.compositions.composition import RunError
+                input_port.parameters.variable._set(np.atleast_2d(input_item), context)
+                base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
+                                 f"with its corresponding {InputPort.__name__} ({input_port.full_name})"
                 try:
                     input_port.parameters.value._set(
                         input_port._execute(input_port.parameters.variable.get(context), context),
                         context)
+                except (RunError,TypeError) as error:
+                    raise MechanismError(f"{base_error_msg}: '{error.args[0]}.'")
                 except:
-                    raise MechanismError(f"Input to '{self.name}' ({input_item}) is incompatible "
-                                         f"with its corresponding {InputPort.__name__} ({input_port.full_name}).")
-            # MODIFIED 2/4/22 END
+                    raise MechanismError(f"{base_error_msg}.")
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
                                      f"required length ({len(input_port.defaults.variable)}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
-        # MODIFIED 2/4/22 OLD:
         return convert_to_np_array(self.get_input_values(context))
-        # # MODIFIED 2/4/22 NEW:
-        # return convert_to_np_array(self.get_input_variables(context))
-        # # MODIFIED 2/4/22 NEWER
-        # return convert_to_np_array(self.external_input_shape())
-        # MODIFIED 2/4/22 END
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
         """Update value for each InputPort in self.input_ports:

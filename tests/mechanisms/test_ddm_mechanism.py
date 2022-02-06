@@ -392,15 +392,15 @@ def test_DDM_input_fn():
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(
-
                 noise=0.0,
                 rate=1.0,
                 time_step_size=1.0
             ),
         )
         float(T.execute(stim))
-    assert '"Input to \'DDM\' ([(NormalDist Normal Distribution Function-1)]) is incompatible ' \
-           'with its corresponding InputPort (DDM[InputPort-0])."' in str(error_text.value)
+    assert '"Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
+    assert 'is incompatible with its corresponding InputPort (DDM[InputPort-0]): ' \
+           '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'"' in str(error_text.value)
 
 # ======================================= RATE TESTS ============================================
 
