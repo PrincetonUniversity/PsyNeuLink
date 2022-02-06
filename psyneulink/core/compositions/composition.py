@@ -8525,7 +8525,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         _input = []
         node_variable = node.external_input_shape
         match_type = self._input_matches_variable(input, node_variable)
-        # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
             # np.atleast_2d will catch any single-input ports specified without an outer list
             _input = convert_to_np_array(input, 2)
@@ -8565,10 +8564,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node_input is not None:
                 node_input = [node_input]
             else:
-                # if node_input is None, it means there are multiple trials of input in the stimulus set, so loop
-                # through and validate each individual input
+                # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
+                #     so loop through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
+                    # incompatible_stimulus = [stimulus[node_input.index(None)]]
                     incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
                     correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
                     node_name = node.name
@@ -10532,7 +10532,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             input_dict = {}
             for node in self.get_nodes_by_role(NodeRole.INPUT):
                 node_key = node.name if use_names else node
-                inputs_for_node = [port.variable for port in node.external_input_ports]
+                inputs_for_node = [port.default_input_shape for port in node.external_input_ports]
                 input_dict[node_key]=[inputs_for_node] * num_trials
             return input_dict
 
