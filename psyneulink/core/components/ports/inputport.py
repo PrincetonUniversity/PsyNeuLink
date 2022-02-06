@@ -1351,9 +1351,12 @@ class InputPort(Port_Base):
     @property
     def _input_shape_template(self):
         try:
-            return self.function.input_shape_template
+            if self.function.changes_shape:
+                return VARIABLE
+            else:
+                return VALUE
         except:
-            assert False, f"PROGRAM ERROR: Unrecognized _input_shape_template for " \
+            assert False, f"PROGRAM ERROR: Missing or unrecognized 'changes_shape' attribute for " \
                           f"('{self.function.name}') of '{self.name}'."
 
     @property
@@ -1366,7 +1369,6 @@ class InputPort(Port_Base):
 
     @property
     def input_shape(self):
-        template = self.function.input_shape_template
         if self._input_shape_template == VARIABLE:
             try:
                 return self.input_variables

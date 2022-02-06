@@ -523,9 +523,8 @@ class Function_Base(Function):
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
 
-    input_shape_template : Enum[VARIABLE, VALUE] : VALUE
-        used to determine whether the inputs to the `Component` to which the function is assigned are shaped based
-        on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
+    changes_shape : bool : False
+        specifies whether the return value of the function is different than the shape of its `variable <Function_Base.variable>.  Used to determine whether the shape of the inputs to the `Component` to which the function is assigned should be based on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
     COMMENT
 
     owner : Component
@@ -572,11 +571,11 @@ class Function_Base(Function):
                     :default value: False
                     :type: ``bool``
 
-                input_shape_template
-                    see `input_shape_template <Function_Base.input_shape_template>`
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
 
-                    :default value: VALUE
-                    :type: Enum
+                    :default value: False
+                    :type: bool
 
                 output_type
                     see `output_type <Function_Base.output_type>`
@@ -596,12 +595,10 @@ class Function_Base(Function):
         )
         enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
 
-        # MODIFIED 2/4/22 NEW:
-        input_shape_template = Parameter(VALUE, stateful=False, loggable=False, pnl_internal=True)
-        def _validate_input_shape_template(self, param):
-            if param not in {VARIABLE, VALUE}:
-                return f'must be VARIABLE or VALUE.'
-        # MODIFIED 2/4/22 END
+        changes_shape = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+        def _validate_changes_shape(self, param):
+            if not isinstance(param, bool):
+                return f'must be a bool.'
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1

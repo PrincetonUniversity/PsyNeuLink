@@ -187,11 +187,11 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: numpy.array([], dtype=float64)
                     :type: ``numpy.ndarray``
 
-                input_shape_template
-                    see `input_shape_template <Function_Base.input_shape_template>`
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
 
-                    :default value: VARIABLE
-                    :type: Enum
+                    :default value: True
+                    :type: bool
 
                 noise
                     see `noise <Buffer.noise>`
@@ -212,7 +212,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         )
         history = None
         initializer = Parameter(np.array([]), pnl_internal=True)
-        input_shape_template = Parameter(VARIABLE, stateful=False, loggable=False, pnl_internal=True)
+        changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
 
     @tc.typecheck

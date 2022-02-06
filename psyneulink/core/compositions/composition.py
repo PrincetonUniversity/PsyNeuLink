@@ -5095,22 +5095,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context.execution_id = None
             context_string = context.string
 
-            # # MODIFIED 2/4/22 OLD:
-            # new_default_variable = [
-            #     deepcopy(input_port.defaults.value)
-            #     for input_port in cim.input_ports
-            # ]
-            # # MODIFIED 2/4/22 NEW:
-            # new_default_variable = [
-            #     deepcopy(input_port.defaults.variable)
-            #     for input_port in cim.input_ports
-            # ]
-            # MODIFIED 2/4/22 NEWER:
             new_default_variable = [
                 deepcopy(input_port.default_input_shape)
                 for input_port in cim.input_ports
             ]
-            # MODIFIED 2/4/22 END
 
             try:
                 cim._update_default_variable(new_default_variable, context)
@@ -8094,13 +8082,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for j in range(len(controller.input_ports) - shadow_inputs_start_index):
             input_port = controller.input_ports[j + shadow_inputs_start_index]
             if no_predicted_input:
-                # # MODIFIED 2/4/22 OLD:
-                # predicted_input = input_port.defaults.value
-                # # MODIFIED 2/4/22 NEW:
-                # predicted_input = input_port.defaults.variable
-                # MODIFIED 2/4/22 NEWER:
                 predicted_input = input_port.default_input_shape
-                # MODIFIED 2/4/22 END
             else:
                 predicted_input = predicted_inputs[j]
 
@@ -8541,15 +8523,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
-        # # MODIFIED 2/4/22 OLD:
-        # node_variable = [input_port.defaults.value for input_port in node.input_ports
-        #                  if not input_port.internal_only or input_port.default_input]
-        # # MODIFIED 2/4/22 NEW:
-        # node_variable = [input_port.defaults.variable for input_port in node.input_ports
-        #                  if not input_port.internal_only or input_port.default_input]
-        # MODIFIED 2/4/22 NEWER:
         node_variable = node.external_input_shape
-        # MODIFIED 2/4/22 END
         match_type = self._input_matches_variable(input, node_variable)
         # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':

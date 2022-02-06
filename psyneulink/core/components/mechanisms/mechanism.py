@@ -2622,7 +2622,11 @@ class Mechanism_Base(Mechanism):
         for input_item, input_port in zip(input, self.input_ports):
             if input_port.default_input_shape.size == np.array(input_item).size:
                 from psyneulink.core.compositions.composition import RunError
+
+                # Assign input_item as input_port.variable
                 input_port.parameters.variable._set(np.atleast_2d(input_item), context)
+
+                # Call input_port._execute with newly assigned variable and assign result to input_port.value
                 base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
                                  f"with its corresponding {InputPort.__name__} ({input_port.full_name})"
                 try:
@@ -2638,6 +2642,7 @@ class Mechanism_Base(Mechanism):
                                      f"required length ({len(input_port.defaults.variable)}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
+        # Return values of input_ports for use as variable of Mechanism
         return convert_to_np_array(self.get_input_values(context))
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
@@ -3896,22 +3901,6 @@ class Mechanism_Base(Mechanism):
         except (TypeError, AttributeError):
             return None
 
-    # MODIFIED 2/3/22 NEW:
-    # @property
-    # def external_input_shape(self):
-    #     shape = []
-    #     for input_port in self.input_ports:
-    #         if input_port.internal_only:
-    #             continue
-    #         if input_port._input_shape_template == VARIABLE:
-    #             shape.append(input_port.variable)
-    #         elif input_port._input_shape_template == VALUE:
-    #             shape.append(input_port.value)
-    #         else:
-    #             assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
-    #                           f"external_input_shape for '{input_port.name}' of '{self.name}."
-    #     return shape
-
     @property
     def external_input_shape(self):
         """Alias for _default_external_input_shape"""
@@ -3929,7 +3918,7 @@ class Mechanism_Base(Mechanism):
                 elif input_port._input_shape_template == VALUE:
                     shape.append(input_port.defaults.value)
                 else:
-                    assert False, f"PROGRAM ERROR: bad input_shape_template in attempt to assign " \
+                    assert False, f"PROGRAM ERROR: bad changes_shape in attempt to assign " \
                                   f"default_external_input_shape for '{input_port.name}' of '{self.name}."
             return shape
         except (TypeError, AttributeError):

@@ -179,11 +179,11 @@ class Concatenate(CombinationFunction):  # -------------------------------------
             Attributes
             ----------
 
-                input_shape_template
-                    see `input_shape_template <Function_Base.input_shape_template>`
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
 
-                    :default value: VARIABLE
-                    :type: Enum
+                    :default value: True
+                    :type: bool
 
                 offset
                     see `offset <Concatenate.offset>`
@@ -199,7 +199,7 @@ class Concatenate(CombinationFunction):  # -------------------------------------
         """
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        input_shape_template = Parameter(VARIABLE, stateful=False, loggable=False, pnl_internal=True)
+        changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,
@@ -686,11 +686,11 @@ class Reduce(CombinationFunction):  # ------------------------------------------
                     :default value: None
                     :type:
 
-                input_shape_template
-                    see `input_shape_template <Function_Base.input_shape_template>`
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
 
-                    :default value: VARIABLE
-                    :type: Enum
+                    :default value: True
+                    :type: bool
 
                 offset
                     see `offset <Reduce.offset>`
@@ -721,7 +721,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         operation = SUM
         scale = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        input_shape_template = Parameter(VARIABLE, stateful=False, loggable=False, pnl_internal=True)
+        changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
     @tc.typecheck
     def __init__(self,
