@@ -166,10 +166,26 @@ def test_helper_is_close(mode, var1, var2, rtol, atol):
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-def test_helper_all_close(mode):
+@pytest.mark.parametrize('rtol,atol',
+                         [[0, 0], [None, None], [None, 100], [2, None]])
+@pytest.mark.parametrize('var1,var2',
+                         [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
+                          [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
+                         ])
+def test_helper_all_close(mode, var1, var2, atol, rtol):
+
+    tolerance = {}
+    if rtol is not None:
+        tolerance['rtol'] = rtol
+    if atol is not None:
+        tolerance['atol'] = atol
+
+    vec1 = np.atleast_1d(np.asfarray(var1))
+    vec2 = np.atleast_1d(np.asfarray(var2))
+    assert len(vec1) == len(vec2)
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
-        arr_ptr_ty = ir.ArrayType(ir.DoubleType(), DIM_X).as_pointer()
+        arr_ptr_ty = ir.ArrayType(ir.DoubleType(), len(vec1)).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty,
                                                   ir.IntType(32).as_pointer()])
 
@@ -179,15 +195,13 @@ def test_helper_all_close(mode):
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        all_close = pnlvm.helpers.all_close(ctx, builder, in1, in2)
+        all_close = pnlvm.helpers.all_close(ctx, builder, in1, in2, **tolerance)
         res = builder.select(all_close, out.type.pointee(1), out.type.pointee(0))
         builder.store(res, out)
         builder.ret_void()
 
-    vec1 = copy.deepcopy(VECTOR)
-    vec2 = copy.deepcopy(VECTOR)
 
-    ref = np.allclose(vec1, vec2)
+    ref = np.allclose(vec1, vec2, **tolerance)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
         ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
