@@ -101,14 +101,15 @@ class TestTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_inputs_list_of_strings(self):
-        with pytest.raises(FunctionError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
             T.execute(["one", "two", "three", "four"])
-        assert "Unrecognized type" in str(error_text.value)
+        assert '"Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
+               'with its corresponding InputPort (T[InputPort-0])."' in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism

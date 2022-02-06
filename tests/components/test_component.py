@@ -20,15 +20,14 @@ class TestComponent:
         assert "Unrecognized arguments in constructor for MY_MECH (type: ProcessingMechanism): 'flim_flam, grumblabble'"
 
     def test_component_execution_counts_for_standalone_mechanism(self):
-        """Note: input_port should not update execution count, since it has no afferents"""
 
         T = pnl.TransferMechanism()
 
         T.execute()
         assert T.execution_count == 1
-        assert T.input_port.execution_count == 0
+        assert T.input_port.execution_count == 1 # incremented by Mechanism.get_variable_from_input()
 
-        # skipped (0 executions) because we bypass execute when no afferents, and
+        # skipped (0 executions) because execution is bypassed when no afferents, and
         # function._is_identity is satisfied (here, Linear function with slope 0 and intercept 1)
         # This holds true for each below
         assert T.parameter_ports[pnl.SLOPE].execution_count == 0
@@ -36,13 +35,13 @@ class TestComponent:
 
         T.execute()
         assert T.execution_count == 2
-        assert T.input_port.execution_count == 0
+        assert T.input_port.execution_count == 2
         assert T.parameter_ports[pnl.SLOPE].execution_count == 0
         assert T.output_port.execution_count == 0
 
         T.execute()
         assert T.execution_count == 3
-        assert T.input_port.execution_count == 0
+        assert T.input_port.execution_count == 3
         assert T.parameter_ports[pnl.SLOPE].execution_count == 0
         assert T.output_port.execution_count == 0
 

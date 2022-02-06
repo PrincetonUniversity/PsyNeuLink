@@ -2640,9 +2640,13 @@ class Mechanism_Base(Mechanism):
                 # input_port.parameters.value._set(
                 #     input_port.function(input_port.parameters.variable.get(context), context),
                 #     context)
-                input_port.parameters.value._set(
-                    input_port._execute(input_port.parameters.variable.get(context), context),
-                    context)
+                try:
+                    input_port.parameters.value._set(
+                        input_port._execute(input_port.parameters.variable.get(context), context),
+                        context)
+                except:
+                    raise MechanismError(f"Input to '{self.name}' ({input_item}) is incompatible "
+                                         f"with its corresponding {InputPort.__name__} ({input_port.full_name}).")
             # MODIFIED 2/4/22 END
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "

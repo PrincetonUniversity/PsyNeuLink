@@ -9,6 +9,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.stateful.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -386,7 +387,7 @@ def test_DDM_input_list_len_2():
 
 
 def test_DDM_input_fn():
-    with pytest.raises(TypeError) as error_text:
+    with pytest.raises(MechanismError) as error_text:
         stim = NormalDist()
         T = DDM(
             name='DDM',
@@ -398,8 +399,8 @@ def test_DDM_input_fn():
             ),
         )
         float(T.execute(stim))
-    assert "not supported for the input types" in str(error_text.value)
-
+    assert '"Input to \'DDM\' ([(NormalDist Normal Distribution Function-1)]) is incompatible ' \
+           'with its corresponding InputPort (DDM[InputPort-0])."' in str(error_text.value)
 
 # ======================================= RATE TESTS ============================================
 

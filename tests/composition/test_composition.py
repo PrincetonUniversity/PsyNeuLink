@@ -2347,7 +2347,7 @@ class TestExecutionOrder:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
-    def test_transfer_mechanism(self, benchmark, comp_mode):
+    def xtest_transfer_mechanism(self, benchmark, comp_mode):
 
         # mechanisms
         C = TransferMechanism(name="C",
