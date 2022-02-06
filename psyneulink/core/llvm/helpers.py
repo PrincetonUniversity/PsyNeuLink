@@ -196,7 +196,7 @@ def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     builder.store(all_ptr.type.pointee(1), all_ptr)
     with array_ptr_loop(builder, arr1, "all_close") as (b1, idx):
         val1_ptr = b1.gep(arr1, [idx.type(0), idx])
-        val2_ptr = b1.gep(arr1, [idx.type(0), idx])
+        val2_ptr = b1.gep(arr2, [idx.type(0), idx])
         val1 = b1.load(val1_ptr)
         val2 = b1.load(val2_ptr)
         res_close = is_close(ctx, b1, val1, val2, rtol, atol)
