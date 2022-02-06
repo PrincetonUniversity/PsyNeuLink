@@ -2596,7 +2596,7 @@ class Mechanism_Base(Mechanism):
 
     def _get_variable_from_input(self, input, context=None):
         """Return array of results from each InputPort function executed with corresponding input item as its variable
-        This is called when Mechanism is executed on its own (e.g., from the command line).
+        This is called when Mechanism is executed on its own (e.g., during init or from the command line).
         It:
         - bypasses call to Port._update(), thus ignoring any afferent Projections assigned to the Mechanism;
         - assigns each item of **input** to variable of corresponding InputPort;
@@ -2628,7 +2628,7 @@ class Mechanism_Base(Mechanism):
             #     input_port.parameters.variable._set(input_item, context)
             # MODIFIED 2/4/22 NEWER
             # if len(input_port.default_input_shape) == len(input_item):
-            if input_port.default_input_shape.size == input_item.size:
+            if input_port.default_input_shape.size == np.array(input_item).size:
                 # FIX: ?NECESSARY (OR IS ASSIGNMENT TO VARIABLE ALWAYS OK, AS BELOW):
                 # if self._input_shape_template == VARIABLE:
                 #     input_port.parameters.variable._set(input_item, context)

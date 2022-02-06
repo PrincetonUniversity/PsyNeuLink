@@ -1192,7 +1192,7 @@ class LinearCombination(
         )
 
     def _validate_variable(self, variable, context=None):
-        """Insure that all items of list or np.ndarray in variable are of the same length
+        """Insure that all items of list or np.array in variable are of the same length
 
         Args:
             variable:
