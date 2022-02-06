@@ -8569,30 +8569,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
-                    # # MODIFIED 2/4/22 OLD:
-                    # incompatible_stimulus = stimulus[node_input.index(None)]
-                    # MODIFIED 2/4/22 NEW:
                     incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
                     correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
-                    # MODIFIED 2/4/22 OLD:
                     node_name = node.name
-                    # # MODIFIED 2/4/22 OLD:
-                    # node_variable = [input_port.defaults.value for input_port in node.input_ports
-                    #             if not input_port.internal_only]
-                    # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                    #           f"its external_input_values ({node_variable})."
-                    # # MODIFIED 2/4/22 NEW:
-                    # node_variable = [input_port.defaults.variable for input_port in node.input_ports
-                    #             if not input_port.internal_only]
-                    # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                    #           f"its external_input_variables ({node_variable})."
-                    # # MODIFIED 2/4/22 NEWER:
-                    # err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                    #           f"the shape of its external input ({node.external_input_shape})."
-                    # MODIFIED 2/4/22 NEWEST:
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"the shape of its external input ({correct_stimulus})."
-                    # MODIFIED 2/4/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(node)):
@@ -8786,13 +8767,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
             if node not in inputs:
-                # # MODIFIED 2/4/22 OLD:
-                # inputs[node] = node.default_external_input_values
-                # # MODIFIED 2/4/22 NEW:
-                # inputs[node] = node.default_external_input_variables
-                # MODIFIED 2/4/22 NEWER:
                 inputs[node] = node.external_input_shape
-                # MODIFIED 2/4/22 END
         return inputs
 
     def _parse_run_inputs(self, inputs, context=None):
@@ -8881,16 +8856,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 inp = node._parse_input_dict(inp)
             inp = self._validate_single_input(node, inp)
             if inp is None:
-                # # MODIFIED 2/4/22 OLD:
-                # raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
-                #                        f"with its variable ({node.default_external_input_values}).")
-                # # MODIFIED 2/4/22 NEW:
-                # raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
-                #                        f"with its variable ({node.default_external_input_variables}).")
-                # MODIFIED 2/4/22 NEWER:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
                                        f"with its variable ({node.external_input_shape}).")
-                # MODIFIED 2/4/22 END
             _inputs[node] = inp
         return _inputs
 
@@ -11251,10 +11218,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def simulation_results(self):
         return self.parameters.simulation_results.get(self.default_execution_id)
 
-    #     FIX: 2/4/22 SHOULD external_input_variables REPLACE OR BE ADDED TO external_input_values HERE?
-    #  For now, external_input_ports == input_ports and external_input_values == input_values
-    #  They could be different in the future depending on new state_features (ex. if we introduce recurrent compositions)
-    #  Useful to have this property for treating Compositions the same as Mechanisms in run & execute
     @property
     def external_input_ports(self):
         """Returns all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
@@ -11262,8 +11225,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return [input_port for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
-
-    # MODIFIED 2/3/22 NEW:
 
     @property
     def external_input_shape(self):
@@ -11298,7 +11259,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
-    # MODIFIED 2/3/22 END
 
     @property
     def external_input_values(self):

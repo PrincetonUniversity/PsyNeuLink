@@ -226,16 +226,15 @@ class TestOutputPorts:
             output_ports=[SELECTED_INPUT_ARRAY],
             name='DDM'
         )
-        # # MODIFIED 2/4/22 OLD:
-        # action_selection.execute([1.0])
-        # MODIFIED 2/4/22 NEW:
+        with pytest.raises(MechanismError) as error:
+            action_selection.execute([1.0])
+        assert 'Length (1) of input ([1.]) does not match required length (2) ' \
+               'for input to InputPort \'ARRAY\' of DDM.' in str(error.value)
         action_selection.execute([1.0, 0.0])
-        # MODIFIED 2/4/22 END
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # function = Bogacz
-
 
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism

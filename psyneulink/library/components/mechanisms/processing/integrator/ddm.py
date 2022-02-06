@@ -799,12 +799,9 @@ class DDM(ProcessingMechanism):
                  #    v[0]=self.value[self.DECISION_VARIABLE_INDEX]
                  #    v[1]=self.parameter_ports[THRESHOLD]
                  #    v[2]=self.input_ports[0].variable
-                 # # MODIFIED 2/4/22 OLD:
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
                                       if (v[1] - v[0]) < (v[1] + v[0]) \
                                       else [0, float(v[2][0][1])]
-
-                 # MODIFIED 2/4/22 END
                  }
             ])
 
@@ -1029,11 +1026,7 @@ class DDM(ProcessingMechanism):
         :rtype self.outputPort.value: (number)
         """
 
-        # # MODIFIED 2/4/22 OLD:
-        # if variable is None or np.isnan(variable):
-        # MODIFIED 2/4/22 NEW:
         if variable is None or any(np.isnan(i) for i in variable):
-        # MODIFIED 2/4/22 END
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
             variable = self.defaults.variable
 

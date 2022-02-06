@@ -2639,7 +2639,7 @@ class Mechanism_Base(Mechanism):
                     raise MechanismError(f"{base_error_msg}.")
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
-                                     f"required length ({len(input_port.defaults.variable)}) for input "
+                                     f"required length ({input_port.default_input_shape.size}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
         # Return values of input_ports for use as variable of Mechanism
@@ -3857,15 +3857,6 @@ class Mechanism_Base(Mechanism):
     def input_port(self):
         return self.input_ports[0]
 
-    # MODIFIED 2/4/22 NEW:
-    @property
-    def input_variables(self):
-        try:
-            # FIX: 2/4/22 NO variables ATTRIBUTE OF ContentAddressable CLASS;  NEED TO CONSTRUCT
-            return self.input_ports.variables
-        except (TypeError, AttributeError):
-            return None
-
     def get_input_variables(self, context=None):
         # FIX: 2/4/22 THIS WOULD PARALLEL get_input_values BUT MAY NOT BE NEEDED:
         # input_variables = []
@@ -3876,7 +3867,6 @@ class Mechanism_Base(Mechanism):
         #         input_variables.append(input_port.parameters.variable.get(context))
         # return input_variables
         return [input_port.parameters.variable.get(context) for input_port in self.input_ports]
-    # MODIFIED 2/4/22 END
 
     @property
     def input_values(self):
