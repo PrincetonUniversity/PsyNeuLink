@@ -8658,7 +8658,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs[node] = inputs.pop(name)
         return inputs
 
-    def _parse_labels(self, inputs, mech=None, context=None):
+    def _parse_labels(self, inputs, mech=None, port=None, context=None):
         """
         Traverse input dict and replace any inputs that are in the form of their input or output label representations
               to their numeric representations
@@ -8691,16 +8691,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
-                        for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(port)
-                            v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
+                        for i, cim_port in enumerate(k.input_CIM.input_ports):
+                            port, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(cim_port)
+                            v[i] = k._parse_labels(inputs[k][i],mech_with_labels, port)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
         elif type(inputs) == list or type(inputs) == np.ndarray:
             _inputs = []
             for i in range(len(inputs)):
-                port = 0 if len(labels) == 1 else i
+                if port:
+                    port_index = mech.input_ports.index(port)
+                else:
+                    port_index = 0 if len(labels) == 1 else i
                 stimulus = inputs[i]
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
@@ -8709,7 +8712,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise CompositionError(f"Inappropriate use of str ({repr(stimulus)}) as a stimulus for "
                                                f"{mech.name} in {self.name}: it does not have an input_labels_dict.")
                     try:
-                        _inputs.append(labels[port][stimulus])
+                        if len(inputs) == 1:
+                            _inputs = labels[port_index][stimulus]
+                        else:
+                            _inputs.append(labels[port_index][stimulus])
                     except KeyError as e:
                         raise CompositionError(f"Inappropriate use of {repr(stimulus)} as a stimulus for {mech.name} "
                                                f"in {self.name}: it is not a label in its input_labels_dict.")
@@ -10575,6 +10581,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # MODIFIED 2/7/22 NEW:
                             inputs_for_trial = []
                             # MODIFIED 2/7/22 OLD
+                            labels_dict = node.input_labels_dict
                             for i in range(len(node.input_values)):
                                 labels = _get_labels(labels_dict, i, node.input_ports[i])
                                 input_values.append(repr(labels[t % len(labels)]))
