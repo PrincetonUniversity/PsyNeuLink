@@ -5746,6 +5746,39 @@ class TestInputSpecifications:
         else:
             assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
 
+    def test_get_input_format(self):
+        A = ProcessingMechanism(size=1, name='A')
+        B = ProcessingMechanism(size=2, name='B')
+        C = ProcessingMechanism(size=[3,3], input_ports=['C INPUT 1', 'C INPUT 2'], name='C')
+        assert C.variable.shape == (2,3)
+        X = ProcessingMechanism(size=4, name='X')
+        Y = ProcessingMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce}],
+                                name='Y')
+        assert len(Y.input_port.variable) == 3
+        assert len(Y.input_port.value) == 1
+        icomp = Composition(pathways=[[A,B],[C]], name='ICOMP')
+        ocomp = Composition(nodes=[X, icomp, Y], name='OCOMP')
+
+        expected = '{\n\tX: [ [[0.0, 0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0, 0.0]] ],' \
+                   '\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],' \
+                   '\n\tY: [ [[0.0]], [[0.0]] ]\n}'
+        inputs_dict = ocomp.get_input_format(num_trials=2)
+        assert inputs_dict == expected
+
+        expected = '\nInputs to (nested) INPUT Nodes of OCOMP for 1 trials:\n\tX: [[0.0, 0.0, 0.0, 0.0]]' \
+                   '\n\tICOMP: \n\t\tA: [[0.0]]\n\t\tC: [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]]\n\tY: [[0.0]' \
+                   '\n\nFormat as follows for inputs to run():\n{\n\tX: [[0.0, 0.0, 0.0, 0.0]],' \
+                   '\n\tICOMP: [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]],\n\tY: [[0.0]]\n}'
+        inputs_dict = ocomp.get_input_format(show_nested_input_nodes=True)
+        assert inputs_dict == expected
+
+        inputs_dict = ocomp.get_input_format(template=True, use_names=False, num_trials=2)
+        ocomp.run(inputs=inputs_dict)
+        len(ocomp.results)==2
+
+        inputs_dict = ocomp.get_input_format(template=True, use_names=True, num_trials=2)
+        ocomp.run(inputs=inputs_dict)
+        len(ocomp.results)==2
 
     input_labels_dict = [
         # indices
