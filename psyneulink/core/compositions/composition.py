@@ -8713,7 +8713,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                f"{mech.name} in {self.name}: it does not have an input_labels_dict.")
                     try:
                         if len(inputs) == 1:
-                            _inputs = labels[port_index][stimulus]
+                            _inputs = np.atleast_1d(labels[port_index][stimulus])
                         else:
                             _inputs.append(labels[port_index][stimulus])
                     except KeyError as e:
