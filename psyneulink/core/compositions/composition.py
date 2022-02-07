@@ -10527,15 +10527,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             use `Node <Composition_Nodes>` name as key for Node in template dict.
         """
 
-        # FIX: NEED TO ADD TRIALS AND LABELS (OR EMBDED IN BELOW)
-        if template:
-            # Return dict that can be used as inputs arg to run()
-            input_dict = {}
-            for node in self.get_nodes_by_role(NodeRole.INPUT):
-                node_key = node.name if use_names else node
-                inputs_for_node = [port.default_input_shape for port in node.external_input_ports]
-                input_dict[node_key]=[inputs_for_node] * num_trials
-            return input_dict
+        # # FIX: NEED TO ADD LABELS (OR EMBDED IN BELOW)
+        # if template:
+        #     # Return dict that can be used as inputs arg to run()
+        #     input_dict = {}
+        #     for node in self.get_nodes_by_role(NodeRole.INPUT):
+        #         node_key = node.name if use_names else node
+        #         inputs_for_node = [port.default_input_shape for port in node.external_input_ports]
+        #         input_dict[node_key]= inputs_for_node * num_trials
+        #     return input_dict
 
         if alias:
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
@@ -10547,7 +10547,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return list(labels_dict[index].keys())
             raise CompositionError(f"Unable to find labels for '{input_port.full_name}' of '{input_port.owner.name}'.")
 
-        def _get_inputs(comp, nesting_level=1, use_labels=False):
+        def _get_inputs(comp, nesting_level=1, use_labels=False, template=False):
 
             input_format = ''
             indent = '\t' * nesting_level
@@ -10572,11 +10572,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Mechanism with labels
                         if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                             input_values = []
+                            # MODIFIED 2/7/22 NEW:
+                            inputs_for_trial = []
+                            # MODIFIED 2/7/22 OLD
                             for i in range(len(node.input_values)):
                                 labels = _get_labels(labels_dict, i, node.input_ports[i])
                                 input_values.append(repr(labels[t % len(labels)]))
+                                # MODIFIED 2/7/22 NEW:
+                                inputs_for_trial.append(labels[t % len(labels)])
+                                # MODIFIED 2/7/22 END
                             trial = f"[{','.join(input_values)}]"
-                            inputs_for_trial = input_values
+                            # inputs_for_trial = input_values
 
                         # Mechanism(s) with labels in nested Compositions
                         elif (use_labels and isinstance(node, Composition)
@@ -10592,6 +10598,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 if labels_dict:
                                     labels = _get_labels(labels_dict, mech.input_ports.index(input_port), input_port)
                                     input_values.append(repr([labels[t % len(labels)]]))
+                                    # MODIFIED 2/7/22 NEW:
+                                    inputs_for_trial.append([labels[t % len(labels)]])
+                                    # MODIFIED 2/7/22 END
                                 else:
                                     # # MODIFIED 2/7/22 OLD:
                                     # input_values.append(repr(np.array(mech.input_values).tolist()))
@@ -10600,23 +10609,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     input_values.append(repr(np.array(port.default_input_shape).tolist()))
                                     # MODIFIED 2/7/22 END
                             trial = f"[{','.join(input_values)}]"
-                            inputs_for_trial = input_values
+                            # inputs_for_trial = input_values
 
                         # No Mechanism(s) with labels or use_labels == False
                         else:
                             # # MODIFIED 2/7/22 OLD:
                             # trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
                             # MODIFIED 2/7/22 NEW:
-                            inputs_for_trial = [port.default_input_shape for port in mech.external_input_ports]
-                            inputs_for_node.append(inputs_for_trial)
+                            inputs_for_trial = [port.default_input_shape for port in node.external_input_ports]
                             trial = f"[{','.join([repr(i.tolist()) for i in inputs_for_trial])}]"
                             # MODIFIED 2/7/22 END
 
                         trials.append(trial)
                         # MODIFIED 2/7/22 NEW:
-                        inputs_for_node.append(inputs_for_trial)
+                        inputs_for_node.extend(inputs_for_trial)
                         # MODIFIED 2/7/22 END
-
 
                     trials = ', '.join(trials)
                     if num_trials > 1:
@@ -10630,7 +10637,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # MODIFIED 2/7/22 END
 
             nesting_level -= 1
-            return input_format
+            if template:
+                return input_dict
+            else:
+                return input_format
 
         # Return dict usable for run()
         if template:
@@ -10638,7 +10648,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return _get_inputs(self, 1, use_labels, template)
         # Return text format
         else:
-            formatted_input = _get_inputs(self, 1, use_labels, template)
+            formatted_input = _get_inputs(self, 1, use_labels)
             if show_nested_input_nodes:
                 preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
                 epilog = f"\n\nFormat as follows for inputs to run():\n" \
