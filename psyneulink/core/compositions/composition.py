@@ -10549,10 +10549,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def _get_inputs(comp, nesting_level=1, use_labels=False):
 
+            input_dict = {}
             input_format = ''
             indent = '\t' * nesting_level
+
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
                 input_format += '\n' + indent + node.name + ': '
+                node_key = node.name if use_names else node
+                inputs_for_node = []
 
                 # Nested Compositions
                 if show_nested_input_nodes and isinstance(node, Composition):
@@ -10604,13 +10608,19 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             nesting_level -= 1
             return input_format
 
-        formatted_input = _get_inputs(self, 1, use_labels)
-        if show_nested_input_nodes:
-            preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
-            epilog = f"\n\nFormat as follows for inputs to run():\n" \
-                     f"{self.get_input_format(num_trials=num_trials)}"
-            return preface + formatted_input[:-1] + epilog
-        return '{' + formatted_input[:-1] + '\n}'
+        # Return dict usable for run()
+        if template:
+            show_nested_input_nodes = False
+            return _get_inputs(self, 1, use_labels, template)
+        # Return text format
+        else:
+            formatted_input = _get_inputs(self, 1, use_labels, template)
+            if show_nested_input_nodes:
+                preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
+                epilog = f"\n\nFormat as follows for inputs to run():\n" \
+                         f"{self.get_input_format(num_trials=num_trials)}"
+                return preface + formatted_input[:-1] + epilog
+            return '{' + formatted_input[:-1] + '\n}'
 
     def get_output_format(self, **kwargs):
         return self.get_results_by_nodes(**kwargs, alias="get_output_format")
