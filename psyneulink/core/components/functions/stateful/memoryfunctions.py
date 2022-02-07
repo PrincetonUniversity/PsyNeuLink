@@ -44,7 +44,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
-    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
+    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import \
@@ -187,6 +187,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: numpy.array([], dtype=float64)
                     :type: ``numpy.ndarray``
 
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
+
+                    :default value: True
+                    :type: bool
+
                 noise
                     see `noise <Buffer.noise>`
 
@@ -206,6 +212,7 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         )
         history = None
         initializer = Parameter(np.array([]), pnl_internal=True)
+        changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
 
     @tc.typecheck

@@ -1549,7 +1549,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                         ctx.int32_ty(0)])
 
         threshold = builder.load(threshold_ptr)
-        cmp_val_ptr = builder.alloca(threshold.type)
+        cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_value")
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
             # Get inside of the structure
@@ -1578,7 +1578,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
             func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
-            func_in = builder.alloca(func.args[2].type.pointee)
+            func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
                                                         ctx.int32_ty(0)])

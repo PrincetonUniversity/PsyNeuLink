@@ -800,12 +800,12 @@ class TestControlMechanisms:
         f'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         # 4
-        f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' "
-        f"that is using a Composition ('OUTER COMP') as its agent_rep, but they are not compatible with "
-        f"the inputs required by its 'agent_rep': 'Input stimulus (0.0) for OB is incompatible with its "
-        f"external_input_values ([array([0., 0., 0.])]).' Use the get_inputs_format() method of 'OUTER COMP' "
-        f"to see the required format, or remove the specification of '{pnl.STATE_FEATURES}' from the constructor "
-        f"for OptimizationControlMechanism-0 to have them automatically assigned.",
+        f"The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' that is using a "
+        f"Composition ('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by "
+        f"its 'agent_rep': 'Input stimulus ([0.]) for OB is incompatible with the shape of its external input "
+        f"([0. 0. 0.]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, or "
+        f"remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
+        f"to have them automatically assigned.",
 
         # 5
         f"The number of '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 (4) is more than "

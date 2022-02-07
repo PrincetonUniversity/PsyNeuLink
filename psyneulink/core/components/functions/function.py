@@ -155,7 +155,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
-    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX
+    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE
 )
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
@@ -519,9 +519,12 @@ class Function_Base(Function):
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
     output_type : FunctionOutputType : None
-        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        used to determine the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
+
+    changes_shape : bool : False
+        specifies whether the return value of the function is different than the shape of its `variable <Function_Base.variable>.  Used to determine whether the shape of the inputs to the `Component` to which the function is assigned should be based on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
     COMMENT
 
     owner : Component
@@ -568,11 +571,18 @@ class Function_Base(Function):
                     :default value: False
                     :type: ``bool``
 
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
+
+                    :default value: False
+                    :type: bool
+
                 output_type
                     see `output_type <Function_Base.output_type>`
 
                     :default value: FunctionOutputType.DEFAULT
                     :type: `FunctionOutputType`
+
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -584,6 +594,11 @@ class Function_Base(Function):
             valid_types=FunctionOutputType
         )
         enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+
+        changes_shape = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+        def _validate_changes_shape(self, param):
+            if not isinstance(param, bool):
+                return f'must be a bool.'
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1

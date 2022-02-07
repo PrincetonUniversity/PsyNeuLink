@@ -1165,8 +1165,8 @@ to one (i.e., its `name <Component.name>` attribute).  The value must an input t
 `InputPorts <InputPort>` that receive external input for that Node. These are listed in its ``external_input_ports``
 (`here <Mechanism_Base.external_input_ports>` if it is Mechanism, or `here <Composition.external_input_ports>` if it
 is a Composition).  More specifically, the shape of the input value must be compatible with the shape of the Node's
-`external_input_values` attribute (`here <Mechanism_Base.external_input_values>` if it is Mechanism, or `here
-<Composition.external_input_values>` if it is a Composition). While these are always 2d arrays, the number and size
+`external_input_variables` attribute (`here <Mechanism_Base.external_input_variables>` if it is Mechanism, or `here
+<Composition.external_input_variables>` if it is a Composition). While these are always 2d arrays, the number and size
 of the items (corresponding to each InputPort) may vary; in some case shorthand notations are allowed, as illustrated
 in the `examples <Composition_Examples_Input_Dictionary>` below.
 
@@ -2021,9 +2021,14 @@ length 1 arrays, so it is constructed with two InputPorts, each of which takes a
 therefore, the input specified for each `TRIAL <TimeScale.TRIAL>` must be two length 1 arrays.  See `figure
 <Composition_Execution_Input_Dict_Fig>` for an illustration of the format for an input dictionary.
 
+COMMENT: MODIFIED 2/4/22 OLD:
+# FIX: 2/4/22 - ADD NOTE THAT external_input_values IS NOT NECESSARILY SAME AS external_input_variables
+                AS SOME InputPorts CAN HAVE FUNCTIONS THAT CHANGE THE SHAPE OF variable->value (e.g., Reduce)
+ # Furthermore, Mechanisms can also have InputPorts with a `function <InputPort.function>` that changes
+ #    the size of its input when generatings its `value <InputPort.value>`, in which case its `e
 .. note::
     A `Node's <Composition_Nodes>` `external_input_values` attribute is always a 2d list in which the index i
-    element is the value of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+    element is the variable of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
     the `external_input_values <Mechanism_Base.external_input_values>` is often the same as its `variable
     <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
     <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
@@ -2031,6 +2036,18 @@ therefore, the input specified for each `TRIAL <TimeScale.TRIAL>` must be two le
     input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
     and `external_input_values <Composition.external_input_values>` of a Composition, based on the Mechanisms and/or
     `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
+MODIFIED 2/4/22 NEW:
+COMMENT
+.. note::
+    A `Node's <Composition_Nodes>` `external_input_variables` attribute is always a 2d list in which the index i
+    element is the variable of the i'th element of the Node's `external_input_ports` attribute.  For Mechanisms,
+    the `external_input_variables <Mechanism_Base.external_input_variables>` is often the same as its `variable
+    <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
+    <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
+    and therefore its `external_input_variables <Mechanism_Base.external_input_variables>`, and so should not receive
+    an input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
+    and `external_input_variabels <Composition.external_input_variables>` of a Composition, based on the Mechanisms
+    and/or `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
 
 If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
 the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
@@ -2596,8 +2613,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, \
-    RANDOMIZATION_CONTROL_SIGNAL, NUM_ESTIMATES, STATE_FEATURES
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -4839,7 +4855,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if input_port not in set(self.input_CIM_ports.keys()):
                     # instantiate the input port on the input CIM to correspond to the node's input port
                     interface_input_port = InputPort(owner=self.input_CIM,
-                                                     variable=input_port.defaults.value,
+                                                     # # MODIFIED 2/3/22 OLD:
+                                                     # variable=input_port.defaults.value,
+                                                     # MODIFIED 2/3/22 NEW:
+                                                     variable=np.atleast_2d(input_port.defaults.variable)[0],
+                                                     # MODIFIED 2/3/22 END
                                                      reference_value=input_port.defaults.value,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
@@ -5076,7 +5096,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             context_string = context.string
 
             new_default_variable = [
-                deepcopy(input_port.defaults.value)
+                deepcopy(input_port.default_input_shape)
                 for input_port in cim.input_ports
             ]
 
@@ -8062,7 +8082,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for j in range(len(controller.input_ports) - shadow_inputs_start_index):
             input_port = controller.input_ports[j + shadow_inputs_start_index]
             if no_predicted_input:
-                predicted_input = input_port.defaults.value
+                predicted_input = input_port.default_input_shape
             else:
                 predicted_input = predicted_inputs[j]
 
@@ -8503,10 +8523,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         # Validate that a single input is properly formatted for a node.
         _input = []
-        node_variable = [input_port.defaults.value for input_port in node.input_ports
-                         if not input_port.internal_only or input_port.default_input]
+        node_variable = node.external_input_shape
         match_type = self._input_matches_variable(input, node_variable)
-        # match_type = self._input_matches_variable(input, node_variable)
         if match_type == 'homogeneous':
             # np.atleast_2d will catch any single-input ports specified without an outer list
             _input = convert_to_np_array(input, 2)
@@ -8546,16 +8564,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if node_input is not None:
                 node_input = [node_input]
             else:
-                # if node_input is None, it means there are multiple trials of input in the stimulus set, so loop
-                # through and validate each individual input
+                # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
+                #     so loop through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
-                    incompatible_stimulus = stimulus[node_input.index(None)]
+                    # incompatible_stimulus = [stimulus[node_input.index(None)]]
+                    incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
+                    correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
                     node_name = node.name
-                    node_variable = [input_port.defaults.value for input_port in node.input_ports
-                                if not input_port.internal_only]
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
-                              f"its external_input_values ({node_variable})."
+                              f"the shape of its external input ({correct_stimulus})."
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(node)):
@@ -8749,7 +8767,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
             if node not in inputs:
-                inputs[node] = node.default_external_input_values
+                inputs[node] = node.external_input_shape
         return inputs
 
     def _parse_run_inputs(self, inputs, context=None):
@@ -8839,7 +8857,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inp = self._validate_single_input(node, inp)
             if inp is None:
                 raise CompositionError(f"Input stimulus ({inp}) for {node.name} is incompatible "
-                                       f"with its variable ({node.default_external_input_values}).")
+                                       f"with its variable ({node.external_input_shape}).")
             _inputs[node] = inp
         return _inputs
 
@@ -10475,9 +10493,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def get_inputs_format(self, **kwargs):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
-    def get_input_format(self, num_trials:int=1,
+    def get_input_format(self,
+                         num_trials:int=1,
                          use_labels:bool=False,
                          show_nested_input_nodes:bool=False,
+                         template:bool=False,
+                         use_names:bool=False,
                          alias:str=None):
         """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
@@ -10488,16 +10509,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             specifies number of trials' worth of inputs to included in format.
 
         use_labels : bool : default False
-            if True, shows labels instead of values for Mechanisms that have an `input_label_dict
+            if True, show labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
-            shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
+            shown; for **num_trials** > 1, use a different label for each trial shown, cycling
             through the set if **num_trials** is greater than the number of labels.
 
         show_nested_input_nodes : bool : default False
-            shows hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
+            show hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
             with names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` and representative inputs,
             followed by the actual format used for the `run <Composition.run>` method.
+
+        template : bool : default False
+            return dict (with **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node
+            <Composition_Nodes>`) properly formatted for use inputs arg of `run <Composition.run>` method.
+
+        use_names : bool : default False
+            use `Node <Composition_Nodes>` name as key for Node in template dict.
         """
+
+        if template:
+            # Return dict that can be used as inputs arg to run()
+            input_dict = {}
+            for node in self.get_nodes_by_role(NodeRole.INPUT):
+                node_key = node.name if use_names else node
+                inputs_for_node = [port.default_input_shape for port in node.external_input_ports]
+                input_dict[node_key]=[inputs_for_node] * num_trials
+            return input_dict
 
         if alias:
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
@@ -10518,6 +10555,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     trials = []
                     for t in range(num_trials):
 
+                        # FIX: 2/3/22 - SHOULD REFACTOR TO USE InputPort.variable RATHER THAN input_values
+                        #               IN CASE AN InputPort'S FUNCTION CHANGES ITS SHAPE
+                        #               (SEE ABOVE FOR template)
                         # Mechanism with labels
                         if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                             input_values = []
@@ -11178,9 +11218,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def simulation_results(self):
         return self.parameters.simulation_results.get(self.default_execution_id)
 
-    #  For now, external_input_ports == input_ports and external_input_values == input_values
-    #  They could be different in the future depending on new state_features (ex. if we introduce recurrent compositions)
-    #  Useful to have this property for treating Compositions the same as Mechanisms in run & execute
     @property
     def external_input_ports(self):
         """Returns all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
@@ -11190,17 +11227,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             return None
 
     @property
-    def external_input_values(self):
-        """Returns values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+    def external_input_shape(self):
+        """Alias for _default_external_input_shape"""
+        return self._default_external_input_shape
+
+    @property
+    def _default_external_input_shape(self):
+        """Returns default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
         try:
+            return [input_port.default_input_shape for input_port in self.input_CIM.input_ports
+                    # FIX: 2/4/22 - IS THIS NEEDED (HERE OR BELOW -- DO input_CIM.input_ports EVER GET ASSIGNED THIS?
+                    if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def external_input_variables(self):
+        """Return variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        try:
+            return [input_port.variable for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_input_variables(self):
+        """Return default variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism
+        """
+
+        try:
+            return [input_port.defaults.variable for input_port in self.input_CIM.input_ports if
+                    not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def external_input_values(self):
+        """Return values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        try:
+            #  FIX: 2/4/22 SHOULD input_port.variable REPLACE input_port.value HERE?
             return [input_port.value for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
     @property
     def default_external_input_values(self):
-        """Return the default values of all external InputPorts that belong to the
-        Input CompositionInterfaceMechanism
+        """Return the default values of all external InputPorts that belong to the Input CompositionInterfaceMechanism
         """
 
         try:
