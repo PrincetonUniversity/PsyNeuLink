@@ -2896,7 +2896,8 @@ class Mechanism_Base(Mechanism):
             builder, p_output = get_output_ptr(builder, i)
 
             # Allocate the input structure (data + modulation)
-            p_input = builder.alloca(p_function.args[2].type.pointee)
+            p_input = builder.alloca(p_function.args[2].type.pointee,
+                                     name=group + "_port_" + str(i) + "_input")
 
             # Copy input data to input structure
             builder = fill_input_data(builder, p_input, i)
@@ -2936,7 +2937,7 @@ class Mechanism_Base(Mechanism):
         else:
             ip_output_type = pnlvm.ir.LiteralStructType(ip_output_list)
 
-        ip_output = builder.alloca(ip_output_type)
+        ip_output = builder.alloca(ip_output_type, name="input_ports_out")
 
         def _get_output_ptr(b, i):
             ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
@@ -2958,16 +2959,19 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_param_ports_for_obj(self, obj, params_in, ctx, builder,
                                       mech_params, mech_state, mech_input):
-        # Allocate a shadow structure to overload user supplied parameters
-        params_out = builder.alloca(params_in.type.pointee)
-        # Copy original values. This handles params without param ports.
-        # Few extra copies will be eliminated by the compiler.
-        builder.store(builder.load(params_in), params_out)
-
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
         # Filter out param ports without corresponding param for this function
         param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
+
+        # Exit early if there's no modulation. LLVM is not aliminating
+        # the redundant copy created below.
+        if len(param_ports) == 0:
+            return params_in, builder
+
+        # Allocate a shadow structure to overload user supplied parameters
+        params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
+        builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
@@ -3037,7 +3041,7 @@ class Mechanism_Base(Mechanism):
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_out = builder.alloca(fun.args[3].type.pointee)
+        fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
 
         builder.call(fun, [params, state, variable, fun_out])
 
@@ -3104,8 +3108,8 @@ class Mechanism_Base(Mechanism):
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
-        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 

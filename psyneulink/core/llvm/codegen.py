@@ -573,13 +573,15 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
         # And we run no further projection
         incoming_projections = []
     elif not is_mech:
-        node_in = builder.alloca(node_function.args[2].type.pointee)
+        node_in = builder.alloca(node_function.args[2].type.pointee,
+                                 name="composition_node_input")
         incoming_projections = node.input_CIM.afferents + node.parameter_CIM.afferents
     else:
         # this path also handles parameter_CIM with no afferent
         # projections. 'comp_in' does not include any extra values,
         # and the entire call should be optimized out.
-        node_in = builder.alloca(node_function.args[2].type.pointee)
+        node_in = builder.alloca(node_function.args[2].type.pointee,
+                                 name="mechanism_node_input")
         incoming_projections = node.afferents
 
     if "reset" in tags or "is_finished" in tags:
@@ -716,7 +718,7 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
         builder.store(const_params, params)
 
     if "alloca_data" in debug_env:
-        data = builder.alloca(data_arg.type.pointee)
+        data = builder.alloca(data_arg.type.pointee, name="data_loc")
         data_vals = builder.load(data_arg)
         builder.store(data_vals, data)
     else:
@@ -755,7 +757,7 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         nodes_states = helpers.get_state_ptr(builder, composition, state, "nodes")
 
         # Allocate temporary output storage
-        output_storage = builder.alloca(data.type.pointee, name="output_storage")
+        output_storage = builder.alloca(data.type.pointee, name="comp_output_frozen_temp")
 
         # Get locations of number of executions.
         num_exec_locs = {}
@@ -963,7 +965,7 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
 
     if not simulation and "const_data" in debug_env:
         const_data = data.type.pointee(composition._get_data_initializer(None))
-        data = builder.alloca(data.type.pointee)
+        data = builder.alloca(data.type.pointee, name="const_data_loc")
         builder.store(const_data, data)
 
     # Hardcode stateful parameters if set in the environment
@@ -986,12 +988,12 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     # Allocate and initialize condition structure
     cond_gen = helpers.ConditionGenerator(ctx, composition)
     cond_type = cond_gen.get_condition_struct_type()
-    cond = builder.alloca(cond_type)
+    cond = builder.alloca(cond_type, name="scheduler_metadata")
     cond_init = cond_type(cond_gen.get_condition_initializer())
     builder.store(cond_init, cond)
 
     trials = builder.load(trials_ptr, "trials")
-    iters_ptr = builder.alloca(trials.type)
+    iters_ptr = builder.alloca(trials.type, name="iterations")
     builder.store(iters_ptr.type.pointee(0), iters_ptr)
 
     # Start the main loop structure
