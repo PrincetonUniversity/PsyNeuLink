@@ -10582,7 +10582,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               and any(n.input_labels_dict for n
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
-                            iinput_for_node = []
+                            inputs_for_trial = []
                             for port in node.input_CIM.input_ports:
                                 input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
@@ -10594,7 +10594,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     # input_values.append(repr(np.array(mech.input_values).tolist()))
                                     # MODIFIED 2/7/22 NEW:
                                     inputs_for_trial.append(port.default_input_shape)
-                                    input_values.append(repr(np.array(input_for_port).tolist()))
+                                    input_values.append(repr(np.array(port.default_input_shape).tolist()))
                                     # MODIFIED 2/7/22 END
                             trial = f"[{','.join(input_values)}]"
 
@@ -10609,7 +10609,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # MODIFIED 2/7/22 END
 
                         trials.append(trial)
-                        input_dict[node_key]=inputs_for_node
+                        inputs_for_node.append(inputs_for_trial)
+
+                    input_dict[node_key]=inputs_for_node
 
                     trials = ', '.join(trials)
                     if num_trials > 1:
