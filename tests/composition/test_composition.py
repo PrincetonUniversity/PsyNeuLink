@@ -5841,6 +5841,7 @@ class TestInputSpecifications:
     #     ocomp.run(inputs=inputs_dict)
     #     len(ocomp.results)==2
 
+
 class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python, pnl.ExecutionMode.Auto,
@@ -6549,7 +6550,7 @@ class TestNodeRoles:
         input_format = ocomp.get_input_format()
         assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
         input_format = ocomp.get_input_format(num_trials=3, use_labels=True)
-        assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[[0.0]],[\'red\']], [[[0.0]],[\'green\']], [[[0.0]],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
+        assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[0.0],[\'red\']], [[0.0],[\'green\']], [[0.0],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
         input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True)
         assert input_format == '\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ [[0.0]], [[0.0]] ]\n\tQ: [ [[0.0]], [[0.0]] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}'
         input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True, use_labels=True)
