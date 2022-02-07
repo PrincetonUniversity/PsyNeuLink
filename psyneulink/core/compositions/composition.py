@@ -10576,13 +10576,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                 labels = _get_labels(labels_dict, i, node.input_ports[i])
                                 input_values.append(repr(labels[t % len(labels)]))
                             trial = f"[{','.join(input_values)}]"
+                            inputs_for_trial = input_values
 
                         # Mechanism(s) with labels in nested Compositions
                         elif (use_labels and isinstance(node, Composition)
                               and any(n.input_labels_dict for n
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
+                            # MODIFIED 2/7/22 NEW:
                             inputs_for_trial = []
+                            # MODIFIED 2/7/22 OLD
                             for port in node.input_CIM.input_ports:
                                 input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
@@ -10597,6 +10600,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     input_values.append(repr(np.array(port.default_input_shape).tolist()))
                                     # MODIFIED 2/7/22 END
                             trial = f"[{','.join(input_values)}]"
+                            inputs_for_trial = input_values
 
                         # No Mechanism(s) with labels or use_labels == False
                         else:
@@ -10609,9 +10613,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # MODIFIED 2/7/22 END
 
                         trials.append(trial)
+                        # MODIFIED 2/7/22 NEW:
                         inputs_for_node.append(inputs_for_trial)
+                        # MODIFIED 2/7/22 END
 
-                    input_dict[node_key]=inputs_for_node
 
                     trials = ', '.join(trials)
                     if num_trials > 1:
@@ -10620,6 +10625,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 input_format += trials
                 if not show_nested_input_nodes:
                     input_format += ','
+                # MODIFIED 2/7/22 NEW:
+                input_dict[node_key]=inputs_for_node
+                # MODIFIED 2/7/22 END
+
             nesting_level -= 1
             return input_format
 
