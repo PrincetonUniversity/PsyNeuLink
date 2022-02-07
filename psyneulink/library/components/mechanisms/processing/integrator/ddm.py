@@ -802,9 +802,7 @@ class DDM(ProcessingMechanism):
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
                                       if (v[1] - v[0]) < (v[1] + v[0]) \
                                       else [0, float(v[2][0][1])]
-
                  }
-
             ])
 
         # Add StandardOutputPorts for Mechanism (after ones for DDM, so that their indices are not messed up)
@@ -1028,7 +1026,7 @@ class DDM(ProcessingMechanism):
         :rtype self.outputPort.value: (number)
         """
 
-        if variable is None or np.isnan(variable):
+        if variable is None or any(np.isnan(i) for i in variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
             variable = self.defaults.variable
 
