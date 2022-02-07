@@ -5746,10 +5746,38 @@ class TestInputSpecifications:
         else:
             assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
 
-    def test_get_input_format(self):
+
+    input_labels_dict = [
+        # indices
+        {0:{'red':0, 'green':1},
+         1:{'blue':2, 'yellow':3}},
+        # names
+        {'C INPUT 1':{'red':0, 'green':1},
+         'C INPUT 2':{'blue':2, 'yellow':3}}
+    ]
+    expected_output = [
+
+    ]
+    test_args = [
+        # format args, num_trials, expected output,
+        ({'show_nested_input_nodes':False}, 2, expected_output[X], ''),
+        ({'show_nested_input_nodes':True}, 2, expected_output[X], ''),
+        ({'template':True}, 2, expected_output[X], ''),
+    ]
+
+    @pytest.mark.parametrize('input_labels_dict', input_labels_dict, ids=['indices','names'])
+    @pytest.mark.parametrize('test_args', test_args)
+    def test_get_input_format(self, test_args, input_labels_dict):
+        get_input_format_args = test_args[0]
+        num_trials = test_args[1]
+        expected_output = test_args[2]
+
         A = ProcessingMechanism(size=1, name='A')
         B = ProcessingMechanism(size=2, name='B')
-        C = ProcessingMechanism(size=[3,3], input_ports=['C INPUT 1', 'C INPUT 2'], name='C')
+        C = ProcessingMechanism(size=[3,3],
+                                input_ports=['C INPUT 1', 'C INPUT 2'],
+                                input_labels=input_labels_dict,
+                                name='C')
         assert C.variable.shape == (2,3)
         X = ProcessingMechanism(size=4, name='X')
         Y = ProcessingMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce}],

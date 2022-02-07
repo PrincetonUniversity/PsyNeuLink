@@ -10527,6 +10527,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             use `Node <Composition_Nodes>` name as key for Node in template dict.
         """
 
+        # FIX: NEED TO ADD TRIALS AND LABELS (OR EMBDED IN BELOW)
         if template:
             # Return dict that can be used as inputs arg to run()
             input_dict = {}
@@ -10539,6 +10540,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if alias:
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
 
+        def _get_labels(labels_dict, index, input_port):
+            try:
+                return list(labels_dict[input_port.name].keys())
+            except KeyError:
+                return list(labels_dict[index].keys())
+            raise CompositionError(f"Unable to find labels for '{input_port.full_name}' of '{input_port.owner.name}'.")
+
         def _get_inputs(comp, nesting_level=1, use_labels=False):
 
             input_format = ''
@@ -10550,7 +10558,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if show_nested_input_nodes and isinstance(node, Composition):
                     trials = _get_inputs(node, nesting_level=nesting_level + 1, use_labels=use_labels)
 
-                # Nested Composition
                 else:
                     trials = []
                     for t in range(num_trials):
@@ -10562,8 +10569,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
                             input_values = []
                             for i in range(len(node.input_values)):
-                                label_dict = node.input_labels_dict[i]
-                                labels = list(label_dict.keys())
+                                labels = _get_labels(labels_dict, i, node.input_ports[i])
                                 input_values.append(repr(labels[t % len(labels)]))
                             trial = f"[{','.join(input_values)}]"
 
@@ -10572,11 +10578,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               and any(n.input_labels_dict for n
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
-                            for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
+                            for port in node.input_CIM.input_ports:
+                                input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
-                                    labels = list(labels_dict[0].keys())
+                                    labels = _get_labels(labels_dict, mech.input_ports.index(input_port), input_port)
                                     input_values.append(repr([labels[t % len(labels)]]))
                                 else:
                                     input_values.append(repr(np.array(mech.input_values).tolist()))
