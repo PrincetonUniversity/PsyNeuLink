@@ -10549,9 +10549,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         def _get_inputs(comp, nesting_level=1, use_labels=False):
 
-            input_dict = {}
             input_format = ''
             indent = '\t' * nesting_level
+            input_dict = {}
 
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
                 input_format += '\n' + indent + node.name + ': '
@@ -10582,6 +10582,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                               and any(n.input_labels_dict for n
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
                             input_values = []
+                            iinput_for_node = []
                             for port in node.input_CIM.input_ports:
                                 input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
@@ -10589,14 +10590,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                     labels = _get_labels(labels_dict, mech.input_ports.index(input_port), input_port)
                                     input_values.append(repr([labels[t % len(labels)]]))
                                 else:
-                                    input_values.append(repr(np.array(mech.input_values).tolist()))
+                                    # # MODIFIED 2/7/22 OLD:
+                                    # input_values.append(repr(np.array(mech.input_values).tolist()))
+                                    # MODIFIED 2/7/22 NEW:
+                                    inputs_for_trial.append(port.default_input_shape)
+                                    input_values.append(repr(np.array(input_for_port).tolist()))
+                                    # MODIFIED 2/7/22 END
                             trial = f"[{','.join(input_values)}]"
 
                         # No Mechanism(s) with labels or use_labels == False
                         else:
-                            trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+                            # # MODIFIED 2/7/22 OLD:
+                            # trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+                            # MODIFIED 2/7/22 NEW:
+                            inputs_for_trial = [port.default_input_shape for port in mech.external_input_ports]
+                            inputs_for_node.append(inputs_for_trial)
+                            trial = f"[{','.join([repr(i.tolist()) for i in inputs_for_trial])}]"
+                            # MODIFIED 2/7/22 END
 
                         trials.append(trial)
+                        input_dict[node_key]=inputs_for_node
 
                     trials = ', '.join(trials)
                     if num_trials > 1:
