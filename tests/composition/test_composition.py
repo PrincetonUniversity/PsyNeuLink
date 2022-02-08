@@ -5777,7 +5777,24 @@ class TestInputSpecifications:
         (True, True, True, 1, None)
     ]
 
-    @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args)
+    @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args,
+                             # ids=[x[0] for x in test_args])
+                             # ids = [f"{'template_dict' if test_args[i][0] else 'format_string'}",
+                             #        f"{'use_labels_true' if test_args[i][1] else 'use_labels_false'}",
+                             #        f"{'show_nested_true' if test_args[i][2] else 'show_nested_false'}",
+                             #        f"num_trials_{test_args[i][3]}",
+                             #        f"{'expected_format_string' if test_args[i][4] else 'None'}"])
+                             # ids = [['template_dict' if x[0] else 'format_string'  for x in test_args],
+                             #        ['use_labels_true' if x[1] else 'use_labels_false' for x in test_args],
+                             #        ['show_nested_true' if x[2] else 'show_nested_false' for x in test_args],
+                             #        [f"num_trials_{x[3]}" for x in test_args],
+                             #        [f'expected_format_string' if x[4] else 'None' for x in test_args]])
+                             ids = [f"{'template_dict' if x[0] else 'format_string'}-"
+                                    f"{'use_labels_true' if x[1] else 'use_labels_false'}-"
+                                    f"{'show_nested_true' if x[2] else 'show_nested_false'}-"
+                                    f"{'num_trials'+ repr(x[3])}-"
+                                    f"{'expected_format_string' if x[4] else 'None'}" for x in test_args]
+                             )
     def test_get_input_format(self, template, use_labels, show_nested, num_trials, expected_format_string):
 
         A = pnl.ProcessingMechanism(size=1, name='A',
