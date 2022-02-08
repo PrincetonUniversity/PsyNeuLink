@@ -5771,10 +5771,10 @@ class TestInputSpecifications:
 
     test_args = [
         # template, labels, nested, num_trials, expected_format_string
-        (False, False, False, 2, expected_format_strings[0]),
-        (False, True, True, pnl.FULL, expected_format_strings[1]),
+        # (False, False, False, 2, expected_format_strings[0]),
+        # (False, True, True, pnl.FULL, expected_format_strings[1]),
         (True, False, False, pnl.FULL, None),
-        (True, True, True, 1, None)
+        # (True, True, True, 1, None)
     ]
 
     @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args,

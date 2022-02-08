@@ -8566,11 +8566,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
                 #     so loop through and validate each individual input
+                # FIX: 2/7/22 - MULTI-TRIAL STIMULUS FOR COMP HAS EXTRA DIMENSION THAT MAKES LEN=1 AND THEREFORE NO LOOP
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
                     # incompatible_stimulus = [stimulus[node_input.index(None)]]
-                    incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
-                    correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
+                    # # MODIFIED 2/7/22 OLD:
+                    # incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
+                    # correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
+                    # MODIFIED 2/7/22 NEW:
+                    incompatible_stimulus = np.atleast_1d(np.array(stimulus[node_input.index(None)], dtype=object))
+                    correct_stimulus = np.atleast_1d(np.array(node.external_input_shape[node_input.index(None)],
+                                                              dtype=object))
+                    # MODIFIED 2/7/22 END
                     node_name = node.name
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"the shape of its external input ({correct_stimulus})."
@@ -8690,7 +8697,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
-                        if np.array(v).ndim == 2:
+                        # FIX: 2/7/22 - PROBLEMS WITH TYPING HERE
+                        if np.array(v, dtype=object).ndim == 2:
                             # Enforce that even single trial specs user outer trial dimension (for consistency below)
                             v = [v]
                         for t in range(len(v)):
