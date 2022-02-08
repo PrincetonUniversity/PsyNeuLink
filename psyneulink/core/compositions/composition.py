@@ -10577,7 +10577,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # Nested Compositions
                 if show_nested_input_nodes and isinstance(node, Composition):
                     # No need for node_inputs_for_template_dict here as template_dict never contains nested_input_nodes
-                    node_inputs_for_format_string = _get_inputs(node, nesting_level=nesting_level + 1, use_labels=use_labels)
+                    node_inputs_for_format_string = _get_inputs(node,
+                                                                nesting_level=nesting_level + 1,
+                                                                use_labels=use_labels)
 
                 else:
                     for t in range(num_trials):
@@ -10617,7 +10619,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             trial = f"[{','.join([repr(i.tolist()) for i in inputs_for_template_dict])}]"
 
                         node_inputs_for_format_string.append(trial)
-                        node_inputs_for_template_dict.extend(inputs_for_template_dict)
+                        # FIX: 2/7/22:
+                        node_inputs_for_template_dict.append(inputs_for_template_dict)
 
                     node_inputs_for_format_string = ', '.join(node_inputs_for_format_string)
                     if num_trials > 1:
