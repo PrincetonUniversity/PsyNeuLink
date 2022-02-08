@@ -10560,11 +10560,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
 
         def _get_labels(labels_dict, index, input_port):
-            # Need index for InputPort, since owner Mechanism is not passed in
+            """Need index for InputPort, since owner Mechanism is not passed in."""
+
+            # FIX: 2/7/22 - NEED TO DEAL WITH "MECHANISM-LEVEL" DICT THAT SPECIFIES LABELS FOR *ALL* INPUTPORTS
             try:
                 return list(labels_dict[input_port.name].keys())
             except KeyError:
-                return list(labels_dict[index].keys())
+                try:
+                    return list(labels_dict[index].keys())
+                except KeyError:
+                    # Dict with no InputPort-specific subdicts, used to specify labels for all InputPorts of Mechanism
+                    return list(labels_dict.keys())
             raise CompositionError(f"Unable to find labels for '{input_port.full_name}' of '{input_port.owner.name}'.")
 
         def _get_inputs(comp, nesting_level=1, use_labels=False, template_dict=False):
