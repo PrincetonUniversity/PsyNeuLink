@@ -5746,100 +5746,67 @@ class TestInputSpecifications:
         else:
             assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
 
-    # def test_get_input_format(self):
-    #     A = ProcessingMechanism(size=1, name='A')
-    #     B = ProcessingMechanism(size=2, name='B')
-    #     C = ProcessingMechanism(size=[3,3], input_ports=['C INPUT 1', 'C INPUT 2'], name='C')
-    #     assert C.variable.shape == (2,3)
-    #     X = ProcessingMechanism(size=4, name='X')
-    #     Y = ProcessingMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce}],
-    #                             name='Y')
-    #     assert len(Y.input_port.variable) == 3
-    #     assert len(Y.input_port.value) == 1
-    #     icomp = Composition(pathways=[[A,B],[C]], name='ICOMP')
-    #     ocomp = Composition(nodes=[X, icomp, Y], name='OCOMP')
-    #
-    #     expected = '{\n\tX: [ [[0.0, 0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0, 0.0]] ],' \
-    #                '\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],' \
-    #                '\n\tY: [ [[0.0]], [[0.0]] ]\n}'
-    #     inputs_dict = ocomp.get_input_format(num_trials=2)
-    #     assert inputs_dict == expected
-    #
-    #     expected = '\nInputs to (nested) INPUT Nodes of OCOMP for 1 trials:\n\tX: [[0.0, 0.0, 0.0, 0.0]]' \
-    #                '\n\tICOMP: \n\t\tA: [[0.0]]\n\t\tC: [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]]\n\tY: [[0.0]' \
-    #                '\n\nFormat as follows for inputs to run():\n{\n\tX: [[0.0, 0.0, 0.0, 0.0]],' \
-    #                '\n\tICOMP: [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]],\n\tY: [[0.0]]\n}'
-    #     inputs_dict = ocomp.get_input_format(show_nested_input_nodes=True)
-    #     assert inputs_dict == expected
-    #
-    #     inputs_dict = ocomp.get_input_format(template=True, use_names=False, num_trials=2)
-    #     ocomp.run(inputs=inputs_dict)
-    #     len(ocomp.results)==2
-    #
-    #     inputs_dict = ocomp.get_input_format(template=True, use_names=True, num_trials=2)
-    #     ocomp.run(inputs=inputs_dict)
-    #     len(ocomp.results)==2
-    #
-    # input_labels_dict = [
-    #     # indices
-    #     {0:{'red':0, 'green':1},
-    #      1:{'blue':2, 'yellow':3}},
-    #     # names
-    #     {'C INPUT 1':{'red':0, 'green':1},
-    #      'C INPUT 2':{'blue':2, 'yellow':3}}
-    # ]
-    # expected_output = [
-    #
-    # ]
-    # test_args = [
-    #     # format args, num_trials, expected output,
-    #     ({'show_nested_input_nodes':False}, 2, expected_output[X], ''),
-    #     ({'show_nested_input_nodes':True}, 2, expected_output[X], ''),
-    #     ({'template':True}, 2, expected_output[X], ''),
-    # ]
 
-    # @pytest.mark.parametrize('input_labels_dict', input_labels_dict, ids=['indices','names'])
-    # @pytest.mark.parametrize('test_args', test_args)
-    # def test_get_input_format(self, test_args, input_labels_dict):
-    #     get_input_format_args = test_args[0]
-    #     num_trials = test_args[1]
-    #     expected_output = test_args[2]
-    #
-    #     A = ProcessingMechanism(size=1, name='A')
-    #     B = ProcessingMechanism(size=2, name='B')
-    #     C = ProcessingMechanism(size=[3,3],
-    #                             input_ports=['C INPUT 1', 'C INPUT 2'],
-    #                             input_labels=input_labels_dict,
-    #                             name='C')
-    #     assert C.variable.shape == (2,3)
-    #     X = ProcessingMechanism(size=4, name='X')
-    #     Y = ProcessingMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce}],
-    #                             name='Y')
-    #     assert len(Y.input_port.variable) == 3
-    #     assert len(Y.input_port.value) == 1
-    #     icomp = Composition(pathways=[[A,B],[C]], name='ICOMP')
-    #     ocomp = Composition(nodes=[X, icomp, Y], name='OCOMP')
-    #
-    #     expected = '{\n\tX: [ [[0.0, 0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0, 0.0]] ],' \
-    #                '\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],' \
-    #                '\n\tY: [ [[0.0]], [[0.0]] ]\n}'
-    #     inputs_dict = ocomp.get_input_format(num_trials=2)
-    #     assert inputs_dict == expected
-    #
-    #     expected = '\nInputs to (nested) INPUT Nodes of OCOMP for 1 trials:\n\tX: [[0.0, 0.0, 0.0, 0.0]]' \
-    #                '\n\tICOMP: \n\t\tA: [[0.0]]\n\t\tC: [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]]\n\tY: [[0.0]' \
-    #                '\n\nFormat as follows for inputs to run():\n{\n\tX: [[0.0, 0.0, 0.0, 0.0]],' \
-    #                '\n\tICOMP: [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]],\n\tY: [[0.0]]\n}'
-    #     inputs_dict = ocomp.get_input_format(show_nested_input_nodes=True)
-    #     assert inputs_dict == expected
-    #
-    #     inputs_dict = ocomp.get_input_format(template=True, use_names=False, num_trials=2)
-    #     ocomp.run(inputs=inputs_dict)
-    #     len(ocomp.results)==2
-    #
-    #     inputs_dict = ocomp.get_input_format(template=True, use_names=True, num_trials=2)
-    #     ocomp.run(inputs=inputs_dict)
-    #     len(ocomp.results)==2
+    expected_format_strings = [
+        '{\n\tX: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],'
+        '\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],'
+        '\n\tY: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}',
+
+        '\nInputs to (nested) INPUT Nodes of OCOMP for 1 trials:\n\tX: [[0.0, 0.0, 0.0, 0.0]]' \
+        '\n\tICOMP: \n\t\tA: [[0.0]]\n\t\tC: [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]]\n\tY: [[0.0]' \
+        '\n\nFormat as follows for inputs to run():\n{\n\tX: [[0.0, 0.0, 0.0, 0.0]],' \
+        '\n\tICOMP: [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]],\n\tY: [[0.0]]\n}'
+    ]
+
+    test_args = [
+        # template, labels, nested, num_trials, expected_format_string
+        (False, False, False, 2, expected_format_strings[0]),
+        (False, True, True, pnl.FULL, expected_format_strings[1]),
+        (True, False, False, pnl.FULL, None),
+        (True, True, True, 1, None)
+    ]
+
+    @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args)
+    def test_get_input_format(self, template, use_labels, show_nested, num_trials, expected_format_string):
+
+        A = pnl.ProcessingMechanism(size=1, name='A',
+                                input_labels={0:{'red':0, 'green':1},
+                                              1:{'blue':2, 'yellow':3}})
+        B = pnl.ProcessingMechanism(size=2, name='B')
+        C = pnl.ProcessingMechanism(size=[3,3],
+                                input_ports=['C INPUT 1', 'C INPUT 2'],
+                                input_labels={'C INPUT 1':{'red':[0,0,0], 'green':[1,1,1], 'orange':[2,2,2]},
+                                              'C INPUT 2':{'blue':[3,3,3], 'yellow':[4,4,4], 'purple':[5,5,5]}},
+                                name='C')
+        assert C.variable.shape == (2,3)
+        X = ProcessingMechanism(size=[3,3],
+                                input_ports=['X INPUT 1', 'X INPUT 2'],
+                                name='X',
+                                # input_labels={0:{'red':[0,0,0], 'green':[1,1,1]}}  # Specify dict for only one port
+                                )
+        Y = pnl.ProcessingMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce},
+                                                 {NAME:'Y INPUT 2', pnl.SIZE: 3}],
+                                    # Test specification of labels for all InputPorts of Mechanism:
+                                    input_labels={'red':[0,0,0], 'green':[1,1,1]},
+                                    name='Y')
+        assert len(Y.input_ports[0].variable) == 3
+        assert len(Y.input_ports[0].value) == 1
+        assert len(Y.input_ports[1].variable) == 3
+        assert len(Y.input_ports[1].value) == 3
+        icomp = Composition(pathways=[[A,B],[C]], name='ICOMP')
+        ocomp = Composition(nodes=[X, icomp, Y], name='OCOMP')
+
+        inputs_dict = ocomp.get_input_format(template_dict=template,
+                                             use_labels=use_labels,
+                                             show_nested_input_nodes=show_nested,
+                                             num_trials=num_trials)
+        if not template:
+            assert inputs_dict == expected_format_string
+        else:
+            ocomp.run(inputs=inputs_dict)
+            if num_trials == pnl.MAX:
+                num_trials = 2
+            len(ocomp.results)==num_trials
 
 
 class TestProperties:

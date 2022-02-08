@@ -2640,9 +2640,9 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
-    FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
-    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, MAX, \
+    MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
@@ -10507,7 +10507,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
     def get_input_format(self,
-                         num_trials:Union[int, MAX]=1,
+                         num_trials:Union[int, FULL]=1,
                          use_labels:bool=False,
                          show_nested_input_nodes:bool=False,
                          template_dict:bool=False,
@@ -10518,8 +10518,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Arguments
         ---------
 
-        num_trials : int or MAX : default 1
-            specifies number of trials' worth of inputs to include in returned item.  If *MAX* is specified,
+        num_trials : int or FULL : default 1
+            specifies number of trials' worth of inputs to include in returned item.  If *FULL* is specified,
             **use_labels** is automatically set to True, and **num_trials** is set to number of labels in the
             `input_label_dict <Mechanism_Base.input_labels_dict>` with the largest number of labels specified; if
             none of the `INPUT <NodeRole.INPUT>` Mechanisms in the Composition (including any nested ones) have an
@@ -10529,7 +10529,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if True, shows labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
             shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
-            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *MAX*,
+            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
             trials will be included
 
             it is set to the number of labels in the largest list specified in any `input_label_dict
@@ -10560,6 +10560,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
 
         def _get_labels(labels_dict, index, input_port):
+            # Need index for InputPort, since owner Mechanism is not passed in
             try:
                 return list(labels_dict[input_port.name].keys())
             except KeyError:
@@ -10640,7 +10641,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 return format_description_string
 
-        if num_trials == MAX:
+        if num_trials == FULL:
             num_trials = 1
             # Get number of labels in largest list of any input_labels_dict in an INPUT Mechanism
             for node in self._get_nested_nodes_with_same_roles_at_all_levels(self, NodeRole.INPUT):
