@@ -208,7 +208,7 @@ class jit_engine:
             self.__mod.link_in(module)
             self.__linked_modules += 1
 
-        if "dupm-llvm-gen" in debug_env:
+        if "dump-llvm-gen" in debug_env:
             with open(mod_name + '.linked.ll', 'w') as dump_file:
                 dump_file.write(str(self.__mod))
 
