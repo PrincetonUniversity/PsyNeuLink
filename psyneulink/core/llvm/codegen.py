@@ -711,18 +711,11 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
     for a in llvm_func.args:
         a.attributes.add('noalias')
 
-    state, params, comp_in, data_arg, cond, *_ = llvm_func.args
+    state, params, comp_in, data, cond, *_ = llvm_func.args
     if "const_params" in debug_env:
         const_params = params.type.pointee(composition._get_param_initializer(None))
         params = builder.alloca(const_params.type, name="const_params_loc")
         builder.store(const_params, params)
-
-    if "alloca_data" in debug_env:
-        data = builder.alloca(data_arg.type.pointee, name="data_loc")
-        data_vals = builder.load(data_arg)
-        builder.store(data_vals, data)
-    else:
-        data = data_arg
 
     node_tags = tags.union({"node_wrapper"})
     # Call input CIM
@@ -736,10 +729,6 @@ def _gen_composition_exec_context(ctx, composition, *, tags:frozenset, suffix=""
     builder.call(param_cim_f, [state, params, comp_in, data, data])
 
     yield builder, data, params, cond_gen
-
-    if "alloca_data" in debug_env:
-        data_vals = builder.load(data)
-        builder.store(data_vals, data_arg)
 
     # Bump run counter
     cond_gen.bump_ts(builder, cond, (1, 0, 0))
