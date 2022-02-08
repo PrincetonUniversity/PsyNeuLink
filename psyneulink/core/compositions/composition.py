@@ -8690,11 +8690,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
-                        for i, cim_port in enumerate(k.input_CIM.input_ports):
-                            port, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(cim_port)
-                            # Pass port along with corresponding input, since it is not bound to owning Mechanism in
-                            #    input_CIM, so its index can't be determined below (in recursive call to _parse_labels)
-                            v[i] = k._parse_labels(inputs[k][i],mech_with_labels, port)
+                        if np.array(v).ndim == 2:
+                            # Enforce that even single trial specs user outer trial dimension (for consistency below)
+                            v = [v]
+                        for t in range(len(v)):
+                            for i, cim_port in enumerate(k.input_CIM.input_ports):
+                                port, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(cim_port)
+                                # Pass port along with corresponding input, since it is not bound to owning Mechanism in
+                                #   input_CIM, so its index can't be determined in recursive call to _parse_labels below
+                                v[t][i] = k._parse_labels(v[t][i],mech_with_labels, port)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
@@ -10619,7 +10623,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             trial = f"[{','.join([repr(i.tolist()) for i in inputs_for_template_dict])}]"
 
                         node_inputs_for_format_string.append(trial)
-                        # FIX: 2/7/22:
                         node_inputs_for_template_dict.append(inputs_for_template_dict)
 
                     node_inputs_for_format_string = ', '.join(node_inputs_for_format_string)
