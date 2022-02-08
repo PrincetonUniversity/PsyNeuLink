@@ -5801,7 +5801,9 @@ class TestInputSpecifications:
                                 name='X',
                                 # input_labels={0:{'red':[0,0,0], 'green':[1,1,1]}}  # Specify dict for only one port
                                 )
-        Y = pnl.ProcessingMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce},
+        # Use TransferMechanism so that 2nd OutputPort uses 2nd item of Mechanism's value
+        #    (i.e. ,without having to specify that explicitly, as would be the case for ProcessingMechanism)
+        Y = pnl.TransferMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce},
                                                  {NAME:'Y INPUT 2', pnl.SIZE: 3}],
                                     # Test specification of labels for all InputPorts of Mechanism:
                                     input_labels={'red':[0,0,0], 'green':[1,1,1]},
@@ -5821,7 +5823,7 @@ class TestInputSpecifications:
             assert inputs_dict == expected_format_string
         else:
             ocomp.run(inputs=inputs_dict)
-            if num_trials == pnl.MAX:
+            if num_trials == pnl.FULL:
                 num_trials = 2
             len(ocomp.results)==num_trials
 

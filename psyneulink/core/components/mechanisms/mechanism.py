@@ -3969,7 +3969,11 @@ class Mechanism_Base(Mechanism):
 
     @property
     def output_values(self):
-        return self.output_ports.values
+        # # MODIFIED 2/7/22 OLD:
+        # return self.output_ports.values
+        # MODIFIED 2/7/22 NEW:
+        return self.get_output_values()
+        # MODIFIED 2/7/22 END
 
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_ports]
