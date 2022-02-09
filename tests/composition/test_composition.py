@@ -5770,21 +5770,22 @@ class TestInputSpecifications:
         "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}"
         ]
     test_args = [
-        # template, labels, nested, num_trials, expected_format_string
-        (False, False, False, 2, expected_format_strings[0]),
-        (False, True, True, pnl.FULL, expected_format_strings[1]),
-        (True, False, False, 1, None),
-        (True, False, False, pnl.FULL, None),
-        (True, True, True, 1, None),
-        (True, True, False, pnl.FULL, None)]
-    @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args,
-                             ids = [f"{'template_dict' if x[0] else 'format_string'} "
+        # form, labels, nested, num_trials, expected_format_string
+        (pnl.TEXT, False, False, 2, expected_format_strings[0]),
+        (pnl.TEXT, True, True, pnl.FULL, expected_format_strings[1]),
+        (pnl.DICT, False, False, 1, None),
+        (pnl.DICT, False, False, pnl.FULL, None),
+        (pnl.DICT, True, True, 1, None),
+        (pnl.DICT, True, False, pnl.FULL, None)
+    ]
+    @pytest.mark.parametrize('form, use_labels, show_nested, num_trials, expected_format_string', test_args,
+                             ids = [f"{'dict' if x[0] else 'string'} "
                                     f"{'use_labels_true' if x[1] else 'use_labels_false'} "
                                     f"{'show_nested_true' if x[2] else 'show_nested_false'} "
                                     f"num_trials-{x[3]} "
                                     f"{'expected_format_string' if x[4] else 'None'}" for x in test_args]
                              )
-    def test_get_input_format(self, template, use_labels, show_nested, num_trials, expected_format_string):
+    def test_get_input_format(self, form, use_labels, show_nested, num_trials, expected_format_string):
         """Also tests input_labels_dict"""
 
         A = pnl.ProcessingMechanism(size=1, name='A',
@@ -5816,11 +5817,11 @@ class TestInputSpecifications:
         icomp = Composition(pathways=[[A,B],[C]], name='ICOMP')
         ocomp = Composition(nodes=[X, icomp, Y], name='OCOMP')
 
-        inputs_dict = ocomp.get_input_format(template_dict=template,
+        inputs_dict = ocomp.get_input_format(form=form,
+                                             num_trials=num_trials,
                                              use_labels=use_labels,
-                                             show_nested_input_nodes=show_nested,
-                                             num_trials=num_trials)
-        if not template:
+                                             show_nested_input_nodes=show_nested)
+        if form == pnl.TEXT:
             assert inputs_dict == expected_format_string
         else:
             ocomp.run(inputs=inputs_dict)
@@ -6534,13 +6535,13 @@ class TestNodeRoles:
         result = ocomp.run(inputs={mcomp:[[0],[0]]})
         assert len(result)==4
 
-        input_format = ocomp.get_input_format()
+        input_format = ocomp.get_input_format(form=pnl.TEXT)
         assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
-        input_format = ocomp.get_input_format(num_trials=3, use_labels=True)
+        input_format = ocomp.get_input_format(form=pnl.TEXT, num_trials=3, use_labels=True)
         assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[0.0],[\'red\']], [[0.0],[\'green\']], [[0.0],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
-        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True)
+        input_format = ocomp.get_input_format(form=pnl.TEXT, num_trials=2, show_nested_input_nodes=True)
         assert input_format == '\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ [[0.0]], [[0.0]] ]\n\tQ: [ [[0.0]], [[0.0]] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}'
-        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True, use_labels=True)
+        input_format = ocomp.get_input_format(form=pnl.TEXT, num_trials=2, show_nested_input_nodes=True, use_labels=True)
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})

@@ -2640,7 +2640,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
-    FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -2649,7 +2649,7 @@ from psyneulink.core.globals.keywords import \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
+    TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
@@ -10510,22 +10510,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
-
     # Alias of get_input_format(easy mistake to make)
     def get_inputs_format(self, **kwargs):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
     def get_input_format(self,
+                         form:Union[DICT,TEXT]=DICT,
                          num_trials:Union[int, FULL]=1,
                          use_labels:bool=False,
-                         show_nested_input_nodes:bool=False,
-                         template_dict:bool=False,
                          use_names:bool=False,
+                         show_nested_input_nodes:bool=False,
                          alias:str=None):
-        """Return string or dict with format of dict used by **inputs** argument of `run <Composition.run>` method.
+        """Return dict or string with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
         Arguments
         ---------
+
+        form : DICT or TEXT : default DICT
+            specifies the form in which the exampple is returned; DICT (the default) returns a dict (with
+            **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`)
+            formatted for use as the **inputs** arg of the Compositon's `run <Composition.run>` method;
+            TEXT returns a user-readable text description of the format (optionally with inputs required for
+            `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of any `nested Compositions <Composition_Nested>`
+            (see **show_nested_input_nodes** below).
 
         num_trials : int or FULL : default 1
             specifies number of trials' worth of inputs to include in returned item.  If *FULL* is specified,
@@ -10539,29 +10546,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
             shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
             through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
-            trials will be included
+            trials will be included.
 
             it is set to the number of labels in the largest list specified in any `input_label_dict
             <Mechanism_Base.input_labels_dict>` specified for an `INPUT <NodeRole.INPUT>` Mechanism;
+
+        use_names : bool : default False
+            use `Node <Composition_Nodes>` name as key for Node if **form** = DICT.
 
         show_nested_input_nodes : bool : default False
             show hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
             with names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` and representative inputs,
             followed by the actual format used for the `run <Composition.run>` method.
 
-        template_dict : bool : default False
-            return dict (with **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node
-            <Composition_Nodes>`) properly formatted for use inputs arg of `run <Composition.run>` method.
-
-        use_names : bool : default False
-            use `Node <Composition_Nodes>` name as key for Node in template_dict dict.
-
         Returns
         -------
 
-        Either a string showing the format required by the **inputs** argument of the Composition's `run()
-        <Composition.run>` method (default), or a dict formatted appropriately for assignment as the **inputs**
-        argument (template_dict=True).
+        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
+        method (default), or string showing the format required by the **inputs** argument <Composition.run>`
+        (template_dict=False)
 
         """
 
@@ -10581,7 +10584,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     return list(labels_dict.keys())
             raise CompositionError(f"Unable to find labels for '{input_port.full_name}' of '{input_port.owner.name}'.")
 
-        def _get_inputs(comp, nesting_level=1, use_labels=False, template_dict=False):
+        def _get_inputs(comp, nesting_level=1, use_labels=False, template_dict=str):
 
             format_description_string = ''
             indent = '\t' * nesting_level
@@ -10650,7 +10653,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 template_input_dict[node_key]=node_inputs_for_template_dict
 
             nesting_level -= 1
-            if template_dict:
+            if form == DICT:
                 return template_input_dict
             else:
                 return format_description_string
@@ -10664,16 +10667,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     num_trials = max(num_trials, max([len(labels) for labels in labels_dict.values()]))
 
         # Return dict usable for run()
-        if template_dict:
+        if form == DICT:
             show_nested_input_nodes = False
-            return _get_inputs(self, 1, use_labels, template_dict)
+            return _get_inputs(self, 1, use_labels, form)
         # Return text format
         else:
             formatted_input = _get_inputs(self, 1, use_labels)
             if show_nested_input_nodes:
                 preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
                 epilog = f"\n\nFormat as follows for inputs to run():\n" \
-                         f"{self.get_input_format(num_trials=num_trials)}"
+                         f"{self.get_input_format(form=form, num_trials=num_trials)}"
                 return preface + formatted_input[:-1] + epilog
             return '{' + formatted_input[:-1] + '\n}'
 
