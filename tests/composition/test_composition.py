@@ -5768,17 +5768,14 @@ class TestInputSpecifications:
         "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
         "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}",
     ]
-
     test_args = [
         # template, labels, nested, num_trials, expected_format_string
         (False, False, False, 2, expected_format_strings[0]),
         (False, True, True, pnl.FULL, expected_format_strings[1]),
-        (True, False, False, 1, None),            # <- FIX 2/7/22 PROBLEM
-        (True, False, False, pnl.FULL, None),   # <- FIX 2/7/22 PROBLEM
+        (True, False, False, 1, None),
+        (True, False, False, pnl.FULL, None),
         (True, True, True, 1, None),
-        (True, True, False, pnl.FULL, None),
-    ]
-
+        (True, True, False, pnl.FULL, None)]
     @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args,
                              ids = [f"{'template_dict' if x[0] else 'format_string'} "
                                     f"{'use_labels_true' if x[1] else 'use_labels_false'} "

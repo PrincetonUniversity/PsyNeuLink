@@ -2656,7 +2656,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, is_numeric
+    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -8565,23 +8565,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input = [node_input]
             else:
                 # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
-                #     so loop through and validate each individual input
-                # # FIX: 2/7/22 -
-                # # FIX: MULTI-TRIAL STIMULUS FOR *NESTED COMP* HAS EXTRA DIMENSION THAT MAKES LEN=1 AND THEREFORE NO LOOP
-                # # FIX: THE FOLLOWING FIXES IT FOR MULTI-TRIAL BUT DOESN"T WORK FOR SINGLE TRIAL STIMULI:
-                # if isinstance(node, Composition):
-                #     stimulus = stimulus[0]
+                #     so in list comprehension below loop through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
+                # Look for any bad ones (for which _validate_single_input() returned None) and report if found
                 if True in [i is None for i in node_input]:
-                    # incompatible_stimulus = [stimulus[node_input.index(None)]]
-                    # # MODIFIED 2/7/22 OLD:
-                    # incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
-                    # correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
-                    # MODIFIED 2/7/22 NEW:
                     incompatible_stimulus = np.atleast_1d(np.array(stimulus[node_input.index(None)], dtype=object))
                     correct_stimulus = np.atleast_1d(np.array(node.external_input_shape[node_input.index(None)],
                                                               dtype=object))
-                    # MODIFIED 2/7/22 END
                     node_name = node.name
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"the shape of its external input ({correct_stimulus})."
@@ -8702,10 +8692,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
-                        # FIX: 2/7/22 - PROBLEMS WITH TYPING HERE
-                        # if np.array(v, dtype=object).ndim == 2:
-                        #     # Enforce that even single trial specs user outer trial dimension (for consistency below)
-                        #     v = [v]
+                        if nesting_depth(v) == 2:
+                            # Enforce that even single trial specs user outer trial dimension (for consistency below)
+                            v = [v]
                         for t in range(len(v)):
                             for i, cim_port in enumerate(k.input_CIM.input_ports):
                                 port, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(cim_port)
@@ -8719,32 +8708,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif type(inputs) == list or type(inputs) == np.ndarray:
             _inputs = []
             for i in range(len(inputs)): # One for each port if full node's worth, else inputs = input for port
-                # # MODIFIED 2/9/22 OLD:
-                # if port:
-                #     # port passed in, since it is not bound to owner in input_CIM, so index can't be determined locally
-                #     # also signifies input should be treated below just for that port (not entire node), so 1 dim less
-                #     port_index = mech.input_ports.index(port)
-                #     # No port passed in, so use primary InputPort if only one input, or i if inputs for mulitiple ports
-                #     port_index = 0 if len(labels) == 1 else i
-                # # # MODIFIED 2/7/22 OLD:
-                # # stimulus = inputs[i] # input for port
-                # # MODIFIED 2/7/22 NEW:
-                # stimulus = inputs if port else inputs[i] # inputs for port
-                # # MODIFIED 2/7/22 END
-                # MODIFIED 2/9/22 NEW:
                 if port:
                     # port passed in, since it is not bound to owner in input_CIM, so index can't be determined locally
-                    # also signifies input should be treated below just for that port (not entire node), so 1 dim less
+                    # also signifies input is to be treated as just for that port (not entire node), so 1 dim less
                     port_index = mech.input_ports.index(port)
-                    # stimulus = inputs
                     if not isinstance(inputs[0], str):
+                        # If input for port is not a string, no further processing need, so just return as is
                         _inputs = inputs
                         break
                 else:
-                    # No port passed in, so use primary InputPort if only one input, or i if inputs for mulitiple ports
+                    # No port passed in, so use primary InputPort if only one input, or i if inputs for multiple ports
                     port_index = 0 if len(labels) == 1 else i
                 stimulus = inputs[i] # input for port
-                # MODIFIED 2/9/22 END
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
                 elif type(stimulus) == str:
@@ -8760,20 +8735,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise CompositionError(f"Inappropriate use of {repr(stimulus)} as a stimulus for {mech.name} "
                                                f"in {self.name}: it is not a label in its input_labels_dict.")
                 else:
-                    # MODIFIED 2/7/22 OLD:
                     _inputs.append(stimulus)
-                    # # MODIFIED 2/7/22 NEW:
-                    # _inputs = [np.array(s) for s in stimulus] if stimulus.ndim else np.array(stimulus)
-                    # # MODIFIED 2/7/22 NEWER: **
-                    # _inputs.append(np.atleast_1d(stimulus))
-                    # # MODIFIED 2/7/22 NEWEST:
-                    # _inputs.append(np.array(stimulus))
-                    # MODIFIED 2/7/22 END
-                    assert True
-                # # MODIFIED 2/7/22 NEW:
-                # if port:
-                #     break
-                # MODIFIED 2/7/22 END
 
         return _inputs
 
@@ -10609,7 +10571,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         def _get_labels(labels_dict, index, input_port):
             """Need index for InputPort, since owner Mechanism is not passed in."""
 
-            # FIX: 2/7/22 - NEED TO DEAL WITH "MECHANISM-LEVEL" DICT THAT SPECIFIES LABELS FOR *ALL* INPUTPORTS
             try:
                 return list(labels_dict[input_port.name].keys())
             except KeyError:
@@ -10716,6 +10677,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 return preface + formatted_input[:-1] + epilog
             return '{' + formatted_input[:-1] + '\n}'
 
+    # Aliases for get_results_by_node:
     def get_output_format(self, **kwargs):
         return self.get_results_by_nodes(**kwargs, alias="get_output_format")
 
