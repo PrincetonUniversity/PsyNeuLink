@@ -8566,7 +8566,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             else:
                 # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
                 #     so loop through and validate each individual input
-                # FIX: 2/7/22 - MULTI-TRIAL STIMULUS FOR COMP HAS EXTRA DIMENSION THAT MAKES LEN=1 AND THEREFORE NO LOOP
+                # # FIX: 2/7/22 -
+                # # FIX: MULTI-TRIAL STIMULUS FOR *NESTED COMP* HAS EXTRA DIMENSION THAT MAKES LEN=1 AND THEREFORE NO LOOP
+                # # FIX: THE FOLLOWING FIXES IT FOR MULTI-TRIAL BUT DOESN"T WORK FOR SINGLE TRIAL STIMULI:
+                # if isinstance(node, Composition):
+                #     stimulus = stimulus[0]
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
                 if True in [i is None for i in node_input]:
                     # incompatible_stimulus = [stimulus[node_input.index(None)]]
@@ -8668,6 +8672,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _parse_labels(self, inputs, mech=None, port=None, context=None):
         """
         Traverse input dict and resolve any input or output labels to their numeric values
+        If **port** is passed, inputs is only for a single port, so manage accordingly
 
         Returns
         -------
@@ -8691,35 +8696,55 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for k,v in inputs.items():
                 if isinstance(k, Mechanism) and \
                    (target_to_output[k].output_labels_dict if k in target_to_output else k.input_labels_dict):
-                    _inputs.update({k:self._parse_labels(v, k)})
+                    _inputs.update({k:self._parse_labels(v, k)})  # Full node's worth of inputs, so don't pass port
                 else:
                     # Call _parse_labels for any Nodes with input_labels_dicts in nested Composition(s)
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
                         # FIX: 2/7/22 - PROBLEMS WITH TYPING HERE
-                        if np.array(v, dtype=object).ndim == 2:
-                            # Enforce that even single trial specs user outer trial dimension (for consistency below)
-                            v = [v]
+                        # if np.array(v, dtype=object).ndim == 2:
+                        #     # Enforce that even single trial specs user outer trial dimension (for consistency below)
+                        #     v = [v]
                         for t in range(len(v)):
                             for i, cim_port in enumerate(k.input_CIM.input_ports):
                                 port, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(cim_port)
-                                # Pass port along with corresponding input, since it is not bound to owning Mechanism in
-                                #   input_CIM, so its index can't be determined in recursive call to _parse_labels below
+                                # Get only a port's worth of input, so signify by passing port with input,
+                                #   which is also need since it is not bound to owning Mechanism in input_CIM,
+                                #   so its index can't be determined in recursive call to _parse_labels below
                                 v[t][i] = k._parse_labels(v[t][i],mech_with_labels, port)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
         elif type(inputs) == list or type(inputs) == np.ndarray:
             _inputs = []
-            for i in range(len(inputs)):
+            for i in range(len(inputs)): # One for each port if full node's worth, else inputs = input for port
+                # # MODIFIED 2/9/22 OLD:
+                # if port:
+                #     # port passed in, since it is not bound to owner in input_CIM, so index can't be determined locally
+                #     # also signifies input should be treated below just for that port (not entire node), so 1 dim less
+                #     port_index = mech.input_ports.index(port)
+                #     # No port passed in, so use primary InputPort if only one input, or i if inputs for mulitiple ports
+                #     port_index = 0 if len(labels) == 1 else i
+                # # # MODIFIED 2/7/22 OLD:
+                # # stimulus = inputs[i] # input for port
+                # # MODIFIED 2/7/22 NEW:
+                # stimulus = inputs if port else inputs[i] # inputs for port
+                # # MODIFIED 2/7/22 END
+                # MODIFIED 2/9/22 NEW:
                 if port:
                     # port passed in, since it is not bound to owner in input_CIM, so index can't be determined locally
+                    # also signifies input should be treated below just for that port (not entire node), so 1 dim less
                     port_index = mech.input_ports.index(port)
+                    # stimulus = inputs
+                    if not isinstance(inputs[0], str):
+                        _inputs = inputs
+                        break
                 else:
                     # No port passed in, so use primary InputPort if only one input, or i if inputs for mulitiple ports
                     port_index = 0 if len(labels) == 1 else i
-                stimulus = inputs[i]
+                stimulus = inputs[i] # input for port
+                # MODIFIED 2/9/22 END
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
                 elif type(stimulus) == str:
@@ -8735,7 +8760,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise CompositionError(f"Inappropriate use of {repr(stimulus)} as a stimulus for {mech.name} "
                                                f"in {self.name}: it is not a label in its input_labels_dict.")
                 else:
+                    # MODIFIED 2/7/22 OLD:
                     _inputs.append(stimulus)
+                    # # MODIFIED 2/7/22 NEW:
+                    # _inputs = [np.array(s) for s in stimulus] if stimulus.ndim else np.array(stimulus)
+                    # # MODIFIED 2/7/22 NEWER: **
+                    # _inputs.append(np.atleast_1d(stimulus))
+                    # # MODIFIED 2/7/22 NEWEST:
+                    # _inputs.append(np.array(stimulus))
+                    # MODIFIED 2/7/22 END
+                    assert True
+                # # MODIFIED 2/7/22 NEW:
+                # if port:
+                #     break
+                # MODIFIED 2/7/22 END
+
         return _inputs
 
     def _parse_input_dict(self, inputs, context=None):

@@ -5771,10 +5771,12 @@ class TestInputSpecifications:
 
     test_args = [
         # template, labels, nested, num_trials, expected_format_string
-        # (False, False, False, 2, expected_format_strings[0]),
-        # (False, True, True, pnl.FULL, expected_format_strings[1]),
-        (True, False, False, pnl.FULL, None),
-        # (True, True, True, 1, None)
+        (False, False, False, 2, expected_format_strings[0]),
+        (False, True, True, pnl.FULL, expected_format_strings[1]),
+        (True, False, False, 1, None),            # <- FIX 2/7/22 PROBLEM
+        (True, False, False, pnl.FULL, None),   # <- FIX 2/7/22 PROBLEM
+        (True, True, True, 1, None),
+        (True, True, False, pnl.FULL, None),
     ]
 
     @pytest.mark.parametrize('template, use_labels, show_nested, num_trials, expected_format_string', test_args,
@@ -5785,6 +5787,7 @@ class TestInputSpecifications:
                                     f"{'expected_format_string' if x[4] else 'None'}" for x in test_args]
                              )
     def test_get_input_format(self, template, use_labels, show_nested, num_trials, expected_format_string):
+        """Also tests input_labels_dict"""
 
         A = pnl.ProcessingMechanism(size=1, name='A',
                                 input_labels={0:{'red':0, 'green':1},
