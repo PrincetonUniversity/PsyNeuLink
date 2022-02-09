@@ -5747,7 +5747,8 @@ class TestInputSpecifications:
             assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
 
 
-    expected_format_strings = [
+    expected_format_strings = \
+        [
         '{\n\tX: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],'
         '\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],'
         '\n\tY: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}',
@@ -5766,8 +5767,8 @@ class TestInputSpecifications:
         "[[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],"
         "\n\tY: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
         "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
-        "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}",
-    ]
+        "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}"
+        ]
     test_args = [
         # template, labels, nested, num_trials, expected_format_string
         (False, False, False, 2, expected_format_strings[0]),
