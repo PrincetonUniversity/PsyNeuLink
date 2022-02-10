@@ -3973,7 +3973,7 @@ class Mechanism_Base(Mechanism):
 
     @property
     def output_values(self):
-        return self.output_ports.values
+        return self.get_output_values()
 
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_ports]
@@ -3993,8 +3993,8 @@ class Mechanism_Base(Mechanism):
         elif context:
             return self.get_output_values(context)
         else:
-            return self.output_values
-
+            # Use this to report most recent value if no context is available
+            return self.output_ports.values
 
     @property
     def ports(self):

@@ -2640,7 +2640,7 @@ from psyneulink.core.compositions.showgraph import ShowGraph, INITIAL_FRAME, SHO
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
     AFTER, ALL, ALLOW_PROBES, ANY, BEFORE, COMPONENT, COMPOSITION, CONTROL, CONTROL_SIGNAL, CONTROLLER, DEFAULT, \
-    FEEDBACK, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
+    DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
@@ -2649,14 +2649,14 @@ from psyneulink.core.globals.keywords import \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
-    TARGET, TARGET_MECHANISM, VARIABLE, WEIGHT, OWNER_MECH
+    TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
 from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, convert_to_np_array, is_numeric
+    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -8565,12 +8565,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input = [node_input]
             else:
                 # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
-                #     so loop through and validate each individual input
+                #     so in list comprehension below loop through and validate each individual input
                 node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
+                # Look for any bad ones (for which _validate_single_input() returned None) and report if found
                 if True in [i is None for i in node_input]:
-                    # incompatible_stimulus = [stimulus[node_input.index(None)]]
-                    incompatible_stimulus = np.atleast_1d(stimulus[node_input.index(None)])
-                    correct_stimulus = np.atleast_1d(node.external_input_shape[node_input.index(None)])
+                    incompatible_stimulus = np.atleast_1d(np.array(stimulus[node_input.index(None)], dtype=object))
+                    correct_stimulus = np.atleast_1d(np.array(node.external_input_shape[node_input.index(None)],
+                                                              dtype=object))
                     node_name = node.name
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
                               f"the shape of its external input ({correct_stimulus})."
@@ -8658,18 +8659,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             inputs[node] = inputs.pop(name)
         return inputs
 
-    def _parse_labels(self, inputs, mech=None, context=None):
+    def _parse_labels(self, inputs, mech=None, port=None, context=None):
         """
-        Traverse input dict and replace any inputs that are in the form of their input or output label representations
-              to their numeric representations
+        Traverse input dict and resolve any input or output labels to their numeric values
+        If **port** is passed, inputs is only for a single port, so manage accordingly
 
         Returns
         -------
 
         `dict` :
-            The input dict, with inputs with their label representations replaced by their numeric representations
-
+            The input dict, with inputs with labels replaced by corresponding numeric values
         """
+
         # the nested list comp below is necessary to retrieve target nodes of learning pathways,
         # because the PathwayRole enum is not importable into this module
         target_to_output = {path.target: path.output for path in self.pathways
@@ -8685,23 +8686,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             for k,v in inputs.items():
                 if isinstance(k, Mechanism) and \
                    (target_to_output[k].output_labels_dict if k in target_to_output else k.input_labels_dict):
-                    _inputs.update({k:self._parse_labels(v, k)})
+                    _inputs.update({k:self._parse_labels(v, k)})  # Full node's worth of inputs, so don't pass port
                 else:
                     # Call _parse_labels for any Nodes with input_labels_dicts in nested Composition(s)
                     if (isinstance(k, Composition)
                             and any(n.input_labels_dict
                                     for n in k._get_nested_nodes_with_same_roles_at_all_levels(k,NodeRole.INPUT))):
-                        for i, port in enumerate(k.input_CIM.input_ports):
-                            _, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(port)
-                            v[i] = k._parse_labels(inputs[k][i],mech_with_labels)
+                        if nesting_depth(v) == 2:
+                            # Enforce that even single trial specs user outer trial dimension (for consistency below)
+                            v = [v]
+                        for t in range(len(v)):
+                            for i, cim_port in enumerate(k.input_CIM.input_ports):
+                                port, mech_with_labels, __ = k.input_CIM._get_destination_info_from_input_CIM(cim_port)
+                                # Get only a port's worth of input, so signify by passing port with input,
+                                #   which is also need since it is not bound to owning Mechanism in input_CIM,
+                                #   so its index can't be determined in recursive call to _parse_labels below
+                                v[t][i] = k._parse_labels(v[t][i],mech_with_labels, port)
                         _inputs.update({k:v})
                     else:
                         _inputs.update({k:v})
         elif type(inputs) == list or type(inputs) == np.ndarray:
             _inputs = []
-            for i in range(len(inputs)):
-                port = 0 if len(labels) == 1 else i
-                stimulus = inputs[i]
+            for i in range(len(inputs)): # One for each port if full node's worth, else inputs = input for port
+                if port:
+                    # port passed in, since it is not bound to owner in input_CIM, so index can't be determined locally
+                    # also signifies input is to be treated as just for that port (not entire node), so 1 dim less
+                    port_index = mech.input_ports.index(port)
+                    if not isinstance(inputs[0], str):
+                        # If input for port is not a string, no further processing need, so just return as is
+                        _inputs = inputs
+                        break
+                else:
+                    # No port passed in, so use primary InputPort if only one input, or i if inputs for multiple ports
+                    port_index = 0 if len(labels) == 1 else i
+                stimulus = inputs[i] # input for port
                 if type(stimulus) == list or type(stimulus) == np.ndarray:
                     _inputs.append(self._parse_labels(inputs[i], mech))
                 elif type(stimulus) == str:
@@ -8709,12 +8727,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise CompositionError(f"Inappropriate use of str ({repr(stimulus)}) as a stimulus for "
                                                f"{mech.name} in {self.name}: it does not have an input_labels_dict.")
                     try:
-                        _inputs.append(labels[port][stimulus])
+                        if len(inputs) == 1:
+                            _inputs = np.atleast_1d(labels[port_index][stimulus])
+                        else:
+                            _inputs.append(labels[port_index][stimulus])
                     except KeyError as e:
                         raise CompositionError(f"Inappropriate use of {repr(stimulus)} as a stimulus for {mech.name} "
                                                f"in {self.name}: it is not a label in its input_labels_dict.")
                 else:
                     _inputs.append(stimulus)
+
         return _inputs
 
     def _parse_input_dict(self, inputs, context=None):
@@ -10488,124 +10510,177 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             bad_args_str = ", ".join([str(arg) for arg in args] + list(kwargs.keys()))
             raise CompositionError(f"Composition ({self.name}) called with illegal argument(s): {bad_args_str}")
 
-
     # Alias of get_input_format(easy mistake to make)
     def get_inputs_format(self, **kwargs):
         return self.get_input_format(**kwargs, alias="get_inputs_format")
 
     def get_input_format(self,
-                         num_trials:int=1,
+                         form:Union[DICT,TEXT]=DICT,
+                         num_trials:Union[int, FULL]=1,
                          use_labels:bool=False,
-                         show_nested_input_nodes:bool=False,
-                         template:bool=False,
                          use_names:bool=False,
+                         show_nested_input_nodes:bool=False,
                          alias:str=None):
-        """Return str with format of dict used by **inputs** argument of `run <Composition.run>` method.
+        """Return dict or string with format of dict used by **inputs** argument of `run <Composition.run>` method.
 
         Arguments
         ---------
 
-        num_trials : int : default 1
-            specifies number of trials' worth of inputs to included in format.
+        form : DICT or TEXT : default DICT
+            specifies the form in which the exampple is returned; DICT (the default) returns a dict (with
+            **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`)
+            formatted for use as the **inputs** arg of the Compositon's `run <Composition.run>` method;
+            TEXT returns a user-readable text description of the format (optionally with inputs required for
+            `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of any `nested Compositions <Composition_Nested>`
+            (see **show_nested_input_nodes** below).
+
+        num_trials : int or FULL : default 1
+            specifies number of trials' worth of inputs to include in returned item.  If *FULL* is specified,
+            **use_labels** is automatically set to True, and **num_trials** is set to number of labels in the
+            `input_label_dict <Mechanism_Base.input_labels_dict>` with the largest number of labels specified; if
+            none of the `INPUT <NodeRole.INPUT>` Mechanisms in the Composition (including any nested ones) have an
+            `input_label_dict <Mechanism_Base.input_labels_dict>` specified, **num_trials** is set to the default (1).
 
         use_labels : bool : default False
-            if True, show labels instead of values for Mechanisms that have an `input_label_dict
+            if True, shows labels instead of values for Mechanisms that have an `input_label_dict
             <Mechanism_Base.input_labels_dict>`.  For **num_trials** = 1, a representative label is
-            shown; for **num_trials** > 1, use a different label for each trial shown, cycling
-            through the set if **num_trials** is greater than the number of labels.
+            shown; for **num_trials** > 1, a different label is used for each trial shown, cycling
+            through the set if **num_trials** is greater than the number of labels.  If **num_trials = *FULL*,
+            trials will be included.
+
+            it is set to the number of labels in the largest list specified in any `input_label_dict
+            <Mechanism_Base.input_labels_dict>` specified for an `INPUT <NodeRole.INPUT>` Mechanism;
+
+        use_names : bool : default False
+            use `Node <Composition_Nodes>` name as key for Node if **form** = DICT.
 
         show_nested_input_nodes : bool : default False
             show hierarchical display of `Nodes <Composition_Nodes>` in `nested Compositions <Composition_Nested>`
             with names of destination `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` and representative inputs,
             followed by the actual format used for the `run <Composition.run>` method.
 
-        template : bool : default False
-            return dict (with **num_trials** worth of default values for each `INPUT <NodeRole.INPUT>` `Node
-            <Composition_Nodes>`) properly formatted for use inputs arg of `run <Composition.run>` method.
+        Returns
+        -------
 
-        use_names : bool : default False
-            use `Node <Composition_Nodes>` name as key for Node in template dict.
+        Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
+        method (default), or string showing the format required by the **inputs** argument <Composition.run>`
+        (template_dict=False)
+
         """
-
-        if template:
-            # Return dict that can be used as inputs arg to run()
-            input_dict = {}
-            for node in self.get_nodes_by_role(NodeRole.INPUT):
-                node_key = node.name if use_names else node
-                inputs_for_node = [port.default_input_shape for port in node.external_input_ports]
-                input_dict[node_key]=[inputs_for_node] * num_trials
-            return input_dict
 
         if alias:
             warnings.warn(f"{alias} is aliased to get_input_format(); please use that in the future.")
 
-        def _get_inputs(comp, nesting_level=1, use_labels=False):
+        def _get_labels(labels_dict, index, input_port):
+            """Need index for InputPort, since owner Mechanism is not passed in."""
 
-            input_format = ''
+            try:
+                return list(labels_dict[input_port.name].keys())
+            except KeyError:
+                try:
+                    return list(labels_dict[index].keys())
+                except KeyError:
+                    # Dict with no InputPort-specific subdicts, used to specify labels for all InputPorts of Mechanism
+                    return list(labels_dict.keys())
+            raise CompositionError(f"Unable to find labels for '{input_port.full_name}' of '{input_port.owner.name}'.")
+
+        def _get_inputs(comp, nesting_level=1, use_labels=False, template_dict=str):
+
+            format_description_string = ''
             indent = '\t' * nesting_level
+            template_input_dict = {}
+
             for node in comp.get_nodes_by_role(NodeRole.INPUT):
-                input_format += '\n' + indent + node.name + ': '
+                node_inputs_for_format_string = []
+                format_description_string += '\n' + indent + node.name + ': '
+                node_inputs_for_template_dict = []
+                node_key = node.name if use_names else node
 
                 # Nested Compositions
                 if show_nested_input_nodes and isinstance(node, Composition):
-                    trials = _get_inputs(node, nesting_level=nesting_level + 1, use_labels=use_labels)
+                    # No need for node_inputs_for_template_dict here as template_dict never contains nested_input_nodes
+                    node_inputs_for_format_string = _get_inputs(node,
+                                                                nesting_level=nesting_level + 1,
+                                                                use_labels=use_labels)
 
-                # Nested Composition
                 else:
-                    trials = []
                     for t in range(num_trials):
+                        inputs_for_format = []
+                        inputs_for_template_dict = []
 
-                        # FIX: 2/3/22 - SHOULD REFACTOR TO USE InputPort.variable RATHER THAN input_values
-                        #               IN CASE AN InputPort'S FUNCTION CHANGES ITS SHAPE
-                        #               (SEE ABOVE FOR template)
                         # Mechanism with labels
                         if use_labels and isinstance(node, Mechanism) and node.input_labels_dict:
-                            input_values = []
-                            for i in range(len(node.input_values)):
-                                label_dict = node.input_labels_dict[i]
-                                labels = list(label_dict.keys())
-                                input_values.append(repr(labels[t % len(labels)]))
-                            trial = f"[{','.join(input_values)}]"
+                            labels_dict = node.input_labels_dict
+
+                            for i in range(len(node.external_input_shape)):
+                                labels = _get_labels(labels_dict, i, node.input_ports[i])
+                                inputs_for_format.append(repr(labels[t % len(labels)]))
+                                inputs_for_template_dict.append(labels[t % len(labels)])
+                            trial = f"[{','.join(inputs_for_format)}]"
 
                         # Mechanism(s) with labels in nested Compositions
                         elif (use_labels and isinstance(node, Composition)
                               and any(n.input_labels_dict for n
                                       in node._get_nested_nodes_with_same_roles_at_all_levels(node, NodeRole.INPUT))):
-                            input_values = []
-                            for i, port in enumerate(node.input_CIM.input_ports):
-                                _, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
+
+                            for port in node.input_CIM.input_ports:
+                                input_port, mech, __ = node.input_CIM._get_destination_info_from_input_CIM(port)
                                 labels_dict = mech.input_labels_dict
                                 if labels_dict:
-                                    labels = list(labels_dict[0].keys())
-                                    input_values.append(repr([labels[t % len(labels)]]))
+                                    labels = _get_labels(labels_dict, mech.input_ports.index(input_port), input_port)
+                                    inputs_for_format.append(repr([labels[t % len(labels)]]))
+                                    inputs_for_template_dict.append([labels[t % len(labels)]])
                                 else:
-                                    input_values.append(repr(np.array(mech.input_values).tolist()))
-                            trial = f"[{','.join(input_values)}]"
+                                    inputs_for_template_dict.append(port.default_input_shape)
+                                    inputs_for_format.append(repr(np.array(port.default_input_shape).tolist()))
+                            trial = f"[{','.join(inputs_for_format)}]"
 
                         # No Mechanism(s) with labels or use_labels == False
                         else:
-                            trial = f"[{','.join([repr(i.tolist()) for i in node.input_values])}]"
+                            inputs_for_template_dict = [port.default_input_shape for port in node.external_input_ports]
+                            trial = f"[{','.join([repr(i.tolist()) for i in inputs_for_template_dict])}]"
 
-                        trials.append(trial)
+                        node_inputs_for_format_string.append(trial)
+                        node_inputs_for_template_dict.append(inputs_for_template_dict)
 
-                    trials = ', '.join(trials)
+                    node_inputs_for_format_string = ', '.join(node_inputs_for_format_string)
                     if num_trials > 1:
-                        trials = f"[ {trials} ]"
+                        node_inputs_for_format_string = f"[ {node_inputs_for_format_string} ]"
 
-                input_format += trials
+                format_description_string += node_inputs_for_format_string
                 if not show_nested_input_nodes:
-                    input_format += ','
+                    format_description_string += ','
+                template_input_dict[node_key]=node_inputs_for_template_dict
+
             nesting_level -= 1
-            return input_format
+            if form == DICT:
+                return template_input_dict
+            else:
+                return format_description_string
 
-        formatted_input = _get_inputs(self, 1, use_labels)
-        if show_nested_input_nodes:
-            preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
-            epilog = f"\n\nFormat as follows for inputs to run():\n" \
-                     f"{self.get_input_format(num_trials=num_trials)}"
-            return preface + formatted_input[:-1] + epilog
-        return '{' + formatted_input[:-1] + '\n}'
+        if num_trials == FULL:
+            num_trials = 1
+            # Get number of labels in largest list of any input_labels_dict in an INPUT Mechanism
+            for node in self._get_nested_nodes_with_same_roles_at_all_levels(self, NodeRole.INPUT):
+                if node.input_labels_dict:
+                    labels_dict = node.input_labels_dict
+                    num_trials = max(num_trials, max([len(labels) for labels in labels_dict.values()]))
 
+        # Return dict usable for run()
+        if form == DICT:
+            show_nested_input_nodes = False
+            return _get_inputs(self, 1, use_labels, form)
+        # Return text format
+        else:
+            formatted_input = _get_inputs(self, 1, use_labels)
+            if show_nested_input_nodes:
+                preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
+                epilog = f"\n\nFormat as follows for inputs to run():\n" \
+                         f"{self.get_input_format(form=form, num_trials=num_trials)}"
+                return preface + formatted_input[:-1] + epilog
+            return '{' + formatted_input[:-1] + '\n}'
+
+    # Aliases for get_results_by_node:
     def get_output_format(self, **kwargs):
         return self.get_results_by_nodes(**kwargs, alias="get_output_format")
 
