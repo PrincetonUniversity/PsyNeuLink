@@ -1088,7 +1088,7 @@ case that value is provided as the input to that Node for every `TRIAL <TimeScal
 the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
 If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
 argument is specified (see `below <Composition_Execution_Learning_Inputs>`).  The Composition's `get_input_format()
-<Composition.get_input_format>` method can be used to show a template for how inputs should be formatted for the
+<Composition.get_input_format>` method can be used to show an example for how inputs should be formatted for the
 Composition, as well as the `INPUT <NodeRole.INPUT>` Nodes to which they are assigned.  The formats are described in
 more detail below.
 
