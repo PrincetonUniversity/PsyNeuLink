@@ -10582,7 +10582,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 except KeyError:
                     # Dict with no InputPort-specific subdicts, used to specify labels for all InputPorts of Mechanism
                     return list(labels_dict.keys())
-            raise CompositionError(f"Unable to find labels for '{input_port.full_name}' of '{input_port.owner.name}'.")
+            except:
+                assert False, f"PROGRAM ERROR: Unable to find labels for " \
+                              f"'{input_port.full_name}' of '{input_port.owner.name}'."
 
         def _get_inputs(comp, nesting_level=1, use_labels=False, template_dict=str):
 

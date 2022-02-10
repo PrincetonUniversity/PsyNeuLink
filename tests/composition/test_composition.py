@@ -381,11 +381,11 @@ class TestAddProjection:
         X = ProcessingMechanism(name='INPUT NODE')
         M = ProcessingMechanism(name='MIDDLE NODE')
         Y = ProcessingMechanism(name='OUTPUT NODE')
-        if projs is 'list':
+        if projs == 'list':
             iprojs = [MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)]
             oprojs = [MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
                      MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)]
-        elif projs is 'set':
+        elif projs == 'set':
             iprojs = {MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)}
             oprojs = {MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
                      MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)}
