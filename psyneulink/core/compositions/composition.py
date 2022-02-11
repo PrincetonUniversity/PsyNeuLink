@@ -10563,8 +10563,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         -------
 
         Either a dict formatted appropriately for assignment as the **inputs** argument of the Composition's `run()
-        method (default), or string showing the format required by the **inputs** argument <Composition.run>`
-        (template_dict=False)
+        method (form = *DICT*, the default), or string showing the format required by the **inputs** argument
+        <Composition.run>` (form = *TEXT*).
 
         """
 
