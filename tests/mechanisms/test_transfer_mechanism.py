@@ -967,12 +967,7 @@ class TestTransferMechanismTimeConstant:
 
         T.noise.base = 10
 
-        if mech_mode == 'Python':
-            val = T.execute([1, 2, -3, 0])
-        elif mech_mode == 'LLVM':
-            val = e.execute([1, 2, -3, 0])
-        elif mech_mode == 'PTX':
-            val = e.cuda_execute([1, 2, -3, 0])
+        val = EX([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
     # @pytest.mark.mechanism
