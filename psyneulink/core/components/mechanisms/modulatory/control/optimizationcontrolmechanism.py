@@ -1508,7 +1508,10 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         state_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
-        # state_feature_specs = Parameter(None, stateful=False, loggable=False, read_only=True, structural=True)
+        # MODIFIED 1/30/22 NEW:
+        state_feature_specs = Parameter(None, stateful=False, loggable=False, read_only=True, structural=True,
+                                        parse_spec=True)
+        # MODIFIED 1/30/22 END
         state_feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         function = Parameter(GridSearch, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
@@ -1539,17 +1542,25 @@ class OptimizationControlMechanism(ControlMechanism):
         saved_samples = None
         saved_values = None
 
-        # # MODIFIED 1/30/22 NEW:  FIX - MAY BE NEEDED IF state_feature_specs -> Parameter,
-        #                                WHICH SHOULD SET spec ATTRIBUTE
-        # def _parse_state_feature_specs(self, state_features):
-        #     return (state_features if isinstance(state_features, (dict, set)) else convert_to_list(state_features))
+        # MODIFIED 1/30/22 NEW:  FIX - MAY BE NEEDED IF state_feature_specs -> Parameter,
+        #                              WHICH SHOULD SET spec ATTRIBUTE
+        def _parse_state_feature_specs(self, state_features):
+            # return (state_features if isinstance(state_features, (dict, set)) else convert_to_list(state_features))
+            from psyneulink.core.compositions.composition import Composition
+            return (state_features if (isinstance(state_features, set)
+                                       or (isinstance(state_features, dict)
+                                           and (any(isinstance(key, (Port, Mechanism, Composition))
+                                                    for key in state_features)
+                                                or SHADOW_INPUTS in state_features)))
+                    else convert_to_list(state_features))
         # MODIFIED 1/30/22 END
 
     @handle_external_context()
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) = None,
+                 state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) =
+                 None,
                  state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type))) = None,
                  function=None,
                  num_estimates = None,
@@ -1596,14 +1607,14 @@ class OptimizationControlMechanism(ControlMechanism):
         # # MODIFIED 1/30/22 OLD:
         # self.state_feature_specs = (state_features if isinstance(state_features, (dict, set))
         #                             else convert_to_list(state_features))
-        # MODIFIED 1/30/22 NEW:
-        # Enclose state_features in a list unless it is already a list, set, or state_feature specification dict
-        self.state_feature_specs = (state_features if (isinstance(state_features, set)
-                                                       or (isinstance(state_features, dict)
-                                                           and (any(isinstance(key, (Port, Mechanism, Composition))
-                                                                   for key in state_features)
-                                                                or SHADOW_INPUTS in state_features)))
-                                    else convert_to_list(state_features))
+        # # MODIFIED 1/30/22 NEW:
+        # # Enclose state_features in a list unless it is already a list, set, or state_feature specification dict
+        # self.state_feature_specs = (state_features if (isinstance(state_features, set)
+        #                                                or (isinstance(state_features, dict)
+        #                                                    and (any(isinstance(key, (Port, Mechanism, Composition))
+        #                                                            for key in state_features)
+        #                                                         or SHADOW_INPUTS in state_features)))
+        #                             else convert_to_list(state_features))
         # MODIFIED 1/30/22 END
 
         function = function or GridSearch
@@ -1615,6 +1626,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._assign_deferred_init_name(self.__class__.__name__)
                 # Store args for deferred initialization
                 self._store_deferred_init_args(**locals())
+                self._init_args['state_feature_specs'] = state_features
 
                 # Flag for deferred initialization
                 self.initialization_status = ContextFlags.DEFERRED_INIT
@@ -1640,8 +1652,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         super().__init__(
             agent_rep=agent_rep,
-            # # MODIFIED 1/30/22 NEW: FIX - MAY NEED IF state_feature_specs -> Parameter
-            # state_feature_specs=state_features,
+            # MODIFIED 1/30/22 NEW: FIX - MAY NEED IF state_feature_specs -> Parameter
+            state_feature_specs=state_features,
             # MODIFIED 1/30/22 END
             state_feature_function=state_feature_function,
             function=function,
