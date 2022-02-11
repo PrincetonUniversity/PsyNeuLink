@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0+untagged.22.g82d43be documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0+untagged.20.gc84a66a documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.22.g82d43be
+                  0+untagged.20.gc84a66a
                 </div>
               
             
@@ -1152,7 +1152,7 @@ case that value is provided as the input to that Node for every <a class="refere
 <strong>inputs</strong> argument is not specified for the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.run" title="psyneulink.core.compositions.composition.Composition.run"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">run</span></code></a> or <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.execute" title="psyneulink.core.compositions.composition.Composition.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> methods,
 the <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> for each <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node is used as its input on <a class="reference internal" href="Time.html#psyneulink.core.scheduling.time.TimeScale.TRIAL" title="psyneulink.core.scheduling.time.TimeScale.TRIAL"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">TRIAL</span></code></a>.
 If it is not specified for the <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.learn" title="psyneulink.core.compositions.composition.Composition.learn"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">learn</span></code></a> method, an error is generated unless its <strong>targets</strong>
-argument is specified (see <a class="reference internal" href="#composition-execution-learning-inputs"><span class="std std-ref">below</span></a>).  The Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.get_input_format" title="psyneulink.core.compositions.composition.Composition.get_input_format"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_input_format()</span></code></a> method can be used to show a template for how inputs should be formatted for the
+argument is specified (see <a class="reference internal" href="#composition-execution-learning-inputs"><span class="std std-ref">below</span></a>).  The Composition’s <a class="reference internal" href="#psyneulink.core.compositions.composition.Composition.get_input_format" title="psyneulink.core.compositions.composition.Composition.get_input_format"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">get_input_format()</span></code></a> method can be used to show an example for how inputs should be formatted for the
 Composition, as well as the <a class="reference internal" href="#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Nodes to which they are assigned.  The formats are described in
 more detail below.</p>
 <section id="input-formats-including-targets-for-learning">
@@ -4632,8 +4632,8 @@ followed by the actual format used for the <a class="reference internal" href="#
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>Either a dict formatted appropriately for assignment as the <strong>inputs</strong> argument of the Composition’s <a href="#id17"><span class="problematic" id="id18">`</span></a>run()</p></li>
-<li><p>method (default), or string showing the format required by the <strong>inputs</strong> argument &lt;Composition.run&gt;`</p></li>
-<li><p><em>(template_dict=False)</em></p></li>
+<li><p><em>method (form = *DICT</em>, the default), or string showing the format required by the <strong>inputs</strong> argument*</p></li>
+<li><p>&lt;Composition.run&gt;` (form = <em>TEXT</em>).</p></li>
 </ul>
 </p>
 </dd>
