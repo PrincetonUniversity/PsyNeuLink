@@ -988,17 +988,19 @@ class TestTransferMechanismTimeConstant:
     #     )
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_integration_rate_0_8_list(self):
+    def test_transfer_mech_integration_rate_0_8_list(self, mech_mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            integration_rate=[0.8, 0.8, 0.8, 0.8],
+            integration_rate=[0.8, 0.7, 0.6, 0.5],
             integrator_mode=True
         )
-        T.execute([1, 1, 1, 1])
-        val = T.execute([1, 1, 1, 1])
-        assert np.allclose(val, [[ 0.96,  0.96,  0.96,  0.96]])
+        EX = pytest.helpers.get_mech_execution(T, mech_mode)
+
+        EX([1, 1, 1, 1])
+        val = EX([1, 1, 1, 1])
+        assert np.allclose(val, [[ 0.96,  0.91,  0.84,  0.75]])
 
 
     @pytest.mark.mechanism
