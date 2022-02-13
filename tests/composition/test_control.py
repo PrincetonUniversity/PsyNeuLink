@@ -845,26 +845,26 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        ('partial_legal_list_spec', messages[0], None, UserWarning),
-        ('full_list_spec', None, None, None),
-        ('list_spec_with_none', None, None, None),
-        ('input_dict_spec', None, None, None),
-        ('input_dict_spec_short', None, None, None),
-        ('set_spec', None, None, None),
-        ('set_spec_short', None, None, None),
-        ('automatic_assignment', None, None, None),
-        ('shadow_inputs_dict_spec', None, None, None),
-        ('shadow_inputs_dict_spec_w_none', None, None, None),
-        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        ('too_many_inputs_warning', messages[5], None, UserWarning),
-        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
-        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        ('bad_dict_spec_warning', messages[8], None, UserWarning),
-        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
+        # ('partial_legal_list_spec', messages[0], None, UserWarning),
+        # ('full_list_spec', None, None, None),
+        # ('list_spec_with_none', None, None, None),
+        # ('input_dict_spec', None, None, None),
+        # ('input_dict_spec_short', None, None, None),
+        # ('set_spec', None, None, None),
+        # ('set_spec_short', None, None, None),
+        # ('automatic_assignment', None, None, None),
+        # ('shadow_inputs_dict_spec', None, None, None),
+        # ('shadow_inputs_dict_spec_w_none', None, None, None),
+        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
+        # ('too_many_inputs_warning', messages[5], None, UserWarning),
+        # ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        # ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        # ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        # ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        # ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
         ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
         ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
         ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
@@ -922,8 +922,8 @@ class TestControlMechanisms:
             'too_many_w_node_not_in_composition_warning': [ia, oa, ob, ext],
             'bad_dict_spec_warning': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
-            'bad_set_spec_warning': {ob, ia},  # elicits both short spec and not INPUT Node warnings (for both ob and ia)
-            'bad_set_spec_error': {ob, ia},  # elicits both short spec and not INPUT Node warnings (for both ob and ia)
+            'bad_set_spec_warning': {ob, ia},  # elicits short spec warning
+            'bad_set_spec_error': {ob, ia},  # elicits INPUT Node warning (for ia)
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
