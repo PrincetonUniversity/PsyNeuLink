@@ -3040,67 +3040,66 @@ class Mechanism_Base(Mechanism):
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function, tags=tags)
         fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
 
-        builder.call(fun, [params, state, variable, fun_out])
+        builder.call(fun, [f_params, f_state, variable, fun_out])
 
         return fun_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
         return ctx.bool_ty(1)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, arg_in,
                                       ip_output, *, tags:frozenset):
 
         # Default mechanism runs only the main function
-        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_params_ptr, ctx, builder, params, state, arg_in)
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+                self.function, f_base_params, ctx, builder, m_base_params, m_state, arg_in)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
 
         return self._gen_llvm_invoke_function(ctx, builder, self.function,
                                               f_params, f_state, ip_output,
                                               tags=tags)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in,
-                                    arg_out, *, tags:frozenset):
+    def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in,
+                                    arg_out, m_base_params, *, tags:frozenset):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
-                                                        params, state, arg_in)
+                                                        m_base_params, m_state, arg_in)
 
-        value, builder = self._gen_llvm_mechanism_functions(ctx, builder, params,
-                                                            state, arg_in,
-                                                            ip_output,
-                                                            tags=tags)
+        value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
+                                                            m_params, m_state, arg_in,
+                                                            ip_output, tags=tags)
 
         # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
+        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "execution_count")
         exec_count = builder.load(exec_count_ptr)
         exec_count = builder.fadd(exec_count, exec_count.type(1))
         builder.store(exec_count, exec_count_ptr)
 
         # Update internal clock (i.e. num_executions parameter)
-        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
+        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
         for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
             num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
-        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
+        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
         if val_ptr.type.pointee == value.type.pointee:
-            pnlvm.helpers.push_state_val(builder, self, state, "value", value)
+            pnlvm.helpers.push_state_val(builder, self, m_state, "value", value)
         else:
             # FIXME: Does this need some sort of parsing?
             warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
-        is_finished_cond = builder.call(is_finished_f, [params, state, arg_in,
+        is_finished_cond = builder.call(is_finished_f, [m_params, m_state, arg_in,
                                                         arg_out])
         return builder, is_finished_cond
 
@@ -3134,11 +3133,11 @@ class Mechanism_Base(Mechanism):
         builder.ret(finished)
         return builder.function
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
-                self, params, ctx, builder, params, state, arg_in)
+                self, base_params, ctx, builder, base_params, state, arg_in)
 
         is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                            "is_finished_flag")
@@ -3164,17 +3163,19 @@ class Mechanism_Base(Mechanism):
 
         # Get internal function
         args_t = [a.type for a in builder.function.args]
+        args_t[4:4] = [base_params.type]
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=ctx.bool_ty)
-        iparams, istate, iin, iout = internal_builder.function.args[:4]
+        iparams, istate, iin, iout, ibase_params = internal_builder.function.args[:5]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         iparams, istate, iin, iout, tags=tags)
+                                                                         iparams, istate, iin, iout,
+                                                                         ibase_params, tags=tags)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
         internal_f = internal_builder.function
-        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, *builder.function.args[4:]])
+        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, base_params, *builder.function.args[4:]])
 
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count
