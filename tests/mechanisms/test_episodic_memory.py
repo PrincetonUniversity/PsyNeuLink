@@ -209,14 +209,11 @@ def test_with_contentaddressablememory(name, func, func_params, mech_params, tes
     assert em.input_ports.names == input_port_names
     assert em.output_ports.names == output_port_names
 
-    if mech_mode == 'Python':
-        def EX(variable):
-            em.execute(variable)
-            return em.output_values
-    elif mech_mode == 'LLVM':
-        pytest.skip("LLVM not yet implemented for ContentAddressableMemory")
-    elif mech_mode == 'PTX':
+    if mech_mode != 'Python':
         pytest.skip("PTX not yet implemented for ContentAddressableMemory")
+
+    EX = pytest.helpers.get_mech_execution(em, mech_mode)
+
 
     # EX(test_var)
     actual_output = EX(test_var)
