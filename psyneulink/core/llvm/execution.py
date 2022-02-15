@@ -110,7 +110,7 @@ class CUDAExecution(Execution):
         self._downloaded_bytes = Counter()
 
     def __del__(self):
-        if "cuda_data" in self._debug_env:
+        if "stat" in self._debug_env:
             try:
                 name = self._bin_func.name
             except AttributeError:

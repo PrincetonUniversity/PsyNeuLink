@@ -206,14 +206,16 @@ class TestRecurrentTransferMechanismInputs:
             benchmark(EX, [1])
 
     def test_recurrent_mech_inputs_list_of_strings(self):
-        with pytest.raises(FunctionError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             R = RecurrentTransferMechanism(
                 name='R',
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
             R.execute(["one", "two", "three", "four"])
-        assert "Unrecognized type" in str(error_text.value)
+        assert '"Input to \'R\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
+               'with its corresponding InputPort (R[InputPort-0]): ' \
+               '\'cannot perform reduce with flexible type.\'"' in str(error_text.value)
 
     def test_recurrent_mech_var_list_of_strings(self):
         with pytest.raises(ParameterError) as error_text:

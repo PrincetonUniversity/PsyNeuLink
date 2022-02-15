@@ -9,6 +9,7 @@ from psyneulink.core.components.component import ComponentError
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical, NormalDist
 from psyneulink.core.components.functions.function import FunctionError
 from psyneulink.core.components.functions.stateful.integratorfunctions import DriftDiffusionIntegrator
+from psyneulink.core.components.mechanisms.mechanism import MechanismError
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.compositions.composition import Composition
 from psyneulink.core.scheduling.condition import Never, WhenFinished
@@ -231,12 +232,15 @@ class TestOutputPorts:
             output_ports=[SELECTED_INPUT_ARRAY],
             name='DDM'
         )
-        action_selection.execute([1.0])
+        with pytest.raises(MechanismError) as error:
+            action_selection.execute([1.0])
+        assert 'Length (1) of input ([1.]) does not match required length (2) ' \
+               'for input to InputPort \'ARRAY\' of DDM.' in str(error.value)
+        action_selection.execute([1.0, 0.0])
 
 # ------------------------------------------------------------------------------------------------
 # TEST 2
 # function = Bogacz
-
 
 @pytest.mark.ddm_mechanism
 @pytest.mark.mechanism
@@ -391,12 +395,11 @@ def test_DDM_input_list_len_2():
 
 
 def test_DDM_input_fn():
-    with pytest.raises(TypeError) as error_text:
+    with pytest.raises(MechanismError) as error_text:
         stim = NormalDist()
         T = DDM(
             name='DDM',
             function=DriftDiffusionIntegrator(
-
                 noise=0.0,
                 rate=1.0,
                 time_step_size=1.0
@@ -404,8 +407,9 @@ def test_DDM_input_fn():
             execute_until_finished=False,
         )
         float(T.execute(stim))
-    assert "not supported for the input types" in str(error_text.value)
-
+    assert '"Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
+    assert 'is incompatible with its corresponding InputPort (DDM[InputPort-0]): ' \
+           '\'unsupported operand type(s) for *: \'NormalDist\' and \'float\'.\'"' in str(error_text.value)
 
 # ======================================= RATE TESTS ============================================
 

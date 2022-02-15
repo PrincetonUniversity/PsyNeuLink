@@ -730,7 +730,7 @@ class DDM(ProcessingMechanism):
         input_format = Parameter(SCALAR, stateful=False, loggable=False)
         initializer = np.array([[0]])
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         output_ports = Parameter(
             [DECISION_VARIABLE, RESPONSE_TIME],
@@ -814,9 +814,7 @@ class DDM(ProcessingMechanism):
                  FUNCTION: lambda v: [float(v[2][0][0]), 0] \
                                       if (v[1] - v[0]) < (v[1] + v[0]) \
                                       else [0, float(v[2][0][1])]
-
                  }
-
             ])
 
         # Add StandardOutputPorts for Mechanism (after ones for DDM, so that their indices are not messed up)
@@ -1049,7 +1047,7 @@ class DDM(ProcessingMechanism):
         :rtype self.outputPort.value: (number)
         """
 
-        if variable is None or np.isnan(variable):
+        if variable is None or any(np.isnan(i) for i in variable):
             # IMPLEMENT: MULTIPROCESS DDM:  ??NEED TO DEAL WITH PARTIAL NANS
             variable = self.defaults.variable
 
@@ -1106,7 +1104,7 @@ class DDM(ProcessingMechanism):
         mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)
-        mech_out = builder.alloca(mech_out_ty)
+        mech_out = builder.alloca(mech_out_ty, name="mech_out")
 
         if isinstance(self.function, IntegratorFunction):
             # Integrator version of the DDM mechanism converts the
@@ -1153,7 +1151,7 @@ class DDM(ProcessingMechanism):
             mech_state = builder.function.args[1]
             random_state = ctx.get_random_state_ptr(builder, self, mech_state, mech_params)
             random_f = ctx.get_uniform_dist_function_by_state(random_state)
-            random_val_ptr = builder.alloca(random_f.args[1].type.pointee)
+            random_val_ptr = builder.alloca(random_f.args[1].type.pointee, name="random_out")
             builder.call(random_f, [random_state, random_val_ptr])
             random_val = builder.load(random_val_ptr)
 

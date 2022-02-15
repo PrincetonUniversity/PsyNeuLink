@@ -13,6 +13,7 @@ import enum
 import functools
 import numpy as np
 import time
+from math import ceil, log2
 from typing import Set
 
 from llvmlite import ir
@@ -129,12 +130,38 @@ class LLVMBinaryFunction:
             self.__cuda_kernel = _ptx_engine.get_kernel(self.name)
         return self.__cuda_kernel
 
-    def cuda_call(self, *args, threads=1, block_size=128):
+    def cuda_max_block_size(self, override):
+        if override is not None:
+            return override
+
+        kernel = self._cuda_kernel
+        device = jit_engine.pycuda.autoinit.device
+
+        if kernel.shared_size_bytes > 0:
+            # we use shared memory, prefer big blocks.
+            # Limited by reg usage
+            rounded_regs = 2 ** ceil(log2(kernel.num_regs))
+            block_size = device.get_attribute(jit_engine.pycuda.driver.device_attribute.MAX_REGISTERS_PER_BLOCK) // rounded_regs
+        else:
+            # Use smallest possible blocks
+            block_size = device.get_attribute(jit_engine.pycuda.driver.device_attribute.WARP_SIZE)
+
+        block_size = min(device.get_attribute(jit_engine.pycuda.driver.device_attribute.MAX_THREADS_PER_BLOCK), block_size)
+        if "stat" in debug_env:
+            print("kernel '", self.name, "' registers:", kernel.num_regs)
+            print("kernel '", self.name, "' local memory size:", kernel.local_size_bytes)
+            print("kernel '", self.name, "' shared memory size:", kernel.shared_size_bytes)
+            print("kernel '", self.name, "' selected block size:", block_size)
+
+        return block_size
+
+    def cuda_call(self, *args, threads=1, block_size=None):
+        block_size = self.cuda_max_block_size(block_size)
         grid = ((threads + block_size - 1) // block_size, 1)
         self._cuda_kernel(*args, np.int32(threads),
                           block=(block_size, 1, 1), grid=grid)
 
-    def cuda_wrap_call(self, *args, threads=1, block_size=128):
+    def cuda_wrap_call(self, *args, threads=1, block_size=None):
         wrap_args = (jit_engine.pycuda.driver.InOut(a) if isinstance(a, np.ndarray) else a for a in args)
         self.cuda_call(*wrap_args, threads=threads, block_size=block_size)
 

@@ -1292,8 +1292,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
-        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 
@@ -1301,8 +1301,8 @@ class RecurrentTransferMechanism(TransferMechanism):
         if self.integrator_mode:
             reinit_f = ctx.import_llvm_function(self.integrator_function,
                                                 tags=tags)
-            reinit_in = builder.alloca(reinit_f.args[2].type.pointee)
-            reinit_out = builder.alloca(reinit_f.args[3].type.pointee)
+            reinit_in = builder.alloca(reinit_f.args[2].type.pointee, name="integ_reinit_in")
+            reinit_out = builder.alloca(reinit_f.args[3].type.pointee, name="integ_reinit_out")
             reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "integrator_function")
             reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "integrator_function")
             builder.call(reinit_f, [reinit_params, reinit_state, reinit_in,

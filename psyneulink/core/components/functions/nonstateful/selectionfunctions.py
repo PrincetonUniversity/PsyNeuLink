@@ -188,7 +188,7 @@ class OneHot(SelectionFunction):
         """
         mode = Parameter(MAX_VAL, stateful=False)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         def _validate_mode(self, mode):
             options = {MAX_VAL, MAX_ABS_VAL, MAX_INDICATOR, MAX_ABS_INDICATOR,
@@ -288,7 +288,7 @@ class OneHot(SelectionFunction):
                 cmp_op = ">="
                 cmp_prev = b1.call(fabs, [prev])
                 cmp_curr = b1.call(fabs, [current])
-                val = current
+                val = b1.call(fabs, [current])
             elif self.mode == MAX_INDICATOR:
                 cmp_op = ">="
                 cmp_prev = prev

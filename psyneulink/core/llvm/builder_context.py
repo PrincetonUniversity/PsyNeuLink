@@ -179,15 +179,20 @@ class LLVMBuilderContext:
     def get_uniform_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_double")
-        if len(state.type.pointee) == 7:
+        elif len(state.type.pointee) == 7:
+            # we have different versions based on selected FP precision
             return self.import_llvm_function("__pnl_builtin_philox_rand_{}".format(str(self.float_ty)))
+        else:
+            assert False, "Unknown PRNG type!"
 
     def get_normal_dist_function_by_state(self, state):
         if len(state.type.pointee) == 5:
             return self.import_llvm_function("__pnl_builtin_mt_rand_normal")
-        if len(state.type.pointee) == 7:
+        elif len(state.type.pointee) == 7:
             # Normal exists only for self.float_ty
             return self.import_llvm_function("__pnl_builtin_philox_rand_normal")
+        else:
+            assert False, "Unknown PRNG type!"
 
     def get_builtin(self, name: str, args=[], function_type=None):
         if name in _builtin_intrinsics:
@@ -272,6 +277,8 @@ class LLVMBuilderContext:
                 reseed_f = self.get_builtin("mt_rand_init")
             elif seed_idx == 6:
                 reseed_f = self.get_builtin("philox_rand_init")
+            else:
+                assert False, "Unknown PRNG type!"
 
             builder.call(reseed_f, [random_state_ptr, new_seed])
 
@@ -340,6 +347,7 @@ class LLVMBuilderContext:
 
     @_comp_cached
     def get_param_struct_type(self, component):
+        from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import NUM_ESTIMATES
         self._stats["param_structs_generated"] += 1
         if hasattr(component, '_get_param_struct_type'):
             return component._get_param_struct_type(self)
@@ -353,8 +361,6 @@ class LLVMBuilderContext:
                 return ir.LiteralStructType(self.get_param_struct_type(x) for x in val)
             elif p.name == 'matrix':   # Flatten matrix
                 val = np.asfarray(val).flatten()
-            elif p.name == 'num_estimates':  # Should always be int
-                val = np.int32(0) if val is None else np.int32(val)
             elif p.name == 'num_trials_per_estimate':  # Should always be int
                 val = np.int32(0) if val is None else np.int32(val)
             elif np.ndim(val) == 0 and component._is_param_modulated(p):
@@ -477,17 +483,70 @@ def _gen_cuda_kernel_wrapper_module(function):
     tid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.tid.x")
     ntid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ntid.x")
     ctaid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ctaid.x")
-    global_id = builder.mul(builder.call(ctaid_x_f, []), builder.call(ntid_x_f, []))
-    global_id = builder.add(global_id, builder.call(tid_x_f, []))
+    ntid = builder.call(ntid_x_f, [])
+    tid = builder.call(tid_x_f, [])
+    global_id = builder.mul(builder.call(ctaid_x_f, []), ntid)
+    global_id = builder.add(global_id, tid)
+
+    # Index all pointer arguments. Ignore the thread count argument
+    args = list(kernel_func.args)[:-1]
+    indexed_args = []
+
+    # pointer args do not alias
+    for a in args:
+        if isinstance(a.type, ir.PointerType):
+            a.attributes.add('noalias')
+
+    def _upload_to_shared(b, ptr, name):
+        shared = ir.GlobalVariable(module, ptr.type.pointee,
+                                   name=function.name + "_shared_" + name,
+                                   addrspace=3)
+        shared.alignment = 128
+        shared.linkage = "internal"
+        shared_ptr = b.addrspacecast(shared, shared.type.pointee.as_pointer())
+
+        char_ptr_ty = ir.IntType(8).as_pointer()
+        bool_ty = ir.IntType(1)
+
+        ptr_src = b.bitcast(ptr, char_ptr_ty)
+        ptr_dst = b.bitcast(shared_ptr, char_ptr_ty)
+
+        obj_size_ty = ir.FunctionType(ir.IntType(32), [char_ptr_ty, bool_ty, bool_ty, bool_ty])
+        obj_size_f = module.declare_intrinsic("llvm.objectsize.i32", [], obj_size_ty)
+        # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
+        obj_size = b.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
+
+        if "unaligned_copy" not in debug_env:
+            int_ty = ir.IntType(32)
+            int_ptr_ty = int_ty.as_pointer()
+            obj_size = builder.add(obj_size, obj_size.type((int_ty.width // 8) - 1))
+            obj_size = builder.udiv(obj_size, obj_size.type(int_ty.width // 8))
+            ptr_src = builder.bitcast(ptr, int_ptr_ty)
+            ptr_dst = builder.bitcast(shared_ptr, int_ptr_ty)
+
+
+        # copy data using as many threads as available in thread group
+        with helpers.for_loop(b, tid, obj_size, ntid, id="copy_" + name) as (b1, i):
+            src = b1.gep(ptr_src, [i])
+            dst = b1.gep(ptr_dst, [i])
+            b1.store(b1.load(src), dst)
+
+        sync_threads_ty = ir.FunctionType(ir.VoidType(), [])
+        sync_threads = module.declare_intrinsic("llvm.nvvm.barrier0", [], sync_threads_ty)
+        builder.call(sync_threads, [])
+
+        return b, shared_ptr
+
+    if is_grid_ranged and "cuda_no_shared" not in debug_env:
+        builder, args[0] = _upload_to_shared(builder, args[0], "params")
+        builder, args[1] = _upload_to_shared(builder, args[1], "state")
+        builder, args[3] = _upload_to_shared(builder, args[3], "inputs")
+        builder, args[4] = _upload_to_shared(builder, args[4], "data")
 
     # Check global id and exit if we're over
     should_quit = builder.icmp_unsigned(">=", global_id, kernel_func.args[-1])
     with builder.if_then(should_quit):
         builder.ret_void()
-
-    # Index all pointer arguments. Ignore the thread count argument
-    args = list(kernel_func.args)[:-1]
-    indexed_args = []
 
     # If we're calling ranged search there are no offsets
     if is_grid_ranged:
@@ -496,11 +555,6 @@ def _gen_cuda_kernel_wrapper_module(function):
         builder.call(decl_f, call_args)
         builder.ret_void()
         return module
-
-
-    # There are 6 arguments to evaluate:
-    # comp_param, comp_state, allocations, output, input, comp_data
-    is_grid_evaluate = len(args) == 6
 
     # Runs need special handling. data_in and data_out are one dimensional,
     # but hold entries for all parallel invocations.
@@ -522,14 +576,11 @@ def _gen_cuda_kernel_wrapper_module(function):
                     offset = builder.mul(global_id, runs_count)
                 elif i == 3:  # data_in
                     offset = builder.mul(global_id, input_count)
-            elif is_grid_evaluate:
-                # all but #2 and #3 are shared
-                if i != 2 and i != 3:
-                    offset = ir.IntType(32)(0)
 
             arg = builder.gep(arg, [offset])
 
         indexed_args.append(arg)
+
     builder.call(decl_f, indexed_args)
     builder.ret_void()
 

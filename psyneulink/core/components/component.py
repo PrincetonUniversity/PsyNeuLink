@@ -650,14 +650,16 @@ def make_parameter_property(param):
     def getter(self):
         p = getattr(self.parameters, param.name)
 
-        if p.modulable:
+        if p.port is not None:
+            assert p.modulable
             return getattr(self, _get_parametervalue_attr(p))
         else:
             return p._get(self.most_recent_context)
 
     def setter(self, value):
         p = getattr(self.parameters, param.name)
-        if p.modulable:
+        if p.port is not None:
+            assert p.modulable
             warnings.warn(
                 'Setting parameter values directly using dot notation'
                 ' may be removed in a future release. It is replaced with,'
@@ -1157,6 +1159,14 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             self.defaults.variable = copy.deepcopy(default_variable)
             self.parameters.variable._user_specified = True
 
+        self.parameters.variable._set(
+            copy_parameter_value(default_variable),
+            context=context,
+            skip_log=True,
+            skip_history=True,
+            override=True
+        )
+
         # ASSIGN PREFS
         _assign_prefs(self, prefs, BasePreferenceSet)
 
@@ -1310,6 +1320,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Only mechanisms use "value" state
         if not hasattr(self, 'ports'):
             blacklist.add("value")
+
+        # Only mechanisms and compositions need 'num_executions'
+        if not hasattr(self, 'ports') and not hasattr(self, 'nodes'):
+            blacklist.add("num_executions")
+
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1372,7 +1387,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "auto", "hetero", "cost", "costs", "combined_costs",
                      "control_signal",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer"}
+                     "pytorch_representation", "optimizer",
+                     # duplicate
+                     "allocation_samples", "control_allocation_search_space"}
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
@@ -2050,7 +2067,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             p.spec = copy_parameter_value(p.spec)
 
             # set default to None context to ensure it exists
-            if p.getter is None and p._get(context) is None:
+            if (
+                p._get(context) is None and p.getter is None
+                or context.execution_id not in p.values
+            ):
                 if p._user_specified:
                     val = param_defaults[p.name]
 
@@ -3123,7 +3143,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     self.parameter_ports.parameter_mapping[param_port.source] = param_port
                 except TypeError:
                     pass
-                param_port.source._port = param_port
+                param_port.source.port = param_port
 
     def _get_current_parameter_value(self, parameter, context=None):
         from psyneulink.core.components.ports.parameterport import ParameterPortError
@@ -3936,23 +3956,20 @@ class ParameterValue:
 
     @property
     def modulated(self):
-        try:
-            is_modulated = (self._parameter in self._owner.parameter_ports)
-        except AttributeError:
-            is_modulated = False
-
-        try:
-            is_modulated = is_modulated or (self._parameter in self._owner.owner.parameter_ports)
-        except AttributeError:
-            pass
-
-        if is_modulated:
-            return self._owner._get_current_parameter_value(
+        # TODO: consider making this
+        # self._parameter.port.is_modulated(self._owner.most_recent_context)
+        # because the port existing doesn't necessarily mean modulation
+        # is actually happening
+        if self._parameter.port is not None:
+            return self._parameter.port.owner._get_current_parameter_value(
                 self._parameter,
                 self._owner.most_recent_context
             )
         else:
-            warnings.warn(f'{self._parameter.name} is not currently modulated.')
+            warnings.warn(
+                f'{self._parameter.name} is not currently modulated in most'
+                f' recent context {self._owner.most_recent_context}'
+            )
             return None
 
     @modulated.setter

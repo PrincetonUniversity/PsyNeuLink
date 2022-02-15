@@ -101,14 +101,16 @@ class TestTransferMechanismInputs:
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
     def test_transfer_mech_inputs_list_of_strings(self):
-        with pytest.raises(FunctionError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             T = TransferMechanism(
                 name='T',
                 default_variable=[0, 0, 0, 0],
                 integrator_mode=True
             )
             T.execute(["one", "two", "three", "four"])
-        assert "Unrecognized type" in str(error_text.value)
+        assert '"Input to \'T\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible ' \
+               'with its corresponding InputPort (T[InputPort-0]): ' \
+               '\'cannot perform reduce with flexible type.\'"' in str(error_text.value)
 
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
@@ -321,7 +323,7 @@ class TestDistributionFunctions:
             )
             # This is equivalent to
             # T.noise.base.parameters.random_state.get(None).seed([22])
-            T.noise.base.parameters.seed.set(22, None)
+            T.noise.parameters.seed.set(22, None)
             val = T.execute([0, 0, 0, 0])
             assert np.allclose(val, [[1.73027452, -1.07866481, -1.98421126,  2.99564032]])
 
@@ -965,12 +967,7 @@ class TestTransferMechanismTimeConstant:
 
         T.noise.base = 10
 
-        if mech_mode == 'Python':
-            val = T.execute([1, 2, -3, 0])
-        elif mech_mode == 'LLVM':
-            val = e.execute([1, 2, -3, 0])
-        elif mech_mode == 'PTX':
-            val = e.cuda_execute([1, 2, -3, 0])
+        val = EX([1, 2, -3, 0])
         assert np.allclose(val, [[10.98, 11.78, 7.779999999999999, 10.18]]) # testing noise changes to an integrator
 
     # @pytest.mark.mechanism
@@ -991,17 +988,19 @@ class TestTransferMechanismTimeConstant:
     #     )
     @pytest.mark.mechanism
     @pytest.mark.transfer_mechanism
-    def test_transfer_mech_integration_rate_0_8_list(self):
+    def test_transfer_mech_integration_rate_0_8_list(self, mech_mode):
         T = TransferMechanism(
             name='T',
             default_variable=[0, 0, 0, 0],
             function=Linear(),
-            integration_rate=[0.8, 0.8, 0.8, 0.8],
+            integration_rate=[0.8, 0.7, 0.6, 0.5],
             integrator_mode=True
         )
-        T.execute([1, 1, 1, 1])
-        val = T.execute([1, 1, 1, 1])
-        assert np.allclose(val, [[ 0.96,  0.96,  0.96,  0.96]])
+        EX = pytest.helpers.get_mech_execution(T, mech_mode)
+
+        EX([1, 1, 1, 1])
+        val = EX([1, 1, 1, 1])
+        assert np.allclose(val, [[ 0.96,  0.91,  0.84,  0.75]])
 
 
     @pytest.mark.mechanism

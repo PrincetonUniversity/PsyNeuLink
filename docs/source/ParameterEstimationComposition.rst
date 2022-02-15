@@ -1,6 +1,15 @@
 ParameterEstimationComposition
 ==============================
 
+.. container:: related
+
+    *Related*
+
+    .. toctree::
+       :maxdepth: 1
+
+       OptimizationControlMechanism
+
 .. toctree::
    :maxdepth: 2
 

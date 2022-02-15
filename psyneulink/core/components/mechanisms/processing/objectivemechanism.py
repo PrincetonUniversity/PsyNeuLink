@@ -364,15 +364,15 @@ Class Reference
 """
 
 import warnings
-import typecheck as tc
-
-from collections.abc import Iterable
 from collections import namedtuple
+from collections.abc import Iterable
+
+import typecheck as tc
 
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism_Base
-from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.inputport import InputPort, INPUT_PORT
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.port import _parse_port_spec
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
@@ -433,8 +433,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
     output_ports :  list[OutputPort, value, str or dict] or dict[] : default [OUTCOME]
         specifies the OutputPorts for the Mechanism;
 
+    COMMENT:
     role: LEARNING or CONTROL : default None
         specifies if the ObjectiveMechanism is being used for learning or control (see `role` for details).
+    COMMENT
 
     Attributes
     ----------
@@ -467,11 +469,6 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e., its number of
         input_ports) and returns a 1d array.
 
-    role : None, LEARNING or CONTROL
-        specifies whether the ObjectiveMechanism is used for learning in a `Composition` (in conjunction with a
-        `LearningMechanism`), or for control in a Composition (in conjunction with a `ControlMechanism
-        <ControlMechanism>`).
-
     output_port : OutputPort
         contains the `primary OutputPort <OutputPort_Primary>` of the ObjectiveMechanism; the default is
         its *OUTCOME* `OutputPort <ObjectiveMechanism_Output>`, the value of which is equal to the
@@ -493,9 +490,15 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
             the value of the objective or "loss" function computed by the
             ObjectiveMechanism's `function <ObjectiveMechanism.function>`
 
+    modulatory_mechanism : None or ModulatoryMechanism
+        `ModulatoryMechanism` to which ObjectiveMechanism has been assigned, and to which one or more of its
+        `output_ports <ObjectiveMechanism.output_ports>` project. If that is a `ControlMechanism`, then
+        the ObjectiveMechanism is assigned as its `objective_mechanism <ControlMechanism.objective_mechanism>`;
+        if it is a `LearningMechanism`, it is in its `error_sources <LearningMechanism.error_sources>` attribute.
+
     """
 
-    componentType = OBJECTIVE_MECHANISM
+    componentType = 'ObjectiveMechanism'
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TYPE_DEFAULT_PREFERENCES
@@ -599,6 +602,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         # This is used to specify whether the ObjectiveMechanism is associated with a ControlMechanism that is
         #    the controller for a Composition;  it is set by the ControlMechanism when it creates the ObjectiveMechanism
         self.for_controller = False
+        self.modulatory_mechanism = None
 
     def _validate_params(self, request_set, target_set=None, context=None):
         """Validate **role**, **monitor**, amd **input_ports** arguments

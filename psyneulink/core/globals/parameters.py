@@ -30,6 +30,10 @@ class, and are used to validate compatibility between this instance and other Ps
     ``t.defaults.noise`` is shorthand for ``t.parameters.noise.default_value``, and they both refer to the default
     ``noise`` value for *t*
 
+Default values are sometimes also used when the parameters value has not been specified; for example, a Component's
+``defaults.variable`` is used as the input to a `Mechanism` if its `execute <Mechanism_Base.execute>` method is called
+without any input specified, and similarly it is used for the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of
+a `Composition` which are not specified in the **inputs** argument of its `run <Composition.run>` method.
 
 .. _Parameter_Statefulness:
 
@@ -102,8 +106,10 @@ To create new Parameters, reference this example of a new class *B*
 - an instance of *B*.Parameters will be assigned to the parameters attribute of the class *B* and all instances of *B*
 - each attribute on *B*.Parameters becomes a parameter (instance of the Parameter class)
     - as with *p*, specifying only a value uses default values for the attributes of the Parameter
-    - as with *q*, specifying an explicit instance of the Parameter class allows you to modify the `Parameter attributes <Parameter_Attributes_Table>`
-- if you want assignments to parameter *p* to be validated, add a method _validate_p(value), that returns None if value is a valid assignment, or an error string if value is not a valid assignment
+    - as with *q*, specifying an explicit instance of the Parameter class allows you to modify the
+      `Parameter attributes <Parameter_Attributes_Table>`
+- if you want assignments to parameter *p* to be validated, add a method _validate_p(value),
+  that returns None if value is a valid assignment, or an error string if value is not a valid assignment
 - if you want all values set to *p* to be parsed beforehand, add a method _parse_p(value) that returns the parsed value
     - for example, convert to a numpy array or float
 
@@ -291,17 +297,18 @@ import collections
 import copy
 import itertools
 import logging
-import toposort
 import types
 import typing
 import weakref
 
+import toposort
 
-from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 from psyneulink.core.globals.context import Context, ContextError, ContextFlags, _get_time, handle_external_context
 from psyneulink.core.globals.context import time as time_object
 from psyneulink.core.globals.log import LogCondition, LogEntry, LogError
-from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy, create_union_set
+from psyneulink.core.globals.utilities import call_with_pruned_args, copy_iterable_with_shared, \
+    get_alias_property_getter, get_alias_property_setter, get_deepcopy_with_shared, unproxy_weakproxy, create_union_set
+from psyneulink.core.rpc.graph_pb2 import Entry, ndArray
 
 __all__ = [
     'Defaults', 'get_validator_by_function', 'Parameter', 'ParameterAlias', 'ParameterError',
@@ -783,6 +790,12 @@ class Parameter(ParameterBase):
 
             :default: None
 
+        port
+            stores a reference to the ParameterPort that modulates this
+            Parameter, if applicable
+
+            :default: None
+
     """
     # The values of these attributes will never be inherited from parent Parameters
     # KDM 7/12/18: consider inheriting ONLY default_value?
@@ -846,6 +859,7 @@ class Parameter(ParameterBase):
         reference=False,
         dependencies=None,
         initializer=None,
+        port=None,
         _owner=None,
         _inherited=False,
         # this stores a reference to the Parameter object that is the
@@ -854,7 +868,6 @@ class Parameter(ParameterBase):
         _inherited_source=None,
         _user_specified=False,
         # if modulated, set to the ParameterPort
-        _port=None,
         **kwargs
     ):
         if isinstance(aliases, str):
@@ -909,10 +922,10 @@ class Parameter(ParameterBase):
             reference=reference,
             dependencies=dependencies,
             initializer=initializer,
+            port=port,
             _inherited=_inherited,
             _inherited_source=_inherited_source,
             _user_specified=_user_specified,
-            _port=_port,
             **kwargs
         )
 
@@ -1041,10 +1054,7 @@ class Parameter(ParameterBase):
             self._is_invalid_source = value
 
             if value:
-                for attr in self._param_attrs:
-                    if attr not in self._uninherited_attrs:
-                        self._inherited_attrs_cache[attr] = getattr(self, attr)
-                        delattr(self, attr)
+                self._cache_inherited_attrs()
             else:
                 # This is a rare operation, so we can just immediately
                 # trickle down sources without performance issues.
@@ -1065,22 +1075,32 @@ class Parameter(ParameterBase):
                             next_child._inherit_from(self)
                             children.extend(next_child._owner._children)
 
-                for attr in self._param_attrs:
-                    if (
-                        attr not in self._uninherited_attrs
-                        and getattr(self, attr) is getattr(self._parent, attr)
-                    ):
-                        setattr(self, attr, self._inherited_attrs_cache[attr])
+                self._restore_inherited_attrs()
 
             self.__inherited = value
 
     def _inherit_from(self, parent):
         self._inherited_source = weakref.ref(parent)
 
-    def _cache_inherited_attrs(self):
+    def _cache_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
         for attr in self._param_attrs:
-            if attr not in self._uninherited_attrs:
+            if attr not in exclusions:
                 self._inherited_attrs_cache[attr] = getattr(self, attr)
+                delattr(self, attr)
+
+    def _restore_inherited_attrs(self, exclusions=None):
+        if exclusions is None:
+            exclusions = self._uninherited_attrs
+
+        for attr in self._param_attrs:
+            if (
+                attr not in exclusions
+                and getattr(self, attr) is getattr(self._parent, attr)
+            ):
+                setattr(self, attr, self._inherited_attrs_cache[attr])
 
     @property
     def _parent(self):
@@ -1757,6 +1777,22 @@ class SharedParameter(Parameter):
         except AttributeError:
             return super().__getattr__(attr)
 
+    def __setattr__(self, attr, value):
+        if self._source_exists and attr in self._sourced_attrs:
+            setattr(self.source, attr, value)
+        else:
+            super().__setattr__(attr, value)
+
+    def _cache_inherited_attrs(self):
+        super()._cache_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
+    def _restore_inherited_attrs(self):
+        super()._restore_inherited_attrs(
+            exclusions=self._uninherited_attrs.union(self._sourced_attrs)
+        )
+
     def _set_name(self, name):
         if self.shared_parameter_name is None:
             self.shared_parameter_name = name
@@ -1812,7 +1848,7 @@ class SharedParameter(Parameter):
                             delattr(self, p)
                         except AttributeError:
                             pass
-            self._source_exists = True
+                self._source_exists = True
             return obj
         except AttributeError:
             return None
@@ -1824,6 +1860,10 @@ class SharedParameter(Parameter):
             base_param = base_param.source
 
         return base_param
+
+    @property
+    def _sourced_attrs(self):
+        return set([a for a in self._param_attrs if a not in self._unsourced_attrs])
 
 
 class FunctionParameter(SharedParameter):

@@ -44,7 +44,7 @@ There are two primary types of ModulatoryMechanism:
     that is computed based on the `costs <ControlSignal.costs>` of its ControlSignals. A ControlMechanism can be
     assigned only the `ControlSignal` class of `ModulatorySignal`, but can be also be assigned other generic
     `OutputPorts <OutputPort>` that appear after its ControlSignals in its `output_ports
-    <ControlMechanism.output_ports>` attribute.
+    <Mechanism_Base.output_ports>` attribute.
 
     `GatingMechanism` is a specialized subclass of ControlMechanism,
     that is used to modulate the `value <Port_Base.value>` of an `InputPort` or `OutputPort`, and that uses

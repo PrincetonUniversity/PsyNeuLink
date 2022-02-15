@@ -402,13 +402,6 @@ class KWTAMechanism(RecurrentTransferMechanism):
         )
 
     def _parse_function_variable(self, variable, context=None):
-        if variable.dtype.char == "U":
-            raise KWTAError(
-                "input ({0}) to {1} was a string, which is not supported for {2}".format(
-                    variable, self, self.__class__.__name__
-                )
-            )
-
         return self._kwta_scale(variable, context=context)
 
     # adds indexOfInhibitionInputPort to the attributes of KWTAMechanism

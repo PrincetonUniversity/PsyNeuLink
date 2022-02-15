@@ -1464,7 +1464,7 @@ class GridSearch(OptimizationFunction):
         save_samples = Parameter(True, pnl_internal=True)
         save_values = Parameter(True, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
 
         direction = MAXIMIZE
@@ -2439,7 +2439,7 @@ class ParamEstimationFunction(OptimizationFunction):
         """
         variable = Parameter([[0], [0]], read_only=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         save_samples = True
         save_values = True
 

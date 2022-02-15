@@ -35,7 +35,7 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import (
-    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, is_function_type, EPSILON,
+    DEFAULT_SEED, FunctionError, _random_state_getter, _seed_setter, is_function_type, EPSILON, _noise_setter
 )
 from psyneulink.core.components.functions.nonstateful.objectivefunctions import Distance
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
@@ -44,7 +44,7 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, BUFFER_FUNCTION, MEMORY_FUNCTION, COSINE, \
     ContentAddressableMemory_FUNCTION, DictionaryMemory_FUNCTION, \
-    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM
+    MIN_INDICATOR, MULTIPLICATIVE_PARAM, NEWEST, NOISE, OLDEST, OVERWRITE, RATE, RANDOM, VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import \
@@ -187,6 +187,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
                     :default value: numpy.array([], dtype=float64)
                     :type: ``numpy.ndarray``
 
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
+
+                    :default value: True
+                    :type: bool
+
                 noise
                     see `noise <Buffer.noise>`
 
@@ -201,9 +207,12 @@ class Buffer(MemoryFunction):  # -----------------------------------------------
         """
         variable = Parameter([], pnl_internal=True, constructor_argument='default_variable')
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
-        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        noise = Parameter(
+            0.0, modulable=True, aliases=[ADDITIVE_PARAM], setter=_noise_setter
+        )
         history = None
         initializer = Parameter(np.array([]), pnl_internal=True)
+        changes_shape = Parameter(True, stateful=False, loggable=False, pnl_internal=True)
 
 
     @tc.typecheck
@@ -1091,10 +1100,12 @@ class ContentAddressableMemory(MemoryFunction): # ------------------------------
         duplicate_threshold = Parameter(EPSILON, stateful=False, modulable=True)
         equidistant_entries_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
-        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        noise = Parameter(
+            0.0, modulable=True, aliases=[ADDITIVE_PARAM], setter=_noise_setter
+        )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)
         distance = Parameter(0, stateful=True, read_only=True)
@@ -2151,10 +2162,12 @@ class DictionaryMemory(MemoryFunction):  # -------------------------------------
         duplicate_keys = Parameter(False)
         equidistant_keys_select = Parameter(RANDOM)
         rate = Parameter(1.0, modulable=True)
-        noise = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
+        noise = Parameter(
+            0.0, modulable=True, aliases=[ADDITIVE_PARAM], setter=_noise_setter
+        )
         max_entries = Parameter(1000)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
 
         distance_function = Parameter(Distance(metric=COSINE), stateful=False, loggable=False)
         selection_function = Parameter(OneHot(mode=MIN_INDICATOR), stateful=False, loggable=False)

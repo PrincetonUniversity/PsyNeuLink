@@ -72,7 +72,7 @@ executed, including any other ControlMechanisms that belong to it (see `Composit
 ControlMechanism can be assigned as the `controller <Composition.controller>` for a Composition by specifying it in
 the **controller** argument of the Composition's constructor, or by using the Composition's `add_controller
 <Composition.add_controller>` method.  A Composition's `controller <Composition.controller>` and its associated
-Components can be displayed using the Composition's `show_graph <Composition.show_graph>` method with its
+Components can be displayed using the Composition's `show_graph <ShowGraph.show_graph>` method with its
 **show_control** argument assigned as `True`.
 
 
@@ -92,7 +92,7 @@ modulates must be specified in some other way.
 *Specifying OutputPorts to be monitored*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A ControlMechanism can be configured to monitor the output of other Mechanisms directly (by receiving direct
+A ControlMechanism can be configured to monitor the output of other Mechanisms either directly (by receiving direct
 Projections from their OutputPorts), or by way of an `ObjectiveMechanism` that evaluates those outputs and passes the
 result to the ControlMechanism (see `below <ControlMechanism_ObjectiveMechanism>` for more detailed description).
 The following figures show an example of each:
@@ -188,6 +188,18 @@ specified (also see `ControlMechanism_Examples`):
       ObjectiveMechanism, along with `MappingProjection` to it from the specified OutputPort.    This can be used to
       specify an ObjectiveMechanism with a custom `function <ObjectiveMechanism.function>` and weighting of the
       OutputPorts monitored (see `below <ControlMechanism_ObjectiveMechanism_Function>` for additional details).
+
+  .. _ControlMechanism_Allow_Probes:
+
+  * **allow_probes** -- this argument allows values of Components of a `nested Composition <Composition_Nested>` other
+    than its `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` to be specified in the **monitor_for_control**
+    argument of the ControlMechanism's constructor or, if **objective_mechanism** is specified, in the
+    **monitor** argument of the ObjectiveMechanism's constructor (see above).  If the Composition's `allow_probes
+    <Composition.allow_probes>` attribute is False, it is set to *CONTROL*, and only a ControlMechanism can receive
+    projections from `PROBE <NodeRole.PROBE>` Nodes of a nested Composition (the current one as well as any others in
+    the same Composition);  if the Composition's `allow_probes <Composition.allow_probes>` attribute is True, then it
+    is left that way, and any node within the Comopsition, including the ControlMechanism, can receive projections from
+    `PROBE <NodeRole.PROBE>` Nodes (see `Probes <Composition_Probes>` for additional details).
 
 The OutputPorts monitored by a ControlMechanism or its `objective_mechanism <ControlMechanism.objective_mechanism>`
 are listed in the ControlMechanism's `monitor_for_control <ControlMechanism.monitor_for_control>` attribute
@@ -629,10 +641,12 @@ def _is_control_spec(spec):
     else:
         return False
 
+
 class ControlMechanismError(Exception):
     def __init__(self, error_value, data=None):
         self.error_value = error_value
         self.data = data
+
 
 def validate_monitored_port_spec(owner, spec_list):
     for spec in spec_list:
@@ -679,7 +693,6 @@ def validate_monitored_port_spec(owner, spec_list):
                     f"it must be an {OutputPort.__name__} or a {Mechanism.__name__}."
                 )
 
-
 def _control_mechanism_costs_getter(owning_component=None, context=None):
     # NOTE: In cases where there is a reconfiguration_cost, that cost is not returned by this method
     try:
@@ -699,7 +712,7 @@ def _outcome_getter(owning_component=None, context=None):
     """Return array of values of outcome_input_ports"""
     try:
         return np.array([port.parameters.value._get(context) for port in owning_component.outcome_input_ports])
-    except TypeError:
+    except (AttributeError, TypeError):
         return None
 
 def _net_outcome_getter(owning_component=None, context=None):
@@ -712,6 +725,7 @@ def _net_outcome_getter(owning_component=None, context=None):
         )
     except TypeError:
         return [0]
+
 
 class DefaultAllocationFunction(Function_Base):
     """Take a single 1d item and return a 2d array with n identical items
@@ -770,6 +784,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     ControlMechanism(                        \
         monitor_for_control=None,            \
         objective_mechanism=None,            \
+        allow_probes=False,                  \
         outcome_input_ports_option=SEPARATE  \
         function=Linear,                     \
         default_allocation=None,             \
@@ -827,6 +842,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
         OutputPorts specified in the ControlMechanism's **monitor_for_control** `argument
         <ControlMechanism_Monitor_for_Control_Argument>`.
 
+    allow_probes : bool : default False
+        specifies whether Components of a `nested Composition <Composition_Nested>` that are not OUTPUT
+        <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>` of that Composition can be specified as items in the
+        ControlMechanism's  **monitor_for_control** argument or, if **objective_mechanism**
+        is specified, in the ObjectiveMechanism's **monitor** argument (see `allow_probes
+        <ControlMechanism_Allow_Probes>` for additional information).
+
     outcome_input_ports_option : COMBINE, CONCATENATE, SEPARATE : default SEPARATE
         if **objective_mechanism** is not specified, this specifies whether `MappingProjections <MappingProjection>`
         from items specified in **monitor_for_control** are each assigned their own `InputPort` (*SEPARATE*)
@@ -876,6 +898,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
         `ObjectiveMechanism` that monitors and evaluates the values specified in the ControlMechanism's
         **objective_mechanism** argument, and transmits the result to the ControlMechanism's *OUTCOME*
         `input_port <Mechanism_Base.input_port>`.
+
+    allow_probes : bool
+        indicates status of the `allow_probes <Composition.allow_probes>` attribute of the Composition
+        to which the ControlMechanism belongs.  If False, items specified in the `monitor_for_control
+        <ControlMechanism.monitor_for_control>` are all `OUTPUT <NodeRole.OUTPUT>` `Nodes <Composition_Nodes>`
+        of that Composition.  If True, they may be `INPUT <NodeRole.INPUT>` or `INTERNAL <NodeRole.INTERNAL>`
+        `Nodes <Composition_Nodes>` of `nested Composition <Composition_Nested>` (see `allow probes
+        <ControlMechanism_Allow_Probes>` and `Composition_Probes` for additional information).
 
     outcome_input_ports_option : , SEPARATE, COMBINE, or CONCATENATE
         determines how items specified in `monitor_for_control <ControlMechanism.monitor_for_control>` project to
@@ -999,6 +1029,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     """
 
     componentType = "ControlMechanism"
+    controlType = CONTROL # Used as key in specification dictionaries;  can be overridden by subclasses
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -1115,8 +1146,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
+                outcome_input_ports
+                    see `outcome_input_ports <ControlMechanism.outcome_input_ports>`
+
+                    :default value: None
+                    :type:  ``list``
+
                 output_ports
-                    see `output_ports <ControlMechanism.output_ports>`
+                    see `output_ports <Mechanism_Base.output_ports>`
 
                     :default value: None
                     :type:
@@ -1152,6 +1189,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
         outcome_input_ports_option = Parameter(SEPARATE, stateful=False, loggable=False, structural=True)
+        outcome_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
 
         input_ports = Parameter(
             [OUTCOME],
@@ -1176,8 +1214,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             read_only=True,
             structural=True,
             parse_spec=True,
-            aliases=['control', 'control_signals'],
-            constructor_argument='control'
+            aliases=[CONTROL, CONTROL_SIGNALS],
+            constructor_argument=CONTROL
         )
 
         def _parse_output_ports(self, output_ports):
@@ -1201,17 +1239,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
                         MECHANISM: output_ports[i][1]
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
-                elif (
-                    isinstance(output_ports[i], dict)
-                    and PROJECTIONS in output_ports[i]
-                    and is_2tuple(output_ports[i][PROJECTIONS])
-                ):
-                    full_spec_dict = {
-                        NAME: output_ports[i][PROJECTIONS][0],
-                        MECHANISM: output_ports[i][PROJECTIONS][1],
-                        **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                    }
-                    output_ports[i] = full_spec_dict
+                elif isinstance(output_ports[i], dict):
+                    for PROJ_SPEC_KEYWORD in {PROJECTIONS, self._owner.controlType}:
+                        if (PROJ_SPEC_KEYWORD in output_ports[i] and is_2tuple(output_ports[i][PROJ_SPEC_KEYWORD])):
+                            tuple_spec = output_ports[i].pop(PROJ_SPEC_KEYWORD)
+                            output_ports[i].update({
+                                NAME: tuple_spec[0],
+                                MECHANISM: tuple_spec[1]})
+                    assert True
 
             return output_ports
 
@@ -1233,6 +1268,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  size=None,
                  monitor_for_control:tc.optional(tc.any(is_iterable, Mechanism, OutputPort))=None,
                  objective_mechanism=None,
+                 allow_probes:bool = False,
                  outcome_input_ports_option:tc.optional(tc.enum(CONCATENATE, COMBINE, SEPARATE))=None,
                  function=None,
                  default_allocation:tc.optional(tc.any(int, float, list, np.ndarray))=None,
@@ -1251,9 +1287,10 @@ class ControlMechanism(ModulatoryMechanism_Base):
                  **kwargs
                  ):
 
-        monitor_for_control = convert_to_list(monitor_for_control) or []
         control = convert_to_list(control) or []
-
+        monitor_for_control = convert_to_list(monitor_for_control) or []
+        self.allow_probes = allow_probes
+        self._sim_counts = {}
 
         # For backward compatibility:
         if kwargs:
@@ -1265,7 +1302,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
             # These are synonyms, but allowing several to be specified and trying to combine the specifications
             # can cause problems if different forms of specification are used to refer to the same Component(s)
-            control_specified = "'control'" if control else ''
+            control_specified = f"'{CONTROL}'" if control else ''
             modulatory_signals_specified = ''
             if MODULATORY_SIGNALS in kwargs:
                 args = kwargs.pop(MODULATORY_SIGNALS)
@@ -1292,8 +1329,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control = convert_to_list(args)
 
         function = function or DefaultAllocationFunction
-
-        self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
@@ -1325,9 +1360,17 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                        target_set=target_set,
                                                        context=context)
 
-        if OBJECTIVE_MECHANISM in target_set and \
-                target_set[OBJECTIVE_MECHANISM] is not None and\
-                target_set[OBJECTIVE_MECHANISM] is not False:
+        if (MONITOR_FOR_CONTROL in target_set
+                and target_set[MONITOR_FOR_CONTROL] is not None
+                and any(item for item in target_set[MONITOR_FOR_CONTROL]
+                        if (isinstance(item, ObjectiveMechanism) or item is ObjectiveMechanism))):
+            raise ControlMechanismError(f"The '{MONITOR_FOR_CONTROL}' arg of '{self.name}' contains a specification for"
+                                        f" an {ObjectiveMechanism.componentType} ({target_set[MONITOR_FOR_CONTROL]}).  "
+                                        f"This should be specified in its '{OBJECTIVE_MECHANISM}' argument.")
+
+        if (OBJECTIVE_MECHANISM in target_set and
+                target_set[OBJECTIVE_MECHANISM] is not None
+                and target_set[OBJECTIVE_MECHANISM] is not False):
 
             if isinstance(target_set[OBJECTIVE_MECHANISM], list):
 
@@ -1354,22 +1397,25 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     validate_monitored_port_spec(self, obj_mech_spec_list)
 
             if not isinstance(target_set[OBJECTIVE_MECHANISM], (ObjectiveMechanism, list, bool)):
-                raise ControlMechanismError("Specification of {} arg for {} ({}) must be an {}"
-                                            "or a list of Mechanisms and/or OutputPorts to be monitored for control".
-                                            format(OBJECTIVE_MECHANISM,
-                                                   self.name, target_set[OBJECTIVE_MECHANISM],
-                                                   ObjectiveMechanism.componentName))
+                raise ControlMechanismError(f"Specification of {OBJECTIVE_MECHANISM} arg for '{self.name}' "
+                                            f"({target_set[OBJECTIVE_MECHANISM].name}) must be an "
+                                            f"{ObjectiveMechanism.componentType} or a list of Mechanisms and/or "
+                                            f"OutputPorts to be monitored for control.")
 
         if CONTROL in target_set and target_set[CONTROL]:
             control = target_set[CONTROL]
-            assert isinstance(control, list), \
-                f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-            for ctl_spec in control:
-                ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-                if not (isinstance(ctl_spec, ControlSignal)
-                        or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE]==ControlSignal.__name__)):
-                    raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
-                                                f"({ctl_spec})")
+            self._validate_control_arg(control)
+
+    def _validate_control_arg(self, control):
+        """Treat control arg separately so it can be overridden by subclassses (e.g., GatingMechanism)"""
+        assert isinstance(control, list), \
+            f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
+        for ctl_spec in control:
+            ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
+            if not (isinstance(ctl_spec, ControlSignal)
+                    or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == ControlSignal)):
+                raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
+                                            f"({ctl_spec})")
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, input_ports=None, context=None):
@@ -1438,6 +1484,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
                                                                name=self.name + '_ObjectiveMechanism')
             except (ObjectiveMechanismError, FunctionError) as e:
                 raise ObjectiveMechanismError(f"Error creating {OBJECTIVE_MECHANISM} for {self.name}: {e}")
+
+        self.objective_mechanism.control_mechanism = self
 
         # Print monitored_output_ports
         if self.prefs.verbosePref:
@@ -1509,7 +1557,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         other_input_ports = input_ports or []
 
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
-        self.outcome_input_ports = ContentAddressableList(component_type=OutputPort)
+        self.parameters.outcome_input_ports.set(ContentAddressableList(component_type=OutputPort),
+                                                override=True)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:
@@ -1518,6 +1567,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             #       of the objective_mechanism's constructor
             self._instantiate_objective_mechanism(input_ports, context=context)
 
+        # FIX: CONSOLIDATE THIS WITH SIMILAR HANDLING IN _instantiate_objective_mechanism AND ELSE BELOW
         # If no ObjectiveMechanism is specified, but items to monitor are specified,
         #    assign an outcome_input_port for each item specified
         elif self.monitor_for_control:
@@ -1546,7 +1596,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 
-            self.aux_components = []
             for i in range(len(projection_specs)):
                 if option == SEPARATE:
                     # Each outcome_input_port get its own Projection
@@ -1557,10 +1606,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 self.aux_components.append(MappingProjection(sender=projection_specs[i],
                                                              receiver=self.outcome_input_ports[outcome_port_index]))
 
-        # Nothing has been specified, so just instantiate the default OUTCOME InputPort
+        # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
-            super()._instantiate_input_ports(context=context)
+            # # MODIFIED 1/30/21 OLD:
+            # super()._instantiate_input_ports(context=context)
+            # self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            # MODIFIED 1/30/21 NEW:
+            other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
+            # Construct full list of InputPort specifications and sizes
+            input_ports = self.input_ports + other_input_ports
+            input_port_value_sizes = [[0]] + other_input_port_value_sizes
+            super()._instantiate_input_ports(context=context,
+                                             input_ports=input_ports,
+                                             reference_value=input_port_value_sizes)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            # MODIFIED 1/30/21 END
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
@@ -1621,7 +1681,9 @@ class ControlMechanism(ModulatoryMechanism_Base):
         return outcome_input_port_specs, port_value_sizes, monitored_ports
 
     def _validate_monitor_for_control(self, nodes):
-        # Ensure all of the Components being monitored for control are in the Composition being controlled
+        """Ensure all of the Components being monitored for control are in the Composition being controlled
+        If monitor_for_control is specified as an ObjectiveMechanism, warn and move to objective_mecahnism arg
+        """
         from psyneulink.core.components.ports.port import Port
         invalid_outcome_specs = [item for item in self.monitor_for_control
                                  if ((isinstance(item, Mechanism)
@@ -1663,7 +1725,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                           )
 
     def _instantiate_control_signals(self, context):
-        """Subclassess can override for class-specific implementation (see OptimizationControlMechanism for example)"""
+        """Subclasses can override for class-specific implementation (see OptimizationControlMechanism for example)"""
         output_port_specs = list(enumerate(self.output_ports))
 
         for i, control_signal in output_port_specs:
@@ -1756,7 +1818,13 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # tests/composition/test_control.py::TestModelBasedOptimizationControlMechanisms::test_stateful_mechanism_in_simulation
             allocation_parameter_default = np.ones(np.asarray(allocation_parameter_default).shape)
         except (KeyError, IndexError, TypeError):
-            allocation_parameter_default = self.parameters.control_allocation.default_value
+            # if control allocation is a single value specified from
+            # default_variable for example, it should be used here
+            # instead of the "global default" defaultControlAllocation
+            if len(self.defaults.control_allocation) == 1:
+                allocation_parameter_default = copy.deepcopy(self.defaults.control_allocation)
+            else:
+                allocation_parameter_default = copy.deepcopy(defaultControlAllocation)
 
         control_signal = _instantiate_port(port_type=ControlSignal,
                                            owner=self,
@@ -1943,6 +2011,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         for proj in deeply_nested_aux_components.values():
             composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
+
+        # Add any remaining afferent Projections that have been assigned and are from nodes in composition
+        remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)
+        for proj in remaining_projections:
+            # Projection is afferent:
+            if proj in self.afferents:
+                # Confirm sender is in composition
+                port, node, comp = composition._get_source(proj)
+            elif proj in self.efferents:
+                # Confirm receiver is in composition
+                port, node, comp = composition._get_destination(proj)
+            else:
+                assert False, f"PROGRAM ERROR: Attempt to activate Projection ('{proj.name}') in '{composition.name}'" \
+                              f" associated with its controller '{self.name}' that is neither an afferent nor " \
+                              f"efferent of '{self.name}' -- May be as yet unaccounted for condition."
+            if node in composition._get_all_nodes():
+                proj._activate_for_compositions(composition)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`

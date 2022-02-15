@@ -419,7 +419,7 @@ class BayesGLM(LearningFunction):
                     :type: ``int``
         """
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
-        seed = Parameter(DEFAULT_SEED, modulable=True, setter=_seed_setter)
+        seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         variable = Parameter([np.array([0, 0, 0]),
                               np.array([0])],
                              read_only=True,
@@ -1393,15 +1393,24 @@ class ContrastiveHebbian(LearningFunction):  # ---------------------------------
 
 
 def _activation_input_getter(owning_component=None, context=None):
-    return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_INPUT]
+    try:
+        return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_INPUT]
+    except (AttributeError, TypeError):
+        return None
 
 
 def _activation_output_getter(owning_component=None, context=None):
-    return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_OUTPUT]
+    try:
+        return owning_component.parameters.variable._get(context)[LEARNING_ACTIVATION_OUTPUT]
+    except (AttributeError, TypeError):
+        return None
 
 
 def _error_signal_getter(owning_component=None, context=None):
-    return owning_component.parameters.variable._get(context)[LEARNING_ERROR_OUTPUT]
+    try:
+        return owning_component.parameters.variable._get(context)[LEARNING_ERROR_OUTPUT]
+    except (AttributeError, TypeError):
+        return None
 
 
 

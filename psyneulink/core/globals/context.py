@@ -498,7 +498,7 @@ class Context():
         if self.string is None:
             self.string = string
         else:
-            self.string = '{0} {1} {2}'.format(self.string, SEPARATOR_BAR, string)
+            self.string = f'{self.string} {SEPARATOR_BAR} {string}'
 
     def _change_flags(self, *flags, operation=lambda attr, blank_flag, *flags: NotImplemented):
         # split by flag type to avoid extra costly binary operations on enum flags
@@ -573,28 +573,28 @@ def _get_time(component, context):
     """
 
     from psyneulink.core.globals.context import time
-    from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
+    from psyneulink.core.components.shellclasses import Mechanism, Projection, Port, Function
 
     no_time = time(None, None, None, None)
 
     # Get mechanism to which Component being logged belongs
     if isinstance(component, Mechanism):
         ref_mech = component
-    elif isinstance(component, Port):
+    elif isinstance(component, (Port, Function)):
         if isinstance(component.owner, Mechanism):
             ref_mech = component.owner
         elif isinstance(component.owner, Projection):
             ref_mech = component.owner.receiver.owner
         else:
-            raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+            raise ContextError("Logging currently does not support {} (only {}s, {}s, {}s, and {}s).".
                                format(component.__class__.__name__,
-                                      Mechanism.__name__, Port.__name__, Projection.__name__))
+                                      Mechanism.__name__, Port.__name__, Projection.__name__, Function.__name__))
     elif isinstance(component, Projection):
         ref_mech = component.receiver.owner
     else:
-        raise ContextError("Logging currently does not support {} (only {}s, {}s, and {}s).".
+        raise ContextError("Logging currently does not support {} (only {}s, {}s, {}s, and {}s).".
                            format(component.__class__.__name__,
-                                  Mechanism.__name__, Port.__name__, Projection.__name__))
+                                  Mechanism.__name__, Port.__name__, Projection.__name__, Function.__name__))
 
     # Get Composition in which it is being (or was last) executed (if any):
 

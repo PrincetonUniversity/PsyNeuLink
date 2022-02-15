@@ -24,11 +24,12 @@ Composition
        :maxdepth: 1
 
        Pathway
+       CompositionInterfaceMechanism
        Scheduling
        Visualization
        Report
 
 .. automodule:: psyneulink.core.compositions.composition
-   :members: Composition, NodeRole
+   :members: Composition, NodeRole, Graph
    :private-members:
-   :exclude-members: Parameters, show_structure, CompositionError
+   :exclude-members: Parameters, show_structure, CompositionError, get_inputs_format

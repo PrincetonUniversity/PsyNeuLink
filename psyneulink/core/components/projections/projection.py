@@ -133,7 +133,7 @@ Projection in context:
         as its the ControlProjection's `sender <ControlProjection.sender>`.  See `ControlMechanism_ControlSignals` for
         additional details.
 
-      * *GATING_PROJECTION* (or *GATING*) -- this can be used when specifying an `InputPort
+      * *GATING_PROJECTION* (or *GATE*) -- this can be used when specifying an `InputPort
         <InputPort_Projection_Source_Specification>` or an `OutputPort <OutputPort_Projections>`, to create a
         default `GatingProjection` to the `Port <Port>`. If the GatingProjection's `sender <GatingProjection.sender>`
         cannot be inferred from the context in which this specification occurs, then its `initialization is deferred
@@ -156,7 +156,7 @@ Projection in context:
 
   .. _Projection_Specification_Dictionary:
 
-  * **Specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
+  * **Projection specification dictionary** -- can contain an entry specifying the type of Projection, and/or entries
     specifying the value of parameters used to instantiate it. These should take the following form:
 
       * *PROJECTION_TYPE*: *<name of a Projection type>* --
@@ -402,14 +402,14 @@ import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
-from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.functions.function import get_matrix
-from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
+from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
+from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
 from psyneulink.core.globals.keywords import \
-    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATING, GATING_PROJECTION, GATING_SIGNAL, \
+    CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, \
@@ -443,7 +443,7 @@ PROJECTION_SPEC_KEYWORDS = {PATHWAY: MAPPING_PROJECTION,
                             CONTROL: CONTROL_PROJECTION,
                             CONTROL_SIGNAL: CONTROL_PROJECTION,
                             CONTROL_PROJECTION: CONTROL_PROJECTION,
-                            GATING: GATING_PROJECTION,
+                            GATE: GATING_PROJECTION,
                             GATING_SIGNAL: GATING_PROJECTION,
                             GATING_PROJECTION: GATING_PROJECTION
                             }
@@ -1142,7 +1142,6 @@ def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_s
 
     return False
 
-
 def _is_projection_subclass(spec, keyword):
     """Evaluate whether spec is a valid specification of type
 
@@ -1177,7 +1176,6 @@ def _is_projection_subclass(spec, keyword):
         if _is_projection_subclass(spec[keyword], keyword):
             return True
     return False
-
 
 def _parse_projection_spec(projection_spec,
                            owner = None,       # Used only for error message
@@ -1270,7 +1268,6 @@ def _parse_projection_spec(projection_spec,
                                  owner.name,
                                  proj_spec_dict[PROJECTION_TYPE]))
     return proj_spec_dict
-
 
 def _parse_projection_keyword(projection_spec:str):
     """Takes keyword (str) and returns corresponding Projection class
