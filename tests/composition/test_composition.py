@@ -9,10 +9,10 @@ import psyneulink as pnl
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination
 from psyneulink.core.components.functions.nonstateful.learningfunctions import Reinforcement, BackPropagation
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
-from psyneulink.core.components.functions.stateful.integratorfunctions import \
-    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.nonstateful.transferfunctions import \
     Linear, Logistic, INTENSITY_COST_FCT_MULTIPLICATIVE_PARAM
+from psyneulink.core.components.functions.stateful.integratorfunctions import \
+    AdaptiveIntegrator, DriftDiffusionIntegrator, IntegratorFunction, SimpleIntegrator
 from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
@@ -4131,7 +4131,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_function=pnl.Buffer(history=2),
+                # state_feature_functions=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=ocomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
@@ -4151,7 +4151,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_function=pnl.Buffer(history=2),
+                # state_feature_functions=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=icomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
@@ -4653,6 +4653,82 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [4500]
 
+    @pytest.mark.parametrize('nesting', ("unnested", "nested"))
+    def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
+        pnl.clear_registry()
+        samples = np.arange(0.1, 1.01, 0.3)
+        Input = pnl.TransferMechanism(name='Input')
+        reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
+                                       name='reward',
+                                       )
+        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
+                                                                     pnl.ControlProjection(function=pnl.Linear,
+                                                                                       control_signal_params={
+                                                                                           pnl.ALLOCATION_SAMPLES: samples,
+                                                                                       })),
+                                                         threshold=(1.0,
+                                                                    pnl.ControlProjection(function=pnl.Linear,
+                                                                                      control_signal_params={
+                                                                                          pnl.ALLOCATION_SAMPLES: samples,
+                                                                                      })),
+                                                         noise=0.5,
+                                                         starting_value=0,
+                                                         non_decision_time=0.45),
+                       output_ports=[pnl.DECISION_VARIABLE,
+                                     pnl.RESPONSE_TIME,
+                                     pnl.PROBABILITY_UPPER_THRESHOLD],
+                       name='Decision')
+        Response = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=1.0,
+                                                          threshold=1.0,
+                                                          noise=0.5,
+                                                          starting_value=0,
+                                                          non_decision_time=0.45),
+                        output_ports=[pnl.DECISION_VARIABLE,
+                                      pnl.RESPONSE_TIME,
+                                      pnl.PROBABILITY_UPPER_THRESHOLD],
+                        name='Response')
+
+        icomp = pnl.Composition(name="EVC (inner comp)", retain_old_simulation_data=True)
+        icomp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_node(Response, required_roles=[pnl.NodeRole.OUTPUT])
+        icomp.add_linear_processing_pathway([Input, pnl.IDENTITY_MATRIX, Decision, Response])
+        if nesting == 'nested':
+            comp = Composition(nodes=icomp, name="Outer Composition")
+        else:
+            comp = icomp
+        ocm=OptimizationControlMechanism(
+            agent_rep=comp,
+            monitor_for_control=[Decision.output_ports[pnl.DECISION_VARIABLE],
+                                 Decision.output_ports[pnl.RESPONSE_TIME]],
+            num_estimates=1,
+            function=GridSearch,
+            control_signals=[
+                ControlSignal(modulates=('drift_rate',Decision), # OVERLAPS WITH CONTROL SPEC ON Decision
+                              allocation_samples=[1,2]),
+                ControlSignal(modulates=('threshold',Response), # ADDS CONTROL SPEC FOR Response
+                              allocation_samples=[1,2]),
+            ]
+        )
+        comp.add_controller(ocm)
+
+        assert len(comp.controller.input_ports[pnl.OUTCOME].path_afferents) == 2
+        if nesting == 'nested':
+            # All Projections to controller's OUTCOME InputPort should be from input_CIM
+            assert all(isinstance(comp.controller.input_ports[pnl.OUTCOME].path_afferents[i].sender.owner,
+                                  pnl.CompositionInterfaceMechanism) for i in range(2))
+
+        assert len(comp.controller.control_signals) == 4  # Should be 4:  Decision threshold (spec'd locally on mech)
+                                                          #               Decision drift_rate (spec'd on mech and OCM)
+                                                          #               Response threshold (spec'd on OCM)
+                                                          #               RANDOMIZATION
+        ctl_sig_names = ['Decision[drift_rate] ControlSignal', 'Decision[threshold] ControlSignal',
+                         'Response[threshold] ControlSignal', 'RANDOMIZATION_CONTROL_SIGNAL']
+        assert all([name in ctl_sig_names for name in comp.controller.control_signals.names])
+        if nesting == 'nested':
+            # All of the controller's ControlSignals should project to the ParameterCIM for the nested comp
+            assert all(isinstance(comp.controller.control_signals[i].efferents[0].receiver.owner,
+                                  pnl.CompositionInterfaceMechanism) for i in range(4))
 
 class TestOverloadedCompositions:
     def test_mechanism_different_inputs(self):
@@ -5705,7 +5781,11 @@ class TestShadowInputs:
 
         assert A.value == [[1.0]]
         assert B.value == [[1.0]]
-        assert comp.shadows[A] == [B]
+
+        # Since B is both an INPUT Node and also shadows A, it should have two afferent Projections,
+        #   one from it own OutputPort of the Composition's input_CIM, and another from the one for A
+        # assert len(B.path_afferents)==2
+        # assert B.input_port.path_afferents[1].sender is A.input_port.path_afferents[0].sender
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
@@ -5720,7 +5800,7 @@ class TestShadowInputs:
         assert len(B.path_afferents) == 1
         assert B.path_afferents[0].sender.owner == C
 
-    def test_two_origins_two_input_ports(self):
+    def test_shadow_internal_projectionstest_two_origins_two_input_ports(self):
         comp = Composition(name='comp')
         A = ProcessingMechanism(name='A',
                                 function=Linear(slope=2.0))
@@ -5732,15 +5812,20 @@ class TestShadowInputs:
 
         assert A.value == [[2.0]]
         assert np.allclose(B.value, [[1.0], [2.0]])
-        assert comp.shadows[A] == [B]
+
+        assert len(B.input_ports)==2
+        assert len(B.input_ports[0].path_afferents)==1
+        assert len(B.input_ports[1].path_afferents)==1
+        assert B.input_ports[0].path_afferents[0].sender is A.input_ports[0].path_afferents[0].sender
+        assert B.input_ports[1].path_afferents[0].sender is A.output_ports[0]
 
         C = ProcessingMechanism(name='C')
         comp.add_linear_processing_pathway([C, A])
 
         comp.run(inputs={C: 1.5})
         assert A.value == [[3.0]]
-        assert np.allclose(B.value, [[1.5], [3.0]])
         assert C.value == [[1.5]]
+        assert np.allclose(B.value, [[1.5], [3.0]])
 
         # Since B is shadowing A, its old projection from the CIM should be deleted,
         # and a new projection from C should be added
@@ -5773,11 +5858,58 @@ class TestShadowInputs:
         comp.add_linear_processing_pathway([A2, B])
         comp.run(inputs={A: [[1.0]],
                          A2: [[1.0]]})
-
         assert A.value == [[1.0]]
         assert A2.value == [[1.0]]
         assert B.value == [[2.0]]
         assert C.value == [[2.0]]
+
+
+    _test_shadow_nested_nodes_arg =\
+        [
+            ('shadow_nodes_one_and_two_levels_deep', 0),
+            ('shadow_nested_internal_node', 1),
+         ],
+
+    @pytest.mark.parametrize(
+        'condition',
+        ['shadow_nodes_one_and_two_levels_deep',
+         'shadow_nested_internal_node'],
+    )
+    def test_shadow_nested_nodes(self, condition):
+
+        I = ProcessingMechanism(name='I')
+        icomp = Composition(nodes=I, name='INNER COMP')
+
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        mcomp = Composition(pathways=[[A,B,C],icomp], name='MIDDLE COMP')
+
+        if condition == 'shadow_nodes_one_and_two_levels_deep':
+
+            # Confirm that B's shadow of I comes from the same ocomp_input_CIM that serves I
+            O = ProcessingMechanism(name='O',input_ports=[I.input_port, A.input_port])
+            ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+            ocomp._analyze_graph()
+            assert len(O.afferents)==2
+            assert O.input_ports[0].shadow_inputs.owner is I
+            receiver = icomp.input_CIM.port_map[I.input_port][0]
+            receiver = receiver.path_afferents[0].sender.owner.port_map[receiver][0]
+            assert O.input_ports[0].path_afferents[0].sender is \
+                   ocomp.input_CIM.port_map[receiver][1]
+
+            # Confirm that B's shadow of A comes from the same ocomp_input_CIM that serves A
+            assert O.input_ports[1].shadow_inputs.owner is A
+            assert O.input_ports[1].path_afferents[0].sender is \
+                   mcomp.input_CIM.port_map[A.input_port][0].path_afferents[0].sender
+
+        elif condition == 'shadow_nested_internal_node':
+            with pytest.raises(CompositionError) as err:
+                O = ProcessingMechanism(name='O',input_ports=[B.input_port])
+                ocomp = Composition(nodes=[mcomp,O], name='OUTER COMP')
+            assert 'Attempt to shadow the input to a node (B) in a nested Composition of OUTER COMP ' \
+                   'that is not an INPUT Node of that Composition is not currently supported.' \
+                   in err.value.error_value
 
     def test_monitor_input_ports(self):
         comp = Composition(name='comp')

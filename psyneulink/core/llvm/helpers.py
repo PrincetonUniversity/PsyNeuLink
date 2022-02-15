@@ -208,7 +208,7 @@ def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     return builder.load(all_ptr)
 
 
-def create_allocation(builder, allocation, search_space, idx):
+def create_sample(builder, allocation, search_space, idx):
     # Construct allocation corresponding to this index
     for i in reversed(range(len(search_space.type.pointee))):
         slot_ptr = builder.gep(allocation, [idx.type(0), idx.type(i)])

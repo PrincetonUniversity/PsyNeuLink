@@ -188,9 +188,11 @@ class OptimizationFunction(Function_Base):
         <OptimizationFunction_Defaults>`).
 
     aggregation_function : function or method : default None
-        specifies function used to evaluate samples in each iteration of the `optimization process
-        <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply returns
-        the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
+        specifies function used to aggregate the values returned over the `num_estimates
+        <OptimizationFunction.num_estimates>` calls to the `objective_function
+        <OptimizationFunction.objective_function>` for a given sample in each iteration of the `optimization
+        process <OptimizationFunction_Procedure>`; if it is not specified, a default function is used that simply
+        returns the value passed as its `variable <OptimizationFunction.variable>` parameter (see `note
         <OptimizationFunction_Defaults>`).
 
     search_function : function or method : default None
@@ -272,6 +274,11 @@ class OptimizationFunction(Function_Base):
         for a given sample.  This is determined from the `search_space <OptimizationFunction.search_space>` by
         accessing its `randomization_dimension <OptimizationFunction.randomization_dimension>` and determining the
         the length of (i.e., number of elements specified for) that dimension.
+
+    aggregation_function : function or method
+        used to aggregate the values returned over the `num_estimates <OptimizationFunction.num_estimates>` calls to
+        the `objective_function <OptimizationFunction.objective_function>` for a given sample in each iteration of
+        the `optimization process <OptimizationFunction_Procedure>`.
 
     search_termination_function : function or method that returns a boolean value
         used to terminate iterations of the `optimization process <OptimizationFunction_Procedure>`; if it is required
@@ -376,9 +383,9 @@ class OptimizationFunction(Function_Base):
                     :default value: lambda x, y, z: True
                     :type: ``types.FunctionType``
         """
-        variable = Parameter(np.array([0, 0, 0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
+        variable = Parameter(np.array([0.0, 0.0, 0.0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
-        objective_function = Parameter(lambda x: 0, stateful=False, loggable=False)
+        objective_function = Parameter(lambda x: 0.0, stateful=False, loggable=False)
         aggregation_function = Parameter(lambda x: np.mean(x, axis=x.ndim-1), stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
@@ -640,8 +647,10 @@ class OptimizationFunction(Function_Base):
                                                                                          initial_value,
                                                                                          context)
 
-        # If  aggregation_function is specified, use it to aggregate over randomization dimension
-        if self.aggregation_function:
+        # If  aggregation_function is specified and there is a randomization dimension specified
+        # in the control signals; use the aggregation function aggregate over the samples generated
+        # for different randomized values of the control signal
+        if self.aggregation_function and self.parameters.randomization_dimension._get(context):
             aggregated_values = np.atleast_1d(self.aggregation_function(all_values))
             returned_values = aggregated_values
         else:
@@ -649,7 +658,6 @@ class OptimizationFunction(Function_Base):
 
         # Return list of unique samples and aggregated values over them
         return last_sample, last_value, all_samples, returned_values
-
 
     def _sequential_evaluate(self, initial_sample, initial_value, context):
         """Sequentially evaluate every sample in search_space.
@@ -710,7 +718,7 @@ class OptimizationFunction(Function_Base):
                 break
 
             # Change randomization for next sample if specified (relies on randomization being last dimension)
-            if self.owner and self.owner.parameters.same_randomization_for_all_allocations is False:
+            if self.owner and self.owner.parameters.same_seed_for_all_allocations is False:
                 self.search_space[self.parameters.randomization_dimension._get(context)].start += 1
                 self.search_space[self.parameters.randomization_dimension._get(context)].stop += 1
 
@@ -728,8 +736,7 @@ class OptimizationFunction(Function_Base):
         return current_sample, current_value, evaluated_samples, estimated_values
 
     def _grid_evaluate(self, ocm, context):
-        """Helper method for parallelizing evaluation of samples from search space.
-        """
+        """Helper method for evaluation of a grid of samples from search space via LLVM backends."""
         assert ocm is ocm.agent_rep.controller
         # Compiled evaluate expects the same variable as mech function
         variable = [input_port.parameters.value.get(context) for input_port in ocm.input_ports]
@@ -751,6 +758,13 @@ class OptimizationFunction(Function_Base):
     def _report_value(self, new_value):
         """Report value returned by `objective_function <OptimizationFunction.objective_function>` for sample."""
         pass
+
+    @property
+    def num_estimates(self):
+        if self.randomization_dimension is None:
+            return 1
+        else:
+            return self.search_space[self.randomization_dimension].num
 
 
 ASCENT = 'ascent'
@@ -1463,7 +1477,8 @@ class GridSearch(OptimizationFunction):
                  objective_function:tc.optional(is_function_type)=None,
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
-                 save_values:tc.optional(bool)=None,
+                 save_samples:tc.optional(bool)=False,
+                 save_values:tc.optional(bool)=False,
                  # tolerance=0.,
                  select_randomly_from_optimal_values=None,
                  seed=None,
@@ -1491,7 +1506,7 @@ class GridSearch(OptimizationFunction):
             search_termination_function=search_termination_function,
             search_space=search_space,
             select_randomly_from_optimal_values=select_randomly_from_optimal_values,
-            save_samples=True,
+            save_samples=save_samples,
             save_values=save_values,
             seed=seed,
             direction=direction,
@@ -1913,9 +1928,9 @@ class GridSearch(OptimizationFunction):
             return_optimal_sample = max_value_of_max_tuples[0]
             return_optimal_value = max_value_of_max_tuples[1]
 
-            if self._return_samples:
+            if self.parameters.save_samples._get(context):
                 return_all_samples = np.concatenate(Comm.allgather(samples), axis=0)
-            if self._return_values:
+            if self.parameters.save_values._get(context):
                 return_all_values = np.concatenate(Comm.allgather(values), axis=0)
 
         else:
@@ -1943,14 +1958,23 @@ class GridSearch(OptimizationFunction):
 
             # Python version
             else:
+
+                # Evaluate objective_function for each sample
                 last_sample, last_value, all_samples, all_values = self._evaluate(
                     variable=variable,
                     context=context,
                     params=params,
                 )
 
+                if all_values.size != all_samples.shape[-1]:
+                    raise ValueError(f"OptimizationFunction Error: {self}._evaluate returned misatched sizes for "
+                                     f"samples and values. This is likely due to a bug in the implementation of "
+                                     f"{self.__class__} _evaluate method.")
+
+                # Find the optimal value(s)
                 optimal_value_count = 1
-                value_sample_pairs = zip(all_values, all_samples)
+                value_sample_pairs = zip(all_values.flatten(),
+                                         [all_samples[:,i] for i in range(all_samples.shape[1])])
                 value_optimal, sample_optimal = next(value_sample_pairs)
 
                 select_randomly = self.parameters.select_randomly_from_optimal_values._get(context)
@@ -1972,9 +1996,11 @@ class GridSearch(OptimizationFunction):
                         value_optimal, sample_optimal = value, sample
                         optimal_value_count = 1
 
-            if self._return_samples:
+            if self.parameters.save_samples._get(context):
+                self.parameters.saved_samples._set(all_samples, context)
                 return_all_samples = all_samples
-            if self._return_values:
+            if self.parameters.save_values._get(context):
+                self.parameters.saved_values._set(all_values, context)
                 return_all_values = all_values
 
         return sample_optimal, value_optimal, return_all_samples, return_all_values
