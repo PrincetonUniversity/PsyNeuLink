@@ -2074,7 +2074,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
-            p.spec = copy_parameter_value(p.spec)
+            p.spec = copy_parameter_value(p.spec, shared_types=shared_types)
 
             # set default to None context to ensure it exists
             if (
