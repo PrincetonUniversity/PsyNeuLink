@@ -2054,8 +2054,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # MODIFIED 2/11/22 END
             return spec_names or []
 
-        # user_specs = self.parameters.state_feature_specs.spec
-        user_specs = self.state_feature_specs
+        user_specs = self.parameters.state_feature_specs.spec
+        # user_specs = self.state_feature_specs
 
         # LIST spec
         #   Treat as source specs:
