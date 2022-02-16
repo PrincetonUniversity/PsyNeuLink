@@ -2289,10 +2289,10 @@ class Port_Base(Port):
         base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                   "function")
 
-        if len(self.mod_afferents) > 0:
-            # Create a local copy of the function parameters
-            # only if there are modulating projections
-            # LLVM is not eliminating the redundant copy
+        if any(a.sender.modulation != OVERRIDE for a in self.mod_afferents):
+            # Create a local copy of the function parameters only if
+            # there are modulating projections of type other than OVERRIDE.
+            # LLVM is not eliminating the redundant copy.
             f_params = builder.alloca(port_f.args[0].type.pointee,
                                       name="modulated_port_params")
             builder.store(builder.load(base_params), f_params)

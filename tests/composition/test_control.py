@@ -1907,7 +1907,9 @@ class TestControlMechanisms:
         comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
         comp.add_node(ctl_mech)
 
+        # Seeds are chosen to show difference in results below.
         seeds = [13, 13, 14]
+
         # cycle over the seeds twice setting and resetting the random state
         benchmark(comp.run, inputs={ctl_mech:seeds, mech:5.0}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
 
@@ -1915,6 +1917,35 @@ class TestControlMechanisms:
             assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 21], [100, 23], [100, 20]] * 2)
         elif prng == 'Philox':
             assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[100, 19], [100, 21], [100, 21]] * 2)
+
+    @pytest.mark.benchmark
+    @pytest.mark.control
+    @pytest.mark.composition
+    # 'LLVM' mode is not supported, because synchronization of compiler and
+    # python values during execution is not implemented.
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
+    @pytest.mark.parametrize('prng', ['Default', 'Philox'])
+    def test_modulation_of_random_state_DDM_Analytical(self, comp_mode, benchmark, prng):
+        # set explicit seed to make sure modulation is different
+        mech = pnl.DDM(function=pnl.DriftDiffusionAnalytical())
+        if prng == 'Philox':
+            mech.parameters.random_state.set(_SeededPhilox([0]))
+        ctl_mech = pnl.ControlMechanism(control_signals=pnl.ControlSignal(modulates=('seed', mech),
+                                                                          modulation=pnl.OVERRIDE))
+        comp = pnl.Composition()
+        comp.add_node(mech, required_roles=pnl.NodeRole.INPUT)
+        comp.add_node(ctl_mech)
+
+        # Seeds are chosen to show difference in results below.
+        seeds = [3, 3, 4]
+
+        # cycle over the seeds twice setting and resetting the random state
+        benchmark(comp.run, inputs={ctl_mech:seeds, mech:0.1}, num_trials=len(seeds) * 2, execution_mode=comp_mode)
+
+        if prng == 'Default':
+            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [1, 3.99948962], [-1, 3.99948962]] * 2)
+        elif prng == 'Philox':
+            assert np.allclose(np.squeeze(comp.results[:len(seeds) * 2]), [[-1, 3.99948962], [-1, 3.99948962], [1, 3.99948962]] * 2)
 
     @pytest.mark.control
     @pytest.mark.composition
