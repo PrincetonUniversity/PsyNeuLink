@@ -1039,13 +1039,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
         # Specified state_features for a subset of INPUT Nodes so use those
         j = 0
         state_feature_values = []
-        # # MODIFIED 2/11/22 OLD:
-        # for node, spec in zip(owning_component._specified_input_nodes_in_order,
-        #                       owning_component._state_feature_specs_parsed):
-        # MODIFIED 2/11/22 NEW:
         for node, spec in zip(owning_component._specified_input_nodes_in_order,
                               owning_component.state_feature_specs):
-        # MODIFIED 2/11/22 END
             if spec is not None:
                 state_feature_values.append(state_input_port_values[j])
                 j += 1
@@ -1408,7 +1403,6 @@ class OptimizationControlMechanism(ControlMechanism):
     #     PREFERENCE_SET_NAME: 'DefaultControlMechanismCustomClassPreferences',
     #     PREFERENCE_KEYWORD<pref>: <setting>...}
 
-    # FIX: ADD OTHER Parameters() HERE??
     class Parameters(ControlMechanism.Parameters):
         """
             Attributes
@@ -1513,8 +1507,8 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         outcome_input_ports_option = Parameter(CONCATENATE, stateful=False, loggable=False, structural=True)
         state_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
-        state_feature_specs = Parameter(None, stateful=False, loggable=False, read_only=True, structural=True,
-                                        parse_spec=True)
+        state_feature_specs = Parameter(None, stateful=False, loggable=False, read_only=True,
+                                        structural=True, parse_spec=True)
         state_feature_function = Parameter(None, reference=True, stateful=False, loggable=False)
         function = Parameter(GridSearch, stateful=False, loggable=False)
         search_function = Parameter(None, stateful=False, loggable=False)
@@ -1882,18 +1876,10 @@ class OptimizationControlMechanism(ControlMechanism):
         # The following are all "full" lists; that is, there is an entry corresponding to every INPUT node of agent_rep
         # List of INPUT Nodes for which state_features are specified, ordered according to agent_rep.nodes
         self._specified_input_nodes_in_order = []
-        # # MODIFIED 2/11/22 OLD:
-        # # List of parsed state_feature_specs (vs. user provided specs)
-        # self._state_feature_specs_parsed = []
-        # MODIFIED 2/11/22 END
         # List of assigned state_feature_function (vs. user provided specs)
         self._state_feature_functions = []
 
         # VALIDATION AND WARNINGS -----------------------------------------------------------------------------------
-
-        # # MODIFIED 2/11/22 OLD:
-        # state_feature_specs = self.state_feature_specs
-        # MODIFIED 2/11/22 END
 
         # Only list spec allowed if agent_rep is a CompositionFunctionApproximator
         if self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR and not isinstance(self.state_feature_specs, list):
@@ -2040,18 +2026,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     #  the remaining ones may be specified later, but for now assume they are meant to be ignored
                     spec = None
 
-                # MODIFIED 2/11/22 OLD:
-                # self._state_feature_specs_parsed.append(spec)
-                # MODIFIED 2/11/22 NEW:
                 parsed_feature_specs.append(spec)
-                # MODIFIED 2/11/22 END
                 self._state_feature_functions.append(state_feature_fct)
                 self._specified_input_nodes_in_order.append(node)
                 spec_names.append(spec_name)
 
-            # MODIFIED 2/11/22 NEW:
             self.parameters.state_feature_specs.set(parsed_feature_specs, override=True)
-            # MODIFIED 2/11/22 END
             return spec_names or []
 
         user_specs = self.parameters.state_feature_specs.spec
@@ -2118,13 +2098,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         state_input_port_specs = []
         for i in range(self._num_state_feature_specs):
-            # # MODIFIED 2/11/22 OLD:
-            # spec = self._state_feature_specs_parsed[i]
-            # MODIFIED 2/11/22 NEW:
             # Note: state_feature_specs have now been parsed (user's specs are in parameters.state_feature_specs.spec)
             spec = self.state_feature_specs[i]
-            # MODIFIED 2/11/22 END
-            # node = self._specified_input_nodes_in_order[i]
             if spec is None:
                 continue
             spec = _parse_shadow_inputs(self, spec)
@@ -2150,11 +2125,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 else:
                     spec = spec.output_port
                 # Update Mechanism spec with Port
-                # # MODIFIED 2/11/22 OLD:
-                # self._state_feature_specs_parsed[i] = spec
-                # MODIFIED 2/11/22 NEW:
                 self.state_feature_specs[i] = spec
-                # MODIFIED 2/11/22 END
             if isinstance(spec, dict):
                 # Note: clear any functions specified; will be assigned in _assign_state_feature_function
                 if self._state_feature_functions[i]:
@@ -2223,21 +2194,13 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: HANDLE ERRORS HERE INSTEAD OF _validate_state_features OR EXECUTE THAT FIRST AND CAPTURE HERE
         for i, port in enumerate(self.state_input_ports):
             node = self._specified_input_nodes_in_order[i]
-            # # MODIFIED 2/11/22 OLD:
-            # feature = self._state_feature_specs_parsed[i]
-            # MODIFIED 2/11/22 NEW:
             feature = self.state_feature_specs[i]
-            # MODIFIED 2/11/22 END
             if not (isinstance(node, str) and 'DEFERRED' in node):
                 continue
             if feature.owner not in self._get_agent_rep_input_nodes():
                 # assert False, f"PROGRAM ERROR: Node not in {self.agent_rep.name} should have been caught above."
                 continue
-            # # MODIFIED 2/11/22 OLD:
-            # self._state_feature_specs_parsed[i] = feature
-            # MODIFIED 2/11/22 NEW:
             self.state_feature_specs[i] = feature
-            # MODIFIED 2/11/22 END
 
     def _update_state_input_ports_for_controller(self, context=None):
         """Check and update state_input_ports for model-based optimization (agent_rep==Composition)
@@ -2332,22 +2295,12 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.data = state_input_ports
             self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
-            # # MODIFIED 2/11/22 OLD:
-            # self._state_feature_specs_parsed = [input_port.shadow_inputs for input_port in self.state_input_ports]
-            # MODIFIED  NEW:
             self.parameters.state_feature_specs.set([input_port.shadow_inputs
                                                      for input_port in self.state_input_ports],
                                                     override=True)
-            # MODIFIED  END
-
             self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
-            # # MODIFIED 2/11/22 OLD:
-            # self._state_feature_specs_parsed = [input_port.shadow_inputs for input_port in self.state_input_ports]
-            # # MODIFIED 2/11/22 NEW:
             self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
                                                     override=True)
-            # MODIFIED  END
-
             return True
 
     def _validate_state_features(self):
@@ -3153,14 +3106,8 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def state_features(self):
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-        # # MODIFIED 2/11/22 OLD:
-        # state_features_dict = {(k if k in agent_rep_input_nodes else f"{k.name} DEFERRED"):v
-        #                        for k,v in zip(self._specified_input_nodes_in_order,
-        #                                       self._state_feature_specs_parsed)}
-        # MODIFIED 2/11/22 NEW:
         state_features_dict = {(k if k in agent_rep_input_nodes else f"{k.name} DEFERRED"):v
                                for k,v in zip(self._specified_input_nodes_in_order, self.state_feature_specs)}
-        # MODIFIED 2/11/22 END
         return state_features_dict
 
     @property
