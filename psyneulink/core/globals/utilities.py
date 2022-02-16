@@ -801,7 +801,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
 
     dict_types = (dict, collections.UserDict)
     list_types = (list, collections.UserList, collections.deque)
-    tuple_types = (tuple, )
+    tuple_types = (tuple, set)
     all_types_using_recursion = dict_types + list_types + tuple_types
 
     if isinstance(obj, dict_types):
