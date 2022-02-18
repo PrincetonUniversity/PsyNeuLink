@@ -968,7 +968,6 @@ class ParameterPort(Port_Base):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterPort belongs.
         """
-
         # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
         return self.source._get(context)
 
@@ -981,16 +980,6 @@ class ParameterPort(Port_Base):
     def pathway_projections(self, value):
         raise ParameterPortError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_PORT, PATHWAY_PROJECTION))
-
-    @property
-    def efferents(self):
-        raise ParameterPortError(f"{ParameterPortError.__name__}s do not have 'efferents' "
-                             f"(access attempted for {self.full_name}).")
-
-    @efferents.setter
-    def efferents(self, value):
-        raise ParameterPortError(f"{ParameterPortError.__name__}s are not allowed to have any 'efferents' "
-                             f"(assignment attempted for {self.full_name}).")
 
 def _instantiate_parameter_ports(owner, function=None, context=None):
     """Call _instantiate_parameter_port for all modulable parameters to instantiate ParameterPorts for them

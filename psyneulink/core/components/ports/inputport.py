@@ -521,13 +521,14 @@ Class Reference
 """
 import collections
 import inspect
+import itertools
 import numbers
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import DefaultsFlexibility
+from psyneulink.core.components.component import Component, DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -879,8 +880,6 @@ class InputPort(Port_Base):
             prefs=prefs,
             context=context,
         )
-
-        self.path_afferents = []
 
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_port_Name()
@@ -1337,6 +1336,14 @@ class InputPort(Port_Base):
         self.path_afferents = assignment
 
     @property
+    def path_afferents(self):
+        try:
+            return self._path_afferents
+        except:
+            self._path_afferents = []
+            return self._path_afferents
+
+    @property
     def socket_width(self):
         return self.defaults.variable.shape[-1]
 
@@ -1444,7 +1451,6 @@ class InputPort(Port_Base):
         function = function or InputPort.defaults.function
 
         return Port_Base._get_port_function_value(owner=owner, function=function, variable=variable)
-
 
 def _instantiate_input_ports(owner, input_ports=None, reference_value=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of InputPort(s)
