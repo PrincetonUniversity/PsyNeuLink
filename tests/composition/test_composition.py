@@ -506,8 +506,9 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-        assert "receiver assignment" in str(error.value)
-        assert "incompatible" in str(error.value)
+            assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+                   '\'MappingProjection from composition-pytests-A[RESULT] to composition-pytests-B[InputPort-0] ' \
+                   'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -2913,7 +2914,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
-        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
+        assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+               '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-D[InputPort-0] ' \
+               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -2933,8 +2936,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
-
-        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
+        assert '"Receiver (\'composition-pytests-D\') assigned to ' \
+               '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-C[InputPort-0] ' \
+               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
 
     @pytest.mark.composition
     def test_run_5_mechanisms_2_origins_1_terminal(self, comp_mode):
@@ -3165,7 +3169,7 @@ class TestRun:
         assert ("Bad Projection specification in \'pathway\' arg " in str(error_text.value)
                 and "for add_linear_procesing_pathway method" in str(error_text.value)
                 and "Attempt to assign Projection" in str(error_text.value)
-                and "to InputPort" in str(error_text.value)
+                and "using InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
 
     @pytest.mark.composition
