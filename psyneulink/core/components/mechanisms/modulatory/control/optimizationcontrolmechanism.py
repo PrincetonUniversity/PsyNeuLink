@@ -351,12 +351,14 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
          method is executed.
 
     .. _Optimization_Control_Mechanism_Numeric_State_Feature:
+
     * *numeric value* -- create an `InputPort` with the specified value as its `default variable <Component.defaults>`
       and no `afferent Projections <Mechanism_Base.afferents>`;  as a result, the specified value is assigned as the
       input to the corresponding `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep
       <OptimizationControlMechanism.agent_rep>` each time it is `evaluated <Composition.evaluate>`.
 
     .. _Optimization_Control_Mechanism_Tuple_State_Feature:
+
     * *2-item tuple* -- the first item must be a `Port` or `Mechanism` specification, as described below;
       the second item must be a `Function`, that is assigned as the `function <InputPort.function>` of the
       corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`;
@@ -366,12 +368,14 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       <OptimizationControlMechanism_State_Feature_Function_Arg>` for additional details).
 
     .. _Optimization_Control_Mechanism_Input_Port_Dict_State_Feature:
+
     * *specification dictionary* -- an `InputPort specification dictionary <InputPort_Specification_Dictionary>`
       can be used to configure the corresponding `state_input_port <OptimizationControlMechanism.state_input_ports>`,
       if `Parameters <Parameter>` other than its `function <InputPort.function>` need to be specified (e.g., its `name
       <InputPort.name>` or more than a single `afferent Projection <Mechanism_Base.afferents>`).
 
     .. _Optimization_Control_Mechanism_Input_Port_State_Feature:
+
     * *InputPort specification* -- creates an `InputPort` that `shadows <InputPort_Shadow_Inputs>` the input to
       the specified InputPort, the `value <InputPort.value>` of which is used as the corresponding value of the
       OptimizationControlMechanism's `state_feature_values <OptimizationControlMechanism.state_feature_values>`.
@@ -395,6 +399,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
         The InputPorts specified as state_features are marked as `internal_only <InputPort.internal_only>` = `True`.
 
     .. _Optimization_Control_Mechanism_Output_Port_State_Feature:
+
     * *OutputPort specification* -- this creates an `InputPort` that receives a `MappingProjection` from the
       specified `OutputPort`;  it can be any form of `OutputPort specification <OutputPort_Specification>`
       for any `OutputPort` of another `Mechanism <Mechanism>` in the Composition. The `value <OutputPort.value>`
@@ -441,12 +446,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   <InputPort_Shadow_Inputs>`, then its InputPort must be specified explicitly (as described `above
   <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
-
-
   COMMENT:
       FIX: CONFIRM THAT THE FOLLOWING WORKS
   State features can also be added to an existing OptimizationControlMechanism using its `add_state_features` method.
   COMMENT
+
+|
 
 .. _OptimizationControlMechanism_State_Feature_Function_Arg:
 
