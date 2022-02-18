@@ -440,11 +440,12 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   The list of specifications can contain any of the forms of specification used for an `agent_rep
   <OptimizationControlMechanism.agent_rep>` that is a Composition as described `above
   <Optimization_Control_Mechanism_State_Feature_Input_Dict>`, with the following exception: if a
-  `Mechanism` is specified, its `primary OutputPort <OutputPort_Primary>` is used, since that
-  is more typical usage, and there are no assumptions made about the state features of a
-  `CompositionFunctionApproximator`); if the input to the Mechanism *is* to be `shadowed
-  <InputPort_Shadow_Inputs>`, then its InputPort must be specified explicitly (as described `above
-  <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
+  `Mechanism` is specified, its `primary OutputPort <OutputPort_Primary>` is used (rather than
+  shadowing its primary InputPort), since that is more typical usage, and there are no assumptions
+  made about the state features of a `CompositionFunctionApproximator` (as there are about a Composition
+  as `agent_rep <OptimizationControlMechanism.agent_rep>`); if the input to the Mechanism *is* to be
+  `shadowed <InputPort_Shadow_Inputs>`, then its InputPort must be specified explicitly (as described
+  `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
   COMMENT:
       FIX: CONFIRM THAT THE FOLLOWING WORKS
