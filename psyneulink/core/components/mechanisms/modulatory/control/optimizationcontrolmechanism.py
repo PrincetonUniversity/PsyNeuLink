@@ -420,11 +420,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   |
 
-  The **state_features** specify the **feature_values** argument to the `CompositionFunctionApproximator`\\'s `evaluate
-  <CompositionFunctionApproximator.evaluate>` method. These cannot be determined automatically and so they *must be
-  specified explicitly*, in a list, with the correct number of items in the same order and with the same shapes they
-  are expected have in the array passed to the **feature_values** argument of the
-  `evaluate<CompositionFunctionApproximator.evaluate>` method (see warning below).
+  The **state_features** specify the **feature_values** argument to the `CompositionFunctionApproximator`\\'s
+  `evaluate <CompositionFunctionApproximator.evaluate>` method. These cannot be determined automatically and so
+  they *must be specified explicitly*, in a list, with the correct number of items in the same order and with
+  the same shapes they are expected have in the array passed to the **feature_values** argument of the
+  `evaluate <CompositionFunctionApproximator.evaluate>` method (see warning below).
 
       .. warning::
          The **state_features** for an `agent_rep <OptimizationControlMechanism.agent_rep>` that is a
@@ -434,12 +434,13 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   The list of specifications can contain any of the forms of specification used for an `agent_rep
   <OptimizationControlMechanism.agent_rep>` that is a Composition as described `above
-  <Optimization_Control_Mechanism_State_Feature_Input_Dict>`, with the following exception:  if a `Mechanism`
-  is specified its `primary OutputPort <OutputPort_Primary>` is used (instead of `shadowing <InputPort_Shadow_Inputs>`
-  it `primary InputPort <InputPort_Primary>`) since that is more typical usage, and there are no assumptions made
-  about the state features of a `CompositionFunctionApproximator`); if the input to the Mechanism *is* to be shadowed,
-  then its InputPort must be specified explicitly (as described `above
-  <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
+  <Optimization_Control_Mechanism_State_Feature_Input_Dict>`, with the following exception: if a
+  `Mechanism` is specified, its `primary OutputPort <OutputPort_Primary>` is used (instead of `shadowing
+  <InputPort_Shadow_Inputs>` its `primary InputPort <InputPort_Primary>` as is the case when specifying a
+  Mechanism for an agent_rep <OptimizationControlMechanism.agent_rep>` that is a Composition) since that
+  is more typical usage, and there are no assumptions made about the state features of a
+  `CompositionFunctionApproximator`); if the input to the Mechanism *is* to be shadowed, then its InputPort
+  must be specified explicitly (as described `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
   COMMENT:
       FIX: CONFIRM THAT THE FOLLOWING WORKS
