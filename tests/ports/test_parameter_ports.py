@@ -70,6 +70,12 @@ class TestParameterPorts:
             ParameterPort(owner='SOMETHING')
         assert "Contructor for ParameterPort cannot be called directly(context: None" in str(error_text.value)
 
+    def test_no_path_afferents(self):
+        pass
+
+    def test_no_efferents(self):
+        pass
+
 class TestConfigurableParameters:
     def test_configurable_params(self):
         old_value = 0.2
@@ -136,6 +142,7 @@ class TestConfigurableParameters:
 
         assert np.allclose(T.noise.base, new_value)
         assert np.allclose(T.noise.modulated, new_value)
+
 
 class TestModParams:
     def test_mod_param_error(self):

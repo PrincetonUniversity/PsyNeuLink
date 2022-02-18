@@ -55,3 +55,14 @@ class TestOutputPorts:
         assert np.array_equal(outs, [[3], [2], [1], [1]])
         outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=comp_mode)
         assert np.array_equal(outs, [[3], [2], [1], [2]])
+
+    def test_no_path_afferents(self):
+        A = pnl.OutputPort()
+        with pytest.raises(pnl.PortError) as error:
+            A.path_afferents
+        assert '"OutputPorts do not have \'path_afferents\'; (access attempted for Deferred Init OutputPort)."' \
+               in str(error.value)
+        with pytest.raises(pnl.PortError) as error:
+            A.path_afferents = ['test']
+        assert '"OutputPorts are not allowed to have \'path_afferents\' ' \
+               '(assignment attempted for Deferred Init OutputPort)."' in str(error.value)
