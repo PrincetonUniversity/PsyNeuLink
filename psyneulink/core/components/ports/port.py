@@ -1815,7 +1815,7 @@ class Port_Base(Port):
             pass
         try:
             if projection in self.efferents:
-                self._remove_projection_to_port(projection, context=context)
+                self._remove_projection_from_port(projection, context=context)
         except(PortError):
             pass
 
