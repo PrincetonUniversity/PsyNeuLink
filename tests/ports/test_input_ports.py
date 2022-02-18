@@ -125,3 +125,10 @@ class TestInputPorts:
             comp.run()                   # No warning since default_input is set
             assert m.input_port.value == variable
             assert m.value == variable
+
+    def test_no_efferents(self):
+        A = pnl.InputPort()
+        with pytest.raises(pnl.PortError) as error:
+            A.efferents
+        assert '"InputPorts do not have \'efferents\'; (access attempted for Deferred Init InputPort)."' \
+               in str(error.value)

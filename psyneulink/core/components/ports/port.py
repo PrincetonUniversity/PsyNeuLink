@@ -2293,7 +2293,7 @@ class Port_Base(Port):
     @property
     def full_name(self):
         """Return name relative to owner as:  <owner.name>[<self.name>]"""
-        if self.owner:
+        if hasattr(self, OWNER) and self.owner:
             return f'{self.owner.name}[{self.name}]'
         else:
             return self.name
