@@ -2254,15 +2254,9 @@ class Port_Base(Port):
     def owner(self, assignment):
         self._owner = assignment
 
-    # # MODIFIED 2/17/22 OLD:
-    # @property
-    # def all_afferents(self):
-    #     return self.path_afferents + self.mod_afferents
-    # MODIFIED 2/17/22 NEW:
     @property
     def all_afferents(self):
         return self._get_all_afferents()
-    # MODIFIED 2/17/22 END
 
     @property
     def afferents_info(self):

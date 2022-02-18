@@ -5410,31 +5410,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             and receiver_check not in self.nodes)):
                     for proj in existing_projections:
                         self.remove_projection(proj)
-                        # FIX: REVERSE ORDER OF THESE ONCE STUFF BELOW IS IMPLEMENTED AND PASSING TESTS:
-                        for port in receiver_check.input_ports + sender_check.output_ports:
-                            # MODIFIED 2/17/22 OLD:
-                            # FIX: CENTRALIZE THIS ?USING port._remove_projections METHOD OR THE LIKE?
-                            # if proj in port.afferents_info:
-                            #     del port.afferents_info[proj]
-                            # if proj in port.projections:
-                            #     port.projections.remove(proj)
-                            # try:
-                            #     if proj in port.path_afferents:
-                            #         port.path_afferents.remove(proj)
-                            # except PortError:
-                            #     pass
-                            # if proj in port.mod_afferents:
-                            #     port.mod_afferents.remove(proj)
-                            # try:
-                            #     if proj in port.efferents:
-                            #         port.efferents.remove(proj)
-                            # except PortError:
-                            #     pass
-                            # # MODIFIED 2/17/22 NEW:
+                        for port in sender_check.output_ports + receiver_check.input_ports:
                             port.remove_projection(proj, context=context)
-                            # MODIFIED 2/17/22 END
                 else:
-                #  Need to do stuff at end, so can't just return
+                    #  Need to do stuff at end, so can't just return
                     if self.prefs.verbosePref:
                         warnings.warn(f"Several existing projections were identified between "
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
@@ -5600,14 +5579,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection,
                              ):
 
-        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
+        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM IN LearningProjections? OR ARE THOSE DONE ELSEWHERE?
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
             if projection.sender.owner != graph_sender:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, sender))
+                raise CompositionError(f"Sender ('{sender.name}') assigned to '{projection.name} is "
+                                       f"incompatible with the positions of these Components in '{self.name}'.")
             if projection.receiver.owner != graph_receiver:
-                raise CompositionError(f"Receiver ('{receiver.name}') assigned to '{projection.name}  is "
+                raise CompositionError(f"Receiver ('{receiver.name}') assigned to '{projection.name} is "
                                        f"incompatible with the positions of these Components in '{self.name}'.")
 
     def _instantiate_projection_from_spec(self, projection, sender=None, receiver=None, name=None):

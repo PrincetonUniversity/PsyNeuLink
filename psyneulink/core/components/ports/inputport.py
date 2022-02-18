@@ -1002,14 +1002,13 @@ class InputPort(Port_Base):
         Returns redundant Projection if found, otherwise False.
         """
 
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
+            raise InputPortError(f"Attempt to assign Projection ('{projection.name}') "
+                                 f"using InputPort ('{self.name}') that is in deferred init")
         try:
             self.path_afferents
         except:
-            if self.initialization_status == ContextFlags.DEFERRED_INIT:
-                raise InputPortError(f"Attempt to assign Projection ('{projection}') "
-                                     f"to InputPort ('{self.name}') that is in deferred init")
-            else:
-                raise InputPortError(f"No 'path_afferents' for {self.name}")
+            raise InputPortError(f"No 'path_afferents' for {self.full_name}")
 
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_PORT
         duplicate = next(iter([proj for proj in self.path_afferents
@@ -1387,36 +1386,6 @@ class InputPort(Port_Base):
         elif self._input_shape_template == VALUE:
             return self.get_input_values(context)
         assert False, f"PROGRAM ERROR: bad _input_shape_template assignment for '{self.name}'."
-
-    # @property
-    # def efferents(self):
-    #     raise InputPortError(f"{InputPort.__name__}s do not have 'efferents' "
-    #                          f"(access attempted for {self.full_name}).")
-    #
-    # @efferents.setter
-    # def efferents(self, value):
-    #     raise InputPortError(f"{InputPort.__name__}s are not allowed to have any 'efferents' "
-    #                          f"(assignment attempted for {self.full_name}).")
-
-    # @property
-    # def efferents(self):
-    #     return super().efferents
-    #
-    # @efferents.setter
-    # def efferents(self, value):
-    #     assert False, f"{InputPort.__name__}s cannot be assigned any 'efferents' (attempt for {self.full_name})."
-
-    # @property
-    # def _efferents(self):
-    #     # return super()._efferents
-    #     return []
-    #
-    # @_efferents.setter
-    # def _efferents(self, value):
-    #     if not hasattr(self, '_efferents'):
-    #         pass
-    #     else:
-    #         assert False, f"{InputPort.__name__}s cannot be assigned any 'efferents' (attempt for {self.full_name})."
 
     @property
     def position_in_mechanism(self):
