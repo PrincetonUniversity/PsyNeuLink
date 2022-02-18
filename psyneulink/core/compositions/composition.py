@@ -2624,7 +2624,7 @@ from psyneulink.core.components.ports.inputport import InputPort, InputPortError
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.components.ports.parameterport import ParameterPort
-from psyneulink.core.components.ports.port import Port
+from psyneulink.core.components.ports.port import Port, PortError
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.modulatory.learningprojection import LearningProjection
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
@@ -5403,26 +5403,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     receiver_check = receiver
                 # If either the sender or receiver are not in Composition and are not CompositionInterfaceMechanisms
-                #   remove the Projection and inclusion in relevant Ports
+                #   remove the Projection and its inclusion in any relevant Port attributes
                 if ((not isinstance(sender_check, CompositionInterfaceMechanism)
                      and sender_check not in self.nodes)
                         or (not isinstance(receiver_check, CompositionInterfaceMechanism)
                             and receiver_check not in self.nodes)):
                     for proj in existing_projections:
                         self.remove_projection(proj)
-                        for port in receiver_check.input_ports + sender_check.output_ports:
-                            if proj in port.afferents_info:
-                                del port.afferents_info[proj]
-                            if proj in port.projections:
-                                port.projections.remove(proj)
-                            if proj in port.path_afferents:
-                                port.path_afferents.remove(proj)
-                            if proj in port.mod_afferents:
-                                port.mod_afferents.remove(proj)
-                            if proj in port.efferents:
-                                port.efferents.remove(proj)
+                        for port in sender_check.output_ports + receiver_check.input_ports:
+                            port.remove_projection(proj, context=context)
                 else:
-                #  Need to do stuff at end, so can't just return
+                    #  Need to do stuff at end, so can't just return
                     if self.prefs.verbosePref:
                         warnings.warn(f"Several existing projections were identified between "
                                       f"{sender.name} and {receiver.name}: {[p.name for p in existing_projections]}; "
@@ -5588,15 +5579,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                              learning_projection,
                              ):
 
-        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM LearningProjections? OR ARE THOSE DONE ELSEWHERE?
+        # FIX: [JDC 6/8/19] SHOULDN'T THERE BE A CHECK FOR THEM IN LearningProjections? OR ARE THOSE DONE ELSEWHERE?
         # Skip this validation on learning projections because they have non-standard senders and receivers
         if not learning_projection:
             if projection.sender.owner != graph_sender:
-                raise CompositionError("{}'s sender assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, sender))
+                raise CompositionError(f"Sender ('{sender.name}') assigned to '{projection.name} is "
+                                       f"incompatible with the positions of these Components in '{self.name}'.")
             if projection.receiver.owner != graph_receiver:
-                raise CompositionError("{}'s receiver assignment [{}] is incompatible with the positions of these "
-                                       "Components in the Composition.".format(projection, receiver))
+                raise CompositionError(f"Receiver ('{receiver.name}') assigned to '{projection.name} is "
+                                       f"incompatible with the positions of these Components in '{self.name}'.")
 
     def _instantiate_projection_from_spec(self, projection, sender=None, receiver=None, name=None):
         if isinstance(projection, dict):
@@ -7960,11 +7951,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             graph_receiver.add_projection(p, receiver=p.receiver, sender=control_signal)
         try:
             sender._remove_projection_to_port(projection)
-        except ValueError:
+        except (ValueError, PortError):
             pass
         try:
             receiver._remove_projection_from_port(projection)
-        except ValueError:
+        except (ValueError, PortError):
             pass
         receiver = interface_input_port
         return MappingProjection(sender=sender, receiver=receiver)

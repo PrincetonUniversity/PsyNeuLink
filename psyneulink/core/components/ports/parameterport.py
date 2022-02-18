@@ -796,6 +796,12 @@ class ParameterPort(Port_Base):
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
         return duplicate
 
+    def _get_all_afferents(self):
+        return self.mod_afferents
+
+    def _get_all_projections(self):
+        return self.mod_afferents
+
     @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
@@ -962,7 +968,6 @@ class ParameterPort(Port_Base):
         """
         Get backingfield ("base") value of param of function of Mechanism to which the ParameterPort belongs.
         """
-
         # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
         return self.source._get(context)
 
