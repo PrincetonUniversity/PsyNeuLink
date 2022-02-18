@@ -880,6 +880,8 @@ class InputPort(Port_Base):
             context=context,
         )
 
+        self.path_afferents = []
+
         if self.name is self.componentName or self.componentName + '-' in self.name:
             self._assign_default_port_Name()
 
@@ -1052,6 +1054,12 @@ class InputPort(Port_Base):
 
     def _get_primary_port(self, mechanism):
         return mechanism.input_port
+
+    def _get_all_afferents(self):
+        return self.path_afferents + self.mod_afferents
+
+    def _get_all_projections(self):
+        return self._get_all_afferents()
 
     @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
@@ -1372,6 +1380,36 @@ class InputPort(Port_Base):
         elif self._input_shape_template == VALUE:
             return self.get_input_values(context)
         assert False, f"PROGRAM ERROR: bad _input_shape_template assignment for '{self.name}'."
+
+    # @property
+    # def efferents(self):
+    #     raise InputPortError(f"{InputPort.__name__}s do not have 'efferents' "
+    #                          f"(access attempted for {self.full_name}).")
+    #
+    # @efferents.setter
+    # def efferents(self, value):
+    #     raise InputPortError(f"{InputPort.__name__}s are not allowed to have any 'efferents' "
+    #                          f"(assignment attempted for {self.full_name}).")
+
+    # @property
+    # def efferents(self):
+    #     return super().efferents
+    #
+    # @efferents.setter
+    # def efferents(self, value):
+    #     assert False, f"{InputPort.__name__}s cannot be assigned any 'efferents' (attempt for {self.full_name})."
+
+    # @property
+    # def _efferents(self):
+    #     # return super()._efferents
+    #     return []
+    #
+    # @_efferents.setter
+    # def _efferents(self, value):
+    #     if not hasattr(self, '_efferents'):
+    #         pass
+    #     else:
+    #         assert False, f"{InputPort.__name__}s cannot be assigned any 'efferents' (attempt for {self.full_name})."
 
     @property
     def position_in_mechanism(self):

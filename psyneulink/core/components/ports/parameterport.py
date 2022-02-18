@@ -796,6 +796,12 @@ class ParameterPort(Port_Base):
                           f'{self.owner.name} already exists; will ignore additional one specified ({projection.name}).')
         return duplicate
 
+    def _get_all_afferents(self):
+        return self.mod_afferents
+
+    def _get_all_projections(self):
+        return self.mod_afferents
+
     @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Get connections specified in a ParameterPort specification tuple
@@ -975,6 +981,16 @@ class ParameterPort(Port_Base):
     def pathway_projections(self, value):
         raise ParameterPortError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_PORT, PATHWAY_PROJECTION))
+
+    @property
+    def efferents(self):
+        raise ParameterPortError(f"{ParameterPortError.__name__}s do not have 'efferents' "
+                             f"(access attempted for {self.full_name}).")
+
+    @efferents.setter
+    def efferents(self, value):
+        raise ParameterPortError(f"{ParameterPortError.__name__}s are not allowed to have any 'efferents' "
+                             f"(assignment attempted for {self.full_name}).")
 
 def _instantiate_parameter_ports(owner, function=None, context=None):
     """Call _instantiate_parameter_port for all modulable parameters to instantiate ParameterPorts for them

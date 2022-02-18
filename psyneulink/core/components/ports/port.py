@@ -1101,7 +1101,7 @@ class Port_Base(Port):
             **kwargs
         )
 
-        self.path_afferents = []
+        # Every type of Por can be modulated
         self.mod_afferents = []
 
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
@@ -1114,7 +1114,12 @@ class Port_Base(Port):
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
 
-        self.projections = self.path_afferents + self.mod_afferents + self.efferents
+        # # MODIFIED 2/17/22 OLD:
+        # self.projections = self.path_afferents + self.mod_afferents + self.efferents
+        # MODIFIED 2/17/22 NEW:
+        # MODIFIED 2/17/22 OLD:
+        self.projections = self._get_all_projections()
+        # MODIFIED 2/17/22 END
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
@@ -1822,6 +1827,12 @@ class Port_Base(Port):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
                          format(self.__class__.__name__))
 
+    def _get_all_projections(self):
+        assert False, f"Subclass of Port ({self.__class__.__name__}) must implement '_get_all_projections()' method."
+
+    def _get_all_afferents(self):
+        assert False, f"Subclass of Port ({self.__class__.__name__}) must implement '_get_all_afferents()' method."
+
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Parse parameters in Port specification tuple specific to each subclass
 
@@ -2223,9 +2234,15 @@ class Port_Base(Port):
     def owner(self, assignment):
         self._owner = assignment
 
+    # # MODIFIED 2/17/22 OLD:
+    # @property
+    # def all_afferents(self):
+    #     return self.path_afferents + self.mod_afferents
+    # MODIFIED 2/17/22 NEW:
     @property
     def all_afferents(self):
-        return self.path_afferents + self.mod_afferents
+        return self._get_all_afferents()
+    # MODIFIED 2/17/22 END
 
     @property
     def afferents_info(self):
@@ -2235,17 +2252,35 @@ class Port_Base(Port):
             self._afferents_info = {}
             return self._afferents_info
 
+    # @property
+    # def efferents(self):
+    #     try:
+    #         return self._efferents
+    #     except:
+    #         self._efferents = []
+    #         return self._efferents
+
+    @property
+    def path_afferents(self):
+        raise PortError(f"{self.__class__.__name__}s do not have 'path_afferents'; "
+                        f"(access attempted for {self.full_name}).")
+
+    @path_afferents.setter
+    def path_afferents(self, value):
+        raise PortError(f"{self.__class__.__name__}s are not allowed to have 'path_afferents' "
+                             f"(assignment attempted for {self.full_name}).")
+
     @property
     def efferents(self):
-        try:
-            return self._efferents
-        except:
-            self._efferents = []
-            return self._efferents
+        # assert False, f"{self.__class__.__name__} must implement 'efferents' property."
+        raise PortError(f"{self.__class__.__name__}s do not have 'efferents'; "
+                        f"(access attempted for {self.full_name}).")
 
     @efferents.setter
     def efferents(self, proj):
-        assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+        # assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+        raise PortError(f"{self.__class__.__name__}s are not allowed to have 'efferents' "
+                             f"(assignment attempted for {self.full_name}).")
 
     @property
     def full_name(self):
