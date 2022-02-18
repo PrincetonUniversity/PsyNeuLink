@@ -1080,7 +1080,6 @@ class Port_Base(Port):
         if name is not None and DEFERRED_INITIALIZATION in name:
             name = self._assign_default_port_Name()
 
-
         # Register Port with PortRegistry of owner (Mechanism to which the Port is being assigned)
         register_category(entry=self,
                           base_class=Port_Base,
@@ -1101,11 +1100,6 @@ class Port_Base(Port):
             **kwargs
         )
 
-        # # MODIFIED 2/17/22 OLD:
-        # # Every type of Por can be modulated
-        # self.mod_afferents = []
-        # MODIFIED 2/17/22 END
-
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if self.projections is not None:
@@ -1116,12 +1110,7 @@ class Port_Base(Port):
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
 
-        # # MODIFIED 2/17/22 OLD:
-        # self.projections = self.path_afferents + self.mod_afferents + self.efferents
-        # MODIFIED 2/17/22 NEW:
-        # MODIFIED 2/17/22 OLD:
         self.projections = self._get_all_projections()
-        # MODIFIED 2/17/22 END
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
@@ -2324,7 +2313,6 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
-        # MODIFIED 2/17/22 NEW:
         try:
             # MODIFIED 4/4/20 NEW: [PER JAN]
             if len(self.path_afferents) > 0:
@@ -2335,7 +2323,6 @@ class Port_Base(Port):
             # MODIFIED 4/4/20 END
         except (PortError):
             pass
-        # MODIFIED 2/17/22 END
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
