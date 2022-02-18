@@ -410,12 +410,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       Mechanism's  input_port, as described `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`.  If
       the Mechanism is in a `nested Composition <Composition_Nested>`, it must be an `INPUT <NodeRole.INPUT>` `Node
       <Composition_Nodes>` of that Composition (see note above).  If its OutputPort needs to be used, it must be
-      specified explicitly (as described `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).  In
-      contrast, if the `agent_rep <OptimizationControlMechanism.agent_rep>` is a `CompositionFunctionApproximator`,
-      then the Mechanism's `primary OutputPort <OutputPort_Primary>` is used (since that is typical usage, and there
-      are no assumptions made about the state features of a `CompositionFunctionApproximator`); if the input to the
-      Mechanism *is* to be shadowed, then its InputPort must be specified explicitly (as described `above
-      <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
+      specified explicitly (as described `above <Optimization_Control_Mechanism_Output_Port_State_Feature>`).
 
   |
 
@@ -425,16 +420,26 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   |
 
-  **state_features** specify the **feature_values**
-  argument to the CompositionFunctionApproximator's `evaluate <CompositionFunctionApproximator.evaluate>` method.
-  These cannot be determined automatically and so they *must be specified explicity*, in a list, with the correct
-  number of items in the same order and with the same shapes they are expected have in the array passed to the
-  **feature_values** argument of the `evaluate<CompositionFunctionApproximator.evaluate>` method (see warning below).
+  The **state_features** specify the **feature_values** argument to the `CompositionFunctionApproximator`\\'s `evaluate
+  <CompositionFunctionApproximator.evaluate>` method. These cannot be determined automatically and so they *must be
+  specified explicitly*, in a list, with the correct number of items in the same order and with the same shapes they
+  are expected have in the array passed to the **feature_values** argument of the
+  `evaluate<CompositionFunctionApproximator.evaluate>` method (see warning below).
+
       .. warning::
          The **state_features** for an `agent_rep <OptimizationControlMechanism.agent_rep>` that is a
          `CompositionFunctionApproximator` cannot be created automatically nor can they be validated;
          thus specifying the wrong number or invalid **state_features**, or specifying them in an incorrect
          order may produce errors that are unexpected or difficult to interpret.
+
+  The list of specifications can contain any of the forms of specification used for an `agent_rep
+  <OptimizationControlMechanism.agent_rep>` that is a Composition as described `above
+  <Optimization_Control_Mechanism_State_Feature_Input_Dict>`, with the following exception:  if a `Mechanism`
+  is specified its `primary OutputPort <OutputPort_Primary>` is used (instead of `shadowing <InputPort_Shadow_Inputs>`
+  it `primary InputPort <InputPort_Primary>`) since that is more typical usage, and there are no assumptions made
+  about the state features of a `CompositionFunctionApproximator`); if the input to the Mechanism *is* to be shadowed,
+  then its InputPort must be specified explicitly (as described `above
+  <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
   COMMENT:
       FIX: CONFIRM THAT THE FOLLOWING WORKS
