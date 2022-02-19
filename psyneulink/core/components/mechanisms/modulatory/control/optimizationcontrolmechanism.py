@@ -2222,7 +2222,11 @@ class OptimizationControlMechanism(ControlMechanism):
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         specified_input_nodes = self._specified_input_nodes_in_order
 
-        for i, port in enumerate(self.state_input_ports):
+        # # MODIFIED 2/19/22 OLD:
+        # for i, port in enumerate(self.state_input_ports):
+        # MODIFIED 2/19/22 NEW:
+        for i in range(max(len(agent_rep_input_nodes), len(specified_input_nodes))):
+        # MODIFIED 2/19/22 END
             # # MODIFIED 2/19/22 OLD:
             # node = self._specified_input_nodes_in_order[i]
             # MODIFIED 2/19/22 NEW:
@@ -2231,11 +2235,6 @@ class OptimizationControlMechanism(ControlMechanism):
             elif i < len(agent_rep_input_nodes):
                 node = specified_input_nodes[i] = agent_rep_input_nodes[i]
             else:
-                # raise OptimizationControlMechanismError(f"Attempt to assign '{STATE_FEATURES}' specification "
-                #                                         f"({self.state_feature_specs[i]}) for INPUT Node {i} of "
-                #                                         f"'{self.agent_rep.name}' that has not been assigned; "
-                #                                         f"must be assigned before '{self.composition.name}' "
-                #                                         f"can be executed.")
                 node = None
             # MODIFIED 2/19/22 END
             feature = self.state_feature_specs[i]
