@@ -315,7 +315,7 @@ class TestControlSpecification:
                 ])
         )
         assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
-                                                   'deferred DEFERRED':deferred_node.input_port}
+                                                   'EXPECTED INPUT NODE 1 OF ocomp':deferred_node.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             # expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
