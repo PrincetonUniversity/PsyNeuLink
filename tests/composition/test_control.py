@@ -133,7 +133,9 @@ class TestControlSpecification:
         assert expected_error in error_msg
 
     def test_objective_mechanism_spec_as_monitor_for_control_error(self):
-        expected_error = 'The \'monitor_for_control\' arg of \'ControlMechanism-0\' contains a specification for an ObjectiveMechanism ([(ObjectiveMechanism ObjectiveMechanism-0)]).  This should be specified in its \'objective_mechanism\' argument.'
+        expected_error = 'The \'monitor_for_control\' arg of \'ControlMechanism-0\' contains a specification ' \
+                         'for an ObjectiveMechanism ([(ObjectiveMechanism ObjectiveMechanism-0)]).  ' \
+                         'This should be specified in its \'objective_mechanism\' argument.'
         with pytest.raises(pnl.ControlMechanismError) as error:
             pnl.Composition(controller=pnl.ControlMechanism(monitor_for_control=pnl.ObjectiveMechanism()))
         error_msg = error.value.error_value
@@ -148,46 +150,44 @@ class TestControlSpecification:
         Input = pnl.TransferMechanism(name='Input')
         reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE],
                                        name='reward')
-        Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
-                                                                             pnl.ControlProjection(function=pnl.Linear,
-                                                                                                   control_signal_params={
-                                                                                                       pnl.ALLOCATION_SAMPLES: np.arange(
-                                                                                                               0.1,
-                                                                                                               1.01,
-                                                                                                               0.3)})),
-                                                                 threshold=(1.0,
-                                                                            pnl.ControlProjection(function=pnl.Linear,
-                                                                                                  control_signal_params={
-                                                                                                      pnl.ALLOCATION_SAMPLES:
-                                                                                                          np.arange(
-                                                                                                                  0.1,
-                                                                                                                  1.01,
-                                                                                                                  0.3)})),
-                                                                 noise=0.5,
-                                                                 starting_point=0,
-                                                                 t0=0.45),
-                           output_ports=[pnl.DECISION_VARIABLE,
-                                         pnl.RESPONSE_TIME,
-                                         pnl.PROBABILITY_UPPER_THRESHOLD],
-                           name='Decision')
+        Decision = pnl.DDM(
+            function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0,
+                                                              pnl.ControlProjection(
+                                                                  function=pnl.Linear,
+                                                                  control_signal_params={
+                                                                      pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                                                                  })),
+                                                  threshold=(1.0,
+                                                             pnl.ControlProjection(
+                                                                 function=pnl.Linear,
+                                                                 control_signal_params={
+                                                                     pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
+                                                                 })),
+                                                  noise=0.5,
+                                                  starting_point=0,
+                                                  t0=0.45),
+            output_ports=[pnl.DECISION_VARIABLE,
+                          pnl.RESPONSE_TIME,
+                          pnl.PROBABILITY_UPPER_THRESHOLD],
+            name='Decision')
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
         # add the controller to the Composition before adding the relevant Mechanisms
         comp.add_controller(controller=pnl.OptimizationControlMechanism(
-                agent_rep=comp,
-                state_features=[reward.input_port, Input.input_port],
-                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                objective_mechanism=pnl.ObjectiveMechanism(
-                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                        monitor=[reward,
-                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
-                function=pnl.GridSearch(),
-                control_signals=[{control_spec: ("drift_rate", Decision),
-                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {control_spec: ("threshold", Decision),
-                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+            agent_rep=comp,
+            state_features=[reward.input_port, Input.input_port],
+            state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+            objective_mechanism=pnl.ObjectiveMechanism(
+                function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                monitor=[reward,
+                         Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                         (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+            function=pnl.GridSearch(),
+            control_signals=[{control_spec: ("drift_rate", Decision),
+                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                             {control_spec: ("threshold", Decision),
+                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
         )
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 

@@ -2010,6 +2010,9 @@ class OptimizationControlMechanism(ControlMechanism):
                         node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
                     node_name = node.name
                 else:
+                    # FIX 2/18/22 - FALSELY ASSUMES THAT SPEC IN LIST IS FOR AN INPUT NODE RATHER THAN JUST ITS SOURCE
+                    #               SHOULD INSTEAD USE A PLACEMARKER, AND ASSIGN ONCE IT IS THERE IN
+                    #               _update_state_input_ports_for_controller() ?AND _update_state_features_dict()?
                     # Node not (yet) in agent_rep, so uses its node name
                     spec = state_feature_specs[i]
                     node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
@@ -2313,10 +2316,6 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.data = state_input_ports
             self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
-            self.parameters.state_feature_specs.set([input_port.shadow_inputs
-                                                     for input_port in self.state_input_ports],
-                                                    override=True)
-            self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
             self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
                                                     override=True)
             return True
@@ -2421,14 +2420,14 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY)
-        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-        # if len(self.state_input_ports) < len(inputs_dict):
-        #     warnings.warn(f"The '{STATE_FEATURES}' specified for '{self.name}' are legal, but there are fewer "
-        #                   f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-        #                   f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
-        #                   f"get_inputs_format() method to see the format for its inputs.")
+        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY)
+        inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
+        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
+        if len(self.state_input_ports) < len(inputs_dict):
+            warnings.warn(f"The '{STATE_FEATURES}' specified for '{self.name}' are legal, but there are fewer "
+                          f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
+                          f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
+                          f"get_inputs_format() method to see the format for its inputs.")
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
