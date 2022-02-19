@@ -311,14 +311,19 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   .. _Optimization_Control_Mechanism_State_Feature_List_Inputs:
 
   * *List* -- a list of individual input source specifications, that can be any of the forms of individual input
-    specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.  The items
+    specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`. The items
     must be listed in the order that `INPUT <NodeRole.INPUT>` Nodes are listed in the `agent_rep
     <OptimizationControlMechanism.agent_rep>`\\'s `nodes <Composition.nodes>` attribute (and returned by its
     `get_nodes_by_role(NodeRole.INPUT) <Composition.get_nodes_by_role>` method).  If the list is incomplete,
     the remaining INPUT Nodes are assigned their `default variable <Component.defaults>` as input when the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called;  ``None`` can
+    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is called; ``None`` can
     be used as an entry to "skip" items in the list (i.e., specify that they receive their `default variable
-    <Component.defaults>` as input).
+    <Component.defaults>` as input). Items can be specified in the list that have not yet been added to the
+    OptimizationControlMechanism's Composition or its `agent_rep <OptimizationControlMechanism.agent_rep>`, that are
+    either sources of input to `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s  `INPUT <NodeRole.INPUT>`
+    `Nodes <Composition_Nodes>`, or those Nodes themselves.  However, these must be added before Composition is
+    executed, and must appear in the list in the same position that the `INPUT Nodes to which they pertain are
+    list in the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `nodes <Composition.nodes>` attribute.
 
   .. _Optimization_Control_Mechanism_State_Feature_Set_Inputs:
 
