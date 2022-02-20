@@ -897,21 +897,19 @@ class TestControlMechanisms:
         ocomp.add_linear_processing_pathway([ob,oc])
 
         state_features_dict = {
+
             # Legal state_features specifications
             'partial_legal_list_spec': [oa.output_port],
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
             'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
             'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing oa spec and out of order
-            # 'input_dict_spec': {oa:oc.input_port, ia:ia, ob:ob.output_port}, # <- ia is in nested Comp doesn't work
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
             'set_spec_short': {oa},
             'automatic_assignment': None,
-            'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]},
+            'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]}, # <- ia & ob OK BECAUSE JUST FOR SHADOWING
             'shadow_inputs_dict_spec_w_none': {pnl.SHADOW_INPUTS:[ia, None, ob]},
-            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[icomp, oa, ob]}, <- BAD SHADOW SPEC
-            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, oc]}, <- OK BECAUSE IT IS JUST FOR SHADOWING
-            # 'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:{ia, oa, ob}},
+
             # Illegal state_features specifications
             'misplaced_shadow':ib.input_port,
             'ext_shadow':ext.input_port,
@@ -921,7 +919,7 @@ class TestControlMechanisms:
             'too_many_inputs_error': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
             'too_many_w_node_not_in_composition_warning': [ia, oa, ob, ext],
             'bad_dict_spec_warning': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
-            'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
+            'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # ia & oc are not *ocomp* INPUT Nodes
             'bad_set_spec_warning': {ob, ia},  # elicits short spec warning
             'bad_set_spec_error': {ob, ia},  # elicits INPUT Node warning (for ia)
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
@@ -1002,7 +1000,7 @@ class TestControlMechanisms:
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {icomp: ia.input_port, oa: oa.input_port, ob: ob.input_port}
+                assert ocm.state_features == {ia: ia.input_port, oa: oa.input_port, ob: ob.input_port}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
@@ -3204,6 +3202,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         else:
             ocomp.add_controller(ocm)
             ocomp.run()
+            # MODIFIED 2/19/22 NEW:
+            assert ocm.state_features == {A:A.input_port, I:I.input_port}
+            # MODIFIED 2/19/22 END
 
 
 class TestSampleIterator:

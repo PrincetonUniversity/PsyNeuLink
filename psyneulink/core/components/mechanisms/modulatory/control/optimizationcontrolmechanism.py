@@ -2015,13 +2015,8 @@ class OptimizationControlMechanism(ControlMechanism):
                     #               _update_state_input_ports_for_controller() ?AND _update_state_features_dict()?
                     # Node not (yet) in agent_rep, so uses its node name
                     spec = state_feature_specs[i]
-                    # # MODIFIED 2/19/22 OLD:
-                    # node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    # node_name = node.name
-                    # MODIFIED 2/19/22 NEW:
                     node = None
                     node_name = f'DEFFERED {str(i-num_nodes)}'
-                    # MODIFIED 2/19/22 END
                 # SPEC
                 # Assign specs
                 # Only process specs for which there are already INPUT Nodes in agent_rep
@@ -2222,26 +2217,38 @@ class OptimizationControlMechanism(ControlMechanism):
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         specified_input_nodes = self._specified_input_nodes_in_order
 
-        # # MODIFIED 2/19/22 OLD:
-        # for i, port in enumerate(self.state_input_ports):
-        # MODIFIED 2/19/22 NEW:
-        for i in range(max(len(agent_rep_input_nodes), len(specified_input_nodes))):
+        # MODIFIED 2/19/22 OLD:
+        for i, port in enumerate(self.state_input_ports):
+        # # MODIFIED 2/19/22 NEW:
+        # for i in range(max(len(agent_rep_input_nodes), len(specified_input_nodes))):
         # MODIFIED 2/19/22 END
+            # Get value (need first, to determine whether it belongs to a nested Comp, for assigning key)
+            feature = self.state_feature_specs[i]
+            # Get INPUT Node of agent_rep as key:
             # # MODIFIED 2/19/22 OLD:
             # node = self._specified_input_nodes_in_order[i]
-            # MODIFIED 2/19/22 NEW:
-            if specified_input_nodes[i]:
+            # # MODIFIED 2/19/22 NEW:
+            # if specified_input_nodes[i]:
+            #     node = specified_input_nodes[i]
+            # elif i < len(agent_rep_input_nodes):
+            #     node = specified_input_nodes[i] = agent_rep_input_nodes[i]
+            # else:
+            #     node = None
+            # MODIFIED 2/19/22 NEWER:
+            if (isinstance(feature, Component) and
+                    feature.owner in [n[0] for n in self.agent_rep._get_nested_nodes()]):
+                node = feature.owner
+            elif specified_input_nodes[i]:
                 node = specified_input_nodes[i]
             elif i < len(agent_rep_input_nodes):
                 node = specified_input_nodes[i] = agent_rep_input_nodes[i]
             else:
                 node = None
             # MODIFIED 2/19/22 END
-            feature = self.state_feature_specs[i]
             if not (isinstance(node, str) and 'DEFERRED' in node):
                 continue
-            if feature.owner not in self._get_agent_rep_input_nodes():
-                # assert False, f"PROGRAM ERROR: Node not in {self.agent_rep.name} should have been caught above."
+            if feature.owner not in self._get_agent_rep_input_nodes(comp_as_node=ALL):
+                # Don't add to dict, will be dealt with or raise an error at run time
                 continue
             self.state_feature_specs[i] = feature
 
@@ -2338,7 +2345,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.data = state_input_ports
             self._num_state_feature_specs = len(self.state_input_ports)
-            self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
+            # # MODIFIED 2/19/22 OLD:
+            # self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
+            # MODIFIED 2/19/22 NEW:
+            self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=False)
+            # MODIFIED 2/19/22 END
             self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
                                                     override=True)
             return True
@@ -2444,6 +2455,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
         # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY)
+        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
         # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
         # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
         # if len(self.state_input_ports) < len(inputs_dict):
@@ -3146,9 +3158,19 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def state_features(self):
         self._update_state_features_dict()
+        # MODIFIED 2/19/22 OLD:
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+        # # MODIFIED 2/19/22 NEW:
+        # agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
+        # # MODIFIED 2/19/22 NEWER:
+        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=ALL)
+        # MODIFIED 2/19/22 END
         state_features_dict = {}
+        # MODIFIED 2/19/22 OLD: FIX: TRY state_input_ports AGAIN BEFORE DELETING, SINCE THAT IS REALLY THE RIGHT SPEC
         for i in range(self._num_state_feature_specs):
+        # # MODIFIED 2/19/22 NEW:
+        # for i in range(self.num_state_input_ports):
+        # MODIFIED 2/19/22 END
             # Assign keys as INPUT Nodes of agent_rep
             if self._specified_input_nodes_in_order[i] in agent_rep_input_nodes:
                 k = self._specified_input_nodes_in_order[i]
