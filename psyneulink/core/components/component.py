@@ -1382,7 +1382,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict", "num_estimates",
                      "modulated_mechanisms", "grid", "control_signal_params",
-                     "activation_derivative_fct", "input_specification", "state_feature_specs",
+                     "activation_derivative_fct", "input_specification",
+                     "state_feature_specs",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
@@ -1395,7 +1396,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      # not used in computation
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
-                     "output_type", 'bounds' }
+                     "output_type", "bounds"}
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
