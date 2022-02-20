@@ -1405,6 +1405,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         else:
             # Execute until finished is only used by mechanisms
             blacklist.update(["execute_until_finished", "max_executions_before_finished"])
+            # "has_initializers" is only used by RTM
+            blacklist.update(["has_initializers"])
 
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
