@@ -3171,8 +3171,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                              )
     def test_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
 
-        I = pnl.ProcessingMechanism(name='I')
-        icomp = pnl.Composition(nodes=I, name='INNER COMP')
+        I1 = pnl.ProcessingMechanism(name='I1')
+        I2 = pnl.ProcessingMechanism(name='I2')
+        icomp = pnl.Composition(nodes=[I1,I2], name='INNER COMP')
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
         C = pnl.ProcessingMechanism(name='C', size=3)
@@ -3194,7 +3195,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         if state_features_arg == 'nested_partial':
             state_features = [A]
         elif state_features_arg == 'nested_full':
-            state_features = [A, I]
+            state_features = [A, I1, I2]
         elif state_features_arg == 'automatic':
             state_features = None
         elif state_features_arg == 'bad':
@@ -3208,7 +3209,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
                                                allow_probes=True,
                                                function=pnl.GridSearch(),
-                                               control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I),
+                                               control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
                                                                                  allocation_samples=[10, 20, 30]))
         if state_features_arg == 'bad':
             with pytest.raises(pnl.OptimizationControlMechanismError) as error:
@@ -3218,7 +3219,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         else:
             ocomp.add_controller(ocm)
             ocomp.run()
-            assert ocm.state_features == {A:A.input_port, I:I.input_port}
+            assert ocm.state_features == {A:A.input_port, I1:I1.input_port, I2:I2.input_port}
 
 class TestSampleIterator:
 
