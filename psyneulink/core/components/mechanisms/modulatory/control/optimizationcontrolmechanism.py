@@ -232,7 +232,9 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   |
 
-  The **state_features** specify the inputs to the  Composition assigned as the `agent_rep
+  .. _OptimizationControlMechanism_State_Features_Automatic_Assignment:
+
+  *Automatic assignment.* The **state_features** specify the inputs to the  Composition assigned as the `agent_rep
   <OptimizationControlMechanism.agent_rep>` when it is executed by the OptimizationControlMechanism to
   `evaluate <OptimizationControlMechanism_Evaluation>` its performance.  The default is for the evaluation to use the
   same values received by the `agent_rep <OptimizationControlMechanism.agent_rep>` as its `external inputs
@@ -245,18 +247,18 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   |
 
   .. _OptimizationControlMechanism_State_Features_Explicit_Specification:
-  The **state_features** argument can also be specified explicitly, using the formats described below.  This is
-  useful if values other than the `external inputs <Composition_Execution_Inputs>` to the `agent_rep
-  <OptimizationControlMechanism.agent_rep>` Composition are to be used to evaluate it, to restrict evaluation
-  This allows values other than the `external inputs <Composition_Execution_Inputs>` to the `agent_rep
-  <OptimizationControlMechanism.agent_rep>` Composition to be used to evaluate it; to restrict evaluation to a
-  subset of inputs (while others are held constant); and/or to assign specific functions to one or more
-  `state_input_ports <OptimizationControlMechanism.state_input_ports>` that allow them to process inputs
-  (e.g., modulate and/or intergrate them) before them as `state_feature_values state_feature_values
-  <OptimizationControlMechanism.state_feature_values>` (see `below
-  <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning **state_features** explicitly
-  overrides their automatic assignment, so that all required values must be specified, and this must be done
-  accurate, as described below.
+
+  *Explicit specificaiont.* The **state_features** argument can also be specified explicitly, using the formats
+  described below.  This is useful if values other than the `external inputs <Composition_Execution_Inputs>` to
+  the `agent_rep <OptimizationControlMechanism.agent_rep>` Composition are to be used to evaluate it, to restrict
+  evaluation This allows values other than the `external inputs <Composition_Execution_Inputs>` to the `agent_rep
+  <OptimizationControlMechanism.agent_rep>` Composition to be used to evaluate it; to restrict evaluation to a subset
+  of inputs (while others are held constant); and/or to assign specific functions to one or more `state_input_ports
+  <OptimizationControlMechanism.state_input_ports>` that allow them to process inputs (e.g., modulate and/or integrate
+  them) before them as `state_feature_values state_feature_values <OptimizationControlMechanism.state_feature_values>`
+  (see `below <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning **state_features**
+  explicitly overrides their automatic assignment, so that all required values must be specified, and this must be
+  done accurate, as described below.
 
   .. _OptimizationControlMechanism_State_Features_Shapes:
 
@@ -1119,7 +1121,7 @@ class OptimizationControlMechanism(ControlMechanism):
         specifies the Components from which `state_input_ports <OptimizationControlMechanism.state_input_ports>`
         receive their inputs, the `values <InputPort.value>` of which are assigned to `state_feature_values
         <OptimizationControlMechanism.state_feature_values>` and provided as input to the `agent_rep
-        <OptimizationControlMechanism.agent_rep>'s `evaluate <Composition.evaluate>` method whent it is executed.
+        <OptimizationControlMechanism.agent_rep>'s `evaluate <Composition.evaluate>` method when it is executed.
         See `state_features <OptimizationControlMechanism_State_Features_Arg>` for details of specification.
 
     state_feature_function : Function or function : default None
@@ -2369,6 +2371,9 @@ class OptimizationControlMechanism(ControlMechanism):
             state_feature_specs = user_specs
 
         if isinstance(state_feature_specs, list):
+            # FIX: 2/20/22: CONSIDER ALLOWING PARTIAL SPECIFICATION OF INPUT NODES IN NESTED COMPS:
+            #               NEED TO DETERMINE WHETHER NODE IS NESTED AND, IF SO, AND ONLY PARTIAL
+            #               FLESH OUT SPEC FOR REST OF NEST COMP
             # Convert list to dict, assuming list is in order of INPUT Nodes,
             #    and assigning the corresponding INPUT Nodes as keys for use in comp._build_predicted_inputs_dict()
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
@@ -2441,15 +2446,11 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY)
-        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-        # if len(self.state_input_ports) < len(inputs_dict):
-        #     warnings.warn(f"The '{STATE_FEATURES}' specified for '{self.name}' are legal, but there are fewer "
-        #                   f"than the number of input_nodes for its {AGENT_REP} ('{self.agent_rep.name}'); "
-        #                   f"the remaining inputs will be assigned default values.  Use the {AGENT_REP}'s "
-        #                   f"get_inputs_format() method to see the format for its inputs.")
+        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
+        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
+        # END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:

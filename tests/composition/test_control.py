@@ -3155,14 +3155,20 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # -7 ((5*-1)+(-2*1))
         assert np.allclose(results, [[7]])
 
+    state_features_arg = [
+        # 'nested_partial', # <- Specify only one of two INPUT Nodes of nested comp
+        # 'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
+        'automatic',        # <- Automaticaly asign state_features
+        'bad'               # <- Specify Mechanism not in agent_rep
+    ]
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.parametrize('nested_agent_rep',
                              [(False, 'OUTER COMP'),(True, 'MIDDLE COMP')],
                              ids=['unnested','nested'])
-    @pytest.mark.parametrize('state_features_arg',
-                             ['good','bad'],
-                             ids=['good_state_feat', 'bad_state_feat'])
+    @pytest.mark.parametrize('state_features_arg', state_features_arg,
+                             ids= [f"state_feature-{x}" for x in state_features_arg]
+                             )
     def test_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
 
         I = pnl.ProcessingMechanism(name='I')
@@ -3184,7 +3190,17 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             agent_rep = None
             error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
                          'missing from \'OUTER COMP\' and any Compositions nested within it."'
-        state_features = D.output_port if state_features_arg is 'bad' else None
+        # state_features = D.output_port if state_features_arg is 'bad' else None
+        if state_features_arg == 'nested_partial':
+            state_features = [A]
+        elif state_features_arg == 'nested_full':
+            state_features = [A, I]
+        elif state_features_arg == 'automatic':
+            state_features = None
+        elif state_features_arg == 'bad':
+            state_features = D.output_port
+        else:
+            assert False, "Bad state_features_arg in test."
 
         ocm = pnl.OptimizationControlMechanism(name='OCM',
                                                agent_rep=agent_rep,
