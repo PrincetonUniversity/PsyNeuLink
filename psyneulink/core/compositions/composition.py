@@ -8042,7 +8042,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"or a composition nested within it."
                 )
 
-    # FIX: 1/28/22 - NEED TO ACCOMODATE None OR MISSING state_feature_values, EITHER HERE OR IN predicted_inputs
     def _build_predicted_inputs_dict(self, predicted_inputs, controller=None):
         """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
@@ -10892,15 +10891,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         origin_node = origin_node.composition
 
                     if origin_node in inputs:
-                        # MODIFIED 12/19/21 OLD:
                         value = inputs[origin_node][index]
-                        # # MODIFIED 12/19/21 NEW:
-                        # # MODIFIED 12/19/21 END
-                        # if origin_node.input_labels_dict:
-                        #     labels = origin_node.input_labels_dict
-                        # else:
-                        #     value = inputs[origin_node][index]
-
                     else:
                         value = origin_node.defaults.variable[index]
 

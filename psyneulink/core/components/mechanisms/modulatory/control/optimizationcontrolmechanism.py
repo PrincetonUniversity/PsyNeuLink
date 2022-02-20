@@ -1218,14 +1218,27 @@ class OptimizationControlMechanism(ControlMechanism):
         of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details).
 
     state_features : Dict[Node:source]
-        dictionary listing the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of `agent_rep
-        <OptimizationControlMechanism.agent_rep>` (keys) and the source of their inputs (values)
-        as specified in **state_features** (or determined automatically), and used to construct `state_input_ports
-        <OptimizationControlMechanism.state_input_ports>`, the values of which are assigned to
-        `state_feature_values <OptimizationControlMechanism.state_feature_values>` and provided as
-        input to the `agent_rep <OptimizationControlMechanism.agent_rep>'s `evaluate <Composition.evaluate>`
-        method when it is executed (see `state_features <OptimizationControlMechanism_State_Features_Arg>`
-        and `OptimizationControlMechanism_State_Features` for additional details).
+        dictionary in which keys are Mechanism's that are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of
+        `agent_rep <OptimizationControlMechanism.agent_rep>` and/or any `nested Compositions <Composition_Nested>`
+        within it, and values are sources of input specified in **state_features** (or determined automatically). The
+        latter are provided as the inputs to `state_input_ports <OptimizationControlMechanism.state_input_ports>`, the
+        values of which are assigned to `state_feature_values <OptimizationControlMechanism.state_feature_values>` and
+        provided as input to the `agent_rep <OptimizationControlMechanism.agent_rep>'s `evaluate <Composition.evaluate>`
+        method when it is executed (see `state_features <OptimizationControlMechanism_State_Features_Arg>` and
+        `OptimizationControlMechanism_State_Features` for additional details).
+
+        .. technical_note::
+            the state_features dict is used by the _build_predicted_inputs() method of an `agent_rep
+            <OptimizationControlMechanism>` Composition to construct inputs for its `evaluate
+            <Composition.evaluate_method>` method. Only Mechanisms are used as keys, to accommodate the possibility
+            that some but not all of the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of any nested
+            composition(s) are specified in the `state_features <OptimizationControlMechanism_State_Features_Arg>`
+            of the OptimizationControlMechanism's constructor, allowing _build_predicted_inputs() to identify and
+            provide defaults for any that are not specified. Accordingly, if **state_features** is not specified in
+            the constructor, and thus assigned automatically, the state_features dictionary will contain entries for
+            shadowing the InputPorts of all Mechanisms that are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`
+            in either `agent_rep <OptimizationControlMechanism.agent_rep>` and/or of any Compositions nested at any
+            level within it.
 
     state_feature_values : 2d array
         the current value of each item of the OptimizationControlMechanism's `state_input_ports
@@ -2207,34 +2220,13 @@ class OptimizationControlMechanism(ControlMechanism):
             return feature_function
 
     def _update_state_features_dict(self):
-        # FIX: 1/30/22 - ??REFACTOR TO USE Composition aux_components??
-        #                 OR IMPLEMENT LIST WITH DEFERRED ITEMS STORED THERE (THAT WAY DON'T HAVE TO RELY ON NAME BELOW)
-        #                 OR IMPLEMENT INTERNAL _state_features dict THEN state_features AS A PROPERTY
-        #                 THAT TRACKS state_input_ports AS BEFORE
-        # FIX: MODIFY THIS TO INDICATE WHICH SPECS ARE STILL MISSING
-        # FIX: HANDLE ERRORS HERE INSTEAD OF _validate_state_features OR EXECUTE THAT FIRST AND CAPTURE HERE
-        # FIX: 2/19/22: ADD AGENT_REP INPUT NODES TO _specified_input_nodes_in_order IF AVAILABLE
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         specified_input_nodes = self._specified_input_nodes_in_order
 
-        # MODIFIED 2/19/22 OLD:
         for i, port in enumerate(self.state_input_ports):
-        # # MODIFIED 2/19/22 NEW:
-        # for i in range(max(len(agent_rep_input_nodes), len(specified_input_nodes))):
-        # MODIFIED 2/19/22 END
             # Get value (need first, to determine whether it belongs to a nested Comp, for assigning key)
             feature = self.state_feature_specs[i]
             # Get INPUT Node of agent_rep as key:
-            # # MODIFIED 2/19/22 OLD:
-            # node = self._specified_input_nodes_in_order[i]
-            # # MODIFIED 2/19/22 NEW:
-            # if specified_input_nodes[i]:
-            #     node = specified_input_nodes[i]
-            # elif i < len(agent_rep_input_nodes):
-            #     node = specified_input_nodes[i] = agent_rep_input_nodes[i]
-            # else:
-            #     node = None
-            # MODIFIED 2/19/22 NEWER:
             if (isinstance(feature, Component) and
                     feature.owner in [n[0] for n in self.agent_rep._get_nested_nodes()]):
                 node = feature.owner
@@ -2244,7 +2236,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 node = specified_input_nodes[i] = agent_rep_input_nodes[i]
             else:
                 node = None
-            # MODIFIED 2/19/22 END
             if not (isinstance(node, str) and 'DEFERRED' in node):
                 continue
             if feature.owner not in self._get_agent_rep_input_nodes(comp_as_node=ALL):
@@ -2345,11 +2336,7 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.data = state_input_ports
             self._num_state_feature_specs = len(self.state_input_ports)
-            # # MODIFIED 2/19/22 OLD:
-            # self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=True)
-            # MODIFIED 2/19/22 NEW:
             self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=False)
-            # MODIFIED 2/19/22 END
             self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
                                                     override=True)
             return True
@@ -3158,19 +3145,10 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def state_features(self):
         self._update_state_features_dict()
-        # MODIFIED 2/19/22 OLD:
-        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-        # # MODIFIED 2/19/22 NEW:
-        # agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
-        # # MODIFIED 2/19/22 NEWER:
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=ALL)
-        # MODIFIED 2/19/22 END
         state_features_dict = {}
-        # MODIFIED 2/19/22 OLD: FIX: TRY state_input_ports AGAIN BEFORE DELETING, SINCE THAT IS REALLY THE RIGHT SPEC
+        # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
         for i in range(self._num_state_feature_specs):
-        # # MODIFIED 2/19/22 NEW:
-        # for i in range(self.num_state_input_ports):
-        # MODIFIED 2/19/22 END
             # Assign keys as INPUT Nodes of agent_rep
             if self._specified_input_nodes_in_order[i] in agent_rep_input_nodes:
                 k = self._specified_input_nodes_in_order[i]
