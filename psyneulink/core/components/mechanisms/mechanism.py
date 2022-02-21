@@ -2971,7 +2971,8 @@ class Mechanism_Base(Mechanism):
 
         # Allocate a shadow structure to overload user supplied parameters
         params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
-        builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
+        if len(param_ports) != len(obj.llvm_param_ids):
+            builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
