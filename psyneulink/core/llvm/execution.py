@@ -132,7 +132,10 @@ class CUDAExecution(Execution):
 
     def upload_ctype(self, data, name='other'):
         self._uploaded_bytes[name] += ctypes.sizeof(data)
-        assert ctypes.sizeof(data) != 0
+        if ctypes.sizeof(data) == 0:
+            # 0-sized structures fail to upload
+            # provide a small device buffer instead
+            return jit_engine.pycuda.driver.mem_alloc(4)
         return jit_engine.pycuda.driver.to_device(bytearray(data))
 
     def download_ctype(self, source, ty, name='other'):
