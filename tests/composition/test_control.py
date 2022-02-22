@@ -3170,6 +3170,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                              ids= [f"state_feature-{x}" for x in state_features_arg]
                              )
     def test_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
+        """Also tests state_features for comp nested within nested_agent_rep"""
 
         I1 = pnl.ProcessingMechanism(name='I1')
         I2 = pnl.ProcessingMechanism(name='I2')
