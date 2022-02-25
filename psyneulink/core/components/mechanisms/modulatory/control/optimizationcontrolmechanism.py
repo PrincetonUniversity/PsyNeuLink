@@ -895,9 +895,9 @@ When an OptimizationControlMechanism is executed, it carries out the following s
       to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the `net_outcome
       <ControlMechanism.net_outcome>` for that `control_allocation <ControlMechanism.control_allocation>`.
       It does this by calling the OptimizationControlMechanism's `evaluate_agent_rep
-      <OptimizationControlMechanism.evaluate_agent_rep>` method `num_estimates <OptimizationControlMechanism>` times,
-      each of which uses the `state_feature_values <OptimizationControlMechanism.state_feature_values>` and
-      `control_allocation <ControlMechanism.control_allocation>` as the input to the `agent_rep
+      <OptimizationControlMechanism.evaluate_agent_rep>` method `num_estimates <OptimizationControlMechanism>`
+      times, each of which uses the `state_feature_values <OptimizationControlMechanism.state_feature_values>`
+      and `control_allocation <ControlMechanism.control_allocation>` as the input to the `agent_rep
       <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method, executing it for
       `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` trials for each estimate.
       The `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `control_allocation
@@ -937,13 +937,13 @@ If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method).
 The values of Components listed in the OptimizationControlMechanism's `random_variables
 <OptimizationControlMechanism.random_variables>` attribute are randomized over those estimates.  By default,
-this includes all Components in the `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables (listed
-in its `random_variables <Composition.random_variables>` attribute).  However, if particular Components are specified
-in the **random_variables** argument of the OptimizationControlMechanism's constructor, then randomization is
-restricted to their values. Randomization over estimates can be further configured using the `initial_seed
-<OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
-<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The results of all the estimates for a given
-`control_allocation <ControlMechanism.control_allocation>` are aggregated by the `aggregation_function
+this includes all Components in the `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables
+(listed in its `random_variables <Composition.random_variables>` attribute).  However, if particular Components
+are specified in the **random_variables** argument of the OptimizationControlMechanism's constructor, then
+randomization is restricted to their values. Randomization over estimates can be further configured using the
+`initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
+<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The results of all the estimates for a
+given `control_allocation <ControlMechanism.control_allocation>` are aggregated by the `aggregation_function
 <OptimizationFunction.aggregation_function>` of the `OptimizationFunction` assigned to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism>`, and used to compute the `net_outcome
 <ControlMechanism.net_outcome>` over the estimates for that `control_allocation <ControlMechanism.control_allocation>`
@@ -1904,6 +1904,9 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
+        # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
+        #                - ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
+        #                - INCLUDES INPUT NODES OF NESTED COMP
         # Agent rep's input Nodes and their names
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         # The following are all "full" lists; that is, there is an entry corresponding to every INPUT node of agent_rep
@@ -1940,8 +1943,8 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"they are added, or unexpected results may occur.  It is safer to assign all Nodes to "
                               f"the {AGENT_REP} of a controller before specifying its '{STATE_FEATURES}'.")
         else:
-            # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
-            # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
+            # FIX: 2/25/22 - WHAT IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
+            # FIX: 1/18/22 - ADD TEST FOR THIS TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
             if len(self.state_feature_specs) < len(agent_rep_input_nodes):
                 warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number of "
                               f"INPUT Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
@@ -1976,6 +1979,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_feature_specs = []
 
+            # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
+            #                > ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
+            #                > INCLUDES INPUT NODES OF NESTED COMP
             if self.agent_rep_type == COMPOSITION:
                 if len(state_feature_specs) > len(agent_rep_input_nodes):
                     nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
@@ -2008,6 +2014,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"shadowed.")
             spec_names = []
             num_specs = len(state_feature_specs)
+            # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
+            #                > ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
+            #                > INCLUDES INPUT NODES OF NESTED COMP
             num_nodes = len(agent_rep_input_nodes)
             self._num_state_feature_specs = max(num_specs, num_nodes)
             for i in range(self._num_state_feature_specs):
