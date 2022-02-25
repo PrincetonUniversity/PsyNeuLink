@@ -1973,7 +1973,7 @@ class OptimizationControlMechanism(ControlMechanism):
         def _parse_specs(state_feature_specs, spec_str="list"):
             """Validate and parse specs into Port references and construct state_features dict
             Validate number and identity of specs relative to agent_rep INPUT Nodes.
-            Assign {node: spec} entries to state_features dict
+            Assign {node: spec} entries to state_features dict, with one entry for *every* nested INPUT Node
             Return names for use as input_port_names in main body of method
             """
 
@@ -1982,6 +1982,8 @@ class OptimizationControlMechanism(ControlMechanism):
             # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
             #                > ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
             #                > INCLUDES INPUT NODES OF NESTED COMP
+            #              -> IF LIST SPEC, OR ONLY TOP-LEVEL INPUT NODES SPECIFIED IN set OR dict FORMATS:
+            #                  UNPACK TO GENERATE LIST OF *ALL* INPUT NODES OF ALL NESTED COMPS
             if self.agent_rep_type == COMPOSITION:
                 if len(state_feature_specs) > len(agent_rep_input_nodes):
                     nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
