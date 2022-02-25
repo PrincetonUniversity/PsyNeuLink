@@ -51,13 +51,14 @@ class TestKWTAInputs:
         assert(np.allclose(val, [[0.5]]))
 
     def test_kwta_inputs_list_of_strings(self):
-        with pytest.raises(KWTAError) as error_text:
+        with pytest.raises(MechanismError) as error_text:
             K = KWTAMechanism(
                 name='K',
                 size = 4,
             )
             K.execute(["one", "two", "three", "four"])
-        assert("which is not supported for KWTA" in str(error_text.value))
+        assert('"Input to \'K\' ([\'one\' \'two\' \'three\' \'four\']) is incompatible with its corresponding '
+               'InputPort (K[InputPort-0]): \'cannot perform reduce with flexible type.\'"' in str(error_text.value))
 
     def test_kwta_var_list_of_strings(self):
         with pytest.raises(ParameterError) as error_text:

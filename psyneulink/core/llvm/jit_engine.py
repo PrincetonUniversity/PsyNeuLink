@@ -90,8 +90,8 @@ def _cpu_jit_constructor():
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
-    if "llvm" in debug_env:
-        with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
+    if "dump-llvm-gen" in debug_env:
+        with open(builtins_module.name + '.generated.ll', 'w') as dump_file:
             dump_file.write(str(builtins_module))
 
     __backing_mod = binding.parse_assembly(str(builtins_module))
@@ -126,8 +126,8 @@ def _ptx_jit_constructor():
 
 
 def _try_parse_module(module):
-    if "llvm" in debug_env:
-        with open(module.name + '.parse.ll', 'w') as dump_file:
+    if "dump-llvm-gen" in debug_env:
+        with open(module.name + '.generated.ll', 'w') as dump_file:
             dump_file.write(str(module))
 
     # IR module is not the same as binding module.
@@ -177,12 +177,12 @@ class jit_engine:
         if "time_stat" in debug_env:
             print("Time to optimize LLVM module bundle '{}': {}".format(module.name, finish - start))
 
-        if "opt" in self.__debug_env:
+        if "dump-llvm-opt" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
 
         # This prints generated x86 assembly
-        if "isa" in self.__debug_env:
+        if "dump-asm" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
@@ -208,7 +208,7 @@ class jit_engine:
             self.__mod.link_in(module)
             self.__linked_modules += 1
 
-        if "llvm" in debug_env:
+        if "dump-llvm-gen" in debug_env:
             with open(mod_name + '.linked.ll', 'w') as dump_file:
                 dump_file.write(str(self.__mod))
 
@@ -356,6 +356,6 @@ class ptx_jit_engine(jit_engine):
             self.stage_compilation({wrapper_mod})
             self.compile_staged()
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
-            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+#            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
 
         return kernel

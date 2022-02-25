@@ -1,16 +1,17 @@
-import psyneulink as pnl
 import numpy as np
 import pytest
 
+import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.distributionfunctions
-import psyneulink.core.components.functions.stateful.integratorfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
+import psyneulink.core.components.functions.stateful.integratorfunctions
+
 
 class TestProjectionSpecificationFormats:
 
     def test_projection_specification_formats(self):
         """Test various matrix and Projection specifications
-        Also tests assignment of Projections to pathay of Composition using add_linear_processing_pathway:
+        Also tests assignment of Projections to pathway of Composition using add_linear_processing_pathway:
         - Projection explicitly specified in sequence (M1_M2_proj)
         - Projection pre-constructed and assigned to Mechanisms, but not specified in pathway(M2_M3_proj)
         - Projection specified in pathway that is duplicate one preconstructed and assigned to Mechanisms (M3_M4_proj)
@@ -52,26 +53,118 @@ class TestProjectionSpecificationFormats:
         # assert np.allclose(c.results, [[-130.19166667, -152.53333333, -174.875]])
         assert np.allclose(c.results, [[ -78.115,  -91.52 , -104.925]])
 
-    def test_multiple_modulatory_projection_specs(self):
+    @pytest.mark.parametrize('args', [
+        (pnl.CONTROL, None),
+        (pnl.MODULATES, None),
+        (pnl.PROJECTIONS, None),
+        ('mod and ctl', '"Both \'control\' and \'modulates\' arguments are specified in '
+                        'the constructor for \'ControlSignal; Should use just \'control\'."'),
+        ('proj and ctl', 'Both \'control\' and \'projections\' arguments are specified in the constructor for '
+                         '\'ControlSignal; Must use just one or the other.'),
+        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'ControlSignal; Should use just \'projections\' (or \'control\') "')
+    ])
+    @pytest.mark.control
+    def test_control_signal_projections_arg(self, args):
+        M = pnl.ProcessingMechanism()
+        control_specs = {pnl.CONTROL: {'control':(pnl.SLOPE, M)},
+                         pnl.MODULATES: {pnl.MODULATES:(pnl.SLOPE, M)},
+                         pnl.PROJECTIONS: {pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                         'mod and ctl': {'control':(pnl.SLOPE, M),
+                                         pnl.MODULATES:(pnl.SLOPE, M)},
+                         'proj and ctl': {'control':(pnl.SLOPE, M),
+                                          pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                         'proj and mod': {pnl.MODULATES:(pnl.SLOPE, M),
+                                          pnl.PROJECTIONS:(pnl.SLOPE, M)}
+                         }
+        if args[0] in {'mod and ctl', 'proj and ctl', 'proj and mod'}:
+            from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignalError
+            with pytest.raises(ControlSignalError) as err:
+                pnl.ControlSignal(**control_specs[args[0]])
+            assert args[1] in str(err.value)
+        else:
+            ctl_sig = pnl.ControlSignal(**control_specs[args[0]])
+            assert ctl_sig._init_args[pnl.PROJECTIONS][0][0] == pnl.SLOPE
+            assert ctl_sig._init_args[pnl.PROJECTIONS][0][1] is M
+
+    @pytest.mark.parametrize('args', [
+        (pnl.GATE, None),
+        (pnl.MODULATES, None),
+        (pnl.PROJECTIONS, None),
+        ('mod and gate', '"Both \'gate\' and \'modulates\' arguments are specified in the constructor for '
+                         '\'GatingSignal; Should use just \'gate\'."'),
+        ('proj and gate', 'Both \'gate\' and \'projections\' arguments are specified in the constructor for '
+                          '\'GatingSignal; Must use just one or the other.'),
+        ('proj and mod','"Both \'modulates\' and \'projections\' arguments are specified in the constructor for '
+                        '\'GatingSignal; Should use just \'projections\' (or \'gate\') "')
+    ])
+    @pytest.mark.control
+    def test_gating_signal_projections_arg(self, args):
+        M = pnl.ProcessingMechanism()
+        gating_specs = {pnl.GATE: {'gate':(pnl.SLOPE, M)},
+                        pnl.MODULATES: {pnl.MODULATES:(pnl.SLOPE, M)},
+                        pnl.PROJECTIONS: {pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                        'mod and gate': {'gate':(pnl.SLOPE, M),
+                                         pnl.MODULATES:(pnl.SLOPE, M)},
+                        'proj and gate': {'gate':(pnl.SLOPE, M),
+                                          pnl.PROJECTIONS:(pnl.SLOPE, M)},
+                        'proj and mod': {pnl.MODULATES:(pnl.SLOPE, M),
+                                         pnl.PROJECTIONS:(pnl.SLOPE, M)}
+                        }
+        if args[0] in {'mod and gate', 'proj and gate', 'proj and mod'}:
+            from psyneulink.core.components.ports.modulatorysignals.gatingsignal import GatingSignalError
+            with pytest.raises(GatingSignalError) as err:
+                pnl.GatingSignal(**gating_specs[args[0]])
+            assert args[1] in str(err.value)
+        else:
+            gating_sig = pnl.GatingSignal(**gating_specs[args[0]])
+            assert gating_sig._init_args[pnl.PROJECTIONS][0][0] == pnl.SLOPE
+            assert gating_sig._init_args[pnl.PROJECTIONS][0][1] is M
+
+    @pytest.mark.parametrize("control_spec, gating_spec, extra_spec",
+                             [
+                                 [pnl.CONTROL, pnl.GATE, ''],
+                                 [pnl.PROJECTIONS, pnl.PROJECTIONS, ''],
+                                 [pnl.CONTROL, pnl.GATE, pnl.PROJECTIONS]
+                             ]
+                             )
+    @pytest.mark.control
+    def test_multiple_modulatory_projection_specs(self, control_spec, gating_spec, extra_spec):
 
         M = pnl.DDM(name='MY DDM')
-        C = pnl.ControlMechanism(control_signals=[{pnl.PROJECTIONS: [M.parameter_ports[
-                                                                         psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE],
-                                                                     M.parameter_ports[
-                                                                         psyneulink.core.globals.keywords.THRESHOLD]]}])
-        G = pnl.GatingMechanism(gating_signals=[{pnl.PROJECTIONS: [M.output_ports[pnl.DECISION_VARIABLE],
-                                                                     M.output_ports[pnl.RESPONSE_TIME]]}])
-        assert len(C.control_signals)==1
-        assert len(C.control_signals[0].efferents)==2
-        assert M.parameter_ports[
-                   psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
-        assert M.parameter_ports[
-                   psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
-        assert len(G.gating_signals)==1
-        assert len(G.gating_signals[0].efferents)==2
-        assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
-        assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
+        ctl_sig_spec = {control_spec: [M.parameter_ports[pnl.DRIFT_RATE],
+                                       M.parameter_ports[pnl.THRESHOLD]]}
+        gating_sig_spec = {gating_spec: [M.output_ports[pnl.DECISION_VARIABLE],
+                                         M.output_ports[pnl.RESPONSE_TIME]]}
+        if extra_spec:
+            ctl_sig_spec.update({extra_spec:[M.parameter_ports[pnl.STARTING_POINT]]})
+            gating_sig_spec.update({extra_spec:[M.output_ports[pnl.RESPONSE_TIME]]})
+            ctl_err_msg = '"Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
+                          '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other."'
+            with pytest.raises(pnl.ControlSignalError) as err:
+                pnl.ControlMechanism(control_signals=[ctl_sig_spec])
+            assert ctl_err_msg == str(err.value)
+            gating_err_msg = '"Both \'PROJECTIONS\' and \'GATE\' entries found in specification dict for ' \
+                             '\'GatingSignal\' of \'GatingMechanism-0\'. Must use only one or the other."'
+            with pytest.raises(pnl.GatingSignalError) as err:
+                pnl.GatingMechanism(gating_signals=[gating_sig_spec])
+            assert gating_err_msg == str(err.value)
+        else:
+            # G = pnl.GatingMechanism(gating_signals=[gating_sig_spec])
+            C = pnl.ControlMechanism(control_signals=[ctl_sig_spec])
+            G = pnl.GatingMechanism(gating_signals=[gating_sig_spec])
+            assert len(C.control_signals)==1
+            assert len(C.control_signals[0].efferents)==2
+            assert M.parameter_ports[
+                       psyneulink.core.components.functions.nonstateful.distributionfunctions.DRIFT_RATE].mod_afferents[0] == C.control_signals[0].efferents[0]
+            assert M.parameter_ports[
+                       psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0] == C.control_signals[0].efferents[1]
+            assert len(G.gating_signals)==1
+            assert len(G.gating_signals[0].efferents)==2
+            assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
+            assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
+    @pytest.mark.control
     def test_multiple_modulatory_projections_with_port_Name(self):
 
         M = pnl.DDM(name='MY DDM')
@@ -94,6 +187,7 @@ class TestProjectionSpecificationFormats:
         assert M.output_ports[pnl.DECISION_VARIABLE].mod_afferents[0]==G.gating_signals[0].efferents[0]
         assert M.output_ports[pnl.RESPONSE_TIME].mod_afferents[0]==G.gating_signals[0].efferents[1]
 
+    @pytest.mark.control
     def test_multiple_modulatory_projections_with_mech_and_port_Name_specs(self):
 
         M = pnl.DDM(name='MY DDM')
@@ -179,6 +273,7 @@ class TestProjectionSpecificationFormats:
         assert C.control_signals[0].efferents[0].receiver.name == 'drift_rate'
         assert C.control_signals[0].efferents[1].receiver.name == 'threshold'
 
+    @pytest.mark.control
     def test_2_item_tuple_from_parameter_port_to_control_signals(self):
 
         C = pnl.ControlMechanism(control_signals=['a','b'])
@@ -191,6 +286,7 @@ class TestProjectionSpecificationFormats:
         assert D.parameter_ports[
                    psyneulink.core.globals.keywords.THRESHOLD].mod_afferents[0].sender == C.control_signals[1]
 
+    @pytest.mark.control
     def test_2_item_tuple_from_gating_signal_to_output_ports(self):
 
         D4 = pnl.DDM(name='D4')
@@ -206,6 +302,7 @@ class TestProjectionSpecificationFormats:
         assert G.gating_signals[0].efferents[0].receiver.name == 'DECISION_VARIABLE'
         assert G.gating_signals[0].efferents[1].receiver.name == 'RESPONSE_TIME'
 
+    @pytest.mark.control
     def test_2_item_tuple_from_input_and_output_ports_to_gating_signals(self):
 
         G = pnl.GatingMechanism(gating_signals=['a','b'])
@@ -243,6 +340,7 @@ class TestProjectionSpecificationFormats:
         'noise, gain',
         [(noise, gain) for noise, gain in [j for j in zip(control_spec_list, reversed(control_spec_list))]]
     )
+    @pytest.mark.control
     def test_formats_for_control_specification_for_mechanism_and_function_params(self, noise, gain):
         # This shenanigans is to avoid assigning the same instantiated ControlProjection more than once
         if noise == 'CP_OBJECT':
@@ -267,7 +365,7 @@ class TestProjectionSpecificationFormats:
                 'ControlProjection for R-CONTROL[gain]'
 
     gating_spec_list = [
-        pnl.GATING,
+        pnl.GATE,
         pnl.CONTROL,
         pnl.GATING_SIGNAL,
         pnl.CONTROL_SIGNAL,
@@ -283,7 +381,7 @@ class TestProjectionSpecificationFormats:
         pnl.ControlMechanism,
         pnl.GatingMechanism(),
         pnl.ControlMechanism(),
-        (0.3, pnl.GATING),
+        (0.3, pnl.GATE),
         (0.3, pnl.CONTROL),
         (0.3, pnl.GATING_SIGNAL),
         (0.3, pnl.CONTROL_SIGNAL),
@@ -306,6 +404,7 @@ class TestProjectionSpecificationFormats:
         'input_port, output_port',
         [(inp, outp) for inp, outp in [j for j in zip(gating_spec_list, reversed(gating_spec_list))]]
     )
+    @pytest.mark.control
     def test_formats_for_gating_specification_of_input_and_output_ports(self, input_port, output_port):
         G_IN, G_OUT = input_port, output_port
 
@@ -323,12 +422,14 @@ class TestProjectionSpecificationFormats:
             IN_NAME = G_IN[1]
         else:
             IN_NAME = G_IN
-        IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        # IN_CONTROL = pnl.CONTROL in repr(IN_NAME).split(".")[-1].upper()
+        IN_CONTROL = 'CONTROL' in repr(IN_NAME).split(".")[-1].upper()
         if isinstance(G_OUT, tuple):
             OUT_NAME = G_OUT[1]
         else:
             OUT_NAME = G_OUT
-        OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        # OUT_CONTROL = pnl.CONTROL in repr(OUT_NAME).split(".")[-1].upper()
+        OUT_CONTROL = 'CONTROL' in repr(OUT_NAME).split(".")[-1].upper()
 
         T = pnl.TransferMechanism(
             name='T-GATING',

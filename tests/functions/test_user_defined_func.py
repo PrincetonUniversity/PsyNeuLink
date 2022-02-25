@@ -31,7 +31,7 @@ def binDiv(_, param1, param2):
 
 
 def binPow(_, param1, param2):
-    return param1 / param2
+    return param1 ** param2
 
 
 @pytest.mark.parametrize("param1", [1, np.ones(2), np.ones((2, 2))], ids=['scalar', 'vector', 'matrix'])
@@ -295,6 +295,9 @@ def condValReturn(variable, param1, param2):
         val = param2 + 0.3
     return val
 
+def lambdaGen():
+    return lambda var, param1, param2: var + param1 * param2
+
 
 @pytest.mark.parametrize("func,var,params,expected", [
     (simpleFun, [1, 3], {"param1":None, "param2":3}, [5, 9]),
@@ -302,6 +305,7 @@ def condValReturn(variable, param1, param2):
     (condReturn, [1], {"param1":1, "param2":2}, [1.5]),
     (condValReturn, [0], {"param1":1, "param2":2}, [2.3]),
     (condValReturn, [1], {"param1":1, "param2":2}, [1.5]),
+    (lambdaGen(), [3], {"param1":3, "param2":-0.5}, [1.5]),
 ])
 @pytest.mark.benchmark(group="Function UDF")
 def test_user_def_func(func, var, params, expected, func_mode, benchmark):

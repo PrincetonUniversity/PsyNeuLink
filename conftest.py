@@ -68,8 +68,10 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("comp_mode", get_comp_execution_modes())
 
     if "autodiff_mode" in metafunc.fixturenames:
-        auto_modes = [pnlvm.ExecutionMode.Python,
-                      pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)]
+        auto_modes = [
+            pnlvm.ExecutionMode.Python,
+            pytest.param(pnlvm.ExecutionMode.LLVMRun, marks=pytest.mark.llvm)
+        ]
         metafunc.parametrize("autodiff_mode", auto_modes)
 
 def pytest_runtest_call(item):

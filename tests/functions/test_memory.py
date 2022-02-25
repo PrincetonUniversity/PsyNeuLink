@@ -219,7 +219,7 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for DictionaryMemory'
+        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
@@ -271,7 +271,7 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for DictionaryMemory'
+        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
@@ -341,7 +341,7 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for DictionaryMemory'
+        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 
@@ -391,7 +391,7 @@ class TestDictionaryMemory:
         em.function.duplicate_keys = False
         stim = 'A'
 
-        text = r'More than one item matched key \(\[1 2 3\]\) in memory for DictionaryMemory'
+        text = r'More than one item matched key \(\[1. 2. 3.\]\) in memory for DictionaryMemory'
         with pytest.warns(UserWarning, match=text):
             retrieved = em.execute(stimuli[stim])
 

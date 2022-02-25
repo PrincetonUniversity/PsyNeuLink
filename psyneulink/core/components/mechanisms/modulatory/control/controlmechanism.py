@@ -1029,6 +1029,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
     """
 
     componentType = "ControlMechanism"
+    controlType = CONTROL # Used as key in specification dictionaries;  can be overridden by subclasses
 
     initMethod = INIT_EXECUTE_METHOD_ONLY
 
@@ -1145,6 +1146,12 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     :type:
                     :read only: True
 
+                outcome_input_ports
+                    see `outcome_input_ports <ControlMechanism.outcome_input_ports>`
+
+                    :default value: None
+                    :type:  ``list``
+
                 output_ports
                     see `output_ports <Mechanism_Base.output_ports>`
 
@@ -1182,6 +1189,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         objective_mechanism = Parameter(None, stateful=False, loggable=False, structural=True)
         outcome_input_ports_option = Parameter(SEPARATE, stateful=False, loggable=False, structural=True)
+        outcome_input_ports = Parameter(None, reference=True, stateful=False, loggable=False, read_only=True)
 
         input_ports = Parameter(
             [OUTCOME],
@@ -1206,8 +1214,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
             read_only=True,
             structural=True,
             parse_spec=True,
-            aliases=['control', 'control_signals'],
-            constructor_argument='control'
+            aliases=[CONTROL, CONTROL_SIGNALS],
+            constructor_argument=CONTROL
         )
 
         def _parse_output_ports(self, output_ports):
@@ -1231,17 +1239,14 @@ class ControlMechanism(ModulatoryMechanism_Base):
                         MECHANISM: output_ports[i][1]
                     }
                 # handle dict of form {PROJECTIONS: <2 item tuple>, <param1>: <value1>, ...}
-                elif (
-                    isinstance(output_ports[i], dict)
-                    and PROJECTIONS in output_ports[i]
-                    and is_2tuple(output_ports[i][PROJECTIONS])
-                ):
-                    full_spec_dict = {
-                        NAME: output_ports[i][PROJECTIONS][0],
-                        MECHANISM: output_ports[i][PROJECTIONS][1],
-                        **{k: v for k, v in output_ports[i].items() if k != PROJECTIONS}
-                    }
-                    output_ports[i] = full_spec_dict
+                elif isinstance(output_ports[i], dict):
+                    for PROJ_SPEC_KEYWORD in {PROJECTIONS, self._owner.controlType}:
+                        if (PROJ_SPEC_KEYWORD in output_ports[i] and is_2tuple(output_ports[i][PROJ_SPEC_KEYWORD])):
+                            tuple_spec = output_ports[i].pop(PROJ_SPEC_KEYWORD)
+                            output_ports[i].update({
+                                NAME: tuple_spec[0],
+                                MECHANISM: tuple_spec[1]})
+                    assert True
 
             return output_ports
 
@@ -1285,6 +1290,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
         control = convert_to_list(control) or []
         monitor_for_control = convert_to_list(monitor_for_control) or []
         self.allow_probes = allow_probes
+        self._sim_counts = {}
 
         # For backward compatibility:
         if kwargs:
@@ -1296,7 +1302,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             # Only allow one of CONTROL, MODULATORY_SIGNALS OR CONTROL_SIGNALS to be specified
             # These are synonyms, but allowing several to be specified and trying to combine the specifications
             # can cause problems if different forms of specification are used to refer to the same Component(s)
-            control_specified = "'control'" if control else ''
+            control_specified = f"'{CONTROL}'" if control else ''
             modulatory_signals_specified = ''
             if MODULATORY_SIGNALS in kwargs:
                 args = kwargs.pop(MODULATORY_SIGNALS)
@@ -1323,8 +1329,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
                     control = convert_to_list(args)
 
         function = function or DefaultAllocationFunction
-
-        self._sim_counts = {}
 
         super(ControlMechanism, self).__init__(
             default_variable=default_variable,
@@ -1400,14 +1404,18 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         if CONTROL in target_set and target_set[CONTROL]:
             control = target_set[CONTROL]
-            assert isinstance(control, list), \
-                f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
-            for ctl_spec in control:
-                ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
-                if not (isinstance(ctl_spec, ControlSignal)
-                        or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE]==ControlSignal.__name__)):
-                    raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
-                                                f"({ctl_spec})")
+            self._validate_control_arg(control)
+
+    def _validate_control_arg(self, control):
+        """Treat control arg separately so it can be overridden by subclassses (e.g., GatingMechanism)"""
+        assert isinstance(control, list), \
+            f"PROGRAM ERROR: control arg {control} of {self.name} should have been converted to a list."
+        for ctl_spec in control:
+            ctl_spec = _parse_port_spec(port_type=ControlSignal, owner=self, port_spec=ctl_spec)
+            if not (isinstance(ctl_spec, ControlSignal)
+                    or (isinstance(ctl_spec, dict) and ctl_spec[PORT_TYPE] == ControlSignal)):
+                raise ControlMechanismError(f"Invalid specification for '{CONTROL}' argument of {self.name}:"
+                                            f"({ctl_spec})")
 
     # IMPLEMENTATION NOTE:  THIS SHOULD BE MOVED TO COMPOSITION ONCE THAT IS IMPLEMENTED
     def _instantiate_objective_mechanism(self, input_ports=None, context=None):
@@ -1549,7 +1557,8 @@ class ControlMechanism(ModulatoryMechanism_Base):
         other_input_ports = input_ports or []
 
         # FIX 11/3/21: THIS SHOULD BE MADE A PARAMETER
-        self.outcome_input_ports = ContentAddressableList(component_type=OutputPort)
+        self.parameters.outcome_input_ports.set(ContentAddressableList(component_type=OutputPort),
+                                                override=True)
 
         # If ObjectiveMechanism is specified, instantiate it and OUTCOME InputPort that receives projection from it
         if self.objective_mechanism:
@@ -1558,6 +1567,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
             #       of the objective_mechanism's constructor
             self._instantiate_objective_mechanism(input_ports, context=context)
 
+        # FIX: CONSOLIDATE THIS WITH SIMILAR HANDLING IN _instantiate_objective_mechanism AND ELSE BELOW
         # If no ObjectiveMechanism is specified, but items to monitor are specified,
         #    assign an outcome_input_port for each item specified
         elif self.monitor_for_control:
@@ -1586,7 +1596,6 @@ class ControlMechanism(ModulatoryMechanism_Base):
             from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
             from psyneulink.core.components.mechanisms.processing.objectivemechanism import _parse_monitor_specs
 
-            self.aux_components = []
             for i in range(len(projection_specs)):
                 if option == SEPARATE:
                     # Each outcome_input_port get its own Projection
@@ -1597,10 +1606,21 @@ class ControlMechanism(ModulatoryMechanism_Base):
                 self.aux_components.append(MappingProjection(sender=projection_specs[i],
                                                              receiver=self.outcome_input_ports[outcome_port_index]))
 
-        # Nothing has been specified, so just instantiate the default OUTCOME InputPort
+        # Nothing has been specified, so just instantiate the default OUTCOME InputPort with any input_ports passed in
         else:
-            super()._instantiate_input_ports(context=context)
+            # # MODIFIED 1/30/21 OLD:
+            # super()._instantiate_input_ports(context=context)
+            # self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            # MODIFIED 1/30/21 NEW:
+            other_input_port_value_sizes  = self._handle_arg_input_ports(other_input_ports)[0]
+            # Construct full list of InputPort specifications and sizes
+            input_ports = self.input_ports + other_input_ports
+            input_port_value_sizes = [[0]] + other_input_port_value_sizes
+            super()._instantiate_input_ports(context=context,
+                                             input_ports=input_ports,
+                                             reference_value=input_port_value_sizes)
             self.outcome_input_ports.append(self.input_ports[OUTCOME])
+            # MODIFIED 1/30/21 END
 
     def _parse_monitor_for_control_input_ports(self, context):
         """Get outcome_input_port specification dictionaries for items specified in monitor_for_control.
@@ -1705,7 +1725,7 @@ class ControlMechanism(ModulatoryMechanism_Base):
                           )
 
     def _instantiate_control_signals(self, context):
-        """Subclassess can override for class-specific implementation (see OptimizationControlMechanism for example)"""
+        """Subclasses can override for class-specific implementation (see OptimizationControlMechanism for example)"""
         output_port_specs = list(enumerate(self.output_ports))
 
         for i, control_signal in output_port_specs:
@@ -1991,6 +2011,23 @@ class ControlMechanism(ModulatoryMechanism_Base):
 
         for proj in deeply_nested_aux_components.values():
             composition.add_projection(proj, sender=proj.sender, receiver=proj.receiver)
+
+        # Add any remaining afferent Projections that have been assigned and are from nodes in composition
+        remaining_projections = set(self.projections) - dependent_projections - set(self.composition.projections)
+        for proj in remaining_projections:
+            # Projection is afferent:
+            if proj in self.afferents:
+                # Confirm sender is in composition
+                port, node, comp = composition._get_source(proj)
+            elif proj in self.efferents:
+                # Confirm receiver is in composition
+                port, node, comp = composition._get_destination(proj)
+            else:
+                assert False, f"PROGRAM ERROR: Attempt to activate Projection ('{proj.name}') in '{composition.name}'" \
+                              f" associated with its controller '{self.name}' that is neither an afferent nor " \
+                              f"efferent of '{self.name}' -- May be as yet unaccounted for condition."
+            if node in composition._get_all_nodes():
+                proj._activate_for_compositions(composition)
 
     def _apply_control_allocation(self, control_allocation, runtime_params, context):
         """Update values to `control_signals <ControlMechanism.control_signals>`

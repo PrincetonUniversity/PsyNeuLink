@@ -166,7 +166,7 @@ A Port can be specified using any of the following:
       <Projection_Specification>`:
 
       * *PROJECTIONS*:List[<`projection specification <Projection_Specification>`>,...]
-          the list must contain a one or more `Projection specifications <Projection_Specification>` to or from
+          the list must contain one or more `Projection specifications <Projection_Specification>` to or from
           the Port, and/or `ModulatorySignals <ModulatorySignal>` from which it should receive projections (see
           `Port_Projections` below).
 
@@ -449,8 +449,7 @@ Ports created by the Mechanism when none are specified (see `note <Mechanism_Def
 
 .. _port_value_Spec_Example:
 
-For example, the following specifies the InputPort by a value to use as its `default_variable
-<InputPort.default_variable>` attribute::
+For example, the following specifies the InputPort by a value to use as its `variable <InputPort.variable>` attribute::
 
     my_mech = pnl.TransferMechanism(input_ports=[[0,0])
 
@@ -584,20 +583,23 @@ ParameterPorts of a `DDM` Mechanism::
         print(control_signal.name)
         for control_projection in control_signal.efferents:
             print("\t{}: {}".format(control_projection.receiver.owner.name, control_projection.receiver))
-    > MY DDM DRIFT RATE AND THREHOLD CONTROL SIGNAL
+    > MY DDM DRIFT RATE AND THRESHOLD CONTROL SIGNAL
     >     MY DDM: (ParameterPort drift_rate)
     >     MY DDM: (ParameterPort threshold)
 
 Note that a ControlMechanism uses a **control_signals** argument in place of an **output_ports** argument (since it
-uses `ControlSignal <ControlSignals>` for its `OutputPorts <OutputPort>`.  In the example above,
-both ControlProjections are assigned to a single ControlSignal.  However, they could each be assigned to their own by
-specifying them in separate itesm of the **control_signals** argument::
+uses `ControlSignal <ControlSignals>` for its `OutputPorts <OutputPort>`.  Note also that, for specifying Projections
+of a ControlSignal (i.e., its ControlProjections), the keyword *CONTROL* can be used in place of the more generic
+*PROJECTIONS* keyword (as shown in the example below).
+
+In the example above, both ControlProjections are assigned to a single ControlSignal.  However, they could each be
+assigned to their own by specifying them in separate items of the **control_signals** argument::
 
     my_mech = pnl.DDM(name='MY DDM')
     my_ctl_mech = pnl.ControlMechanism(control_signals=[{pnl.NAME: 'DRIFT RATE CONTROL SIGNAL',
-                                                         pnl.PROJECTIONS: [my_mech.parameter_ports[pnl.DRIFT_RATE]]},
+                                                         pnl.CONTROL: [my_mech.parameter_ports[pnl.DRIFT_RATE]]},
                                                         {pnl.NAME: 'THRESHOLD RATE CONTROL SIGNAL',
-                                                         pnl.PROJECTIONS: [my_mech.parameter_ports[pnl.THRESHOLD]]}])
+                                                         pnl.CONTROL: [my_mech.parameter_ports[pnl.THRESHOLD]]}])
     # Print ControlSignals and their ControlProjections...
     > DRIFT RATE CONTROL SIGNAL
     >     MY DDM: (ParameterPort drift_rate)
@@ -784,14 +786,14 @@ from psyneulink.core.components.functions.nonstateful.transferfunctions import L
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, \
-    CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, DEFERRED_INITIALIZATION, DISABLE, EXPONENT, \
-    FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE,\
+    EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_PORTS, OVERRIDE, OWNER, \
-    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
+    PATH_AFFERENTS, PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
@@ -854,7 +856,7 @@ class PortError(Exception):
         return repr(self.error_value)
 
 
-# DOCUMENT:  INSTANTATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
+# DOCUMENT:  INSTANTIATION CREATES AN ATTIRBUTE ON THE OWNER MECHANISM WITH THE PORT'S NAME + VALUE_SUFFIX
 #            THAT IS UPDATED BY THE PORT'S value setter METHOD (USED BY LOGGING OF MECHANISM ENTRIES)
 class Port_Base(Port):
     """
@@ -1020,6 +1022,7 @@ class Port_Base(Port):
 
         This is used by subclasses to implement the InputPort(s), OutputPort(s), and ParameterPort(s) of a Mechanism.
 
+        COMMENT: [OLD]
         Arguments:
             - owner (Mechanism):
                  Mechanism with which Port is associated (default: NotImplemented)
@@ -1050,6 +1053,7 @@ class Port_Base(Port):
                 NOTES:
                     * these are used for dictionary specification of a Port in param declarations
                     * they take precedence over arguments specified directly in the call to __init__()
+        COMMENT
         """
         if kwargs:
             try:
@@ -1076,7 +1080,6 @@ class Port_Base(Port):
         if name is not None and DEFERRED_INITIALIZATION in name:
             name = self._assign_default_port_Name()
 
-
         # Register Port with PortRegistry of owner (Mechanism to which the Port is being assigned)
         register_category(entry=self,
                           base_class=Port_Base,
@@ -1097,9 +1100,6 @@ class Port_Base(Port):
             **kwargs
         )
 
-        self.path_afferents = []
-        self.mod_afferents = []
-
         # IMPLEMENTATION NOTE:  MOVE TO COMPOSITION ONCE THAT IS IMPLEMENTED
         # INSTANTIATE PROJECTIONS SPECIFIED IN projections ARG OR params[PROJECTIONS:<>]
         if self.projections is not None:
@@ -1110,7 +1110,7 @@ class Port_Base(Port):
             #                       if params = NotImplemented or there is no param[PROJECTIONS]
             pass
 
-        self.projections = self.path_afferents + self.mod_afferents + self.efferents
+        self.projections = self._get_all_projections()
 
         if context.source == ContextFlags.COMMAND_LINE:
             owner.add_ports([self])
@@ -1792,6 +1792,22 @@ class Port_Base(Port):
                 self.owner.aux_components.append((projection, feedback))
             return projection
 
+    def remove_projection(self, projection, context=None):
+        if projection in self.afferents_info:
+            del self.afferents_info[projection]
+        if projection in self.projections:
+            self.projections.remove(projection)
+        try:
+            if projection in self.mod_afferents or projection in self.path_afferents:
+                self._remove_projection_to_port(projection, context=context)
+        except(PortError):
+            pass
+        try:
+            if projection in self.efferents:
+                self._remove_projection_from_port(projection, context=context)
+        except(PortError):
+            pass
+
     def _remove_projection_from_port(self, projection, context=None):
         """Remove Projection entry from Port.efferents."""
         del self.efferents[self.efferents.index(projection)]
@@ -1804,6 +1820,9 @@ class Port_Base(Port):
         if projection in self.mod_afferents:
             del self.mod_afferents[self.mod_afferents.index(projection)]
         else:
+            # Do this first so that if it fails (i.e., miscalled for OutputPort)
+            #    no changes are made to the Port's or its function's variable
+            del self.path_afferents[self.path_afferents.index(projection)]
             shape = list(self.defaults.variable.shape)
             # Reduce outer dimension by one
             # only if shape is already greater than 1 (ports keep
@@ -1812,11 +1831,16 @@ class Port_Base(Port):
             if shape[0] > 0:
                 self.defaults.variable = np.resize(self.defaults.variable, shape)
                 self.function.defaults.variable = np.resize(self.function.defaults.variable, shape)
-            del self.path_afferents[self.path_afferents.index(projection)]
 
     def _get_primary_port(self, mechanism):
         raise PortError("PROGRAM ERROR: {} does not implement _get_primary_port method".
                          format(self.__class__.__name__))
+
+    def _get_all_projections(self):
+        assert False, f"Subclass of Port ({self.__class__.__name__}) must implement '_get_all_projections()' method."
+
+    def _get_all_afferents(self):
+        assert False, f"Subclass of Port ({self.__class__.__name__}) must implement '_get_all_afferents()' method."
 
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
         """Parse parameters in Port specification tuple specific to each subclass
@@ -2116,6 +2140,8 @@ class Port_Base(Port):
             # return None, so that this port is ignored
             # KDM 8/2/19: double check the relevance of this branch
             if variable is None:
+                if hasattr(self, DEFAULT_INPUT) and self.default_input == DEFAULT_VARIABLE:
+                    return self.defaults.variable
                 return None
 
         return super()._execute(
@@ -2219,7 +2245,7 @@ class Port_Base(Port):
 
     @property
     def all_afferents(self):
-        return self.path_afferents + self.mod_afferents
+        return self._get_all_afferents()
 
     @property
     def afferents_info(self):
@@ -2229,22 +2255,45 @@ class Port_Base(Port):
             self._afferents_info = {}
             return self._afferents_info
 
+    # IMPLEMENTATION NOTE:
+    #  Every Port subtype has mod_afferents
+    #  path_afferents are specific to InputPorts
+    #  efferents are specific to OutputPorts
+
+    @property
+    def mod_afferents(self):
+        try:
+            return self._mod_afferents
+        except:
+            self._mod_afferents = []
+            return self._mod_afferents
+
+    @property
+    def path_afferents(self):
+        raise PortError(f"{self.__class__.__name__}s do not have 'path_afferents'; "
+                        f"(access attempted for {self.full_name}).")
+
+    @path_afferents.setter
+    def path_afferents(self, value):
+        raise PortError(f"{self.__class__.__name__}s are not allowed to have 'path_afferents' "
+                             f"(assignment attempted for {self.full_name}).")
+
     @property
     def efferents(self):
-        try:
-            return self._efferents
-        except:
-            self._efferents = []
-            return self._efferents
+        # assert False, f"{self.__class__.__name__} must implement 'efferents' property."
+        raise PortError(f"{self.__class__.__name__}s do not have 'efferents'; "
+                        f"(access attempted for {self.full_name}).")
 
     @efferents.setter
     def efferents(self, proj):
-        assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+        # assert False, f"Illegal attempt to directly assign {repr('efferents')} attribute of {self.name}"
+        raise PortError(f"{self.__class__.__name__}s are not allowed to have 'efferents' "
+                             f"(assignment attempted for {self.full_name}).")
 
     @property
     def full_name(self):
         """Return name relative to owner as:  <owner.name>[<self.name>]"""
-        if self.owner:
+        if hasattr(self, OWNER) and self.owner:
             return f'{self.owner.name}[{self.name}]'
         else:
             return self.name
@@ -2264,13 +2313,16 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
-        # MODIFIED 4/4/20 NEW: [PER JAN]
-        if len(self.path_afferents) > 0:
-            assert len(func_input_type) == len(self.path_afferents), \
-                "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
-                    self, func_input_type, self.defaults.variable,
-                    self.function.defaults.variable, len(self.path_afferents))
-        # MODIFIED 4/4/20 END
+        try:
+            # MODIFIED 4/4/20 NEW: [PER JAN]
+            if len(self.path_afferents) > 0:
+                assert len(func_input_type) == len(self.path_afferents), \
+                    "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
+                        self, func_input_type, self.defaults.variable,
+                        self.function.defaults.variable, len(self.path_afferents))
+            # MODIFIED 4/4/20 END
+        except (PortError):
+            pass
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
@@ -2278,13 +2330,20 @@ class Port_Base(Port):
         return pnlvm.ir.LiteralStructType(input_types)
 
     def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
-        state_f = ctx.import_llvm_function(self.function)
+        port_f = ctx.import_llvm_function(self.function)
 
-        # Create a local copy of the function parameters
         base_params = pnlvm.helpers.get_param_ptr(builder, self, params,
                                                   "function")
-        f_params = builder.alloca(state_f.args[0].type.pointee)
-        builder.store(builder.load(base_params), f_params)
+
+        if any(a.sender.modulation != OVERRIDE for a in self.mod_afferents):
+            # Create a local copy of the function parameters only if
+            # there are modulating projections of type other than OVERRIDE.
+            # LLVM is not eliminating the redundant copy.
+            f_params = builder.alloca(port_f.args[0].type.pointee,
+                                      name="modulated_port_params")
+            builder.store(builder.load(base_params), f_params)
+        else:
+            f_params = base_params
 
         # FIXME: Handle and combine multiple afferents
         assert len(self.mod_afferents) <= 1
@@ -2332,13 +2391,13 @@ class Port_Base(Port):
                 builder.store(param_val, f_mod_param_ptr)
 
         # OutputPort returns 1D array even for scalar functions
-        if arg_out.type != state_f.args[3].type:
+        if arg_out.type != port_f.args[3].type:
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
         f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        builder.call(state_f, [f_params, f_state, f_input, arg_out])
+        builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder
 
     @staticmethod
@@ -2357,10 +2416,16 @@ class Port_Base(Port):
 
     @property
     def _dependent_components(self):
-        return list(itertools.chain(
-            super()._dependent_components,
-            self.efferents,
-        ))
+        try:
+            return list(itertools.chain(
+                super()._dependent_components,
+                self.efferents,
+            ))
+        except PortError:
+            return list(itertools.chain(
+                super()._dependent_components,
+            ))
+
 
     @property
     def _dict_summary(self):
@@ -2491,9 +2556,15 @@ def _instantiate_port_list(owner,
                                    port_spec=port_spec,
                                    # name=name,
                                    context=context)
-        # automatically generate projections (e.g. when an InputPort is specified by the OutputPort of another mech)
-        for proj in port.path_afferents:
-            owner.aux_components.append(proj)
+        # automatically generate any Projections to InputPort or ParameterPort
+        # (e.g. if InputPort was specified using the OutputPort of another Mechanism,
+        #       or a ParameterPort was specified using the ControlSignal of a ControlMechanism)
+        try:
+            for proj in port.path_afferents:
+                owner.aux_components.append(proj)
+        except PortError:
+            # OutputPort that has no path_afferents
+            pass
 
         # KDM 12/3/19: this depends on name setting for InputPorts that
         # ensures there are no duplicates. If duplicates exist, ports
