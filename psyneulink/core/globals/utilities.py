@@ -67,6 +67,14 @@ CONTENTS
 * powerset
 * tensor_power
 
+*LIST MANAGEMENT*
+~~~~~~~~~~~~~~~~~
+
+* `insert_list`
+* `convert_to_list`
+* `flatten_list`
+* `nesting_depth`
+
 
 *OTHER*
 ~~~~~~~
@@ -85,9 +93,6 @@ CONTENTS
 * `ContentAddressableList`
 * `make_readonly_property`
 * `get_class_attributes`
-* `insert_list`
-* `flatten_list`
-* `convert_to_list`
 * `get_global_seed`
 * `set_global_seed`
 
@@ -126,6 +131,7 @@ __all__ = [
     'is_modulation_operation', 'is_numeric', 'is_numeric_or_none', 'is_number', 'is_same_function_spec', 'is_unit_interval',
     'is_value_spec',
     'kwCompatibilityLength', 'kwCompatibilityNumeric', 'kwCompatibilityType',
+    'nesting_depth',
     'make_readonly_property',
     'Modulation', 'MODULATION_ADD', 'MODULATION_MULTIPLY','MODULATION_OVERRIDE',
     'multi_getattr', 'np_array_less_than_2d', 'object_has_single_value', 'optional_parameter_spec', 'normpdf',
@@ -665,6 +671,32 @@ def tensor_power(items, levels:tc.optional(range)=None, flat=False):
     return pp
 
 
+# LIST MANAGEMENT ******************************************************************************************************
+
+def insert_list(list1, position, list2):
+    """Insert list2 into list1 at position"""
+    return list1[:position] + list2 + list1[position:]
+
+def convert_to_list(l):
+    if l is None:
+        return None
+    elif isinstance(l, list):
+        return l
+    elif isinstance(l, ContentAddressableList):
+        return list(l)
+    elif isinstance(l, set):
+        return list(l)
+    else:
+        return [l]
+
+def flatten_list(l):
+    return [item for sublist in l for item in sublist]
+
+def nesting_depth(l):
+    if isinstance(l, np.ndarray):
+        l = l.tolist()
+    return isinstance(l, list) and max(map(nesting_depth, l)) + 1
+
 
 # OTHER ****************************************************************************************************************
 
@@ -769,7 +801,7 @@ def copy_iterable_with_shared(obj, shared_types=None, memo=None):
 
     dict_types = (dict, collections.UserDict)
     list_types = (list, collections.UserList, collections.deque)
-    tuple_types = (tuple, )
+    tuple_types = (tuple, set)
     all_types_using_recursion = dict_types + list_types + tuple_types
 
     if isinstance(obj, dict_types):
@@ -1379,9 +1411,15 @@ class ContentAddressableList(UserList):
 
 
 def is_value_spec(spec):
+    from psyneulink.core.components.component import Component
+
     if isinstance(spec, (numbers.Number, np.ndarray)):
         return True
-    elif isinstance(spec, list) and is_numeric(spec):
+    elif (
+        isinstance(spec, list)
+        and is_numeric(spec)
+        and not contains_type(spec, (Component, types.FunctionType))
+    ):
         return True
     else:
         return False
@@ -1517,28 +1555,6 @@ def convert_all_elements_to_np_array(arr, cast_from=None, cast_to=None):
             elementwise_subarr[i] = subarr[i]
 
         return elementwise_subarr
-
-
-def insert_list(list1, position, list2):
-    """Insert list2 into list1 at position"""
-    return list1[:position] + list2 + list1[position:]
-
-
-def convert_to_list(l):
-    if l is None:
-        return None
-    elif isinstance(l, list):
-        return l
-    elif isinstance(l, ContentAddressableList):
-        return list(l)
-    elif isinstance(l, set):
-        return list(l)
-    else:
-        return [l]
-
-def flatten_list(l):
-    return [item for sublist in l for item in sublist]
-
 
 # Seeds and randomness
 

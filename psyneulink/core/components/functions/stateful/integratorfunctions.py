@@ -36,7 +36,7 @@ from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
 from psyneulink.core.components.functions.function import (
     DEFAULT_SEED, FunctionError, _random_state_getter,
-    _seed_setter,
+    _seed_setter, _noise_setter
 )
 from psyneulink.core.components.functions.stateful.statefulfunction import StatefulFunction
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
@@ -214,7 +214,9 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
                     :type: ``float``
         """
         rate = Parameter(1.0, modulable=True, function_arg=True)
-        noise = Parameter(0.0, modulable=True, function_arg=True)
+        noise = Parameter(
+            0.0, modulable=True, function_arg=True, setter=_noise_setter
+        )
         previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
@@ -663,6 +665,30 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
             self.parameters.previous_value._set(value, context)
 
         return self.convert_output_type(value)
+
+    def _gen_llvm_integrate(self, builder, index, ctx, vi, vo, params, state):
+        rate = self._gen_llvm_load_param(ctx, builder, params, index, RATE)
+        increment = self._gen_llvm_load_param(ctx, builder, params, index, INCREMENT)
+        noise = self._gen_llvm_load_param(ctx, builder, params, index, NOISE,
+                                          state=state)
+
+        # Get the only context member -- previous value
+        prev_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "previous_value")
+        # Get rid of 2d array. When part of a Mechanism the input,
+        # (and output, and context) are 2d arrays.
+        prev_ptr = pnlvm.helpers.unwrap_2d_array(builder, prev_ptr)
+        assert len(prev_ptr.type.pointee) == len(vi.type.pointee)
+
+        prev_ptr = builder.gep(prev_ptr, [ctx.int32_ty(0), index])
+        prev_val = builder.load(prev_ptr)
+
+        res = builder.fmul(prev_val, rate)
+        res = builder.fadd(res, noise)
+        res = builder.fadd(res, increment)
+
+        vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
+        builder.store(res, vo_ptr)
+        builder.store(res, prev_ptr)
 
 
 class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------

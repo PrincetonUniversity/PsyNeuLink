@@ -13,8 +13,8 @@ y = np.random.rand()
                          (np.log, (x,), "__pnl_builtin_log", np.log(x)),
                          (np.power, (x,y), "__pnl_builtin_pow", np.power(x, y)),
                          (np.tanh, (x,), "__pnl_builtin_tanh", np.tanh(x)),
-                         (lambda x: 1 / np.tanh(x), (x,), "__pnl_builtin_coth", 1 / np.tanh(x)),
-                         (lambda x: 1 / np.sinh(x), (x,), "__pnl_builtin_csch", 1 / np.sinh(x)),
+                         (lambda x: 1.0 / np.tanh(x), (x,), "__pnl_builtin_coth", 1 / np.tanh(x)),
+                         (lambda x: 1.0 / np.sinh(x), (x,), "__pnl_builtin_csch", 1 / np.sinh(x)),
                          ], ids=["EXP", "LOG", "POW", "TANH", "COTH", "CSCH"])
 def test_builtin_op(benchmark, op, args, builtin, result, func_mode):
     if func_mode == 'Python':

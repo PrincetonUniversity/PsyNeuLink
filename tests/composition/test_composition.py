@@ -31,7 +31,7 @@ from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
     ADDITIVE, ALLOCATION_SAMPLES, BEFORE, DEFAULT, DISABLE, INPUT_PORT, INTERCEPT, LEARNING_MECHANISMS, \
-    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, \
+    LEARNED_PROJECTIONS, RANDOM_CONNECTIVITY_MATRIX, CONTROL, \
     NAME, PROJECTIONS, RESULT, OBJECTIVE_MECHANISM, OUTPUT_MECHANISM, OVERRIDE, SLOPE, TARGET_MECHANISM, VARIANCE
 from psyneulink.core.scheduling.condition import AtTimeStep, AtTrial, Never, TimeInterval
 from psyneulink.core.scheduling.condition import EveryNCalls
@@ -381,11 +381,11 @@ class TestAddProjection:
         X = ProcessingMechanism(name='INPUT NODE')
         M = ProcessingMechanism(name='MIDDLE NODE')
         Y = ProcessingMechanism(name='OUTPUT NODE')
-        if projs is 'list':
+        if projs == 'list':
             iprojs = [MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)]
             oprojs = [MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
                      MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)]
-        elif projs is 'set':
+        elif projs == 'set':
             iprojs = {MappingProjection(sender=C, receiver=D, matrix=RANDOM_CONNECTIVITY_MATRIX)}
             oprojs = {MappingProjection(sender=X, receiver=A, matrix=RANDOM_CONNECTIVITY_MATRIX),
                      MappingProjection(sender=X, receiver=M, matrix=RANDOM_CONNECTIVITY_MATRIX)}
@@ -506,8 +506,9 @@ class TestAddProjection:
         proj = MappingProjection(sender=A, receiver=B)
         with pytest.raises(CompositionError) as error:
             comp.add_projection(projection=proj, receiver=C)
-        assert "receiver assignment" in str(error.value)
-        assert "incompatible" in str(error.value)
+            assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+                   '\'MappingProjection from composition-pytests-A[RESULT] to composition-pytests-B[InputPort-0] ' \
+                   'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error.value)
 
     @pytest.mark.stress
     @pytest.mark.parametrize(
@@ -1264,7 +1265,8 @@ class TestCompositionPathwaysArg:
 
 class TestProperties:
 
-    def test_properties(self):
+    @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
+    def test_properties(self, control_spec):
 
         Input = pnl.TransferMechanism(name='Input')
         Reward = pnl.TransferMechanism(output_ports=[pnl.RESULT, pnl.MEAN, pnl.VARIANCE], name='reward')
@@ -1281,16 +1283,16 @@ class TestProperties:
                 agent_rep=comp,
                 num_estimates=2,
                 state_features=[Input.input_port, Reward.input_port],
-                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.1),
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.1),
                 monitor_for_control=[Reward,
                                      Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
                                      Decision.output_ports[pnl.RESPONSE_TIME]],
                 function=pnl.GridSearch(),
-                control_signals=[{PROJECTIONS: ("drift_rate", Decision),
+                control_signals=[{control_spec: ("drift_rate", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {PROJECTIONS: ("threshold", Decision),
+                                 {control_spec: ("threshold", Decision),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {PROJECTIONS: ("slope", Reward),
+                                 {control_spec: ("slope", Reward),
                                   ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}]))
 
         assert len(comp.nodes) == len(comp.mechanisms) == 3
@@ -2346,7 +2348,7 @@ class TestExecutionOrder:
 
     @pytest.mark.composition
     @pytest.mark.benchmark(group="Transfer")
-    def test_transfer_mechanism(self, benchmark, comp_mode):
+    def xtest_transfer_mechanism(self, benchmark, comp_mode):
 
         # mechanisms
         C = TransferMechanism(name="C",
@@ -2912,7 +2914,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=D), B, C)
-        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
+        assert '"Receiver (\'composition-pytests-C\') assigned to ' \
+               '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-D[InputPort-0] ' \
+               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
 
     def test_projection_assignment_mistake_swap2(self):
         # A ----> C --
@@ -2932,8 +2936,9 @@ class TestRun:
         comp.add_projection(MappingProjection(sender=A, receiver=C), A, C)
         with pytest.raises(CompositionError) as error_text:
             comp.add_projection(MappingProjection(sender=B, receiver=C), B, D)
-
-        assert "is incompatible with the positions of these Components in the Composition" in str(error_text.value)
+        assert '"Receiver (\'composition-pytests-D\') assigned to ' \
+               '\'MappingProjection from composition-pytests-B[RESULT] to composition-pytests-C[InputPort-0] ' \
+               'is incompatible with the positions of these Components in \'Composition-0\'."' == str(error_text.value)
 
     @pytest.mark.composition
     def test_run_5_mechanisms_2_origins_1_terminal(self, comp_mode):
@@ -3164,7 +3169,7 @@ class TestRun:
         assert ("Bad Projection specification in \'pathway\' arg " in str(error_text.value)
                 and "for add_linear_procesing_pathway method" in str(error_text.value)
                 and "Attempt to assign Projection" in str(error_text.value)
-                and "to InputPort" in str(error_text.value)
+                and "using InputPort" in str(error_text.value)
                 and "that is in deferred init" in str(error_text.value))
 
     @pytest.mark.composition
@@ -4254,7 +4259,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
                 state_features=[oa.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=ocomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MINIMIZE),
@@ -4274,7 +4279,7 @@ class TestNestedCompositions:
             pnl.OptimizationControlMechanism(
                 agent_rep=icomp,
                 state_features=[ia.input_port],
-                # state_feature_functions=pnl.Buffer(history=2),
+                # state_feature_function=pnl.Buffer(history=2),
                 name="Controller",
                 objective_mechanism=icomp_objective_mechanism,
                 function=pnl.GridSearch(direction=pnl.MAXIMIZE),
@@ -5746,6 +5751,89 @@ class TestInputSpecifications:
             assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
 
 
+    expected_format_strings = \
+        [
+        '{\n\tX: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],'
+        '\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],'
+        '\n\tY: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}',
+
+        "\nInputs to (nested) INPUT Nodes of OCOMP for 3 trials:\n\tX: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, "
+        "0.0, 0.0],[0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]"
+        "\n\tICOMP: \n\t\tA: [ ['red'], ['green'], ['red'] ]"
+        "\n\t\tC: [ ['red','blue'], ['green','yellow'], ['orange','purple'] ]"
+        "\n\tY: [ ['red','red'], ['green','green'], ['red','red'] "
+        "\n\nFormat as follows for inputs to run():"
+        "\n{\n\tX: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
+        "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
+        "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],"
+        "\n\tICOMP: [ [[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
+        "[[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
+        "[[0.0],[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ],"
+        "\n\tY: [ [[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
+        "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]], "
+        "[[0.0, 0.0, 0.0],[0.0, 0.0, 0.0]] ]\n}"
+        ]
+    test_args = [
+        # form, labels, nested, num_trials, expected_format_string
+        (pnl.TEXT, False, False, 2, expected_format_strings[0]),
+        (pnl.TEXT, True, True, pnl.FULL, expected_format_strings[1]),
+        (pnl.DICT, False, False, 1, None),
+        (pnl.DICT, False, False, pnl.FULL, None),
+        (pnl.DICT, True, True, 1, None),
+        (pnl.DICT, True, False, pnl.FULL, None)
+    ]
+    @pytest.mark.parametrize('form, use_labels, show_nested, num_trials, expected_format_string', test_args,
+                             ids = [f"{'dict' if x[0] else 'string'} "
+                                    f"{'use_labels_true' if x[1] else 'use_labels_false'} "
+                                    f"{'show_nested_true' if x[2] else 'show_nested_false'} "
+                                    f"num_trials-{x[3]} "
+                                    f"{'expected_format_string' if x[4] else 'None'}" for x in test_args]
+                             )
+    def test_get_input_format(self, form, use_labels, show_nested, num_trials, expected_format_string):
+        """Also tests input_labels_dict"""
+
+        A = pnl.ProcessingMechanism(size=1, name='A',
+                                input_labels={0:{'red':0, 'green':1},
+                                              1:{'blue':2, 'yellow':3}})
+        B = pnl.ProcessingMechanism(size=2, name='B')
+        C = pnl.ProcessingMechanism(size=[3,3],
+                                input_ports=['C INPUT 1', 'C INPUT 2'],
+                                input_labels={'C INPUT 1':{'red':[0,0,0], 'green':[1,1,1], 'orange':[2,2,2]},
+                                              'C INPUT 2':{'blue':[3,3,3], 'yellow':[4,4,4], 'purple':[5,5,5]}},
+                                name='C')
+        assert C.variable.shape == (2,3)
+        X = ProcessingMechanism(size=[3,3],
+                                input_ports=['X INPUT 1', 'X INPUT 2'],
+                                name='X',
+                                # input_labels={0:{'red':[0,0,0], 'green':[1,1,1]}}  # Specify dict for only one port
+                                )
+        # Use TransferMechanism so that 2nd OutputPort uses 2nd item of Mechanism's value
+        #    (i.e. ,without having to specify that explicitly, as would be the case for ProcessingMechanism)
+        Y = pnl.TransferMechanism(input_ports=[{NAME:'Y INPUT 1', pnl.SIZE: 3, pnl.FUNCTION: pnl.Reduce},
+                                                 {NAME:'Y INPUT 2', pnl.SIZE: 3}],
+                                    # Test specification of labels for all InputPorts of Mechanism:
+                                    input_labels={'red':[0,0,0], 'green':[1,1,1]},
+                                    name='Y')
+        assert len(Y.input_ports[0].variable) == 3
+        assert len(Y.input_ports[0].value) == 1
+        assert len(Y.input_ports[1].variable) == 3
+        assert len(Y.input_ports[1].value) == 3
+        icomp = Composition(pathways=[[A,B],[C]], name='ICOMP')
+        ocomp = Composition(nodes=[X, icomp, Y], name='OCOMP')
+
+        inputs_dict = ocomp.get_input_format(form=form,
+                                             num_trials=num_trials,
+                                             use_labels=use_labels,
+                                             show_nested_input_nodes=show_nested)
+        if form == pnl.TEXT:
+            assert inputs_dict == expected_format_string
+        else:
+            ocomp.run(inputs=inputs_dict)
+            if num_trials == pnl.FULL:
+                num_trials = 2
+            len(ocomp.results)==num_trials
+
+
 class TestProperties:
     @pytest.mark.composition
     @pytest.mark.parametrize("mode", [pnl.ExecutionMode.Python, pnl.ExecutionMode.Auto,
@@ -6451,13 +6539,13 @@ class TestNodeRoles:
         result = ocomp.run(inputs={mcomp:[[0],[0]]})
         assert len(result)==4
 
-        input_format = ocomp.get_input_format()
+        input_format = ocomp.get_input_format(form=pnl.TEXT)
         assert repr(input_format) == '\'{\\n\\tMIDDLE COMP: [[0.0],[0.0]],\\n\\tQ: [[0.0]]\\n}\''
-        input_format = ocomp.get_input_format(num_trials=3, use_labels=True)
-        assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[[0.0]],[\'red\']], [[[0.0]],[\'green\']], [[[0.0]],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
-        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True)
+        input_format = ocomp.get_input_format(form=pnl.TEXT, num_trials=3, use_labels=True)
+        assert repr(input_format) == '"{\\n\\tMIDDLE COMP: [ [[0.0],[\'red\']], [[0.0],[\'green\']], [[0.0],[\'red\']] ],\\n\\tQ: [ [\'red\'], [\'green\'], [\'red\'] ]\\n}"'
+        input_format = ocomp.get_input_format(form=pnl.TEXT, num_trials=2, show_nested_input_nodes=True)
         assert input_format == '\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ [[0.0]], [[0.0]] ]\n\tQ: [ [[0.0]], [[0.0]] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}'
-        input_format = ocomp.get_input_format(num_trials=2, show_nested_input_nodes=True, use_labels=True)
+        input_format = ocomp.get_input_format(form=pnl.TEXT, num_trials=2, show_nested_input_nodes=True, use_labels=True)
         assert input_format == "\nInputs to (nested) INPUT Nodes of OUTER COMP for 2 trials:\n\tMIDDLE COMP: \n\t\tX: [ [[0.0]], [[0.0]] ]\n\t\tINNER COMP: \n\t\t\tA: [ ['red'], ['green'] ]\n\tQ: [ ['red'], ['green'] \n\nFormat as follows for inputs to run():\n{\n\tMIDDLE COMP: [ [[0.0],[0.0]], [[0.0],[0.0]] ],\n\tQ: [ [[0.0]], [[0.0]] ]\n}"
 
         result = ocomp.run(inputs={mcomp:[[.2],['green']], Q:[4.6]})

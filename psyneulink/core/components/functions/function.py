@@ -155,7 +155,7 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
-    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX
+    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE
 )
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
@@ -163,7 +163,7 @@ from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, P
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
     convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len,
-    SeededRandomState
+    SeededRandomState, contains_type, is_instance_or_subclass
 )
 
 __all__ = [
@@ -368,6 +368,39 @@ def _random_state_getter(self, owning_component, context):
     return current_state
 
 
+def _noise_setter(value, owning_component, context):
+    def has_function(x):
+        return (
+            is_instance_or_subclass(x, (Function_Base, types.FunctionType))
+            or contains_type(x, (Function_Base, types.FunctionType))
+        )
+
+    noise_param = owning_component.parameters.noise
+    value_has_function = has_function(value)
+    # initial set
+    if owning_component.is_initializing:
+        if value_has_function:
+            # is changing a parameter attribute like this ok?
+            noise_param.stateful = False
+    else:
+        default_value_has_function = has_function(noise_param.default_value)
+
+        if default_value_has_function and not value_has_function:
+            warnings.warn(
+                'Setting noise to a numeric value after instantiation'
+                ' with a value containing functions will not remove the'
+                ' noise ParameterPort or make noise stateful.'
+            )
+        elif not default_value_has_function and value_has_function:
+            warnings.warn(
+                'Setting noise to a value containing functions after'
+                ' instantiation with a numeric value will not create a'
+                ' noise ParameterPort or make noise stateless.'
+            )
+
+    return value
+
+
 class Function_Base(Function):
     """
     Function_Base(           \
@@ -486,9 +519,12 @@ class Function_Base(Function):
         specifies whether `function output type conversion <Function_Output_Type_Conversion>` is enabled.
 
     output_type : FunctionOutputType : None
-        used to specify the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
+        used to determine the return type for the `function <Function_Base.function>`;  `functionOuputTypeConversion`
         must be enabled and implemented for the class (see `FunctionOutputType <Function_Output_Type_Conversion>`
         for details).
+
+    changes_shape : bool : False
+        specifies whether the return value of the function is different than the shape of its `variable <Function_Base.variable>.  Used to determine whether the shape of the inputs to the `Component` to which the function is assigned should be based on the `variable <Function_Base.variable>` of the function or its `value <Function.value>`.
     COMMENT
 
     owner : Component
@@ -535,11 +571,18 @@ class Function_Base(Function):
                     :default value: False
                     :type: ``bool``
 
+                changes_shape
+                    see `changes_shape <Function_Base.changes_shape>`
+
+                    :default value: False
+                    :type: bool
+
                 output_type
                     see `output_type <Function_Base.output_type>`
 
                     :default value: FunctionOutputType.DEFAULT
                     :type: `FunctionOutputType`
+
         """
         variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
@@ -551,6 +594,11 @@ class Function_Base(Function):
             valid_types=FunctionOutputType
         )
         enable_output_type_conversion = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+
+        changes_shape = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
+        def _validate_changes_shape(self, param):
+            if not isinstance(param, bool):
+                return f'must be a bool.'
 
     # Note: the following enforce encoding as 1D np.ndarrays (one array per variable)
     variableEncodingDim = 1

@@ -1320,6 +1320,11 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # Only mechanisms use "value" state
         if not hasattr(self, 'ports'):
             blacklist.add("value")
+
+        # Only mechanisms and compositions need 'num_executions'
+        if not hasattr(self, 'ports') and not hasattr(self, 'nodes'):
+            blacklist.add("num_executions")
+
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
             return p.name not in blacklist and \
@@ -1370,24 +1375,39 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "previous_w", "random_state", "is_finished_flag",
                      "num_executions_before_finished", "num_executions",
                      "variable", "value", "saved_values", "saved_samples",
+                     "integrator_function_value", "termination_measure_value",
+                     "execution_count",
                      # Invalid types
                      "input_port_variables", "results", "simulation_results",
                      "monitor_for_control", "state_feature_values", "simulation_ids",
                      "input_labels_dict", "output_labels_dict", "num_estimates",
                      "modulated_mechanisms", "grid", "control_signal_params",
                      "activation_derivative_fct", "input_specification",
+                     "state_feature_specs",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
                      # Shape mismatch
                      "auto", "hetero", "cost", "costs", "combined_costs",
                      "control_signal",
                      # autodiff specific types
-                     "pytorch_representation", "optimizer"}
+                     "pytorch_representation", "optimizer",
+                     # duplicate
+                     "allocation_samples", "control_allocation_search_space",
+                     # not used in computation
+                     "has_recurrent_input_port", "enable_learning",
+                     "enable_output_type_conversion", "changes_shape",
+                     "output_type", "bounds"}
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input
         if hasattr(self, 'ports'):
             blacklist.update(["matrix", "integration_rate"])
+        else:
+            # Execute until finished is only used by mechanisms
+            blacklist.update(["execute_until_finished", "max_executions_before_finished"])
+            # "has_initializers" is only used by RTM
+            blacklist.update(["has_initializers"])
+
         def _is_compilation_param(p):
             if p.name not in blacklist and not isinstance(p, (ParameterAlias, SharedParameter)):
                 #FIXME: this should use defaults
@@ -2057,7 +2077,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in filter(lambda x: not isinstance(x, (ParameterAlias, SharedParameter)), self.parameters._in_dependency_order):
             # copy spec so it is not overwritten later
             # TODO: check if this is necessary
-            p.spec = copy_parameter_value(p.spec)
+            p.spec = copy_parameter_value(p.spec, shared_types=shared_types)
 
             # set default to None context to ensure it exists
             if (

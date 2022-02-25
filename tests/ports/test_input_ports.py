@@ -1,7 +1,7 @@
 import numpy as np
-import psyneulink as pnl
 import pytest
 
+import psyneulink as pnl
 import psyneulink.core.components.functions.nonstateful.combinationfunctions
 import psyneulink.core.components.functions.nonstateful.transferfunctions
 
@@ -96,3 +96,43 @@ class TestInputPorts:
         m = pnl.TransferMechanism(input_ports=['EXTERNAL', pnl.InputPort(name='INTERNAL_ONLY', internal_only=True)])
         assert m.input_values == [[ 0.],[ 0.]]
         assert m.external_input_values == [[0.]]
+
+    @pytest.mark.parametrize('default_input', [None, pnl.DEFAULT_VARIABLE])
+    def test_default_input(self, default_input):
+        variable = [22]
+        m = pnl.TransferMechanism(input_ports=[pnl.InputPort(name='INTERNAL_NODE',
+                                                             default_input=default_input,
+                                                             variable=variable)])
+        m.execute()
+        assert m.input_port.value == variable
+        if default_input:
+            assert m.input_port.internal_only is True
+        else:
+            assert m.input_port.internal_only is False
+        comp = pnl.Composition(nodes=(m, pnl.NodeRole.INTERNAL))
+        assert pnl.NodeRole.INTERNAL in comp.get_roles_by_node(m)
+        assert pnl.NodeRole.INPUT not in comp.get_roles_by_node(m)
+        assert not m.path_afferents
+        if default_input is None:
+            with pytest.warns(UserWarning) as warning:  # Warn, since default_input is NOT set
+                comp.run()
+            assert repr(warning[1].message.args[0]) == '"InputPort (\'INTERNAL_NODE\') of \'TransferMechanism-0\' ' \
+                                                       'doesn\'t have any afferent Projections."'
+            assert m.input_port.value == variable # For Mechanisms other than controller, default_variable seems
+            assert m.value == variable            #     to still be used even though default_input is NOT set
+        else:
+            assert not m.path_afferents  # No path_afferents since internal_only is set by default_input
+            comp.run()                   # No warning since default_input is set
+            assert m.input_port.value == variable
+            assert m.value == variable
+
+    def test_no_efferents(self):
+        A = pnl.InputPort()
+        with pytest.raises(pnl.PortError) as error:
+            A.efferents
+        assert '"InputPorts do not have \'efferents\'; (access attempted for Deferred Init InputPort)."' \
+               in str(error.value)
+        with pytest.raises(pnl.PortError) as error:
+            A.efferents = ['test']
+        assert '"InputPorts are not allowed to have \'efferents\' ' \
+               '(assignment attempted for Deferred Init InputPort)."' in str(error.value)

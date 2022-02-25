@@ -764,6 +764,7 @@ class OutputPortError(Exception):
     def __str__(self):
         return repr(self.error_value)
 
+
 class OutputPort(Port_Base):
     """
     OutputPort(            \
@@ -1056,6 +1057,12 @@ class OutputPort(Port_Base):
     def _get_primary_port(self, mechanism):
         return mechanism.output_port
 
+    def _get_all_afferents(self):
+        return self.mod_afferents
+
+    def _get_all_projections(self):
+        return self.mod_afferents + self.efferents
+
     def _parse_arg_variable(self, default_variable):
         return _parse_output_port_variable(default_variable, self.owner)
 
@@ -1262,6 +1269,14 @@ class OutputPort(Port_Base):
     @pathway_projections.setter
     def pathway_projections(self, assignment):
         self.efferents = assignment
+
+    @property
+    def efferents(self):
+        try:
+            return self._efferents
+        except:
+            self._efferents = []
+            return self._efferents
 
     # For backward compatibility with INDEX and ASSIGN
     @property

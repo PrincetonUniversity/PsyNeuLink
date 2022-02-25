@@ -27,7 +27,7 @@ import typecheck as tc
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import DefaultsFlexibility, _has_initializers_setter, ComponentsMeta
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DistributionFunction
-from psyneulink.core.components.functions.function import Function_Base, FunctionError
+from psyneulink.core.components.functions.function import Function_Base, FunctionError, _noise_setter
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.keywords import STATEFUL_FUNCTION_TYPE, STATEFUL_FUNCTION, NOISE, RATE
 from psyneulink.core.globals.parameters import Parameter
@@ -146,6 +146,12 @@ class StatefulFunction(Function_Base): #  --------------------------------------
             output, or a list or array of either of these, then noise is simply an offset that remains the same
             across all executions.
 
+        .. note::
+            A ParameterPort for noise will only be generated, and the
+            noise Parameter itself will only be stateful, if the value
+            of noise is entirely numeric (contains no functions) at the
+            time of Mechanism construction.
+
     owner : Component
         `component <Component>` to which the Function has been assigned.
 
@@ -191,7 +197,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
                     :default value: 1.0
                     :type: ``float``
         """
-        noise = Parameter(0.0, modulable=True)
+        noise = Parameter(0.0, modulable=True, setter=_noise_setter)
         rate = Parameter(1.0, modulable=True)
         previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
         initializer = Parameter(np.array([0]), pnl_internal=True)
