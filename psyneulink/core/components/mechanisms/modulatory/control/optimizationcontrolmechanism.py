@@ -2025,10 +2025,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
                     node_name = node.name
                 else:
-                    # FIX 2/18/22 - FALSELY ASSUMES THAT SPEC IN LIST IS FOR AN INPUT NODE RATHER THAN JUST ITS SOURCE
-                    #               SHOULD INSTEAD USE A PLACEMARKER, AND ASSIGN ONCE IT IS THERE IN
-                    #               _update_state_input_ports_for_controller() ?AND _update_state_features_dict()?
-                    # Node not (yet) in agent_rep, so uses its node name
+                    # Node not (yet) in agent_rep, so "DEFERRED n" as node name
                     spec = state_feature_specs[i]
                     node = None
                     node_name = f'DEFFERED {str(i-num_nodes)}'
