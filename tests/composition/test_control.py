@@ -849,6 +849,15 @@ class TestControlMechanisms:
         ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
         ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
+        ('set_spec', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
         ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
         ('too_many_inputs_warning', messages[5], None, UserWarning),
         ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
@@ -3149,8 +3158,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
     state_features_arg = [
         # 'nested_partial', # <- Specify only one of two INPUT Nodes of nested comp
         # 'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
-        'automatic',        # <- Automaticaly asign state_features
-        'bad'               # <- Specify Mechanism not in agent_rep
+        'nested_comp',
+        # 'automatic',        # <- Automaticaly asign state_features
+        # 'bad'               # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
     @pytest.mark.composition
@@ -3185,9 +3195,13 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                          'missing from \'OUTER COMP\' and any Compositions nested within it."'
         # state_features = D.output_port if state_features_arg is 'bad' else None
         if state_features_arg == 'nested_partial':
-            state_features = [A]
+            # state_features = [A]
+            state_features = {A:A.input_port, I1:I2.input_port}
         elif state_features_arg == 'nested_full':
-            state_features = [A, I1, I2]
+            # state_features = [A, I1, I2]
+            state_features = {A:A.input_port, I1:I2.input_port, I2:I1.input_port}
+        elif state_features_arg == 'nested_comp':
+            state_features = {mcomp}
         elif state_features_arg == 'automatic':
             state_features = None
         elif state_features_arg == 'bad':

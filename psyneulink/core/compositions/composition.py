@@ -8047,8 +8047,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         Get values of state_input_ports that receive projections from items providing relevant input (and any
           processing of those values specified), and format as input_dict suitable for run() method (called in evaluate)
-        Deal with inputs for nodes in nested Compositions
+
+        Deal with inputs for nodes in nested Compositions; at present:
+          - entries in the inputs dict are constrained to be INPUT Nodes *only* of the outermost Composition (self);
+          - if that has any nested Compositions that are INPUT Nodes, inputs will have entries for each of the
+            InputPorts of the input_CIM for each nested Composition that is an INPUT Node of the outermost Composition
+
+        Returns input_dict containing entries corresponding to each InputPort in controller.state_input_ports,
+          the key of which is the INPUT Node and the value is the value for that node
         """
+
         controller = controller or self.controller
         # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
         # Note:  these are always Mechanisms, including those that are INPUT Nodes in nested Compositions;
@@ -8058,9 +8066,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
         if no_predicted_input:
+            # FIX 2/25/22 - SHOULD CONTEXTUALIZE THIS
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
 
+        # FIX: 2/25/22
+        # MODIFIED 2/25/22 OLD:
+        # Used to check whether shadowed inputs are (nested) in comp
         nested_nodes = dict(self._get_nested_nodes())
+        # # MODIFIED 2/25/22 NEW:
+        # nested_input_nodes = self._get_nested_nodes_with_same_roles_at_all_levels(comp=self,
+        #                                                                           include_roles=NodeRole.INPUT)
+        # MODIFIED 2/25/22 END
 
         for i in range(controller.num_state_input_ports):
             input_port = controller.state_input_ports[i]
