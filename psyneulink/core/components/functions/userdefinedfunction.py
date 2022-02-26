@@ -17,7 +17,7 @@ import ast
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
 from psyneulink.core.globals.keywords import \
     CONTEXT, CUSTOM_FUNCTION, OWNER, PARAMS, \
-    SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE, MODEL_SPEC_ID_PSYNEULINK
+    SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
 from psyneulink.core.globals.utilities import _is_module_class, iscompatible
@@ -688,35 +688,6 @@ class UserDefinedFunction(Function_Base):
         post_block = builder.append_basic_block(name="post_udf")
         builder.position_at_start(post_block)
         return builder
-
-    @property
-    def _dict_summary(self):
-        import math
-
-        summary = super()._dict_summary
-        ext_function_str = None
-
-        try:
-            import modeci_mdf.functions.standard
-            # remove import/module errors when modeci_mdf is a package
-        except (ImportError, ModuleNotFoundError):
-            pass
-        else:
-            if self.custom_function in [
-                func_dict['function']
-                for name, func_dict
-                in modeci_mdf.functions.standard.mdf_functions.items()
-            ]:
-                ext_function_str = self.custom_function.__name__
-
-        if _is_module_class(self.custom_function, math):
-            ext_function_str = f'{self.custom_function.__module__}.{self.custom_function.__name__}'
-
-        if ext_function_str is not None:
-            summary[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]['custom_function'] = ext_function_str
-            summary['function'] = ext_function_str
-
-        return summary
 
     def as_mdf_model(self):
         import math

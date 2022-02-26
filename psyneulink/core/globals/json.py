@@ -181,7 +181,6 @@ nodes that serves as the Composition's \
 
 """
 
-import abc
 import ast
 import base64
 import binascii
@@ -223,15 +222,12 @@ class PNLJSONError(Exception):
 
 class JSONDumpable:
     @property
-    @abc.abstractmethod
-    def _dict_summary(self):
-        pass
-
-    @property
     def json_summary(self):
-        return _dump_pnl_json_from_dict(self._dict_summary)
+        return self.as_mdf_model().to_json()
 
 
+# leaving this due to instructions in test_documentation_models
+# (useful for exporting Composition results to JSON)
 class PNLJSONEncoder(json.JSONEncoder):
     """
         A `JSONEncoder
@@ -278,16 +274,6 @@ class PNLJSONEncoder(json.JSONEncoder):
             return super().default(o)
         except TypeError:
             return str(o)
-
-
-def _dump_pnl_json_from_dict(dict_summary):
-    return json.dumps(
-        dict_summary,
-        sort_keys=True,
-        indent=4,
-        separators=(',', ': '),
-        cls=PNLJSONEncoder
-    )
 
 
 def _get_variable_parameter_name(obj):
@@ -1619,20 +1605,6 @@ def generate_json(*compositions, simple_edge_format=True):
     from psyneulink.core.compositions.composition import Composition
 
     model_name = "_".join([c.name for c in compositions])
-
-    merged_graphs_dict_summary = {}
-    for c in compositions:
-        if not isinstance(c, Composition):
-            raise PNLJSONError(
-                f'Item in compositions arg of {__name__}() is not a Composition: {c}.'
-            )
-
-        try:
-            merged_graphs_dict_summary[MODEL_SPEC_ID_COMPOSITION].update(
-                c._dict_summary[MODEL_SPEC_ID_COMPOSITION]
-            )
-        except KeyError:
-            merged_graphs_dict_summary.update(c._dict_summary)
 
     model = mdf.Model(
         id=model_name,

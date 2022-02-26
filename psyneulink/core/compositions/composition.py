@@ -2753,8 +2753,7 @@ from psyneulink.core.globals.keywords import \
     DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
-    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_METADATA, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
+    MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
@@ -11416,66 +11415,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 for param in item.parameters:
                     if param.loggable and param.log_condition is LogCondition.OFF:
                         param.log_condition = LogCondition.EXECUTION
-
-    @property
-    def _dict_summary(self):
-        super_summary = super()._dict_summary
-
-        nodes_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
-        projections_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
-
-        additional_projections = []
-        additional_nodes = (
-            [self.controller]
-            if self.controller is not None
-            else []
-        )
-
-        for n in list(self.nodes) + additional_nodes:
-            if not isinstance(n, CompositionInterfaceMechanism):
-                nodes_dict[n.name] = n._dict_summary
-
-            # consider making this more general in the future
-            try:
-                additional_projections.extend(n.control_projections)
-            except AttributeError:
-                pass
-
-        for p in list(self.projections) + additional_projections:
-            p_summary = p._dict_summary
-            # filter projections to/from CIMs of this composition
-            # and projections to things outside this composition
-            if (
-                (
-                    p_summary[MODEL_SPEC_ID_SENDER_MECH] != self.name
-                    and p_summary[MODEL_SPEC_ID_RECEIVER_MECH] != self.name
-                )
-                and (
-                    p_summary[MODEL_SPEC_ID_SENDER_MECH] in nodes_dict
-                    or p_summary[MODEL_SPEC_ID_RECEIVER_MECH] in nodes_dict
-                )
-            ):
-                projections_dict[p.name] = p_summary
-
-        if len(nodes_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
-            del nodes_dict[MODEL_SPEC_ID_PSYNEULINK]
-
-        if len(projections_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
-            del projections_dict[MODEL_SPEC_ID_PSYNEULINK]
-
-        return {
-            MODEL_SPEC_ID_COMPOSITION: {
-                self.name: {
-                    **super_summary,
-                    **self.scheduler._dict_summary,
-                    **{
-                        MODEL_SPEC_ID_NODES: nodes_dict,
-                        MODEL_SPEC_ID_PROJECTIONS: projections_dict,
-                        'controller': self.controller,
-                    }
-                }
-            }
-        }
 
     # endregion LLVM
 

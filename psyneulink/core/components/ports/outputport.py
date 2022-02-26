@@ -1292,16 +1292,6 @@ class OutputPort(Port_Base):
             label_dictionary = {}
         return self._get_value_label(label_dictionary, self.owner.output_ports, context=context)
 
-    @property
-    def _dict_summary(self):
-        return {
-            **super()._dict_summary,
-            **{
-                'shape': str(self.defaults.value.shape),
-                'dtype': str(self.defaults.value.dtype)
-            }
-        }
-
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
 

@@ -1041,43 +1041,6 @@ class Projection_Base(Projection):
             {'variable'}
         )
 
-    @property
-    def _dict_summary(self):
-        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
-
-        # these may occur during deferred init
-        if not isinstance(self.sender, type):
-            sender_name = self.sender.name
-            if isinstance(self.sender.owner, CompositionInterfaceMechanism):
-                sender_mech = self.sender.owner.composition.name
-            else:
-                sender_mech = self.sender.owner.name
-        else:
-            sender_name = None
-            sender_mech = None
-
-        if not isinstance(self.receiver, type):
-            receiver_name = self.receiver.name
-            if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
-                receiver_mech = self.receiver.owner.composition.name
-            else:
-                receiver_mech = self.receiver.owner.name
-        else:
-            receiver_name = None
-            receiver_mech = None
-
-        socket_dict = {
-            MODEL_SPEC_ID_SENDER_PORT: sender_name,
-            MODEL_SPEC_ID_RECEIVER_PORT: receiver_name,
-            MODEL_SPEC_ID_SENDER_MECH: sender_mech,
-            MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
-        }
-
-        return {
-            **super()._dict_summary,
-            **socket_dict
-        }
-
     def as_mdf_model(self, simple_edge_format=True):
         import modeci_mdf.mdf as mdf
 

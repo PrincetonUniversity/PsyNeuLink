@@ -96,19 +96,6 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
             skip_environment_state_update_time_increment=skip_trial_time_increment,
         )
 
-    @property
-    def _dict_summary(self):
-        return {
-            'conditions': {
-                'termination': {
-                    str.lower(k.name): v._dict_summary for k, v in self.termination_conds.items()
-                },
-                'node_specific': {
-                    n.name: self.conditions[n]._dict_summary for n in self.nodes if n in self.conditions
-                }
-            }
-        }
-
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf
 

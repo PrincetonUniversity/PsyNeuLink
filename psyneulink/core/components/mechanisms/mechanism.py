@@ -1104,7 +1104,7 @@ from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, MECHANISM, MECHANISM_VALUE, \
-    MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
+    MECHANISM_COMPONENT_CATEGORY, \
     MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
@@ -4096,29 +4096,6 @@ class Mechanism_Base(Mechanism):
             self.output_ports,
             self.parameter_ports,
         ))
-
-    @property
-    def _dict_summary(self):
-        inputs_dict = {
-            MODEL_SPEC_ID_INPUT_PORTS: [
-                s._dict_summary for s in self.input_ports
-            ]
-        }
-        inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
-            {s.name: s._dict_summary for s in self.parameter_ports}
-        )
-
-        outputs_dict = {
-            MODEL_SPEC_ID_OUTPUT_PORTS: [
-                s._dict_summary for s in self.output_ports
-            ]
-        }
-
-        return {
-            **super()._dict_summary,
-            **inputs_dict,
-            **outputs_dict
-        }
 
     def as_mdf_model(self):
         import modeci_mdf.mdf as mdf

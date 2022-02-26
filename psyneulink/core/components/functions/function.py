@@ -157,7 +157,7 @@ from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
     IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
-    MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
+    MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
 )
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
@@ -815,20 +815,6 @@ class Function_Base(Function):
         return super()._model_spec_parameter_blacklist.union({
             'multiplicative_param', 'additive_param',
         })
-
-    @property
-    def _dict_summary(self):
-        summary = super()._dict_summary
-
-        try:
-            type_str = summary[MODEL_SPEC_ID_TYPE][MODEL_SPEC_ID_PSYNEULINK]
-        except KeyError:
-            type_str = summary[MODEL_SPEC_ID_TYPE][MODEL_SPEC_ID_GENERIC]
-
-        return {
-            **summary,
-            'function': type_str.lower()
-        }
 
     def _get_mdf_noise_function(self):
         import modeci_mdf.mdf as mdf
