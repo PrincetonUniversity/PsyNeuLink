@@ -1833,14 +1833,15 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _validate_input_nodes(self, nodes, enforce=None):
         """Check that nodes are INPUT Nodes of agent_rep
+        Restricted to INPUT Nodes at top level of agent_rep Composition
         Raise exception for non-INPUT Nodes if **enforce** is specified; else warn.
         """
-        # # MODIFIED 2/25/22 OLD:
-        # non_input_node_specs = [node for node in nodes
-        #                         if node not in self._get_agent_rep_input_nodes(comp_as_node=True)]
-        # MODIFIED 2/25/22 NEW:
+        # MODIFIED 2/25/22 OLD:
         non_input_node_specs = [node for node in nodes
-                                if node not in self._get_agent_rep_input_nodes(comp_as_node=ALL)]
+                                if node not in self._get_agent_rep_input_nodes(comp_as_node=True)]
+        # # MODIFIED 2/25/22 NEW:
+        # non_input_node_specs = [node for node in nodes
+        #                         if node not in self._get_agent_rep_input_nodes(comp_as_node=ALL)]
         # MODIFIED 2/25/22 END
         non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
 
