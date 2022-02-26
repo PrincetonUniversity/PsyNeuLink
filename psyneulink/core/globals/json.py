@@ -211,7 +211,7 @@ from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comm
 
 __all__ = [
     'PNLJSONError', 'JSONDumpable', 'PNLJSONEncoder',
-    'generate_json', 'generate_script_from_json',
+    'generate_json', 'generate_script_from_json', 'generate_script_from_mdf',
     'write_json_file'
 ]
 
@@ -1580,6 +1580,29 @@ def generate_script_from_json(model_input, outfile=None):
             print(f'Wrote JSON to {outfile.name}')
     else:
         return model_output
+
+
+def generate_script_from_mdf(model_input, outfile=None):
+    """
+        Generate a Python script from MDF model **model_input**
+
+        .. warning::
+           Use of `generate_script_from_mdf` to generate a Python script from a model without taking proper precautions
+           can introduce a security risk to the system on which the Python interpreter is running.  This is because it
+           calls exec, which has the potential to execute non-PsyNeuLink-related code embedded in the file.  Therefore,
+           `generate_script_from_mdf` should be used to read only model of known and secure origin.
+
+        Arguments
+        ---------
+
+            model_input : modeci_mdf.Model
+
+        Returns
+        -------
+
+            Text of Python script : str
+    """
+    return generate_script_from_json(model_input.to_json(), outfile)
 
 
 def generate_json(*compositions, simple_edge_format=True):
