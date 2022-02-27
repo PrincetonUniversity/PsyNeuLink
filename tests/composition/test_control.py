@@ -3157,10 +3157,10 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
     state_features_arg = [
         'nested_partial', # <- Specify only one of two INPUT Nodes of nested comp
-        # 'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
-        # 'nested_comp',
-        # 'automatic',        # <- Automaticaly asign state_features
-        # 'bad'               # <- Specify Mechanism not in agent_rep
+        'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
+        'nested_comp',
+        'automatic',        # <- Automaticaly asign state_features
+        'bad'               # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
     @pytest.mark.composition
@@ -3231,7 +3231,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             if state_features_arg == 'nested_partial':
                 assert ocm.state_features == {A:A.input_port,  I1:None, I2:I2.input_port}
             else:
-                assert ocm.state_features == {A:A.input_port,I2:I2.input_port}
+                assert ocm.state_features == {A:A.input_port, I1:I1.input_port, I2:I2.input_port}
 
 class TestSampleIterator:
 
