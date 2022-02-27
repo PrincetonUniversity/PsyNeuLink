@@ -3158,9 +3158,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
     state_features_arg = [
         'nested_partial', # <- Specify only one of two INPUT Nodes of nested comp
         'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
-        'nested_comp',
-        'automatic',        # <- Automaticaly asign state_features
-        'bad'               # <- Specify Mechanism not in agent_rep
+        'nested_comp',    # <- Specify nested comp as itself
+        'automatic',      # <- Automaticaly asign state_features
+        'bad'             # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
     @pytest.mark.composition
