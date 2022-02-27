@@ -1834,14 +1834,17 @@ class OptimizationControlMechanism(ControlMechanism):
     def _validate_input_nodes(self, nodes, enforce=None):
         """Check that nodes are INPUT Nodes of agent_rep
         Restricted to INPUT Nodes at top level of agent_rep Composition
-        Raise exception for non-INPUT Nodes if **enforce** is specified; else warn.
+        Raise exception for non-INPUT Nodes if **enforce** is specified; otherwise just issue warning.
         """
-        # MODIFIED 2/25/22 OLD:
-        non_input_node_specs = [node for node in nodes
-                                if node not in self._get_agent_rep_input_nodes(comp_as_node=True)]
-        # # MODIFIED 2/25/22 NEW:
+        # # MODIFIED 2/25/22 OLD:
+        # # This restricts legal INPUT Node specifications to top level of agent_rep
+        # #     (i.e., if a nested Composition is an INPUT Node, only it -- and not its INPUT Nodes -- are allowed)
         # non_input_node_specs = [node for node in nodes
-        #                         if node not in self._get_agent_rep_input_nodes(comp_as_node=ALL)]
+        #                         if node not in self._get_agent_rep_input_nodes(comp_as_node=True)]
+        # MODIFIED 2/25/22 NEW:
+        # This allows specification of INPUT Nodes of a nested Composition that itself is an INPUT Node of agent_rep
+        non_input_node_specs = [node for node in nodes
+                                if node not in self._get_agent_rep_input_nodes(comp_as_node=ALL)]
         # MODIFIED 2/25/22 END
         non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
 
@@ -2124,25 +2127,33 @@ class OptimizationControlMechanism(ControlMechanism):
         elif isinstance(user_specs, set):
             # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
             self._validate_input_nodes(user_specs)
-            # specs = [node if node in state_feature_specs else None for node in agent_rep_input_nodes]
+            # FIX: 2/25/22 - SHOULD EXPAND ANY SPECIFICATION OF NESTED COMP (THAT IS AN INPUT NODE) TO
+            #                # INPUT NODES OF ALL NESTED COMPS AS DEEP AS THE NESTING GOES
             # FIX: 1/29/22 -
             #      THIS IS DANGEROUS -- SHOULD REPLACE ONCE TUPLE FORMAT IS IMPLEMENTED OR USE InputPort SPECIF DICT
             #      IT WORKS FOR NESTED COMPS WITH A SIGNLE INPUT NODE OF THEIR OWN
             #      BUT IF A NESTED COMP HAS MORE THAN ONE INPUT NODE, THIS WILL RETURN MORE THAN ONE NODE IN PLACE OF
             #      THE NESTED COMP AND THUS GET OUT OF ALIGNMENT WITH NUMBER OF INPUT NODES FOR AGENT_REP
-            #      ONCE FIXED, EXTEND FOR USE WITH COMP AS SPEC IN LIST AND DICT FORMATS
+            #      ONCE FIXED, EXTEND FOR USE WITH COMP AS SPEC IN DICT FORMAT
             # Replace any nested Comps that are INPUT Nodes of agent_comp with their INPUT Nodes so they are shadowed
             all_nested_input_nodes = []
             for node in user_specs:
                 if isinstance(node, Composition):
-                    all_nested_input_nodes.extend(get_inputs_for_nested_comp(node))
+                    # FIX: 2/25/22 - THIS CURRENTLY RETURNS ONLY TOP LEVEL INPUT nodes for node;
+                    #                SHOULD PROBABLY BE REPLACED WITH CALL TO _get_agent_rep_input_nodes(comp=False)
+                    # # MODIFIED 2/25/22 OLD:
+                    # all_nested_input_nodes.extend(get_inputs_for_nested_comp(node))
+                    # MODIFIED 2/25/22 NEW:
+                    all_nested_input_nodes.extend(self._get_agent_rep_input_nodes(node, comp_as_node=False))
+                    # MODIFIED 2/25/22 END
                 else:
                     all_nested_input_nodes.append(node)
             # Get specs ordered by agent_rep INPUT Nodes, with any not in agent_rep at end and None for any not included
-            agent_rep_nodes = self._get_agent_rep_input_nodes()
-            nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_nodes]
-            nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_nodes])
+            agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
+            nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_input_nodes]
+            nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_input_nodes])
             input_port_names = _parse_specs(nodes)
+            assert True
 
         # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 
@@ -2460,10 +2471,10 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
-        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
+        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
+        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
         # END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
