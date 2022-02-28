@@ -2111,15 +2111,44 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # User {node:spec} dict spec
             else:
-                specified_input_nodes = user_specs.keys()
+                specified_input_nodes =list(user_specs.keys())
                 self._validate_input_nodes(specified_input_nodes)
-                nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+                # # MODIFIED 2/25/22 OLD:
+                # nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
+                # # Get specs in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
+                # #   as well as to any not in agent_rep at end which are placed at the end of the list
+                # nodes.extend([node for node in specified_input_nodes if node not in nodes])
+                # specs = [user_specs[node] if node in specified_input_nodes else None for node in nodes]
+                # # Get parsed specs and names (don't care about nodes since those are specified by keys
+                # input_port_names = _parse_specs(specs)
+                # MODIFIED 2/25/22 NEW:
+                # FIX: 2/25/22: CONSOLIDATE WITH HANDLING OF set FORMAT BELOW
+                all_nested_input_nodes = []
+                for node in user_specs:
+                    if isinstance(node, Composition):
+                        all_nested_input_nodes.extend(self._get_agent_rep_input_nodes(node, comp_as_node=False))
+                    else:
+                        all_nested_input_nodes.append(node)
                 # Get specs in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
-                #   as well as to any not in agent_rep at end which are placed at the end of the list
-                nodes.extend([node for node in specified_input_nodes if node not in nodes])
-                specs = [user_specs[node] if node in specified_input_nodes else None for node in nodes]
+                #   and any not anywhere (including nested) in agent_rep, which are placed at the end of list
+                agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
+                nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_input_nodes]
+                nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_input_nodes])
+                # # MODIFIED 2/25/22 OLD:
+                # specs = [user_specs[node] if node in specified_input_nodes else None for node in nodes]
+                # MODIFIED 2/25/22 NEW:
+                # Expand any Compositions to all of their nested nodes
+                for i, node in enumerate(specified_input_nodes):
+                    if isinstance(node, Composition):
+                        nested_input_nodes = \
+                            node._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles=NodeRole.INPUT)
+                        user_specs.update({k:user_specs[node] for k in nested_input_nodes})
+                        user_specs.pop(node)
+                specs = [user_specs[node] if node in user_specs.keys() else None for node in nodes]
+                # MODIFIED 2/25/22 END
                 # Get parsed specs and names (don't care about nodes since those are specified by keys
                 input_port_names = _parse_specs(specs)
+                # MODIFIED 2/25/22 END
 
         # SET spec
         # Treat as specification of INPUT Nodes to be shadowed:

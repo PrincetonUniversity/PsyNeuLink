@@ -878,6 +878,7 @@ class TestControlMechanisms:
         None
     ])
     def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
+        """See test_nested_composition_as_agent_rep() for additional tests of state_features specification."""
 
         test_condition = state_feature_args[0]
         message_1 = state_feature_args[1]
@@ -3156,11 +3157,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         assert np.allclose(results, [[7]])
 
     state_features_arg = [
-        'nested_partial', # <- Specify only one of two INPUT Nodes of nested comp
-        'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
-        'nested_comp',    # <- Specify nested comp as itself
-        'automatic',      # <- Automaticaly asign state_features
-        'bad'             # <- Specify Mechanism not in agent_rep
+        'nested_partial_set',   # <- Specify only one of two INPUT Nodes of nested comp in set format
+        'nested_partial_dict',  # <- Specify only one of two INPUT Nodes of nested comp in dict format
+        'nested_full_set',      # <- Specify both of two INPUT Nodes of nested comp in set format
+        'nested_full_dict',     # <- Specify both of two INPUT Nodes of nested comp in dict format
+        'nested_comp_set',      # <- Specify nested comp as itself in set format
+        'nested_comp_dict',     # <- Specify nested comp as itself in dict format with a single spec for all INPUT Nodes
+        'automatic',            # <- Automaticaly asign state_features
+        'bad'                   # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
     @pytest.mark.composition
@@ -3171,7 +3175,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                              ids= [f"state_feature-{x}" for x in state_features_arg]
                              )
     def test_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
-        """Also tests state_features for comp nested within nested_agent_rep"""
+        """Also tests state_features for comp nested within nested_agent_rep.
+        See test_ocm_state_feature_specs_and_warnings_and_errors() for additional tests of state_features specification.
+        """
 
         I1 = pnl.ProcessingMechanism(name='I1')
         I2 = pnl.ProcessingMechanism(name='I2')
@@ -3194,17 +3200,18 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
                          'missing from \'OUTER COMP\' and any Compositions nested within it."'
         # state_features = D.output_port if state_features_arg is 'bad' else None
-        if state_features_arg == 'nested_partial':
-            # state_features = [A]
-            # state_features = {A:A.input_port, I1:I2.input_port}
-            # state_features = {A, I1}
+        if state_features_arg == 'nested_partial_set':
             state_features = {A, I2}
-        elif state_features_arg == 'nested_full':
-            # state_features = [A, I1, I2]
-            # state_features = {A:A.input_port, I1:I2.input_port, I2:I1.input_port}
+        elif state_features_arg == 'nested_full_set':
             state_features = {A, I1, I2}
-        elif state_features_arg == 'nested_comp':
+        elif state_features_arg == 'nested_partial_dict':
+            state_features = {A:A.input_port, I2:I1.input_port}
+        elif state_features_arg == 'nested_full_dict':
+            state_features = {A:A.input_port, I1:I2.input_port, I2:I1.input_port}
+        elif state_features_arg == 'nested_comp_set':
             state_features = {mcomp}
+        elif state_features_arg == 'nested_comp_dict':
+            state_features = {mcomp:I1}
         elif state_features_arg == 'automatic':
             state_features = None
         elif state_features_arg == 'bad':
@@ -3228,8 +3235,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         else:
             ocomp.add_controller(ocm)
             ocomp.run()
-            if state_features_arg == 'nested_partial':
+            if state_features_arg == 'nested_partial_set':
                 assert ocm.state_features == {A:A.input_port,  I1:None, I2:I2.input_port}
+            elif state_features_arg == 'nested_partial_dict':
+                assert ocm.state_features == {A:A.input_port,  I1:None, I2:I1.input_port}
+            elif state_features_arg == 'nested_full_dict':
+                assert ocm.state_features == {A:A.input_port,  I1:I2.input_port, I2:I1.input_port}
+            elif state_features_arg == 'nested_comp_dict':
+                assert ocm.state_features == {A:I1.input_port,  I1:I1.input_port, I2:I1.input_port}
             else:
                 assert ocm.state_features == {A:A.input_port, I1:I1.input_port, I2:I2.input_port}
 
