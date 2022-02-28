@@ -3651,6 +3651,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
         self._need_check_for_unused_projections = True
+        self._nodes_added = False
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -3809,6 +3810,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
+        # MODIFIED 2/25/22 NEW:
+        #  FIX - NEEDED FOR _update_state_input_ports_for_controller() TO SEE ALL NESTED INPUT NODES
+        #        CONDITIONALIZE ONCE add_node IS FLAGGED?
+        if self._nodes_added:
+            self._determine_node_roles(context=context)
+        # MODIFIED 2/25/22 END
         self._complete_init_of_partially_initialized_nodes(context=context)
         # Call before _determine_pathway and _create_CIM_ports so they have updated roles
         self._determine_node_roles(context=context)
@@ -3938,6 +3945,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
         #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
         # MODIFIED 1/27/22 END
+        self._nodes_added = True
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
@@ -4714,6 +4722,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # CIMs to be created, which is not correct for controllers
         if self.controller is not None:
             self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
+
+        self._nodes_added = False
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -8171,6 +8181,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # MODIFIED 2/25/22 NEW:
         num_input_nodes = len(nested_input_nodes)
+        # FIX: 2/25/22: REINSTATE ONCE FIXED FOR test_moving_average()
         assert len(controller.state_feature_specs) == num_input_nodes, \
             f"PROGRAM ERROR: The number of state_feature_specs for {controller.name} " \
             f"({len(controller.state_feature_specs)}) does not equal the number of INPUT Nodes for {self.name} " \
@@ -10799,7 +10810,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             formatted_input = _get_inputs(self, 1, use_labels)
             if show_nested_input_nodes:
-                preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trials:"
+                plural = 's' if num_trials > 1 else ''
+                preface = f"\nInputs to (nested) INPUT Nodes of {self.name} for {num_trials} trial{plural}:"
                 epilog = f"\n\nFormat as follows for inputs to run():\n" \
                          f"{self.get_input_format(form=form, num_trials=num_trials)}"
                 return preface + formatted_input[:-1] + epilog

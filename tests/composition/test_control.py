@@ -327,7 +327,7 @@ class TestControlSpecification:
 
         else:
             expected_text = 'The \'state_features\' specified for \'Controller\' contains an item (deferred) ' \
-                            'that is not an INPUT Node of its agent_rep (\'ocomp\'); only INPUT Nodes can be ' \
+                            'that is not an INPUT Node within its agent_rep (\'ocomp\'); only INPUT Nodes can be ' \
                             'in a set or used as keys in a dict used to specify \'state_features\'.'
 
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
@@ -1025,7 +1025,7 @@ class TestControlMechanisms:
                                   'bad_dict_spec_warning'}:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
-                    assert warning[0].message.args[0] == message_1
+                    assert message_1 in [warning[i].message.args[0] for i in range(len(warning))]
             else:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
@@ -1035,7 +1035,7 @@ class TestControlMechanisms:
                         assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
                         # Note: oa is assigned to icomp due to ordering:
                         assert ocm.state_features == {icomp: oa.output_port, oa: None, ob: None}
-                assert warning[0].message.args[0] == message_1
+                assert message_1 in [warning[i].message.args[0] for i in range(len(warning))]
                 assert ocm.state_features == {icomp: oa.output_port, oa: None, ob: None}
 
         else:

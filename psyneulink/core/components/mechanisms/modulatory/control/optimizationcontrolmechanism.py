@@ -1833,19 +1833,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _validate_input_nodes(self, nodes, enforce=None):
         """Check that nodes are INPUT Nodes of agent_rep
-        Restricted to INPUT Nodes at top level of agent_rep Composition
+        INPUT Nodes are those at the top level of agent_rep as well as those of any Compositions nested within it
+            that are themselves INPUT Nodes of their enclosing Composition.
         Raise exception for non-INPUT Nodes if **enforce** is specified; otherwise just issue warning.
         """
-        # # MODIFIED 2/25/22 OLD:
-        # # This restricts legal INPUT Node specifications to top level of agent_rep
-        # #     (i.e., if a nested Composition is an INPUT Node, only it -- and not its INPUT Nodes -- are allowed)
-        # non_input_node_specs = [node for node in nodes
-        #                         if node not in self._get_agent_rep_input_nodes(comp_as_node=True)]
-        # MODIFIED 2/25/22 NEW:
-        # This allows specification of INPUT Nodes of a nested Composition that itself is an INPUT Node of agent_rep
+
         non_input_node_specs = [node for node in nodes
                                 if node not in self._get_agent_rep_input_nodes(comp_as_node=ALL)]
-        # MODIFIED 2/25/22 END
         non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
 
         # Deal with Nodes that are in agent_rep but not INPUT Nodes
@@ -1913,9 +1907,12 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
-        # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
-        #                - ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
-        #                - INCLUDES INPUT NODES OF NESTED COMP
+        # # MODIFIED 2/25/22 NEW:
+        # #  FIX - NEEDED FOR _update_state_input_ports_for_controller() TO SEE ALL NESTED INPUT NODES
+        # #        REMOVE ONCE add_node IS FLAGGED?
+        # if self.agent_rep_type == COMPOSITION:
+        #     self.agent_rep._analyze_graph()
+        # MODIFIED 2/25/22 END
         # Agent rep's input Nodes and their names
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         # The following are all "full" lists; that is, there is an entry corresponding to every INPUT node of agent_rep
@@ -2182,7 +2179,6 @@ class OptimizationControlMechanism(ControlMechanism):
             nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_input_nodes]
             nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_input_nodes])
             input_port_names = _parse_specs(nodes)
-            assert True
 
         # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 
