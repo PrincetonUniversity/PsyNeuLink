@@ -824,13 +824,13 @@ class TestControlMechanisms:
         f'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
 
         # 8
-        f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OC) '
-        f'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
+        f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (OC) '
+        f'that is not an INPUT Node within its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
         f'used as keys in a dict used to specify \'state_features\'.',
 
         # 9
         f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
-        f'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
+        f'that is not an INPUT Node within its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
         f'or used as keys in a dict used to specify \'state_features\'.',
 
         # 10
@@ -845,29 +845,27 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
-        # ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec_short', None, None, None),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('full_list_spec', None, None, None),
+        ('list_spec_with_none', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
         ('set_spec', None, None, None),
-        # ('set_spec_short', None, None, None),
-        # ('automatic_assignment', None, None, None),
-        # ('shadow_inputs_dict_spec', None, None, None),
-        # ('shadow_inputs_dict_spec_w_none', None, None, None),
-        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        # ('too_many_inputs_warning', messages[5], None, UserWarning),
-        # ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
-        # ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        # ('bad_dict_spec_warning', messages[8], None, UserWarning),
-        # ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        # ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
-        # ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
+        ('set_spec_short', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
+        ('too_many_inputs_warning', messages[5], None, UserWarning),
+        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
     @pytest.mark.control
@@ -921,8 +919,6 @@ class TestControlMechanisms:
             'too_many_w_node_not_in_composition_warning': [ia, oa, ob, ext],
             'bad_dict_spec_warning': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # ia & oc are not *ocomp* INPUT Nodes
-            'bad_set_spec_warning': {ob, ia},  # elicits short spec warning
-            'bad_set_spec_error': {ob, ia},  # elicits INPUT Node warning (for ia)
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
@@ -967,7 +963,7 @@ class TestControlMechanisms:
                                                        'Shadowed input of OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
                 # 'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-                assert ocm.state_features == {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
+                assert ocm.state_features == {ia:ia.input_port, oa:oc.input_port, ob:ob.output_port}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
@@ -975,7 +971,7 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
-                assert ocm.state_features == {icomp: None, oa:oc.input_port, ob:ob.output_port}
+                assert ocm.state_features == {ia: None, oa:oc.input_port, ob:ob.output_port}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
@@ -984,7 +980,7 @@ class TestControlMechanisms:
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {icomp:ia.input_port, oa:oa.input_port, ob:ob.input_port}
+                assert ocm.state_features == {ia:ia.input_port, oa:oa.input_port, ob:ob.input_port}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
@@ -992,7 +988,7 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 1
                 assert ocm.state_input_ports.names == ['Shadowed input of OA[InputPort-0]']
                 # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
-                assert ocm.state_features == {icomp:None, oa:oa.input_port, ob:None}
+                assert ocm.state_features == {ia:None, oa:oa.input_port, ob:None}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
@@ -1026,13 +1022,10 @@ class TestControlMechanisms:
             # These also produce errors, tested below
             if test_condition in {'too_many_inputs_warning',
                                   'too_many_w_node_not_in_composition_warning',
-                                  'bad_dict_spec_warning',
-                                  'bad_set_spec_warning'}:
+                                  'bad_dict_spec_warning'}:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
                     assert warning[0].message.args[0] == message_1
-                if test_condition == 'bad_set_spec_warning':
-                    assert message_2 == warning[1].message.args[0] # since set, order of ob and ia is not reliable
             else:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)

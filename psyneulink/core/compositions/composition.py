@@ -8186,10 +8186,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 2/25/22 - REPLACE THE FOLLOWING WITH DIRECT ASSIGNMENTS FROM controller.state_features
             input_node = nested_input_nodes[i]
             state_feature = controller.state_feature_specs[i]
-            assert controller.state_features[input_node] == state_feature, \
-                f"PROGRAM ERROR: state_feature_spec ({state_feature}) for controller of {self.name} " \
-                f"({controller.self.name}) is out of alignment with the corresponding INPUT Node " \
-                f"listed in its {STATE_FEATURES} dict."
+            # # assert controller.state_features[input_node] == state_feature, \
+            #     f"PROGRAM ERROR: state_feature_spec ({state_feature}) for controller of {self.name} " \
+            #     f"({controller.self.name}) is out of alignment with the corresponding INPUT Node " \
+            #     f"listed in its {STATE_FEATURES} dict."
 
             if state_feature is None:
                 state_input_port = None
@@ -8198,7 +8198,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # ELSE, ADD IT AS KEY TO inputs DICT
                 # EITHER WAY, CAN USE predicted_input
                 if isinstance(input_node, Mechanism) and input_node in self.nodes:
-                    inputs[key] = predicted_input
+                    inputs[input_node] = predicted_input
                 else:
                     comp_for_input = _get_enclosing_comp_for_node(input_node.input_port, nested_nodes[input_node])
                     if comp_for_input in inputs:
@@ -8214,8 +8214,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if no_predicted_input:
                     predicted_input = state_input_port.default_input_shape
                 else:
-                    # FIX: 2/25/22 ??IF predicted_inputs, IT IS state_feature_values WHICH IS OF LEN state_input_ports (s)
-                    predicted_input = predicted_inputs[s]
+                    # Use i here since predicted_inputs has been populated for all INPUT Nodes
+                    #    (i.e., even for ones for which state_feature_specs have not been specified)
+                    predicted_input = predicted_inputs[i]
                 s += 1
 
             # Shadow input specified

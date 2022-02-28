@@ -1856,7 +1856,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 items_str = f"contains items ({items}) that are not INPUT Nodes"
             message = f"The '{STATE_FEATURES}' specified for '{self.name}' {items_str} " \
-                      f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set " \
+                      f"within its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set " \
                       f"or used as keys in a dict used to specify '{STATE_FEATURES}'."
             if enforce:
                 raise OptimizationControlMechanismError(message)
