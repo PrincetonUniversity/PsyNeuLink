@@ -2079,43 +2079,56 @@ class OptimizationControlMechanism(ControlMechanism):
             return spec_names or []
 
         user_specs = self.parameters.state_feature_specs.spec
-        # user_specs = self.state_feature_specs
 
-        # LIST spec
-        #   Treat as source specs:
-        #   - construct a regular dict using INPUT Nodes as keys and specs as values
-        if isinstance(user_specs, list):
-            input_port_names = _parse_specs(user_specs)
-
-        # DICT spec
-        elif isinstance(user_specs, dict):
-            # SHADOW_INPUTS dict spec
-            if SHADOW_INPUTS in user_specs:
-                # Set not allowed as SHADOW_INPUTS spec
+        # LIST OR SHADOW_INPUTS DICT: source specs
+        # Source specs but not INPUT Nodes specified; spec is either:
+        # - list:  [spec, spec...]
+        # - SHADOW_INPUTS dict (with list spec as its only entry): {SHADOW_INPUTS: {[spec, spec...]}}
+        # Treat specs as sources of input to INPUT Nodes of agent_rep (in corresponding order):
+        # Call _parse_specs to construct a regular dict using INPUT Nodes as keys and specs as values
+        if isinstance(user_specs, list) or (isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs):
+            if isinstance(user_specs, list):
+                specs = user_specs
+                spec_str = 'list'
+            else:
+                # SHADOW_INPUTS spec:
                 if isinstance(user_specs[SHADOW_INPUTS], set):
-                    # Catch here to provide context-relevant error message
+                    # Set not allowed as SHADOW_INPUTS spec; catch here to provide context-relevant error message
                     raise OptimizationControlMechanismError(
                         f"The '{STATE_FEATURES}' argument for '{self.name}' uses a set in a '{SHADOW_INPUTS.upper()}' "
                         f"dict;  this must be a single item or list of specifications in the order of the INPUT Nodes"
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
-                input_port_names = _parse_specs(user_specs[SHADOW_INPUTS], f"{SHADOW_INPUTS.upper()} dict")
+                specs = user_specs[SHADOW_INPUTS]
+                spec_str = f"{SHADOW_INPUTS.upper()} dict"
+            input_port_names = _parse_specs(specs, spec_str=spec_str)
 
-            # User {node:spec} dict spec
+        # FIX: 2/25/22 - ?ITEMS IN set ARE SHADOWED, BUT UNSPECIFIED ITEMS IN SET AND DICT ARE ASSIGNED DEFAULT VALUES
+        # SET OR DICT: specification by INPUT Nodes
+        # INPUT Nodes of agent_rep specified in either a:
+        # - set, without source specs: {node, node...}
+        # - dict, with source specs for each: {node: spec, node: spec...}
+        # Call _parse_specs to convert to or flesh out dict with INPUT Nodes as keys and any specs as values
+        #  adding any unspecified INPUT Nodes of agent_rep and assiging default values for any unspecified values
+        elif isinstance(user_specs, (set, dict)):
+
+            exapnded_specifid_nodes = []
+            for node in user_specs:
+                if isinstance(node, Composition):
+                    exapnded_specifid_nodes.extend(self._get_agent_rep_input_nodes(node, comp_as_node=False))
+                else:
+                    exapnded_specifid_nodes.append(node)
+            agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
+            # Get specified nodes in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
+            all_specified_nodes = [node if node in exapnded_specifid_nodes else None for node in agent_rep_input_nodes]
+            # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
+            all_specified_nodes.extend([node for node in exapnded_specifid_nodes if node not in agent_rep_input_nodes])
+
+            if isinstance(user_specs, set):
+                self._validate_input_nodes(user_specs)
+                specs = all_specified_nodes
             else:
-                specified_input_nodes =list(user_specs.keys())
+                specified_input_nodes = list(user_specs.keys())
                 self._validate_input_nodes(specified_input_nodes)
-                # FIX: 2/25/22: CONSOLIDATE WITH HANDLING OF set FORMAT BELOW
-                all_nested_input_nodes = []
-                for node in user_specs:
-                    if isinstance(node, Composition):
-                        all_nested_input_nodes.extend(self._get_agent_rep_input_nodes(node, comp_as_node=False))
-                    else:
-                        all_nested_input_nodes.append(node)
-                # Get specs in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
-                #   and any not anywhere (including nested) in agent_rep, which are placed at the end of list
-                agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
-                nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_input_nodes]
-                nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_input_nodes])
                 # Expand any Compositions to all of their nested nodes
                 for i, node in enumerate(specified_input_nodes):
                     if isinstance(node, Composition):
@@ -2123,36 +2136,9 @@ class OptimizationControlMechanism(ControlMechanism):
                             node._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles=NodeRole.INPUT)
                         user_specs.update({k:user_specs[node] for k in nested_input_nodes})
                         user_specs.pop(node)
-                specs = [user_specs[node] if node in user_specs.keys() else None for node in nodes]
+                specs = [user_specs[node] if node in user_specs.keys() else None for node in all_specified_nodes]
                 # Get parsed specs and names (don't care about nodes since those are specified by keys
-                input_port_names = _parse_specs(specs)
-
-        # SET spec
-        # Treat as specification of INPUT Nodes to be shadowed:
-        # - construct an InputPort dict with SHADOW_INPUTS as its key, and specs in a list as its value
-        elif isinstance(user_specs, set):
-            # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
-            self._validate_input_nodes(user_specs)
-            # FIX: 2/25/22 - SHOULD EXPAND ANY SPECIFICATION OF NESTED COMP (THAT IS AN INPUT NODE) TO
-            #                # INPUT NODES OF ALL NESTED COMPS AS DEEP AS THE NESTING GOES
-            # FIX: 1/29/22 -
-            #      THIS IS DANGEROUS -- SHOULD REPLACE ONCE TUPLE FORMAT IS IMPLEMENTED OR USE InputPort SPECIF DICT
-            #      IT WORKS FOR NESTED COMPS WITH A SIGNLE INPUT NODE OF THEIR OWN
-            #      BUT IF A NESTED COMP HAS MORE THAN ONE INPUT NODE, THIS WILL RETURN MORE THAN ONE NODE IN PLACE OF
-            #      THE NESTED COMP AND THUS GET OUT OF ALIGNMENT WITH NUMBER OF INPUT NODES FOR AGENT_REP
-            #      ONCE FIXED, EXTEND FOR USE WITH COMP AS SPEC IN DICT FORMAT
-            # Replace any nested Comps that are INPUT Nodes of agent_comp with their INPUT Nodes so they are shadowed
-            all_nested_input_nodes = []
-            for node in user_specs:
-                if isinstance(node, Composition):
-                    all_nested_input_nodes.extend(self._get_agent_rep_input_nodes(node, comp_as_node=False))
-                else:
-                    all_nested_input_nodes.append(node)
-            # Get specs ordered by agent_rep INPUT Nodes, with any not in agent_rep at end and None for any not included
-            agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
-            nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_input_nodes]
-            nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_input_nodes])
-            input_port_names = _parse_specs(nodes)
+            input_port_names = _parse_specs(specs)
 
         # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 

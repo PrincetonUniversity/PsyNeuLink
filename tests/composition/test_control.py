@@ -868,6 +868,11 @@ class TestControlMechanisms:
         ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
+    if len(state_feature_args) != 21:
+        print("\n\n**********************************************************************************************")
+        print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
+        print("***********************************************************************************************")
+
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
     @pytest.mark.parametrize('obj_mech', [
