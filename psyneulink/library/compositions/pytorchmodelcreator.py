@@ -241,7 +241,7 @@ class PytorchModelCreator(torch.nn.Module):
                 weights_llvmlite = proj._extract_llvm_matrix(ctx, builder, params)
                 pnlvm.helpers.printf_float_matrix(builder, weights_llvmlite, prefix= f"{proj.sender._mechanism} -> {proj.receiver._mechanism}\n", override_debug=False)
                 # update delta_W
-                node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(proj._idx)])
+                node_delta_w = builder.gep(delta_w, [ctx.int32_ty(0), ctx.int32_ty(self.projections.index(proj))])
 
                 dim_x, dim_y = proj.matrix.shape
                 with pnlvm.helpers.for_loop_zero_inc(builder, ctx.int32_ty(dim_x), "weight_update_loop_outer") as (b1, weight_row):

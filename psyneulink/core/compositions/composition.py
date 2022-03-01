@@ -3933,9 +3933,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._need_check_for_unused_projections = True
 
         # # MODIFIED 1/27/22 NEW: FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
-        # if context.source != ContextFlags.METHOD:
-        #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
-        #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
+        if context.source != ContextFlags.METHOD:
+            # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
+            self._analyze_graph(context=Context(source=ContextFlags.METHOD))
         # MODIFIED 1/27/22 END
 
     def add_nodes(self, nodes, required_roles=None, context=None):
