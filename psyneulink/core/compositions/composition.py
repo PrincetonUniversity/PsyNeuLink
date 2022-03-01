@@ -3650,8 +3650,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self.needs_update_graph_processing = True  # Tracks if the processing graph is current with the full graph
         self.needs_update_scheduler = True  # Tracks if the scheduler needs to be regenerated
         self.needs_update_controller = True # Tracks if controller needs to update its state_input_ports
+        self.needs_determine_node_roles = False # Set in add_node and add_projection to insure update of NodeRoles
         self._need_check_for_unused_projections = True
-        self._nodes_added = False
 
         self.nodes_to_roles = collections.OrderedDict()
         self.cycle_vertices = set()
@@ -3810,12 +3810,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             except AttributeError:
                 pass
 
-        # MODIFIED 2/25/22 NEW:
-        #  FIX - NEEDED FOR _update_state_input_ports_for_controller() TO SEE ALL NESTED INPUT NODES
-        #        CONDITIONALIZE ONCE add_node IS FLAGGED?
-        if self._nodes_added:
-            self._determine_node_roles(context=context)
-        # MODIFIED 2/25/22 END
         self._complete_init_of_partially_initialized_nodes(context=context)
         # Call before _determine_pathway and _create_CIM_ports so they have updated roles
         self._determine_node_roles(context=context)
@@ -3945,7 +3939,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
         #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
         # MODIFIED 1/27/22 END
-        self._nodes_added = True
+        self.needs_determine_node_roles = True
 
     def add_nodes(self, nodes, required_roles=None, context=None):
         """
@@ -4723,7 +4717,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller is not None:
             self.nodes_to_roles[self.controller] = {NodeRole.CONTROLLER}
 
-        self._nodes_added = False
+        self.needs_determine_node_roles = False
 
     def _set_node_roles(self, node, roles):
         self._clear_node_roles(node)
@@ -5566,6 +5560,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         #     self.feedback_senders.add(sender_mechanism)
         #     self.feedback_receivers.add(receiver_mechanism)
 
+        self.needs_determine_node_roles = True
         return projection
 
     def _add_projection(self, projection):

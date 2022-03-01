@@ -1809,6 +1809,8 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep_type or self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             return [None]
         comp = comp or self.agent_rep
+        if comp.needs_determine_node_roles:
+            comp._determine_node_roles()
         _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
         input_nodes = []
         for node in _input_nodes:
@@ -1907,12 +1909,6 @@ class OptimizationControlMechanism(ControlMechanism):
         """
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
-        # # MODIFIED 2/25/22 NEW:
-        # #  FIX - NEEDED FOR _update_state_input_ports_for_controller() TO SEE ALL NESTED INPUT NODES
-        # #        REMOVE ONCE add_node IS FLAGGED?
-        # if self.agent_rep_type == COMPOSITION:
-        #     self.agent_rep._analyze_graph()
-        # MODIFIED 2/25/22 END
         # Agent rep's input Nodes and their names
         agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
         # The following are all "full" lists; that is, there is an entry corresponding to every INPUT node of agent_rep
@@ -1949,8 +1945,6 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"they are added, or unexpected results may occur.  It is safer to assign all Nodes to "
                               f"the {AGENT_REP} of a controller before specifying its '{STATE_FEATURES}'.")
         else:
-            # FIX: 2/25/22 - WHAT IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
-            # FIX: 1/18/22 - ADD TEST FOR THIS TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
             if len(self.state_feature_specs) < len(agent_rep_input_nodes):
                 warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number of "
                               f"INPUT Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
@@ -1980,16 +1974,19 @@ class OptimizationControlMechanism(ControlMechanism):
             """Validate and parse specs into Port references and construct state_features dict
             Validate number and identity of specs relative to agent_rep INPUT Nodes.
             Assign {node: spec} entries to state_features dict, with one entry for *every* nested INPUT Node
+
+            # FIX: 2/25/22 - DOCUMENT:
+            #                NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
+            #                > ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
+            #                > INCLUDES INPUT NODES OF NESTED COMP
+            #              -> IF LIST SPEC, OR ONLY TOP-LEVEL INPUT NODES SPECIFIED IN set OR dict FORMATS:
+            #                  UNPACK TO GENERATE LIST OF *ALL* INPUT NODES OF ALL NESTED COMPS
+
             Return names for use as input_port_names in main body of method
             """
 
             parsed_feature_specs = []
 
-            # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
-            #                > ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
-            #                > INCLUDES INPUT NODES OF NESTED COMP
-            #              -> IF LIST SPEC, OR ONLY TOP-LEVEL INPUT NODES SPECIFIED IN set OR dict FORMATS:
-            #                  UNPACK TO GENERATE LIST OF *ALL* INPUT NODES OF ALL NESTED COMPS
             if self.agent_rep_type == COMPOSITION:
                 if len(state_feature_specs) > len(agent_rep_input_nodes):
                     nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
@@ -2022,9 +2019,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"shadowed.")
             spec_names = []
             num_specs = len(state_feature_specs)
-            # FIX: 2/25/22 - NEED TO MANAGE CONDITIONS IN WHICH agent_rep_input_nodes:
-            #                > ONLY INCLUDES TOP-LEVEL INPUT NODES (i.e., NESTED COMPS AS SINGLE NODE
-            #                > INCLUDES INPUT NODES OF NESTED COMP
             num_nodes = len(agent_rep_input_nodes)
             self._num_state_feature_specs = max(num_specs, num_nodes)
             for i in range(self._num_state_feature_specs):
@@ -2110,15 +2104,6 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 specified_input_nodes =list(user_specs.keys())
                 self._validate_input_nodes(specified_input_nodes)
-                # # MODIFIED 2/25/22 OLD:
-                # nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-                # # Get specs in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
-                # #   as well as to any not in agent_rep at end which are placed at the end of the list
-                # nodes.extend([node for node in specified_input_nodes if node not in nodes])
-                # specs = [user_specs[node] if node in specified_input_nodes else None for node in nodes]
-                # # Get parsed specs and names (don't care about nodes since those are specified by keys
-                # input_port_names = _parse_specs(specs)
-                # MODIFIED 2/25/22 NEW:
                 # FIX: 2/25/22: CONSOLIDATE WITH HANDLING OF set FORMAT BELOW
                 all_nested_input_nodes = []
                 for node in user_specs:
@@ -2131,9 +2116,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=False)
                 nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_input_nodes]
                 nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_input_nodes])
-                # # MODIFIED 2/25/22 OLD:
-                # specs = [user_specs[node] if node in specified_input_nodes else None for node in nodes]
-                # MODIFIED 2/25/22 NEW:
                 # Expand any Compositions to all of their nested nodes
                 for i, node in enumerate(specified_input_nodes):
                     if isinstance(node, Composition):
@@ -2142,10 +2124,8 @@ class OptimizationControlMechanism(ControlMechanism):
                         user_specs.update({k:user_specs[node] for k in nested_input_nodes})
                         user_specs.pop(node)
                 specs = [user_specs[node] if node in user_specs.keys() else None for node in nodes]
-                # MODIFIED 2/25/22 END
                 # Get parsed specs and names (don't care about nodes since those are specified by keys
                 input_port_names = _parse_specs(specs)
-                # MODIFIED 2/25/22 END
 
         # SET spec
         # Treat as specification of INPUT Nodes to be shadowed:
@@ -2165,13 +2145,7 @@ class OptimizationControlMechanism(ControlMechanism):
             all_nested_input_nodes = []
             for node in user_specs:
                 if isinstance(node, Composition):
-                    # FIX: 2/25/22 - THIS CURRENTLY RETURNS ONLY TOP LEVEL INPUT nodes for node;
-                    #                SHOULD PROBABLY BE REPLACED WITH CALL TO _get_agent_rep_input_nodes(comp=False)
-                    # # MODIFIED 2/25/22 OLD:
-                    # all_nested_input_nodes.extend(get_inputs_for_nested_comp(node))
-                    # MODIFIED 2/25/22 NEW:
                     all_nested_input_nodes.extend(self._get_agent_rep_input_nodes(node, comp_as_node=False))
-                    # MODIFIED 2/25/22 END
                 else:
                     all_nested_input_nodes.append(node)
             # Get specs ordered by agent_rep INPUT Nodes, with any not in agent_rep at end and None for any not included
