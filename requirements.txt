@@ -7,7 +7,7 @@ grpcio<1.43.0
 grpcio-tools<1.43.0
 llvmlite<0.39
 matplotlib<3.5.2
-networkx<2.6
+networkx<2.8
 numpy<1.21.4, >=1.17.0
 pillow<9.1.0
 pint<0.18
