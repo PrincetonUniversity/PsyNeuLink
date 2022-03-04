@@ -842,6 +842,11 @@ class TestControlMechanisms:
         f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
         f"('INNER COMP') in the SHADOW_INPUTS dict specified for its '{pnl.STATE_FEATURES}' argument; these must be "
         f"replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed.",
+
+        # 12
+        f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' has one or more items in the "
+        f"list specified for 'SHADOW_INPUTS' ('IA') that are not (part of) any INPUT Nodes of its 'agent_rep' "
+        f"('OUTER COMP')."
     ]
 
     state_feature_args = [
@@ -864,11 +869,12 @@ class TestControlMechanisms:
         ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
         ('bad_dict_spec_warning', messages[8], None, UserWarning),
         ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        ('bad_shadow_inputs_dict_spec_error', messages[12], None, pnl.OptimizationControlMechanismError),
         ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
         ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
-    if len(state_feature_args) != 21:
+    if len(state_feature_args) != 22:
         print("\n\n**********************************************************************************************")
         print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
         print("***********************************************************************************************")
@@ -924,6 +930,7 @@ class TestControlMechanisms:
             'too_many_w_node_not_in_composition_warning': [ia, oa, ob, ext],
             'bad_dict_spec_warning': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # ia & oc are not *ocomp* INPUT Nodes
+            'bad_shadow_inputs_dict_spec_error': {pnl.SHADOW_INPUTS:[ia.output_port, None, ob]}, # only INPUT Nodes r OK
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
