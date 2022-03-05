@@ -8095,7 +8095,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Used to check whether shadowed inputs are (nested) in comp
         nested_nodes = dict(self._get_nested_nodes())
-        nested_input_nodes = controller._get_agent_rep_input_nodes(comp_as_node=False)
+        nested_input_nodes = controller._get_agent_rep_input_receivers(comp_as_node=False)
 
         num_input_nodes = len(nested_input_nodes)
         assert len(controller.state_feature_specs) == num_input_nodes, \
