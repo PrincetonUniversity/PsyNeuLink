@@ -2238,44 +2238,59 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"{', '.join(non_input_port_specs)}.")
 
             expanded_specified_ports = []
+            expanded_dict_with_ports = {}
             dict_format = isinstance(user_specs, dict)
             for spec in user_specs:
                 # FIX: 3/4/22 - NEED TO VALIDATE THAT COMP IS INPUT Node (HERE OR IN _validate_input_nodes?)
                 # Expand any specified Compositions into corresponding InputPorts for all INPUT Nodes (including nested)
                 if isinstance(spec, Composition):
-                    expanded_specified_ports.extend(self._get_agent_rep_input_receivers(spec))
+                    ports = self._get_agent_rep_input_receivers(spec)
                 # FIX: 3/4/22 - NEED TO VALIDATE THAT MECH IS AN INPUT Node (HERE OR IN _validate_input_nodes?)
                 # Expand any specified Mechanisms into corresponding InputPorts except any internal ones
                 elif isinstance(spec, Mechanism):
-                    expanded_specified_ports.extend([input_port for input_port in spec.input_ports
-                                                     if not input_port.internal_only])
+                    ports = [input_port for input_port in spec.input_ports if not input_port.internal_only]
                 else:
-                    expanded_specified_ports.append(spec)
+                    ports = [spec]
+                expanded_specified_ports.extend(ports)
+                if dict_format:
+                    # Assign value specified for Composition to all InputPorts of its INPUT Nodes:
+                    expanded_dict_with_ports.update({port:user_specs[spec] for port in ports})
 
             # # Get specified ports in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
             all_specified_ports = [port if port in expanded_specified_ports else None for port in agent_rep_input_ports]
             # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
             all_specified_ports.extend([port for port in expanded_specified_ports if port not in agent_rep_input_ports])
 
-            # FIX: 3/4/22 MOVE TO ABOVE??
-            self._validate_input_nodes(all_specified_ports)
+            # FIX: 3/4/22 REINSTATE & MOVE TO ABOVE??
+            # self._validate_input_nodes(all_specified_ports)
 
             if isinstance(user_specs, set):
+                # Just pass ports;  _parse_specs will assign shadowing projections for them
                 specs = all_specified_ports
+            # MODIFIED 3/4/22 OLD:
+            # else:
+            #     for port in all_specified_ports:
+            #         # Expand any Compositions to all of the InputPorts for all of its INPUT Nodes
+            #         if isinstance(spec, Composition):
+            #             input_ports = self._get_agent_rep_input_receivers(spec)
+            #             user_specs.update({k:user_specs[spec] for k in input_ports})
+            #             user_specs.pop(spec)
+            #         # Expand any Mechanism to all of its InputPorts except any that are internal_only
+            #         if isinstance(spec, Mechanism):
+            #             input_ports = [input_port for input_port in spec.input_ports if not input_port.internal_only]
+            #             user_specs.update({k:user_specs[spec] for k in input_ports})
+            #             user_specs.pop(spec)
+            #     # Values from user_specs dict
+            #     specs = [user_specs[spec] if spec in user_specs.keys() else None for spec in all_specified_ports]
+            #     # Get parsed specs and names (don't care about nodes since those are specified by keys
+            # MODIFIED 3/4/22 NEW:
             else:
-                for port in all_specified_ports:
-                    # Expand any Compositions to all of the InputPorts for all of its INPUT Nodes
-                    if isinstance(spec, Composition):
-                        input_ports = self._get_agent_rep_input_receivers(spec)
-                        user_specs.update({k:user_specs[spec] for k in input_ports})
-                        user_specs.pop(spec)
-                    # Expand any Mechanism to all of its InputPorts except any that are internal_only
-                    if isinstance(spec, Mechanism):
-                        input_ports = [input_port for input_port in spec.input_ports if not input_port.internal_only]
-                        user_specs.update({k:user_specs[spec] for k in input_ports})
-                        user_specs.pop(spec)
-                specs = [user_specs[spec] if spec in user_specs.keys() else None for spec in all_specified_ports]
-                # Get parsed specs and names (don't care about nodes since those are specified by keys
+                # Pass values from user_spec dict to be parsed; corresponding ports are safely in all_specified_ports
+                # specs = [user_specs[spec] if spec in user_specs.keys() else None for spec in all_specified_ports]
+                specs = [expanded_dict_with_ports[port] for port in all_specified_ports]
+                # specs = list(expanded_dict_with_ports.values())
+            # MODIFIED 3/4/22 END
+
             input_port_names = _parse_specs(specs)
             # MODIFIED 3/4/22 OLD
 
