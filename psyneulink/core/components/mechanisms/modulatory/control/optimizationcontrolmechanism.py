@@ -2238,6 +2238,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"{', '.join(non_input_port_specs)}.")
 
             expanded_specified_ports = []
+            dict_format = isinstance(user_specs, dict)
             for spec in user_specs:
                 # FIX: 3/4/22 - NEED TO VALIDATE THAT COMP IS INPUT Node (HERE OR IN _validate_input_nodes?)
                 # Expand any specified Compositions into corresponding InputPorts for all INPUT Nodes (including nested)
@@ -2255,20 +2256,21 @@ class OptimizationControlMechanism(ControlMechanism):
             all_specified_ports = [port if port in expanded_specified_ports else None for port in agent_rep_input_ports]
             # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
             all_specified_ports.extend([port for port in expanded_specified_ports if port not in agent_rep_input_ports])
+
+            # FIX: 3/4/22 MOVE TO ABOVE??
+            self._validate_input_nodes(all_specified_ports)
+
             if isinstance(user_specs, set):
-                self._validate_input_nodes(user_specs)
                 specs = all_specified_ports
             else:
-                specified_items = list(user_specs.keys())
-                self._validate_input_nodes(specified_items)
-                for i, spec in enumerate(specified_items):
+                for port in all_specified_ports:
                     # Expand any Compositions to all of the InputPorts for all of its INPUT Nodes
                     if isinstance(spec, Composition):
                         input_ports = self._get_agent_rep_input_receivers(spec)
                         user_specs.update({k:user_specs[spec] for k in input_ports})
                         user_specs.pop(spec)
                     # Expand any Mechanism to all of its InputPorts except any that are internal_only
-                    if isinstance(spec, Composition):
+                    if isinstance(spec, Mechanism):
                         input_ports = [input_port for input_port in spec.input_ports if not input_port.internal_only]
                         user_specs.update({k:user_specs[spec] for k in input_ports})
                         user_specs.pop(spec)
