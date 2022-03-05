@@ -918,6 +918,13 @@ def _generate_condition_string(condition_dict, component_identifiers):
         else:
             return _generate_condition_string(value, component_identifiers)
 
+        # handle value/outputport fix for threshold
+        try:
+            if re.match(r'\w+_OutputPort_0', value):
+                return '"value"'
+        except TypeError:
+            pass
+
         return str(_parse_parameter_value(value, component_identifiers))
 
     def _parse_graph_scheduler_type(typ):

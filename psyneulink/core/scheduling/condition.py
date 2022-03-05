@@ -288,3 +288,11 @@ class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
             atol=atol,
             rtol=rtol,
         )
+
+    def as_mdf_model(self):
+        m = super().as_mdf_model()
+
+        if self.parameter == 'value':
+            m.args['parameter'] = f'{self.dependency.name}_OutputPort_0'
+
+        return m
