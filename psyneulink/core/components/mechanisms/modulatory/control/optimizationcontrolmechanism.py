@@ -2013,6 +2013,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.agent_rep_type == COMPOSITION:
 
                 # FIX: 3/4/22 - THESE SEEM DUPLICATIVE OF _validate_state_features;  JUST CALL THAT HERE?
+                #               ALSO, "fewer" WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
                 # Too FEW specs for number of agent_rep receivers
                 if len(self.state_feature_specs) < len(agent_rep_input_ports):
                     warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number "
