@@ -1809,7 +1809,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if not self.agent_rep_type or self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             return [None]
         comp = comp or self.agent_rep
-        return self._get_input_receivers(comp=comp, type=type, comp_as_node=comp_as_node)
+        return comp._get_input_receivers(comp=comp, type=type, comp_as_node=comp_as_node)
 
     def _get_specs_not_in_agent_rep(self, state_feature_specs):
         from psyneulink.core.compositions.composition import Composition
@@ -2398,7 +2398,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 #                BUT MANAGE ERRORS WRT TO _validate_state_features
                 self._update_state_features_dict()
                 # MODIFIED 1/30/22 END
-                self._validate_state_features()
+                self._validate_state_features(context)
             # MODIFIED 1/30/22 OLD:
             return
             # # MODIFIED 1/30/22 NEW:
@@ -2451,7 +2451,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                     override=True)
             return True
 
-    def _validate_state_features(self):
+    def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
 
         Called by _update_state_input_ports_for_controller,
@@ -2566,17 +2566,17 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
-        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-        # END DEBUGGING ---------------------------------------------------------------------
+        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self, context)
+        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
+        # # END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
             # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
             # Call these to check for errors in constructing inputs dict
-            inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
+            inputs = self.agent_rep._build_predicted_inputs_dict(None, self, context)
             self.agent_rep._parse_input_dict(inputs)
         except RunError as error:
             raise OptimizationControlMechanismError(
@@ -3265,20 +3265,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_features(self):
-        # # MODIFIED 3/4/22 OLD:
-        # self._update_state_features_dict()
-        # agent_rep_input_nodes = self._get_agent_rep_input_receivers(comp_as_node=ALL)
-        # state_features_dict = {}
-        # # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
-        # for i in range(self._num_state_feature_specs):
-        #     # Assign keys as INPUT Nodes of agent_rep
-        #     if self._specified_input_nodes_in_order[i] in agent_rep_input_nodes:
-        #         k = self._specified_input_nodes_in_order[i]
-        #     else:
-        #         k = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-        #     state_features_dict[k] = self.state_feature_specs[i]
-        # return state_features_dict
-        # MODIFIED 3/4/22 NEW:
         self._update_state_features_dict()
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
         state_features_dict = {}
@@ -3291,7 +3277,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 k = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
             state_features_dict[k] = self.state_feature_specs[i]
         return state_features_dict
-        # MODIFIED 3/4/22 END
 
     @property
     def state_feature_sources(self):

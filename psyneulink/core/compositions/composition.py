@@ -8109,7 +8109,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"or a composition nested within it."
                 )
 
-    def _build_predicted_inputs_dict(self, predicted_inputs, controller=None):
+    def _build_predicted_inputs_dict(self, predicted_inputs, controller, context):
         """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
 
         Assign input values for all INPUT Nodes (including ones in nested Compositions) of Composition based on:
@@ -8125,141 +8125,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
           the key of which is the INPUT Node and the value is the value for that node
         """
 
-        # FIX 1/9/22: CAN THIS BE REPLACED BY CALL TO _get_source?
-        def _get_enclosing_comp_for_node(input_port, comp):
-            """Get the Composition (under which node is nested) that is a node of self
-               - input_port is of node for which enclosing comp is being sought
-               - comp is one to which that node immediately belongs
-            """
-            # Get input_port for comp's CIM corresponding to
-            cim_input_port = comp.input_CIM.port_map[input_port][0]
-            # Outermost Composition, so return that
-            if not cim_input_port.path_afferents:
-                return comp
-            enclosing_comp = cim_input_port.path_afferents[0].sender.owner.composition
-            # Recursively search up through enclosing Compositions until one is a node of self
-            while comp not in self.nodes and comp is not self:
-                comp = _get_enclosing_comp_for_node(cim_input_port, enclosing_comp)
-            return comp
-
-
-        # MODIFIED 3/4/22 NEW:
-        def _get_node_for_port(input_port, comp):
-            comp.input_CIM._get_destination_info_from_input_CIM(comp.input_CIM.ports[i])
-        # MODIFIED 3/4/22 END
-
         controller = controller or self.controller
-        # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
-        # Note:  these are always Mechanisms, including those that are INPUT Nodes in nested Compositions;
-        #        this is so that if any INPUT Nodes of a nested Composition are unspecified, defaults can be assigned
-        input_dict_keys = list(controller.state_features.keys())
-        inputs = {}
-
         no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
-        if no_predicted_input:
-            # FIX 2/25/22 - SHOULD CONTEXTUALIZE THIS
+        if no_predicted_input and not context.flags | ContextFlags.PREPARING:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
-
-        # Used to check whether shadowed inputs are (nested) in comp
-        nested_nodes = dict(self._get_nested_nodes())
-        nested_input_nodes = controller._get_agent_rep_input_receivers(comp_as_node=False)
-
-        num_input_nodes = len(nested_input_nodes)
-        assert len(controller.state_feature_specs) == num_input_nodes, \
-            f"PROGRAM ERROR: The number of state_feature_specs for {controller.name} " \
-            f"({len(controller.state_feature_specs)}) does not equal the number of INPUT Nodes for {self.name} " \
-            f"({num_input_nodes}) for Composition being used as its controller's {AGENT_REP} " \
-            f"({controller.agent_rep.name})"
-        s = 0
-        for i in range(num_input_nodes):
-            # FIX: 2/25/22 - ASSIGN DEFAULT VALUES TO ITEMS WITH None IN controller.state_feature_specs
-            #                INDEX s IS USED FOR controller.state_input_ports[],
-            #                AND ONLY INCREMENTED IF controller.state-feature_specs[i] != None
-            #             ?? MODIFY TO USE controller.state_features ??
-            #             state_feature = controller.state_features[nested_input_nodes[i]
-            # FIX: 2/25/22 - REPLACE THE FOLLOWING WITH DIRECT ASSIGNMENTS FROM controller.state_features
-            input_node = nested_input_nodes[i]
-            state_feature = controller.state_feature_specs[i]
-            # # assert controller.state_features[input_node] == state_feature, \
-            #     f"PROGRAM ERROR: state_feature_spec ({state_feature}) for controller of {self.name} " \
-            #     f"({controller.self.name}) is out of alignment with the corresponding INPUT Node " \
-            #     f"listed in its {STATE_FEATURES} dict."
-
-            # FIX: 2/25/22 - ?CONSOLIDATE THIS WITH BELOW?
-            if state_feature is None:
-                state_input_port = None
-                # # MODIFIED 3/4/22 OLD:
-                # predicted_input = input_node.input_port.default_input_shape
-                # MODIFIED 3/4/22 NEW:
-                predicted_input = input_node.default_input_shape
-                # MODIFIED 3/4/22 END
-                # CHECK WHETHER input_node IS IN A NESTED COMPOSITION AND, IF SO, APPEND TO THAT (AS PER BELOW)
-                # ELSE, ADD IT AS KEY TO inputs DICT
-                # EITHER WAY, CAN USE predicted_input
-                if isinstance(input_node, Mechanism) and input_node in self.nodes:
-                    inputs[input_node] = predicted_input
-                else:
-                    comp_for_input = _get_enclosing_comp_for_node(input_node.input_port, nested_nodes[input_node])
-                    if comp_for_input in inputs:
-                        # If node for nested comp is already in inputs dict, append to its input
-                        inputs[comp_for_input][0].append(predicted_input)
-                    else:
-                        # Create entry in inputs dict for nested comp containing shadowed_input
-                        inputs[comp_for_input] = [[predicted_input]]
-                continue
-
+        inputs = {}
+        i = 0
+        for state_input_port, spec in controller.state_features.items():
+            if spec is None or no_predicted_input:
+                inputs[state_input_port] = state_input_port.default_input_shape
             else:
-                state_input_port = controller.state_input_ports[s]
-                if no_predicted_input:
-                    predicted_input = state_input_port.default_input_shape
-                else:
-                    # Use i here since predicted_inputs has been populated for all INPUT Nodes
-                    #    (i.e., even for ones for which state_feature_specs have not been specified)
-                    predicted_input = predicted_inputs[i]
-                s += 1
-
-            # Shadow input specified
-            if hasattr(state_input_port, SHADOW_INPUTS) and state_input_port.shadow_inputs is not None:
-                shadow_input_owner = state_input_port.shadow_inputs.owner
-                if self._controller_initialization_status == ContextFlags.DEFERRED_INIT \
-                        and shadow_input_owner not in nested_nodes \
-                        and shadow_input_owner not in self.nodes:
-                    continue
-                if shadow_input_owner in nested_nodes:
-                    comp = nested_nodes[shadow_input_owner]
-                    if comp in inputs:
-                        # Add INPUT Node for nested Composition to its inputs spec
-                        inputs[comp]=np.concatenate([[predicted_input],inputs[comp][0]])
-                    else:
-                        # FIX: 2/25/22 - ?? IS THIS EVEN NEEDED, IF shadow_input_comp IS ALWAYS THE OUTERMOST COMP?
-                        shadow_input_comp = nested_nodes[shadow_input_owner].input_CIM.composition
-                        comp_for_input = _get_enclosing_comp_for_node(state_input_port.shadow_inputs,
-                                                                      shadow_input_comp)
-                        if comp_for_input in inputs:
-                            # If node for nested comp is already in inputs dict, append to its input
-                            inputs[comp_for_input][0].append(predicted_input)
-                        else:
-                            # Create entry in inputs dict for nested comp containing shadowed_input
-                            inputs[comp_for_input] = [[predicted_input]]
-                else:
-                    if isinstance(shadow_input_owner, CompositionInterfaceMechanism):
-                        shadow_input_owner = shadow_input_owner.composition
-                    # Use key from ocm.state_features dict if specified, else use the source node
-                    # FIX: 2/25/22 - i HERE SHOULD BE FOR INPUT Nodes NOT state_input_ports
-                    key = input_dict_keys[i] if input_dict_keys else shadow_input_owner
-                    inputs[key] = predicted_input
-
-            # Regular input specified (i.e., projection from an OutputPort)
-            else:
-                # assert len(state_input_port.path_afferents) == 1
-                if state_input_port.path_afferents:
-                    source = state_input_port.path_afferents[0].sender.owner
-                # Use key from OptimizationControlMechanism state_features dict if specified, else the source node
-                # FIX: 2/25/22 - i HERE SHOULD BE FOR INPUT Nodes NOT state_input_ports; WHAT IS ?source??
-                key = input_dict_keys[i] if input_dict_keys else source
-                inputs[key] = predicted_input
-        # MODIFIED 2/25/22 END
-
+                inputs[state_input_port] = predicted_inputs[i]
+                i += 1
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
@@ -8363,8 +8240,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(input_spec, dict):
                 inputs = input_spec
         else:
-            inputs = self._build_predicted_inputs_dict(predicted_input,
-                                                       controller=controller)
+            inputs = self._build_predicted_inputs_dict(predicted_input, controller, context)
 
         if hasattr(self, '_input_spec') and block_simulate and isgenerator(input_spec):
             warnings.warn(f"The evaluate method of {self.name} is attempting to use block simulation, but the "
