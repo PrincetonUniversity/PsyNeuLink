@@ -8957,11 +8957,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         f"which should have been caught earlier."
                     nested_comp = cim_output_port.efferents[0].receiver.owner.composition
                     nested_comp_cim_input_port = cim_output_port.efferents[0].receiver
-
-                    input_dict[nested_comp] = np.zeros_like(nested_comp.input_CIM.input_values)
+                    if nested_comp not in input_dict:
+                        input_dict[nested_comp] = np.zeros_like(nested_comp.input_CIM.input_values)
                     for port in ports:
                         i = nested_comp.input_CIM.input_ports.index(nested_comp_cim_input_port)
-                        input_dict[nested_comp][i] = inputs[item]
+                        input_dict[nested_comp][i] = np.array(inputs[item])
                     item = nested_comp
 
             # MODIFIED 3/4/22 END
