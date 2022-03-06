@@ -8973,7 +8973,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     raise CompositionError(f"{item.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
 
-
         # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
             if node not in input_dict:
