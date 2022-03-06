@@ -2613,8 +2613,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
-    AGENT_REP, STATE_FEATURES
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2646,9 +2645,10 @@ from psyneulink.core.globals.keywords import \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
     MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
     MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
-    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
+    MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
-    PARAMETER, PARAMETER_CIM_NAME, PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
+    PARAMETER, PARAMETER_CIM_NAME, PORT, \
+    PROCESSING_PATHWAY, PROJECTION, PROJECTION_TYPE, PROJECTION_PARAMS, PULSE_CLAMP, \
     SAMPLE, SHADOW_INPUTS, SOFT_CLAMP, SSE, \
     TARGET, TARGET_MECHANISM, TEXT, VARIABLE, WEIGHT, OWNER_MECH
 from psyneulink.core.globals.log import CompositionLog, LogCondition
@@ -4201,6 +4201,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return [{cim[0]:n for n, cim in self.input_CIM_ports.items()}[input_port].owner
                 for input_port in self.input_CIM.input_ports]
+
+    def _get_input_receivers(self, comp=None, type:Union[PORT,NODE]=PORT, comp_as_node:Union[bool,ALL]=False):
+        """Return all INPUT Nodes [or their InputPorts] of comp, [including those for any nested Compositions].
+        If type is PORT, return all InputPorts for all INPUT Nodes, including for nested Compositions.
+        If type is NODE, return all INPUT Nodes, including for nested Compositions as determined by comp_as_node:
+            if an INPUT Node is a Composition, and comp_as_node is:
+            - False, include the nested Composition's INPUT Nodes, but not the Composition
+            - True, include the nested Composition but not its INPUT Nodes
+            - ALL, include the nested Composition AND its INPUT Nodes
+        """
+        assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
+                                                    f"for 'ports' and 'nodes' at the same time."
+
+        input_items = []
+
+        if type==PORT:
+            # Return all InputPorts of all INPUT Nodes
+            _input_nodes = comp._get_nested_nodes_with_same_roles_at_all_levels(comp=comp,
+                                                                                include_roles=NodeRole.INPUT)
+            for node in _input_nodes:
+                input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
+            # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
+            assert len(input_items) == len(comp.input_CIM_ports)
+        else:
+            # Return all INPUT Nodes
+            if comp.needs_determine_node_roles:
+                comp._determine_node_roles()
+            _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
+            for node in _input_nodes:
+                if isinstance(node, Composition):
+                    if comp_as_node:
+                        input_items.append(node)
+                    if comp_as_node in {False, ALL}:
+                        # FIX: DOESN'T THIS SEARCH RECURSIVELY? -- NEED TO TEST WITH > ONE LEVEL OF NESTING
+                        input_items.extend(self._get_input_receivers(node))
+                else:
+                    input_items.append(node)
+
+        return input_items
+
+    def _get_external_cim_input_port(self, port:InputPort):
+        """Get input_CIM.input_port of outermost Composition that projects to port in nested Comopsition.
+        **port** must be an InputPort that receives a single path_afferent Projection from an input_CIM.
+        Search up the nesting hierarchy recursively to find the input_CIM of the outermost Composition.
+        Return tuple with:
+            input_CIM.input_port of outermost enclosing Composition
+            input_CIM.output_port correspondig to input_CIM.input_port (for ease of tracking Node to which it projects)
+        """
+        assert len(port.path_afferents) == 1, \
+            f"PROGRAM ERROR: _get_external_cim_input_ports called for {port} " \
+            f"that has either no or more than one path_afferent projections."
+        input_CIM = port.path_afferents[0].sender.owner
+        assert isinstance(input_CIM, CompositionInterfaceMechanism), \
+            f"PROGRAM ERROR: _get_external_cim_input_ports called for {port} that is not an INPUT Node " \
+            f"(i.e., does not receive a path_afferent projection from an input_CIM of its enclosing Composition."
+        input_CIM_input_port = input_CIM.port_map[port][0]
+        if not input_CIM_input_port.path_afferents:
+            # input_CIM_input_port belongs to outermost Composition, so return
+            return input_CIM.port_map[port]
+        # input_CIM_input_port belongs to a nested Composition, so continue to search up the nesting hierarchy
+        return self._get_external_cim_input_port(input_CIM_input_port)
 
     def _get_nested_nodes(self,
                           nested_nodes=NotImplemented,
@@ -8081,6 +8142,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 comp = _get_enclosing_comp_for_node(cim_input_port, enclosing_comp)
             return comp
 
+
+        # MODIFIED 3/4/22 NEW:
+        def _get_node_for_port(input_port, comp):
+            comp.input_CIM._get_destination_info_from_input_CIM(comp.input_CIM.ports[i])
+        # MODIFIED 3/4/22 END
+
         controller = controller or self.controller
         # Use keys for inputs dict from OptimizationControlMechanism state_features if it is specified as a dict
         # Note:  these are always Mechanisms, including those that are INPUT Nodes in nested Compositions;
@@ -8121,7 +8188,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # FIX: 2/25/22 - ?CONSOLIDATE THIS WITH BELOW?
             if state_feature is None:
                 state_input_port = None
-                predicted_input = input_node.input_port.default_input_shape
+                # # MODIFIED 3/4/22 OLD:
+                # predicted_input = input_node.input_port.default_input_shape
+                # MODIFIED 3/4/22 NEW:
+                predicted_input = input_node.default_input_shape
+                # MODIFIED 3/4/22 END
                 # CHECK WHETHER input_node IS IN A NESTED COMPOSITION AND, IF SO, APPEND TO THAT (AS PER BELOW)
                 # ELSE, ADD IT AS KEY TO inputs DICT
                 # EITHER WAY, CAN USE predicted_input
@@ -8823,25 +8894,91 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         -------
 
         `dict` :
-            Input dict, with added entries for any input Nodes for which input was not provided
+            Input dict, with added entries for any input Nodes or Ports for which input was not provided
         """
 
-        # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        input_dict = {}
 
-        for node in inputs.keys():
-            if node not in input_nodes:
-                if not isinstance(node, (Mechanism, Composition)):
-                    raise CompositionError(f'{node} in "inputs" dict for {self.name} is not a '
-                                           f'{Mechanism.__name__} or {Composition.__name__}.')
+        # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
+        #    and assign any InputPort specs to their owner Mechanisms
+        for item in inputs.keys():
+            # MODIFIED 3/4/22 NEW:
+            if item in input_nodes:
+                input_dict[item] = inputs[item]
+            else:
+                if isinstance(item, Port):
+                    # Validate that it is an InputPort that takes external inputs
+                    if not isinstance(item, InputPort):
+                        raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' that is a {Port.__name__}' "
+                                               f"is not an {InputPort.__name__}.")
+                    if item.internal_only:
+                        raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' that is an "
+                                               f"{InputPort.__name__}' but does not receive external inputs.")
+                    mech = item.owner
+
+                    if mech in input_nodes:
+                        # Item is an input_port of a Mechanism in self, so assign input to that input_port
+                        # Get index of input_port on mech
+                        i = item.owner.input_ports.index(item)
+                        if mech not in inputs:
+                            # Assign default input for Mechanism as base; then populate with input below
+                            input_dict[mech] = np.zeros_like(mech.external_input_shape)
+                        # Assign input to item of array in value corresponding to InputPort
+                        input_dict[mech][i] = inputs[item]
+                        ports = []
+                        item = mech
+                    else:
+                        # Item is an InputPort of a node in a nested Composition,
+                        #     so assign it to ports, to get corresponding input_port of self.input_CIM below
+                        ports = [item]
+
+                elif isinstance(item, Mechanism):
+                    # Item is Mechanism that is either in a nested Composition within self or not in self at all
+                    #     Get its input_ports, for identificaction of corresponding self.input_CIM.input_ports,
+                    #     or exclusion below
+                    ports = item.input_ports
+
+                elif isinstance(item, Composition):
+                    # Item is Composition that is either nested more than one level deep within self or not in self
+                    #     Get its input_CIM_input_ports, for identification of self.input_CIM.input_ports,
+                    #     or exclusion below
+                    ports = item.input_CIM.input_ports
+
+                if ports:
+                    # FIX: NEED TO IDENTIFY COMP AT FIRST LEVEL OF NESTING TO WHICH input_CIM_output_port PROJECTIONS
+                    cim_input_port, cim_output_port = self._get_external_cim_input_port(ports[0])
+                    assert cim_input_port.owner.composition == self, \
+                        f"PROGRAM ERROR: outermost comp returned by _get_external_cim_input_port() " \
+                        f"is not the one from which it was called in _instantiate_input_dict()."
+                    assert isinstance(cim_output_port.efferents[0].receiver.owner, CompositionInterfaceMechanism), \
+                        f"PROGRAM ERROR: nested node identified by _get_external_cim_input_port() is a " \
+                        f"{type(cim_output_port.efferents[0].receiver.owner)} rather than a Composition, " \
+                        f"which should have been caught earlier."
+                    nested_comp = cim_output_port.efferents[0].receiver.owner.composition
+                    nested_comp_cim_input_port = cim_output_port.efferents[0].receiver
+
+                    input_dict[nested_comp] = np.zeros_like(nested_comp.input_CIM.input_values)
+                    for port in ports:
+                        i = nested_comp.input_CIM.input_ports.index(nested_comp_cim_input_port)
+                        input_dict[nested_comp][i] = inputs[item]
+                    item = nested_comp
+
+            # MODIFIED 3/4/22 END
+            if item not in input_nodes:
+                if not isinstance(item, (Mechanism, Composition)):
+                    raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' is not a {Mechanism.__name__} " \
+                                           f"or {Composition.__name__}, or an {InputPort.__name__} " \
+                                           f"of one, that is an INPUT Node of '{self.name}'.")
                 else:
-                    raise CompositionError(f"{node.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+                    raise CompositionError(f"{item.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+
 
         # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
-            if node not in inputs:
-                inputs[node] = node.external_input_shape
-        return inputs
+            if node not in input_dict:
+                input_dict[node] = node.external_input_shape
+        return input_dict
 
     def _parse_run_inputs(self, inputs, context=None):
         """
