@@ -8888,7 +8888,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _instantiate_input_dict(self, inputs):
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
         Validate that all Nodes included in input dict are INPUT nodes of Composition.
-        If any input nodes of Composition are not included, add them to the input dict using their default values.
+        Inputs can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions;
+            these can be at any level of nesting within self.
+        If any INPUT nodes of Composition are not included, add them to the input_dict using their default values.
 
         Returns
         -------
@@ -8903,7 +8905,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
         #    and assign any InputPort specs to their owner Mechanisms
         for item in inputs.keys():
-            # MODIFIED 3/4/22 NEW:
             if item in input_nodes:
                 input_dict[item] = inputs[item]
             else:
@@ -8946,7 +8947,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     ports = item.input_CIM.input_ports
 
                 if ports:
-                    # FIX: NEED TO IDENTIFY COMP AT FIRST LEVEL OF NESTING TO WHICH input_CIM_output_port PROJECTIONS
                     cim_input_port, cim_output_port = self._get_external_cim_input_port(ports[0])
                     assert cim_input_port.owner.composition == self, \
                         f"PROGRAM ERROR: outermost comp returned by _get_external_cim_input_port() " \
@@ -8958,13 +8958,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     nested_comp = cim_output_port.efferents[0].receiver.owner.composition
                     nested_comp_cim_input_port = cim_output_port.efferents[0].receiver
                     if nested_comp not in input_dict:
-                        input_dict[nested_comp] = np.zeros_like(nested_comp.input_CIM.input_values)
+                        input_dict[nested_comp] = np.zeros_like(nested_comp.input_CIM.input_values).tolist()
                     for port in ports:
                         i = nested_comp.input_CIM.input_ports.index(nested_comp_cim_input_port)
                         input_dict[nested_comp][i] = np.array(inputs[item])
                     item = nested_comp
 
-            # MODIFIED 3/4/22 END
             if item not in input_nodes:
                 if not isinstance(item, (Mechanism, Composition)):
                     raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' is not a {Mechanism.__name__} " \
@@ -8972,6 +8971,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"of one, that is an INPUT Node of '{self.name}'.")
                 else:
                     raise CompositionError(f"{item.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+
+        # for entry in input_dict:
+        #     input_dict[entry] = np.atleast_2d(input_dict[entry])
 
         # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
         for node in input_nodes:
