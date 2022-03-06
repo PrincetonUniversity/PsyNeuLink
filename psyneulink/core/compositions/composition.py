@@ -8823,6 +8823,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     ports = item.input_CIM.input_ports
 
                 if ports:
+                    # Get input_CIM_input_ports of nested Composition in outermost Composition corresponding to ports
+                    #    use those as keys of input_dict, and assign corresponding input as their values
                     cim_input_port, cim_output_port = self._get_external_cim_input_port(ports[0])
                     assert cim_input_port.owner.composition == self, \
                         f"PROGRAM ERROR: outermost comp returned by _get_external_cim_input_port() " \

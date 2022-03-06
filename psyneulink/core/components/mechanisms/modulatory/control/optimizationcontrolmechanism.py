@@ -1061,13 +1061,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
         # Specified state_features for a subset of INPUT Nodes so use those
         j = 0
         state_feature_values = []
-        # # MODIFIED 3/4/22 OLD:
-        # for node, spec in zip(owning_component._specified_input_nodes_in_order,
-        #                       owning_component.state_feature_specs):
-        # MODIFIED 3/4/22 NEW:
         for node, spec in zip(owning_component._specified_input_ports_in_order,
                               owning_component.state_feature_specs):
-        # MODIFIED 3/4/22 END
             if spec is not None:
                 state_feature_values.append(state_input_port_values[j])
                 j += 1
@@ -2111,11 +2106,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
-                # # MODIFIED 3/4/22 OLD:
-                # self._specified_input_nodes_in_order.append(node)
-                # MODIFIED 3/4/22 NEW:
                 self._specified_input_ports_in_order.append(node)
-                # MODIFIED 3/4/22 END
                 spec_names.append(spec_name)
 
             self.parameters.state_feature_specs.set(parsed_feature_specs, override=True)
@@ -2319,13 +2310,8 @@ class OptimizationControlMechanism(ControlMechanism):
             return feature_function
 
     def _update_state_features_dict(self):
-        # # MODIFIED 3/4/22 OLD:
-        # agent_rep_input_nodes = self._get_agent_rep_input_receivers(type=NODE, comp_as_node=True)
-        # specified_input_nodes = self._specified_input_nodes_in_order
-        # MODIFIED 3/4/22 NEW:
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
         specified_input_ports = self._specified_input_ports_in_order
-        # MODIFIED 3/4/22 END
 
         for i, port in enumerate(self.state_input_ports):
             # Get value (need first, to determine whether it belongs to a nested Comp, for assigning key)
@@ -2447,7 +2433,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.data = state_input_ports
             self._num_state_feature_specs = len(self.state_input_ports)
-            self._specified_input_nodes_in_order = self._get_agent_rep_input_receivers(comp_as_node=False)
+            # # MODIFIED 3/4/22 OLD:
+            # self._specified_input_nodes_in_order = self._get_agent_rep_input_receivers(comp_as_node=False)
+            # # MODIFIED 3/4/22 NEW:
+            self._specified_input_ports_in_order = self._get_agent_rep_input_receivers()
+            # MODIFIED 3/4/22 END
             self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
                                                     override=True)
             return True
