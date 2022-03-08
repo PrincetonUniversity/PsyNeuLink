@@ -70,6 +70,28 @@ class TestParameterPorts:
             ParameterPort(owner='SOMETHING')
         assert "Contructor for ParameterPort cannot be called directly(context: None" in str(error_text.value)
 
+    def test_no_path_afferents(self):
+        A = TransferMechanism()
+        with pytest.raises(pnl.PortError) as error:
+            A.parameter_ports['slope'].path_afferents
+        assert '"ParameterPorts do not have \'path_afferents\'; (access attempted for TransferMechanism-0[slope])."' \
+               in str(error.value)
+        with pytest.raises(pnl.PortError) as error:
+            A.parameter_ports['slope'].path_afferents = ['test']
+        assert '"ParameterPorts are not allowed to have \'path_afferents\' ' \
+               '(assignment attempted for TransferMechanism-0[slope])."' in str(error.value)
+
+    def test_no_efferents(self):
+        A = TransferMechanism()
+        with pytest.raises(pnl.PortError) as error:
+            A.parameter_ports['slope'].efferents
+        assert '"ParameterPorts do not have \'efferents\'; (access attempted for TransferMechanism-0[slope])."' \
+               in str(error.value)
+        with pytest.raises(pnl.PortError) as error:
+            A.parameter_ports['slope'].efferents = ['test']
+        assert '"ParameterPorts are not allowed to have \'efferents\' ' \
+               '(assignment attempted for TransferMechanism-0[slope])."' in str(error.value)
+
 class TestConfigurableParameters:
     def test_configurable_params(self):
         old_value = 0.2
@@ -136,6 +158,7 @@ class TestConfigurableParameters:
 
         assert np.allclose(T.noise.base, new_value)
         assert np.allclose(T.noise.modulated, new_value)
+
 
 class TestModParams:
     def test_mod_param_error(self):

@@ -521,13 +521,14 @@ Class Reference
 """
 import collections
 import inspect
+import itertools
 import numbers
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import DefaultsFlexibility
+from psyneulink.core.components.component import Component, DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -1001,14 +1002,13 @@ class InputPort(Port_Base):
         Returns redundant Projection if found, otherwise False.
         """
 
+        if self.initialization_status == ContextFlags.DEFERRED_INIT:
+            raise InputPortError(f"Attempt to assign Projection ('{projection.name}') "
+                                 f"using InputPort ('{self.name}') that is in deferred init")
         try:
             self.path_afferents
         except:
-            if self.initialization_status == ContextFlags.DEFERRED_INIT:
-                raise InputPortError(f"Attempt to assign Projection ('{projection}') "
-                                     f"to InputPort ('{self.name}') that is in deferred init")
-            else:
-                raise InputPortError(f"No 'path_afferents' for {self.name}")
+            raise InputPortError(f"No 'path_afferents' for {self.full_name}")
 
         # FIX: 7/22/19 - CHECK IF SENDER IS SPECIFIED AS MECHANISM AND, IF SO, CHECK ITS PRIMARY_OUTPUT_PORT
         duplicate = next(iter([proj for proj in self.path_afferents
@@ -1052,6 +1052,12 @@ class InputPort(Port_Base):
 
     def _get_primary_port(self, mechanism):
         return mechanism.input_port
+
+    def _get_all_afferents(self):
+        return self.path_afferents + self.mod_afferents
+
+    def _get_all_projections(self):
+        return self._get_all_afferents()
 
     @tc.typecheck
     def _parse_port_specific_specs(self, owner, port_dict, port_specific_spec):
@@ -1329,6 +1335,14 @@ class InputPort(Port_Base):
         self.path_afferents = assignment
 
     @property
+    def path_afferents(self):
+        try:
+            return self._path_afferents
+        except:
+            self._path_afferents = []
+            return self._path_afferents
+
+    @property
     def socket_width(self):
         return self.defaults.variable.shape[-1]
 
@@ -1406,7 +1420,6 @@ class InputPort(Port_Base):
         function = function or InputPort.defaults.function
 
         return Port_Base._get_port_function_value(owner=owner, function=function, variable=variable)
-
 
 def _instantiate_input_ports(owner, input_ports=None, reference_value=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of InputPort(s)

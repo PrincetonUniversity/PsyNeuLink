@@ -8,18 +8,22 @@
 
 # ********************************************* Condition **************************************************************
 
+import collections
+import copy
 import functools
 import inspect
+import warnings
 
 import dill
 import graph_scheduler
-
+import numpy as np
 from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
-from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE
+from psyneulink.core.globals.keywords import MODEL_SPEC_ID_TYPE, comparison_operators
 from psyneulink.core.globals.parameters import parse_context
 
-__all__ = graph_scheduler.condition.__all__
+__all__ = copy.copy(graph_scheduler.condition.__all__)
+__all__.extend(['Threshold'])
 
 
 def _create_as_pnl_condition(condition):
@@ -152,3 +156,98 @@ _doc_subs = {
         )
     ]
 }
+
+
+class Threshold(graph_scheduler.condition._DependencyValidation, Condition):
+    """Threshold
+
+    Attributes:
+
+        dependency
+            the node on which the Condition depends
+
+        parameter
+            the name of the parameter of **dependency** whose value is
+            to be compared to **threshold**
+
+        threshold
+            the fixed value compared to the value of the **parameter**
+
+        comparator
+            the string comparison operator determining the direction or
+            type of comparison of the value of the **parameter**
+            relative to **threshold**
+
+        indices
+            if specified, a series of indices that reach the desired
+            number given an iterable value for **parameter**
+
+        atol
+            absolute tolerance for the comparison
+
+        rtol
+            relative tolerance (to **threshold**) for the comparison
+
+    Satisfied when:
+
+        The comparison between the value of the **parameter** and
+        **threshold** using **comparator** is true. If **comparator** is
+        an equality (==, !=), the comparison will be considered equal
+        within tolerances **atol** and **rtol**.
+
+    Notes:
+
+        The comparison must be done with scalars. If the value of
+        **parameter** contains more than one item, **indices** must be
+        specified.
+    """
+
+    def __init__(self, dependency, parameter, threshold, comparator, indices=None, atol=0, rtol=0):
+        if comparator not in comparison_operators:
+            raise graph_scheduler.ConditionError(
+                f'Operator must be one of {list(comparison_operators.keys())}'
+            )
+
+        if parameter not in dependency.parameters:
+            raise graph_scheduler.ConditionError(
+                f'{dependency} has no {parameter} parameter'
+            )
+
+        if (atol != 0 or rtol != 0) and comparator in {'<', '<=', '>', '>='}:
+            warnings.warn('Tolerances for inequality comparators are ignored')
+
+        if (
+            indices is not None
+            and not isinstance(indices, graph_scheduler.TimeScale)
+            and not isinstance(indices, collections.abc.Iterable)
+        ):
+            indices = [indices]
+
+        def func(threshold, comparator, indices, atol, rtol, execution_id):
+            param_value = getattr(self.dependency.parameters, self.parameter).get(execution_id)
+
+            if isinstance(indices, graph_scheduler.TimeScale):
+                param_value = param_value._get_by_time_scale(indices)
+            elif indices is not None:
+                for i in indices:
+                    param_value = param_value[i]
+
+            param_value = float(param_value)
+
+            if comparator == '==':
+                return np.isclose(param_value, threshold, atol=atol, rtol=rtol)
+            elif comparator == '!=':
+                return not np.isclose(param_value, threshold, atol=atol, rtol=rtol)
+            else:
+                return comparison_operators[comparator](param_value, threshold)
+
+        super().__init__(
+            func,
+            dependency=dependency,
+            parameter=parameter,
+            threshold=threshold,
+            comparator=comparator,
+            indices=indices,
+            atol=atol,
+            rtol=rtol,
+        )

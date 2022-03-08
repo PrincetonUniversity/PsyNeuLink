@@ -185,43 +185,45 @@ words_hidden_layer.set_log_conditions('value')
 
 # Bidirectional_Stroop.show_graph(show_dimensions=pnl.ALL)#,show_mechanism_structure=pnl.VALUES) # Uncomment to show graph of the system
 
-# Create threshold function -------------------------------------------------------------------------------------------
-# context is automatically passed into Conditions, and references the execution context in which they are being run,
-# which in this case is simply the Bidirectional_Stroop system
-def pass_threshold(response_layer, thresh, context):
-    results1 = response_layer.get_output_values(context)[0][0] #red response
-    results2 = response_layer.get_output_values(context)[0][1] #green response
-    if results1  >= thresh or results2 >= thresh:
-        return True
-    return False
 
-# 2nd threshold function
-def pass_threshold2(response_layer, thresh, terminate, context):
-    results1 = response_layer.get_output_values(context)[0][0] #red response
-    results2 = response_layer.get_output_values(context)[0][1] #green response
-    length = response_layer.log.nparray_dictionary()[context.execution_id]['value'].shape[0]
-    if results1  >= thresh or results2 >= thresh:
-        return True
-    if length ==terminate:
-        return True
-    return False
+def terminate_num_executions(length, context):
+    return response_layer.log.nparray_dictionary()[context.execution_id]['value'].shape[0] == length
 
 
 # Create different terminate trial conditions --------------------------------------------------------------------------
 terminate_trial = {
-   pnl.TimeScale.TRIAL: pnl.While(pass_threshold, response_layer, threshold)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 0)),
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 1)),
+    )
 }
 terminate_trial2 = {
-   pnl.TimeScale.TRIAL: pnl.While(pass_threshold2, response_layer, threshold, terminate2)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 0)),
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 1)),
+        pnl.While(terminate_num_executions, terminate2),
+    )
 }
 terminate_trial3 = {
-   pnl.TimeScale.TRIAL: pnl.While(pass_threshold2, response_layer, threshold, terminate3)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 0)),
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 1)),
+        pnl.While(terminate_num_executions, terminate3),
+    )
 }
 terminate_trial4 = {
-   pnl.TimeScale.TRIAL: pnl.While(pass_threshold2, response_layer, threshold, terminate4)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 0)),
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 1)),
+        pnl.While(terminate_num_executions, terminate4),
+    )
 }
 terminate_trial5 = {
-   pnl.TimeScale.TRIAL: pnl.While(pass_threshold2, response_layer, threshold, terminate5)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 0)),
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 1)),
+        pnl.While(terminate_num_executions, terminate5),
+    )
 }
 
 terminate_list = [terminate_trial2,
