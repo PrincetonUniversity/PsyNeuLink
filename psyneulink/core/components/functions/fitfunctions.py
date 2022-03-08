@@ -7,6 +7,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.scheduling.condition import AtTrialStart
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.llvm import ExecutionMode
+from psyneulink.core.components.functions.nonstateful.optimizationfunctions import OptimizationFunction
 
 
 import typing
@@ -367,6 +368,9 @@ def make_likelihood_function(
 
     return log_likelihood, param_name_map
 
+
+class MaxLikelihoodEstimatorFunction(OptimizationFunction):
+    pass
 
 class MaxLikelihoodEstimator:
     """

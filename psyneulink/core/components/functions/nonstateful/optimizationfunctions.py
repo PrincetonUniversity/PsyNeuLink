@@ -1257,7 +1257,7 @@ class GradientOptimization(OptimizationFunction):
             evaluated; otherwise it is empty.
         """
 
-        optimal_sample, optimal_value, all_samples, all_values = super()._function(variable=variable,
+        optimal_sample, optimal_value, all_samples, all_values = super()._evaluate(variable=variable,
                                                                                   context=context,
                                                                                   params=params,
                                                                                   )
