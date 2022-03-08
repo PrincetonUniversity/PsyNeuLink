@@ -2668,6 +2668,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
@@ -11476,6 +11477,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._show_graph._animate_execution(active_items, context)
 
     # endregion SHOW_GRAPH
+
+    def make_likelihood_function(self, *args, **kwargs):
+        """
+        This method invokes :func:`~psyneulink.core.components.functions.fitfunctions.make_likelihood_function`
+        on the composition.
+        """
+        return make_likelihood_function(composition=self, *args, **kwargs)
 
 
 def get_compositions():

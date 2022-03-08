@@ -24,7 +24,8 @@ class TestReset:
     def test_valid(self):
         D = DDM(
             name='DDM',
-            function=DriftDiffusionIntegrator(seed=0),
+            function=DriftDiffusionIntegrator(seed=0, time_step_size=1.0),
+            execute_until_finished=False,
         )
 
         #  returns previous_value + rate * variable * time_step_size  + noise
@@ -77,7 +78,7 @@ class TestReset:
 
         # reset only decision variable
         D.function.initializer = 1.0
-        D.function.starting_point = 0.0
+        D.function.non_decision_time = 0.0
         D.reset()
         assert np.allclose(D.function.value[0], 1.0)
         assert np.allclose(D.function.previous_value, 1.0)
@@ -89,7 +90,7 @@ class TestReset:
 class TestThreshold:
     def test_threshold_param(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=10.0))
+                function=DriftDiffusionIntegrator(threshold=10.0, time_step_size=1.0))
 
         assert D.function.threshold.base == 10.0
 
@@ -98,7 +99,9 @@ class TestThreshold:
 
     def test_threshold_sets_is_finished(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=5.0))
+                function=DriftDiffusionIntegrator(threshold=5.0, time_step_size=1.0),
+                execute_until_finished=False,
+                reset_stateful_function_when=Never())
         D.execute(2.0)  # 2.0 < 5.0
         assert not D.is_finished()
 
@@ -117,7 +120,8 @@ class TestThreshold:
         ], ids=["POSITIVE", "NEGATIVE"])
     def test_threshold_stops_accumulation(self, mech_mode, variable, expected, benchmark):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=5.0))
+                function=DriftDiffusionIntegrator(threshold=5.0, time_step_size=1.0),
+                execute_until_finished=False)
         ex = pytest.helpers.get_mech_execution(D, mech_mode)
 
         decision_variables = []
@@ -157,7 +161,9 @@ class TestThreshold:
 
     def test_is_finished_stops_composition(self):
         D = DDM(name='DDM',
-                function=DriftDiffusionIntegrator(threshold=10.0))
+                function=DriftDiffusionIntegrator(threshold=10.0, time_step_size=1.0),
+                execute_until_finished=False,
+                reset_stateful_function_when=Never())
         C = Composition(pathways=[D], reset_stateful_function_when=Never())
         C.run(inputs={D: 2.0},
               termination_processing={TimeScale.TRIAL: WhenFinished(D)})
@@ -284,8 +290,8 @@ def test_DDM_Integrator_Bogacz(benchmark, mech_mode, prng):
 @pytest.mark.benchmark(group="DDM")
 @pytest.mark.parametrize("noise, expected", [
     (0., 10),
-    (0.5, 8.194383551861414),
-    (2., 6.388767103722829),
+    (np.sqrt(0.5), 8.194383551861414),
+    (np.sqrt(2.0), 6.388767103722829),
     ], ids=["0", "0.5", "2.0"])
 def test_DDM_noise(mech_mode, benchmark, noise, expected):
     T = DDM(
@@ -294,7 +300,8 @@ def test_DDM_noise(mech_mode, benchmark, noise, expected):
             noise=noise,
             rate=1.0,
             time_step_size=1.0
-        )
+        ),
+        execute_until_finished=False
     )
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
@@ -346,6 +353,7 @@ def test_DDM_input(stim):
             rate=1.0,
             time_step_size=1.0
         ),
+        execute_until_finished=False,
     )
     val = float(T.execute(stim)[0])
     assert val == 10
@@ -371,6 +379,7 @@ def test_DDM_input_list_len_2():
                 rate=1.0,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
         float(T.execute(stim)[0])
     assert "single numeric item" in str(error_text.value)
@@ -395,6 +404,7 @@ def test_DDM_input_fn():
                 rate=1.0,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
         float(T.execute(stim))
     assert '"Input to \'DDM\' ([(NormalDist Normal Distribution Function' in str(error_text.value)
@@ -423,6 +433,7 @@ def test_DDM_rate(benchmark, rate, expected, mech_mode):
             rate=rate,
             time_step_size=1.0
         ),
+        execute_until_finished=False,
     )
     ex = pytest.helpers.get_mech_execution(T, mech_mode)
 
@@ -456,6 +467,7 @@ def test_DDM_rate_fn():
                 rate=NormalDist().function,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
         float(T.execute(stim)[0])
     assert "incompatible value" in str(error_text.value)
@@ -481,6 +493,7 @@ def test_DDM_size_int_check_var():
             rate=-5.0,
             time_step_size=1.0
         ),
+        execute_until_finished=False,
     )
     assert len(T.defaults.variable) == 1 and T.defaults.variable[0][0] == 0
 
@@ -498,6 +511,7 @@ def test_DDM_size_int_inputs():
             rate=-5.0,
             time_step_size=1.0
         ),
+        execute_until_finished=False,
     )
     val = T.execute([.4])
     decision_variable = val[0][0]
@@ -524,6 +538,7 @@ def test_DDM_mech_size_zero():
                 rate=-5.0,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
     assert "is not a positive number" in str(error_text.value)
 
@@ -542,6 +557,7 @@ def test_DDM_mech_size_negative_one():
                 rate=-5.0,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
     assert "is not a positive number" in str(error_text.value)
 
@@ -560,6 +576,7 @@ def test_DDM_size_too_large():
                 rate=-5.0,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
     assert "single numeric item" in str(error_text.value)
 
@@ -578,6 +595,7 @@ def test_DDM_size_too_long():
                 rate=-5.0,
                 time_step_size=1.0
             ),
+            execute_until_finished=False,
         )
     assert "is greater than 1, implying there are" in str(error_text.value)
 
@@ -590,8 +608,9 @@ def test_DDM_time():
             noise=0.0,
             rate=-5.0,
             time_step_size=0.2,
-            starting_point=0.5
-        )
+            non_decision_time=0.5
+        ),
+        execute_until_finished=False,
     )
 
     time_0 = D.function.previous_time   # t_0  = 0.5
@@ -622,9 +641,11 @@ def test_DDM_in_composition(benchmark, comp_mode):
             rate=1,
             noise=0.0,
             offset=0.0,
-            starting_point=0.0,
+            non_decision_time=0.0,
             time_step_size=0.1,
         ),
+        execute_until_finished=False,
+        reset_stateful_function_when=Never()
     )
     C = pnl.Composition()
     C.add_linear_processing_pathway([M])
@@ -675,9 +696,18 @@ def test_DDM_threshold_modulation(comp_mode):
                             (100.0, 100.0, (100.0, 76.0)),
                         ])
 def test_ddm_is_finished(comp_mode, noise, threshold, expected_results):
+
+    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
+    # functions after each trial. This is not supported in LLVM execution mode.
+    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+    if comp_mode == pnl.ExecutionMode.LLVM:
+        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
+                            "This is not supported in LLVM execution mode. "
+                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
+
     comp = Composition()
-    ddm = DDM(execute_until_finished=True,
-                function=DriftDiffusionIntegrator(threshold=threshold, noise=noise))
+    ddm = DDM(function=DriftDiffusionIntegrator(threshold=threshold, noise=np.sqrt(noise), time_step_size=1.0),
+              execute_until_finished=True)
     comp.add_node(ddm)
 
     results = comp.run([0], execution_mode=comp_mode)
@@ -691,7 +721,7 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
         function=DriftDiffusionAnalytical(
             drift_rate=(1.0),
             threshold=(10.0),
-            starting_point=0.0,
+            starting_value=0.0,
         ),
         name='My_DDM',
     )
@@ -745,7 +775,18 @@ def test_sequence_of_DDM_mechs_in_Composition_Pathway():
 @pytest.mark.mechanism
 @pytest.mark.ddm_mechanism
 def test_DDMMechanism_LCA_equivalent(comp_mode):
-    ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1))
+
+    # 3/5/2021 - DDM' default behaviour now requires resetting stateful
+    # functions after each trial. This is not supported in LLVM execution mode.
+    # See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935
+    if comp_mode == pnl.ExecutionMode.LLVM:
+        pytest.xfail(reason="DDM' default behaviour now requires resetting stateful functions after each trial. "
+                            "This is not supported in LLVM execution mode. "
+                            "See: https://github.com/PrincetonUniversity/PsyNeuLink/issues/1935")
+
+
+    ddm = DDM(default_variable=[0], function=DriftDiffusionIntegrator(rate=1, time_step_size=0.1),
+              execute_until_finished=False)
     comp2 = Composition()
     comp2.add_node(ddm)
     result2 = comp2.run(inputs={ddm:[1]}, execution_mode=comp_mode)

@@ -56,8 +56,8 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                                                                       pnl.ALLOCATION_SAMPLES: samples,
                                                                                   })),
                                                      noise=0.5,
-                                                     starting_point=0,
-                                                     t0=0.45),
+                                                     starting_value=0,
+                                                     non_decision_time=0.45),
                    output_ports=[DECISION_VARIABLE,
                                  RESPONSE_TIME,
                                  PROBABILITY_UPPER_THRESHOLD],
@@ -65,8 +65,8 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
     Decision2 = DDM(function=DriftDiffusionAnalytical(drift_rate=1.0,
                                                       threshold=1.0,
                                                       noise=0.5,
-                                                      starting_point=0,
-                                                      t0=0.45),
+                                                      starting_value=0,
+                                                      non_decision_time=0.45),
                     output_ports=[DECISION_VARIABLE,
                                   RESPONSE_TIME,
                                   PROBABILITY_UPPER_THRESHOLD],
@@ -97,7 +97,7 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
                                              # enable_controller=False  # For testing error
                                              )
     ctlr = pec.controller
-    # pec.show_graph(show_node_structure=pnl.ALL)
+
     assert ctlr.num_outcome_input_ports == 1
     if objective_function_arg:
         # pec.show_graph(show_cim=True)

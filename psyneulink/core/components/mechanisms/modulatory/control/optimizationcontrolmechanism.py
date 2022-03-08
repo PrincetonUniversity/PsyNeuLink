@@ -2914,7 +2914,7 @@ class OptimizationControlMechanism(ControlMechanism):
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
             func_out = b.gep(arg_out, [idx])
-            pnlvm.helpers.create_allocation(b, allocation, search_space, idx)
+            pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
             b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
 

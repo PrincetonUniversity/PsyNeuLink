@@ -13,7 +13,7 @@ class TestModels:
             function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(10.0),
-                starting_point=0.0,
+                starting_value=0.0,
             ),
             name='My_DDM',
         )
