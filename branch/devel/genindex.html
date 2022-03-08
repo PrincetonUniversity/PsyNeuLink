@@ -9,7 +9,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; PsyNeuLink 0+untagged.16.gc7c172b documentation</title>
+  <title>Index &mdash; PsyNeuLink 0+untagged.40.g19e9388 documentation</title>
   
 
   
@@ -98,7 +98,7 @@
               
               
                 <div class="version">
-                  0+untagged.16.gc7c172b
+                  0+untagged.40.g19e9388
                 </div>
               
             
@@ -336,6 +336,8 @@
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._determine_origin_and_terminal_nodes_from_consideration_queue">_determine_origin_and_terminal_nodes_from_consideration_queue() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
+      <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._evaluate">_evaluate() (psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction method)</a>
+</li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction._EWMA_filter">_EWMA_filter() (psyneulink.core.components.functions.stateful.integratorfunctions.IntegratorFunction method)</a>
 </li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._execute">_execute() (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism method)</a>
@@ -541,6 +543,8 @@
 </li>
       </ul></li>
       <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.GridSearch._grid_complete">_grid_complete() (psyneulink.core.components.functions.optimizationfunctions.GridSearch method)</a>
+</li>
+      <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._grid_evaluate">_grid_evaluate() (psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction method)</a>
 </li>
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._handle_allow_probes_for_control">_handle_allow_probes_for_control() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
@@ -877,6 +881,8 @@
       <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition._route_control_projection_through_intermediary_pcims">_route_control_projection_through_intermediary_pcims() (psyneulink.core.compositions.composition.Composition method)</a>
 </li>
       <li><a href="CompositionInterfaceMechanism.html#psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism._sender_is_probe">_sender_is_probe() (psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism.CompositionInterfaceMechanism method)</a>
+</li>
+      <li><a href="OptimizationFunctions.html#psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction._sequential_evaluate">_sequential_evaluate() (psyneulink.core.components.functions.optimizationfunctions.OptimizationFunction method)</a>
 </li>
       <li><a href="Time.html#psyneulink.core.scheduling.time.Time._set_by_time_scale">_set_by_time_scale() (psyneulink.core.scheduling.time.Time method)</a>
 </li>
@@ -2902,6 +2908,8 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="Composition.html#psyneulink.core.compositions.composition.Composition.make_likelihood_function">make_likelihood_function() (psyneulink.core.compositions.composition.Composition method)</a>
+</li>
       <li><a href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingError">MappingError</a>
 </li>
       <li><a href="MappingProjection.html#psyneulink.core.components.projections.pathway.mappingprojection.MappingProjection">MappingProjection (class in psyneulink.core.components.projections.pathway.mappingprojection)</a>
@@ -3421,6 +3429,14 @@
         <li><a href="StatefulFunction.html#psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction.noise">(psyneulink.core.components.functions.stateful.statefulfunction.StatefulFunction attribute)</a>
 </li>
         <li><a href="TransferMechanism.html#psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism.noise">(psyneulink.core.components.mechanisms.processing.transfermechanism.TransferMechanism attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.non_decision_time">non_decision_time (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
+
+      <ul>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.non_decision_time">(psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
+</li>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.OrnsteinUhlenbeckIntegrator.non_decision_time">(psyneulink.core.components.functions.stateful.integratorfunctions.OrnsteinUhlenbeckIntegrator attribute)</a>
 </li>
       </ul></li>
       <li><a href="TransferFunctions.html#psyneulink.core.components.functions.transferfunctions.CostFunctions.NONE">NONE (psyneulink.core.components.functions.transferfunctions.CostFunctions attribute)</a>
@@ -5137,10 +5153,10 @@
 </li>
       <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.shenhav_et_al_compat_mode">shenhav_et_al_compat_mode (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical property)</a>
 </li>
-      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.short_term_bias">short_term_bias (psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.short_term_bias">short_term_bias (psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator attribute)</a>
+</li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.short_term_gain">short_term_gain (psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator attribute)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator.short_term_rate">short_term_rate (psyneulink.core.components.functions.stateful.integratorfunctions.DualAdaptiveIntegrator attribute)</a>
@@ -5237,14 +5253,12 @@
         <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.start_inclusive">(psyneulink.core.scheduling.condition.TimeTermination attribute)</a>
 </li>
       </ul></li>
-      <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point">starting_point (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
+      <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point">starting_point (psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator attribute)</a>
+</li>
+      <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value">starting_value (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
 
       <ul>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.starting_point">(psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
-</li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator.starting_point">(psyneulink.core.components.functions.stateful.integratorfunctions.DriftOnASphereIntegrator attribute)</a>
-</li>
-        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.OrnsteinUhlenbeckIntegrator.starting_point">(psyneulink.core.components.functions.stateful.integratorfunctions.OrnsteinUhlenbeckIntegrator attribute)</a>
+        <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator.starting_value">(psyneulink.core.components.functions.stateful.integratorfunctions.DriftDiffusionIntegrator attribute)</a>
 </li>
       </ul></li>
       <li><a href="OptimizationControlMechanism.html#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism.state">state (psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism attribute)</a>
@@ -5300,8 +5314,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="Condition.html#psyneulink.core.scheduling.condition.TimeTermination.t">t (psyneulink.core.scheduling.condition.TimeTermination attribute)</a>
-</li>
-      <li><a href="DistributionFunctions.html#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.t0">t0 (psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical attribute)</a>
 </li>
       <li><a href="IntegratorFunctions.html#psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator.t_0">t_0 (psyneulink.core.components.functions.stateful.integratorfunctions.FitzHughNagumoIntegrator attribute)</a>
 </li>
