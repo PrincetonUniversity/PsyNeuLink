@@ -386,7 +386,7 @@ class OptimizationFunction(Function_Base):
         variable = Parameter(np.array([0.0, 0.0, 0.0]), read_only=True, pnl_internal=True, constructor_argument='default_variable')
 
         objective_function = Parameter(lambda x: 0.0, stateful=False, loggable=False)
-        aggregation_function = Parameter(lambda x: np.mean(x, axis=x.ndim-1), stateful=False, loggable=False)
+        aggregation_function = Parameter(lambda x: np.mean(x, axis=1), stateful=False, loggable=False)
         search_function = Parameter(lambda x: x, stateful=False, loggable=False)
         search_termination_function = Parameter(lambda x, y, z: True, stateful=False, loggable=False)
         search_space = Parameter([SampleIterator([0])], stateful=False, loggable=False)
@@ -650,9 +650,24 @@ class OptimizationFunction(Function_Base):
         # If  aggregation_function is specified and there is a randomization dimension specified
         # in the control signals; use the aggregation function aggregate over the samples generated
         # for different randomized values of the control signal
-        if self.aggregation_function and self.parameters.randomization_dimension._get(context):
-            aggregated_values = np.atleast_1d(self.aggregation_function(all_values))
+        if self.aggregation_function and \
+                self.parameters.randomization_dimension._get(context) and \
+                self.parameters.num_estimates._get(context) is not None:
+
+            # Reshape all the values we encountered to group those that correspond to the same parameter values
+            # can be aggregated.
+            all_values = np.reshape(all_values, (-1, self.parameters.num_estimates._get(context)))
+
+            # Since we are aggregating over the randomized value of the control allocation, we also need to drop the
+            # randomized dimension from the samples. That is, we don't want to return num_estimates samples for each
+            # control allocation. This line below just grabs the first one (seed == 1) for each control allocation.
+            all_samples = all_samples[:, all_samples[1, :] == all_samples[1, 0]]
+
+            # If num_estimates is not None, then one of the control signals is modulating the random seed. We will
+            # groupby this signal and average the values to compute the estimated value.
+            aggregated_values = np.atleast_2d(self.aggregation_function(all_values))
             returned_values = aggregated_values
+
         else:
             returned_values = all_values
 
@@ -728,8 +743,8 @@ class OptimizationFunction(Function_Base):
             self.parameters.saved_values._set(all_values, context)
 
         # Convert evaluated_samples and estimated_values to numpy arrays, stack along the last dimension
-        estimated_values = np.stack(estimated_values, axis=estimated_values[0].ndim)
-        evaluated_samples = np.stack(evaluated_samples, axis=evaluated_samples[0].ndim)
+        estimated_values = np.stack(estimated_values, axis=-1)
+        evaluated_samples = np.stack(evaluated_samples, axis=-1)
 
         # FIX: 11/3/21: ??MODIFY TO RETURN SAME AS _grid_evaluate
         # return current_sample, current_value, evaluated_samples, estimated_values
@@ -837,7 +852,7 @@ class GradientOptimization(OptimizationFunction):
     :math:`\\frac{d(objective\\_function(variable))}{d(variable)}`.  If the **gradient_function* argument of the
     constructor is not specified, then an attempt is made to use `Autograd's <https://github.com/HIPS/autograd>`_ `grad
     <autograd.grad>` method to generate `gradient_function <GradientOptimization.gradient_function>`.  If that fails,
-    an erorr occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
+    an error occurs.  The **search_space** argument can be used to specify lower and/or upper bounds for each dimension
     of the sample; if the gradient causes a value of the sample to exceed a bound along a dimenson, the value of the
     bound is used for that dimension, unless/until the gradient shifts and causes it to return back within the bound.
 
@@ -1461,8 +1476,8 @@ class GridSearch(OptimizationFunction):
                     :type: ``bool``
         """
         grid = Parameter(None)
-        save_samples = Parameter(True, pnl_internal=True)
-        save_values = Parameter(True, pnl_internal=True)
+        save_samples = Parameter(False, pnl_internal=True)
+        save_values = Parameter(False, pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         select_randomly_from_optimal_values = Parameter(False)
@@ -1477,8 +1492,8 @@ class GridSearch(OptimizationFunction):
                  objective_function:tc.optional(is_function_type)=None,
                  search_space=None,
                  direction:tc.optional(tc.enum(MAXIMIZE, MINIMIZE))=None,
-                 save_samples:tc.optional(bool)=False,
-                 save_values:tc.optional(bool)=False,
+                 save_samples:tc.optional(bool)=None,
+                 save_values:tc.optional(bool)=None,
                  # tolerance=0.,
                  select_randomly_from_optimal_values=None,
                  seed=None,
@@ -1967,7 +1982,7 @@ class GridSearch(OptimizationFunction):
                 )
 
                 if all_values.size != all_samples.shape[-1]:
-                    raise ValueError(f"OptimizationFunction Error: {self}._evaluate returned misatched sizes for "
+                    raise ValueError(f"OptimizationFunction Error: {self}._evaluate returned mismatched sizes for "
                                      f"samples and values. This is likely due to a bug in the implementation of "
                                      f"{self.__class__} _evaluate method.")
 

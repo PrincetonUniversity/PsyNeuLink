@@ -137,7 +137,7 @@ class TestProjectionSpecificationFormats:
         gating_sig_spec = {gating_spec: [M.output_ports[pnl.DECISION_VARIABLE],
                                          M.output_ports[pnl.RESPONSE_TIME]]}
         if extra_spec:
-            ctl_sig_spec.update({extra_spec:[M.parameter_ports[pnl.STARTING_POINT]]})
+            ctl_sig_spec.update({extra_spec:[M.parameter_ports[pnl.STARTING_VALUE]]})
             gating_sig_spec.update({extra_spec:[M.output_ports[pnl.RESPONSE_TIME]]})
             ctl_err_msg = '"Both \'PROJECTIONS\' and \'CONTROL\' entries found in specification dict for ' \
                           '\'ControlSignal\' of \'ControlMechanism-0\'. Must use only one or the other."'

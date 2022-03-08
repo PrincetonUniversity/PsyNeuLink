@@ -185,10 +185,10 @@ def test_execute(func, func_mode, variable, noise, params, benchmark):
     # If we are dealing with a DriftDiffusionIntegrator, noise and time_step_size defaults
     # have changed since this test was created. Hard code their old values.
     if 'DriftDiffusionIntegrator' in str(func[0]):
-        noise = np.sqrt(noise)
-        params['time_step_size'] = 1.0
+        f = func[0](default_variable=variable, noise=np.sqrt(noise), time_step_size=1.0, **params)
+    else:
+        f = func[0](default_variable=variable, noise=noise, **params)
 
-    f = func[0](default_variable=variable, noise=noise, **params)
     ex = pytest.helpers.get_func_execution(f, func_mode)
 
     ex(variable)

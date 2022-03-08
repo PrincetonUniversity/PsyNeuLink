@@ -1821,12 +1821,11 @@ class TestControlMechanisms:
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.parametrize("cost, expected, exp_values", [
-        # FIX: 11/3/21: NEED TO CHANGE expected (and exp_values?) NOW THAT feature_input_ports IS IMPLEMENTED
-        (pnl.CostFunctions.NONE, 7.0, [1, 2, 3, 4, 5]),
-        (pnl.CostFunctions.INTENSITY, 3, [-1.71828183, -5.3890561, -17.08553692, -50.59815003, -143.4131591]),
-        (pnl.CostFunctions.ADJUSTMENT, 3, [1, 1, 1, 1, 1] ),
-        (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [-1.71828183, -6.3890561, -19.08553692, -53.59815003, -147.4131591]),
-        (pnl.CostFunctions.DURATION, 3, [-19, -22., -25., -28., -31]),
+        (pnl.CostFunctions.NONE, 7.0, [3, 4, 5, 6, 7]),
+        (pnl.CostFunctions.INTENSITY, 3, [0.2817181715409549, -3.3890560989306495, -15.085536923187664, -48.59815003314423, -141.41315910257657]),
+        (pnl.CostFunctions.ADJUSTMENT, 3, [3, 3, 3, 3, 3] ),
+        (pnl.CostFunctions.INTENSITY | pnl.CostFunctions.ADJUSTMENT, 3, [0.2817181715409549, -4.389056098930649, -17.085536923187664, -51.59815003314423, -145.41315910257657]),
+        (pnl.CostFunctions.DURATION, 3, [-17, -20, -23, -26, -29]),
         # FIXME: combinations with DURATION are broken
         # (pnl.CostFunctions.DURATION | pnl.CostFunctions.ADJUSTMENT, ,),
         # (pnl.CostFunctions.ALL, ,),
@@ -1853,6 +1852,9 @@ class TestControlMechanisms:
                     allocation_samples=pnl.SampleSpec(start=1, stop=5, step=1),
                     cost_options=cost,
                 ),
+
+                # Need to specify GridSearch since save_values is False by default and we
+                # going to check these values later in the test.
                 function=pnl.GridSearch(save_values=True)
             )
         )
@@ -1860,7 +1862,7 @@ class TestControlMechanisms:
         ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(ret, expected)
         if comp_mode == pnl.ExecutionMode.Python:
-            assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
+            assert np.allclose(comp.controller.function.saved_values.flatten(), exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -2659,7 +2661,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(),
+                                               function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
@@ -2710,7 +2712,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(),
+                                               function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
