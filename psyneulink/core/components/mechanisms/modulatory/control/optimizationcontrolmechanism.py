@@ -3120,18 +3120,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, port):
-        i = self.output_ports.index(port)
-        # Allocate the data member of the port input struct
-        port_in_ty = ctx.get_input_struct_type(port)
-        data_in_ty = port_in_ty if len(port.mod_afferents) == 0 else port_in_ty.elements[0]
-        oport_input = builder.alloca(data_in_ty, name="output_port_{}_input".format(i))
-        # FIXME: workaround controller signals occasionally being 2d
-        dest_ptr = pnlvm.helpers.unwrap_2d_array(builder, oport_input)
-        dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-        builder.store(builder.load(val_ptr), dest_ptr)
-        return oport_input
+    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, state, value, port):
+        # The function returns (sample_optimal, value_optimal),
+        # but the value of mechanism is only 'sample_optimal'
+        value = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        return super()._gen_llvm_output_port_parse_variable(ctx, builder, params, state, value, port)
 
     @property
     def agent_rep_type(self):

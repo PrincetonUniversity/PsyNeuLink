@@ -2896,11 +2896,9 @@ class Mechanism_Base(Mechanism):
         for i, port in enumerate(ports):
             p_function = ctx.import_llvm_function(port)
 
-            # Find output location
-            builder, p_output = get_output_ptr(builder, i)
+            # Find input and output locations
             builder, p_input_data = get_input_data_ptr(builder, i)
-
-
+            builder, p_output = get_output_ptr(builder, i)
 
             if len(port.mod_afferents) == 0:
                 # There's no modulation so the only input is data
@@ -2909,30 +2907,23 @@ class Mechanism_Base(Mechanism):
                 else:
                     assert port in self.output_ports
                     # Ports always take at least 2d input. However, parsing
-                    # the function result can get us 1d structure.
-                    # Casting the pointer is LLVM way of adding a dimension
-                    assert len(p_function.args[2].type.pointee) == 1
-                    assert p_function.args[2].type.pointee.element == p_input_data.type.pointee
+                    # the function result can result in 1d structure or scalar
+                    # Casting the pointer is LLVM way of adding dimensions
+                    array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
+                    array_2d = pnlvm.ir.ArrayType(array_1d, 1)
+                    assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
+                        "{} vs.{}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
                     p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
             else:
                 # Port input structure is: (data, [modulations]),
                 p_input = builder.alloca(p_function.args[2].type.pointee,
                                          name=group + "_port_" + str(i) + "_input")
-                # fill in the data.
+                # Fill in the data.
+                # FIXME: We can potentially hit the same dimensionality issue
+                #        as above, but it's more difficult to manifest and
+                #        not even new tests that modulate output ports hit it.
                 p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-                if p_data.type != p_input_data.type:
-                    assert port in self.output_ports
-                    # Ports always take at least 2d input. However, parsing
-                    # the function result can get us 1d structure.
-                    warnings.warn("Shape mismatch: {} parsed value does not match "
-                                  "output port: mech value: {} spec: {} parsed {}.".format(
-                                  port, self.defaults.value, port._variable_spec,
-                                  port.defaults.variable))
-                    p_data = builder.gep(p_data, [ctx.int32_ty(0), ctx.int32_ty(0)])
-
-                # Copy input data to input structure
                 builder.store(builder.load(p_input_data), p_data)
 
             # Copy mod_afferent inputs
