@@ -1182,8 +1182,7 @@ class TestControlMechanisms:
         ocm = pnl.OptimizationControlMechanism(
             state_features=[ia.input_port,
                             oa.output_port,
-                            # ob],
-                            [3,1,2]],
+                            [3,1,2]], # <- ob
             objective_mechanism=[ic,ib],
             function=pnl.GridSearch(),
             allow_probes=True,
