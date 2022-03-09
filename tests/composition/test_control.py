@@ -314,7 +314,7 @@ class TestControlSpecification:
                     deferred_node_control_signal
                 ])
         )
-        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
+        assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
                                                    'EXPECTED INPUT NODE 1 OF ocomp':deferred_node.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
@@ -335,8 +335,8 @@ class TestControlSpecification:
         assert expected_text in error_text.value.error_value
 
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
-        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
-                                                   deferred_node: deferred_node.input_port}
+        assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
+                                                   deferred_node.input_port: deferred_node.input_port}
 
         result = ocomp.run({
             initial_node_a: [1],

@@ -2008,7 +2008,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.agent_rep_type == COMPOSITION:
 
                 # FIX: 3/4/22 - THESE SEEM DUPLICATIVE OF _validate_state_features;  JUST CALL THAT HERE?
-                #               ALSO, "fewer" WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
+                #               ALSO, "d" WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
                 # Too FEW specs for number of agent_rep receivers
                 if len(self.state_feature_specs) < len(agent_rep_input_ports):
                     warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number "
@@ -2136,19 +2136,20 @@ class OptimizationControlMechanism(ControlMechanism):
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
                 # All specifications in list specified for SHADOW_INPUTS must be shadowable
                 #     (i.e., either an INPUT Node or the InputPort of one) or None
-                # FIX: 3/4/22: NEED TO ACCOMODATE input_port IN SET OR AS KEY IN DICT HERE:
-                bad_specs = [spec for spec in user_specs[SHADOW_INPUTS]
-                             if ((spec.owner not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL)
-                                  if isinstance(spec, InputPort)
-                                  else spec not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL))
-                                 and spec is not None)]
-                if bad_specs:
-                    bad_spec_names = [f"'{item.owner.name}'" if hasattr(item, 'owner')
-                                      else f"'{item.name}'" for item in bad_specs]
-                    raise OptimizationControlMechanismError(
-                        f"The '{STATE_FEATURES}' argument for '{self.name}' has one or more items in the list "
-                        f"specified for '{SHADOW_INPUTS.upper()}' ({', '.join([name for name in bad_spec_names])}) "
-                        f"that are not (part of) any INPUT Nodes of its '{AGENT_REP}' ('{self.agent_rep.name}')." )
+                # # FIX: 3/4/22: NEED TO ACCOMODATE input_port IN SET OR AS KEY IN DICT HERE:
+                # # FIX: NOT SURE WHERE THIS CAME FROM, BUT SHOULD EITHER BE WARNING OR COMMENTED OUT:
+                # bad_specs = [spec for spec in user_specs[SHADOW_INPUTS]
+                #              if ((spec.owner not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL)
+                #                   if isinstance(spec, InputPort)
+                #                   else spec not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL))
+                #                  and spec is not None)]
+                # if bad_specs:
+                #     bad_spec_names = [f"'{item.owner.name}'" if hasattr(item, 'owner')
+                #                       else f"'{item.name}'" for item in bad_specs]
+                #     raise OptimizationControlMechanismError(
+                #         f"The '{STATE_FEATURES}' argument for '{self.name}' has one or more items in the list "
+                #         f"specified for '{SHADOW_INPUTS.upper()}' ({', '.join([name for name in bad_spec_names])}) "
+                #         f"that are not (part of) any INPUT Nodes of its '{AGENT_REP}' ('{self.agent_rep.name}')." )
                 specs = user_specs[SHADOW_INPUTS]
                 spec_str = f"{SHADOW_INPUTS.upper()} dict"
             input_port_names = _parse_specs(specs, spec_str=spec_str)
