@@ -1105,7 +1105,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, MECHANISM, MECHANISM_VALUE, \
     MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MULTIPLICATIVE_PARAM, \
+    MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
@@ -3001,14 +3001,14 @@ class Mechanism_Base(Mechanism):
         port_spec = port._variable_spec
         if port_spec == OWNER_VALUE:
             return value
+        elif port_spec == OWNER_EXECUTION_COUNT:
+            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, EXECUTION_COUNT)
+            return execution_count
         elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
             index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
 
             assert index < len(value.type.pointee)
             return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
-        elif port_spec == OWNER_EXECUTION_COUNT:
-            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
-            return execution_count
         else:
             #TODO: support more spec options
             assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
