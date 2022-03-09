@@ -2028,19 +2028,21 @@ class OptimizationControlMechanism(ControlMechanism):
                     if specs_not_in_agent_rep:
                         spec_str = ", ".join(specs_not_in_agent_rep)
                         warnings.warn(
-                            f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(state_feature_specs)}) "
-                            f"is associated with more than the number of {InputPort.__name__}s of INPUT Nodes "
-                            f"({len(agent_rep_input_ports)}) for the Composition assigned as its {AGENT_REP} "
-                            f"('{self.agent_rep.name}'), which includes the following that "
-                            f"are not (yet) in '{self.agent_rep.name}': {spec_str}. Executing {self.name} before the "
-                            f"additional items are added as (part of) INPUT Nodes will generate an error.")
+                            f"The '{STATE_FEATURES}' specified for {self.name} is associated with a number of "
+                            f"{InputPort.__name__}s ({len(state_feature_specs)}) that is greater than for the "
+                            f"{InputPort.__name__}s of the INPUT Nodes ({len(agent_rep_input_ports)}) for the "
+                            f"Composition assigned as its {AGENT_REP} ('{self.agent_rep.name}'), which includes "
+                            f"the following that are not (yet) in '{self.agent_rep.name}': {spec_str}. Executing "
+                            f"{self.name} before the additional item(s) are added as (part of) INPUT Nodes will "
+                            f"generate an error.")
                     else:
                         warnings.warn(
-                            f"The number of '{STATE_FEATURES}' specified for {self.name} ({len(state_feature_specs)}) "
-                            f"is associated with more than the number of {InputPort.__name__}s of INPUT Nodes "
-                            f"({len(agent_rep_input_ports)}) for the Composition assigned as its {AGENT_REP} "
-                            f"('{self.agent_rep.name}'). Executing {self.name} before the "
-                            f"additional Nodes are added as INPUT Nodes will generate an error.")
+                            f"The '{STATE_FEATURES}' specified for {self.name} is associated with a number of "
+                            f"{InputPort.__name__}s ({len(state_feature_specs)}) that is greater than for the "
+                            f"{InputPort.__name__}s of the INPUT Nodes ({len(agent_rep_input_ports)}) for the "
+                            f"Composition assigned as its {AGENT_REP} ('{self.agent_rep.name}'). Executing "
+                            f"{self.name} before the additional item(s) are added as (part of) INPUT Nodes will "
+                            f"generate an error.")
 
             # Nested Compositions not allowed to be specified in a list spec
             nested_comps = [node for node in state_feature_specs if isinstance(node, Composition)]
@@ -2068,7 +2070,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     else:
                         spec = state_feature_specs[i]
                         node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    node_name = node.name
+                    node_name = node.full_name
                 else:
                     # Node not (yet) in agent_rep, so "DEFERRED n" as node name
                     spec = state_feature_specs[i]
@@ -2134,10 +2136,11 @@ class OptimizationControlMechanism(ControlMechanism):
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
                 # All specifications in list specified for SHADOW_INPUTS must be shadowable
                 #     (i.e., either an INPUT Node or the InputPort of one) or None
+                # FIX: 3/4/22: NEED TO ACCOMODATE input_port IN SET OR AS KEY IN DICT HERE:
                 bad_specs = [spec for spec in user_specs[SHADOW_INPUTS]
-                             if ((spec.owner not in self._get_agent_rep_input_receivers(comp_as_node=ALL)
+                             if ((spec.owner not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL)
                                   if isinstance(spec, InputPort)
-                                  else spec not in self._get_agent_rep_input_receivers(comp_as_node=ALL))
+                                  else spec not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL))
                                  and spec is not None)]
                 if bad_specs:
                     bad_spec_names = [f"'{item.owner.name}'" if hasattr(item, 'owner')
@@ -2399,13 +2402,22 @@ class OptimizationControlMechanism(ControlMechanism):
             # Get list of nodes with any nested Comps that are INPUT Nodes replaced with their respective INPUT Nodes
             #   (as those are what need to be shadowed)
             shadowed_input_ports = []
-            for node in self._get_agent_rep_input_receivers(comp_as_node=False):
-                for input_port in node.input_ports:
-                    if input_port.internal_only:
-                        continue
-                    # if isinstance(input_port.owner, CompositionInterfaceMechanism):
-                    #     input_port = input_port.
-                    shadowed_input_ports.append(input_port)
+            # # MODIFIED 3/4/22 OLD:
+            # for node in self._get_agent_rep_input_receivers(comp_as_node=False):
+            #     for input_port in node.input_ports:
+            #         if input_port.internal_only:
+            #             continue
+            #         # if isinstance(input_port.owner, CompositionInterfaceMechanism):
+            #         #     input_port = input_port.
+            #         shadowed_input_ports.append(input_port)
+            # MODIFIED 3/4/22 NEW:
+            for port in self._get_agent_rep_input_receivers():
+                if port.internal_only:
+                    continue
+                # if isinstance(input_port.owner, CompositionInterfaceMechanism):
+                #     input_port = input_port.
+                shadowed_input_ports.append(port)
+            # MODIFIED 3/4/22 END
 
             #  Instantiate state_input_ports
             local_context = Context(source=ContextFlags.METHOD)

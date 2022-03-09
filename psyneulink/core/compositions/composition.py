@@ -4220,10 +4220,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Return all InputPorts of all INPUT Nodes
             _input_nodes = comp._get_nested_nodes_with_same_roles_at_all_levels(comp=comp,
                                                                                 include_roles=NodeRole.INPUT)
-            for node in _input_nodes:
-                input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
-            # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
-            assert len(input_items) == len(comp.input_CIM_ports)
+            if _input_nodes:
+                for node in _input_nodes:
+                    input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
+                # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
+                assert len(input_items) == len(comp.input_CIM_ports)
         else:
             # Return all INPUT Nodes
             if comp.needs_determine_node_roles:
@@ -4235,7 +4236,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         input_items.append(node)
                     if comp_as_node in {False, ALL}:
                         # FIX: DOESN'T THIS SEARCH RECURSIVELY? -- NEED TO TEST WITH > ONE LEVEL OF NESTING
-                        input_items.extend(self._get_input_receivers(node))
+                        input_items.extend(self._get_input_receivers(comp=node, type=type, comp_as_node=comp_as_node))
                 else:
                     input_items.append(node)
 
@@ -8126,17 +8127,33 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         controller = controller or self.controller
-        no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
-        if no_predicted_input and not context.flags | ContextFlags.PREPARING:
+        # MODIFIED 3/4/22 OLD:
+        # no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
+        # MODIFIED 3/4/22 NEW:
+        predicted_input = predicted_inputs is not None and len(predicted_inputs)
+        # MODIFIED 3/4/22 END
+        if not predicted_input and not context.flags | ContextFlags.PREPARING:
             warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
         inputs = {}
         i = 0
         for state_input_port, spec in controller.state_features.items():
-            if spec is None or no_predicted_input:
+            if spec is None and not predicted_input:
                 inputs[state_input_port] = state_input_port.default_input_shape
-            else:
+            elif predicted_input:
                 inputs[state_input_port] = predicted_inputs[i]
                 i += 1
+            elif spec:
+                if is_numeric(spec):
+                    inputs[state_input_port] = spec
+                elif spec.value is not None:
+                    inputs[state_input_port] = spec.value
+                else:
+                    if isinstance(spec, InputPort):
+                        inputs[state_input_port] = spec.default_input_shape
+                    else:
+                        inputs[state_input_port] = spec.defaults.value
+            else:
+                assert False
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
@@ -8506,23 +8523,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         num_trials = 1
         return inputs, num_trials
 
-    def _validate_single_input(self, node, input):
-        """
-        validates a single input for a single node. if the input is specified without an outer list (i.e.
-            Composition.run(inputs = [1, 1]) instead of Composition.run(inputs = [[1], [1]]), add an extra dimension
-            to the input
+    def _validate_single_input(self, receiver, input):
+        """Validate a single input for a single receiver.
+        If the input is specified without an outer list (i.e. Composition.run(inputs = [1, 1]) instead of
+            Composition.run(inputs = [[1], [1]]), add an extra dimension to the input
 
         Returns
         -------
 
         `None` or `np.ndarray` or `list` :
             The input, with an added dimension if necessary, if the input is valid. `None` if the input is not valid.
-
         """
-        # Validate that a single input is properly formatted for a node.
+        
+        # Validate that a single input is properly formatted for a receiver.
         _input = []
-        node_variable = node.external_input_shape
-        match_type = self._input_matches_variable(input, node_variable)
+        if isinstance(receiver, InputPort):
+            input_shape = receiver.default_input_shape
+        elif isinstance(receiver, Mechanism):
+            input_shape = receiver.external_input_shape
+        elif isinstance(receiver, Composition):
+            input_shape = receiver.input_CIM.external_input_shape
+        match_type = self._input_matches_variable(input, input_shape)
         if match_type == 'homogeneous':
             # np.atleast_2d will catch any single-input ports specified without an outer list
             _input = convert_to_np_array(input, 2)
@@ -8555,35 +8576,42 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_lengths = set()
         inputs_to_duplicate = []
         # loop through input dict
-        for node, stimulus in inputs.items():
-            # see if the entire stimulus set provided is a valid input for the node (i.e. in the case of a call with a
+        for receiver, stimulus in inputs.items():
+            # see if the entire stimulus set provided is a valid input for the receiver (i.e. in the case of a call with a
             # single trial of provided input)
-            node_input = self._validate_single_input(node, stimulus)
-            if node_input is not None:
-                node_input = [node_input]
+            _input = self._validate_single_input(receiver, stimulus)
+            if _input is not None:
+                _input = [_input]
             else:
-                # if node_input is None, it may mean there are multiple trials of input in the stimulus set,
+                # if _input is None, it may mean there are multiple trials of input in the stimulus set,
                 #     so in list comprehension below loop through and validate each individual input
-                node_input = [self._validate_single_input(node, single_trial_input) for single_trial_input in stimulus]
+                _input = [self._validate_single_input(receiver, single_trial_input) for single_trial_input in stimulus]
                 # Look for any bad ones (for which _validate_single_input() returned None) and report if found
-                if True in [i is None for i in node_input]:
-                    incompatible_stimulus = np.atleast_1d(np.array(stimulus[node_input.index(None)], dtype=object))
-                    correct_stimulus = np.atleast_1d(np.array(node.external_input_shape[node_input.index(None)],
-                                                              dtype=object))
-                    node_name = node.name
-                    err_msg = f"Input stimulus ({incompatible_stimulus}) for {node_name} is incompatible with " \
+                if True in [i is None for i in _input]:
+                    if isinstance(receiver, InputPort):
+                        receiver_shape = receiver.default_input_shape
+                        receiver_name = receiver.full_name
+                    elif isinstance(receiver, Mechanism):
+                        receiver_shape = receiver.external_input_shape
+                        receiver_name = receiver.name
+                    elif isinstance(receiver, Composition):
+                        receiver_shape = receiver.input_CIM.external_input_shape
+                        receiver_name = receiver.name
+                    incompatible_stimulus = np.atleast_1d(np.array(stimulus[_input.index(None)], dtype=object))
+                    correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
+                    err_msg = f"Input stimulus ({incompatible_stimulus}) for {receiver_name} is incompatible with " \
                               f"the shape of its external input ({correct_stimulus})."
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
-                    if "KWTA" in str(type(node)):
+                    if "KWTA" in str(type(receiver)):
                         err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
                                             "(or other values) to represent the outside stimulus for " \
                                             "the inhibition InputPort, and for Compositions, put your inputs"
                     raise RunError(err_msg)
-            _inputs[node] = node_input
-            input_length = len(node_input)
+            _inputs[receiver] = _input
+            input_length = len(_input)
             if input_length == 1:
-                inputs_to_duplicate.append(node)
+                inputs_to_duplicate.append(receiver)
             # track input lengths. stimulus sets of length 1 can be duplicated to match another stimulus set length.
             # there can be at maximum 1 other stimulus set length besides 1.
             input_lengths.add(input_length)
@@ -8592,7 +8620,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if len(input_lengths) > 1:
             raise CompositionError(f"The input dictionary for {self.name} contains input specifications of different "
                                     f"lengths ({input_lengths}). The same number of inputs must be provided for each "
-                                   f"node in a Composition.")
+                                   f"receiver in a Composition.")
         elif len(input_lengths) > 0:
             num_trials = list(input_lengths)[0]
             for mechanism in inputs_to_duplicate:
@@ -8763,9 +8791,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _instantiate_input_dict(self, inputs):
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
-        Validate that all Nodes included in input dict are INPUT nodes of Composition.
-        Inputs can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions;
+        **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions;
             these can be at any level of nesting within self.
+        Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition specifications
+        Validate that all Nodes included in input dict are INPUT nodes of Composition.
         If any INPUT nodes of Composition are not included, add them to the input_dict using their default values.
 
         Returns
@@ -8779,7 +8808,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_dict = {}
 
         # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
-        #    and assign any InputPort specs to their owner Mechanisms
+        #    and assign any InputPort specs to their owner Mechanism or Composition
         for item in inputs.keys():
             if item in input_nodes:
                 input_dict[item] = inputs[item]
@@ -8798,11 +8827,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # Item is an input_port of a Mechanism in self, so assign input to that input_port
                         # Get index of input_port on mech
                         i = item.owner.input_ports.index(item)
-                        if mech not in inputs:
+                        if mech not in inputs and item not in inputs:
                             # Assign default input for Mechanism as base; then populate with input below
                             input_dict[mech] = np.zeros_like(mech.external_input_shape)
                         # Assign input to item of array in value corresponding to InputPort
-                        input_dict[mech][i] = inputs[item]
+                        elif mech in inputs or item in inputs:
+                            if mech not in input_dict:
+                                input_dict[mech] = mech.external_input_shape
+                            input_dict[mech][i] = inputs[item]
+                        # elif item in inputs:
+                        #     if item not in input_dict:
+                        #         input_dict[item] = item.default_input_shape
+                        #     input_dict[item][i] = inputs[item]
                         ports = []
                         item = mech
                     else:
@@ -8839,7 +8875,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         input_dict[nested_comp] = np.zeros_like(nested_comp.input_CIM.input_values).tolist()
                     for port in ports:
                         i = nested_comp.input_CIM.input_ports.index(nested_comp_cim_input_port)
-                        input_dict[nested_comp][i] = np.array(inputs[item])
+                        # FIX: 3/4/22 - THIS NEEDS TO REFERENCE state_features.values() AT LEAST FOR SHADOW_INPUTS
+                        if inputs[item] is not None:
+                            input_dict[nested_comp][i] = np.array(inputs[item])
+                        else:
+                            # input_dict[nested_comp][i] = np.array(item.default_input_shape)
+                            assert False, f"PROGRAM ERROR: 'None' passed in for value of {item.full_name}"
                     item = nested_comp
 
             if item not in input_nodes:
