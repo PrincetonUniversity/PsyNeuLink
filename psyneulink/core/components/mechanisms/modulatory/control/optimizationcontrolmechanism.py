@@ -3230,6 +3230,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_features(self):
+        # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
+        #              for unspecified InputPorts if "needs_update_controller" is False
+        #              - GET SOURCE OR SHADOWED SPEC XXX
         self._update_state_features_dict()
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
         state_features_dict = {}

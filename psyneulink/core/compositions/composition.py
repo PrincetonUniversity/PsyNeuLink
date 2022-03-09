@@ -8137,12 +8137,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         inputs = {}
         i = 0
         for state_input_port, spec in controller.state_features.items():
+            # MODIFIED 3/4/22 NEW:
+            # state_input_port not (yet) specified; default input will be assigned in _instantiate_input_dict()
+            if not isinstance(state_input_port, InputPort):
+                continue
+            # MODIFIED 3/4/22 END
             if spec is None and not predicted_input:
                 inputs[state_input_port] = state_input_port.default_input_shape
             elif predicted_input:
                 inputs[state_input_port] = predicted_inputs[i]
                 i += 1
-            elif spec:
+            elif spec is not None:
                 if is_numeric(spec):
                     inputs[state_input_port] = spec
                 elif spec.value is not None:
@@ -8153,7 +8158,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     else:
                         inputs[state_input_port] = spec.defaults.value
             else:
-                assert False
+                assert False, "PROGRAM ERROR: Unanticipated combination of spec and predicted_input values."
         return inputs
 
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):

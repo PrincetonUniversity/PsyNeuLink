@@ -1173,7 +1173,7 @@ class TestControlMechanisms:
         ib = pnl.ProcessingMechanism(name='IB')
         ic = pnl.ProcessingMechanism(name='IC')
         oa = pnl.ProcessingMechanism(name='OA')
-        ob = pnl.ProcessingMechanism(name='OB')
+        ob = pnl.ProcessingMechanism(name='OB', size=3)
         oc = pnl.ProcessingMechanism(name='OC')
         icomp = pnl.Composition(pathways=[ia,ib,ic], name='INNER COMP')
         ocomp = pnl.Composition(pathways=[icomp], name='OUTER COMP')
@@ -3269,13 +3269,21 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                               I1.input_port: None,
                                               I2.input_port: I2.input_port}
             elif state_features_arg == 'nested_partial_dict':
-                assert ocm.state_features == {A:A.input_port,  I1:None, I2:I1.input_port}
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: None,
+                                              I2.input_port: I1.input_port}
             elif state_features_arg == 'nested_full_dict':
-                assert ocm.state_features == {A:A.input_port,  I1:I2.input_port, I2:I1.input_port}
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: I2.input_port,
+                                              I2.input_port: I1.input_port}
             elif state_features_arg == 'nested_comp_dict':
-                assert ocm.state_features == {A:I1.input_port,  I1:I1.input_port, I2:I1.input_port}
+                assert ocm.state_features == {A.input_port:I1.input_port,
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I1.input_port}
             else:
-                assert ocm.state_features == {A:A.input_port, I1:I1.input_port, I2:I2.input_port}
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I2.input_port}
 
 class TestSampleIterator:
 
