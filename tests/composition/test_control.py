@@ -806,7 +806,7 @@ class TestControlMechanisms:
         f"([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, or "
         f"remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
         f"to have them automatically assigned.",
-        
+
         # 5
         f"The '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 is associated with a number of "
         f"InputPorts (4) that is greater than for the InputPorts of the INPUT Nodes (3) for the Composition assigned "
@@ -851,29 +851,29 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
-        # ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec_short', None, None, None),
-        # ('set_spec_short', None, None, None),
-        # ('set_spec_port', None, None, None),
-        # ('set_spec_short', None, None, None),
-        # ('automatic_assignment', None, None, None),
-        # ('shadow_inputs_dict_spec', None, None, None),
-        # ('shadow_inputs_dict_spec_w_none', None, None, None),
-        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
-        # ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
-        # ('too_many_inputs_warning', messages[5], None, UserWarning),
-        # ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
-        # ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
-        # ('bad_dict_spec_warning', messages[8], None, UserWarning),
-        # ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('full_list_spec', None, None, None),
+        ('list_spec_with_none', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('set_spec_port', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
+        ('too_many_inputs_warning', messages[5], None, UserWarning),
+        ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
+        ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
+        ('bad_dict_spec_warning', messages[8], None, UserWarning),
+        ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
         ('bad_shadow_inputs_dict_spec_error', messages[12], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
-        # ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
+        ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
+        ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
     if len(state_feature_args) != 22:
