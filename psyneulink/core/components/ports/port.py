@@ -2324,6 +2324,11 @@ class Port_Base(Port):
                     self, func_input_type, self.defaults.variable,
                     self.function.defaults.variable, len(self.path_afferents))
 
+        if len(self.mod_afferents) == 0:
+            # Not need to wrap inputs of non-modulated ports inside mechanisms
+            # This makes sure the port input matches port data input and avoids a copy
+            return func_input_type
+
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
@@ -2396,7 +2401,10 @@ class Port_Base(Port):
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
-        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if len(self.mod_afferents) == 0:
+            f_input = arg_in
+        else:
+            f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder
