@@ -2882,7 +2882,7 @@ class Mechanism_Base(Mechanism):
         return (port_state_init, *mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports, group,
-                        get_output_ptr, fill_input_data,
+                        get_output_ptr, get_input_data_ptr,
                         mech_params, mech_state, mech_input):
         group_ports = getattr(self, group)
         ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, group)
@@ -2894,13 +2894,24 @@ class Mechanism_Base(Mechanism):
 
             # Find output location
             builder, p_output = get_output_ptr(builder, i)
+            builder, p_input_data = get_input_data_ptr(builder, i)
 
-            # Allocate the input structure (data + modulation)
+            # Port inputs are (data, [modulations]),
             p_input = builder.alloca(p_function.args[2].type.pointee,
                                      name=group + "_port_" + str(i) + "_input")
+            # fill in the data.
+            p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
+            if p_data.type != p_input_data.type:
+                assert port in self.output_ports
+                warnings.warn("Shape mismatch: {} parsed value does not match "
+                              "output port: mech value: {} spec: {} parsed {}.".format(
+                              port, self.defaults.value, port._variable_spec,
+                              port.defaults.variable))
+                p_data = builder.gep(p_data, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
             # Copy input data to input structure
-            builder = fill_input_data(builder, p_input, i)
+            builder.store(builder.load(p_input_data), p_data)
 
             # Copy mod_afferent inputs
             for idx, p_mod in enumerate(port.mod_afferents):
@@ -2943,16 +2954,12 @@ class Mechanism_Base(Mechanism):
             ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, p_input, i):
-            ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            # Input port inputs are {original parameter, [modulations]},
-            # fill in the first one.
-            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(ip_in), data_ptr)
-            return b
+        def _get_input_data_ptr(b, i):
+            ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, self.input_ports, "input_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_input)
 
         return ip_output, builder
@@ -2979,20 +2986,13 @@ class Mechanism_Base(Mechanism):
                                               param_ports[i].source.name)
             return b, ptr
 
-        def _fill_input(b, p_input, i):
-            param_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                                    param_ports[i].source.name)
-            # Parameter port inputs are {original parameter, [modulations]},
-            # here we fill in the first one.
-            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            assert data_ptr.type == param_ptr.type, \
-                "Mishandled modulation type for: {} in '{}' in '{}'".format(
-                    param_ports[i].name, obj.name, self.name)
-            b.store(b.load(param_ptr), data_ptr)
-            return b
+        def _get_input_data_ptr(b, i):
+            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
+                                              param_ports[i].source.name)
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_input)
         return params_out, builder
 
@@ -3019,24 +3019,13 @@ class Mechanism_Base(Mechanism):
             ptr = b.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, s_input, i):
-            data_ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
+        def _get_input_data_ptr(b, i):
+            ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_ports[i])
-            # Output port inputs are {original parameter, [modulations]},
-            # fill in the first one.
-            input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            if input_ptr.type != data_ptr.type:
-                port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {} parsed value does not match "
-                              "output port: mech value: {} spec: {} parsed {}.".format(
-                              port, self.defaults.value, port._variable_spec,
-                              port.defaults.variable))
-                input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(data_ptr), input_ptr)
-            return b
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, self.output_ports, "output_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_in)
         return builder
 
