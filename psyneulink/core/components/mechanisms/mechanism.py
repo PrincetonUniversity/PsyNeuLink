@@ -2964,8 +2964,8 @@ class Mechanism_Base(Mechanism):
         # Filter out param ports without corresponding param for this function
         param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
 
-        # Exit early if there's no modulation. LLVM is not aliminating
-        # the redundant copy created below.
+        # Exit early if there's no modulation. It's difficult for compiler
+        # to replace pointer arguments to functions with the source location.
         if len(param_ports) == 0:
             return params_in, builder
 
