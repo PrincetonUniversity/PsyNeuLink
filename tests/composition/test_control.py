@@ -856,7 +856,8 @@ class TestControlMechanisms:
         # ('list_spec_with_none', None, None, None),
         # ('input_dict_spec', None, None, None),
         # ('input_dict_spec_short', None, None, None),
-        # ('set_spec', None, None, None),
+        # ('set_spec_short', None, None, None),
+        # ('set_spec_port', None, None, None),
         # ('set_spec_short', None, None, None),
         # ('automatic_assignment', None, None, None),
         # ('shadow_inputs_dict_spec', None, None, None),
@@ -997,6 +998,16 @@ class TestControlMechanisms:
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
+            elif test_condition == 'set_spec_short':
+                assert len(ocm.state_input_ports) == 1
+                assert ocm.state_input_ports.names == ['Shadowed input of OA[InputPort-0]']
+                # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
+                assert ocm.state_features == {ia.input_port: None,
+                                              oa.input_port: oa.input_port,
+                                              ob.input_port: None}
+                assert all(np.allclose(expected,actual)
+                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+
             elif test_condition in {'set_spec', 'set_spec_port'}:
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
@@ -1005,16 +1016,6 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: oa.input_port,
                                               ob.input_port: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
-
-            elif test_condition == 'set_spec_short':
-                assert len(ocm.state_input_ports) == 1
-                assert ocm.state_input_ports.names == ['Shadowed input of OA[InputPort-0]']
-                # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
-                assert ocm.state_features == {ia.input_port: None,
-                                              oa.input_port: oa.input_port,
-                                              ob.input_port: None}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
 
@@ -3265,7 +3266,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             ocomp.add_controller(ocm)
             ocomp.run()
             if state_features_arg == 'nested_partial_set':
-                assert ocm.state_features == {A:A.input_port,  I1:None, I2:I2.input_port}
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: None,
+                                              I2.input_port: I2.input_port}
             elif state_features_arg == 'nested_partial_dict':
                 assert ocm.state_features == {A:A.input_port,  I1:None, I2:I1.input_port}
             elif state_features_arg == 'nested_full_dict':

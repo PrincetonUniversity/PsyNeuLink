@@ -997,7 +997,6 @@ import ast
 import copy
 import warnings
 from collections.abc import Iterable
-from typing import Union
 
 import numpy as np
 import typecheck as tc
@@ -1604,8 +1603,6 @@ class OptimizationControlMechanism(ControlMechanism):
                  **kwargs):
         """Implement OptimizationControlMechanism"""
 
-        from psyneulink.core.compositions.composition import Composition
-
         # Legacy warnings and conversions
         for k in kwargs.copy():
             if k == 'features':
@@ -1888,12 +1885,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
         Projection(s) to state_input_ports from sources specified in state_feature_specs can be direct,
             or indirect by way of a CIM if the source is in a nested Composition.
-        
+
         Handle four formats:
 
         - dict {INPUT Node: source or None, INPUT Node: source or None...}:
-            - every key must be an INPUT Node of agent_rep or an INPUT Node of a nested Composition within it that 
-                is itself an INPUT Node of its enclosing Composition, at any level of nesting; 
+            - every key must be an INPUT Node of agent_rep or an INPUT Node of a nested Composition within it that
+                is itself an INPUT Node of its enclosing Composition, at any level of nesting;
             - if a Composition is specified as a key, construct a state_input_port for each InputPort of each of its
                 INPUT Nodes, and those of any Compositions nested within it at all levels of nesting, and assign the
                 the value of the dict entry as the source for all of them;
@@ -1908,30 +1905,30 @@ class OptimizationControlMechanism(ControlMechanism):
             - if there are fewer sources listed than INPUT Nodes, assign None to the entries in state_feature_specs
                corresponding to the remaining INPUT Nodes and don't construct state_input_ports for them;
             - if there more sources listed than INPUT Nodes, leave the excess ones, and label them as
-               'EXPECTED INPUT NODE n' for later resolution (see below). 
+               'EXPECTED INPUT NODE n' for later resolution (see below).
 
         - set {INPUT Node, Input Node...}: specifies INPUT Nodes to be shadowed
-            - every item must be an INPUT Node of agent_rep or an INPUT Node of a nested Composition within it that 
-                is itself an INPUT Node of its enclosing Composition, at any level of nesting; 
-            - if a Composition is specified, construct a state_input_port for each of its INPUT Nodes, and those of 
+            - every item must be an INPUT Node of agent_rep or an INPUT Node of a nested Composition within it that
+                is itself an INPUT Node of its enclosing Composition, at any level of nesting;
+            - if a Composition is specified, construct a state_input_port for each of its INPUT Nodes, and those of
                 any Compositions nested within it at all levels of nesting, each of which shadows the input of the
                 corresponding INPUT Node (see _InputPort_Shadow_Inputs).
             - if only one or some of the INPUT Nodes of a nested Composition are specified, don't state_input_ports
-                for the remaining ones, and assign them their default inputs in evaluate().   
+                for the remaining ones, and assign them their default inputs in evaluate().
 
         IMPLEMENTATION NOTE: this is a legacy format for consistency with generic specification of shadowing inputs
         - SHADOW_INPUTS dict {"SHADOW_INPUTS":[shadowable input, None, shadowable input...]}:
             - all items must be a Mechanism (or one of its InputPorts) that is an INPUT Node of agent_rep or
-                 of a nested Composition within it that is itself an INPUT Node; 
+                 of a nested Composition within it that is itself an INPUT Node;
             - must be listed in same order as *expanded* list of agent_rep INPUT Nodes to which they correspond
                 (see list format above);
             - construct a state_input_port for each non-None spec, and assign it a Projection that shadows the spec.
                 (see _InputPort_Shadow_Inputs).
 
         If shadowing is specified for an INPUT Node, set INTERNAL_ONLY to True in entry of params dict in
-            specification dictionary for corresponding state_input_port (so that inputs to Composition are not 
+            specification dictionary for corresponding state_input_port (so that inputs to Composition are not
             required if the specified source is itself an INPUT Node).
-            
+
         If an INPUT Node is specified that is not (yet) in agent_rep, and/or a source is specified that is not yet
             in self.composition, warn and defer creating a state_input_port;  final check is made, and error(s)
             generated for unresolved specifications at run time.

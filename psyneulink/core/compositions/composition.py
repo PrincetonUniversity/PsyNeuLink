@@ -8534,7 +8534,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         `None` or `np.ndarray` or `list` :
             The input, with an added dimension if necessary, if the input is valid. `None` if the input is not valid.
         """
-        
+
         # Validate that a single input is properly formatted for a receiver.
         _input = []
         if isinstance(receiver, InputPort):
@@ -8885,8 +8885,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             if item not in input_nodes:
                 if not isinstance(item, (Mechanism, Composition)):
-                    raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' is not a {Mechanism.__name__} " \
-                                           f"or {Composition.__name__}, or an {InputPort.__name__} " \
+                    raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' is not a {Mechanism.__name__} "
+                                           f"or {Composition.__name__}, or an {InputPort.__name__} "
                                            f"of one, that is an INPUT Node of '{self.name}'.")
                 else:
                     raise CompositionError(f"{item.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
