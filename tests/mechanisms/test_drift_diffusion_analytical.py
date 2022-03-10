@@ -13,7 +13,7 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
     Helper function to check a DriftDiffusionAnalytical Function against a set of data. Format of the
     data follows the following column ordering:
 
-    stim, drift_rate, threshold, starting_point, bias, t0, noise, mean ER, mean RT,
+    stim, drift_rate, threshold, starting_value, bias, non_decision_time, noise, mean ER, mean RT,
     correct RT mean, correct RT variance, correct RT skew
 
     See gen_matlab_ddm_test_data.py script to generate more test data in this form. This script has since
@@ -25,13 +25,13 @@ def check_drift_diffusion_analytical(B, data, degenerate_cases=False):
     """
     NUM_CHECKS = data.shape[0]
     for i in range(NUM_CHECKS):
-        r_stim, r_drift_rate, r_threshold, r_starting_point, r_bias, r_t0, r_noise = data[i, 0:7].tolist()
+        r_stim, r_drift_rate, r_threshold, r_starting_value, r_bias, r_non_decision_time, r_noise = data[i, 0:7].tolist()
         ground_truth = data[i,7:]
 
         B.function.drift_rate.base = r_drift_rate
         B.function.threshold.base = r_threshold
-        B.function.starting_point.base = r_starting_point
-        B.function.t0.base = r_t0
+        B.function.starting_value.base = r_starting_value
+        B.function.non_decision_time.base = r_non_decision_time
         B.function.noise.base = r_noise
 
         results_b = B.execute(r_stim)

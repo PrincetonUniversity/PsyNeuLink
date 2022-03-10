@@ -2151,9 +2151,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         rate=1.0,                       \
         noise=0.0,                      \
         offset= 0.0,                    \
-        starting_point=0.0,             \
+        non_decision_time=0.0,          \
         threshold=1.0                   \
-        time_step_size=1.0,             \
+        time_step_size=0.01,            \
         initializer=None,               \
         params=None,                    \
         owner=None,                     \
@@ -2208,10 +2208,10 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         if it is a list or array, it must be the same length as `variable <DriftDiffusionIntegrator.variable>`
         (see `offset <DriftDiffusionIntegrator.offset>` for details).
 
-    starting_point : float, list or 1d array:  default 0.0
+    starting_value : float, list or 1d array:  default 0.0
         specifies the starting value for the integration process; if it is a list or array, it must be the
-        same length as `variable <DriftDiffusionIntegrator.variable>` (see `starting_point
-        <DriftDiffusionIntegrator.starting_point>` for details).
+        same length as `variable <DriftDiffusionIntegrator.variable>` (see `starting_value
+        <DriftDiffusionIntegrator.starting_value>` for details).
 
     threshold : float : default 0.0
         specifies the threshold (boundaries) of the drift diffusion process -- i.e., at which the
@@ -2274,12 +2274,16 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <DriftDiffusionIntegrator._function>`.
 
-    starting_point : float or 1d array
+    starting_value : float or 1d array
         determines the starting value for the integration process; if it is a list or array, it must be the
         same length as `variable <DriftDiffusionIntegrator.variable>`. If `variable <DriftDiffusionIntegrator.variable>`
-        is an array and starting_point is a float, starting_point is used for each element of the integral;  if
-        starting_point is a list or array, each of its elements is used as the starting point for each element of the
+        is an array and starting_value is a float, starting_value is used for each element of the integral;  if
+        starting_value is a list or array, each of its elements is used as the starting point for each element of the
         integral.
+
+    non_decision_time : float : default 0.0
+        specifies the starting time of the model and is used to compute `previous_time
+        <DriftDiffusionIntegrator.previous_time>`
 
     threshold : float
         determines the boundaries of the drift diffusion process:  the integration process can be scheduled to
@@ -2368,8 +2372,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                     :type:
                     :read only: True
 
-                starting_point
-                    see `starting_point <DriftDiffusionIntegrator.starting_point>`
+                non_decision_time
+                    see `non_decision_time <DriftDiffusionIntegrator.non_decision_time>`
 
                     :default value: 0.0
                     :type: ``float``
@@ -2388,10 +2392,11 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         """
         rate = Parameter(1.0, modulable=True, aliases=[MULTIPLICATIVE_PARAM])
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
-        starting_point = 0.0
+        initializer = Parameter(np.array([0]), aliases=['starting_value'])
+        non_decision_time = Parameter(0.0, modulable=True)
         threshold = Parameter(100.0, modulable=True)
         time_step_size = Parameter(1.0, modulable=True)
-        previous_time = Parameter(None, initializer='starting_point', pnl_internal=True)
+        previous_time = Parameter(None, initializer='non_decision_time', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
@@ -2409,27 +2414,30 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
                 return initializer
 
     @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 noise=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 starting_point=None,
-                 threshold=None,
-                 time_step_size=None,
-                 initializer=None,
-                 seed=None,
-                 params: tc.optional(tc.optional(dict)) = None,
-                 owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+    def __init__(
+        self,
+        default_variable=None,
+        rate: tc.optional(parameter_spec) = None,
+        noise=None,
+        offset: tc.optional(parameter_spec) = None,
+        starting_value=None,
+        non_decision_time=None,
+        threshold=None,
+        time_step_size=None,
+        seed=None,
+        params: tc.optional(tc.optional(dict)) = None,
+        owner=None,
+        prefs: tc.optional(is_pref_set) = None,
+        **kwargs
+    ):
 
         # Assign here as default, for use in initialization of function
         super().__init__(
             default_variable=default_variable,
             rate=rate,
             time_step_size=time_step_size,
-            starting_point=starting_point,
-            initializer=initializer,
+            starting_value=starting_value,
+            non_decision_time=non_decision_time,
             threshold=threshold,
             noise=noise,
             offset=offset,
@@ -2437,6 +2445,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
             params=params,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _validate_noise(self, noise):
@@ -2485,7 +2494,7 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
 
         random_draw = np.array([random_state.normal() for _ in list(variable)])
         value = previous_value + rate * variable * time_step_size \
-                + np.sqrt(time_step_size * noise) * random_draw
+                + noise * np.sqrt(time_step_size) * random_draw
 
         adjusted_value = np.clip(value + offset, -threshold, threshold)
 
@@ -2537,10 +2546,9 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         val = builder.fmul(val, time_step_size)
         val = builder.fadd(val, prev_val)
 
-        factor = builder.fmul(noise, time_step_size)
         sqrt_f = ctx.get_builtin("sqrt", [ctx.float_ty])
-        factor = builder.call(sqrt_f, [factor])
-
+        factor = builder.call(sqrt_f, [time_step_size])
+        factor = builder.fmul(noise, factor)
         factor = builder.fmul(rand_val, factor)
 
         val = builder.fadd(val, factor)
@@ -3186,7 +3194,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         decay=1.0,                       \
         noise=0.0,                       \
         offset= 0.0,                     \
-        starting_point=0.0,              \
+        non_decision_time=0.0,           \
         time_step_size=1.0,              \
         initializer=0.0,                 \
         params=None,                     \
@@ -3246,7 +3254,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         if it is a list or array, it must be the same length as `variable <OrnsteinUhlenbeckIntegrator.variable>`
         (see `offset <OrnsteinUhlenbeckIntegrator.offset>` for details)
 
-    starting_point : float : default 0.0
+    non_decision_time : float : default 0.0
         specifies the starting time of the model and is used to compute `previous_time
         <OrnsteinUhlenbeckIntegrator.previous_time>`
 
@@ -3318,7 +3326,7 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         the corresponding elements of the integral (i.e., Hadamard addition). Serves as *ADDITIVE_PARAM* for
         `modulation <ModulatorySignal_Modulation>` of `function <OrnsteinUhlenbeckIntegrator._function>`.
 
-    starting_point : float
+    non_decision_time : float
         determines the start time of the integration process.
 
     time_step_size : float
@@ -3397,8 +3405,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
                     :default value: 1.0
                     :type: ``float``
 
-                starting_point
-                    see `starting_point <OrnsteinUhlenbeckIntegrator.starting_point>`
+                non_decision_time
+                    see `non_decision_time <OrnsteinUhlenbeckIntegrator.non_decision_time>`
 
                     :default value: 0.0
                     :type: ``float``
@@ -3414,8 +3422,9 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         decay = Parameter(1.0, modulable=True)
         offset = Parameter(0.0, modulable=True, aliases=[ADDITIVE_PARAM])
         time_step_size = Parameter(1.0, modulable=True)
-        starting_point = 0.0
-        previous_time = Parameter(0.0, initializer='starting_point', pnl_internal=True)
+        initializer = Parameter(np.array([0]), aliases=['starting_value'])
+        non_decision_time = Parameter(0.0, modulable=True)
+        previous_time = Parameter(0.0, initializer='non_decision_time', pnl_internal=True)
         random_state = Parameter(None, loggable=False, getter=_random_state_getter, dependencies='seed')
         seed = Parameter(DEFAULT_SEED, modulable=True, fallback_default=True, setter=_seed_setter)
         enable_output_type_conversion = Parameter(
@@ -3427,19 +3436,22 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         )
 
     @tc.typecheck
-    def __init__(self,
-                 default_variable=None,
-                 rate: tc.optional(parameter_spec) = None,
-                 decay=None,
-                 noise=None,
-                 offset: tc.optional(parameter_spec) = None,
-                 starting_point=None,
-                 time_step_size=None,
-                 initializer=None,
-                 params: tc.optional(tc.optional(dict)) = None,
-                 seed=None,
-                 owner=None,
-                 prefs: tc.optional(is_pref_set) = None):
+    def __init__(
+        self,
+        default_variable=None,
+        rate: tc.optional(parameter_spec) = None,
+        decay=None,
+        noise=None,
+        offset: tc.optional(parameter_spec) = None,
+        non_decision_time=None,
+        time_step_size=None,
+        starting_value=None,
+        params: tc.optional(tc.optional(dict)) = None,
+        seed=None,
+        owner=None,
+        prefs: tc.optional(is_pref_set) = None,
+        **kwargs
+    ):
 
         super().__init__(
             default_variable=default_variable,
@@ -3447,15 +3459,16 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
             decay=decay,
             noise=noise,
             offset=offset,
-            starting_point=starting_point,
+            non_decision_time=non_decision_time,
             time_step_size=time_step_size,
-            initializer=initializer,
-            previous_value=initializer,
-            previous_time=starting_point,
+            starting_value=starting_value,
+            previous_value=starting_value,
+            previous_time=non_decision_time,
             params=params,
             seed=seed,
             owner=owner,
             prefs=prefs,
+            **kwargs
         )
 
     def _validate_noise(self, noise):

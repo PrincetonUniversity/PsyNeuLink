@@ -15,7 +15,7 @@ f_d = 1
 
 
 # EVC params for Umemoto et al
-t0 = 0.2
+non_decision_time = 0.2
 c = 0.19
 thresh = 0.21
 x_0 = 0 # starting point
@@ -74,8 +74,8 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.nonstateful.dis
        # drift_rate=(0.3),
         threshold=(thresh),
         noise=(c),
-        starting_point=(x_0),
-        t0=t0
+        starting_value=(x_0),
+        non_decision_time=non_decision_time
     ),name='Decision',
     output_ports=[
         pnl.DECISION_VARIABLE,
@@ -86,7 +86,7 @@ Decision = pnl.DDM(function=psyneulink.core.components.functions.nonstateful.dis
             pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
             pnl.FUNCTION: psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(0, slope=1.0, intercept=1)
         }
-    ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
+    ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),non_decision_time=(0), non_decision_time=0.15
 
 print(Decision.execute([1]))
 

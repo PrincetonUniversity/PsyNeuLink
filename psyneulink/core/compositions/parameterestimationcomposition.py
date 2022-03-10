@@ -259,7 +259,7 @@ class ParameterEstimationComposition(Composition):
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
         values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information);
         it is passed to the ParameterEstimationComposition's `controller <Composition.controller>` to set its
-        `num_estimates <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
+        `num_estimates <OptimizationControlMechanism.num_estimates>` Parameter.
 
     num_trials_per_estimate : int : default None
         specifies an exact number of trials to execute for each run of the `model

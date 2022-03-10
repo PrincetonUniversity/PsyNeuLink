@@ -685,7 +685,7 @@ class Function_Base(Function):
                                    **kwargs)
         except ValueError as err:
             err_msg = f"Problem with '{self}' in '{self.owner.name if self.owner else self.__class__.__name__}': {err}"
-            raise FunctionError(err_msg)
+            raise FunctionError(err_msg) from err
         self.most_recent_context = context
         self.parameters.value._set(value, context=context)
         self._reset_runtime_parameters(context)

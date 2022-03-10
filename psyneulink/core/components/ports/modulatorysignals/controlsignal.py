@@ -1120,7 +1120,10 @@ class ControlSignal(ModulatorySignal):
             self.parameters.duration_cost._set(duration_cost, context)
 
         all_costs = [intensity_cost, adjustment_cost, duration_cost]
-        combined_cost = self.combine_costs_function(all_costs, context=context)
+
+        # Combine the costs. Convert to a float because reRedcu
+        combined_cost = self.combine_costs_function(all_costs, context=context).astype(float)
+
         return max(0.0, combined_cost)
 
     def _gen_llvm_function(self, *, ctx:pnlvm.LLVMBuilderContext,

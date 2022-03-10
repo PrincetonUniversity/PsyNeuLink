@@ -164,8 +164,8 @@ class TestControlSpecification:
                                                                      pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)
                                                                  })),
                                                   noise=0.5,
-                                                  starting_point=0,
-                                                  t0=0.45),
+                                                  starting_value=0,
+                                                  non_decision_time=0.45),
             output_ports=[pnl.DECISION_VARIABLE,
                           pnl.RESPONSE_TIME,
                           pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -1509,7 +1509,7 @@ class TestControlMechanisms:
     def test_two_tier_ocm(self):
         integrationConstant = 0.8  # Time Constant
         DRIFT = 0.25  # Drift Rate
-        STARTING_POINT = 0.0  # Starting Point
+        STARTING_VALUE = 0.0  # Starting Point
         THRESHOLD = 0.05  # Threshold
         NOISE = 0.1  # Noise
         T0 = 0.2  # T0
@@ -1564,10 +1564,10 @@ class TestControlMechanisms:
                                                name="Drift = Wa*(S1 + S2) + (S1*Act1 + S2*Act2)")
 
         decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=DRIFT,
-                                                                      starting_point=STARTING_POINT,
+                                                                      starting_value=STARTING_VALUE,
                                                                       threshold=THRESHOLD,
                                                                       noise=NOISE,
-                                                                      t0=T0),
+                                                                      non_decision_time=T0),
                                 output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                pnl.PROBABILITY_UPPER_THRESHOLD,
                                                pnl.PROBABILITY_LOWER_THRESHOLD],
@@ -1885,14 +1885,18 @@ class TestControlMechanisms:
                     modulation=pnl.OVERRIDE,
                     allocation_samples=pnl.SampleSpec(start=1, stop=5, step=1),
                     cost_options=cost,
-                )
+                ),
+
+                # Need to specify GridSearch since save_values is False by default and we
+                # going to check these values later in the test.
+                function=pnl.GridSearch(save_values=True)
             )
         )
 
         ret = comp.run(inputs={mech: [2]}, num_trials=1, execution_mode=comp_mode)
         assert np.allclose(ret, expected)
         if comp_mode == pnl.ExecutionMode.Python:
-            assert np.allclose([float(x) for x in comp.controller.function.saved_values], exp_values)
+            assert np.allclose(comp.controller.function.saved_values.flatten(), exp_values)
 
     @pytest.mark.benchmark
     @pytest.mark.control
@@ -1930,7 +1934,7 @@ class TestControlMechanisms:
     @pytest.mark.parametrize('prng', ['Default', 'Philox'])
     def test_modulation_of_random_state_DDM(self, comp_mode, benchmark, prng):
         # set explicit seed to make sure modulation is different
-        mech = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=5.),
+        mech = pnl.DDM(function=pnl.DriftDiffusionIntegrator(noise=np.sqrt(5.0)),
                        reset_stateful_function_when=pnl.AtPass(0),
                        execute_until_finished=True)
         if prng == 'Philox':
@@ -2133,8 +2137,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                                             pnl.ControlProjection(function=pnl.Linear,
                                                                                                   control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})),
                                                                  noise=0.5,
-                                                                 starting_point=0,
-                                                                 t0=0.45),
+                                                                 starting_value=0,
+                                                                 non_decision_time=0.45),
                            output_ports=[pnl.DECISION_VARIABLE,
                                         pnl.RESPONSE_TIME,
                                         pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -2241,8 +2245,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                            function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0),
                                                                  threshold=(0.2645),
                                                                  noise=(0.5),
-                                                                 starting_point=(0),
-                                                                 t0=0.15),
+                                                                 starting_value=(0),
+                                                                 non_decision_time=0.15),
                            output_ports=[pnl.DECISION_VARIABLE,
                                           pnl.RESPONSE_TIME,
                                           pnl.PROBABILITY_UPPER_THRESHOLD]
@@ -2412,8 +2416,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                 drift_rate=1.0,
                 threshold=1.0,
                 noise=0.5,
-                starting_point=0,
-                t0=0.45
+                starting_value=0,
+                non_decision_time=0.45
             ),
             output_ports=[
                 pnl.DECISION_VARIABLE,
@@ -2550,8 +2554,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                     ),
                 ),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.45
+                starting_value=(0),
+                non_decision_time=0.45
             ),
             output_ports=[
                 pnl.DECISION_VARIABLE,
@@ -2691,7 +2695,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(),
+                                               function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
@@ -2742,7 +2746,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         ocm = pnl.OptimizationControlMechanism(agent_rep=comp,
                                                state_features=[A.input_port],
                                                objective_mechanism=objective_mech,
-                                               function=pnl.GridSearch(),
+                                               function=pnl.GridSearch(save_values=True),
                                                control_signals=[control_signal],
                                                comp_execution_mode=ocm_mode)
         # objective_mech.log.set_log_conditions(pnl.OUTCOME)
@@ -2871,7 +2875,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # Constants as defined in Musslick et al. 2018
         tau = 0.9  # Time Constant
         DRIFT = 1  # Drift Rate
-        STARTING_POINT = 0.0  # Starting Point
+        STARTING_VALUE = 0.0  # Starting Point
         THRESHOLD = 0.0475  # Threshold
         NOISE = 0.04  # Noise
         T0 = 0.2  # T0
@@ -2921,10 +2925,10 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                                                name="Drift = (S1 + S2) + (S1*Activity1 + S2*Activity2)")
 
         decisionMaker = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=DRIFT,
-                                                                      starting_point=STARTING_POINT,
+                                                                      starting_value=STARTING_VALUE,
                                                                       threshold=THRESHOLD,
                                                                       noise=NOISE,
-                                                                      t0=T0),
+                                                                      non_decision_time=T0),
                                 output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME,
                                                pnl.PROBABILITY_UPPER_THRESHOLD,
                                                pnl.PROBABILITY_LOWER_THRESHOLD],
