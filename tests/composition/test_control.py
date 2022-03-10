@@ -851,8 +851,8 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        ('partial_legal_list_spec', messages[0], None, UserWarning),
-        ('full_list_spec', None, None, None),
+        # ('partial_legal_list_spec', messages[0], None, UserWarning),
+        # ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
         ('input_dict_spec', None, None, None),
         ('input_dict_spec_short', None, None, None),
@@ -958,12 +958,18 @@ class TestControlMechanisms:
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OA[OutputPort-0]',
                                                        'OB[InputPort-0] DEFAULT_VARIABLE']
-                assert ocm.state_features == {ia.input_port: ia.input_port,
-                                              oa.input_port: oa.output_port,
-                                              ob.input_port: [3, 1, 2]}
+                expected_state_features = {ia.input_port: ia.input_port,
+                                           oa.input_port: oa.output_port,
+                                           ob.input_port: [3, 1, 2]}
+                assert len(ocm.state_features) == len(expected_state_features)
+                for k, v in expected_state_features.items():
+                    assert k in ocm.state_features
+                    if pnl.is_numeric(v):
+                        assert np.allclose(v, ocm.state_features[k])
+                    else:
+                        assert v == ocm.state_features[k]
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
-
 
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2

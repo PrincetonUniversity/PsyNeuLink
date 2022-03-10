@@ -2054,20 +2054,40 @@ class OptimizationControlMechanism(ControlMechanism):
                 # (and specs for CFA and any nodes not yet in agent_rep)
                 spec_name = None
                 state_feature_fct = None
-                if i < num_ports:
-                    # Node should be in agent_rep, so use that to be sure
-                    if self.agent_rep_type == COMPOSITION:
-                        node = agent_rep_input_ports[i]
-                    # Assign spec as node for CompositionFunctionApproximator
+                # # MODIFIED 3/4/22 OLD:
+                # if i < num_ports:
+                #     # Node should be in agent_rep, so use that to be sure
+                #     if self.agent_rep_type == COMPOSITION:
+                #         node = agent_rep_input_ports[i]
+                #     # Assign spec as node for CompositionFunctionApproximator
+                #     else:
+                #         spec = state_feature_specs[i]
+                #         node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                #     node_name = node.full_name
+                # else:
+                #     # Node not (yet) in agent_rep, so "DEFERRED n" as node name
+                #     spec = state_feature_specs[i]
+                #     node = None
+                #     node_name = f'DEFFERED {str(i-num_ports)}'
+                # MODIFIED 3/4/22 NEW:
+                if self.agent_rep_type == COMPOSITION:
+                    if i < num_ports:
+                        # Node should be in agent_rep, so use that to be sure
+                        if self.agent_rep_type == COMPOSITION:
+                            node = agent_rep_input_ports[i]
+                        node_name = node.full_name
                     else:
+                        # Node not (yet) in agent_rep, so "DEFERRED n" as node name
                         spec = state_feature_specs[i]
-                        node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    node_name = node.full_name
+                        node = None
+                        node_name = f'DEFFERED {str(i-num_ports)}'
+                # Assign spec as node for CompositionFunctionApproximator
                 else:
-                    # Node not (yet) in agent_rep, so "DEFERRED n" as node name
                     spec = state_feature_specs[i]
-                    node = None
-                    node_name = f'DEFFERED {str(i-num_ports)}'
+                    node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                    node_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                # MODIFIED 3/4/22 END
+
                 # SPEC
                 # Assign specs
                 # Only process specs for which there are already INPUT Nodes in agent_rep
@@ -3257,13 +3277,18 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: USES SOURCES AS VALUES FOR DICT BELOW
         state_features_dict = {}
         # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
+        j = 0
         for i in range(self._num_state_feature_specs):
-            # Assign keys as INPUT Nodes of agent_rep
+            # Assign InputPorts of INPUT Nodes of agent_rep as keys
             if self._specified_input_ports_in_order[i] in agent_rep_input_ports:
                 key = self._specified_input_ports_in_order[i]
             else:
                 key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-            state_features_dict[key] = sources[i]
+            if self.state_feature_specs[i]:
+                state_features_dict[key] = sources[j]
+                j += 1
+            else:
+                state_features_dict[key] = None
 
         return state_features_dict
     # MODIFIED 3/4/22 END
@@ -3334,7 +3359,7 @@ class OptimizationControlMechanism(ControlMechanism):
     def state(self):
         """Array that is concatenation of state_feature_values and control_allocations"""
         # Use self.state_feature_values Parameter if state_features specified; else use state_input_port values
-        return self.state_feature_values + self.control_allocation.tolist()
+        return list(self.state_feature_values) + list(self.control_allocation)
 
     @property
     def state_distal_sources_and_destinations_dict(self):
