@@ -3228,42 +3228,104 @@ class OptimizationControlMechanism(ControlMechanism):
         except:
             return 0
 
+    # # MODIFIED 3/4/22 OLD:
+    # @property
+    # def state_features(self):
+    #     # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
+    #     #              for unspecified InputPorts if "needs_update_controller" is False
+    #     #              - GET SOURCE OR SHADOWED SPEC XXX
+    #     self._update_state_features_dict()
+    #     agent_rep_input_ports = self._get_agent_rep_input_receivers()
+    #     state_features_dict = {}
+    #     # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
+    #     for i in range(self._num_state_feature_specs):
+    #         # Assign keys as INPUT Nodes of agent_rep
+    #         if self._specified_input_ports_in_order[i] in agent_rep_input_ports:
+    #             k = self._specified_input_ports_in_order[i]
+    #         else:
+    #             k = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
+    #         state_features_dict[k] = self.state_feature_specs[i]
+    #     return state_features_dict
+    # MODIFIED 3/4/22 NEW:
     @property
     def state_features(self):
+        """Return {InputPort: source} for all INPUT Nodes of agent_rep and sources specified by state_feature_specs.
+        """
         # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
         #              for unspecified InputPorts if "needs_update_controller" is False
         #              - GET SOURCE OR SHADOWED SPEC XXX
         self._update_state_features_dict()
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
+        # FIX: CONSTRAIN TO ONLY GET SOURCES: HERE OR BY ADDING ARG TO state_distal_sources_and_destinations_dict()
+        sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
+                   for source_tuple, value in self.state_feature_sources.items()]
+        # FIX: USES SOURCES AS VALUES FOR DICT BELOW
         state_features_dict = {}
         # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
         for i in range(self._num_state_feature_specs):
             # Assign keys as INPUT Nodes of agent_rep
             if self._specified_input_ports_in_order[i] in agent_rep_input_ports:
-                k = self._specified_input_ports_in_order[i]
+                key = self._specified_input_ports_in_order[i]
             else:
-                k = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-            state_features_dict[k] = self.state_feature_specs[i]
-        return state_features_dict
+                key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
+            state_features_dict[key] = sources[i]
 
+        return state_features_dict
+    # MODIFIED 3/4/22 END
+
+    # MODIFIED 3/4/22 OLD:
+    # @property
+    # def state_feature_sources(self):
+    #     """Dict with {INPUT Node: source} entries for sources specified in **state_features** arg of constructor."""
+    #     # FIX: 1/30/22:
+    #     # FIX: REDUCE ALL MECHANISM SOURCES TO Port SPECS
+    #     if isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS in self.state_feature_specs:
+    #         # SHADOW_INPUTS dict
+    #         state_feature_specs = self.state_feature_specs[SHADOW_INPUTS]
+    #     else:
+    #         # list and set specs
+    #         state_feature_specs = self.state_feature_specs
+    #     sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
+    #                for source_tuple, value in self.state_distal_sources_and_destinations_dict.items()]
+    #     return {k:v for k,v in zip(self.state_features, sources)}
+    # MODIFIED 3/4/22 NEW:
     @property
     def state_feature_sources(self):
-        """Dict with {INPUT Node: source} entries for sources specified in **state_features** arg of constructor."""
-        # FIX: 1/30/22:
-        # FIX: SUPPORT tuple SPECIFICATION FOR sources
-        # FIX: REDUCE ALL MECHANISM SOURCES TO Port SPECS
-        # FIX: ??REFACTOR TO CONSTRUCT THE FOLLOWING:
-        #          state_feature_specs_dict: {INPUT Node: spec}
-        #          state_features: {INPUT Node: source}
-        if isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS in self.state_feature_specs:
-            # SHADOW_INPUTS dict
-            state_feature_specs = self.state_feature_specs[SHADOW_INPUTS]
-        else:
-            # list and set specs
-            state_feature_specs = self.state_feature_specs
-        sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-                   for source_tuple, value in self.state_distal_sources_and_destinations_dict.items()]
-        return {k:v for k,v in zip(self.state_features, sources)}
+        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
+        state_dict = {}
+        for state_index, port in enumerate(self.state_input_ports):
+            if not port.path_afferents:
+                if port.default_input is DEFAULT_VARIABLE:
+                    source_port = DEFAULT_VARIABLE
+                    node = None
+                    comp = None
+                else:
+                    continue
+            else:
+                get_info_method = self.composition._get_source
+                # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
+                if port.shadow_inputs:
+                    port = port.shadow_inputs
+                    if port.owner in self.composition.nodes:
+                        composition = self.composition
+                    else:
+                        composition = port.path_afferents[0].sender.owner.composition
+                    get_info_method = composition._get_destination
+                source_port, node, comp = get_info_method(port.path_afferents[0])
+            state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
+        return state_dict
+
+    @property
+    def control_signal_destinations(self):
+        state_dict = {}
+        state_index = self.num_state_input_ports
+        # Get recipients of control_allocations values of state:
+        for ctl_index, control_signal in enumerate(self.control_signals):
+            for projection in control_signal.efferents:
+                port, node, comp = self.composition._get_destination(projection)
+                state_dict.update({(port, node, comp, state_index + ctl_index):self.state[state_index + ctl_index]})
+        return state_dict
+    # MODIFIED 3/4/22 END
 
     def _state(self, context=None):
         """Get context-specific state_feature and control_allocation values"""
@@ -3295,40 +3357,42 @@ class OptimizationControlMechanism(ControlMechanism):
               state_input_port.
         """
 
-        state_dict = {}
+        # # MODIFIED 3/4/22 OLD:
+        # state_dict = {}
+        #
+        # # Get sources for state_feature_values of state:
+        # for state_index, port in enumerate(self.state_input_ports):
+        #     if not port.path_afferents:
+        #         if port.default_input is DEFAULT_VARIABLE:
+        #             source_port = DEFAULT_VARIABLE
+        #             node = None
+        #             comp = None
+        #         else:
+        #             continue
+        #     else:
+        #         get_info_method = self.composition._get_source
+        #         # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
+        #         if port.shadow_inputs:
+        #             port = port.shadow_inputs
+        #             if port.owner in self.composition.nodes:
+        #                 composition = self.composition
+        #             else:
+        #                 composition = port.path_afferents[0].sender.owner.composition
+        #             get_info_method = composition._get_destination
+        #         source_port, node, comp = get_info_method(port.path_afferents[0])
+        #     state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
+        #
+        # state_index += 1
+        # # Get recipients of control_allocations values of state:
+        # for ctl_index, control_signal in enumerate(self.control_signals):
+        #     for projection in control_signal.efferents:
+        #         port, node, comp = self.composition._get_destination(projection)
+        #         state_dict.update({(port, node, comp, state_index + ctl_index):self.state[state_index + ctl_index]})
+        # return state_dict
+        # MODIFIED 3/4/22 NEW:
+        return self.state_feature_sources().update(self.control_signal_destinations)
+        # MODIFIED 3/4/22 END
 
-        # FIX: 1/30/22 - RECONCILE AND DOCUMENT MULTIPLE POSSIBLE SOURCES/DESTINATIONS FOR
-        #          - THIS DICT AND STATE_FEATURES DICTS, WHICH MAY HAVE MORE THAN ONE ENTRY PER INPUT_NODE
-        #          - VS. STATE_FEATURE_VALUES AND STATE_FEATURE_SPECS_DICT (WHICH HAVE ONLY ONE ENTRY PER INPUT_NODE
-        # Get sources for state_feature_values of state:
-        for state_index, port in enumerate(self.state_input_ports):
-            if not port.path_afferents:
-                if port.default_input is DEFAULT_VARIABLE:
-                    source_port = DEFAULT_VARIABLE
-                    node = None
-                    comp = None
-                else:
-                    continue
-            else:
-                get_info_method = self.composition._get_source
-                # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
-                if port.shadow_inputs:
-                    port = port.shadow_inputs
-                    if port.owner in self.composition.nodes:
-                        composition = self.composition
-                    else:
-                        composition = port.path_afferents[0].sender.owner.composition
-                    get_info_method = composition._get_destination
-                source_port, node, comp = get_info_method(port.path_afferents[0])
-            state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
-        state_index += 1
-        # Get recipients of control_allocations values of state:
-        for ctl_index, control_signal in enumerate(self.control_signals):
-            for projection in control_signal.efferents:
-                port, node, comp = self.composition._get_destination(projection)
-                state_dict.update({(port, node, comp, state_index + ctl_index):self.state[state_index + ctl_index]})
-
-        return state_dict
 
     @property
     def _model_spec_parameter_blacklist(self):
