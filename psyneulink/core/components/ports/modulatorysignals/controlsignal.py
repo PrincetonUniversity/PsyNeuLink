@@ -1171,8 +1171,12 @@ class ControlSignal(ModulatorySignal):
             ifunc_state = pnlvm.helpers.get_state_ptr(builder, self.function,
                                                       func_state,
                                                       "intensity_cost_fct")
-            # Port input is always struct { data input, modulations }
-            ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            # Port input is struct { data input, modulations } if there are modulations,
+            # otherwise it's just data_input
+            if len(self.mod_afferents) > 0:
+                ifunc_in = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            else:
+                ifunc_in = arg_in
             # point output to the proper slot in comb func input
             assert cost_funcs == 0, "Intensity should eb the first cost function!"
             ifunc_out = builder.gep(cfunc_in, [ctx.int32_ty(0), ctx.int32_ty(cost_funcs)])
