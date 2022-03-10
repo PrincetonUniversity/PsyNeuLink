@@ -1985,11 +1985,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     input_nodes.append(node)
             return input_nodes
 
-        # FIX: 3/4/22 - DELETE IF NOT USED:
-        # def get_inputs_for_nested_comp(comp):
-        #     # FIX: 1/18/22 - NEEDS TO BE MODIFIED TO RETURN TUPLE IF > INPUT NODE, ONCE THAT CAN BE HANDLED BY LIST SPEC
-        #     return comp.get_nodes_by_role(NodeRole.INPUT)
-
         # PARSE SPECS  ------------------------------------------------------------------------------------------
         # Generate parallel lists of INPUT Nodes and corresponding feature specs (for sources of inputs)
 

@@ -1094,7 +1094,7 @@ class TestControlMechanisms:
     def test_state_feature_function_specs(self, state_fct_assignments):
 
         fct_a = pnl.AdaptiveIntegrator
-        fct_b = pnl.Buffer(history=2)
+        fct_b = pnl.Buffer(history=1)
         fct_c = pnl.SimpleIntegrator
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -1153,9 +1153,9 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(expected, actual)
-                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
-                                                   [[20],[[1],[2]],[3]]))
+            assert all(np.allclose(actual.tolist(), expected)
+                       for actual, expected in zip(ocm.parameters.state_feature_values.get('test'),
+                                                   [[20],[2],[3]]))
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)
