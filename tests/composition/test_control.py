@@ -1814,6 +1814,26 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
+    @pytest.mark.parametrize("modulation, expected", [
+                              (pnl.OVERRIDE, 0.2),
+                              (pnl.DISABLE, 0.5),
+                              (pnl.MULTIPLICATIVE, 0.1),
+                              (pnl.ADDITIVE, 0.7),
+                             ])
+    @pytest.mark.parametrize("specification", [ pnl.OWNER_VALUE, (pnl.OWNER_VALUE, 0)])
+    def test_control_of_mech_output_port(self, comp_mode, modulation, expected, specification):
+        mech = pnl.TransferMechanism(output_ports=[pnl.OutputPort(variable=specification)])
+        control_mech = pnl.ControlMechanism(
+                control_signals=pnl.ControlSignal(modulation=modulation,
+                                                  modulates=mech.output_port))
+        comp = pnl.Composition()
+        comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
+        inputs = {mech:[[0.5]], control_mech:[0.2]}
+        results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
+        assert np.allclose(results, expected)
+
+    @pytest.mark.control
+    @pytest.mark.composition
     def test_add_node_with_controller_spec_and_control_mech_but_not_a_controller(self):
         mech = pnl.ProcessingMechanism(name='MECH', function=pnl.Linear(slope=(2, pnl.CONTROL)))
         ctl = pnl.ControlMechanism(name='CONTROL MECHANISM')

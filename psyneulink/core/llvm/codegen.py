@@ -658,7 +658,6 @@ def gen_node_wrapper(ctx, composition, node, *, tags:frozenset):
             warnings.warn("Shape mismatch: Projection ({}) results does not match the receiver state({}) input: {} vs. {}".format(proj, proj.receiver, proj.defaults.value, proj.receiver.defaults.variable))
             # Check that this workaround applies only to projections to inner composition
             # that are off by one dimension, but in the 'wrong' direction (we need to add one dim).
-            assert not is_mech
             assert len(proj_function.args[3].type.pointee) == 1
             assert proj_function.args[3].type.pointee.element == proj_out.type.pointee
 
