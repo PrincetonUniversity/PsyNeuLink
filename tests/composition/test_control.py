@@ -1774,18 +1774,24 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.composition
-    def test_control_of_mech_port(self, comp_mode):
+    @pytest.mark.parametrize("modulation, expected", [
+                              (pnl.OVERRIDE, 0.375),
+                              (pnl.DISABLE, 0.4375),
+                              (pnl.MULTIPLICATIVE, 0.484375),
+                              (pnl.ADDITIVE, 0.25),
+                             ])
+    def test_control_of_mech_port(self, comp_mode, modulation, expected):
         mech = pnl.TransferMechanism(termination_threshold=0.1,
                                      execute_until_finished=True,
                                      integrator_mode=True)
         control_mech = pnl.ControlMechanism(
-                control_signals=pnl.ControlSignal(modulation=pnl.OVERRIDE,
+                control_signals=pnl.ControlSignal(modulation=modulation,
                                                   modulates=(pnl.TERMINATION_THRESHOLD, mech)))
         comp = pnl.Composition()
         comp.add_nodes([(mech, pnl.NodeRole.INPUT), (control_mech, pnl.NodeRole.INPUT)])
         inputs = {mech:[[0.5]], control_mech:[0.2]}
         results = comp.run(inputs=inputs, num_trials=1, execution_mode=comp_mode)
-        assert np.allclose(comp.results, [[[0.375]]])
+        assert np.allclose(results, expected)
 
     @pytest.mark.control
     @pytest.mark.composition
