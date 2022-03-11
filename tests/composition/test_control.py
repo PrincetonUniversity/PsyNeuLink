@@ -958,41 +958,20 @@ class TestControlMechanisms:
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OA[OutputPort-0]',
                                                        'OB[InputPort-0] DEFAULT_VARIABLE']
-                expected_state_features = {ia.input_port: ia.input_port,
-                                           oa.input_port: oa.output_port,
-                                           ob.input_port: [3, 1, 2]}
-                assert len(ocm.state_features) == len(expected_state_features)
-                for k, v in expected_state_features.items():
-                    assert k in ocm.state_features
-                    if pnl.is_numeric(v):
-                        assert np.allclose(v, ocm.state_features[k])
-                    else:
-                        assert v == ocm.state_features[k]
-                # assert ocm.state_features == {ia.input_port: ia.input_port,
-                #                               oa.input_port: None,
-                #                               ob.input_port: [3, 1, 2]}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: oa.output_port,
+                                              ob.input_port: [3, 1, 2]}
 
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OB[InputPort-0] DEFAULT_VARIABLE']
-                expected_state_features = {ia.input_port: ia.input_port,
-                                           oa.input_port: None,
-                                           ob.input_port: [3, 1, 2]}
-                assert len(ocm.state_features) == len(expected_state_features)
-                for k, v in expected_state_features.items():
-                    assert k in ocm.state_features
-                    if pnl.is_numeric(v):
-                        assert np.allclose(v, ocm.state_features[k])
-                    else:
-                        assert v == ocm.state_features[k]
-                    # assert ocm.state_features == {ia.input_port: ia.input_port,
-                    #                               oa.input_port: None,
-                    #                               ob.input_port: [3, 1, 2]}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: None,
+                                              ob.input_port: [3, 1, 2]}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [3, 1, 2]]))
 
             elif test_condition == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
@@ -1003,8 +982,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: oc.input_port,
                                               ob.input_port: ob.output_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'input_dict_spec_short':
                 assert len(ocm.state_input_ports) == 2
@@ -1013,8 +993,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: None,
                                               oa.input_port: oc.input_port,
                                               ob.input_port: ob.output_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
@@ -1023,8 +1004,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: None,
                                               oa.input_port: oa.input_port,
                                               ob.input_port: None}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition in {'set_spec', 'set_spec_port'}:
                 assert len(ocm.state_input_ports) == 3
@@ -1034,8 +1016,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: oa.input_port,
                                               ob.input_port: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'automatic_assignment':
                 assert len(ocm.state_input_ports) == 3
@@ -1045,8 +1028,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: oa.input_port,
                                               ob.input_port: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'shadow_inputs_dict_spec':
                 assert len(ocm.state_input_ports) == 3
@@ -1056,8 +1040,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: oa.input_port,
                                               ob.input_port: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'shadow_inputs_dict_spec_w_none':
                 assert len(ocm.state_input_ports) == 2
@@ -1066,8 +1051,9 @@ class TestControlMechanisms:
                 assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: None,
                                               ob.input_port: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
         elif exception_type is UserWarning:
             # These also produce errors, tested below
@@ -1224,8 +1210,8 @@ class TestControlMechanisms:
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
         ocomp.run()
-        assert all(np.allclose(expected,actual)
-                   for expected,actual in zip(ocm.state_feature_values,
+        assert all(np.allclose(expected, actual)
+                   for expected, actual in zip(ocm.state_feature_values,
                                               [[0.], [0.], [3, 1, 2]]))
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):

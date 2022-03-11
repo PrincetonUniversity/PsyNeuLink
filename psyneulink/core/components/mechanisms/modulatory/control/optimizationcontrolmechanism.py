@@ -2574,27 +2574,15 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
-        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        # # MODIFIED 3/4/22 OLD:
-        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self, context)
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-        # MODIFIED 3/4/22 NEW:
-        inputs_dict, num_inputs = \
-            self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
-        # MODIFIED 3/4/22 END
-        # END DEBUGGING ---------------------------------------------------------------------
+        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
+        # #  END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
-            # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
-            # Call these to check for errors in constructing inputs dict
-            # # MODIFIED 3/4/22 OLD:
-            # inputs = self.agent_rep._build_predicted_inputs_dict(None, self, context)
-            # self.agent_rep._parse_input_dict(inputs)
-            # MODIFIED 3/4/22 NEW:
+            # Call this to check for errors in constructing inputs dict
             self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
-            # MODIFIED 3/4/22 END
         except RunError as error:
             raise OptimizationControlMechanismError(
                 f"The '{STATE_FEATURES}' argument has been specified for '{self.name}' that is using a "
@@ -3391,7 +3379,14 @@ class OptimizationControlMechanism(ControlMechanism):
         for state_index, port in enumerate(self.state_input_ports):
             if not port.path_afferents:
                 if port.default_input is DEFAULT_VARIABLE:
+                    # MODIFIED 3/4/22 OLD:
                     source_port = DEFAULT_VARIABLE
+                    # # MODIFIED 3/4/22 NEW:
+                    # if self.state_feature_specs[state_index] is not None:
+                    #     source_port = self.state_feature_specs[state_index]
+                    # else:
+                    #     source_port = DEFAULT_VARIABLE
+                    # MODIFIED 3/4/22 END
                     node = None
                     comp = None
                 else:
@@ -3438,7 +3433,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 3/4/22 - THIS NEEDS TO BE REFACTORED TO HANDLE state_feature_values FOR WHICH THERE IS NO INPUT_PORT
         # Use self.state_feature_values Parameter if state_features specified; else use state_input_port values
         # return [v.tolist() for v in self.state_feature_values] + self.control_allocation.tolist()
-        return list(self.state_feature_values) + list(self.control_allocation)
+        return list(self.state_feature_values.values()) + list(self.control_allocation)
 
     @property
     def state_distal_sources_and_destinations_dict(self):
