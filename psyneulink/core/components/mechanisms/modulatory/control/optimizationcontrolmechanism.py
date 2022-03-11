@@ -2248,7 +2248,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     # Assign values specified in user_specs dict to corresponding InputPorts
                     expanded_dict_with_ports.update({port:user_specs[spec] for port in ports})
 
-            # # Get specified ports in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
+            # # Get specified ports in order of agent_rep INPUT Nodes, with None assigned to any unspecified InputPorts
             all_specified_ports = [port if port in expanded_specified_ports else None for port in agent_rep_input_ports]
             # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
             all_specified_ports.extend([port for port in expanded_specified_ports if port not in agent_rep_input_ports])
@@ -2264,7 +2264,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 # specs = [expanded_dict_with_ports[port] if port in all_specified_ports else None
                 #          for port in agent_rep_input_ports]
                 # MODIFIED 3/4/22 NEW:
-                specs = [expanded_dict_with_ports[port] if port in agent_rep_input_ports else None
+                specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports else None
                          for port in all_specified_ports]
                 # MODIFIED 3/4/22 END
 

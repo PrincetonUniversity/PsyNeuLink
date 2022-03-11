@@ -258,8 +258,8 @@ class TestControlSpecification:
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
     @pytest.mark.parametrize('state_features_option', [
-        # 'list',
-        # 'set',
+        'list',
+        'set',
         'dict',
         'shadow_inputs_dict'
     ])
@@ -907,11 +907,11 @@ class TestControlMechanisms:
         state_features_dict = {
 
             # Legal state_features specifications
-            'partial_legal_list_spec': [oa.output_port],
+            'partial_legal_list_spec': [oa.output_port], # Note: only specifies ia;  oa and ob assigned default inputs
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
-            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing oa spec and out of order
+            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: use icomp & out of order is OK
+            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing ia spec and out of order
             'set_spec_short': {oa},
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
             'set_spec_port': {ob.input_port, icomp, oa},
