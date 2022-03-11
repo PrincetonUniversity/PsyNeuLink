@@ -1094,8 +1094,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
             #     state_feature_values[key] = state_input_port.default_input_shape
             # else:
             #     state_feature_values[key] = state_input_port.defaults.value
-            # # state_feature_values[key] = state_input_port.default_input_shape
-            assert False, f"PROGRAM ERROR: state_input_port for {self.name} has value of None after init."
+            state_feature_values[key] = state_input_port.default_input_shape
+            # assert False, f"PROGRAM ERROR: state_input_port for {owning_component.name} has value of None after init."
 
     return state_feature_values
     # MODIFIED 3/4/22 END
@@ -2579,10 +2579,10 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
-        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
-        # #  END DEBUGGING ---------------------------------------------------------------------
+        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
+        #  END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
@@ -3492,7 +3492,9 @@ class OptimizationControlMechanism(ControlMechanism):
         #         state_dict.update({(port, node, comp, state_index + ctl_index):self.state[state_index + ctl_index]})
         # return state_dict
         # MODIFIED 3/4/22 NEW:
-        return self.state_feature_sources().update(self.control_signal_destinations)
+        sources_and_destinations = self.state_feature_sources
+        sources_and_destinations.update(self.control_signal_destinations)
+        return sources_and_destinations
         # MODIFIED 3/4/22 END
 
     @property

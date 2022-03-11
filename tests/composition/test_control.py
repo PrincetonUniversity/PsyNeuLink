@@ -1153,8 +1153,8 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(actual.tolist(), expected)
-                       for actual, expected in zip(ocm.parameters.state_feature_values.get('test'),
+            assert all(np.allclose(actual, expected)
+                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
                                                    [[20],[2],[3]]))
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
@@ -1164,7 +1164,7 @@ class TestControlMechanisms:
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
             assert all(np.allclose(expected, actual)
-                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
                                                    [[2],[2],[2]]))
 
     @pytest.mark.control
@@ -1207,8 +1207,8 @@ class TestControlMechanisms:
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
         ocomp.run()
         assert all(np.allclose(expected, actual)
-                   for expected, actual in zip(ocm.state_feature_values,
-                                              [[0.], [0.], [3, 1, 2]]))
+                   for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                               [[0.], [0.], [3, 1, 2]]))
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
         # tests multiplicative modulation of default intensity_cost_function (Exponential) of
@@ -1663,7 +1663,6 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                              state_features=[taskLayer.input_port,
                                                              stimulusInfo.input_port],
-                                             state_feature_function=pnl.Buffer(history=2),
                                              name="Controller",
                                              objective_mechanism=pnl.ObjectiveMechanism(
                                                  monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -1689,7 +1688,6 @@ class TestControlMechanisms:
         outerComposition.add_controller(
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                              state_features=[taskLayer.input_port, stimulusInfo.input_port],
-                                             state_feature_function=pnl.Buffer(history=2),
                                              name="OuterController",
                                              objective_mechanism=pnl.ObjectiveMechanism(
                                                  monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker)],
@@ -2975,7 +2973,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         #  Sets trial history for simulations over specified signal search parameters
         metaController = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                                           state_features=[taskLayer.input_port, stimulusInfo.input_port],
-                                                          state_feature_function=pnl.Buffer(history=10),
+                                                          # state_feature_function=pnl.Buffer(history=10),
                                                           name="Controller",
                                                           objective_mechanism=objectiveMechanism,
                                                           function=pnl.GridSearch(),
@@ -2985,14 +2983,15 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         stabilityFlexibility.enable_controller = True
         # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
 
-        for i in range(1, len(stabilityFlexibility.controller.input_ports)):
-            stabilityFlexibility.controller.input_ports[i].function.reset()
+        # for i in range(1, len(stabilityFlexibility.controller.input_ports)):
+        #     stabilityFlexibility.controller.input_ports[i].function.reset()
         # Origin Node Inputs
         taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
         stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]
 
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
+        assert stablityFlexibility.results == XXX
 
     @pytest.mark.parametrize('num_estimates',[None, 1, 2] )
     @pytest.mark.parametrize('rand_var',[False, True] )
