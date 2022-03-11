@@ -968,6 +968,9 @@ class TestControlMechanisms:
                         assert np.allclose(v, ocm.state_features[k])
                     else:
                         assert v == ocm.state_features[k]
+                # assert ocm.state_features == {ia.input_port: ia.input_port,
+                #                               oa.input_port: None,
+                #                               ob.input_port: [3, 1, 2]}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
 
@@ -975,12 +978,21 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OB[InputPort-0] DEFAULT_VARIABLE']
-                assert ocm.state_features == {ia.input_port: ia.input_port,
-                                              oa.input_port: None,
-                                              ob.input_port: [3, 1, 2]}
+                expected_state_features = {ia.input_port: ia.input_port,
+                                           oa.input_port: None,
+                                           ob.input_port: [3, 1, 2]}
+                assert len(ocm.state_features) == len(expected_state_features)
+                for k, v in expected_state_features.items():
+                    assert k in ocm.state_features
+                    if pnl.is_numeric(v):
+                        assert np.allclose(v, ocm.state_features[k])
+                    else:
+                        assert v == ocm.state_features[k]
+                    # assert ocm.state_features == {ia.input_port: ia.input_port,
+                    #                               oa.input_port: None,
+                    #                               ob.input_port: [3, 1, 2]}
                 assert all(np.allclose(expected,actual)
                            for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
-
 
             elif test_condition == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
