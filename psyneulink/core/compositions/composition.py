@@ -8262,7 +8262,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             elif isinstance(input_spec, dict):
                 inputs = input_spec
         else:
-            inputs = self._build_predicted_inputs_dict(predicted_input, controller, context)
+            # # MODIFIED 3/4/22 OLD:
+            # inputs = self._build_predicted_inputs_dict(predicted_input, controller, context)
+            # MODIFIED 3/4/22 NEW:
+            inputs = predicted_input
+            # MODIFIED 3/4/22 END
 
         if hasattr(self, '_input_spec') and block_simulate and isgenerator(input_spec):
             warnings.warn(f"The evaluate method of {self.name} is attempting to use block simulation, but the "
