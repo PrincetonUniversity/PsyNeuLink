@@ -2260,8 +2260,13 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Pass values from user_spec dict to be parsed;
                 #    corresponding ports are safely in all_specified_ports
                 #    unspecified ports are assigned None per requirements of list format
-                specs = [expanded_dict_with_ports[port] if port in all_specified_ports else None
-                         for port in agent_rep_input_ports]
+                # # MODIFIED 3/4/22 OLD:
+                # specs = [expanded_dict_with_ports[port] if port in all_specified_ports else None
+                #          for port in agent_rep_input_ports]
+                # MODIFIED 3/4/22 NEW:
+                specs = [expanded_dict_with_ports[port] if port in agent_rep_input_ports else None
+                         for port in all_specified_ports]
+                # MODIFIED 3/4/22 END
 
             input_port_names = _parse_specs(specs)
 
@@ -3376,6 +3381,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
         state_dict = {}
         # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
+        specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
         for state_index, port in enumerate(self.state_input_ports):
             if not port.path_afferents:
                 if port.default_input is DEFAULT_VARIABLE:
@@ -3390,7 +3396,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     node = None
                     comp = None
                 else:
-                    continue
+                    source_port = specified_state_features[state_index]
+                    node = None
+                    comp = None
             else:
                 get_info_method = self.composition._get_source
                 # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE

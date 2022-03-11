@@ -260,7 +260,7 @@ class TestControlSpecification:
     @pytest.mark.parametrize('state_features_option', [
         # 'list',
         # 'set',
-        # 'dict',
+        'dict',
         'shadow_inputs_dict'
     ])
     def test_partial_deferred_init(self, state_features_option):
@@ -297,10 +297,6 @@ class TestControlSpecification:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                # state_features=[initial_node_a.input_port,
-                #                 deferred_node.input_port],
-                # state_features={initial_node_a:initial_node_a.input_port,
-                #                 deferred_node:deferred_node.input_port},
                 state_features = state_features,
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
