@@ -2991,7 +2991,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
-        assert stablityFlexibility.results == XXX
+        assert stabilityFlexibility.results == \
+               [[array([0.0475]), array([0.33695222]), array([1.]), array([1.13867062e-09])],
+                [array([0.0475]), array([1.13635091]), array([0.93038951]), array([0.06961049])],
+                [array([0.0475]), array([0.35801411]), array([0.99999998]), array([1.77215519e-08])],
+                [array([0.0475]), array([0.89706881]), array([0.97981972]), array([0.02018028])]]
 
     @pytest.mark.parametrize('num_estimates',[None, 1, 2] )
     @pytest.mark.parametrize('rand_var',[False, True] )
