@@ -1094,7 +1094,7 @@ class TestControlMechanisms:
     def test_state_feature_function_specs(self, state_fct_assignments):
 
         fct_a = pnl.AdaptiveIntegrator
-        fct_b = pnl.Buffer(history=1)
+        fct_b = pnl.Buffer(history=2)
         fct_c = pnl.SimpleIntegrator
         A = pnl.ProcessingMechanism(name='A')
         B = pnl.ProcessingMechanism(name='B')
@@ -2973,7 +2973,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         #  Sets trial history for simulations over specified signal search parameters
         metaController = pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                                           state_features=[taskLayer.input_port, stimulusInfo.input_port],
-                                                          # state_feature_function=pnl.Buffer(history=10),
+                                                          state_feature_function=pnl.Buffer(history=10),
                                                           name="Controller",
                                                           objective_mechanism=objectiveMechanism,
                                                           function=pnl.GridSearch(),
@@ -2983,8 +2983,8 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         stabilityFlexibility.enable_controller = True
         # stabilityFlexibility.model_based_optimizer_mode = pnl.BEFORE
 
-        # for i in range(1, len(stabilityFlexibility.controller.input_ports)):
-        #     stabilityFlexibility.controller.input_ports[i].function.reset()
+        for i in range(1, len(stabilityFlexibility.controller.input_ports)):
+            stabilityFlexibility.controller.input_ports[i].function.reset()
         # Origin Node Inputs
         taskTrain = [[1, 0], [0, 1], [1, 0], [0, 1]]
         stimulusTrain = [[1, -1], [-1, 1], [1, -1], [-1, 1]]
