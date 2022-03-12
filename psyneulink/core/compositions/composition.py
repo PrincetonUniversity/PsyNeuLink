@@ -8833,27 +8833,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if port.internal_only:
                         raise CompositionError(f"{port} in 'inputs' dict for '{self.name}' that is an "
                                                f"{InputPort.__name__}' but does not receive external inputs.")
-                    mech = port.owner
-                    assert not (mech in inputs and port in inputs), \
+                    node = port.owner
+                    assert not (node in inputs and port in inputs), \
                         f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
 
                     # FIX: DEAL WITH NESTED NODES HERE:
                     #      - REASSIGN PORT AS input_port OF input_CIM OF OUTERMOST COMP (SEE BELOW)
                     #      - REASSIGN mech as node
 
-                    if mech in input_nodes:
+                    if node in input_nodes:
                         # Port is an input_port of a Mechanism in self, so assign input to that input_port
-                        # Get index of input_port on mech
+                        # Get index of input_port on node
                         port_idx = port.owner.input_ports.index(port)
                         port_input = np.atleast_2d(inputs[port])
                         num_t_for_port = len(port_input)
-                        # Reshape mech's input (to 3d) to accommodate potential time-series input by adding outer dim
-                        if mech not in input_dict:
+                        # Reshape node's input (to 3d) to accommodate potential time-series input by adding outer dim
+                        if node not in input_dict:
                             mech_shape = np.zeros(tuple([num_t_for_port] +
-                                                        list(np.array(mech.external_input_shape).shape)),
+                                                        list(np.array(node.external_input_shape).shape)),
                                                   dtype='object')
-                            input_dict[mech] = mech_shape
-                        # Assign input to element of mech's input value corresponding to port and time
+                            input_dict[node] = mech_shape
+                        # Assign input to element of node's input value corresponding to port and time
                         # FIX: NEED TO:
                         #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
                         #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
@@ -8863,14 +8863,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
                         #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
                         # assert not len(port_input) % num_t_for_port <- TAUTOLOGY (SEE DEFN ABOVE)
-                        # Assign input for port at each time (trial) to mech's (3d) input array
+                        # Assign input for port at each time (trial) to node's (3d) input array
                         for t in range(num_t_for_port):
-                            mech_entry = input_dict[mech].tolist()
+                            mech_entry = input_dict[node].tolist()
                             mech_entry[t][port_idx] = port_input[t]
-                            input_dict[mech] = np.array(mech_entry)
-                        # mech has been added to input_dict as INPUT Node; nor more ports to deal with.
+                            input_dict[node] = np.array(mech_entry)
+                        # node has been added to input_dict as INPUT Node; nor more ports to deal with.
                         ports_of_nested_INPUT_Nodes = None
-                        item = mech
+                        item = node
                     else:
                         # Item is an InputPort of a node in a nested Composition,
                         #     so assign it to ports, to get corresponding input_port of self.input_CIM below
