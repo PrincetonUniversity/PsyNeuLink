@@ -1312,18 +1312,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
-                     "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions",
-                     "execution_count", "value", "input_ports", "output_ports"}
-        blacklist = { # References to other components
-                     "objective_mechanism", "agent_rep", "projections"}
-        # Only mechanisms use "value" state
-        if not hasattr(self, 'ports'):
-            blacklist.add("value")
+                     "previous_w", "random_state",
+                     "input_ports", "output_ports"}
+        # Prune subcomponents (which are enabled by type rather than a list)
+        # that should be omitted
+        blacklist = { "objective_mechanism", "agent_rep", "projections"}
+
+        # Only mechanisms use "value" state, can execute 'until finished',
+        # and need to track executions
+        if hasattr(self, 'ports'):
+            whitelist.update({"value", "num_executions_before_finished",
+                              "num_executions", "is_finished_flag",
+                              "execution_count"})
 
         # Only mechanisms and compositions need 'num_executions'
-        if not hasattr(self, 'ports') and not hasattr(self, 'nodes'):
-            blacklist.add("num_executions")
+        if hasattr(self, 'nodes'):
+            whitelist.add("num_executions")
 
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
