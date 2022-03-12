@@ -2578,10 +2578,10 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
-        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
-        # #  END DEBUGGING ---------------------------------------------------------------------
+        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
+        #  END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
@@ -2590,8 +2590,8 @@ class OptimizationControlMechanism(ControlMechanism):
         except RunError as error:
             raise OptimizationControlMechanismError(
                 f"The '{STATE_FEATURES}' argument has been specified for '{self.name}' that is using a "
-                f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but "
-                f"they are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
+                f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but some of the "
+                f"specifications are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
                 f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
                 f"remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
                 f"to have them automatically assigned.")

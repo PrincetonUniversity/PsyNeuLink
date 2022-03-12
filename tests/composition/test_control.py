@@ -797,11 +797,11 @@ class TestControlMechanisms:
 
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
-        f"a Composition ('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by "
-        f"its 'agent_rep': 'Input stimulus ([0.0]) for OB is incompatible with the shape of its external input "
-        f"([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, or "
-        f"remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
-        f"to have them automatically assigned.",
+        f"a Composition ('OUTER COMP') as its agent_rep, but some of the specifications are not compatible with the "
+        f"inputs required by its 'agent_rep': 'Input stimulus ([0.0]) for OB is incompatible with the shape of its "
+        f"external input ([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required "
+        f"format, or remove the specification of 'state_features' from the constructor for "
+        f"OptimizationControlMechanism-0 to have them automatically assigned.",
 
         # 5
         f"The '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 is associated with a number of "
@@ -847,20 +847,20 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
-        # ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec_short', None, None, None),
-        # ('set_spec_short', None, None, None),
-        # ('set_spec', None, None, None),
-        # ('set_spec_port', None, None, None),
-        # ('automatic_assignment', None, None, None),
-        # ('shadow_inputs_dict_spec', None, None, None),
-        # ('shadow_inputs_dict_spec_w_none', None, None, None),
-        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
-        # ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
-        # ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('full_list_spec', None, None, None),
+        ('list_spec_with_none', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('set_spec', None, None, None),
+        ('set_spec_port', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
         ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
         ('too_many_inputs_warning', messages[5], None, UserWarning),
         ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
@@ -872,7 +872,7 @@ class TestControlMechanisms:
         ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
 
-    if len(state_feature_args) != 22:
+    if len(state_feature_args) != 23:
         print("\n\n**********************************************************************************************")
         print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
         print("***********************************************************************************************")
@@ -1155,7 +1155,7 @@ class TestControlMechanisms:
             assert result == [[24.]]
             assert all(np.allclose(actual, expected)
                        for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
-                                                   [[20],[2],[3]]))
+                                                   [[20],[[1],[2]],[3]]))
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)

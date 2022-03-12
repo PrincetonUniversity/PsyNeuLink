@@ -8596,7 +8596,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #     so in list comprehension below loop through and validate each individual input
                 _input = [self._validate_single_input(receiver, single_trial_input) for single_trial_input in stimulus]
                 # Look for any bad ones (for which _validate_single_input() returned None) and report if found
-                if True in [i is None for i in _input]:
+                if any(i is None for i in _input):
                     if isinstance(receiver, InputPort):
                         receiver_shape = receiver.default_input_shape
                         receiver_name = receiver.full_name
@@ -8606,7 +8606,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     elif isinstance(receiver, Composition):
                         receiver_shape = receiver.input_CIM.external_input_shape
                         receiver_name = receiver.name
-                    incompatible_stimulus = np.atleast_1d(np.array(stimulus[_input.index(None)], dtype=object))
+                    # incompatible_stimulus = np.atleast_1d(np.array(stimulus[_input.index(None)], dtype=object))
+                    incompatible_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)],
+                                                                             dtype=object)))
                     correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
                     err_msg = f"Input stimulus ({incompatible_stimulus}) for {receiver_name} is incompatible with " \
                               f"the shape of its external input ({correct_stimulus})."
@@ -8875,9 +8877,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         port_input = np.atleast_2d(inputs[port])
                         num_t_for_port = len(port_input)
                         # Reshape mech's input (to 3d) to accomodate potential time-series input by adding outer dim
-                        mech_shape = np.zeros(tuple([num_t_for_port]+list(np.array(mech.external_input_shape).shape)))
+                        mech_shape = np.zeros(tuple([num_t_for_port]+list(np.array(mech.external_input_shape).shape)),
+                                              dtype='object')
                         assert not (mech in inputs and port in inputs), \
-                            f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict." 
+                            f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
+                        # FIX: CHECK FOR PORT SHAPE SPEC AGAINST MECH INPUT SHAPE HERE
                         if mech not in inputs and port not in inputs:
                             # Assign default input for Mechanism as base; then populate with input below
                             input_dict[mech] = mech_shape
@@ -8896,7 +8900,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # assert not len(port_input) % num_t_for_port <- TAUTOLOGY (SEE DEFN ABOVE)
                             # Assign input for port at each time (trial) to mech's (3d) input array
                             for t in range(num_t_for_port):
-                                input_dict[mech][t][port_idx] = port_input[t]
+                                mech_entry = input_dict[mech].tolist()
+                                mech_entry[t][port_idx] = port_input[t]
+                                input_dict[mech] = np.array(mech_entry)
+                                assert True
                         ports = []
                         item = mech
                     else:
@@ -8937,6 +8944,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         # FIX: 3/4/22 - THIS NEEDS TO REFERENCE state_features.values() AT LEAST FOR SHADOW_INPUTS
                         # FIX: 3/4/22 - NEED TO CHECK HERE THAT  is not 2d (>1 TIME'S WORTH OF INPUT)
                         #               OTHERWISE, GET LOWEST DIM AND ADD OUTER LOOP FOR input_dict[mech]
+                        # FIX: 3/12/22 - NEED TO RECURSIVELY CONSTRUCT input_CIM.input_ports
+                        #                FOR InputPorts AT ALL LEVELS OF NESTING
                         if inputs[item] is not None:
                             input_dict[nested_comp][i] = np.array(inputs[item])
                         else:
