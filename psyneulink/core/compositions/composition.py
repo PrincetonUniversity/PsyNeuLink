@@ -8834,40 +8834,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         raise CompositionError(f"{port} in 'inputs' dict for '{self.name}' that is an "
                                                f"{InputPort.__name__}' but does not receive external inputs.")
                     mech = port.owner
+                    assert not (mech in inputs and port in inputs), \
+                        f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
+
+                    # FIX: DEAL WITH NESTED NODES HERE:
+                    #      - REASSIGN PORT AS input_port OF input_CIM OF OUTERMOST COMP (SEE BELOW)
+                    #      - REASSIGN mech as node
 
                     if mech in input_nodes:
                         # Port is an input_port of a Mechanism in self, so assign input to that input_port
                         # Get index of input_port on mech
                         port_idx = port.owner.input_ports.index(port)
-                        # port_input = inputs[port]
                         port_input = np.atleast_2d(inputs[port])
                         num_t_for_port = len(port_input)
-                        # Reshape mech's input (to 3d) to accomodate potential time-series input by adding outer dim
-                        mech_shape = np.zeros(tuple([num_t_for_port]+list(np.array(mech.external_input_shape).shape)),
-                                              dtype='object')
-                        assert not (mech in inputs and port in inputs), \
-                            f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
-                        # FIX: CHECK FOR PORT SHAPE SPEC AGAINST MECH INPUT SHAPE HERE
-                        # FIX: CONSOLIDATE TWO input_dict[mech] ASSIGNMENTS BELOW
+                        # Reshape mech's input (to 3d) to accommodate potential time-series input by adding outer dim
                         if mech not in input_dict:
+                            mech_shape = np.zeros(tuple([num_t_for_port] +
+                                                        list(np.array(mech.external_input_shape).shape)),
+                                                  dtype='object')
                             input_dict[mech] = mech_shape
                         # Assign input to element of mech's input value corresponding to port and time
-                        if mech in inputs or port in inputs:
-                            # FIX: NEED TO:
-                            #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
-                            #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
-                            #       state_feature_functions as Buffers with different histories for each
-                            #  - BE SURE TO FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
-                            #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS INPUTPORT BUT NOW num_t_for_port > 1
-                            #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
-                            #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
-                            # assert not len(port_input) % num_t_for_port <- TAUTOLOGY (SEE DEFN ABOVE)
-                            # Assign input for port at each time (trial) to mech's (3d) input array
-                            for t in range(num_t_for_port):
-                                mech_entry = input_dict[mech].tolist()
-                                mech_entry[t][port_idx] = port_input[t]
-                                input_dict[mech] = np.array(mech_entry)
-                                assert True
+                        # FIX: NEED TO:
+                        #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
+                        #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
+                        #       state_feature_functions as Buffers with different histories for each
+                        #  - BE SURE TO FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
+                        #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS INPUTPORT BUT NOW num_t_for_port > 1
+                        #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
+                        #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
+                        # assert not len(port_input) % num_t_for_port <- TAUTOLOGY (SEE DEFN ABOVE)
+                        # Assign input for port at each time (trial) to mech's (3d) input array
+                        for t in range(num_t_for_port):
+                            mech_entry = input_dict[mech].tolist()
+                            mech_entry[t][port_idx] = port_input[t]
+                            input_dict[mech] = np.array(mech_entry)
                         # mech has been added to input_dict as INPUT Node; nor more ports to deal with.
                         ports_of_nested_INPUT_Nodes = None
                         item = mech
