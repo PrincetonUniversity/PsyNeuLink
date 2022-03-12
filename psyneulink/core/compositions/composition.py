@@ -8816,7 +8816,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         input_dict = {}
 
-        # Check that all of the Nodes listed in the inputs dict are INPUT Nodes in the Composition
+        # Check that all keys in inputs dict are INPUT Nodes (or InputPorts of them) in the Composition
         #    and assign any InputPort specs to their owner Mechanism or Composition
         for item in inputs.keys():
             if item in input_nodes:
@@ -8833,6 +8833,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     mech = item.owner
 
                     if mech in input_nodes:
+                        # FIX: 3/4/22 - NEED TO CHECK HERE THAT IT IS NOT MORE THAN ONE TIME'S WORTH OF INPUT
                         # Item is an input_port of a Mechanism in self, so assign input to that input_port
                         # Get index of input_port on mech
                         i = item.owner.input_ports.index(item)
