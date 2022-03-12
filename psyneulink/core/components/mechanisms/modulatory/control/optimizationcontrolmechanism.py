@@ -1086,15 +1086,17 @@ def _state_feature_values_getter(owning_component=None, context=None):
         #     continue
 
         if is_numeric(spec):
-            state_feature_values[key] = spec
+            state_feature_value = spec
         elif state_input_port.parameters.value._get(context) is not None:
-            state_feature_values[key] = state_input_port.parameters.value._get(context)
+            state_feature_value = state_input_port.parameters.value._get(context)
         else:
             # if isinstance(state_input_port, InputPort):
             #     state_feature_values[key] = state_input_port.default_input_shape
             # else:
             #     state_feature_values[key] = state_input_port.defaults.value
-            state_feature_values[key] = state_input_port.default_input_shape
+            state_feature_value = state_input_port.default_input_shape
+
+        state_feature_values[key] = convert_to_np_array(state_feature_value)
             # assert False, f"PROGRAM ERROR: state_input_port for {owning_component.name} has value of None after init."
 
     return state_feature_values
