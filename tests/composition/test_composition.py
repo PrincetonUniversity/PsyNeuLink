@@ -5752,7 +5752,7 @@ class TestInputSpecifications:
         ocomp.run(inputs=inputs_dict,
                   report_output=pnl.ReportOutput.FULL,
                   report_progress=pnl.ReportProgress.ON,
-                  report_simulations=pnl.ReportSimulations.OFF,
+                  report_simulations=pnl.ReportSimulations.ON,
                   report_to_devices=pnl.ReportDevices.DIVERT
                   )
         actual_output = ocomp.rich_diverted_reports
