@@ -5651,14 +5651,17 @@ class TestInputSpecifications:
               num_trials=4)
 
     @pytest.mark.parametrize(
-        "with_outer_controller, with_inner_controller",[
-            (True, True),
-            # (True, False),
-            # (False, True),
-            # (False, False)
+        "controllers, results",[
+            ('none', [[-2], [1]]),
+            ('inner',  [[-2], [10]]),
+            ('outer',  [[-2], [10]]),
+            ('inner_and_outer', [[-2], [100]]),
         ]
     )
-    def test_input_type_equivalence(self, with_outer_controller, with_inner_controller):
+    @pytest.mark.parametrize(
+        "inputs_arg",['inputs_dict','generator_function','generator_instance']
+    )
+    def test_input_type_equivalence(self, controllers, results, inputs_arg):
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
         ib = pnl.TransferMechanism(name='ib')
@@ -5670,7 +5673,7 @@ class TestInputSpecifications:
         icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
 
         # add controller to inner comp
-        if with_inner_controller:
+        if controllers in {'inner', 'inner_and_outer'}:
             icomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=icomp,
@@ -5697,7 +5700,7 @@ class TestInputSpecifications:
         ocomp.add_node(icomp)
 
         # add controller to outer comp
-        if with_outer_controller:
+        if controllers in {'outer', 'inner_and_outer'}:
             ocomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=ocomp,
@@ -5740,35 +5743,27 @@ class TestInputSpecifications:
 
         inputs_generator_instance = inputs_generator_function()
 
+        inputs_source = {
+            'inputs_dict': inputs_dict,
+            'generator_function': inputs_generator_function,
+            'generator_instance': inputs_generator_instance
+        }[inputs_arg]
+
+        # # Version with reporting for debugging purposes:
+        # ib.reportOutputPref=[pnl.VALUE, pnl.VARIABLE]
+        # icomp.controller.reportOutputPref = pnl.ReportOutput.ON
+        # ocomp.controller.reportOutputPref = pnl.ReportOutput.FULL
+        # ocomp.run(inputs=inputs_dict,
+        #           report_output=pnl.ReportOutput.FULL,
+        #           report_progress=pnl.ReportProgress.ON,
+        #           report_simulations=pnl.ReportSimulations.ON,
+        #           report_to_devices=pnl.ReportDevices.DIVERT
+        #           )
+        # actual_output = ocomp.rich_diverted_reports
+
         # run Composition with all three input types and assert that results are as expected.
-        # # MODIFIED 3/12/22 OLD:
-        # ocomp.run(inputs=inputs_dict)
-        # ocomp.run(inputs=inputs_generator_function)
-        # ocomp.run(inputs=inputs_generator_instance)
-        # MODIFIED 3/12/22 NEW:
-        ib.reportOutputPref=[pnl.VALUE, pnl.VARIABLE]
-        icomp.controller.reportOutputPref = pnl.ReportOutput.ON
-        ocomp.controller.reportOutputPref = pnl.ReportOutput.FULL
-        ocomp.run(inputs=inputs_dict,
-                  report_output=pnl.ReportOutput.FULL,
-                  report_progress=pnl.ReportProgress.ON,
-                  report_simulations=pnl.ReportSimulations.ON,
-                  report_to_devices=pnl.ReportDevices.DIVERT
-                  )
-        actual_output = ocomp.rich_diverted_reports
-        assert True
-        # MODIFIED 3/12/22 END
-
-        # assert results are as expected
-        if not with_inner_controller and not with_outer_controller:                                  # (False,False)
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [1]]
-        elif with_inner_controller and not with_outer_controller or \
-                with_outer_controller and not with_inner_controller:                  # (False,True) or (True,False)
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [10]]
-        else:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]     # (True,True)
-
-
+        ocomp.run(inputs=inputs_source)
+        assert ocomp.results == results
 
     expected_format_strings = \
         [

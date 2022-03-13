@@ -4216,6 +4216,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_items = []
 
+        # MODIFIED 3/12/22 NEW:
+        if comp.needs_determine_node_roles:
+            # Need to do full analyze_graph here as create_cim_input_port has to be call as well for assert below
+            comp._analyze_graph()
+        # MODIFIED 3/12/22 END
+
         if type==PORT:
             # Return all InputPorts of all INPUT Nodes
             _input_nodes = comp._get_nested_nodes_with_same_roles_at_all_levels(comp=comp,
@@ -4227,8 +4233,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert len(input_items) == len(comp.input_CIM_ports)
         else:
             # Return all INPUT Nodes
-            if comp.needs_determine_node_roles:
-                comp._determine_node_roles()
+            # # MODIFIED 3/12/22 OLD:
+            # if comp.needs_determine_node_roles:
+            #     comp._determine_node_roles()
+            # MODIFIED 3/12/22 END
             _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             for node in _input_nodes:
                 if isinstance(node, Composition):
