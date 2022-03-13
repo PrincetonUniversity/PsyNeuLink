@@ -4202,7 +4202,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         return [{cim[0]:n for n, cim in self.input_CIM_ports.items()}[input_port].owner
                 for input_port in self.input_CIM.input_ports]
 
-    def _get_input_receivers(self, comp=None, type:Union[PORT,NODE]=PORT, comp_as_node:Union[bool,ALL]=False):
+    def _get_input_receivers(self,
+                             comp=None,
+                             type:Union[PORT,NODE]=PORT,
+                             comp_as_node:Union[bool,ALL]=False):
         """Return all INPUT Nodes [or their InputPorts] of comp, [including those for any nested Compositions].
         If type is PORT, return all InputPorts for all INPUT Nodes, including for nested Compositions.
         If type is NODE, return all INPUT Nodes, including for nested Compositions as determined by comp_as_node:
@@ -4215,13 +4218,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                     f"for 'ports' and 'nodes' at the same time."
 
         input_items = []
+        _update_cim = False
 
-        # MODIFIED 3/12/22 NEW:
         if comp.needs_determine_node_roles:
             comp._determine_node_roles()
-            # Need to do full analyze_graph here as create_cim_input_port has to be call as well for assert below
-            # comp._analyze_graph()
-        # MODIFIED 3/12/22 END
+            _update_cim = True
 
         if type==PORT:
             # Return all InputPorts of all INPUT Nodes
@@ -4230,23 +4231,25 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if _input_nodes:
                 for node in _input_nodes:
                     input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
+                # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
+                # MODIFIED 3/12/22 NEW:
+                if _update_cim:
+                    context = Context()
+                    self._determine_pathway_roles(context=context)
+                    self._determine_pathway_roles(context)
+                    self._create_CIM_ports(context)
+                _update_cim = False
                 # MODIFIED 3/12/22 OLD:
-                # # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
-                # assert len(input_items) == len(comp.input_CIM_ports)
+                assert len(input_items) == len(comp.input_CIM_ports)
                 # MODIFIED 3/12/22 END
         else:
             # Return all INPUT Nodes
-            # # MODIFIED 3/12/22 OLD:
-            # if comp.needs_determine_node_roles:
-            #     comp._determine_node_roles()
-            # MODIFIED 3/12/22 END
             _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             for node in _input_nodes:
                 if isinstance(node, Composition):
                     if comp_as_node:
                         input_items.append(node)
                     if comp_as_node in {False, ALL}:
-                        # FIX: DOESN'T THIS SEARCH RECURSIVELY? -- NEED TO TEST WITH > ONE LEVEL OF NESTING
                         input_items.extend(self._get_input_receivers(comp=node, type=type, comp_as_node=comp_as_node))
                 else:
                     input_items.append(node)
