@@ -4218,8 +4218,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # MODIFIED 3/12/22 NEW:
         if comp.needs_determine_node_roles:
+            comp._determine_node_roles()
             # Need to do full analyze_graph here as create_cim_input_port has to be call as well for assert below
-            comp._analyze_graph()
+            # comp._analyze_graph()
         # MODIFIED 3/12/22 END
 
         if type==PORT:
@@ -4229,8 +4230,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if _input_nodes:
                 for node in _input_nodes:
                     input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
-                # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
-                assert len(input_items) == len(comp.input_CIM_ports)
+                # MODIFIED 3/12/22 OLD:
+                # # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
+                # assert len(input_items) == len(comp.input_CIM_ports)
+                # MODIFIED 3/12/22 END
         else:
             # Return all INPUT Nodes
             # # MODIFIED 3/12/22 OLD:

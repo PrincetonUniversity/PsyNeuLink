@@ -1265,6 +1265,7 @@ class TestCompositionPathwaysArg:
 
 class TestProperties:
 
+    @pytest.mark.control
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
     def test_properties(self, control_spec):
 
@@ -1389,6 +1390,7 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
         assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
+    @pytest.mark.control
     def test_controller_objective_mech_not_terminal(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
@@ -1419,6 +1421,7 @@ class TestAnalyzeGraph:
         # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
+    @pytest.mark.control
     def test_controller_objective_mech_not_terminal_fall_back(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
@@ -4230,6 +4233,7 @@ class TestNestedCompositions:
 
         outer.run(inputs=input, execution_mode=comp_mode)
 
+    @pytest.mark.control
     def test_invalid_projection_deletion_when_nesting_comps(self):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -4726,6 +4730,7 @@ class TestNestedCompositions:
         ret = comp_lvl0.run(inputs={comp_lvl1: {comp_lvl2: {comp_lvl3a: [[1.0]], comp_lvl3b: [[1.0]]}}})
         assert np.allclose(ret, [[[0.52497918747894]], [[0.52497918747894]]])
 
+    @pytest.mark.control
     def test_four_level_nested_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
 
@@ -4747,6 +4752,7 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [150]
 
+    @pytest.mark.control
     def test_four_level_nested_dual_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
 
@@ -4781,6 +4787,7 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [4500]
 
+    @pytest.mark.control
     @pytest.mark.parametrize('nesting', ("unnested", "nested"))
     def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
         pnl.clear_registry()
@@ -5650,6 +5657,7 @@ class TestInputSpecifications:
         xor_comp.learn(inputs=test_function,
               num_trials=4)
 
+    @pytest.mark.control
     @pytest.mark.parametrize(
         "controllers, results",[
             ('none', [[-2], [1]]),
@@ -7031,6 +7039,7 @@ class TestNodeRoles:
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
+    @pytest.mark.control
     def test_controller_role(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
