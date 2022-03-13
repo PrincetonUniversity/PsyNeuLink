@@ -229,7 +229,7 @@ class TestMechanismFunctionParameters:
 class TestResetValues:
 
     def test_reset_state_integrator_mechanism(self):
-        A = pnl.IntegratorMechanism(name='A', function=pnl.DriftDiffusionIntegrator())
+        A = pnl.IntegratorMechanism(name='A', function=pnl.DriftDiffusionIntegrator(time_step_size=1.0))
 
         # Execute A twice
         #  [0] saves decision variable only (not time)

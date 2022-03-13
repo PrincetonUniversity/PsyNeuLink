@@ -18,10 +18,10 @@ jobs:
       wheel: ${{ steps.create_dist.outputs.wheel }}
     steps:
     - name: Checkout sources
-      uses: actions/checkout@v2.4.0
+      uses: actions/checkout@v3
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.3.2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -38,7 +38,7 @@ jobs:
         echo ::set-output name=wheel::$(ls *.whl)
 
     - name: Upload Python dist files
-      uses: actions/upload-artifact@v2.3.1
+      uses: actions/upload-artifact@v3
       with:
         name: Python-dist-files
         path: dist/
@@ -84,7 +84,7 @@ jobs:
         path: dist/
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.3.2
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -113,7 +113,7 @@ jobs:
       run: pip install dist/${{ needs.create-python-dist.outputs.sdist }}[dev]
 
     - name: Get tests from the repository
-      uses: actions/checkout@v2.4.0
+      uses: actions/checkout@v3
 
     - name: Run tests
       shell: bash
@@ -126,7 +126,7 @@ jobs:
         pytest  --junit-xml=tests_out.xml --verbosity=0 -n auto tests
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2.3.1
+      uses: actions/upload-artifact@v3
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: tests_out.xml

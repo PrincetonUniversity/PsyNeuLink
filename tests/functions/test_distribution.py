@@ -17,12 +17,12 @@ RAND5 = np.random.rand()
 test_data = [
     (Functions.DriftDiffusionAnalytical, test_var, {}, None,
      (1.9774974807292212, 0.012242689689501842, 1.9774974807292207, 1.3147677945132479, 1.7929299891370192, 1.9774974807292207, 1.3147677945132479, 1.7929299891370192)),
-    (Functions.DriftDiffusionAnalytical, test_var, {"drift_rate": RAND1, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, None,
+    (Functions.DriftDiffusionAnalytical, test_var, {"drift_rate": RAND1, "threshold": RAND2, "starting_value": RAND3, "non_decision_time":RAND4, "noise": RAND5}, None,
      (0.4236547993389047, -2.7755575615628914e-17, 0.5173675420165031, 0.06942854144616283, 6.302631815990666, 1.4934079600147951, 0.4288991185241868, 1.7740760781361433)),
-    (Functions.DriftDiffusionAnalytical, -test_var, {"drift_rate": RAND1, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, None,
+    (Functions.DriftDiffusionAnalytical, -test_var, {"drift_rate": RAND1, "threshold": RAND2, "starting_value": RAND3, "non_decision_time":RAND4, "noise": RAND5}, None,
      (0.42365479933890504, 0.0, 0.5173675420165031, 0.06942854144616283, 6.302631815990666, 1.4934079600147951, 0.4288991185241868, 1.7740760781361433)),
 #    FIXME: Rounding errors result in different behaviour on different platforms
-#    (Functions.DriftDiffusionAnalytical, 1e-4, {"drift_rate": 1e-5, "threshold": RAND2, "starting_point": RAND3, "t0":RAND4, "noise": RAND5}, "Rounding errors",
+#    (Functions.DriftDiffusionAnalytical, 1e-4, {"drift_rate": 1e-5, "threshold": RAND2, "starting_value": RAND3, "non_decision_time":RAND4, "noise": RAND5}, "Rounding errors",
 #     (0.5828813465336954, 0.04801236718458773, 0.532471083815943, 0.09633801362499317, 6.111833139205608, 1.5821207676710864, 0.5392724012504414, 1.8065252817609618)),
     # Two tests with different inputs to show that input is ignored.
     (Functions.NormalDist, 1e14, {"mean": RAND1, "standard_deviation": RAND2}, None, (1.0890232855122397)),

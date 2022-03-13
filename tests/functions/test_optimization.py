@@ -79,7 +79,7 @@ def test_grid_search(obj_func, metric, normalize, direction, selection, benchmar
     f = OPTFunctions.GridSearch(objective_function=of, default_variable=variable,
                                 search_space=search_space, direction=direction,
                                 select_randomly_from_optimal_values=(selection=='RANDOM'),
-                                seed=0)
+                                seed=0, save_values=False)
     EX = pytest.helpers.get_func_execution(f, func_mode)
 
     res = EX(variable)

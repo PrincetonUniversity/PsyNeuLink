@@ -12,7 +12,7 @@ from psyneulink.core.components.mechanisms.processing.transfermechanism import T
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
 from psyneulink.core.compositions.composition import Composition, EdgeType
 from psyneulink.core.globals.keywords import VALUE
-from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished
+from psyneulink.core.scheduling.condition import AfterNCalls, AfterNPasses, AfterNTrials, AfterPass, All, AllHaveRun, Always, Any, AtPass, BeforeNCalls, BeforePass, EveryNCalls, EveryNPasses, JustRan, TimeInterval, WhenFinished, Never
 from psyneulink.core.scheduling.scheduler import Scheduler
 from psyneulink.core.scheduling.time import TimeScale
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import DDM
@@ -159,7 +159,9 @@ class TestScheduler:
         assert output == pytest.helpers.setify_expected_output(expected_output)
 
     def test_change_termination_condition(self):
-        D = DDM(function=DriftDiffusionIntegrator(threshold=10))
+        D = DDM(function=DriftDiffusionIntegrator(threshold=10, time_step_size=1.0),
+                execute_until_finished=False,
+                reset_stateful_function_when=Never())
         C = Composition(pathways=[D])
 
         D.set_log_conditions(VALUE)
@@ -1559,10 +1561,12 @@ class TestFeedback:
     @pytest.mark.usefixtures("comp_mode_no_llvm")
     def test_scheduler_conditions(self, comp_mode, condition, scale, expected_result):
         decisionMaker = pnl.DDM(
-                        function=pnl.DriftDiffusionIntegrator(starting_point=0,
+                        function=pnl.DriftDiffusionIntegrator(starting_value=0,
                                                               threshold=1,
-                                                              noise=0.0),
+                                                              noise=0.0,
+                                                              time_step_size=1.0),
                         reset_stateful_function_when=pnl.AtTrialStart(),
+                        execute_until_finished=False,
                         output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
                         name='DDM')
 
