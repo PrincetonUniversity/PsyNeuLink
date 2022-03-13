@@ -1046,7 +1046,6 @@ def _state_feature_values_getter(owning_component=None, context=None):
        default input will be assigned for all other INPUT Node InputPorts (in composition._instantiate_input_dict())
 
     """
-    # FIX: 3/4/22 - ADD BRANCH ON AGENT_REP_TYPE
 
     # If no state_input_ports return empty list
     if (not owning_component.num_state_input_ports):
@@ -2026,7 +2025,7 @@ class OptimizationControlMechanism(ControlMechanism):
             if self.agent_rep_type == COMPOSITION:
 
                 # FIX: 3/4/22 - THESE SEEM DUPLICATIVE OF _validate_state_features;  JUST CALL THAT HERE?
-                #               ALSO, "d" WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
+                #               ALSO, WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
                 # Too FEW specs for number of agent_rep receivers
                 if len(self.state_feature_specs) < len(agent_rep_input_ports):
                     warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number "
