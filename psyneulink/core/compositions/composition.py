@@ -8863,8 +8863,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                     assert not (item in inputs and port in inputs), \
                         f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
-                    assert item in input_nodes, f"PROGRAM ERROR: Input specified for port {port.name} of {item.name} " \
-                                                f"not found in input_nodes of {self.name}."
+                    assert item in input_nodes, f"PROGRAM ERROR: Input specified for port {port.name} of " \
+                                                f"{item.name} not found in input_nodes of {self.name}."
 
                     # Get index of input_port on mech
                     port_idx = port.owner.input_ports.index(port)
