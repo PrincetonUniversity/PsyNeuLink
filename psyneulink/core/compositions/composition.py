@@ -8863,7 +8863,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               dtype='object')
                         input_dict[item] = mech_shape
                     # Assign input to element of mech's input value corresponding to port and time
-                    # FIX: NEED TO:
+                    # FIX: 3/12/22 NEED TO:
                     #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
                     #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
                     #       state_feature_functions as Buffers with different histories for each
@@ -8913,6 +8913,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             input_dict[nested_comp] = np.zeros(tuple([num_t_for_port] +
                                                                      list(np.array(mech.external_input_shape).shape)),
                                                                dtype='object')
+                        # FIX: 3/4/22 - THIS NEEDS TO REFERENCE state_features.values() AT LEAST FOR SHADOW_INPUTS
                         for t in range(num_t_for_port):
                             # Get input for entire nested node
                             nested_node_input = input_dict[item].tolist()
@@ -8920,16 +8921,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             nested_node_input[t][port_idx] = port_input[t]
                             # Assign updated input array for nested node back to input_dict
                             input_dict[item] = np.array(nested_node_input)
-                        # FIX: 3/4/22 - THIS NEEDS TO REFERENCE state_features.values() AT LEAST FOR SHADOW_INPUTS
-                        # FIX: 3/4/22 - NEED TO CHECK HERE THAT  is not 2d (>1 TIME'S WORTH OF INPUT)
-                        #               OTHERWISE, GET LOWEST DIM AND ADD OUTER LOOP FOR input_dict[mech]
-                        # FIX: 3/12/22 - NEED TO GET DESTINATION NODES OF ALL UNCLAIMED input_ports OF input_CIM
-                        #                AND ASSIGN THOSE DEFAULT INPUTS
-                        # if inputs[item] is not None:
-                        #     input_dict[nested_comp][i] = np.array(inputs[item])
-                        # else:
-                        #     # input_dict[nested_comp][i] = np.array(item.default_input_shape)
-                        #     assert False, f"PROGRAM ERROR: 'None' passed in for value of {item.full_name}"
 
             if item not in input_nodes:
                 if not isinstance(item, (Mechanism, Composition)):
