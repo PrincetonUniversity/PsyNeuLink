@@ -5691,7 +5691,7 @@ class TestInputSpecifications:
             )
 
         # instantiate outer comp
-        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.AFTER)
+        ocomp = pnl.Composition(name='ocomp', controller_mode=pnl.BEFORE)
 
         # setup structure of outer comp
         ocomp.add_node(icomp)
