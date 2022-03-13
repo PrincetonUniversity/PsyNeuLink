@@ -3090,8 +3090,11 @@ class Mechanism_Base(Mechanism):
 
         # Update internal clock (i.e. num_executions parameter)
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+        for scale in TimeScale:
+            assert scale.value < len(num_executions_ptr.type.pointee)
+            num_exec_time_ptr = builder.gep(num_executions_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(scale.value)],
+                                            name="num_executions_{}_ptr".format(scale))
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
