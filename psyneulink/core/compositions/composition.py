@@ -2669,6 +2669,7 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
+from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
@@ -8124,57 +8125,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     f"or a composition nested within it."
                 )
 
-    def _build_predicted_inputs_dict(self, predicted_inputs, controller, context):
-        """Format predict_inputs from controller as input to evaluate method used to execute simulations of Composition.
-
-        Assign input values for all INPUT Nodes (including ones in nested Compositions) of Composition based on:
-            - values of state_input_ports for any non-None entries in controller.state_features_specs
-              (based on the values of projections from the specified items,
-               processed by any specified state_feature_function(s))
-            - default value for any items unspecified items (i.e., assigned None in controller.state_feature_specs)
-            (note: this assumes that controller.state_feature_specs reflects expansion of any INPUT Nodes that are
-             nested Compositions, replacing those by all of the INPUT Nodes of those nested Compositions at all levels,
-             and that these are ordered the same as the InputPorts of the input_CIM for each nested Composition).
-
-        Return input_dict containing entries corresponding to each InputPort in controller.state_input_ports,
-          the key of which is the INPUT Node and the value is the value for that node
-        """
-
-        controller = controller or self.controller
-        # MODIFIED 3/4/22 OLD:
-        # no_predicted_input = (predicted_inputs is None or not len(predicted_inputs))
-        # MODIFIED 3/4/22 NEW:
-        predicted_input = predicted_inputs is not None and len(predicted_inputs)
-        # MODIFIED 3/4/22 END
-        if not predicted_input and not context.flags | ContextFlags.PREPARING:
-            warnings.warn(f"{self.name}.evaluate() called without any inputs specified; default values will be used")
-        inputs = {}
-        i = 0
-        for state_input_port, spec in controller.state_features.items():
-            # MODIFIED 3/4/22 NEW:
-            # state_input_port not (yet) specified; default input will be assigned in _instantiate_input_dict()
-            if not isinstance(state_input_port, InputPort):
-                continue
-            # MODIFIED 3/4/22 END
-            if spec is None and not predicted_input:
-                inputs[state_input_port] = state_input_port.default_input_shape
-            elif predicted_input:
-                inputs[state_input_port] = predicted_inputs[i]
-                i += 1
-            elif spec is not None:
-                if is_numeric(spec):
-                    inputs[state_input_port] = spec
-                elif spec.value is not None:
-                    inputs[state_input_port] = spec.value
-                else:
-                    if isinstance(spec, InputPort):
-                        inputs[state_input_port] = spec.default_input_shape
-                    else:
-                        inputs[state_input_port] = spec.defaults.value
-            else:
-                assert False, "PROGRAM ERROR: Unanticipated combination of spec and predicted_input values."
-        return inputs
-
     def _get_total_cost_of_control_allocation(self, control_allocation, context, runtime_params):
         total_cost = 0.
         if control_allocation is not None:  # using "is not None" in case the control allocation is 0.
@@ -11655,6 +11605,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._show_graph._animate_execution(active_items, context)
 
     # endregion SHOW_GRAPH
+
+    def make_likelihood_function(self, *args, **kwargs):
+        """
+        This method invokes :func:`~psyneulink.core.components.functions.fitfunctions.make_likelihood_function`
+        on the composition.
+        """
+        return make_likelihood_function(composition=self, *args, **kwargs)
 
 
 def get_compositions():

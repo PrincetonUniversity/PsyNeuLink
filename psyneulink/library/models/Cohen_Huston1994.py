@@ -272,17 +272,11 @@ words_hidden_layer.set_log_conditions('value')
 
 # Create threshold function -------------------------------------------------------------------------------------------
 
-
-def pass_threshold(response_layer, thresh):
-    results1 = response_layer.get_output_values(Bidirectional_Stroop)[0][0]  # red response
-    results2 = response_layer.get_output_values(Bidirectional_Stroop)[0][1]  # green response
-    if results1 >= thresh or results2 >= thresh:
-        return True
-    return False
-
-
 terminate_trial = {
-    pnl.TimeScale.TRIAL: pnl.While(pass_threshold, response_layer, threshold)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 0)),
+        pnl.Threshold(response_layer, 'value', threshold, '>=', (0, 1)),
+    )
 }
 
 # Create test trials function -----------------------------------------------------------------------------------------

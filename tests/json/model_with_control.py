@@ -27,8 +27,8 @@ Decision = pnl.DDM(
             ),
         ),
         noise=0.5,
-        starting_point=0,
-        t0=0.45,
+        starting_value=0,
+        non_decision_time=0.45,
     ),
     output_ports=[
         pnl.DECISION_VARIABLE,

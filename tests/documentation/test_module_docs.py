@@ -72,7 +72,10 @@ def test_scheduler_substitutions(mod):
     for pattern, repl in pnl.core.scheduling._global_doc_subs:
         for cls_name in mod.__all__:
             cls = getattr(mod, cls_name)
-            ext_cls = getattr(graph_scheduler, cls_name)
+            try:
+                ext_cls = getattr(graph_scheduler, cls_name)
+            except AttributeError:
+                continue
 
             # global replacements may not happen in every docstring
             assert re.sub(r'\\\d', '', repl) in cls.__doc__ or not re.match(pattern, ext_cls.__doc__)

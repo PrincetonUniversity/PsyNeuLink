@@ -2957,8 +2957,15 @@ class OptimizationControlMechanism(ControlMechanism):
             # copy allocation_sample, the input is 1-element array in a struct
             data_in = builder.gep(allocation_sample, [ctx.int32_ty(0),
                                                       ctx.int32_ty(i)])
-            data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0),
-                                           ctx.int32_ty(0)])
+
+            # Port input struct is {data, modulation} if modulation is present,
+            # otherwise it's just data
+            if len(op.mod_afferents) > 0:
+                data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0),
+                                               ctx.int32_ty(0)])
+            else:
+                data_out = builder.gep(op_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+
             if data_in.type != data_out.type:
                 warnings.warn(f"Shape mismatch: Allocation sample '{i}' "
                               f"({self.parameters.control_allocation_search_space.get()}) "
@@ -3019,7 +3026,7 @@ class OptimizationControlMechanism(ControlMechanism):
         with pnlvm.helpers.for_loop(builder, start, stop, stop.type(1), "alloc_loop") as (b, idx):
 
             func_out = b.gep(arg_out, [idx])
-            pnlvm.helpers.create_allocation(b, allocation, search_space, idx)
+            pnlvm.helpers.create_sample(b, allocation, search_space, idx)
 
             b.call(evaluate_f, [params, state, allocation, func_out, arg_in, data])
 
@@ -3218,17 +3225,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return fun_out, builder
 
-    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, context, value, port):
-        i = self.output_ports.index(port)
-        # Allocate the only member of the port input struct
-        oport_input = builder.alloca(ctx.get_input_struct_type(port).elements[0],
-                                     name="output_port_in")
-        # FIXME: workaround controller signals occasionally being 2d
-        dest_ptr = pnlvm.helpers.unwrap_2d_array(builder, oport_input)
-        dest_ptr = builder.gep(dest_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-        val_ptr = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(i)])
-        builder.store(builder.load(val_ptr), dest_ptr)
-        return oport_input
+    def _gen_llvm_output_port_parse_variable(self, ctx, builder, params, state, value, port):
+        # The function returns (sample_optimal, value_optimal),
+        # but the value of mechanism is only 'sample_optimal'
+        value = builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        return super()._gen_llvm_output_port_parse_variable(ctx, builder, params, state, value, port)
 
     @property
     def agent_rep_type(self):

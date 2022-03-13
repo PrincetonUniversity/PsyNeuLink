@@ -66,7 +66,7 @@ class TestProcessingMechanismFunctions:
                                                    (SoftMax, [[1,]]),
                                                    (SimpleIntegrator, [[1.]]),
                                                    (AdaptiveIntegrator, [[1.]]),
-                                                   (DriftDiffusionIntegrator, [[[1.]], [[1.]]]),
+                                                   (DriftDiffusionIntegrator(time_step_size=1.0), [[[1.]], [[1.]]]),
                                                    (OrnsteinUhlenbeckIntegrator, [[[-1.]], [[1.]]]),
                                                    (AccumulatorIntegrator, [[0.]]),
                                                    (FitzHughNagumoIntegrator, [[[0.05127053]], [[0.00279552]], [[0.05]]]),

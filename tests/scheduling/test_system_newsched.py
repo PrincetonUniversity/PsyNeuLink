@@ -39,8 +39,8 @@ class TestInit:
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.25,
+                starting_value=(0),
+                non_decision_time=0.25,
             ),
             name='Decision',
         )

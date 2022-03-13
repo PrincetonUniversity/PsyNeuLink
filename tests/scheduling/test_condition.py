@@ -1,5 +1,7 @@
 import logging
 
+import numpy as np
+import psyneulink as pnl
 import pytest
 from psyneulink import _unit_registry
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
@@ -689,6 +691,106 @@ class TestCondition:
             A, A, B, A, A, B, C
         ]
         assert output == pytest.helpers.setify_expected_output(expected_output)
+
+    @pytest.mark.parametrize(
+        'parameter, indices, default_variable, integration_rate, expected_results',
+        [
+            ('value', None, None, 1, [[[10]]]),
+            ('value', (0, 0), [[0, 0]], [1, 2], [[[10, 20]]]),
+            ('value', (0, 1), [[0, 0]], [1, 2], [[[5, 10]]]),
+            ('num_executions', TimeScale.TRIAL, None, 1, [[[10]]]),
+            ('execution_count', None, None, 1, [[[10]]]),
+        ]
+    )
+    @pytest.mark.parametrize('threshold', [10, 10.0])
+    def test_Threshold_parameters(
+        self, parameter, indices, default_variable, integration_rate, expected_results, threshold, comp_mode
+    ):
+        if comp_mode is pnl.ExecutionMode.LLVM:
+            pytest.skip('ExecutionMode.LLVM does not support Parameter access in conditions')
+
+        A = TransferMechanism(
+            default_variable=default_variable,
+            integrator_mode=True,
+            integrator_function=pnl.SimpleIntegrator,
+            integration_rate=integration_rate,
+        )
+        comp = Composition(pathways=[A])
+
+        comp.termination_processing = {
+            pnl.TimeScale.TRIAL: pnl.Threshold(A, parameter, threshold, '>=', indices=indices)
+        }
+
+        comp.run(inputs={A: np.ones(A.defaults.variable.shape)}, execution_mode=comp_mode)
+
+        np.testing.assert_array_equal(comp.results, expected_results)
+
+    @pytest.mark.parametrize(
+        'comparator, increment, threshold, expected_results',
+        [
+            ('>', 1, 5, [[[6]]]),
+            ('>=', 1, 5, [[[5]]]),
+            ('<', -1, -5, [[[-6]]]),
+            ('<=', -1, -5, [[[-5]]]),
+            ('==', 1, 5, [[[5]]]),
+            ('!=', 1, 0, [[[1]]]),
+            ('!=', -1, 0, [[[-1]]]),
+        ]
+    )
+    def test_Threshold_comparators(
+        self, comparator, increment, threshold, expected_results, comp_mode
+    ):
+        if comp_mode is pnl.ExecutionMode.LLVM:
+            pytest.skip('ExecutionMode.LLVM does not support Parameter access in conditions')
+
+        A = TransferMechanism(
+            integrator_mode=True,
+            integrator_function=pnl.AccumulatorIntegrator(rate=1, increment=increment),
+        )
+        comp = Composition(pathways=[A])
+
+        comp.termination_processing = {
+            pnl.TimeScale.TRIAL: pnl.Threshold(A, 'value', threshold, comparator)
+        }
+
+        comp.run(inputs={A: np.ones(A.defaults.variable.shape)}, execution_mode=comp_mode)
+
+        np.testing.assert_array_equal(comp.results, expected_results)
+
+    @pytest.mark.parametrize(
+        'comparator, increment, threshold, atol, rtol, expected_results',
+        [
+            ('==', 1, 10, 1, 0.1, [[[8]]]),
+            ('==', 1, 10, 1, 0, [[[9]]]),
+            ('==', 1, 10, 0, 0.1, [[[9]]]),
+            ('!=', 1, 2, 1, 0.5, [[[5]]]),
+            ('!=', 1, 1, 1, 0, [[[3]]]),
+            ('!=', 1, 1, 0, 1, [[[3]]]),
+            ('!=', -1, -2, 1, 0.5, [[[-5]]]),
+            ('!=', -1, -1, 1, 0, [[[-3]]]),
+            ('!=', -1, -1, 0, 1, [[[-3]]]),
+        ]
+    )
+    def test_Threshold_tolerances(
+        self, comparator, increment, threshold, atol, rtol, expected_results, comp_mode
+    ):
+        if comp_mode is pnl.ExecutionMode.LLVM:
+            pytest.skip('ExecutionMode.LLVM does not support Parameter access in conditions')
+
+        A = TransferMechanism(
+            integrator_mode=True,
+            integrator_function=pnl.AccumulatorIntegrator(rate=1, increment=increment),
+        )
+        comp = Composition(pathways=[A])
+
+        comp.termination_processing = {
+            pnl.TimeScale.TRIAL: pnl.Threshold(A, 'value', threshold, comparator, atol=atol, rtol=rtol)
+        }
+
+        comp.run(inputs={A: np.ones(A.defaults.variable.shape)}, execution_mode=comp_mode)
+
+        np.testing.assert_array_equal(comp.results, expected_results)
+
 
 class TestWhenFinished:
 

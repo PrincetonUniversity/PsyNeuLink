@@ -58,7 +58,11 @@ for module in ['scheduler', 'condition', 'time']:
                 cls = cls_name
 
             if cls.__doc__ is None:
-                cls.__doc__ = f'{getattr(ext_module, cls_name).__doc__}'
+                try:
+                    cls.__doc__ = f'{getattr(ext_module, cls_name).__doc__}'
+                except AttributeError:
+                    # PNL-exclusive object
+                    continue
 
             cls.__doc__ = re.sub(pattern, repl, cls.__doc__, flags=re.MULTILINE | re.DOTALL)
 

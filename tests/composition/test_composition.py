@@ -3579,7 +3579,7 @@ class TestRun:
             benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
 
     def test_run_termination_condition_custom_context(self):
-        D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
+        D = pnl.DDM(function=pnl.DriftDiffusionIntegrator, execute_until_finished=False)
         comp = pnl.Composition()
 
         comp.add_node(node=D)
@@ -4807,8 +4807,8 @@ class TestNestedCompositions:
                                                                                           pnl.ALLOCATION_SAMPLES: samples,
                                                                                       })),
                                                          noise=0.5,
-                                                         starting_point=0,
-                                                         t0=0.45),
+                                                         starting_value=0,
+                                                         non_decision_time=0.45),
                        output_ports=[pnl.DECISION_VARIABLE,
                                      pnl.RESPONSE_TIME,
                                      pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -4816,8 +4816,8 @@ class TestNestedCompositions:
         Response = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=1.0,
                                                           threshold=1.0,
                                                           noise=0.5,
-                                                          starting_point=0,
-                                                          t0=0.45),
+                                                          starting_value=0,
+                                                          non_decision_time=0.45),
                         output_ports=[pnl.DECISION_VARIABLE,
                                       pnl.RESPONSE_TIME,
                                       pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -6455,7 +6455,7 @@ class TestResetValues:
             integration_rate=0.2
         )
 
-        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegrator(rate=0.1))
+        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegrator(rate=0.1, time_step_size=1.0))
         C = TransferMechanism(name='C')
 
         comp = Composition()
@@ -7113,8 +7113,8 @@ class TestMisc:
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.25,
+                starting_value=(0),
+                non_decision_time=0.25,
             ),
             name='Decision',
         )
@@ -7143,8 +7143,8 @@ class TestMisc:
                     ),
                 ),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.45
+                starting_value=(0),
+                non_decision_time=0.45
             ),
             name='second_DDM',
         )
