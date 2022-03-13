@@ -5651,7 +5651,7 @@ class TestInputSpecifications:
               num_trials=4)
 
     @pytest.mark.parametrize(
-            "with_outer_controller,with_inner_controller",
+            "with_outer_controller, with_inner_controller",
             [(True, True), (True, False), (False, True), (False, False)]
     )
     def test_input_type_equivalence(self, with_outer_controller, with_inner_controller):
@@ -5675,7 +5675,7 @@ class TestInputSpecifications:
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
                                     function=pnl.SimpleIntegrator,
-                                    name="oController Objective Mechanism"
+                                    name="iController Objective Mechanism"
                             ),
                             function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                             control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],

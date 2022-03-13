@@ -1901,11 +1901,11 @@ class OptimizationControlMechanism(ControlMechanism):
         state_feature_specs lists sources of inputs to *all* INPUT Nodes of agent_rep, at all levels of nesting; there
           is one entry for every INPUT Node in agent_rep, and every INPUT Node of any nested Composition that is
           itself an INPUT Node at any level of nesting.
-            
+
         Construct a state_input_port for every entry in state_feature_specs that is not None:
           the value of those state_input_ports comprise the state_feature_values attribute, and are provided as the
               input to the INPUT Nodes of agent_rep when its evaluate() method is executed (as the **predicted_inputs**
-              argument if agent_rep is a Composition, and the **feature_values** argument if it is a 
+              argument if agent_rep is a Composition, and the **feature_values** argument if it is a
               CompositionFunctionApproximator); for INPUT;
           for None entries in state_feature_specs, the corresponding INPUT Nodes are provided their
               default_external_input_shape as their input when agent_rep.evaluate() executes.
