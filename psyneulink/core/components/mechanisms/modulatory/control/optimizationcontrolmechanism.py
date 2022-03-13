@@ -2738,7 +2738,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find control_allocation that optimizes result of agent_rep.evaluate().
+        """Find control_allocation that optimizes net_outcome of agent_rep.evaluate().
         """
 
         if self.is_initializing:
@@ -3330,7 +3330,6 @@ class OptimizationControlMechanism(ControlMechanism):
     @property
     def state(self):
         """Array that is concatenation of state_feature_values and control_allocations"""
-        # FIX: 3/4/22 - THIS NEEDS TO BE REFACTORED TO HANDLE state_feature_values FOR WHICH THERE IS NO INPUT_PORT
         # Use self.state_feature_values Parameter if state_features specified; else use state_input_port values
         return list(self.state_feature_values.values()) + list(self.control_allocation)
 
