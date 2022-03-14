@@ -4217,7 +4217,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
                                                     f"for 'ports' and 'nodes' at the same time."
-
         input_items = []
         _update_cim = False
 
@@ -8766,10 +8765,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _instantiate_input_dict(self, inputs):
         """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
-        **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions;
-            these can be at any level of nesting within self.
-        Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition specifications
+        **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
+            that can be at any level of nesting within self.
         Validate that all Nodes included in input dict are INPUT nodes of Composition.
+        Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition entries
         If any INPUT nodes of Composition are not included, add them to the input_dict using their default values.
 
         Returns
@@ -8780,124 +8779,102 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        all_inputs_as_ports = {}
         input_dict = {}
 
-        # Check that all keys in inputs dict are INPUT Nodes (or InputPorts of them) in the Composition
-        #    and assign any InputPort specs to their owner Mechanism or Composition
+        # Check that all keys in inputs dict are INPUT Nodes (or InputPorts of them) (nested) in the Composition
+        # Convert any entries for Mechanism or Composition to Port entries in all_inputs_as_ports for processing below
         for item in inputs.keys():
+
             if item in input_nodes:
+                # Item is an INPUT Node, so add it straight to input_dict as is
                 input_dict[item] = inputs[item]
-            else:
-                if isinstance(item, Port):
-                    port = item
+                continue
 
-                    # Validate that it is an InputPort that takes external inputs
-                    if not isinstance(port, InputPort):
-                        raise CompositionError(f"{port} in 'inputs' dict for '{self.name}' that is a {Port.__name__}' "
-                                               f"is not an {InputPort.__name__}.")
-                    if port.internal_only:
-                        raise CompositionError(f"{port} in 'inputs' dict for '{self.name}' that is an "
-                                               f"{InputPort.__name__}' but does not receive external inputs.")
-                    mech = port.owner
-
-                    if mech in input_nodes:
-                        item = mech
-                    else:
-                        # Deal with ports of mech in nested Composition
-                        cim_input_port, cim_output_port = self._get_external_cim_input_port(port, self)
-                        mech = cim_input_port.owner
-                        item = mech.composition
-                        assert item in self.nodes, \
-                            f"PROGRAM ERROR: nested comp returned by _get_external_cim_input_port() " \
-                            f"is not a nested at the top level of {self.name}."
-
-                    assert not (item in inputs and port in inputs), \
-                        f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
-                    assert item in input_nodes, f"PROGRAM ERROR: Input specified for port {port.name} of " \
-                                                f"{item.name} not found in input_nodes of {self.name}."
-
-                    # Get index of input_port on mech
-                    port_idx = port.owner.input_ports.index(port)
-                    port_input = np.atleast_2d(inputs[port])
-                    num_t_for_port = len(port_input)
-                    # Reshape mech's input (to 3d) to accommodate potential time-series input by adding outer dim
-                    if item not in input_dict:
-                        mech_shape = np.zeros(tuple([num_t_for_port] +
-                                                    list(np.array(mech.external_input_shape).shape)),
-                                              dtype='object')
-                        input_dict[item] = mech_shape
-                    # Assign input to element of mech's input value corresponding to port and time
-                    # FIX: 3/12/22 NEED TO:
-                    #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
-                    #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
-                    #       state_feature_functions as Buffers with different histories for each
-                    #  - BE SURE TO FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
-                    #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS INPUTPORT BUT NOW num_t_for_port > 1
-                    #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
-                    #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
-                    # assert not len(port_input) % num_t_for_port <- TAUTOLOGY (SEE DEFN ABOVE)
-                    # Assign input for port at each time (trial) to mech's (3d) input array
-                    for t in range(num_t_for_port):
-                        item_entry = input_dict[item].tolist()
-                        item_entry[t][port_idx] = port_input[t]
-                        input_dict[item] = np.array(item_entry)
-                    # mech has been added to input_dict as INPUT Node; nor more ports to deal with.
-                    ports_of_nested_INPUT_Nodes = None
-
-                elif isinstance(item, Mechanism):
-                    # Item is Mechanism that is either in a nested Composition within self or not in self at all
-                    #     Get its input_ports, for identificaction of corresponding self.input_CIM.input_ports,
-                    #     or exclusion below
-                    ports_of_nested_INPUT_Nodes = item.input_ports
-
-                elif isinstance(item, Composition):
-                    # Item is Composition that is either nested more than one level deep within self or not in self
-                    #     Get its input_CIM_input_ports, for identification of self.input_CIM.input_ports,
-                    #     or exclusion below
-                    ports_of_nested_INPUT_Nodes = item.input_CIM.input_ports
-
-                # FIX: ?CONSOLIDATE WITH ABOVE?
-                if ports_of_nested_INPUT_Nodes:
-                    # Get input_CIM_input_ports of nested Composition in outermost Composition corresponding to ports;
-                    #    use those as keys of input_dict, and assign corresponding input as their values
-
-                    # Assign specifications for nested mechs and/or comps to self.input_CIM.input_ports
-                    nested_comp_cim_input_port, cim_output_port = self._get_external_cim_input_port(port, self)
-                    mech = cim_input_port.owner
-                    item = mech.composition
-                    assert item in self.nodes, \
-                        f"PROGRAM ERROR: nested comp returned by _get_external_cim_input_port() " \
-                        f"is not a nested at the top level of {self.name}."
-                    nested_comp = item
-                    # Iterate over nested node's input_ports
-                    for port in ports_of_nested_INPUT_Nodes:
-                        port_input = np.atleast_2d(inputs[port])
-                        num_t_for_port = len(port_input)
-                        if item not in input_dict:
-                            input_dict[nested_comp] = np.zeros(tuple([num_t_for_port] +
-                                                                     list(np.array(mech.external_input_shape).shape)),
-                                                               dtype='object')
-                        # FIX: 3/4/22 - THIS NEEDS TO REFERENCE state_features.values() AT LEAST FOR SHADOW_INPUTS
-                        for t in range(num_t_for_port):
-                            # Get input for entire nested node
-                            nested_node_input = input_dict[item].tolist()
-                            # Assign port's input (in slot for t) to nested node's input array
-                            nested_node_input[t][port_idx] = port_input[t]
-                            # Assign updated input array for nested node back to input_dict
-                            input_dict[item] = np.array(nested_node_input)
-
-            if item not in input_nodes:
-                if not isinstance(item, (Mechanism, Composition)):
-                    raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' is not a {Mechanism.__name__} "
-                                           f"or {Composition.__name__}, or an {InputPort.__name__} "
-                                           f"of one, that is an INPUT Node of '{self.name}'.")
-                else:
+            if isinstance(item, Port):
+                # Validate that item is an InputPort
+                if not isinstance(item, InputPort):
+                    raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' that is a {Port.__name__}' "
+                                           f"is not an {InputPort.__name__}.")
+                # Validate that InputPort takes external inputs
+                if item.internal_only:
+                    raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' that is an "
+                                           f"{InputPort.__name__}' but does not receive external inputs.")
+                # Validate that InputPort is for an INPUT Node nested at any level within self
+                if item.owner not in self._get_nested_nodes_with_same_roles_at_all_levels(self, NodeRole.INPUT):
                     raise CompositionError(f"{item.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+                all_inputs_as_ports[item] = inputs[item]
 
-        # for entry in input_dict:
-        #     input_dict[entry] = np.atleast_2d(input_dict[entry])
+            elif isinstance(item, (Mechanism, Composition)):
+                # Validate that if item is a Mechanism or Composition it is nested at any level within self
+                if item not in self._get_nested_nodes_with_same_roles_at_all_levels(self, NodeRole.INPUT):
+                    raise CompositionError(f"{item.name} in inputs dict for {self.name} is not one of its INPUT nodes.")
+                # Get its input_ports
+                if isinstance(item, Mechanism):
+                    input_ports = inputs[item].input_ports
+                else:
+                    input_ports = item.input_CIM.input_ports
+                # Standardize its value as 3d to deal with any specs in time series format, and make port outer axis
+                item_input = np.swapaxes(np.atleast_3d(input_ports),0,1)
+                # Expand item to its input_ports in all_inputs_as_ports (for further processing below)
+                for i in range(len(item_input)):
+                    all_inputs_as_ports[input_ports[i]] = item_input[i]
+            else :
+                raise CompositionError(f"{item} in 'inputs' dict for '{self.name}' is not a {Mechanism.__name__} "
+                                       f"or {Composition.__name__}, or an {InputPort.__name__} "
+                                       f"of one, that is an INPUT Node of '{self.name}'.")
 
-        # If any INPUT Nodes of the Composition are not specified, add and assign default_external_input_values
+        # Aggregate all Port specs (originally specified, or generated above for nested Nodes)
+        #    into entries for INPUT Nodes of self in inputs_dict
+        for port in all_inputs_as_ports:
+
+            assert isinstance(item, Port), \
+                f"PROGRAM ERROR: Failed to convert all items in inputs for {self.name} to Ports."
+
+            mech = port.owner
+            # If ports's owner is an INPUT Node of self, make that the item (to be added to input_dict below)
+            if mech in input_nodes:
+                node = mech
+            else:
+                # Deal with ports of mech in nested Composition
+                cim_input_port, cim_output_port = self._get_external_cim_input_port(port, self)
+                mech = cim_input_port.owner
+                node = mech.composition
+                assert node in self.nodes, \
+                    f"PROGRAM ERROR: nested comp returned by _get_external_cim_input_port() " \
+                    f"is not a nested at the top level of {self.name}."
+
+            assert not (node in inputs and port in inputs), \
+                f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
+            assert node in input_nodes, f"PROGRAM ERROR: Input specified for port {port.name} of " \
+                                        f"{node.name} not found in input_nodes of {self.name}."
+
+            # Get index of input_port on mech
+            port_idx = port.owner.input_ports.index(port)
+            port_input = np.atleast_2d(inputs[port])
+            num_t_for_port = len(port_input)
+            # Reshape mech's input (to 3d) to accommodate potential time-series input by adding outer dim
+            if node not in input_dict:
+                mech_shape = np.zeros(tuple([num_t_for_port] +
+                                            list(np.array(mech.external_input_shape).shape)),
+                                      dtype='object')
+                input_dict[node] = mech_shape
+            # Assign input to element of mech's input value corresponding to port and time
+            # FIX: 3/12/22 NEED TO:
+            #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
+            #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
+            #       state_feature_functions as Buffers with different histories for each
+            #  - FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
+            #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS INPUTPORT BUT NOW num_t_for_port > 1
+            #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
+            #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
+            # Assign input for port at each time (trial) to mech's (3d) input array
+            for t in range(num_t_for_port):
+                node_entry = input_dict[node].tolist()
+                node_entry[t][port_idx] = port_input[t]
+                input_dict[node] = np.array(node_entry)
+
+        # If any INPUT Nodes of the Composition are not specified, add them and assign default_external_input_values
         for node in input_nodes:
             if node not in input_dict:
                 input_dict[node] = node.external_input_shape
