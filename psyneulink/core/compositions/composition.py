@@ -8830,7 +8830,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         num_trials = 1
         for port in all_inputs_as_ports:
 
-            assert isinstance(item, Port), \
+            assert isinstance(port, Port), \
                 f"PROGRAM ERROR: Failed to convert all items in inputs for {self.name} to Ports."
 
             mech = port.owner
