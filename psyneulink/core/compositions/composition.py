@@ -8770,6 +8770,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Validate that all Nodes included in input dict are INPUT nodes of Composition.
         Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition entries
         If any INPUT nodes of Composition are not included, add them to the input_dict using their default values.
+        Note: all entries must specify either a single trial's worth of input, or the same number as all others.
 
         Returns
         -------
@@ -8826,6 +8827,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Aggregate all Port specs (originally specified, or generated above for nested Nodes)
         #    into entries for INPUT Nodes of self in inputs_dict
+        num_trials = 1
         for port in all_inputs_as_ports:
 
             assert isinstance(item, Port), \
@@ -8851,27 +8853,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
             # Get index of input_port on mech
             port_idx = port.owner.input_ports.index(port)
+            # Standardize on 2d in case some entries are specified as trial-series
             port_input = np.atleast_2d(inputs[port])
-            num_t_for_port = len(port_input)
-            # Reshape mech's input (to 3d) to accommodate potential time-series input by adding outer dim
+
+            # FIX: 3/12/22 NEED TO:
+            #  - TEST FOR TRIAL SERIES OF DIFFERENT LENGTHS
+            #       WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
+            #       state_feature_functions as Buffers with different histories for each
+            #  - ??FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
+            #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS InputPort BUT NOW num_t_for_port > 1
+            #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
+            #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
+            # Get number of trials of input specified for Port
+            num_trials_for_port = len(port_input)
+            # Enforce that number of trials specified can be 1 or the same as all others that have more than one
+            if num_trials == 1:
+                num_trials = num_trials_for_port
+            elif num_trials_for_port not in {1, num_trials}:
+                raise CompositionError(f"Number of trials of input specified for {port.full_name} of {node.name} "
+                                       f"({num_trials_for_port}) is different from the number ({num_trials}) "
+                                       f"specified for one or more others.")
             if node not in input_dict:
-                mech_shape = np.zeros(tuple([num_t_for_port] +
+                # Shape Node's input as 3d to accommodate potential trial-series input by adding outer dim
+                mech_shape = np.zeros(tuple([num_trials_for_port] +
                                             list(np.array(mech.external_input_shape).shape)),
                                       dtype='object')
                 input_dict[node] = mech_shape
-            # Assign input to element of mech's input value corresponding to port and time
-            # FIX: 3/12/22 NEED TO:
-            #  - CHECK FOR TIME SERIES OF DIFFERENT LENGTHS (HERE OR IN PARSE INPUT DICT)
-            #    CAN TEST WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
-            #       state_feature_functions as Buffers with different histories for each
-            #  - FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
-            #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS INPUTPORT BUT NOW num_t_for_port > 1
-            #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
-            #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
-            # Assign input for port at each time (trial) to mech's (3d) input array
-            for t in range(num_t_for_port):
+            # Assign input to port for each trial to Node's 3d input array
+            for trial in range(num_trials_for_port):
                 node_entry = input_dict[node].tolist()
-                node_entry[t][port_idx] = port_input[t]
+                node_entry[trial][port_idx] = port_input[trial]
                 input_dict[node] = np.array(node_entry)
 
         # If any INPUT Nodes of the Composition are not specified, add them and assign default_external_input_values

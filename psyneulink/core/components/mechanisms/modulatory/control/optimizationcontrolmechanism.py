@@ -2563,7 +2563,7 @@ class OptimizationControlMechanism(ControlMechanism):
         try:
             # Call this to check for errors in constructing inputs dict
             self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
-        except RunError as error:
+        except (RunError, CompositionError) as error:
             raise OptimizationControlMechanismError(
                 f"The '{STATE_FEATURES}' argument has been specified for '{self.name}' that is using a "
                 f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but some of the "
