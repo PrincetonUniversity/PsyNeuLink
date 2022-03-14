@@ -1083,7 +1083,7 @@ to execute the current set of inputs. The inputs for each `TRIAL <TimeScale.TRIA
 dictionary <Composition_Input_Dictionary>`; for the `run <Composition.run>` and `learn <Composition.learn>` methods,
 they can also be specified `programmatically <Composition_Programmatic_Inputs>`. Irrespective of format, the same
 number of inputs must be specified for every `INPUT` Node, unless only one value is specified for a Node (in which
-case that value is provided as the input to that Node for every `TRIAL <TimeScale.TRIAL>`\\s executed). If the
+case that value is repeated as the input to that Node for every `TRIAL <TimeScale.TRIAL>`\\s executed). If the
 **inputs** argument is not specified for the `run <Composition.run>` or `execute <Composition.execute>` methods,
 the `default_variable <Component_Variable>` for each `INPUT` Node is used as its input on `TRIAL <TimeScale.TRIAL>`.
 If it is not specified for the `learn <Composition.learn>` method, an error is generated unless its **targets**
@@ -1117,6 +1117,13 @@ in the `external_input_ports <Mechanism_Base.external_input_ports>` attribute of
 of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the Composition being executed
 (see `above <Composition_Nested_External_Input_Ports>`).  The format required can also be seen using the
 `get_input_format() <Composition.get_input_format>` method.
+
+COMMENT:
+FIX: 3/12/22 - THIS SHOULD BE REVISED TO INDICATE THAT INPUTS TO INDIVIDUAL InputPorts CAN BE SPECIFIED
+                  (AT ANY LEVEL OF NESTING), AND THAT DEFAULT VALUES WILL BE ASSIGNED TO ANY THAT ARE UNSPECIED;
+                  SAME CONSTRAINTS APPLY FOR ONLY 1 OR SAME NUM TRIALS ACROSS PORTS AS ACROSS NODES
+             - ALSO, REFER TO default_input_shope RATHER THAN default_variable AS THE DEFAULT INPUT;
+COMMENT
 
 .. note::
    Most Mechanisms have only a single `InputPort`, and thus require only a single input to be specified for them
@@ -8556,7 +8563,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 _input = [_input]
             else:
                 # if _input is None, it may mean there are multiple trials of input in the stimulus set,
-                #     so in list comprehension below loop through and validate each individual input
+                #     so in list comprehension below loop through and validate each individual input;
                 _input = [self._validate_single_input(receiver, single_trial_input) for single_trial_input in stimulus]
                 # Look for any bad ones (for which _validate_single_input() returned None) and report if found
                 if any(i is None for i in _input):
@@ -8569,12 +8576,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     elif isinstance(receiver, Composition):
                         receiver_shape = receiver.input_CIM.external_input_shape
                         receiver_name = receiver.name
-                    # incompatible_stimulus = np.atleast_1d(np.array(stimulus[_input.index(None)], dtype=object))
-                    incompatible_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)],
-                                                                             dtype=object)))
-                    correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
-                    err_msg = f"Input stimulus ({incompatible_stimulus}) for {receiver_name} is incompatible with " \
-                              f"the shape of its external input ({correct_stimulus})."
+                    # # MODIFIED 3/12/22 OLD:
+                    # bad_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)], dtype=object)))
+                    # correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
+                    # err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
+                    #           f"the shape of its external input ({correct_stimulus})."
+                    # MODIFIED 3/12/22 NEW:
+                    # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
+                    #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
+                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object)))
+                    bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
+                    bad_stimulus = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object)))
+                    err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
+                              f"the shape of its external input ({receiver_shape})."
+                    # MODIFIED 3/12/22 END
                     # 8/3/17 CW: I admit the error message implementation here is very hacky;
                     # but it's at least not a hack for "functionality" but rather a hack for user clarity
                     if "KWTA" in str(type(receiver)):
@@ -8825,6 +8840,76 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"or {Composition.__name__}, or an {InputPort.__name__} "
                                        f"of one, that is an INPUT Node of '{self.name}'.")
 
+        # FIX: 3/12/22 - NEED TO PREPROCESS PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
+        #                TO SET mech_shape FOR BELOW, AND ASSIGN FILLERS FOR ONES THAT ARE SHORT OF THE MAX LENGTH
+        #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF MAX
+        #                (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
+        #                ALSO NO NEED TO WORRY ABOUT DIFFERENCES ACROSS NODES, AS THAT TOO WILL BE TESTED THERE
+        for node in input_nodes:
+            # FIX: STRATEGY
+            #      √ CREATE holding_dict
+            #      √ CREATE CLASS FOR ASSGINMENT TO VALUES OF ENTRIES IN holding_dict
+            #      √/? THEN, FOR EACH INPUT Node:
+            #        √ IF THE INPUT NODE IS FOUND IN inputs, COPY DIRECTLY TO input_dicts;
+            #        ? [? HERE OR LATER: ERROR IF ANY OTHER ENTRIES FOUND IN inputs RELATED TO THAT NODE]
+            #      - OTHERWISE:
+            #        - IF NODE IS MECH:
+            #          - LOOK FOR ANY OTHER ENTRIES THAT ARE ITS input_ports:
+            #            - ADD ENTRY IN holding_dict FOR INPUT NODE
+            #            - POP ENTRY FROM inputs
+            #            - APPEND ENTRY TO DICT IN InputNode.ports ATTRIBUTE
+            #            - GET MAX PORT SIZE, CONSTRUCT mech_shape AND ASSIGN TO InputNode.input_shape ATTRIBUTE
+            #        - IF NODE IS COMP:
+            #          - LOOK FOR ANY OTHER ENTRIES THAT ARE NESTED UNDER IT (Mechs AND Ports):
+            #            - ADD ENTRY IN holding_dict FOR INPUT NODE
+            #            - APPEND ENTRY TO DICT IN InputNode.ports ATTRIBUTE
+            #            - GET MAX PORT SIZE, CONSTRUCT input_CIM AND ASSIGN TO InputNode.input_shape ATTRIBUTE
+            #      - GENERATE ERRORS FOR ANY ENTRIES THAT ARE:
+            #        - NOT IN self._get_all_nodes():
+            #        - PORTS THAT ARE NOT INPUT_PORTS
+
+        holding_dict = {}
+        class InputNode():
+            def __init(self):
+                node_shape = []
+                ports = {}
+        for node in input_nodes:
+            # FIX: THIS REPEATS ABOVE;  DO IT HERE OR THERE BUT NOT BOTH
+            if node in inputs:
+                # If node is an INPUT Node specified in inputs, assign directly to input_dict
+                input_dict[node] = inputs.pop(node)
+                continue
+            if isinstance(node, Mechanism)
+
+
+
+            mech = port.owner
+            # If ports's owner is an INPUT Node of self, make that the item (to be added to input_dict below)
+            if mech in input_nodes:
+                node = mech
+            else:
+                # Deal with ports of mech in nested Composition
+                cim_input_port, cim_output_port = self._get_external_cim_input_port(port, self)
+                mech = cim_input_port.owner
+                node = mech.composition
+
+
+
+
+
+
+
+
+            # self._get_all_nodes():
+
+            # FIX: FILTER FOR NON-INPUT_PORTS AS NODES HERE?
+            # FIX: FILTER FOR INPUT_PORTS OF NON-INPUT NODES HERE?
+            # Only bother with InputPorts (others will be caught in validation below)
+            mech = node if isinstance(node, Mechanism) else node.input_CIM
+            ports_for_node = [p for p in inputs if p in mech.input_ports]
+
+        # ------------------------------------------------------------
+        # OLD:
         # Aggregate all Port specs (originally specified, or generated above for nested Nodes)
         #    into entries for INPUT Nodes of self in inputs_dict
         num_trials = 1
@@ -8845,7 +8930,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert node in self.nodes, \
                     f"PROGRAM ERROR: nested comp returned by _get_external_cim_input_port() " \
                     f"is not a nested at the top level of {self.name}."
-
             assert not (node in inputs and port in inputs), \
                 f"PROGRAM ERROR: Can't' specify both Mechanism and its InputPort(s) in input dict."
             assert node in input_nodes, f"PROGRAM ERROR: Input specified for port {port.name} of " \
@@ -8855,15 +8939,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             port_idx = port.owner.input_ports.index(port)
             # Standardize on 2d in case some entries are specified as trial-series
             port_input = np.atleast_2d(inputs[port])
-
-            # FIX: 3/12/22 NEED TO:
-            #  - TEST FOR TRIAL SERIES OF DIFFERENT LENGTHS
-            #       WITH CompartorMechanism InputPorts AS SEPARATE state_features AND
-            #       state_feature_functions as Buffers with different histories for each
-            #  - ??FILL ANY PORTS THAT ARE NOT TIME-SERIES SPECIFIED WITH REPEAT OF SPEC
-            #  - DEAL WITH num_t_for_port=1 FOR PREVIOUS InputPort BUT NOW num_t_for_port > 1
-            #      ??GET MAX LEN OF ANY PORT INPUTS ALREADY ASSIGNED TO MECH; BUT HOW?
-            #      PRE_PROCESS AT OUTSET TO GET MAX num_t_for_port FOR EACH MECH?
             # Get number of trials of input specified for Port
             num_trials_for_port = len(port_input)
             # Enforce that number of trials specified can be 1 or the same as all others that have more than one
