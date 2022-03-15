@@ -483,8 +483,12 @@ def _gen_cuda_kernel_wrapper_module(function):
     tid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.tid.x")
     ntid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ntid.x")
     ctaid_x_f = ir.Function(module, intrin_ty, "llvm.nvvm.read.ptx.sreg.ctaid.x")
+
+    # Number of threads per block
     ntid = builder.call(ntid_x_f, [])
+    # Thread ID in block
     tid = builder.call(tid_x_f, [])
+
     global_id = builder.mul(builder.call(ctaid_x_f, []), ntid)
     global_id = builder.add(global_id, tid)
 
@@ -517,12 +521,13 @@ def _gen_cuda_kernel_wrapper_module(function):
         obj_size = b.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
 
         if "unaligned_copy" not in debug_env:
-            int_ty = ir.IntType(32)
-            int_ptr_ty = int_ty.as_pointer()
-            obj_size = builder.add(obj_size, obj_size.type((int_ty.width // 8) - 1))
-            obj_size = builder.udiv(obj_size, obj_size.type(int_ty.width // 8))
-            ptr_src = builder.bitcast(ptr, int_ptr_ty)
-            ptr_dst = builder.bitcast(shared_ptr, int_ptr_ty)
+            copy_ty = ir.IntType(32)
+            copy_ptr_ty = copy_ty.as_pointer()
+            copy_bytes = copy_ty.width // 8
+            obj_size = builder.add(obj_size, obj_size.type(copy_bytes - 1))
+            obj_size = builder.udiv(obj_size, obj_size.type(copy_bytes))
+            ptr_src = builder.bitcast(ptr, copy_ptr_ty)
+            ptr_dst = builder.bitcast(shared_ptr, copy_ptr_ty)
 
 
         # copy data using as many threads as available in thread group

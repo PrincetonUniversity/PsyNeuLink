@@ -2313,16 +2313,22 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
-        try:
-            # MODIFIED 4/4/20 NEW: [PER JAN]
-            if len(self.path_afferents) > 0:
-                assert len(func_input_type) == len(self.path_afferents), \
-                    "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
-                        self, func_input_type, self.defaults.variable,
-                        self.function.defaults.variable, len(self.path_afferents))
-            # MODIFIED 4/4/20 END
-        except (PortError):
-            pass
+
+        # Not all ports have path_afferents property.
+        len_path_afferents = len(self._get_all_afferents()) - len(self.mod_afferents)
+
+        # Check that either all inputs or none are delivered by projections.
+        if len_path_afferents > 0:
+            assert len(func_input_type) == len_path_afferents, \
+                "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
+                    self, func_input_type, self.defaults.variable,
+                    self.function.defaults.variable, len(self.path_afferents))
+
+        if len(self.mod_afferents) == 0:
+            # Not need to wrap inputs of non-modulated ports inside mechanisms
+            # This makes sure the port input matches port data input and avoids a copy
+            return func_input_type
+
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
@@ -2395,7 +2401,10 @@ class Port_Base(Port):
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
-        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if len(self.mod_afferents) == 0:
+            f_input = arg_in
+        else:
+            f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder
