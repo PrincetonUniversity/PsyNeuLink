@@ -2626,12 +2626,12 @@ class TestRunInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler=sched)[0]
 
-        assert np.allclose(np.array(A.get_output_values(comp)).tolist(), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(np.array(B.get_output_values(comp)).tolist(), [[3., 6., 9.]])
-        assert np.allclose(np.array(C.get_output_values(comp)).tolist(), [[0.]])
-        assert np.allclose(np.array(D.get_output_values(comp)).tolist(), [[4.]])
+        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        assert np.allclose(C.get_output_values(comp), [[0.]])
+        assert np.allclose(D.get_output_values(comp), [[4.]])
         for i,j in zip(comp.results[0], [[2., 4.], [6., 8.], [3., 6., 9.],[0.], [4.]]):
-            assert np.allclose(np.array(i).tolist(),j)
+            assert np.allclose(i,j)
 
     def test_some_inputs_not_specified_origin_node_is_composition(self):
 
@@ -2663,11 +2663,11 @@ class TestRunInputSpecifications:
         sched = Scheduler(composition=comp)
         comp.run(inputs=inputs, scheduler=sched)[0]
 
-        assert np.allclose(np.array(A.get_output_values(comp)).tolist(), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(np.array(compA.get_output_values(comp)).tolist(), [[2.0, 4.0], [6.0, 8.0]])
-        assert np.allclose(np.array(B.get_output_values(comp)).tolist(), [[3., 6., 9.]])
-        assert np.allclose(np.array(C.get_output_values(comp)).tolist(), [[0.]])
-        assert np.allclose(np.array(D.get_output_values(comp)).tolist(), [[4.]])
+        assert np.allclose(A.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(compA.get_output_values(comp), [[2.0, 4.0], [6.0, 8.0]])
+        assert np.allclose(B.get_output_values(comp), [[3., 6., 9.]])
+        assert np.allclose(C.get_output_values(comp), [[0.]])
+        assert np.allclose(D.get_output_values(comp), [[4.]])
 
     def test_heterogeneous_variables_drop_outer_list(self):
         # from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism

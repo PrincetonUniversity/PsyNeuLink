@@ -9061,7 +9061,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         input_port_entries[input_CIM_input_port] = port_inputs[i]
                     inputs_to_remove.add(input_recvr)
 
-            # Get max number of trials across specified input_ports of INPUT_Node:
+            # Get max number of trials across specified input_ports of INPUT_Node
             max_num_trials = 1
             for port in input_port_entries:
                 assert mech == port.owner
@@ -9075,11 +9075,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 max_num_trials = max(num_trials, max_num_trials)
 
             # Construct node_input_shape based on max_num_trials across all input_ports for mech
-            # Shape as 3d by adding outer dim = max_num trials to accommodate potential trial-series input
+            #   Shape as 3d by adding outer dim = max_num trials to accommodate potential trial-series input
             node_input = np.empty(tuple([max_num_trials] +
                                         list(np.array(mech.external_input_shape).shape)),
                                   dtype='object').tolist()
             # MODIFIED 3/14/22 NEW:
+            #   Move ports to outer access for processing below
             node_input = np.swapaxes(np.atleast_3d(node_input),0,1)
             # MODIFIED 3/14/22 END
 
@@ -9097,7 +9098,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input[i] = port_spec
 
             # MODIFIED 3/14/22 OLD:
-            input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(node_input),0,1)
+            # Put trials back in outer axis
+            input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(node_input),0,1).tolist()
             # # MODIFIED 3/14/22 NEW:
             # input_dict[INPUT_Node] = node_input
             # MODIFIED 3/14/22 END
