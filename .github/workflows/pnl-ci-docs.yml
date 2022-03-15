@@ -39,19 +39,23 @@ jobs:
       on_master: ${{ steps.on_master.outputs.on-branch }}
 
     steps:
+    # increased fetch-depth and tag checkout needed as in pnl-ci.yml
     - name: Checkout sources
       uses: actions/checkout@v3
       if: ${{ matrix.pnl-version == 'head' }}
       with:
-        fetch-depth: 10
+        fetch-depth: 200
         ref: ${{ github.ref }}
 
     - name: Checkout pull base
       uses: actions/checkout@v3
       if: ${{ matrix.pnl-version == 'base' }}
       with:
-        fetch-depth: 10
+        fetch-depth: 200
         ref: ${{ github.base_ref }}
+
+    - name: Checkout tags
+      run: git fetch --tags origin master
 
     - name: Check if on master
       if: ${{ github.event_name == 'push' }}
