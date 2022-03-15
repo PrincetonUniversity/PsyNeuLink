@@ -8912,13 +8912,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         input_dict = {}
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
+        remaining_inputs = set(inputs)
 
         # Construct input_dict from input_nodes of self
         for INPUT_Node in input_nodes:
 
             if INPUT_Node in inputs:
                 # If entry is for a INPUT_Node that is an INPUT Node of self, assign the entry directly to input_dict
-                input_dict[INPUT_Node] = inputs.pop(INPUT_Node)
+                input_dict[INPUT_Node] = inputs[INPUT_Node]
+                remaining_inputs.remove(INPUT_Node)
                 continue
 
             # If INPUT_Node is a Composition, get its input_CIM as mech
@@ -8930,39 +8932,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             #          since there may be multiple Port entries for a given INPUT Node
             #          and need to process all of them to determine shape entry (node_input_shape)
             input_port_entries = {}
-            for input_recvr in inputs:
-
+            inputs_to_remove = set()
+            for input_recvr in remaining_inputs:
                 # Get spec and remove entry from inputs
-                input_spec = inputs.pop(input_recvr)
+                input_spec = inputs[input_recvr]
+                # Standardize spec as 3d to deal with any specs in time series format, and make port outer axis
+                port_inputs = np.swapaxes(np.atleast_3d(input_spec),0,1)
 
                 # Entry is InputPort of INPUT_Node itself (usually of a standard Mechanism, but could be of input_CIM)
                 if input_recvr in mech.input_ports:
                     input_port_entries[input_recvr] = input_spec
+                    inputs_to_remove.add(input_recvr)
 
                 # If INPUT_Node is a Composition, check if input_recvr is for an INPUT Node nested under it;
                 #    if so, get the input_port(s) of mech.input_CIM to which its inputs correspond
                 elif (isinstance(INPUT_Node, Composition)
                       and ((input_recvr.owner if isinstance(input_recvr, Port) else input_recvr) in
                            INPUT_Node._get_nested_nodes_with_same_roles_at_all_levels(INPUT_Node, NodeRole.INPUT))):
-                    # Spec is for Port so assign to entry for corresponding input_CIM_input_port of INPUT_Node
                     if isinstance(input_recvr, Port):
-                        input_port_entries[input_CIM_input_port] = input_spec
-                    # Spec is for Mechanism or Composition
+                        # Spec is for Port so assign to entry for corresponding input_CIM_input_port of INPUT_Node
+                        input_ports = [input_recvr]
                     else:
-                        # Get its input_ports
+                        # Spec is for Mechanism or Composition so get its input_ports
                         input_ports = (input_recvr.input_ports if isinstance(input_recvr, Mechanism)
                                        else input_recvr.input_CIM.input_ports)
-                        # Standardize spec as 3d to deal with any specs in time series format, and make port outer axis
-                        port_inputs = np.swapaxes(np.atleast_3d(input_spec),0,1)
-                        # For each port in input_ports of Mech or Compositions input_CIM
-                        for i, input_port in enumerate(input_ports):
-                            # Get corresponding InputPort of input_CIM for INPUT_Node
-                            input_CIM_input_port, _ = self._get_external_cim_input_port(input_port, self)
-                            assert input_CIM_input_port.owner == mech, \
-                                f"PROGRAM ERROR: Unexpected input_CIM_input_port retrieved for entry ({input_recvr}) " \
-                                f"in inputs to '{self.name}'."
-                            # Assign spec for InputPort to entry for corresponding InputPort on input_CIM of INPUT_Node
-                            input_port_entries[input_CIM_input_port] = port_inputs[i]
+                    # For each port in input_ports of Mech or Compositions input_CIM
+                    for i, input_port in enumerate(input_ports):
+                        # Get corresponding InputPort of input_CIM for INPUT_Node
+                        input_CIM_input_port, _ = self._get_external_cim_input_port(input_port, self)
+                        assert input_CIM_input_port.owner == mech, \
+                            f"PROGRAM ERROR: Unexpected input_CIM_input_port retrieved for entry ({input_recvr}) " \
+                            f"in inputs to '{self.name}'."
+                        # Assign spec for InputPort to entry for corresponding InputPort on input_CIM of INPUT_Node
+                        input_port_entries[input_CIM_input_port] = port_inputs[i]
+                    inputs_to_remove.add(input_recvr)
 
             # Get max number of trials across specified input_ports of INPUT_Node:
             max_num_trials = 1
@@ -8986,23 +8989,29 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                               list(np.array(mech.external_input_shape).shape)),
                                         dtype='object')
             input_dict[INPUT_Node] = node_input_shape
+            remaining_inputs = remaining_inputs - inputs_to_remove
 
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
             for i, port in enumerate(INPUT_input_ports):
                 if port in input_port_entries:
                     port_spec = np.array(input_port_entries[port]).tolist()
+                    if len(port_spec) < max_num_trials:
+                        assert len(port_spec) == 1, f"PROGRAM ERROR: Length of port_spec for '{port.full_name}' " \
+                                                    f"in input to '{self.name}' ({len(port_spec)}) should now be " \
+                                                    f"1 or {max_num_trials}."
+                        port_spec = [np.array(port_spec[0]).tolist()] * max_num_trials
                 else:
                     # port_spec = np.full((max_num_trials, len(INPUT_Node.default_input_shape)),
                     #                     INPUT_Node.default_input_shape)
-                    port_spec = [np.array(INPUT_Node.default_input_shape).tolist()] * max_num_trials
+                    port_spec = [np.array(port.default_input_shape).tolist()] * max_num_trials
                 node_entry = input_dict[INPUT_Node].tolist()
                 node_entry[i] = port_spec
                 input_dict[INPUT_Node] = np.array(node_entry)
 
-        if inputs:
+        if remaining_inputs:
             raise CompositionError(f"The following items specified in the 'inputs' arg of the run() method for "
                                    f"'{self.name}' are not INPUT Nodes of that Composition (nor InputPorts "
-                                   f"of them): {', '.join(inputs)}.")
+                                   f"of them): {remaining_inputs}.")
 
         # If any INPUT Nodes of the Composition are not specified, add them and assign default_external_input_values
         for node in input_nodes:
