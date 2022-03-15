@@ -9079,7 +9079,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_input = np.empty(tuple([max_num_trials] +
                                         list(np.array(mech.external_input_shape).shape)),
                                   dtype='object').tolist()
-            remaining_inputs = remaining_inputs - inputs_to_remove
+            # MODIFIED 3/14/22 NEW:
+            node_input = np.swapaxes(np.atleast_3d(node_input),0,1)
+            # MODIFIED 3/14/22 END
 
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
             for i, port in enumerate(INPUT_input_ports):
@@ -9093,7 +9095,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 else:
                     port_spec = [np.array(port.default_input_shape).tolist()] * max_num_trials
                 node_input[i] = port_spec
+
+            # MODIFIED 3/14/22 OLD:
             input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(node_input),0,1)
+            # # MODIFIED 3/14/22 NEW:
+            # input_dict[INPUT_Node] = node_input
+            # MODIFIED 3/14/22 END
+            remaining_inputs = remaining_inputs - inputs_to_remove
         # MODIFIED 3/14/22 END
 
         if remaining_inputs:
