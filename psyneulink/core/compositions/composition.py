@@ -8881,7 +8881,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                         list(np.array(mech.external_input_shape).shape)),
                                   dtype='object').tolist()
             # - move ports to outer access for processing below
-            node_input = np.swapaxes(np.atleast_3d(node_input),0,1).tolist()
+            # # MODIFIED 3/15/22 OLD:
+            # node_input = np.swapaxes(np.atleast_3d(node_input),0,1).tolist()
+            # MODIFIED 3/15/22 NEW:
+            node_input = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            # MODIFIED 3/15/22 END
 
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
             for i, port in enumerate(INPUT_input_ports):
@@ -8897,7 +8901,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 node_input[i] = port_spec
 
             # Put trials back in outer axis
-            input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(node_input),0,1).tolist()
+            # # MODIFIED 3/15/22 OLD:
+            # input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(node_input),0,1).tolist()
+            # MODIFIED 3/15/22 NEW:
+            input_dict[INPUT_Node] = np.swapaxes(np.atleast_3d(np.array(node_input, dtype=object)),0,1).tolist()
+            # MODIFIED 3/15/22 END
             remaining_inputs = remaining_inputs - inputs_to_remove
 
         if remaining_inputs:
