@@ -9084,6 +9084,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             node_input = np.swapaxes(np.atleast_3d(node_input),0,1)
             # MODIFIED 3/14/22 END
 
+            # FIX: 3/15/22 - NEED TO DEAL WITH t HERE??
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
             for i, port in enumerate(INPUT_input_ports):
                 if port in input_port_entries:
