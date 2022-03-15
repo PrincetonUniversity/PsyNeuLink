@@ -370,6 +370,10 @@ def make_likelihood_function(
 
 
 class MaxLikelihoodEstimatorFunction(OptimizationFunction):
+    """
+    A class for performing parameter estimation for a  maximum likelihood estimation on a PsyNeuLink composition using the
+    ParameterEstimationComposition.
+    """
     pass
 
 class MaxLikelihoodEstimator:

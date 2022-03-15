@@ -95,12 +95,16 @@ class OptimizationFunction(Function_Base):
     prefs=None)
 
     Provides an interface to subclasses and external optimization functions. The default `function
-    <OptimizationFunction.function>` executes iteratively, generating samples from `search_space
-    <OptimizationFunction.search_space>` using `search_function <OptimizationFunction.search_function>`,
-    evaluating them using `objective_function <OptimizationFunction.objective_function>`, and reporting the
-    value of each using `report_value <OptimizationFunction.report_value>` until terminated by
-    `search_termination_function <OptimizationFunction.search_termination_function>`. Subclasses can override
+    <OptimizationFunction.function>` raises a not implemented exception. Subclasses must implement
+    the default function. The `_evaluate <OptimizationFunction._evaluate>` method implements the default procedure
+    of generating samples from `search_space <OptimizationFunction.search_space>` using
+    `search_function <OptimizationFunction.search_function>`, evaluating them using
+    `objective_function <OptimizationFunction.objective_function>`, and reporting the value of each using
+    `report_value <OptimizationFunction.report_value>` until terminated by
+    `search_termination_function <OptimizationFunction.search_termination_function>`. Subclasses must override
     `function <OptimizationFunction.function>` to implement their own optimization function or call an external one.
+    The base class method `_evaluate <OptimizationFunction._evaluate>` maybe be used to implement the optimization
+    procedure.
 
     Samples in `search_space <OptimizationFunction.search_space>` are assumed to be a list of one or more
     `SampleIterator` objects.
@@ -109,7 +113,7 @@ class OptimizationFunction(Function_Base):
 
     **Default Optimization Procedure**
 
-    When `function <OptimizationFunction.function>` is executed, it iterates over the following steps:
+    When `_evaluate <OptimizationFunction._evaluate>` is executed, it iterates over the following steps:
 
         - get sample from `search_space <OptimizationFunction.search_space>` by calling `search_function
           <OptimizationFunction.search_function>`;
@@ -1346,7 +1350,7 @@ class GridSearch(OptimizationFunction):
 
     **Grid Search Procedure**
 
-    When `function <GridSearch.function>` is executed, it iterates over the folowing steps:
+    When `function <GridSearch.function>` is executed, it iterates over the following steps:
 
         - get next sample from `search_space <GridSearch.search_space>`;
         ..
