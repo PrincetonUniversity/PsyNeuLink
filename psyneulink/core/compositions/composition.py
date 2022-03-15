@@ -9081,7 +9081,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                   dtype='object').tolist()
             # MODIFIED 3/14/22 NEW:
             #   Move ports to outer access for processing below
-            node_input = np.swapaxes(np.atleast_3d(node_input),0,1)
+            node_input = np.swapaxes(np.atleast_3d(node_input),0,1).tolist()
             # MODIFIED 3/14/22 END
 
             # FIX: 3/15/22 - NEED TO DEAL WITH t HERE??
@@ -9096,6 +9096,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         port_spec = [np.array(port_spec[0]).tolist()] * max_num_trials
                 else:
                     port_spec = [np.array(port.default_input_shape).tolist()] * max_num_trials
+                # FIX: 3/15/22 - ??PUT CHECK FOR SHAPE MISMATCH HERE?? (for port_spec[0] AGAINST node_input[i][0])
                 node_input[i] = port_spec
 
             # MODIFIED 3/14/22 OLD:
