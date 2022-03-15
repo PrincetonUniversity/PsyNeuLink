@@ -8890,12 +8890,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # Assign specs to ports of INPUT_Node, using ones in input_port_entries or defaults
             for i, port in enumerate(INPUT_input_ports):
                 if port in input_port_entries:
-                    port_spec = np.array(input_port_entries[port]).tolist()
+                    port_spec = np.atleast_2d(input_port_entries[port]).tolist()
+                    # port_spec = [np.array(input_port_entries[port]).tolist()]
                     if len(port_spec) < max_num_trials:
                         assert len(port_spec) == 1, f"PROGRAM ERROR: Length of port_spec for '{port.full_name}' " \
                                                     f"in input to '{self.name}' ({len(port_spec)}) should now be " \
                                                     f"1 or {max_num_trials}."
                         port_spec = [np.array(port_spec[0]).tolist()] * max_num_trials
+                        # port_spec = [np.array(port_spec).tolist()] * max_num_trials
                 else:
                     port_spec = [np.array(port.default_input_shape).tolist()] * max_num_trials
                 node_input[i] = port_spec
