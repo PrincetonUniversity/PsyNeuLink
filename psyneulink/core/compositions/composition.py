@@ -1146,18 +1146,17 @@ inputs, as described in detail below (also see `examples <Composition_Examples_I
 
 The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
 the inputs to a given `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`. The key for each entry of the dict is
-either an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` or the `InputPort` of one, or the name of one of these
-(i.e., its `name <Component.name>` attribute), and the value is the input to be provided to it for each `TRIAL
-<TimeScale.TRIAL>` of execution.  A diciontary can have entries for *either* an INPUT Node or one or more of its
-InputPorts, but *not both*.  Entries can be for any `INPUT <NodeRole.INPUT>` Node (or the Inputport(s) of
-one) at any level of nesting within the Composition, so long it is nested under INPUT Nodes at all levels of nesting
-(that is, an INPUT Node of a nested Composition can only be included if the nested Composition is a INPUT Node of the
-Composition to which it belongs). Any INPUT Nodes for which no input is specified (that is, for which there are no
-entries in the inputs dictionary) are assigned their `default_external_inputs <Mechanism_Base.default_external_inputs>`
-on each `TRIAL <TimeScale.TRIAL>` of execution; similarly, if the dictionary contains entries for some but not all of
-the InputPorts of a Node, the remaining InputPorts are assigned their `default_input <InputPort.default_input>` on
-each `TRIAL <TimeScale.TRIAL>` of execution.  See below for additional information concerning `entries for Nodes
-<Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
+either an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` or the `InputPort` of one, and the value is the input
+to be provided to it for each `TRIAL <TimeScale.TRIAL>` of execution.  A diciontary can have entries for *either* an
+INPUT Node or one or more of its InputPorts, but *not both*.  Entries can be for any `INPUT <NodeRole.INPUT>` Node
+(or the Inputport(s) of one) at any level of nesting within the Composition, so long it is nested under INPUT Nodes
+at all levels of nesting (that is, an INPUT Node of a nested Composition can only be included if the nested Composition
+is a INPUT Node of the Composition to which it belongs). Any INPUT Nodes for which no input is specified (that is, for
+which there are no entries in the inputs dictionary) are assigned their `default_external_inputs
+<Mechanism_Base.default_external_inputs>` on each `TRIAL <TimeScale.TRIAL>` of execution; similarly, if the dictionary
+contains entries for some but not all of the InputPorts of a Node, the remaining InputPorts are assigned their
+`default_input <InputPort.default_input>` on each `TRIAL <TimeScale.TRIAL>` of execution.  See below for additional
+information concerning `entries for Nodes <Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
 <Composition_Input_Dictionary_InputPort_Entries>`).
 
 *Input values*. The value of each entry is an ndarray or nested list containing the inputs to that Node or InputPort.
@@ -1176,18 +1175,19 @@ when the Composition is executed (as determined by the number of input values sp
 
 .. _Composition_Input_Dictionary_Node_Entries:
 
-*Node entries*. Entries specifying the input to a `Node <Composition_Nodes>` must specify the input to *all* of its
+*Node entries*.  The key must be an `INPUT <NodeRole>` `Node <Composition_Nodes>`of the Composition, or the name of
+one (i.e., the str in its `name <Component.name>` attribute), and the value must specify the input to *all* of its
 InputPorts (other than those designated as `internal_only <InputPort.internal_only>`; see `above
-<Composition_Input_Internal_Only>`), and the values specified must be compatible with each of the corresponding
-InputPorts (listed in the  `external_input_ports <Mechanism_Base.external_input_ports>` attribute of a Mechanism,
-and similarly in the `external_input_ports <Composition.external_input_ports>` attribute of a Composition). More
-specifically, the shape of each item in the outer dimension (i.e., the input for each `TRIAL <TimeScale.TRIAL>`,
-as described `above <Composition_Input_Dictionary_Input_Values>`) must be compatible with the shape of the Node's
-`external_input_shape <Mechanism_Base.external_input_shape>` attribute if it is Mechanism, and similarly
-the `external_input_shape <Composition.external_input_shape>` attribute of a Composition). While these are
-always 2d arrays, the number and size of the 1d arrays within them (corresponding to each InputPort) may vary; in
-some case shorthand notations are allowed, as illustrated in the `examples <Composition_Examples_Input_Dictionary>`
-below.
+<Composition_Input_Internal_Only>`) for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  The values for each
+`TRIAL <TimeScale.TRIAL>` must be compatible with each of the corresponding InputPorts (listed in the
+`external_input_ports <Mechanism_Base.external_input_ports>` attribute of a Mechanism, and similarly in the
+`external_input_ports <Composition.external_input_ports>` attribute of a Composition). More specifically,
+the shape of each item in the outer dimension (i.e., the input for each `TRIAL <TimeScale.TRIAL>`, as described `above
+<Composition_Input_Dictionary_Input_Values>`) must be compatible with the shape of the Node's
+`external_input_shape <Mechanism_Base.external_input_shape>` attribute if it is Mechanism, and similarly the
+`external_input_shape <Composition.external_input_shape>` attribute of a Composition). While these are always 2d
+arrays, the number and size of the 1d arrays within them (corresponding to each InputPort) may vary; in some case
+shorthand notations are allowed, as illustrated in the `examples <Composition_Examples_Input_Dictionary>` below.
 
     .. _Composition_Execution_Input_Dict_Fig:
 
@@ -1205,16 +1205,21 @@ below.
 
 .. _Composition_Input_Dictionary_InputPort_Entries:
 
-*InputPort Entries*. The inputs to one or more of the external `InputPorts <InputPort>` of an `INPUT <NodeRole.INPUT>`
-`Node <Composition_Nodes>` (that is, those that are not designated as `internal_only <InputPort.internal_only>`; see
-`above <Composition_Input_Internal_Only>`) can be specified in individual entries, instead of specifying all of them
-in a single entry for the Node. This can be useful if only some InputPorts should receive inputs, or the input for
-some needs to remain constant across `TRIAL <TimeScale.TRIAL>`\\s (by providing it with only one input value) while
-the input to others vary (i.e., by providing input_values for every `TRIAL <TimeScale.TRIAL>`).  The value of each
-entry must be a 2d array or nested list containing the input for either a single `TRIAL <TimeScale.TRIAL>` or all
-`TRIAL <TimeScale.TRIAL>`\\s, each of which must match the `input_shape <InputPort.input_shape>` of the InputPort.
-As with Nodes, if there are entries for some but not all of a Node's InputPorts, the ones not specified are assigned
-their `default_input <InputPort.default_input>` values for every `TRIAL <TimeScale.TRIAL>` of execution.
+*InputPort Entries*. The key must be an external `InputPort` (that is, one that is not designated as `internal_only
+<InputPort.internal_only>`; see `above <Composition_Input_Internal_Only>`) for an `INPUT <NodeRole>` `Node
+<Composition_Nodes>` of the Composition, or the `full_name <Port.full_name>` of one, and the value must specify the
+input for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  Any or all of the InputPorts for an`INPUT <NodeRole>`
+`Node <Composition_Nodes>` can be specified, but an inputs dictionary cannot have specifications for both the Node
+and any of its InputPorts.  If the name of an InputPort is used as the key, its the str in its `full_name
+<Port.full_name>` attribute must be used, to ensure disambiguation from any similarly named InputPorts of other
+Nodes.  Specifying InputPorts individually (instead of specifying all of them in a single entry for a Node) can be
+if only some InputPorts should receive inputs, or the input for some needs to remain constant across `TRIAL
+<TimeScale.TRIAL>`\\s (by providing it with only one input value) while the input to others vary (i.e., by providing
+input_values for every `TRIAL <TimeScale.TRIAL>`).  The value of each entry must be a 2d array or nested list
+containing the input for either a single `TRIAL <TimeScale.TRIAL>` or all `TRIAL <TimeScale.TRIAL>`\\s, each of which
+must match the `input_shape <InputPort.input_shape>` of the InputPort. As with Nodes, if there are entries for some
+but not all of a Node's InputPorts, the ones not specified are assigned their `default_input <InputPort.default_input>`
+values for every `TRIAL <TimeScale.TRIAL>` of execution.
 
 COMMENT:
     Example of input dictionary show various ways of specifying inputs for Nodes and InputPorts::
