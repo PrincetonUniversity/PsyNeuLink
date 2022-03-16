@@ -39,7 +39,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx.ext.mathjax',
-    'sphinx_autodoc_typehints',
+    # 'sphinx_autodoc_typehints',
     'technical_note'
     # 'sphinx.ext.imgmath'
 ]
