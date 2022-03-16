@@ -72,7 +72,7 @@ ObjectiveMechanism will be assigned Projections from all of the OutputPorts that
 used to specify attributes of the InputPort and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to
 monitor the specified OutputPort.  In general, the `value <OutputPort.value>` of each specified OutputPort determines
 the format of the `variable <InputPort.variable>` of the InputPort that is created for it by the ObjectiveMechanism.
-However, this can be overridden using the ObjectiveMechanism's `default_variable <Mechanism_Base.default_variable>`
+However, this can be overridden using the ObjectiveMechanism's `default_variable <Component_Variable>`
 or `size <Mechanism_Base.size>` attributes (see `Mechanism InputPort specification
 <Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputPort to the InputPort (see
 `Input Source Specification <InputPort_Projection_Source_Specification>`). If an item in the

@@ -675,8 +675,12 @@ class InputPort(Port_Base):
            <NodeRole.ORIGIN>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
            from its `input_CIM <Composition_CIM>`.
 
+    input_shape : 1d array
+        shows the shape of the input to the InputPort;  that is, the shape of the `value <Projection_Base.value>`
+        expected for any `path_afferent Projections <Port_Base.path_afferents>`.
+
     function : Function
-        If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
+        if it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
         <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputPort  (listed in
         its `path_afferents <Port_Base.path_afferents>` attribute), under the possible influence of `GatingProjections
         <GatingProjection>` received by the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>`
@@ -1371,6 +1375,11 @@ class InputPort(Port_Base):
         except:
             assert False, f"PROGRAM ERROR: Missing or unrecognized 'changes_shape' attribute for " \
                           f"('{self.function.name}') of '{self.name}'."
+
+    @property
+    def input_shape(self):
+        """Alias for default_input_shape_template"""
+        return self.default_input_shape
 
     @property
     def default_input_shape(self):

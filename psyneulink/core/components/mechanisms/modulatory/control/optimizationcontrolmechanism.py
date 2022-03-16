@@ -257,7 +257,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   <OptimizationControlMechanism.state_feature_values>` (see `below
   <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning any **state_features** explicitly
   overrides their automatic assignment, so that *all* required ones must be specified explicitly, as described below.
-  Any that are *not* specified will be assigned the value of their `default_variable <Mechanism_Base.default_variable>`
+  Any that are *not* specified will be assigned the value of their `default_variable <Component_Variable>`
   when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is
   executed.
 
