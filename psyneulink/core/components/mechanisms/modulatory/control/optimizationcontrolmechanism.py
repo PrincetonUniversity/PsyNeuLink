@@ -1025,7 +1025,7 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList, is_numeric
+from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -3255,7 +3255,7 @@ class OptimizationControlMechanism(ControlMechanism):
         """
         # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
         #              for unspecified InputPorts if "needs_update_controller" is False
-        #              - GET SOURCE OR SHADOWED SPEC XXX
+        #              - GET SOURCE OR SHADOWED SPEC
         self._update_state_features_dict()
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
         # FIX: CONSTRAIN TO ONLY GET SOURCES: HERE OR BY ADDING ARG TO state_distal_sources_and_destinations_dict()
