@@ -1074,7 +1074,7 @@ how the results of execution are recorded and reported.
 - `Composition_Input_Dictionary`
 - `Composition_Programmatic_Inputs`
 
-All `methods of executing <Composition_Execution_Methods> a Composition require specification of an **inputs**
+All `methods of executing <Composition_Execution_Methods>` a Composition require specification of an **inputs**
 argument (and a **targets** argument for `learn <Composition.learn>` method), which designates the values assigned
 to the `INPUT <NodeRole.INPUT>` `(and, for learning, the `TARGET <NodeRole.TARGET>`) Nodes <Composition_Nodes>`
 of the Composition.  These are provided to the Composition each time it is executed; that is, for each `TRIAL
@@ -1118,13 +1118,6 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the 
 (see `above <Composition_Nested_External_Input_Ports>`).  The format required can also be seen using the
 `get_input_format() <Composition.get_input_format>` method.
 
-COMMENT:
-FIX: 3/12/22 - THIS SHOULD BE REVISED TO INDICATE THAT INPUTS TO INDIVIDUAL InputPorts CAN BE SPECIFIED
-                  (AT ANY LEVEL OF NESTING), AND THAT DEFAULT VALUES WILL BE ASSIGNED TO ANY THAT ARE UNSPECIED;
-                  SAME CONSTRAINTS APPLY FOR ONLY 1 OR SAME NUM TRIALS ACROSS PORTS AS ACROSS NODES
-             - ALSO, REFER TO default_input_shope RATHER THAN default_variable AS THE DEFAULT INPUT;
-COMMENT
-
 .. _Composition_Input_Internal_Only:
 
 .. note::
@@ -1151,18 +1144,18 @@ inputs, as described in detail below (also see `examples <Composition_Examples_I
 
 .. _Composition_Input_Dictionary_Entries:
 
-*Entries*. The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry
-specifies the inputs to a given `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`. The key for each entry of the
-dict is either an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` or the `InputPort` of one, or the name of one
-of these (i.e., its `name <Component.name>` attribute), and the value is the input to be provided to it for each `TRIAL
+The simplest way to specificy inputs (including targets for learning) is using a dict, in which each entry specifies
+the inputs to a given `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>`. The key for each entry of the dict is
+either an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` or the `InputPort` of one, or the name of one of these
+(i.e., its `name <Component.name>` attribute), and the value is the input to be provided to it for each `TRIAL
 <TimeScale.TRIAL>` of execution.  A diciontary can have entried for *either* an INPUT Node or one or more of its
-InputPorts, but *not both*.  Entries can be for any `INPUT <NodeRole.INPUT>` `Node (or the Inputport(s) of
+InputPorts, but *not both*.  Entries can be for any `INPUT <NodeRole.INPUT>` Node (or the Inputport(s) of
 one) at any level of nesting within the Composition, so long it is nested under INPUT Nodes at all levels of nesting
 (that is, an INPUT Node of a nested Composition can only be included if the nested Composition is a INPUT Node of the
 Composition to which it belongs).  Any INPUT Nodes for which no input is specified (that is, for which there are no
-entries in the inputs dictionary) are assigned their `default input <Mechanism_Base.default_variable>` on each `TRIAL
+entries in the inputs dictionary) are assigned their `default input <Mechanism_Base_Default_Input>` on each `TRIAL
 <TimeScale.TRIAL>` of execution;  similarly, if the dictionary contains entries for some but not all of the InputPorts
-of a Node, the remaining InputPorts are assigned their `default_variable <InputPort.default input>` on each `TRIAL
+of a Node, the remaining InputPorts are assigned their `default input <InputPort_Default_Input>` on each `TRIAL
 <TimeScale.TRIAL>` of execution.
 
 .. _Composition_Input_Dictionary_Input_Values:
@@ -1190,7 +1183,7 @@ InputPorts (listed in the  `external_input_ports <Mechanism_Base.external_input_
 and similarly in the `external_input_ports <Composition.external_input_ports>` attribute of a Composition). More
 specifically, the shape of each item in the outer dimension (i.e., the input for each `TRIAL <TimeScale.TRIAL>`,
 as described `above <Composition_Input_Dictionary_Input_Values>`) must be compatible with the shape of the Node's
-`external_input_variables` attribute <Mechanism_Base.external_input_variables>` if it is Mechanism, and similarly
+`external_input_variables <Mechanism_Base.external_input_variables>` attribute if it is Mechanism, and similarly
 the `external_input_variables <Composition.external_input_variables>` attribute of a Composition). While these are
 always 2d arrays, the number and size of the 1d arrays within them (corresponding to each InputPort) may vary; in
 some case shorthand notations are allowed, as illustrated in the `examples <Composition_Examples_Input_Dictionary>`
@@ -1215,7 +1208,7 @@ below.
 *InputPort Entries*.  Instead of specifying the inputs to all of the InputPorts of a Node in a single entry,
 the inputs to one or more of them (that are not designated as `internal_only <InputPort.internal_only>`; see `above
 <Composition_Input_Internal_Only>`) can be specified in individual entries.  This can be useful if only some
-InputPorts should receive inputs, or the input for some needs to remain constant across `TRIAL <TimeScale.TRIAL>`s
+InputPorts should receive inputs, or the input for some needs to remain constant across `TRIAL <TimeScale.TRIAL>`\\s
 (by providing it with only one input value) while the input to others varies (by providing input_values for every
 `TRIAL <TimeScale.TRIAL>`).  As with Nodes, if there are entries for some but not all InputPorts, the ones not
 specified are assigned their `default input <InputPort.default_variable>` for every `TRIAL <TimeScale.TRIAL>` of
@@ -1227,7 +1220,8 @@ COMMENT
 
 .. _Composition_Input_Labels:
 
-In general, the value of inputs should be numeric arrays;  however, some Mechanisms have an `input_labels_dict
+*Input Labels*. In general, the value of inputs should be numeric arrays;  however, some Mechanisms have an
+`input_labels_dict
 <Mechanism_Base.input_labels_dict>` that specifies a mapping from strings (labels) to numeric values, in which those
 strings can be used to specify inputs to that Mechanism (these are translated to their numeric values on execution).
 However, such labels are specific to a given Mechanism;  use of strings as input to a Mechanism that does not have an
@@ -1236,8 +1230,8 @@ dictionary for that Mechanism generates and error.
 
 .. _Composition_Target_Inputs:
 
-For learning, inputs must also be specified for the `TARGET_MECHANISM <Composition_Learning_Components>` of each
-`learning Pathway <Composition_Learning_Pathway>` in the Composition.  This can be done in either the **inputs**
+*Target Inputs for learning*. Inputs must also be specified for the `TARGET_MECHANISM <Composition_Learning_Components>`
+of each `learning Pathway <Composition_Learning_Pathway>` in the Composition. This can be done in either the **inputs**
 argument or **targets** argument of the `learn <Composition.learn>` method.  If the **inputs** argument is used,
 it must include an entry for each `TARGET_MECHANISM <Composition_Learning_Components>`; if the **targets** argument
 is used, it must be assigned a dictionary containing entries in which the key is either an `OUTPUT_MECHANISM
