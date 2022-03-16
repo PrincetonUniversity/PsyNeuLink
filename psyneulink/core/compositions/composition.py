@@ -1155,7 +1155,7 @@ one) at any level of nesting within the Composition, so long it is nested under 
 Composition to which it belongs). Any INPUT Nodes for which no input is specified (that is, for which there are no
 entries in the inputs dictionary) are assigned their `default_external_inputs <Mechanism_Base.default_external_inputs>`
 on each `TRIAL <TimeScale.TRIAL>` of execution; similarly, if the dictionary contains entries for some but not all of
-the InputPorts of a Node, the remaining InputPorts are assigned their `default input <InputPort_Default_Input>` on
+the InputPorts of a Node, the remaining InputPorts are assigned their `default_input <InputPort.default_input>` on
 each `TRIAL <TimeScale.TRIAL>` of execution.  See below for additional information concerning `entries for Nodes
 <Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
 <Composition_Input_Dictionary_InputPort_Entries>`).

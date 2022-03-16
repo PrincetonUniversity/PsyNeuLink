@@ -673,7 +673,7 @@ class InputPort(Port_Base):
            <InputPort.internal_only>` attribute is automtically assigned True. This is so that if the `Mechanism`
            to which the InputPort belongs is assigned to a `Composition`, it is not treated as an `ORIGIN
            <NodeRole.ORIGIN>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
-           from its `input_CIM <Composition_CIM>`.
+           from its `input_CIM <Composition.input_CIM>`.
 
     input_shape : 1d array
         shows the shape of the input to the InputPort;  that is, the shape of the `value <Projection_Base.value>`
