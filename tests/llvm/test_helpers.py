@@ -220,10 +220,9 @@ def test_helper_all_close(mode, var1, var2, atol, rtol):
 @pytest.mark.llvm
 @pytest.mark.parametrize("ir_argtype,format_spec,values_to_check", [
     (pnlvm.ir.IntType(32), "%u", range(0, 20)),
-    (pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
+    (pnlvm.ir.IntType(64), "%lld", [int(-4E10), int(-3E10), int(-2E10)]),
     (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)]),
     ], ids=["i32", "i64", "double"])
-@pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
     format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -240,12 +239,16 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
 
-    # Printf is buffered in libc.
     bin_f()
-    libc = ctypes.util.find_library("c")
+    # Printf is buffered in libc.
+    libc = ctypes.util.find_library("msvcrt" if sys.platform == "win32" else "c")
     libc = ctypes.CDLL(libc)
     libc.fflush(0)
-    assert capfd.readouterr().out == format_str % tuple(values_to_check)
+
+    # Convert format specifier to Python compatible
+    python_format_spec = {"%lld":"%ld"}.get(format_spec, format_spec)
+    python_format_str = f"Hello {(python_format_spec+' ')*len(values_to_check)} \n"
+    assert capfd.readouterr().out == python_format_str % tuple(values_to_check)
 
 class TestHelperTypegetters:
     FLOAT_TYPE = pnlvm.ir.FloatType()
