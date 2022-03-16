@@ -10,8 +10,12 @@
 
 from contextlib import contextmanager
 from ctypes import util
+import warnings
+import sys
 
 from llvmlite import ir
+import llvmlite.binding as llvm
+
 
 from .debug import debug_env
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
@@ -383,14 +387,19 @@ def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
         return
+
     #FIXME: Fix builtin printf and use that instead of this
-    try:
-        import llvmlite.binding as llvm
-        libc = util.find_library("c")
-        llvm.load_library_permanently(libc)
-        # Address will be none if the symbol is not found
-        printf_address = llvm.address_of_symbol("printf")
-    except Exception as e:
+    libc_name = "msvcrt" if sys.platform == "win32" else "c"
+    libc = util.find_library(libc_name)
+    if libc is None:
+        warnings.warn("Standard libc library not found, 'printf' not available!")
+        return
+
+    llvm.load_library_permanently(libc)
+    # Address will be none if the symbol is not found
+    printf_address = llvm.address_of_symbol("printf")
+    if printf_address is None:
+        warnings.warn("'printf' symbol not found in libc, 'printf' not available!")
         return
 
     # Direct pointer constants don't work
