@@ -615,10 +615,11 @@ Class Reference
 """
 
 import copy
-import numpy as np
-import typecheck as tc
 import types
 import warnings
+
+import numpy as np
+import typecheck as tc
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -627,7 +628,8 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
     MAPPING_PROJECTION, MECHANISM_VALUE, NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
-    OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, \
+    OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
+    VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
@@ -1282,10 +1284,6 @@ class OutputPort(Port_Base):
     @property
     def calculate(self):
         return self.assign
-
-    @property
-    def label(self):
-        return self.get_label()
 
     def get_label(self, context=None):
         try:

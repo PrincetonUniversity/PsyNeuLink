@@ -771,29 +771,28 @@ import numbers
 import sys
 import types
 import warnings
-
-from collections.abc import Iterable
 from collections import defaultdict
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
-    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE,\
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE, \
     EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_PORTS, OVERRIDE, OWNER, \
-    PATH_AFFERENTS, PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
+    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
@@ -2234,6 +2233,15 @@ class Port_Base(Port):
             if np.allclose(labels_dict[key][label], self.parameters.value.get(context)):
                 return label
         return self.parameters.value.get(context)
+
+    @property
+    def labeled_value(self):
+        return self.get_label()
+
+    @property
+    def value_label(self):
+        """Alias of labeled_value"""
+        return self.labeled_value
 
     @property
     def owner(self):

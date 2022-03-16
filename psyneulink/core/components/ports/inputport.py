@@ -521,14 +521,13 @@ Class Reference
 """
 import collections
 import inspect
-import itertools
 import numbers
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -1353,10 +1352,6 @@ class InputPort(Port_Base):
     @property
     def socket_template(self):
         return np.zeros(self.socket_width)
-
-    @property
-    def label(self):
-        return self.get_label()
 
     def get_label(self, context=None):
         try:
