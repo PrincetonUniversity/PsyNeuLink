@@ -1243,13 +1243,21 @@ COMMENT:
     >>> I = ProcessingMechanism(name='I')
     >>> outer_comp = Composition(pathways=[nested_comp_1, nested_comp_2], nodes=[H, I, nested_comp_3]])
 
-    >>> input_dict = {A.input_ports['SAMPLE']:[[.5]],
-    ...               A.input_ports['TARGET']:[[1],[2]], <- REPLACE WITH NAME
-    ...               B:[[[3,4,5]]],
-    ...               "C":[[[.5],[1]]],
+    >>> input_dict = {A.input_ports['SAMPLE']:[[.5]],  # Note: only a signle TRIAL of input is specified
+    ...               A['TARGET']:[[1],[2]],           # Note: name of InputPort is used as key
+    ...               B:[[[3,4,5]]],                   # Note: only a signle TRIAL of input is specified
+    ...               "C":[[[.5],[1]]],                # Note: name of Node is used as key
     ...               D:[[[6,7,8]],[[9,10,11]]],
-    ...               nested_comp_3: [[[12,13],[14,15]], [[16],[17]], [[18],[19]]]}
+    ...               nested_comp_3: [[[12]],[[13]],   # Note: full input nested Composition is provide
+    ...                              [[14]],[[15]]]}   #       for each TRIAL of execution
+    >>> outer_comp.get_input_format()
+    >>> outer_comp.external_input_shape
+    >>> outer_comp.get_external_input_ports
     >>> outer_comp.run(inputs=inputs)
+    Add output here
+
+    Show example of get_input_format()
+    Show example of get_external_inputs
 
     In this example, `ComparatorMechanism` ``A`` has two `InputPorts <InputPort>` that are specified inidividually,
     one of which (``SAMPLE``) has only one `TRIAL <TimeScale.TRIAL>` of input specified, while the other
