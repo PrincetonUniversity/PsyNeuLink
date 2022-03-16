@@ -2701,6 +2701,7 @@ from PIL import Image
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component, ComponentsMeta
+from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 from psyneulink.core.components.functions.function import is_function_type
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import LinearCombination, \
     PredictionErrorDeltaFunction
@@ -2765,7 +2766,6 @@ from psyneulink.library.components.mechanisms.processing.objective.predictionerr
 from psyneulink.library.components.mechanisms.processing.transfer.recurrenttransfermechanism import \
     RecurrentTransferMechanism
 from psyneulink.library.components.projections.pathway.autoassociativeprojection import AutoAssociativeProjection
-from psyneulink.core.components.functions.fitfunctions import make_likelihood_function
 
 __all__ = [
     'Composition', 'CompositionError', 'CompositionRegistry', 'EdgeType', 'get_compositions', 'NodeRole'
@@ -10981,7 +10981,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # Get all values for all OUTPUT Nodes
         if use_labels:
             # Get labels for corresponding values
-            values = [node.output_labels for node in output_nodes]
+            values = [node.labeled_output_values for node in output_nodes]
         else:
             values = self.results[-1] or self.output_values
 
