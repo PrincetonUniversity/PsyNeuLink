@@ -8763,11 +8763,21 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _parse_names_in_inputs(self, inputs):
         names = []
+        # Get keys that are names rather than Components
         for key in inputs:
             if isinstance(key, str):
                 names.append(key)
-        named_nodes = [(node, node.name) for node in self.get_nodes_by_role(NodeRole.INPUT) if node.name in names]
-        for node, name in named_nodes:
+        # named_entries = [(node, node.name) for node in self.get_nodes_by_role(NodeRole.INPUT) if node.name in names]
+        named_entries = []
+        for node in self.get_nodes_by_role(NodeRole.INPUT):
+            if node.name in names:
+                named_entries.append((node, node.name))
+            else:
+                for port in node.input_ports:
+                    if port.full_name in names:
+                        named_entries.append((port, port.full_name))
+        # Replace name with node itself in key
+        for node, name in named_entries:
             inputs[node] = inputs.pop(name)
         return inputs
 
@@ -8898,10 +8908,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # #                ALSO NO NEED TO WORRY ABOUT DIFFERENCES ACROSS NODES, AS THAT TOO WILL BE TESTED THERE
 
         # Validate that keys for inputs are all legal entries
-        bad_entries = [repr(entry) for entry in inputs if not isinstance(entry, (InputPort, Mechanism, Composition))]
+        bad_entries = [repr(key) for key in inputs
+                       if not isinstance(key, (InputPort, Mechanism, Composition))]
         if bad_entries:
-            assert False, f"One or more entries are specified in the inputs for '{self.name}' that are not a " \
-                          f"a Mechanism, Composition, or InputPort of one: {', '.join(bad_entries)}."
+            assert False, f"One or more entries are specified in the inputs for '{self.name}' that are not " \
+                          f"a Mechanism, Composition, or an InputPort of one: {', '.join(bad_entries)}."
 
         input_dict = {}
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)

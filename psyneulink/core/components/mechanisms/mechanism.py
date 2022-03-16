@@ -4264,12 +4264,10 @@ class MechanismList(UserList):
         """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
         return self._get_attributes_dict('input_port_values', 'input_ports', 'value')
 
-    # MODIFIED 3/16/22 OLD:
     @property
     def input_values(self):
         """Return dict with input_values for all Mechanisms in MechanismList"""
         return self._get_attributes_dict('values', 'value')
-    # MODIFIED 3/16/22 END
 
     @property
     def parameter_port_names(self):
@@ -4291,9 +4289,7 @@ class MechanismList(UserList):
         """Return dict with values of OutputPorts for all Mechanisms in MechanismList"""
         return self._get_attributes_dict('output_port_values', 'output_ports', 'value')
 
-    # MODIFIED 3/16/22 OLD:
     @property
     def output_values(self):
         """Return dict with output_values for all Mechanisms in MechanismList"""
         return self._get_attributes_dict('values', 'value')
-    # MODIFIED 3/16/22 END
