@@ -965,24 +965,24 @@ class DriftDiffusionAnalytical(DistributionFunction):  # -----------------------
 
     drift_rate : float, list or 1d array : default 1.0
         specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
+        it must be the same length as `default_variable <Component_Variable>`.
 
     threshold : float, list or 1d array : default 1.0
         specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-        it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
+        it must be the same length as `default_variable <Component_Variable>`.
 
     starting_value : float, list or 1d array : default 1.0
         specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-        array, it must be the same length as `default_variable <DriftDiffusionAnalytical.default_variable>`.
+        array, it must be the same length as `default_variable <Component_Variable>`.
 
     noise : float, list or 1d array : default 0.0
         specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
         If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-        `default_variable <DriftDiffusionAnalytical.default_variable>` and all elements must be floats from 0 to 1.
+        `default_variable <Component_Variable>` and all elements must be floats from 0 to 1.
 
     non_decision_time : float, list or 1d array : default 0.2
         specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-        list or array, it must be the same length as  `default_variable <DriftDiffusionAnalytical.default_variable>` and all
+        list or array, it must be the same length as  `default_variable <Component_Variable>` and all
         elements must be floats from 0 to 1.
 
     params : Dict[param keyword: param value] : default None

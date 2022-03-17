@@ -462,8 +462,7 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AccumulatorIntegrator.variable>` (see `initializer
-        <AccumulatorIntegrator.initializer>` for details).
+        `variable <AccumulatorIntegrator.variable>` (see `initializer <AccumulatorIntegrator.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -741,8 +740,7 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration;  if it is a list or array, it must be the same length as
-        `default_variable <SimpleIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>`
-        for details).
+        `variable <SimpleIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -970,8 +968,7 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
 
     initializer : float, list or 1d array : default 0.0
         specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <AdaptiveIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>`
-        for details).
+        `variable <AdaptiveIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -1880,9 +1877,8 @@ class InteractiveActivationIntegrator(IntegratorFunction):  # ------------------
         <IntegratorFunction.variable>` (see `noise <Integrator.noise>` for details).
 
     initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <InteractiveActivationIntegrator.variable>`
-        (see `initializer <IntegratorFunction.initializer>` for details).
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as `variable
+        <InteractiveActivationIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -2222,9 +2218,8 @@ class DriftDiffusionIntegrator(IntegratorFunction):  # -------------------------
         <DriftDiffusionIntegrator.time_step_size>` for details.
 
     initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <DriftDiffusionIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>`
-        for details).
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as `variable
+        <DriftDiffusionIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3263,9 +3258,8 @@ class OrnsteinUhlenbeckIntegrator(IntegratorFunction):  # ----------------------
         <OrnsteinUhlenbeckIntegrator.time_step_size>` for details.
 
     initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <OrnsteinUhlenbeckIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>`
-        for details).
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as `variable
+        <OrnsteinUhlenbeckIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -3624,9 +3618,8 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         <LeakyCompetingIntegrator.time_step_size>` for details.
 
     initializer : float, list or 1d array : default 0.0
-        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as
-        `default_variable <LeakyCompetingIntegrator.default_variable>` (see `initializer
-        <IntegratorFunction.initializer>` for details).
+        specifies starting value(s) for integration.  If it is a list or array, it must be the same length as `variable
+        <LeakyCompetingIntegrator.variable>` (see `initializer <IntegratorFunction.initializer>` for details).
 
     params : Dict[param keyword: param value] : default None
         a `parameter dictionary <ParameterPort_Specification>` that specifies the parameters for the
@@ -4050,11 +4043,11 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
     initial_w : float, list or 1d array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FitzHughNagumoIntegrator.variable>`
+        `variable <FitzHughNagumoIntegrator.variable>`.
 
     initial_v : float, list or 1d array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FitzHughNagumoIntegrator.variable>`
+        `variable <FitzHughNagumoIntegrator.variable>`
 
     time_step_size : float : default 0.1
         specifies the time step size of numerical integration
@@ -4144,11 +4137,11 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
     initial_w : float, list or 1d array : default 0.0
         specifies starting value for integration of dw/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FitzHughNagumoIntegrator.variable>`
+        `variable <FitzHughNagumoIntegrator.variable>`
 
     initial_v : float, list or 1d array : default 0.0
         specifies starting value for integration of dv/dt.  If it is a list or array, it must be the same length as
-        `default_variable <FitzHughNagumoIntegrator.variable>`
+        `variable <FitzHughNagumoIntegrator.variable>`
 
     time_step_size : float : default 0.1
         specifies the time step size of numerical integration

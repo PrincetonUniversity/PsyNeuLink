@@ -74,7 +74,7 @@ __all__ = [
     'MATRIX', 'MATRIX_KEYWORD_NAMES', 'MATRIX_KEYWORD_SET', 'MATRIX_KEYWORD_VALUES', 'MATRIX_KEYWORDS','MatrixKeywords',
     'MAX_ABS_DIFF', 'MAX_ABS_INDICATOR', 'MAX_ONE_HOT', 'MAX_ABS_ONE_HOT', 'MAX_ABS_VAL',
     'MAX_EXECUTIONS_BEFORE_FINISHED', 'MAX_INDICATOR', 'MAX_VAL', 'MAYBE', 'MEAN',
-    'MECHANISM', 'MECHANISM_COMPONENT_CATEGORY', 'MECHANISM_DEFAULT', 'MECHANISM_DEFAULTInputValue',
+    'MECHANISM', 'MECHANISM_COMPONENT_CATEGORY', 'MECHANISM_DEFAULT', 'MECHANISM_DEFAULT_INPUT_VALUE',
     'MECHANISM_DEFAULTParams', 'MECHANISM_EXECUTED_LOG_ENTRY', 'MECHANISM_NAME', 'MECHANISM_PARAM_VALUE',
     'MECHANISM_TYPE', 'MECHANISM_VALUE', 'MEDIAN', 'METRIC', 'MIN_VAL', 'MIN_ABS_VAL', 'MIN_ABS_INDICATOR',
     'MOD_AFFERENTS', 'MODE', 'MODULATES','MODULATION', 'MODULATORY_PROJECTION', 'MODULATORY_SIGNAL',
@@ -683,7 +683,7 @@ MECHANISM_DEFAULT = "DEFAULT MECHANISM"
 DEFAULT_PROCESSING_MECHANISM = "DefaultProcessingMechanism"
 PROCESS_DEFAULT_MECHANISM = "ProcessDefaultMechanism"
 MECHANISM_TYPE = "Mechanism Type" # Used in mechanism dict specification (e.g., in process.pathway[])
-MECHANISM_DEFAULTInputValue = "Mechanism Default Input Value " # Used in mechanism specification dict
+MECHANISM_DEFAULT_INPUT_VALUE = "Mechanism Default Input Value " # Used in mechanism specification dict
 MECHANISM_PARAM_VALUE = "Mechanism Parameter Value"                 # Used to specify mechanism param value
 MECHANISM_DEFAULTParams = "Mechanism Default Parameters"           # Used in mechanism specification dict
 CONDITION = 'condition'
