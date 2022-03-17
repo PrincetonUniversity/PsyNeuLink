@@ -324,15 +324,16 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     InputPorts are assigned the `state_feature_default <OptimizationControlMechanism.state_feature_default>`;
     ``None`` can also be used as an entry in the list to "skip" that item (i.e., specify that it is assigned the
     `state_feature_default <OptimizationControlMechanism.state_feature_default>`.  If the `state_feature_default
-    <OptimizationControlMechanism.state_feature_default>` is ``None`` (*its* default value), then that InputPort
-    will be assigned the value of its `default variable <Component.defaults>` as its input when the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is executed.
-    Items can be included in the list that have not yet been added to the OptimizationControlMechanism's Composition
-    or its `agent_rep <OptimizationControlMechanism.agent_rep>`, that are either sources of input to `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s  `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`, or those
-    Nodes themselves.  However, these must be added before the Composition is executed, and must appear in the list
-    in the same position that the InputPorts to which they pertain are listed in the `agent_rep
-    <OptimizationControlMechanism.agent_rep>`\\'s `external_input_ports_of_all_input_nodes
+    <OptimizationControlMechanism.state_feature_default>` is ``None`` (*its* default value), then no `state_input_port
+    <OptimizationControlMechanism.state_input_ports>` is constructed for that source, and the InputPort of the
+    `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` will be assigned the value of its `default variable
+    <Component.defaults>` as its input when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate
+    <Composition.evaluate>` method is executed. Items can be included in the list that have not yet been added to the
+    OptimizationControlMechanism's Composition or its `agent_rep <OptimizationControlMechanism.agent_rep>`, that are
+    either sources of input to `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s  `INPUT <NodeRole.INPUT>`
+    `Nodes <Composition_Nodes>`, or those Nodes themselves.  However, these must be added before the Composition is
+    executed, and must appear in the list in the same position that the InputPorts to which they pertain are listed
+    in the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `external_input_ports_of_all_input_nodes
     <Composition.external_input_ports_of_all_input_nodes>` attribute, once construction of the `agent_rep
     <OptimizationControlMechanism.agent_rep>` is complete.
 
