@@ -4336,6 +4336,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - True, include the nested Composition but not its INPUT Nodes
             - ALL, include the nested Composition AND its INPUT Nodes
         """
+
+        # FIX: 3/16/22:
+        # CAN THIS BE REPLACED BY:
+        # return [self._get_destination(output_port.efferents[0])[0]
+        #         for _,output_port in self.input_CIM.port_map.values()]
+
         assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
                                                     f"for 'ports' and 'nodes' at the same time."
         input_items = []
@@ -11538,9 +11544,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def external_input_ports(self):
-        """Returns all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
             return [input_port for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def external_input_ports_of_all_input_nodes(self):
+        """Return all external InputPorts of all INPUT Nodes (including nested ones) of Composition.
+        Note: the InputPorts returned are those of the actual Mechanisms
+              to which the ones returned by external_input_ports ultimately project.
+        """
+        try:
+            # return [self._get_destination(output_port.efferents[0])[0]
+            #         for _,output_port in self.input_CIM.port_map.values()]
+            return self._get_input_receivers(comp=self, type=PORT, comp_as_node=False)
         except (TypeError, AttributeError):
             return None
 
@@ -11551,7 +11570,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def _default_external_input_shape(self):
-        """Returns default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
+        """Return default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
         try:
             return [input_port.default_input_shape for input_port in self.input_CIM.input_ports
                     # FIX: 2/4/22 - IS THIS NEEDED (HERE OR BELOW -- DO input_CIM.input_ports EVER GET ASSIGNED THIS?
