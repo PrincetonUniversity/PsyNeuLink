@@ -297,10 +297,6 @@ class TestControlSpecification:
         ocomp.add_controller(
             pnl.OptimizationControlMechanism(
                 agent_rep=ocomp,
-                # state_features=[initial_node_a.input_port,
-                #                 deferred_node.input_port],
-                # state_features={initial_node_a:initial_node_a.input_port,
-                #                 deferred_node:deferred_node.input_port},
                 state_features = state_features,
                 name="Controller",
                 objective_mechanism=pnl.ObjectiveMechanism(
@@ -314,7 +310,7 @@ class TestControlSpecification:
                     deferred_node_control_signal
                 ])
         )
-        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
+        assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
                                                    'EXPECTED INPUT NODE 1 OF ocomp':deferred_node.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
@@ -327,7 +323,7 @@ class TestControlSpecification:
 
         else:
             expected_text = 'The \'state_features\' specified for \'Controller\' contains an item (deferred) ' \
-                            'that is not an INPUT Node of its agent_rep (\'ocomp\'); only INPUT Nodes can be ' \
+                            'that is not an INPUT Node within its agent_rep (\'ocomp\'); only INPUT Nodes can be ' \
                             'in a set or used as keys in a dict used to specify \'state_features\'.'
 
         with pytest.raises(pnl.OptimizationControlMechanismError) as error_text:
@@ -335,8 +331,8 @@ class TestControlSpecification:
         assert expected_text in error_text.value.error_value
 
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
-        assert ocomp.controller.state_features == {initial_node_a: initial_node_a.input_port,
-                                                   deferred_node: deferred_node.input_port}
+        assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
+                                                   deferred_node.input_port: deferred_node.input_port}
 
         result = ocomp.run({
             initial_node_a: [1],
@@ -782,10 +778,10 @@ class TestControlMechanisms:
 
     messages = [
         # 0
-        f"There are fewer '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' than the number of "
-        f"INPUT Nodes of its agent_rep ('OUTER COMP'); the remaining inputs will be assigned default values "
-        f"when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired configuration, use its "
-        f"get_inputs_format() method to see the format for all of its inputs.",
+        f"There are fewer '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' than the number "
+        f"of InputPort's for all of the INPUT Nodes of its agent_rep ('OUTER COMP'); the remaining inputs will be "
+        f"assigned default values when 'OUTER COMP`s 'evaluate' method is executed. If this is not the desired "
+        f"behavior, use its get_inputs_format() method to see the format for its inputs.",
 
         # 1
         f'\'Attempt to shadow the input to a node (IB) in a nested Composition of OUTER COMP '
@@ -800,37 +796,38 @@ class TestControlMechanisms:
         f'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         # 4
-        "The 'state_features' argument has been specified for 'OptimizationControlMechanism-0' that is using a "
-        "Composition ('OUTER COMP') as its agent_rep, but they are not compatible with the inputs required by "
-        "its 'agent_rep': 'Input stimulus ([0.0]) for OB is incompatible with the shape of its external input "
-        "([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required format, or "
-        "remove the specification of 'state_features' from the constructor for OptimizationControlMechanism-0 "
-        "to have them automatically assigned.",
+        f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
+        f"a Composition ('OUTER COMP') as its agent_rep, but some of the specifications are not compatible with the "
+        f"inputs required by its 'agent_rep': 'Input stimulus ([0.0]) for OB is incompatible with the shape of its "
+        f"external input ([0.0 0.0 0.0]).' Use the get_inputs_format() method of 'OUTER COMP' to see the required "
+        f"format, or remove the specification of 'state_features' from the constructor for "
+        f"OptimizationControlMechanism-0 to have them automatically assigned.",
 
         # 5
-        f"The number of '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 (4) is more than "
-        f"the number of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP'). "
-        f"Executing OptimizationControlMechanism-0 before the additional Nodes are added as INPUT Nodes "
-        f"will generate an error.",
+        f"The '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 is associated with a number of "
+        f"InputPorts (4) that is greater than for the InputPorts of the INPUT Nodes (3) for the Composition assigned "
+        f"as its agent_rep ('OUTER COMP'). Executing OptimizationControlMechanism-0 before the additional item(s) are "
+        f"added as (part of) INPUT Nodes will generate an error.",
 
         # 6
-        f"The number of 'state_features' specified for OptimizationControlMechanism-0 (4) is more than the number "
-        f"of INPUT Nodes (3) of the Composition assigned as its agent_rep ('OUTER COMP'), which includes the "
-        f"following that are not in 'OUTER COMP': 'EXT'. Executing OptimizationControlMechanism-0 before the "
-        f"additional Node(s) are added as INPUT Nodes will generate an error.",
+        f"The '{pnl.STATE_FEATURES}' specified for OptimizationControlMechanism-0 is associated with a number of "
+        f"InputPorts (4) that is greater than for the InputPorts of the INPUT Nodes (3) for the Composition assigned "
+        f"as its agent_rep ('OUTER COMP'), which includes the following that are not (yet) in 'OUTER COMP': 'EXT'. "
+        f"Executing OptimizationControlMechanism-0 before the additional item(s) are added as (part of) INPUT Nodes "
+        f"will generate an error.",
 
         # 7
         f'"The number of \'state_features\' specified for OptimizationControlMechanism-0 (4) is more than the number '
         f'of INPUT Nodes (3) of the Composition assigned as its agent_rep (\'OUTER COMP\')."',
 
         # 8
-        f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains items (IA, OC) '
-        f'that are not INPUT Nodes of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
+        f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (OC) '
+        f'that is not an INPUT Node within its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set or '
         f'used as keys in a dict used to specify \'state_features\'.',
 
         # 9
         f'The \'state_features\' specified for \'OptimizationControlMechanism-0\' contains an item (IA) '
-        f'that is not an INPUT Node of its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
+        f'that is not an INPUT Node within its agent_rep (\'OUTER COMP\'); only INPUT Nodes can be in a set '
         f'or used as keys in a dict used to specify \'state_features\'.',
 
         # 10
@@ -842,6 +839,11 @@ class TestControlMechanisms:
         f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' includes one or more Compositions "
         f"('INNER COMP') in the SHADOW_INPUTS dict specified for its '{pnl.STATE_FEATURES}' argument; these must be "
         f"replaced by direct references to the Mechanisms (or their InputPorts) within them to be shadowed.",
+
+        # 12
+        f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' has one or more items in the "
+        f"list specified for 'SHADOW_INPUTS' ('IA') that are not (part of) any INPUT Nodes of its 'agent_rep' "
+        f"('OUTER COMP')."
     ]
 
     state_feature_args = [
@@ -849,17 +851,31 @@ class TestControlMechanisms:
         ('full_list_spec', None, None, None),
         ('list_spec_with_none', None, None, None),
         ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('set_spec', None, None, None),
+        ('set_spec_port', None, None, None),
+        ('automatic_assignment', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
+        ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
         ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
         ('too_many_inputs_warning', messages[5], None, UserWarning),
         ('too_many_w_node_not_in_composition_warning', messages[6], None, UserWarning),
         ('too_many_inputs_error', messages[7], None, pnl.OptimizationControlMechanismError),
         ('bad_dict_spec_warning', messages[8], None, UserWarning),
         ('bad_dict_spec_error', messages[8], None, pnl.OptimizationControlMechanismError),
-        ('bad_set_spec_warning', messages[0], messages[9], UserWarning),
-        ('bad_set_spec_error', messages[9], None, pnl.OptimizationControlMechanismError),
+        ('bad_shadow_inputs_dict_spec_error', messages[12], None, pnl.OptimizationControlMechanismError),
         ('comp_in_list_spec', messages[10], None, pnl.OptimizationControlMechanismError),
         ('comp_in_shadow_inupts_spec', messages[11], None, pnl.OptimizationControlMechanismError)
     ]
+
+    if len(state_feature_args) != 23:
+        print("\n\n**********************************************************************************************")
+        print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
+        print("***********************************************************************************************")
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
@@ -869,6 +885,7 @@ class TestControlMechanisms:
         None
     ])
     def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
+        """See test_nested_composition_as_agent_rep() for additional tests of state_features specification."""
 
         test_condition = state_feature_args[0]
         message_1 = state_feature_args[1]
@@ -890,13 +907,14 @@ class TestControlMechanisms:
         state_features_dict = {
 
             # Legal state_features specifications
-            'partial_legal_list_spec': [oa.output_port],
+            'partial_legal_list_spec': [oa.output_port], # Note: only specifies ia;  oa and ob assigned default inputs
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
-            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing oa spec and out of order
-            'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
+            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: use icomp & out of order is OK
+            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing ia spec and out of order
             'set_spec_short': {oa},
+            'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
+            'set_spec_port': {ob.input_port, icomp, oa},
             'automatic_assignment': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]}, # <- ia & ob OK BECAUSE JUST FOR SHADOWING
             'shadow_inputs_dict_spec_w_none': {pnl.SHADOW_INPUTS:[ia, None, ob]},
@@ -911,8 +929,7 @@ class TestControlMechanisms:
             'too_many_w_node_not_in_composition_warning': [ia, oa, ob, ext],
             'bad_dict_spec_warning': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # oc is not an INPUT Node
             'bad_dict_spec_error': {oa:oc.input_port, ia:ia, oc:ob.output_port}, # ia & oc are not *ocomp* INPUT Nodes
-            'bad_set_spec_warning': {ob, ia},  # elicits short spec warning
-            'bad_set_spec_error': {ob, ia},  # elicits INPUT Node warning (for ia)
+            'bad_shadow_inputs_dict_spec_error': {pnl.SHADOW_INPUTS:[ia.output_port, None, ob]}, # not INPUT InputPort
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
@@ -936,20 +953,21 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OA[OutputPort-0]',
-                                                       'OB DEFAULT_VARIABLE']
-                assert ocm.state_features == {icomp: ia.input_port, oa: oa.output_port, ob: [3, 1, 2]}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
-
+                                                       'OB[InputPort-0] DEFAULT_VARIABLE']
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: oa.output_port,
+                                              ob.input_port: [3, 1, 2]}
 
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'OB DEFAULT_VARIABLE']
-                assert ocm.state_features == {icomp: ia.input_port, oa: None, ob: [3, 1, 2]}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [3, 1, 2]]))
-
+                                                       'OB[InputPort-0] DEFAULT_VARIABLE']
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: None,
+                                              ob.input_port: [3, 1, 2]}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [3, 1, 2]]))
 
             elif test_condition == 'input_dict_spec':
                 assert len(ocm.state_input_ports) == 3
@@ -957,72 +975,90 @@ class TestControlMechanisms:
                                                        'Shadowed input of OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
                 # 'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
-                assert ocm.state_features == {icomp:ia.input_port, oa:oc.input_port, ob:ob.output_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: oc.input_port,
+                                              ob.input_port: ob.output_port}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'input_dict_spec_short':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
-                assert ocm.state_features == {icomp: None, oa:oc.input_port, ob:ob.output_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
-
-            elif test_condition == 'set_spec':
-                assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {icomp:ia.input_port, oa:oa.input_port, ob:ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert ocm.state_features == {ia.input_port: None,
+                                              oa.input_port: oc.input_port,
+                                              ob.input_port: ob.output_port}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
                 assert ocm.state_input_ports.names == ['Shadowed input of OA[InputPort-0]']
                 # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
-                assert ocm.state_features == {icomp:None, oa:oa.input_port, ob:None}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert ocm.state_features == {ia.input_port: None,
+                                              oa.input_port: oa.input_port,
+                                              ob.input_port: None}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
+
+            elif test_condition in {'set_spec', 'set_spec_port'}:
+                assert len(ocm.state_input_ports) == 3
+                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
+                                                       'Shadowed input of OA[InputPort-0]',
+                                                       'Shadowed input of OB[InputPort-0]']
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: oa.input_port,
+                                              ob.input_port: ob.input_port}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'automatic_assignment':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {ia: ia.input_port, oa: oa.input_port, ob: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: oa.input_port,
+                                              ob.input_port: ob.input_port}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'shadow_inputs_dict_spec':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {icomp: ia.input_port, oa: oa.input_port, ob: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: oa.input_port,
+                                              ob.input_port: ob.input_port}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'shadow_inputs_dict_spec_w_none':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {icomp: ia.input_port, oa: None, ob: ob.input_port}
-                assert all(np.allclose(expected,actual)
-                           for expected,actual in zip(ocm.state_feature_values, [[0.], [0.], [0, 0, 0]]))
+                assert ocm.state_features == {ia.input_port: ia.input_port,
+                                              oa.input_port: None,
+                                              ob.input_port: ob.input_port}
+                assert all(np.allclose(expected, actual)
+                           for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                      [[0.], [0.], [0, 0, 0]]))
 
         elif exception_type is UserWarning:
             # These also produce errors, tested below
             if test_condition in {'too_many_inputs_warning',
                                   'too_many_w_node_not_in_composition_warning',
-                                  'bad_dict_spec_warning',
-                                  'bad_set_spec_warning'}:
+                                  'bad_dict_spec_warning'}:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
-                    assert warning[0].message.args[0] == message_1
-                if test_condition == 'bad_set_spec_warning':
-                    assert message_2 == warning[1].message.args[0] # since set, order of ob and ia is not reliable
+                    assert message_1 in [warning[i].message.args[0] for i in range(len(warning))]
             else:
                 with pytest.warns(UserWarning) as warning:
                     ocomp.add_controller(ocm)
@@ -1031,9 +1067,13 @@ class TestControlMechanisms:
                         assert len(ocm.state_input_ports) == 1
                         assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
                         # Note: oa is assigned to icomp due to ordering:
-                        assert ocm.state_features == {icomp: oa.output_port, oa: None, ob: None}
-                assert warning[0].message.args[0] == message_1
-                assert ocm.state_features == {icomp: oa.output_port, oa: None, ob: None}
+                        assert ocm.state_features == {ia.input_port: oa.output_port,
+                                                      oa.input_port: None,
+                                                      ob.input_port: None}
+                assert message_1 in [warning[i].message.args[0] for i in range(len(warning))]
+                assert ocm.state_features == {ia.input_port: oa.output_port,
+                                              oa.input_port: None,
+                                              ob.input_port: None}
 
         else:
             with pytest.raises(exception_type) as error:
@@ -1113,8 +1153,8 @@ class TestControlMechanisms:
             inputs = {A:[1,2], B:[1,2], C:[1,2]}
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
-            assert all(np.allclose(expected, actual)
-                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+            assert all(np.allclose(actual, expected)
+                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
                                                    [[20],[[1],[2]],[3]]))
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
@@ -1124,7 +1164,7 @@ class TestControlMechanisms:
             result = comp.run(inputs=inputs, context='test')
             assert result == [[24.]]
             assert all(np.allclose(expected, actual)
-                       for expected, actual in zip(ocm.parameters.state_feature_values.get('test'),
+                       for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
                                                    [[2],[2],[2]]))
 
     @pytest.mark.control
@@ -1133,7 +1173,7 @@ class TestControlMechanisms:
         ib = pnl.ProcessingMechanism(name='IB')
         ic = pnl.ProcessingMechanism(name='IC')
         oa = pnl.ProcessingMechanism(name='OA')
-        ob = pnl.ProcessingMechanism(name='OB')
+        ob = pnl.ProcessingMechanism(name='OB', size=3)
         oc = pnl.ProcessingMechanism(name='OC')
         icomp = pnl.Composition(pathways=[ia,ib,ic], name='INNER COMP')
         ocomp = pnl.Composition(pathways=[icomp], name='OUTER COMP')
@@ -1142,8 +1182,7 @@ class TestControlMechanisms:
         ocm = pnl.OptimizationControlMechanism(
             state_features=[ia.input_port,
                             oa.output_port,
-                            # ob],
-                            [3,1,2]],
+                            [3,1,2]], # <- ob
             objective_mechanism=[ic,ib],
             function=pnl.GridSearch(),
             allow_probes=True,
@@ -1167,9 +1206,9 @@ class TestControlMechanisms:
         assert keys[4] == (oc.parameter_ports[pnl.INTERCEPT], oc, ocomp, 4)
         assert keys[5] == (oc.parameter_ports[pnl.SLOPE], oc, ocomp, 4)
         ocomp.run()
-        assert all(np.allclose(expected,actual)
-                   for expected,actual in zip(ocm.state_feature_values,
-                                              [[0.], [0.], [3, 1, 2]]))
+        assert all(np.allclose(expected, actual)
+                   for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                               [[0.], [0.], [3, 1, 2]]))
 
     def test_modulation_of_control_signal_intensity_cost_function_MULTIPLICATIVE(self):
         # tests multiplicative modulation of default intensity_cost_function (Exponential) of
@@ -1624,7 +1663,6 @@ class TestControlMechanisms:
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                              state_features=[taskLayer.input_port,
                                                              stimulusInfo.input_port],
-                                             state_feature_function=pnl.Buffer(history=2),
                                              name="Controller",
                                              objective_mechanism=pnl.ObjectiveMechanism(
                                                  monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD,
@@ -1650,7 +1688,6 @@ class TestControlMechanisms:
         outerComposition.add_controller(
             pnl.OptimizationControlMechanism(agent_rep=stabilityFlexibility,
                                              state_features=[taskLayer.input_port, stimulusInfo.input_port],
-                                             state_feature_function=pnl.Buffer(history=2),
                                              name="OuterController",
                                              objective_mechanism=pnl.ObjectiveMechanism(
                                                  monitor=[(pnl.PROBABILITY_UPPER_THRESHOLD, decisionMaker)],
@@ -3003,6 +3040,11 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
 
         inputs = {taskLayer: taskTrain, stimulusInfo: stimulusTrain}
         stabilityFlexibility.run(inputs)
+        assert np.allclose(stabilityFlexibility.results,
+                           [[[0.0475], [0.33695222], [1.], [1.13867062e-09]],
+                            [[0.0475], [1.13635091], [0.93038951], [0.06961049]],
+                            [[0.0475], [0.35801411], [0.99999998], [1.77215519e-08]],
+                            [[0.0475], [0.89706881], [0.97981972], [0.02018028]]])
 
     @pytest.mark.parametrize('num_estimates',[None, 1, 2] )
     @pytest.mark.parametrize('rand_var',[False, True] )
@@ -3196,10 +3238,14 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         assert np.allclose(results, [[7]])
 
     state_features_arg = [
-        # 'nested_partial', # <- Specify only one of two INPUT Nodes of nested comp
-        # 'nested_full',    # <- Specify both of two INPUT Nodes of nested comp
-        'automatic',        # <- Automaticaly asign state_features
-        'bad'               # <- Specify Mechanism not in agent_rep
+        'nested_partial_set',   # <- Specify only one of two INPUT Nodes of nested comp in set format
+        'nested_partial_dict',  # <- Specify only one of two INPUT Nodes of nested comp in dict format
+        'nested_full_set',      # <- Specify both of two INPUT Nodes of nested comp in set format
+        'nested_full_dict',     # <- Specify both of two INPUT Nodes of nested comp in dict format
+        'nested_comp_set',      # <- Specify nested comp as itself in set format
+        'nested_comp_dict',     # <- Specify nested comp as itself in dict format with a single spec for all INPUT Nodes
+        'automatic',            # <- Automaticaly asign state_features
+        'bad'                   # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
     @pytest.mark.composition
@@ -3210,7 +3256,9 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
                              ids= [f"state_feature-{x}" for x in state_features_arg]
                              )
     def test_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
-        """Also tests state_features for comp nested within nested_agent_rep"""
+        """Also tests state_features for comp nested within nested_agent_rep.
+        See test_ocm_state_feature_specs_and_warnings_and_errors() for additional tests of state_features specification.
+        """
 
         I1 = pnl.ProcessingMechanism(name='I1')
         I2 = pnl.ProcessingMechanism(name='I2')
@@ -3233,10 +3281,18 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
                          'missing from \'OUTER COMP\' and any Compositions nested within it."'
         # state_features = D.output_port if state_features_arg is 'bad' else None
-        if state_features_arg == 'nested_partial':
-            state_features = [A]
-        elif state_features_arg == 'nested_full':
-            state_features = [A, I1, I2]
+        if state_features_arg == 'nested_partial_set':
+            state_features = {A, I2}
+        elif state_features_arg == 'nested_full_set':
+            state_features = {A, I1, I2}
+        elif state_features_arg == 'nested_partial_dict':
+            state_features = {A:A.input_port, I2:I1.input_port}
+        elif state_features_arg == 'nested_full_dict':
+            state_features = {A:A.input_port, I1:I2.input_port, I2:I1.input_port}
+        elif state_features_arg == 'nested_comp_set':
+            state_features = {mcomp}
+        elif state_features_arg == 'nested_comp_dict':
+            state_features = {mcomp:I1}
         elif state_features_arg == 'automatic':
             state_features = None
         elif state_features_arg == 'bad':
@@ -3260,7 +3316,26 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         else:
             ocomp.add_controller(ocm)
             ocomp.run()
-            assert ocm.state_features == {A:A.input_port, I1:I1.input_port, I2:I2.input_port}
+            if state_features_arg == 'nested_partial_set':
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: None,
+                                              I2.input_port: I2.input_port}
+            elif state_features_arg == 'nested_partial_dict':
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: None,
+                                              I2.input_port: I1.input_port}
+            elif state_features_arg == 'nested_full_dict':
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: I2.input_port,
+                                              I2.input_port: I1.input_port}
+            elif state_features_arg == 'nested_comp_dict':
+                assert ocm.state_features == {A.input_port:I1.input_port,
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I1.input_port}
+            else:
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I2.input_port}
 
 class TestSampleIterator:
 

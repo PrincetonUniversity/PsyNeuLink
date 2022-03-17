@@ -234,7 +234,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_State_Features_Automatic_Assignment:
 
-  *Automatic assignment.* The **state_features** specify the inputs to the  Composition assigned as the `agent_rep
+  *Automatic assignment.* The **state_features** specify the inputs to the Composition assigned as the `agent_rep
   <OptimizationControlMechanism.agent_rep>` when it is executed by the OptimizationControlMechanism to
   `evaluate <OptimizationControlMechanism_Evaluation>` its performance.  The default is for the evaluation to use the
   same values received by the `agent_rep <OptimizationControlMechanism.agent_rep>` as its `external inputs
@@ -248,17 +248,18 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_State_Features_Explicit_Specification:
 
-  *Explicit specificaiont.* The **state_features** argument can also be specified explicitly, using the formats
+  *Explicit specification.* The **state_features** argument can also be specified explicitly, using the formats
   described below.  This is useful if values other than the `external inputs <Composition_Execution_Inputs>` to
-  the `agent_rep <OptimizationControlMechanism.agent_rep>` Composition are to be used to evaluate it, to restrict
-  evaluation This allows values other than the `external inputs <Composition_Execution_Inputs>` to the `agent_rep
-  <OptimizationControlMechanism.agent_rep>` Composition to be used to evaluate it; to restrict evaluation to a subset
-  of inputs (while others are held constant); and/or to assign specific functions to one or more `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>` that allow them to process inputs (e.g., modulate and/or integrate
-  them) before them as `state_feature_values state_feature_values <OptimizationControlMechanism.state_feature_values>`
-  (see `below <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning **state_features**
-  explicitly overrides their automatic assignment, so that all required values must be specified, and this must be
-  done accurate, as described below.
+  the `agent_rep <OptimizationControlMechanism.agent_rep>` Composition are to be used to evaluate it; to restrict
+  evaluation to a subset of inputs (while others are held constant); and/or to assign specific functions to one or
+  more `state_input_ports <OptimizationControlMechanism.state_input_ports>` that allow them to process the inputs
+  (e.g., modulate and/or integrate them) before they are assigned as to `state_feature_values
+  <OptimizationControlMechanism.state_feature_values>` (see `below
+  <OptimizationControlMechanism_State_Feature_Function_Arg>`). Note that assigning any **state_features** explicitly
+  overrides their automatic assignment, so that *all* required ones must be specified explicitly, as described below.
+  Any that are *not* specified will be assigned the value of their `default_variable <Component_Variable>`
+  when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is
+  executed.
 
   .. _OptimizationControlMechanism_State_Features_Shapes:
 
@@ -290,10 +291,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
   .. _OptimizationControlMechanism_State_Features_Shadow_Inputs:
 
-  The specifications in the **state_features** argument are used to construct the `state_input_ports
-  <OptimizationControlMechanism.state_input_ports>`.  As noted `above
-  <OptimizationControlMechanism_State_Features_Explicit_Specification>`, specifying these explicitly overrides
-  their automatic construction.  They can be specified using any of the following:
+  The **state_features** argument can be specified using any of the following formats:
 
   .. _Optimization_Control_Mechanism_State_Feature_Input_Dict:
 
@@ -301,14 +299,18 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     <Composition_Input_Dictionary>` to the `agent_rep <OptimizationControlMechanism.agent_rep>`, in which entries
     consist of a key specifying an `INPUT <NodeRole.INPUT>` Node of `agent_rep
     <OptimizationControlMechanism.agent_rep>`, and its value is the source of the input, that can be any of the forms
-    of individual input specifications listed `below
-    <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`. This is the most straightforward and reliable
-    way to specify **state_features**.  The full format required for inputs to `agent_rep
-    <OptimizationControlMechanism.agent_rep>` can be seen using its `get_input_format <Composition.get_input_format>`
-    method.  If only some `INPUT <NodeRole.INPUT>` Nodes are specified, the remaining ones are assigned their
-    `default variable <Component.defaults>` as input when the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
-    `evaluate <Composition.evaluate>` method is called, irrespective of the input to the `agent_rep
-    <OptimizationControlMechanism.agent_rep>` during the last `TRIAL <TimeScale.TRIAL>`.
+    of individual input specifications listed `below <Optimization_Control_Mechanism_State_Feature_Individual_Inputs>`.
+    This is the most straightforward and reliable way to specify **state_features**.  The full format required for
+    inputs to `agent_rep <OptimizationControlMechanism.agent_rep>` can be seen using its `get_input_format
+    <Composition.get_input_format>` method.  If any `INPUT <NodeRole.INPUT>` Nodes are not specified or assigned None
+    as their value, their `default variable <Mechanism_Base.default_variable>` is used for their input when the
+    `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method is executed,
+    irrespective of the input to the `agent_rep <OptimizationControlMechanism.agent_rep>` during the last `TRIAL
+    <TimeScale.TRIAL>`.  If a nested Composition is specified (that is an `INPUT <NodeRole.INPUT>` Node of `agent_rep
+    <OptimizationControlMechanism.agent_rep>`), the value assigned to it is used for *all* of the `INPUT
+    <NodeRole.INPUT>` Nodes for the nested Composition and any nested within it, at all levels of nesting.  If one or
+    more `INPUT <NodeRole.INPUT>` Nodes of a nested Composition (that are INPUT Nodes at all levels of nesting) are
+    specified, then any unspecified INPUT Nodes of the corresponding Compositions are assigned None as their values.
 
   .. _Optimization_Control_Mechanism_State_Feature_List_Inputs:
 
@@ -895,9 +897,9 @@ When an OptimizationControlMechanism is executed, it carries out the following s
       to select one from its `search_space <OptimizationFunction.search_space>`), and evaluates the `net_outcome
       <ControlMechanism.net_outcome>` for that `control_allocation <ControlMechanism.control_allocation>`.
       It does this by calling the OptimizationControlMechanism's `evaluate_agent_rep
-      <OptimizationControlMechanism.evaluate_agent_rep>` method `num_estimates <OptimizationControlMechanism>` times,
-      each of which uses the `state_feature_values <OptimizationControlMechanism.state_feature_values>` and
-      `control_allocation <ControlMechanism.control_allocation>` as the input to the `agent_rep
+      <OptimizationControlMechanism.evaluate_agent_rep>` method `num_estimates <OptimizationControlMechanism>`
+      times, each of which uses the `state_feature_values <OptimizationControlMechanism.state_feature_values>`
+      and `control_allocation <ControlMechanism.control_allocation>` as the input to the `agent_rep
       <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>` method, executing it for
       `num_trials_per_estimate <OptimizationControlMechanism.num_trials_per_estimate>` trials for each estimate.
       The `state_feature_values <OptimizationControlMechanism.state_feature_values>` and `control_allocation
@@ -937,13 +939,13 @@ If `num_estimates <OptimizationControlMechanism.num_estimates>` is specified (i.
 OptimizationControlMechanism's `evaluate_agent_rep <OptimizationControlMechanism.evaluate_agent_rep>` method).
 The values of Components listed in the OptimizationControlMechanism's `random_variables
 <OptimizationControlMechanism.random_variables>` attribute are randomized over those estimates.  By default,
-this includes all Components in the `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables (listed
-in its `random_variables <Composition.random_variables>` attribute).  However, if particular Components are specified
-in the **random_variables** argument of the OptimizationControlMechanism's constructor, then randomization is
-restricted to their values. Randomization over estimates can be further configured using the `initial_seed
-<OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
-<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The results of all the estimates for a given
-`control_allocation <ControlMechanism.control_allocation>` are aggregated by the `aggregation_function
+this includes all Components in the `agent_rep <OptimizationControlMechanism.agent_rep>` with random variables
+(listed in its `random_variables <Composition.random_variables>` attribute).  However, if particular Components
+are specified in the **random_variables** argument of the OptimizationControlMechanism's constructor, then
+randomization is restricted to their values. Randomization over estimates can be further configured using the
+`initial_seed <OptimizationControlMechanism.initial_seed>` and `same_seed_for_all_allocations
+<OptimizationControlMechanism.same_seed_for_all_allocations>` attributes. The results of all the estimates for a
+given `control_allocation <ControlMechanism.control_allocation>` are aggregated by the `aggregation_function
 <OptimizationFunction.aggregation_function>` of the `OptimizationFunction` assigned to the
 OptimizationControlMechanism's `function <OptimizationControlMechanism>`, and used to compute the `net_outcome
 <ControlMechanism.net_outcome>` over the estimates for that `control_allocation <ControlMechanism.control_allocation>`
@@ -995,7 +997,6 @@ import ast
 import copy
 import warnings
 from collections.abc import Iterable
-from typing import Union
 
 import numpy as np
 import typecheck as tc
@@ -1019,12 +1020,12 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
-    FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, OWNER_VALUE, PARAMS, PROJECTIONS, \
+    FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, PROJECTIONS, \
     SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, convert_to_np_array, ContentAddressableList, is_numeric
+from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -1040,37 +1041,61 @@ RANDOM_VARIABLES = 'random_variables'
 NUM_ESTIMATES = 'num_estimates'
 
 def _state_feature_values_getter(owning_component=None, context=None):
+    """Return dict {agent_rep INPUT Node InputPort: value} suitable for **predicted_inputs** arg of evaluate method.
+    Only include entries for sources specified in **state_features**, corresponding to OCM's state_input_ports;
+       default input will be assigned for all other INPUT Node InputPorts (in composition._instantiate_input_dict())
+
+    """
+
     # If no state_input_ports return empty list
     if (not owning_component.num_state_input_ports):
-        return []
+        return {}
+
+    # Get sources specified in **state_features**
+    specified_state_features = [spec for spec in owning_component.state_feature_specs if spec is not None]
+    # Get INPUT Node InputPorts for sources specified in **state_features**
+    specified_INPUT_Node_InputPorts = [port for port, spec
+                                       in zip(owning_component._specified_INPUT_Node_InputPorts_in_order,
+                                              owning_component.state_feature_specs)
+                                       if spec is not None]
+    assert len(specified_state_features) == \
+           len(specified_INPUT_Node_InputPorts) == \
+           owning_component.num_state_input_ports
+
     # If OptimizationControlMechanism is still under construction, use items from input_values as placemarkers
-    elif context.source == ContextFlags.CONSTRUCTOR:
-        return owning_component.input_values[owning_component.num_outcome_input_ports:]
+    if context.source == ContextFlags.CONSTRUCTOR:
+        return {k:v for k,v in zip(specified_INPUT_Node_InputPorts,
+                                   owning_component.input_values[owning_component.num_outcome_input_ports:])}
 
-    # Otherwise, use current values of state_input_ports
-    state_input_port_values = [p.parameters.value.get(context) for p in owning_component.state_input_ports]
+    # Construct state_feature_values dict
+    state_feature_values = {}
+    for i in range(owning_component.num_state_input_ports):
+        key = specified_INPUT_Node_InputPorts[i]
+        state_input_port = owning_component.state_input_ports[i]
+        spec = specified_state_features[i]
 
-    if (not owning_component.state_feature_specs
-            or owning_component.num_state_input_ports == len(owning_component.state_feature_specs)):
-        # Automatically assigned state_features or full set of specs for all INPUT Nodes,
-        #   so use values of state_input_ports (since there is one for every INPUT Node of agent_rep)
-        state_feature_values = state_input_port_values
-    else:
-        # Specified state_features for a subset of INPUT Nodes so use those
-        j = 0
-        state_feature_values = []
-        for node, spec in zip(owning_component._specified_input_nodes_in_order,
-                              owning_component.state_feature_specs):
-            if spec is not None:
-                state_feature_values.append(state_input_port_values[j])
-                j += 1
-            else:
-                # FIX: 1/29/22 - HANDLE VARIBLE AS 1d vs 2d
-                # assert node.defaults.variable.ndim == 2 and len(node.defaults.variable)==1
-                # state_feature_values.append(node.defaults.variable[0])
-                state_feature_values.append(node.defaults.variable)
+        # state_input_port not (yet) specified; default input will be assigned in _instantiate_input_dict()
+        if not isinstance(key, InputPort) or spec is None:
+            continue
 
-    return convert_to_np_array(state_feature_values)
+        # FIX: 3/4/22 - RESTORE?
+        # if spec is None:
+        #     # # FIX: ??TRY IGNORING RATHER THAN ASSIGNING, AS IT WILL BE ASSIGNED IN _instantiate_input_dict()
+        #     # state_feature_values[state_input_port] = state_input_port.default_input_shape
+        #     continue
+
+        if is_numeric(spec):
+            state_feature_value = spec
+        elif state_input_port.parameters.value._get(context) is not None:
+            state_feature_value = state_input_port.parameters.value._get(context)
+        else:
+            state_feature_value = state_input_port.default_input_shape
+
+        # state_feature_values[key] = convert_to_np_array(state_feature_value)
+        state_feature_values[key] = state_feature_value
+
+    return state_feature_values
+
 
 class OptimizationControlMechanismError(Exception):
     def __init__(self, error_value):
@@ -1552,7 +1577,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         agent_rep = Parameter(None, stateful=False, loggable=False, pnl_internal=True, structural=True)
 
-        state_feature_values = Parameter(None, getter=_state_feature_values_getter, user=False, pnl_internal=True)
+        state_feature_values = Parameter(None,getter=_state_feature_values_getter,
+                                         user=False,  pnl_internal=True, read_only=True)
 
         # FIX: Should any of these be stateful?
         random_variables = ALL
@@ -1586,23 +1612,21 @@ class OptimizationControlMechanism(ControlMechanism):
     @tc.typecheck
     def __init__(self,
                  agent_rep=None,
-                 state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))) =
-                 None,
-                 state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type))) = None,
+                 state_features: tc.optional(tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort)))=None,
+                 default_state_feature=None,
+                 state_feature_function: tc.optional(tc.optional(tc.any(dict, is_function_type)))=None,
                  function=None,
-                 num_estimates = None,
-                 random_variables = None,
+                 num_estimates=None,
+                 random_variables=None,
                  initial_seed=None,
                  same_seed_for_all_allocations=None,
-                 num_trials_per_estimate = None,
-                 search_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
-                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type))) = None,
+                 num_trials_per_estimate=None,
+                 search_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
+                 search_termination_function: tc.optional(tc.optional(tc.any(is_function_type)))=None,
                  search_statefulness=None,
                  context=None,
                  **kwargs):
         """Implement OptimizationControlMechanism"""
-
-        from psyneulink.core.compositions.composition import Composition
 
         # Legacy warnings and conversions
         for k in kwargs.copy():
@@ -1773,7 +1797,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         else:
             # Implement any specified state_features
-            state_input_ports_specs = self._parse_state_feature_specs()
+            state_input_ports_specs = self._parse_state_feature_specs(context)
             # Note:
             #   if state_features were specified and agent_rep is a CompositionFunctionApproximator,
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
@@ -1798,31 +1822,13 @@ class OptimizationControlMechanism(ControlMechanism):
                                                         f"{port.name} should receive exactly one projection, "
                                                         f"but it receives {len(port.path_afferents)} projections.")
 
-    def _get_agent_rep_input_nodes(self, comp=None, comp_as_node:Union[bool,ALL]=False):
-        """Return all input_nodes of agent_rep, including those for any Composition nested one level down.
-        If an INPUT Node is a Composition, and include_comp_as_node is:
-        - False, include the nested Composition's INPUT Nodes, but not the Composition
-        - True, include the nested Composition but not its INPUT Nodes
-        - ALL, include the nested Composition AND its INPUT Nodes
-        """
-        from psyneulink.core.compositions.composition import Composition, NodeRole
+    def _get_agent_rep_input_receivers(self, comp=None, type=PORT, comp_as_node=False):
         if not self.agent_rep_type or self.agent_rep_type == COMPOSITION_FUNCTION_APPROXIMATOR:
             return [None]
         comp = comp or self.agent_rep
-        _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
-        input_nodes = []
-        for node in _input_nodes:
-            if isinstance(node, Composition):
-                if comp_as_node:
-                    input_nodes.append(node)
-                if comp_as_node in {False, ALL}:
-                    # FIX: DOESN'T THIS SEARCH RECURSIVELY? -- NEED TO TEST WITH > ONE LEVEL OF NESTING
-                    input_nodes.extend(self._get_agent_rep_input_nodes(node))
-            else:
-                input_nodes.append(node)
-        return input_nodes
+        return comp._get_input_receivers(comp=comp, type=type, comp_as_node=comp_as_node)
 
-    def _get_nodes_not_in_agent_rep(self, state_feature_specs):
+    def _get_specs_not_in_agent_rep(self, state_feature_specs):
         from psyneulink.core.compositions.composition import Composition
         agent_rep_nodes = self.agent_rep._get_all_nodes()
         return [spec for spec in state_feature_specs
@@ -1833,11 +1839,22 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _validate_input_nodes(self, nodes, enforce=None):
         """Check that nodes are INPUT Nodes of agent_rep
-        Raise exception for non-INPUT Nodes if **enforce** is specified; else warn.
+        INPUT Nodes are those at the top level of agent_rep as well as those of any Compositions nested within it
+            that are themselves INPUT Nodes of their enclosing Composition.
+        Raise exception for non-INPUT Nodes if **enforce** is specified; otherwise just issue warning.
         """
+        from psyneulink.core.compositions.composition import Composition
+        agent_rep_input_nodes = self._get_agent_rep_input_receivers(type=NODE,comp_as_node=ALL)
+        agent_rep_input_ports = self._get_agent_rep_input_receivers(type=PORT)
+        agent_rep_all_nodes = self.agent_rep._get_all_nodes()
         non_input_node_specs = [node for node in nodes
-                                if node not in self._get_agent_rep_input_nodes(comp_as_node=True)]
-        non_agent_rep_node_specs = [node for node in nodes if node not in self.agent_rep._get_all_nodes()]
+                                # if node not in self._get_agent_rep_input_receivers(type=NODE, comp_as_node=ALL)]
+                                if ((isinstance(node, (Mechanism, Composition)) and node not in agent_rep_input_nodes)
+                                    or (isinstance(node, Port) and (not isinstance(node, InputPort)
+                                                                    or node not in agent_rep_input_ports)))]
+        non_agent_rep_node_specs = [node for node in nodes
+                                    if ((isinstance(node, (Mechanism, Composition)) and node not in agent_rep_all_nodes) or
+                                        (isinstance(node, Port) and node.owner not in agent_rep_all_nodes))]
 
         # Deal with Nodes that are in agent_rep but not INPUT Nodes
         if non_input_node_specs:
@@ -1847,7 +1864,7 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 items_str = f"contains items ({items}) that are not INPUT Nodes"
             message = f"The '{STATE_FEATURES}' specified for '{self.name}' {items_str} " \
-                      f"of its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set " \
+                      f"within its {AGENT_REP} ('{self.agent_rep.name}'); only INPUT Nodes can be in a set " \
                       f"or used as keys in a dict used to specify '{STATE_FEATURES}'."
             if enforce:
                 raise OptimizationControlMechanismError(message)
@@ -1871,32 +1888,75 @@ class OptimizationControlMechanism(ControlMechanism):
                 warnings.warn(message)
 
     # FIX: 1/29/22 - REFACTOR TO SUPPORT TUPLE AND InportPort SPECIFICATION DICT FOR MULT. PROJS. TO STATE_INPUT_PORT
+    # FIX: 2/25/22 - REFACTOR TO SUPPORT InputPort SPECIFICATIONS IN dict, set and list specs
     def _parse_state_feature_specs(self, context=None):
-        """Parse entries of state_features specifications into InputPort spec dictionaries.
+        """Parse entries of state_features specifications used to construct state_input_ports.
 
         Called from _instantiate_input_ports()
 
-        state_features specify sources of values assigned to state_feature_values, and passed to agent_rep.evaluate()
-            as the inputs to its INPUT Nodes (**predicted_inputs argument if agent_rep is a Composition;
-            **feature_values** argument if it is a CompositionFunctionApproximator.
-        Use each to create Projection(s) from specified source; these may be direct, or indirect by way of a CIM
-            if the source is in a nested Composition).
-        If the number of state_features specified is less than the number of agent_rep INPUT Nodes, only construct
-            state_input_ports for the INPUT Nodes specified (for a list spec, the first n INPUT Nodes listed in
-            agent_rep.nodes, where n is the length of the list spec); as a result, the remaining INPUT Nodes are
-            provided their default variables as input when agent_rep.evaluate() executes.
-        If shadowing is specified, set INTERNAL_ONLY to True in entry of params dict for state_input_port's InputPort
-            specification dictionary (so that inputs to Composition are not required if the specified state_feature
-            is for an INPUT Node).
-        If an INPUT Node is specified that is not (yet) in agent_rep, and/or a source is specified that is not yet
-            in the self.composition, warn and defer creating a state_input_port;  final check is made, and error(s)
-            generated for unresolved specifications at run time.
+        Parse **state_features** arg of constructor for OptimizationControlMechanism, assigned to state_feature_specs.
+
+        state_feature_specs lists sources of inputs to *all* INPUT Nodes of agent_rep, at all levels of nesting; there
+          is one entry for every INPUT Node in agent_rep, and every INPUT Node of any nested Composition that is
+          itself an INPUT Node at any level of nesting.
+
+        Construct a state_input_port for every entry in state_feature_specs that is not None:
+          the value of those state_input_ports comprise the state_feature_values attribute, and are provided as the
+              input to the INPUT Nodes of agent_rep when its evaluate() method is executed (as the **predicted_inputs**
+              argument if agent_rep is a Composition, and the **feature_values** argument if it is a
+              CompositionFunctionApproximator); for INPUT;
+          for None entries in state_feature_specs, the corresponding INPUT Nodes are provided their
+              default_external_input_shape as their input when agent_rep.evaluate() executes.
+
+        Projection(s) to state_input_ports from sources specified in state_feature_specs can be direct,
+            or indirect by way of a CIM if the source is in a nested Composition.
 
         Handle four formats:
-        - list:  list of sources; must be listed in same order as INPUT Nodes of agent_rep to which they correspond;
-        - dict:  keys are INPUT Nodes of agent_rep and values are corresponding sources;
-        - set: INPUT Nodes for which shadowing is implemented
-        - SHADOW_INPUTS dict:  single entry with key='SHADOW_INPUTS" and values=list of sources (see above).
+
+        - dict {INPUT Node: source or None, INPUT Node: source or None...}:
+            - every key must be an INPUT Node of agent_rep or an INPUT Node of a nested Composition within it that
+                is itself an INPUT Node of its enclosing Composition, at any level of nesting;
+            - if a Composition is specified as a key, construct a state_input_port for each InputPort of each of its
+                INPUT Nodes, and those of any Compositions nested within it at all levels of nesting, and assign the
+                the value of the dict entry as the source for all of them;
+            - for INPUT Nodes not specified or assigned None as their value, assign corresponding entries in
+                state_feature_specs as None, and don't construct a state_input_port for them;
+            - if only one or some of the INPUT Nodes of a nested Composition are specified,
+                for the remaining ones assign the corresponding entries in state_feature_specs as None,
+                and don't construct state_input_ports for them;
+        - list [source, None, source...]: specifies source specs for INPUT Nodes
+            - must be listed in same order as *expanded* list of agent_rep INPUT Nodes to which they correspond (i.e.,
+                nested Compositions that are INPUT Nodes replaced by their INPUT Nodes, for all levels of nesting);
+            - if there are fewer sources listed than INPUT Nodes, assign None to the entries in state_feature_specs
+               corresponding to the remaining INPUT Nodes and don't construct state_input_ports for them;
+            - if there more sources listed than INPUT Nodes, leave the excess ones, and label them as
+               'EXPECTED INPUT NODE n' for later resolution (see below).
+
+        - set {INPUT Node, Input Node...}: specifies INPUT Nodes to be shadowed
+            - every item must be an INPUT Node of agent_rep or an INPUT Node of a nested Composition within it that
+                is itself an INPUT Node of its enclosing Composition, at any level of nesting;
+            - if a Composition is specified, construct a state_input_port for each of its INPUT Nodes, and those of
+                any Compositions nested within it at all levels of nesting, each of which shadows the input of the
+                corresponding INPUT Node (see _InputPort_Shadow_Inputs).
+            - if only one or some of the INPUT Nodes of a nested Composition are specified, don't state_input_ports
+                for the remaining ones, and assign them their default inputs in evaluate().
+
+        IMPLEMENTATION NOTE: this is a legacy format for consistency with generic specification of shadowing inputs
+        - SHADOW_INPUTS dict {"SHADOW_INPUTS":[shadowable input, None, shadowable input...]}:
+            - all items must be a Mechanism (or one of its InputPorts) that is an INPUT Node of agent_rep or
+                 of a nested Composition within it that is itself an INPUT Node;
+            - must be listed in same order as *expanded* list of agent_rep INPUT Nodes to which they correspond
+                (see list format above);
+            - construct a state_input_port for each non-None spec, and assign it a Projection that shadows the spec.
+                (see _InputPort_Shadow_Inputs).
+
+        If shadowing is specified for an INPUT Node, set INTERNAL_ONLY to True in entry of params dict in
+            specification dictionary for corresponding state_input_port (so that inputs to Composition are not
+            required if the specified source is itself an INPUT Node).
+
+        If an INPUT Node is specified that is not (yet) in agent_rep, and/or a source is specified that is not yet
+            in self.composition, warn and defer creating a state_input_port;  final check is made, and error(s)
+            generated for unresolved specifications at run time.
 
         Assign functions specified in **state_feature_function** to InputPorts for all state_features
 
@@ -1905,10 +1965,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
         from psyneulink.core.compositions.composition import Composition, NodeRole
         # Agent rep's input Nodes and their names
-        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-        # The following are all "full" lists; that is, there is an entry corresponding to every INPUT node of agent_rep
-        # List of INPUT Nodes for which state_features are specified, ordered according to agent_rep.nodes
-        self._specified_input_nodes_in_order = []
+        agent_rep_input_ports = self._get_agent_rep_input_receivers(type=PORT)
+        self._specified_INPUT_Node_InputPorts_in_order = []
+
         # List of assigned state_feature_function (vs. user provided specs)
         self._state_feature_functions = []
 
@@ -1923,7 +1982,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 f"({self.state_feature_specs}).")
 
         # agent_rep has not yet been (fully) constructed
-        if not agent_rep_input_nodes and self.agent_rep_type is COMPOSITION:
+        if not agent_rep_input_ports and self.agent_rep_type is COMPOSITION:
             if (isinstance(self.state_feature_specs, set)
                     or isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS not in self.state_feature_specs):
                 # Dict and set specs reference Nodes of agent_rep, and so must that must be constructed first
@@ -1939,15 +1998,6 @@ class OptimizationControlMechanism(ControlMechanism):
                               f"same as the order of the corresponding INPUT Nodes for '{self.agent_rep.name}' once "
                               f"they are added, or unexpected results may occur.  It is safer to assign all Nodes to "
                               f"the {AGENT_REP} of a controller before specifying its '{STATE_FEATURES}'.")
-        else:
-            # # FIX: 1/16/22 - MAY BE A PROBLEM IF SET OR DICT HAS ENTRIES FOR INPUT NODES OF NESTED COMP THAT IS AN INPUT NODE
-            # FIX: 1/18/22 - ADD TEST FOR THIS WARNING TO test_ocm_state_feature_specs_and_warnings_and_errors: too_many_inputs
-            if len(self.state_feature_specs) < len(agent_rep_input_nodes):
-                warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number of "
-                              f"INPUT Nodes of its {AGENT_REP} ('{self.agent_rep.name}'); the remaining inputs will be "
-                              f"assigned default values when '{self.agent_rep.name}`s 'evaluate' method is executed. "
-                              f"If this is not the desired configuration, use its get_inputs_format() method to see "
-                              f"the format for all of its inputs.")
 
         # HELPER METHODS ------------------------------------------------------------------------------------------
 
@@ -1960,42 +2010,56 @@ class OptimizationControlMechanism(ControlMechanism):
                     input_nodes.append(node)
             return input_nodes
 
-        def get_inputs_for_nested_comp(comp):
-            # FIX: 1/18/22 - NEEDS TO BE MODIFIED TO RETURN TUPLE IF > INPUT NODE, ONCE THAT CAN BE HANDLED BY LIST SPEC
-            return comp.get_nodes_by_role(NodeRole.INPUT)
-
         # PARSE SPECS  ------------------------------------------------------------------------------------------
         # Generate parallel lists of INPUT Nodes and corresponding feature specs (for sources of inputs)
 
         def _parse_specs(state_feature_specs, spec_str="list"):
-            """Validate and parse specs into Port references and construct state_features dict
+            """Validate and parse INPUT Node specs assigned to construct state_feature_specs
             Validate number and identity of specs relative to agent_rep INPUT Nodes.
-            Assign {node: spec} entries to state_features dict
+            Assign spec for every INPUT Mechanism (nested) within agent_rep (i.e., for all nested Compositions)
+                as entries in state_feature_specs
             Return names for use as input_port_names in main body of method
             """
-
             parsed_feature_specs = []
 
             if self.agent_rep_type == COMPOSITION:
-                if len(state_feature_specs) > len(agent_rep_input_nodes):
-                    nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
-                                              for spec in self._get_nodes_not_in_agent_rep(state_feature_specs)]
-                    if nodes_not_in_agent_rep:
-                        node_str = ", ".join(nodes_not_in_agent_rep)
+
+                # FIX: 3/4/22 - THESE SEEM DUPLICATIVE OF _validate_state_features;  JUST CALL THAT HERE?
+                #               ALSO, WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
+                # Too FEW specs for number of agent_rep receivers
+                if len(self.state_feature_specs) < len(agent_rep_input_ports):
+                    warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number "
+                                  f"of {InputPort.__name__}'s for all of the INPUT Nodes of its {AGENT_REP} "
+                                  f"('{self.agent_rep.name}'); the remaining inputs will be assigned default values "
+                                  f"when '{self.agent_rep.name}`s 'evaluate' method is executed. If this is not the "
+                                  f"desired behavior, use its get_inputs_format() method to see the format for its "
+                                  f"inputs.")
+
+                # Too MANY specs for number of agent_rep receivers
+                if len(state_feature_specs) > len(agent_rep_input_ports):
+                    # specs_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
+                    #                           for spec in self._get_specs_not_in_agent_rep(state_feature_specs)]
+                    specs_not_in_agent_rep = [f"'{spec.name if isinstance(spec,(Mechanism, Composition)) else spec.owner.name}'"
+                                              for spec in self._get_specs_not_in_agent_rep(user_specs)]
+
+                    if specs_not_in_agent_rep:
+                        spec_str = ", ".join(specs_not_in_agent_rep)
                         warnings.warn(
-                            f"The number of '{STATE_FEATURES}' specified for {self.name} "
-                            f"({len(state_feature_specs)}) is more than the number of INPUT Nodes "
-                            f"({len(agent_rep_input_nodes)}) of the Composition assigned as its {AGENT_REP} "
-                            f"('{self.agent_rep.name}'), which includes the following that "
-                            f"are not in '{self.agent_rep.name}': {node_str}. Executing {self.name} before the "
-                            f"additional Node(s) are added as INPUT Nodes will generate an error.")
+                            f"The '{STATE_FEATURES}' specified for {self.name} is associated with a number of "
+                            f"{InputPort.__name__}s ({len(state_feature_specs)}) that is greater than for the "
+                            f"{InputPort.__name__}s of the INPUT Nodes ({len(agent_rep_input_ports)}) for the "
+                            f"Composition assigned as its {AGENT_REP} ('{self.agent_rep.name}'), which includes "
+                            f"the following that are not (yet) in '{self.agent_rep.name}': {spec_str}. Executing "
+                            f"{self.name} before the additional item(s) are added as (part of) INPUT Nodes will "
+                            f"generate an error.")
                     else:
                         warnings.warn(
-                            f"The number of '{STATE_FEATURES}' specified for {self.name} "
-                            f"({len(state_feature_specs)}) is more than the number of INPUT Nodes "
-                            f"({len(agent_rep_input_nodes)}) of the Composition assigned as its {AGENT_REP} "
-                            f"('{self.agent_rep.name}'). Executing {self.name} before the "
-                            f"additional Nodes are added as INPUT Nodes will generate an error.")
+                            f"The '{STATE_FEATURES}' specified for {self.name} is associated with a number of "
+                            f"{InputPort.__name__}s ({len(state_feature_specs)}) that is greater than for the "
+                            f"{InputPort.__name__}s of the INPUT Nodes ({len(agent_rep_input_ports)}) for the "
+                            f"Composition assigned as its {AGENT_REP} ('{self.agent_rep.name}'). Executing "
+                            f"{self.name} before the additional item(s) are added as (part of) INPUT Nodes will "
+                            f"generate an error.")
 
             # Nested Compositions not allowed to be specified in a list spec
             nested_comps = [node for node in state_feature_specs if isinstance(node, Composition)]
@@ -2008,30 +2072,30 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"shadowed.")
             spec_names = []
             num_specs = len(state_feature_specs)
-            num_nodes = len(agent_rep_input_nodes)
-            self._num_state_feature_specs = max(num_specs, num_nodes)
+            num_ports = len(agent_rep_input_ports)
+            self._num_state_feature_specs = max(num_specs, num_ports)
             for i in range(self._num_state_feature_specs):
-                # NODE & NODE_NAME
+                # PORT & PORT_NAME
                 # (and specs for CFA and any nodes not yet in agent_rep)
                 spec_name = None
                 state_feature_fct = None
-                if i < num_nodes:
-                    # Node should be in agent_rep, so use that to be sure
-                    if self.agent_rep_type == COMPOSITION:
-                        node = agent_rep_input_nodes[i]
-                    # Assign spec as node for CompositionFunctionApproximator
+                if self.agent_rep_type == COMPOSITION:
+                    if i < num_ports:
+                        # Node should be in agent_rep, so use that to be sure
+                        if self.agent_rep_type == COMPOSITION:
+                            node = agent_rep_input_ports[i]
+                        node_name = node.full_name
                     else:
+                        # Node not (yet) in agent_rep, so "DEFERRED n" as node name
                         spec = state_feature_specs[i]
-                        node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    node_name = node.name
+                        node = None
+                        node_name = f'DEFFERED {str(i-num_ports)}'
+                # Assign spec as node for CompositionFunctionApproximator
                 else:
-                    # FIX 2/18/22 - FALSELY ASSUMES THAT SPEC IN LIST IS FOR AN INPUT NODE RATHER THAN JUST ITS SOURCE
-                    #               SHOULD INSTEAD USE A PLACEMARKER, AND ASSIGN ONCE IT IS THERE IN
-                    #               _update_state_input_ports_for_controller() ?AND _update_state_features_dict()?
-                    # Node not (yet) in agent_rep, so uses its node name
                     spec = state_feature_specs[i]
-                    node = None
-                    node_name = f'DEFFERED {str(i-num_nodes)}'
+                    node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                    node_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+
                 # SPEC
                 # Assign specs
                 # Only process specs for which there are already INPUT Nodes in agent_rep
@@ -2064,77 +2128,129 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
-                self._specified_input_nodes_in_order.append(node)
+                self._specified_INPUT_Node_InputPorts_in_order.append(node)
                 spec_names.append(spec_name)
 
             self.parameters.state_feature_specs.set(parsed_feature_specs, override=True)
             return spec_names or []
 
         user_specs = self.parameters.state_feature_specs.spec
-        # user_specs = self.state_feature_specs
 
-        # LIST spec
-        #   Treat as source specs:
-        #   - construct a regular dict using INPUT Nodes as keys and specs as values
-        if isinstance(user_specs, list):
-            input_port_names = _parse_specs(user_specs)
-
-        # DICT spec
-        elif isinstance(user_specs, dict):
-            # SHADOW_INPUTS dict spec
-            if SHADOW_INPUTS in user_specs:
-                # Set not allowed as SHADOW_INPUTS spec
+        # LIST OR SHADOW_INPUTS DICT: source specs
+        # Source specs but not INPUT Nodes specified; spec is either:
+        # - list:  [spec, spec...]
+        # - SHADOW_INPUTS dict (with list spec as its only entry): {SHADOW_INPUTS: {[spec, spec...]}}
+        # Treat specs as sources of input to INPUT Nodes of agent_rep (in corresponding order):
+        # Call _parse_specs to construct a regular dict using INPUT Nodes as keys and specs as values
+        if isinstance(user_specs, list) or (isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs):
+            if isinstance(user_specs, list):
+                specs = user_specs
+                spec_str = 'list'
+            else:
+                # SHADOW_INPUTS spec:
                 if isinstance(user_specs[SHADOW_INPUTS], set):
-                    # Catch here to provide context-relevant error message
+                    # Set not allowed as SHADOW_INPUTS spec; catch here to provide context-relevant error message
                     raise OptimizationControlMechanismError(
                         f"The '{STATE_FEATURES}' argument for '{self.name}' uses a set in a '{SHADOW_INPUTS.upper()}' "
                         f"dict;  this must be a single item or list of specifications in the order of the INPUT Nodes"
                         f"of its '{AGENT_REP}' ({self.agent_rep.name}) to which they correspond." )
-                input_port_names = _parse_specs(user_specs[SHADOW_INPUTS], f"{SHADOW_INPUTS.upper()} dict")
+                # All specifications in list specified for SHADOW_INPUTS must be shadowable
+                #     (i.e., either an INPUT Node or the InputPort of one) or None;
+                #     note: if spec is not in agent_rep, might be added later,
+                #           so defer dealing with that until runtime.
+                bad_specs = [spec for spec in user_specs[SHADOW_INPUTS]
+                             if (    # spec is not an InputPort
+                                     ((isinstance(spec, Port) and not isinstance(spec, InputPort))
+                                      # spec is an InputPort of a Node in agent_rep but not one of its INPUT Nodes
+                                      or (isinstance(spec, InputPort)
+                                          and spec.owner in self.agent_rep._get_all_nodes()
+                                          and spec.owner not in self._get_agent_rep_input_receivers(type=NODE,
+                                                                                                    comp_as_node=ALL))
+                                      )
+                                     and spec is not None)]
+                if bad_specs:
+                    bad_spec_names = [f"'{item.owner.name}'" if hasattr(item, 'owner')
+                                      else f"'{item.name}'" for item in bad_specs]
+                    raise OptimizationControlMechanismError(
+                        f"The '{STATE_FEATURES}' argument for '{self.name}' has one or more items in the list "
+                        f"specified for '{SHADOW_INPUTS.upper()}' ({', '.join([name for name in bad_spec_names])}) "
+                        f"that are not (part of) any INPUT Nodes of its '{AGENT_REP}' ('{self.agent_rep.name}')." )
 
-            # User {node:spec} dict spec
-            else:
-                specified_input_nodes = user_specs.keys()
-                self._validate_input_nodes(specified_input_nodes)
-                nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-                # Get specs in order of agent_rep INPUT Nodes, with None assigned to any unspecified INPUT Nodes
-                #   as well as to any not in agent_rep at end which are placed at the end of the list
-                nodes.extend([node for node in specified_input_nodes if node not in nodes])
-                specs = [user_specs[node] if node in specified_input_nodes else None for node in nodes]
-                # Get parsed specs and names (don't care about nodes since those are specified by keys
-                input_port_names = _parse_specs(specs)
+                specs = user_specs[SHADOW_INPUTS]
+                spec_str = f"{SHADOW_INPUTS.upper()} dict"
+            input_port_names = _parse_specs(specs, spec_str=spec_str)
 
-        # SET spec
-        # Treat as specification of INPUT Nodes to be shadowed:
-        # - construct an InputPort dict with SHADOW_INPUTS as its key, and specs in a list as its value
-        elif isinstance(user_specs, set):
-            # All nodes must be INPUT nodes of agent_rep, that are to be shadowed,
-            self._validate_input_nodes(user_specs)
-            # specs = [node if node in state_feature_specs else None for node in agent_rep_input_nodes]
-            # FIX: 1/29/22 -
-            #      THIS IS DANGEROUS -- SHOULD REPLACE ONCE TUPLE FORMAT IS IMPLEMENTED OR USE InputPort SPECIF DICT
-            #      IT WORKS FOR NESTED COMPS WITH A SIGNLE INPUT NODE OF THEIR OWN
-            #      BUT IF A NESTED COMP HAS MORE THAN ONE INPUT NODE, THIS WILL RETURN MORE THAN ONE NODE IN PLACE OF
-            #      THE NESTED COMP AND THUS GET OUT OF ALIGNMENT WITH NUMBER OF INPUT NODES FOR AGENT_REP
-            #      ONCE FIXED, EXTEND FOR USE WITH COMP AS SPEC IN LIST AND DICT FORMATS
-            # Replace any nested Comps that are INPUT Nodes of agent_comp with their INPUT Nodes so they are shadowed
-            all_nested_input_nodes = []
-            for node in user_specs:
-                if isinstance(node, Composition):
-                    all_nested_input_nodes.extend(get_inputs_for_nested_comp(node))
+        # FIX: 2/25/22 - ?ITEMS IN set ARE SHADOWED, BUT UNSPECIFIED ITEMS IN SET AND DICT ARE ASSIGNED DEFAULT VALUES
+        # SET OR DICT: specification by INPUT Nodes
+        # INPUT Nodes of agent_rep specified in either a:
+        # - set, without source specs: {node, node...}
+        # - dict, with source specs for each: {node: spec, node: spec...}
+        # Call _parse_specs to convert to or flesh out dict with INPUT Nodes as keys and any specs as values
+        #  adding any unspecified INPUT Nodes of agent_rep and assiging default values for any unspecified values
+        elif isinstance(user_specs, (set, dict)):
+
+            # FIX: 3/4/22 REINSTATE & MOVE TO ABOVE??
+            self._validate_input_nodes(set(user_specs))
+
+            #  FIX: MOVE TO _validate_input_nodes
+            # Validate user_specs
+            internal_input_port_specs = [f"'{spec.full_name}'" for spec in user_specs
+                                         if isinstance(spec, InputPort) and spec.internal_only]
+            if internal_input_port_specs:
+                raise OptimizationControlMechanismError(
+                    f"The following {InputPort.__name__}s specified in the '{STATE_FEATURES}' arg for {self.name} "
+                    f"do not receive any external inputs and thus cannot be assigned '{STATE_FEATURES}': "
+                    f"{', '.join(internal_input_port_specs)}.")
+            non_input_port_specs = [f"'{spec.full_name}'" for spec in user_specs
+                                    if isinstance(spec, Port) and not isinstance(spec, InputPort)]
+            if non_input_port_specs:
+                raise OptimizationControlMechanismError(
+                    f"The following {Port.__name__}s specified in the '{STATE_FEATURES}' arg for {self.name} "
+                    f"are not {InputPort.__name__} and thus cannot be assigned '{STATE_FEATURES}': "
+                    f"{', '.join(non_input_port_specs)}.")
+
+            expanded_specified_ports = []
+            expanded_dict_with_ports = {}
+            dict_format = isinstance(user_specs, dict)
+
+            # Expand any Nodes specified in user_specs set or keys of dict to corresponding InputPorts
+            for spec in user_specs:
+                # Expand any specified Compositions into corresponding InputPorts for all INPUT Nodes (including nested)
+                if isinstance(spec, Composition):
+                    ports = self._get_agent_rep_input_receivers(spec)
+                # Expand any specified Mechanisms into corresponding InputPorts except any internal ones
+                elif isinstance(spec, Mechanism):
+                    ports = [input_port for input_port in spec.input_ports if not input_port.internal_only]
                 else:
-                    all_nested_input_nodes.append(node)
-            # Get specs ordered by agent_rep INPUT Nodes, with any not in agent_rep at end and None for any not included
-            agent_rep_nodes = self._get_agent_rep_input_nodes()
-            nodes = [node if node in all_nested_input_nodes else None for node in agent_rep_nodes]
-            nodes.extend([node for node in all_nested_input_nodes if node not in agent_rep_nodes])
-            input_port_names = _parse_specs(nodes)
+                    ports = [spec]
+                expanded_specified_ports.extend(ports)
+                if dict_format:
+                    # Assign values specified in user_specs dict to corresponding InputPorts
+                    expanded_dict_with_ports.update({port:user_specs[spec] for port in ports})
+
+            # # Get specified ports in order of agent_rep INPUT Nodes, with None assigned to any unspecified InputPorts
+            all_specified_ports = [port if port in expanded_specified_ports else None for port in agent_rep_input_ports]
+            # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
+            all_specified_ports.extend([port for port in expanded_specified_ports if port not in agent_rep_input_ports])
+
+            if isinstance(user_specs, set):
+                # Just pass ports;  _parse_specs assigns shadowing projections for them and None to all unspecified ones
+                specs = all_specified_ports
+            else:
+                # Pass values from user_spec dict to be parsed;
+                #    corresponding ports are safely in all_specified_ports
+                #    unspecified ports are assigned None per requirements of list format
+                specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports else None
+                         for port in all_specified_ports]
+
+            input_port_names = _parse_specs(specs)
 
         # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 
         state_input_port_specs = []
         for i in range(self._num_state_feature_specs):
-            # Note: state_feature_specs have now been parsed (user's specs are in parameters.state_feature_specs.spec)
+            # Note: state_feature_specs have now been parsed (user's specs are in parameters.state_feature_specs.spec);
+            #       state_feature_specs correspond to all InputPorts of agent_rep's INPUT Nodes (including nested ones)
             spec = self.state_feature_specs[i]
             if spec is None:
                 continue
@@ -2153,10 +2269,10 @@ class OptimizationControlMechanism(ControlMechanism):
                     # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
                     #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICT TO InputPorts IN GENERAL)
                     if len(spec.input_ports)!=1:
-                        raise OptimizationControlMechanismError(f"A Mechanism ({spec.name}) is specified in the "
-                                                                f"'{STATE_FEATURES}' arg for {self.name} that has "
-                                                                f"more than one InputPort; a specific one or subset "
-                                                                f"of them must be specified.")
+                        raise OptimizationControlMechanismError(
+                            f"A Mechanism ({spec.name}) is specified to be shadowed in the '{STATE_FEATURES}' arg "
+                            f"for '{self.name}', but it has more than one {InputPort.__name__}; a specific one of its "
+                            f"{InputPort.__name__}s must be specified to be shadowed.")
                     spec = spec.input_port
                 else:
                     spec = spec.output_port
@@ -2222,8 +2338,8 @@ class OptimizationControlMechanism(ControlMechanism):
             return feature_function
 
     def _update_state_features_dict(self):
-        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=True)
-        specified_input_nodes = self._specified_input_nodes_in_order
+        agent_rep_input_ports = self._get_agent_rep_input_receivers()
+        specified_input_ports = self._specified_INPUT_Node_InputPorts_in_order
 
         for i, port in enumerate(self.state_input_ports):
             # Get value (need first, to determine whether it belongs to a nested Comp, for assigning key)
@@ -2232,15 +2348,15 @@ class OptimizationControlMechanism(ControlMechanism):
             if (isinstance(feature, Component) and
                     feature.owner in [n[0] for n in self.agent_rep._get_nested_nodes()]):
                 node = feature.owner
-            elif specified_input_nodes[i]:
-                node = specified_input_nodes[i]
-            elif i < len(agent_rep_input_nodes):
-                node = specified_input_nodes[i] = agent_rep_input_nodes[i]
+            elif specified_input_ports[i]:
+                node = specified_input_ports[i]
+            elif i < len(agent_rep_input_ports):
+                node = specified_input_ports[i] = agent_rep_input_ports[i]
             else:
                 node = None
             if not (isinstance(node, str) and 'DEFERRED' in node):
                 continue
-            if feature.owner not in self._get_agent_rep_input_nodes(comp_as_node=ALL):
+            if feature.owner not in self._get_agent_rep_input_receivers(comp_as_node=ALL):
                 # Don't add to dict, will be dealt with or raise an error at run time
                 continue
             self.state_feature_specs[i] = feature
@@ -2285,17 +2401,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Restrict validation and any further instantiation of state_input_ports
             #    until run time, when the Composition is expected to be fully constructed
             if context._execution_phase == ContextFlags.PREPARING:
-                # MODIFIED 1/30/22 NEW:
                 # FIX: 1/30/22 - NEEDS TO EXECUTE ON UPDATES WITHOUT RUN,
                 #                BUT MANAGE ERRORS WRT TO _validate_state_features
                 self._update_state_features_dict()
-                # MODIFIED 1/30/22 END
-                self._validate_state_features()
-            # MODIFIED 1/30/22 OLD:
+                self._validate_state_features(context)
             return
-            # # MODIFIED 1/30/22 NEW:
-            # return True
-            # MODIFIED 1/30/22 END
 
         elif not self.state_input_ports:
             # agent_rep is Composition, but no state_features have been specified,
@@ -2304,13 +2414,12 @@ class OptimizationControlMechanism(ControlMechanism):
             # Get list of nodes with any nested Comps that are INPUT Nodes replaced with their respective INPUT Nodes
             #   (as those are what need to be shadowed)
             shadowed_input_ports = []
-            for node in self._get_agent_rep_input_nodes(comp_as_node=False):
-                for input_port in node.input_ports:
-                    if input_port.internal_only:
-                        continue
-                    # if isinstance(input_port.owner, CompositionInterfaceMechanism):
-                    #     input_port = input_port.
-                    shadowed_input_ports.append(input_port)
+            for port in self._get_agent_rep_input_receivers():
+                if port.internal_only:
+                    continue
+                # if isinstance(input_port.owner, CompositionInterfaceMechanism):
+                #     input_port = input_port.
+                shadowed_input_ports.append(port)
 
             #  Instantiate state_input_ports
             local_context = Context(source=ContextFlags.METHOD)
@@ -2338,12 +2447,12 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.data = state_input_ports
             self._num_state_feature_specs = len(self.state_input_ports)
-            self._specified_input_nodes_in_order = self._get_agent_rep_input_nodes(comp_as_node=False)
+            self._specified_INPUT_Node_InputPorts_in_order = self._get_agent_rep_input_receivers()
             self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
                                                     override=True)
             return True
 
-    def _validate_state_features(self):
+    def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
 
         Called by _update_state_input_ports_for_controller,
@@ -2358,6 +2467,7 @@ class OptimizationControlMechanism(ControlMechanism):
         - state_features are compatible with input format for agent_rep Composition
         """
 
+        # FIX: 3/4/22 - DO user_specs HAVE TO BE RE-VALIDATED? ?IS IT BECAUSE THEY MAY REFER TO NEWLY ADDED NODES?
         from psyneulink.core.compositions.composition import \
             Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
 
@@ -2379,7 +2489,7 @@ class OptimizationControlMechanism(ControlMechanism):
             input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
             if len(state_feature_specs) > len(input_nodes):
                 nodes_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
-                                          for spec in self._get_nodes_not_in_agent_rep(state_feature_specs)]
+                                          for spec in self._get_specs_not_in_agent_rep(state_feature_specs)]
                 missing_nodes_str = (f", that includes the following: {', '.join(nodes_not_in_agent_rep)} "
                                      f"missing from {self.agent_rep.name}"
                                      if nodes_not_in_agent_rep else '')
@@ -2391,16 +2501,14 @@ class OptimizationControlMechanism(ControlMechanism):
             for i, spec in enumerate(state_feature_specs):
                 input_dict[input_nodes[i]] = spec
             state_features = state_feature_specs
-        elif isinstance(state_feature_specs, dict):
-            # If user dict is specified, check that keys are legal INPUT nodes:
-            self._validate_input_nodes(state_feature_specs.keys(), enforce=True)
-            # If dict is specified, get values for checks below
-            state_features = list(state_feature_specs.values())
-        elif isinstance(state_feature_specs, set):
-            # If user dict is specified, check that keys are legal INPUT nodes:
-            self._validate_input_nodes(state_feature_specs, enforce=True)
-            # If dict is specified, get values for checks below
-            state_features = list(state_feature_specs)
+        elif isinstance(state_feature_specs, (set, dict)):
+            # If set or dict is specified, check that items of set or keys of dict are legal INPUT nodes:
+            self._validate_input_nodes(set(state_feature_specs), enforce=True)
+            if isinstance(state_feature_specs, dict):
+                # If dict is specified, get values for checks below
+                state_features = list(state_feature_specs.values())
+            else:
+                state_features = list(state_feature_specs)
 
         # Include agent rep in error messages if it is not the same as self.composition
         self_has_state_features_str = f"'{self.name}' has '{STATE_FEATURES}' specified "
@@ -2436,7 +2544,7 @@ class OptimizationControlMechanism(ControlMechanism):
         invalid_state_features = [input_port for input_port in self.state_input_ports
                                   if (input_port.shadow_inputs
                                       and not (input_port.shadow_inputs.owner
-                                               in self._get_agent_rep_input_nodes())
+                                               in self._get_agent_rep_input_receivers())
                                       and (isinstance(input_port.shadow_inputs.owner,
                                                       CompositionInterfaceMechanism)
                                            and not (input_port.shadow_inputs.owner.composition in
@@ -2448,21 +2556,18 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
         # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        # inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(inputs)
-        # # END DEBUGGING ---------------------------------------------------------------------
+        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
+        # #  END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
-            # FIX: 1/10/22 - ?USE self.agent_rep.external_input_values FOR CHECK?
-            # Call these to check for errors in constructing inputs dict
-            inputs = self.agent_rep._build_predicted_inputs_dict(None, self)
-            self.agent_rep._parse_input_dict(inputs)
-        except RunError as error:
+            # Call this to check for errors in constructing inputs dict
+            self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
+        except (RunError, CompositionError) as error:
             raise OptimizationControlMechanismError(
                 f"The '{STATE_FEATURES}' argument has been specified for '{self.name}' that is using a "
-                f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but "
-                f"they are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
+                f"{Composition.componentType} ('{self.agent_rep.name}') as its agent_rep, but some of the "
+                f"specifications are not compatible with the inputs required by its 'agent_rep': '{error.error_value}' "
                 f"Use the get_inputs_format() method of '{self.agent_rep.name}' to see the required format, or "
                 f"remove the specification of '{STATE_FEATURES}' from the constructor for {self.name} "
                 f"to have them automatically assigned.")
@@ -2632,7 +2737,7 @@ class OptimizationControlMechanism(ControlMechanism):
             self._initialize_composition_function_approximator(context)
 
     def _execute(self, variable=None, context=None, runtime_params=None):
-        """Find control_allocation that optimizes result of agent_rep.evaluate().
+        """Find control_allocation that optimizes net_outcome of agent_rep.evaluate().
         """
 
         if self.is_initializing:
@@ -3146,51 +3251,87 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_features(self):
+        """Return {InputPort: source} for all INPUT Nodes of agent_rep and sources specified by state_feature_specs.
+        """
+        # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
+        #              for unspecified InputPorts if "needs_update_controller" is False
+        #              - GET SOURCE OR SHADOWED SPEC
         self._update_state_features_dict()
-        agent_rep_input_nodes = self._get_agent_rep_input_nodes(comp_as_node=ALL)
+        agent_rep_input_ports = self._get_agent_rep_input_receivers()
+        # FIX: CONSTRAIN TO ONLY GET SOURCES: HERE OR BY ADDING ARG TO state_distal_sources_and_destinations_dict()
+        sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
+                   for source_tuple, value in self.state_feature_sources.items()]
+        # FIX: USES SOURCES AS VALUES FOR DICT BELOW
         state_features_dict = {}
         # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
+        j = 0
         for i in range(self._num_state_feature_specs):
-            # Assign keys as INPUT Nodes of agent_rep
-            if self._specified_input_nodes_in_order[i] in agent_rep_input_nodes:
-                k = self._specified_input_nodes_in_order[i]
+            # Assign InputPorts of INPUT Nodes of agent_rep as keys
+            if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
+                key = self._specified_INPUT_Node_InputPorts_in_order[i]
             else:
-                k = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-            state_features_dict[k] = self.state_feature_specs[i]
+                key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
+            if self.state_feature_specs[i] is not None:
+                state_features_dict[key] = sources[j]
+                j += 1
+            else:
+                state_features_dict[key] = None
+
         return state_features_dict
 
     @property
     def state_feature_sources(self):
-        """Dict with {INPUT Node: source} entries for sources specified in **state_features** arg of constructor."""
-        # FIX: 1/30/22:
-        # FIX: SUPPORT tuple SPECIFICATION FOR sources
-        # FIX: REDUCE ALL MECHANISM SOURCES TO Port SPECS
-        # FIX: ??REFACTOR TO CONSTRUCT THE FOLLOWING:
-        #          state_feature_specs_dict: {INPUT Node: spec}
-        #          state_features: {INPUT Node: source}
-        if isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS in self.state_feature_specs:
-            # SHADOW_INPUTS dict
-            state_feature_specs = self.state_feature_specs[SHADOW_INPUTS]
-        else:
-            # list and set specs
-            state_feature_specs = self.state_feature_specs
-        sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-                   for source_tuple, value in self.state_distal_sources_and_destinations_dict.items()]
-        return {k:v for k,v in zip(self.state_features, sources)}
+        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
+        state_dict = {}
+        # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
+        specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
+        for state_index, port in enumerate(self.state_input_ports):
+            if not port.path_afferents:
+                if port.default_input is DEFAULT_VARIABLE:
+                    # MODIFIED 3/4/22 OLD:
+                    source_port = DEFAULT_VARIABLE
+                    # # MODIFIED 3/4/22 NEW:
+                    # if self.state_feature_specs[state_index] is not None:
+                    #     source_port = self.state_feature_specs[state_index]
+                    # else:
+                    #     source_port = DEFAULT_VARIABLE
+                    # MODIFIED 3/4/22 END
+                    node = None
+                    comp = None
+                else:
+                    source_port = specified_state_features[state_index]
+                    node = None
+                    comp = None
+            else:
+                get_info_method = self.composition._get_source
+                # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
+                if port.shadow_inputs:
+                    port = port.shadow_inputs
+                    if port.owner in self.composition.nodes:
+                        composition = self.composition
+                    else:
+                        composition = port.path_afferents[0].sender.owner.composition
+                    get_info_method = composition._get_destination
+                source_port, node, comp = get_info_method(port.path_afferents[0])
+            state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
+        return state_dict
 
-    def _state(self, context=None):
-        """Get context-specific state_feature and control_allocation values"""
-        # Use self.state_feature_values Parameter if state_features specified; else use state_input_port values
-        state_feat_vals = self.parameters.state_feature_values.get(context)
-        state_feature_values = state_feat_vals if len(state_feat_vals) else self.state_input_ports.values
-        # FIX: 1/30/22:  USE CONTEXT TO GET control_allocations IF THAT IS NOT ALREADY DONE ON THAT ATTRIBUTE
-        return [v.tolist() for v in state_feature_values] + self.control_allocation.tolist()
+    @property
+    def control_signal_destinations(self):
+        state_dict = {}
+        state_index = self.num_state_input_ports
+        # Get recipients of control_allocations values of state:
+        for ctl_index, control_signal in enumerate(self.control_signals):
+            for projection in control_signal.efferents:
+                port, node, comp = self.composition._get_destination(projection)
+                state_dict.update({(port, node, comp, state_index + ctl_index):self.state[state_index + ctl_index]})
+        return state_dict
 
     @property
     def state(self):
         """Array that is concatenation of state_feature_values and control_allocations"""
         # Use self.state_feature_values Parameter if state_features specified; else use state_input_port values
-        return self.state_feature_values + self.control_allocation.tolist()
+        return list(self.state_feature_values.values()) + list(self.control_allocation)
 
     @property
     def state_distal_sources_and_destinations_dict(self):
@@ -3207,41 +3348,9 @@ class OptimizationControlMechanism(ControlMechanism):
               (after it has processed the value of its afferent Projections) that determines the input to the
               state_input_port.
         """
-
-        state_dict = {}
-
-        # FIX: 1/30/22 - RECONCILE AND DOCUMENT MULTIPLE POSSIBLE SOURCES/DESTINATIONS FOR
-        #          - THIS DICT AND STATE_FEATURES DICTS, WHICH MAY HAVE MORE THAN ONE ENTRY PER INPUT_NODE
-        #          - VS. STATE_FEATURE_VALUES AND STATE_FEATURE_SPECS_DICT (WHICH HAVE ONLY ONE ENTRY PER INPUT_NODE
-        # Get sources for state_feature_values of state:
-        for state_index, port in enumerate(self.state_input_ports):
-            if not port.path_afferents:
-                if port.default_input is DEFAULT_VARIABLE:
-                    source_port = DEFAULT_VARIABLE
-                    node = None
-                    comp = None
-                else:
-                    continue
-            else:
-                get_info_method = self.composition._get_source
-                # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
-                if port.shadow_inputs:
-                    port = port.shadow_inputs
-                    if port.owner in self.composition.nodes:
-                        composition = self.composition
-                    else:
-                        composition = port.path_afferents[0].sender.owner.composition
-                    get_info_method = composition._get_destination
-                source_port, node, comp = get_info_method(port.path_afferents[0])
-            state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
-        state_index += 1
-        # Get recipients of control_allocations values of state:
-        for ctl_index, control_signal in enumerate(self.control_signals):
-            for projection in control_signal.efferents:
-                port, node, comp = self.composition._get_destination(projection)
-                state_dict.update({(port, node, comp, state_index + ctl_index):self.state[state_index + ctl_index]})
-
-        return state_dict
+        sources_and_destinations = self.state_feature_sources
+        sources_and_destinations.update(self.control_signal_destinations)
+        return sources_and_destinations
 
     @property
     def _model_spec_parameter_blacklist(self):

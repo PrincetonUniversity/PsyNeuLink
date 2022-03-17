@@ -789,7 +789,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     ---------
 
     default_variable : scalar, list or array : default [[0]]
-        specifies template for the input to the Component's `function <Component.function>`.
+        specifies template for the input to the Component's `function <Component.function>`, and the value used as the
+        input to the Component if none is provided on execution (see `Component_Variable` for additional information).
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;

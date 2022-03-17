@@ -521,14 +521,13 @@ Class Reference
 """
 import collections
 import inspect
-import itertools
 import numbers
 import warnings
 
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import Component, DefaultsFlexibility
+from psyneulink.core.components.component import DefaultsFlexibility
 from psyneulink.core.components.functions.function import Function
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -673,10 +672,14 @@ class InputPort(Port_Base):
            <InputPort.internal_only>` attribute is automtically assigned True. This is so that if the `Mechanism`
            to which the InputPort belongs is assigned to a `Composition`, it is not treated as an `ORIGIN
            <NodeRole.ORIGIN>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
-           from its `input_CIM <Composition_CIM>`.
+           from its `input_CIM <Composition.input_CIM>`.
+
+    input_shape : 1d array
+        shows the shape of the input to the InputPort;  that is, the shape of the `value <Projection_Base.value>`
+        expected for any `path_afferent Projections <Port_Base.path_afferents>`.
 
     function : Function
-        If it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
+        if it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
         <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputPort  (listed in
         its `path_afferents <Port_Base.path_afferents>` attribute), under the possible influence of `GatingProjections
         <GatingProjection>` received by the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>`
@@ -1350,10 +1353,6 @@ class InputPort(Port_Base):
     def socket_template(self):
         return np.zeros(self.socket_width)
 
-    @property
-    def label(self):
-        return self.get_label()
-
     def get_label(self, context=None):
         try:
             label_dictionary = self.owner.input_labels_dict
@@ -1371,6 +1370,11 @@ class InputPort(Port_Base):
         except:
             assert False, f"PROGRAM ERROR: Missing or unrecognized 'changes_shape' attribute for " \
                           f"('{self.function.name}') of '{self.name}'."
+
+    @property
+    def input_shape(self):
+        """Alias for default_input_shape_template"""
+        return self.default_input_shape
 
     @property
     def default_input_shape(self):

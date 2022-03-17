@@ -971,6 +971,9 @@ class ParameterPort(Port_Base):
         # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
         return self.source._get(context)
 
+    def get_label(self, context):
+        raise ParameterPortError(f"{ParameterPort.__name__}s do not have labels.")
+
     @property
     def pathway_projections(self):
         raise ParameterPortError("PROGRAM ERROR: Attempt to access {} for {}; {}s do not have {}s".
@@ -980,6 +983,7 @@ class ParameterPort(Port_Base):
     def pathway_projections(self, value):
         raise ParameterPortError("PROGRAM ERROR: Attempt to assign {} to {}; {}s cannot accept {}s".
                                   format(PATHWAY_PROJECTION, self.name, PARAMETER_PORT, PATHWAY_PROJECTION))
+
 
 def _instantiate_parameter_ports(owner, function=None, context=None):
     """Call _instantiate_parameter_port for all modulable parameters to instantiate ParameterPorts for them

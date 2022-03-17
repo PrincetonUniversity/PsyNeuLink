@@ -788,13 +788,13 @@ Mechanism used to specify target values for a particular learning pathway in the
 Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputPort(s) and
 OutputPort(s).
 
-    - The `label <InputPort.label>` attribute of an InputPort or OutputPort returns the current label of
-      its value, if one exists, and its value otherwise.
+    - The `label <InputPort.labeled_value>` attribute of an InputPort or OutputPort returns the current label of
+      its value, if one exists, and its numeric value otherwise.
 
-    - The `input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes of
-      Mechanisms return a list containing the labels corresponding to the value(s) of the InputPort(s) or
-      OutputPort(s) of the Mechanism, respectively. If the current value of a port does not have a corresponding
-      label, then its numeric value is used instead.
+    - The `labeled_input_values <Mechanism_Base.labeled_input_values>` and `labeled_output_values
+      <Mechanism_Base.labeled_output_values>` attributes of a Mechanism return lists containing the labels
+      corresponding to the value(s) of the InputPort(s) or OutputPort(s) of the Mechanism, respectively. If the
+      current value of a Port does not have a corresponding label, then its numeric value is reported instead.
 
         >>> output_labels_dict = {"red": [1, 0, 0],
         ...                      "green": [0, 1, 0],
@@ -804,9 +804,9 @@ OutputPort(s).
         >>> C = pnl.Composition(pathways=[M])
         >>> input_dictionary =  {M: [[1, 0, 0]]}
         >>> results = C.run(inputs=input_dictionary)
-        >>> M.get_output_labels(C)
+        >>> M.labeled_output_values(C)
         ['red']
-        >>> M.output_ports[0].get_label(C)
+        >>> M.output_ports[0].labeled_value(C)
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
@@ -1086,7 +1086,6 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-import psyneulink
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
@@ -1293,9 +1292,9 @@ class Mechanism_Base(Mechanism):
         in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
         of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
-    input_labels : list[str]
-        contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
-        of an InputPort does not have a corresponding label, then its numeric value is used instead.
+    labeled_input_values : list[str]
+        contains the labels corresponding to the current value(s) of the InputPort(s) of the Mechanism. If the
+        current value of an InputPort does not have a corresponding label, then its numeric value is used instead.
 
     external_input_ports : list[InputPort]
         list of the `input_ports <Mechanism_Base.input_ports>` for the Mechanism that are not designated as
@@ -1303,9 +1302,11 @@ class Mechanism_Base(Mechanism):
         <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
 
     external_input_shape : List[List or 1d np.array]
-        list showing shapes of inputs expected for the Mechanism's `input_ports <Mechanism_Base.input_ports>`.
-        Each item corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>` and its shape the
-        expected `value <Projection_Base.value>` of that `Projection`.
+        list of the `input_shape <InputPort.input_shape>`\\s of the Mechanism's external `input_ports
+        <Mechanism_Base.input_ports>` (i.e., excluding any `InputPorts <InputPort>` designated as `internal_only
+        <InputPort.internal_only>`), that shows the shape of the inputs expected for the Mechanism.  Each item
+        corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>`, and its shape is
+        the expected `value <Projection_Base.value>` of that `Projection`.
 
     external_input_variables : List[List or 1d np.array]
         list of the `variable <InputPort.variable>`\\s of the Mechanism's `external_input_ports
@@ -1313,6 +1314,10 @@ class Mechanism_Base(Mechanism):
 
     external_input_values : List[List or 1d np.array]
         list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
+
+    default_external_inputs : List[1d np.array]
+        list of the `default_input <InputPort.default_input>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
 
     COMMENT:
@@ -1373,14 +1378,14 @@ class Mechanism_Base(Mechanism):
                   the `value <OutputPort.OutputPort.value>` of that OutputPort (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
 
+    labeled_output_values : list
+        contains the labels corresponding to the current value(s) of the OutputPort(s) of the Mechanism. If the
+        current value of an OutputPort does not have a corresponding label, then its numeric value is used instead.
+
     output_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
         in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
-
-    output_labels : list
-        contains the labels corresponding to the value(s) of the OutputPort(s) of the Mechanism. If the current value
-        of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
         list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
@@ -3434,9 +3439,9 @@ class Mechanism_Base(Mechanism):
                 value=''
                 if include_value:
                     if use_label and not isinstance(port, ParameterPort):
-                        value = f'<br/>={port.label}'
+                        value = f'<br/>={port.labeled_value}'
                     else:
-                        value = f'<br/>={port.value}'
+                        value = f'<br/>={port.labeled_value}'
                 return f'<td port="{self._get_port_name(port)}"><b>{port.name}</b>{function}{value}</td>'
 
 
@@ -3931,12 +3936,18 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def default_external_inputs(self):
+        try:
+            return [input_port.default_input for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
     def default_external_input_variables(self):
         try:
             return [input_port.defaults.variable for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
-    # MODIFIED 2/3/22 END
 
     @property
     def external_input_values(self):
@@ -3953,7 +3964,7 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
-    def input_labels(self):
+    def labeled_input_values(self):
         """
         Returns a list with as many items as there are InputPorts of the Mechanism. Each list item represents the value
         of the corresponding InputPort, and is populated by a string label (from the input_labels_dict) when one
@@ -3983,7 +3994,7 @@ class Mechanism_Base(Mechanism):
         return [output_port.parameters.value.get(context) for output_port in self.output_ports]
 
     @property
-    def output_labels(self):
+    def labeled_output_values(self):
         """
         Returns a list with as many items as there are OutputPorts of the Mechanism. Each list item represents the
         value of the corresponding OutputPort, and is populated by a string label (from the output_labels_dict) when
