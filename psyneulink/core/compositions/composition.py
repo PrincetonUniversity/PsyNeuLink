@@ -3503,23 +3503,27 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Nested>`, then from any `Nodes <Composition_Nodes>` in the outer composition that project to the
         nested Composition (either itself, as a Node in the outer Composition, or to any of its own Nodes).
 
-    external_input_shape : list[InputPort]
-        a list of the `external_input_shape <Mechanism.external_input_shape>`\\s of all of the `InputPorts <InputPort>`
-        of the Composition's `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` (corresponding to the external
-        InputPots of its `input_CIM <Composition>`); any input to the Composition must be compatible with the shape of
-        this, whether received from the **inputs** argument of one of the Composition's`execution methods
-        <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
-        Composition.
+    external_input_ports_of_all_input_nodes: list[InputPort]
+        a list of all external InputPorts (i.e., ones not desginated `internal_only <InputPort.internal_only>`) of
+        all `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the Composition, including any that in `nested
+        Compositions <Composition_Nested>` within it (i.e., within `INPUT <NodeRole.INPUT>` Nodes at all levels of
+        nesting)  Note that the InputPorts listed are those of the actual Mechanisms projected to by the ones listed
+        in `external_input_ports <Composition.external_input_ports>`.
 
-    external_input_variables : list[InputPort]
-        a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
-        <Composition.external_input_ports>`;  any input to the Composition must be compatible with the shape of this,
-        whether received from the **input_ports** argument of oneo f the Composition's`execution methods
-        <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
-        Composition.
+    external_input_shape : list[1d array]
+        a list of the `input_shape <Input.input_shape>`\\s of all of the InputPorts listed in `external_input_ports
+        <Composition.external_input_ports>` (and are the same as the shapes of those listed in
+        `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>`); any input
+        to the Composition must be compatible with these, whether received from the **inputs** argument of one of the
+        Composition's`execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
+        <Composition_Nested>`, from the enclosing Composition.
 
-    external_input_values : list[InputPort]
-        a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
+    external_input_variables : list[2d array]
+        a list of the `variable <InputPort.variable>`\\s associated with the `InputPorts <InputPort>` listed in
+        `external_input_ports <Composition.external_input_ports>`.
+
+    external_input_values : list[1d array]
+        a list of the values of associated of the `InputPorts <InputPort>` listed in `external_input_ports
         <Composition.external_input_ports>`.
 
     output_CIM : `CompositionInterfaceMechanism`
@@ -11582,7 +11586,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def external_input_variables(self):
         """Return variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_port.variable for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+            return [input_port.parameters.variable.get()
+                    for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
@@ -11602,7 +11607,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
             #  FIX: 2/4/22 SHOULD input_port.variable REPLACE input_port.value HERE?
-            return [input_port.value for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+            return [input_port.parameters.value.get()
+                    for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
