@@ -578,7 +578,7 @@ class TestIntegratorFunctions:
                 initializer=10.0,
                 rate=10,
                 time_step_size=0.2,
-                starting_point=0.5,
+                non_decision_time=0.5,
                 decay=0.1,
                 offset=10,
             )
@@ -758,7 +758,7 @@ class TestIntegratorRate:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=DriftDiffusionIntegrator(
-                rate=5.0
+                rate=5.0, time_step_size=1.0
             )
         )
         # P = Process(pathway=[I])
@@ -1138,7 +1138,8 @@ class TestIntegratorNoise:
         I = IntegratorMechanism(
             name='IntegratorMechanism',
             function=DriftDiffusionIntegrator(
-                noise=5.0,
+                noise=np.sqrt(5.0),
+                time_step_size=1.0,
             ),
         )
 

@@ -1265,6 +1265,7 @@ class TestCompositionPathwaysArg:
 
 class TestProperties:
 
+    @pytest.mark.control
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
     def test_properties(self, control_spec):
 
@@ -1389,6 +1390,7 @@ class TestAnalyzeGraph:
         assert B in comp.get_nodes_by_role(NodeRole.CYCLE)
         assert C in comp.get_nodes_by_role(NodeRole.RECURRENT_INIT)
 
+    @pytest.mark.control
     def test_controller_objective_mech_not_terminal(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
@@ -1419,6 +1421,7 @@ class TestAnalyzeGraph:
         # assert comp.controller.objective_mechanism in comp.get_nodes_by_role(NodeRole.OUTPUT)
         assert comp.controller.objective_mechanism not in comp.get_nodes_by_role(NodeRole.OUTPUT)
 
+    @pytest.mark.control
     def test_controller_objective_mech_not_terminal_fall_back(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
@@ -3576,7 +3579,7 @@ class TestRun:
             benchmark(comp.execute, inputs={R: [[1.0, 2.0]]}, execution_mode=mode)
 
     def test_run_termination_condition_custom_context(self):
-        D = pnl.DDM(function=pnl.DriftDiffusionIntegrator)
+        D = pnl.DDM(function=pnl.DriftDiffusionIntegrator, execute_until_finished=False)
         comp = pnl.Composition()
 
         comp.add_node(node=D)
@@ -4230,6 +4233,7 @@ class TestNestedCompositions:
 
         outer.run(inputs=input, execution_mode=comp_mode)
 
+    @pytest.mark.control
     def test_invalid_projection_deletion_when_nesting_comps(self):
         oa = pnl.TransferMechanism(name='oa')
         ob = pnl.TransferMechanism(name='ob')
@@ -4726,6 +4730,7 @@ class TestNestedCompositions:
         ret = comp_lvl0.run(inputs={comp_lvl1: {comp_lvl2: {comp_lvl3a: [[1.0]], comp_lvl3b: [[1.0]]}}})
         assert np.allclose(ret, [[[0.52497918747894]], [[0.52497918747894]]])
 
+    @pytest.mark.control
     def test_four_level_nested_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
 
@@ -4747,6 +4752,7 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [150]
 
+    @pytest.mark.control
     def test_four_level_nested_dual_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
 
@@ -4781,6 +4787,7 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [4500]
 
+    @pytest.mark.control
     @pytest.mark.parametrize('nesting', ("unnested", "nested"))
     def test_partially_overlapping_local_and_control_mech_control_specs_in_unnested_and_nested_comp(self, nesting):
         pnl.clear_registry()
@@ -4800,8 +4807,8 @@ class TestNestedCompositions:
                                                                                           pnl.ALLOCATION_SAMPLES: samples,
                                                                                       })),
                                                          noise=0.5,
-                                                         starting_point=0,
-                                                         t0=0.45),
+                                                         starting_value=0,
+                                                         non_decision_time=0.45),
                        output_ports=[pnl.DECISION_VARIABLE,
                                      pnl.RESPONSE_TIME,
                                      pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -4809,8 +4816,8 @@ class TestNestedCompositions:
         Response = pnl.DDM(function=pnl.DriftDiffusionAnalytical(drift_rate=1.0,
                                                           threshold=1.0,
                                                           noise=0.5,
-                                                          starting_point=0,
-                                                          t0=0.45),
+                                                          starting_value=0,
+                                                          non_decision_time=0.45),
                         output_ports=[pnl.DECISION_VARIABLE,
                                       pnl.RESPONSE_TIME,
                                       pnl.PROBABILITY_UPPER_THRESHOLD],
@@ -5650,11 +5657,19 @@ class TestInputSpecifications:
         xor_comp.learn(inputs=test_function,
               num_trials=4)
 
+    @pytest.mark.control
     @pytest.mark.parametrize(
-            "with_outer_controller,with_inner_controller",
-            [(True, True), (True, False), (False, True), (False, False)]
+        "controllers, results",[
+            ('none', [[-2], [1]]),
+            ('inner',  [[-2], [10]]),
+            ('outer',  [[-2], [10]]),
+            ('inner_and_outer', [[-2], [100]]),
+        ]
     )
-    def test_input_type_equivalence(self, with_outer_controller, with_inner_controller):
+    @pytest.mark.parametrize(
+        "inputs_arg",['inputs_dict','generator_function','generator_instance']
+    )
+    def test_input_type_equivalence(self, controllers, results, inputs_arg):
         # instantiate mechanisms and inner comp
         ia = pnl.TransferMechanism(name='ia')
         ib = pnl.TransferMechanism(name='ib')
@@ -5666,7 +5681,7 @@ class TestInputSpecifications:
         icomp.add_projection(pnl.MappingProjection(), sender=ia, receiver=ib)
 
         # add controller to inner comp
-        if with_inner_controller:
+        if controllers in {'inner', 'inner_and_outer'}:
             icomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=icomp,
@@ -5675,7 +5690,7 @@ class TestInputSpecifications:
                             objective_mechanism=pnl.ObjectiveMechanism(
                                     monitor=ib.output_port,
                                     function=pnl.SimpleIntegrator,
-                                    name="oController Objective Mechanism"
+                                    name="iController Objective Mechanism"
                             ),
                             function=pnl.GridSearch(direction=pnl.MAXIMIZE),
                             control_signals=[pnl.ControlSignal(projections=[(pnl.SLOPE, ia)],
@@ -5693,7 +5708,7 @@ class TestInputSpecifications:
         ocomp.add_node(icomp)
 
         # add controller to outer comp
-        if with_outer_controller:
+        if controllers in {'outer', 'inner_and_outer'}:
             ocomp.add_controller(
                     pnl.OptimizationControlMechanism(
                             agent_rep=ocomp,
@@ -5715,9 +5730,9 @@ class TestInputSpecifications:
             )
 
         # set up input using three different formats:
-        #  1) generator function
-        #  2) instance of generator function
-        #  3) inputs dict
+        #  1) inputs dict
+        #  2) generator function
+        #  3) instance of generator function
         inputs_dict = {
             icomp:
                 {
@@ -5736,20 +5751,27 @@ class TestInputSpecifications:
 
         inputs_generator_instance = inputs_generator_function()
 
+        inputs_source = {
+            'inputs_dict': inputs_dict,
+            'generator_function': inputs_generator_function,
+            'generator_instance': inputs_generator_instance
+        }[inputs_arg]
+
+        # # Version with reporting for debugging purposes:
+        # ib.reportOutputPref=[pnl.VALUE, pnl.VARIABLE]
+        # icomp.controller.reportOutputPref = pnl.ReportOutput.ON
+        # ocomp.controller.reportOutputPref = pnl.ReportOutput.FULL
+        # ocomp.run(inputs=inputs_dict,
+        #           report_output=pnl.ReportOutput.FULL,
+        #           report_progress=pnl.ReportProgress.ON,
+        #           report_simulations=pnl.ReportSimulations.ON,
+        #           report_to_devices=pnl.ReportDevices.DIVERT
+        #           )
+        # actual_output = ocomp.rich_diverted_reports
+
         # run Composition with all three input types and assert that results are as expected.
-        ocomp.run(inputs=inputs_generator_function)
-        ocomp.run(inputs=inputs_generator_instance)
-        ocomp.run(inputs=inputs_dict)
-
-        # assert results are as expected
-        if not with_inner_controller and not with_outer_controller:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [1]]
-        elif with_inner_controller and not with_outer_controller or \
-                with_outer_controller and not with_inner_controller:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [10]]
-        else:
-            assert ocomp.results[0:2] == ocomp.results[2:4] == ocomp.results[4:6] == [[-2], [100]]
-
+        ocomp.run(inputs=inputs_source)
+        assert ocomp.results == results
 
     expected_format_strings = \
         [
@@ -6433,7 +6455,7 @@ class TestResetValues:
             integration_rate=0.2
         )
 
-        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegrator(rate=0.1))
+        B = IntegratorMechanism(name='B', function=DriftDiffusionIntegrator(rate=0.1, time_step_size=1.0))
         C = TransferMechanism(name='C')
 
         comp = Composition()
@@ -7017,6 +7039,7 @@ class TestNodeRoles:
         # Validate that TERMINAL is LearningMechanism that Projects to first MappingProjection in learning_pathway
         (comp.get_nodes_by_role(NodeRole.TERMINAL))[0].efferents[0].receiver.owner.sender.owner == A
 
+    @pytest.mark.control
     def test_controller_role(self):
         comp = Composition()
         A = ProcessingMechanism(name='A')
@@ -7090,8 +7113,8 @@ class TestMisc:
                 drift_rate=(1.0),
                 threshold=(0.1654),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.25,
+                starting_value=(0),
+                non_decision_time=0.25,
             ),
             name='Decision',
         )
@@ -7120,8 +7143,8 @@ class TestMisc:
                     ),
                 ),
                 noise=(0.5),
-                starting_point=(0),
-                t0=0.45
+                starting_value=(0),
+                non_decision_time=0.45
             ),
             name='second_DDM',
         )

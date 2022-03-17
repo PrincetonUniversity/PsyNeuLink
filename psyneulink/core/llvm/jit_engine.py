@@ -103,12 +103,14 @@ def _cpu_jit_constructor():
 def _ptx_jit_constructor():
     _binding_initialize()
 
-    opt_level = int(debug_env.get('opt', 0))
+    opt_level = int(debug_env.get('opt', 2))
 
-    # PassManagerBuilder can be shared
+    # PassManagerBuilder is used only for inlining simple functions
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.opt_level = opt_level
-    __pass_manager_builder.size_level = 1 # Try to reduce size to reduce PTX parsing time
+    __pass_manager_builder.opt_level = 0
+    __pass_manager_builder.size_level = 1
+    # The threshold of '7' is empirically selected.
+    __pass_manager_builder.inlining_threshold = 7
 
     # Use default device
     # TODO: Add support for multiple devices
@@ -116,7 +118,7 @@ def _ptx_jit_constructor():
     __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
     # Create compilation target, use 64bit triple
     __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
-    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm)
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=opt_level)
 
     __ptx_pass_manager = binding.ModulePassManager()
     __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)

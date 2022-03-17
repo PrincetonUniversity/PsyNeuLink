@@ -85,7 +85,7 @@ task_decision = pnl.DDM(
         function=pnl.DriftDiffusionAnalytical(
                 threshold=2.27,
                 noise=0.4,
-                t0=.4
+                non_decision_time=.4
         ),
         output_ports=[
             pnl.PROBABILITY_UPPER_THRESHOLD,

@@ -205,10 +205,10 @@ An example that illustrate all of the parameters is shown below:
     >>> my_DDM_DriftDiffusionAnalytical = pnl.DDM(
     ...     function=pnl.DriftDiffusionAnalytical(
     ...         drift_rate=0.08928,
-    ...         starting_point=0.5,
+    ...         starting_value=0.5,
     ...         threshold=0.2645,
     ...         noise=0.5,
-    ...         t0=0.15
+    ...         non_decision_time=0.15
     ...     ),
     ...     name='my_DDM_DriftDiffusionAnalytical'
     ... )
@@ -229,7 +229,7 @@ mode, only the `DECISION_VARIABLE <DDM_DECISION_VARIABLE>` and `RESPONSE_TIME <D
     ...     function=pnl.DriftDiffusionIntegrator(
     ...         noise=0.5,
     ...         initializer=1.0,
-    ...         starting_point=2.0,
+    ...         non_decision_time=2.0,
     ...         rate=3.0
     ...     ),
     ...     name='my_DDM_path_integrator'
@@ -266,7 +266,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
             function=DriftDiffusionAnalytical(drift_rate=0.1),
             params={
                 DRIFT_RATE:(0.2, ControlProjection),
-                STARTING_POINT:-0.5
+                STARTING_VALUE:-0.5
             },
         )
     The parameters for the DDM when `function <DDM.function>` is set to `DriftDiffusionAnalytical` are:
@@ -281,7 +281,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       component, and the input its "stimulus" component.  The product of all three determines the drift rate in
       effect for each time_step of the decision process.
     ..
-    * `STARTING_POINT <starting_point>` (default 0.0)
+    * `STARTING_VALUE <starting_value>` (default 0.0)
       - specifies the starting value of the decision variable.
     ..
     * `THRESHOLD` (default 1.0)
@@ -292,7 +292,7 @@ COMMENT:  [OLD;  PUT SOMEHWERE ELSE??]
       - specifies the variance of the stochastic ("diffusion") component of the decision process.
     ..
     * `NON_DECISION_TIME` (default 0.2)
-      specifies the `t0` parameter of the decision process (in units of seconds).
+      specifies the `non_decision_time` parameter of the decision process (in units of seconds).
 
 [TBI - MULTIPROCESS DDM - REPLACE BELOW]
 When a DDM Mechanism is executed it computes the decision process, either analytically (in TRIAL mode)
@@ -315,7 +315,7 @@ single set of parameters that are not subject to the analytic solution (e.g., fo
    created) for the next execution.
 
   ADD NOTE ABOUT INTERROGATION PROTOCOL, USING ``terminate_function``
-  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO t0 TO ms
+  ADD NOTE ABOUT RELATIONSHIP OF RT TO time_steps TO non_decision_time TO ms
 COMMENT
 
 .. _DDM_Execution:
@@ -358,6 +358,7 @@ References
 Class Reference
 ---------------
 """
+import sys
 import logging
 import types
 from collections.abc import Iterable
@@ -368,7 +369,7 @@ import typecheck as tc
 from psyneulink.core.components.functions.function import DEFAULT_SEED, _random_state_getter, _seed_setter
 from psyneulink.core.components.functions.stateful.integratorfunctions import \
     DriftDiffusionIntegrator, IntegratorFunction
-from psyneulink.core.components.functions.nonstateful.distributionfunctions import STARTING_POINT, \
+from psyneulink.core.components.functions.nonstateful.distributionfunctions import STARTING_VALUE, \
     DriftDiffusionAnalytical
 from psyneulink.core.components.functions.nonstateful.combinationfunctions import Reduce
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import _is_control_spec
@@ -382,9 +383,12 @@ from psyneulink.core.globals.keywords import \
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set, REPORT_OUTPUT_PREF
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
-from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value
+from psyneulink.core.globals.utilities import convert_all_elements_to_np_array, is_numeric, is_same_function_spec, object_has_single_value, get_global_seed
+from psyneulink.core.scheduling.condition import AtTrialStart
 
 from psyneulink.core import llvm as pnlvm
+
+
 
 __all__ = [
     'ARRAY', 'DDM', 'DDMError', 'DECISION_VARIABLE', 'DECISION_VARIABLE_ARRAY',
@@ -449,11 +453,19 @@ class DDM(ProcessingMechanism):
     <DDM_Analytic_Mode>` or carrying out `step-wise numerical integration <DDM_Integration_Mode>`.
     See `Mechanism <Mechanism_Class_Reference>` for additional arguments and attributes.
 
+    The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by
+    setting the `reset_stateful_function_when <Component.reset_stateful_function_when>` attribute to a different condition.
+    In addition, unlike `TransferMechamism <TransferMechamism>`, the DDM's
+    `execute_until_finished <Component.execute_until_finished>`
+    attribute is set to :code:`True` by default. This will cause the DDM to execute multiple time steps per
+    call to its `execute <Component.execute>`  method until the decision threshold is reached. This default behavior can
+    be changed by setting `execute_until_finished <Component.execute_until_finished>` to :code:`False`.
+
 
     Arguments
     ---------
 
-    default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_POINT]
+    default_variable : value, list or np.ndarray : default FUNCTION_PARAMS[STARTING_VALUE]
         the input to the Mechanism used if none is provided in a call to its `execute <Mechanism_Base.execute>` or
         `run <Mechanism_Base.run>` methods; also serves as a template to specify the length of the `variable
         <DDM.variable>` for its `function <DDM.function>`, and the `primary OutputPort <OuputState_Primary>` of the
@@ -471,7 +483,7 @@ class DDM(ProcessingMechanism):
 
     Attributes
     ----------
-    variable : value : default  FUNCTION_PARAMS[STARTING_POINT]
+    variable : value : default  FUNCTION_PARAMS[STARTING_VALUE]
         the input to Mechanism's execute method.  Serves as the "stimulus" component of the `function <DDM.function>`'s
         **drift_rate** parameter.
 
@@ -707,10 +719,10 @@ class DDM(ProcessingMechanism):
         function = Parameter(
             DriftDiffusionAnalytical(
                 drift_rate=1.0,
-                starting_point=0.0,
+                starting_value=0.0,
                 threshold=1.0,
                 noise=0.5,
-                t0=.200,
+                non_decision_time=.200,
             ),
             stateful=False,
             loggable=False
@@ -819,7 +831,7 @@ class DDM(ProcessingMechanism):
         # compared to other mechanisms: see TransferMechanism.py __init__ function for a more normal example.
         if default_variable is None and size is None:
             try:
-                default_variable = params[FUNCTION_PARAMS][STARTING_POINT]
+                default_variable = params[FUNCTION_PARAMS][STARTING_VALUE]
                 if not is_numeric(default_variable):
                     # set normally by default
                     default_variable = None
@@ -830,7 +842,17 @@ class DDM(ProcessingMechanism):
         # # Conflict with above
         # self.size = size
 
-        self.parameters.execute_until_finished.default_value = False
+        # New (1/19/2021) default behaviour of DDM mechanism is to execute until finished. That
+        # is, it should execute until it reaches its threshold.
+        self.parameters.execute_until_finished.default_value = True
+
+        # New (1/19/2021) default behavior of DDM mechanism is to reset stateful functions
+        # on each new trial.
+        if 'reset_stateful_function_when' not in kwargs:
+            kwargs['reset_stateful_function_when'] = AtTrialStart()
+
+        # FIXME: Set maximum executions absurdly large to avoid early termination
+        self.max_executions_before_finished = sys.maxsize
 
         super(DDM, self).__init__(default_variable=default_variable,
                                   seed=seed,
@@ -844,7 +866,6 @@ class DDM(ProcessingMechanism):
                                   **kwargs),
 
         self._instantiate_plotting_functions()
-
 
     def plot(self, stimulus=1.0, threshold=10.0):
         """
@@ -1079,6 +1100,7 @@ class DDM(ProcessingMechanism):
             return return_value
 
     def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+
         mf_out, builder = super()._gen_llvm_invoke_function(ctx, builder, function, params, state, variable, tags=tags)
 
         mech_out_ty = ctx.convert_python_struct_to_llvm_ir(self.defaults.value)

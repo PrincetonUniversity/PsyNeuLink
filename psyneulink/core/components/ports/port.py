@@ -771,29 +771,28 @@ import numbers
 import sys
 import types
 import warnings
-
-from collections.abc import Iterable
 from collections import defaultdict
+from collections.abc import Iterable
 
 import numpy as np
 import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import ComponentError, DefaultsFlexibility, component_keywords
-from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.function import Function, get_param_value_for_keyword, is_function_type
+from psyneulink.core.components.functions.nonstateful.combinationfunctions import CombinationFunction, LinearCombination
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Linear
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import \
-    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
-    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE,\
+    ADDITIVE, ADDITIVE_PARAM, AUTO_ASSIGN_MATRIX, CONTEXT, CONTROL_PROJECTION_PARAMS, CONTROL_SIGNAL_SPECS, \
+    DEFAULT_INPUT, DEFAULT_VARIABLE, DEFERRED_INITIALIZATION, DISABLE, \
     EXPONENT, FUNCTION, FUNCTION_PARAMS, GATING_PROJECTION_PARAMS, GATING_SIGNAL_SPECS, INPUT_PORTS, \
     LEARNING_PROJECTION_PARAMS, LEARNING_SIGNAL_SPECS, \
     MATRIX, MECHANISM, MODULATORY_PROJECTION, MODULATORY_PROJECTIONS, MODULATORY_SIGNAL, \
     MULTIPLICATIVE, MULTIPLICATIVE_PARAM, \
     NAME, OUTPUT_PORTS, OVERRIDE, OWNER, \
-    PATH_AFFERENTS, PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
+    PARAMETER_PORTS, PARAMS, PATHWAY_PROJECTIONS, PREFS_ARG, \
     PROJECTION_DIRECTION, PROJECTIONS, PROJECTION_PARAMS, PROJECTION_TYPE, \
     RECEIVER, REFERENCE_VALUE, REFERENCE_VALUE_NAME, SENDER, STANDARD_OUTPUT_PORTS, \
     PORT, PORT_COMPONENT_CATEGORY, PORT_CONTEXT, Port_Name, port_params, PORT_PREFS, PORT_TYPE, port_value, \
@@ -2236,6 +2235,15 @@ class Port_Base(Port):
         return self.parameters.value.get(context)
 
     @property
+    def labeled_value(self):
+        return self.get_label()
+
+    @property
+    def value_label(self):
+        """Alias of labeled_value"""
+        return self.labeled_value
+
+    @property
     def owner(self):
         return self._owner
 
@@ -2313,16 +2321,22 @@ class Port_Base(Port):
         # Use function input type. The shape should be the same,
         # however, some functions still need input shape workarounds.
         func_input_type = ctx.get_input_struct_type(self.function)
-        try:
-            # MODIFIED 4/4/20 NEW: [PER JAN]
-            if len(self.path_afferents) > 0:
-                assert len(func_input_type) == len(self.path_afferents), \
-                    "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
-                        self, func_input_type, self.defaults.variable,
-                        self.function.defaults.variable, len(self.path_afferents))
-            # MODIFIED 4/4/20 END
-        except (PortError):
-            pass
+
+        # Not all ports have path_afferents property.
+        len_path_afferents = len(self._get_all_afferents()) - len(self.mod_afferents)
+
+        # Check that either all inputs or none are delivered by projections.
+        if len_path_afferents > 0:
+            assert len(func_input_type) == len_path_afferents, \
+                "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
+                    self, func_input_type, self.defaults.variable,
+                    self.function.defaults.variable, len(self.path_afferents))
+
+        if len(self.mod_afferents) == 0:
+            # Not need to wrap inputs of non-modulated ports inside mechanisms
+            # This makes sure the port input matches port data input and avoids a copy
+            return func_input_type
+
         input_types = [func_input_type]
         # Add modulation
         for mod in self.mod_afferents:
@@ -2395,7 +2409,10 @@ class Port_Base(Port):
             assert len(arg_out.type.pointee) == 1
             arg_out = builder.gep(arg_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
         # Extract the data part of input
-        f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        if len(self.mod_afferents) == 0:
+            f_input = arg_in
+        else:
+            f_input = builder.gep(arg_in, [ctx.int32_ty(0), ctx.int32_ty(0)])
         f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
         builder.call(port_f, [f_params, f_state, f_input, arg_out])
         return builder

@@ -397,7 +397,7 @@ The following attributes and methods control and provide information about the e
 
   .. note::
 
-     `Mechanisms` <Mechanism>` are the only type of Component that reset when the `reset_stateful_function_when
+     `Mechanisms <Mechanism>` are the only type of Component that reset when the `reset_stateful_function_when
      <Component.reset_stateful_function_when>` `Condition` is satisfied. Other Component types do not reset,
      although `Composition` has a `reset <Composition.reset>` method that can be used to reset all of its eligible
      Mechanisms (see `Composition_Reset`)
@@ -789,7 +789,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     ---------
 
     default_variable : scalar, list or array : default [[0]]
-        specifies template for the input to the Component's `function <Component.function>`.
+        specifies template for the input to the Component's `function <Component.function>`, and the value used as the
+        input to the Component if none is provided on execution (see `Component_Variable` for additional information).
 
     size : int, list or np.ndarray of ints : default None
         specifies default_variable as array(s) of zeros if **default_variable** is not passed as an argument;
@@ -1312,18 +1313,22 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
     def _get_compilation_state(self):
         # FIXME: MAGIC LIST, Use stateful tag for this
         whitelist = {"previous_time", "previous_value", "previous_v",
-                     "previous_w", "random_state", "is_finished_flag",
-                     "num_executions_before_finished", "num_executions",
-                     "execution_count", "value", "input_ports", "output_ports"}
-        blacklist = { # References to other components
-                     "objective_mechanism", "agent_rep", "projections"}
-        # Only mechanisms use "value" state
-        if not hasattr(self, 'ports'):
-            blacklist.add("value")
+                     "previous_w", "random_state",
+                     "input_ports", "output_ports"}
+        # Prune subcomponents (which are enabled by type rather than a list)
+        # that should be omitted
+        blacklist = { "objective_mechanism", "agent_rep", "projections"}
+
+        # Only mechanisms use "value" state, can execute 'until finished',
+        # and need to track executions
+        if hasattr(self, 'ports'):
+            whitelist.update({"value", "num_executions_before_finished",
+                              "num_executions", "is_finished_flag",
+                              "execution_count"})
 
         # Only mechanisms and compositions need 'num_executions'
-        if not hasattr(self, 'ports') and not hasattr(self, 'nodes'):
-            blacklist.add("num_executions")
+        if hasattr(self, 'nodes'):
+            whitelist.add("num_executions")
 
         def _is_compilation_state(p):
             #FIXME: This should use defaults instead of 'p.get'
@@ -1386,17 +1391,25 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "state_feature_specs",
                      # Reference to other components
                      "objective_mechanism", "agent_rep", "projections",
-                     # Shape mismatch
-                     "auto", "hetero", "cost", "costs", "combined_costs",
-                     "control_signal",
+                     "outcome_input_ports", "state_input_ports",
                      # autodiff specific types
                      "pytorch_representation", "optimizer",
                      # duplicate
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
+                     "auto", "hetero", "cost", "costs", "combined_costs",
+                     "control_signal", "intensity",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
-                     "output_type", "bounds"}
+                     "output_type", "bounds", "internal_only",
+                     "require_projection_in_composition", "default_input",
+                     "shadow_inputs", "compute_reconfiguration_cost",
+                     "reconfiguration_cost", "net_outcome", "outcome",
+                     "adjustment_cost", "intensity_cost", "duration_cost",
+                     "enabled_cost_functions", "control_signal_costs",
+                     "default_allocation", "same_seed_for_all_allocations",
+                     "search_statefulness", "initial_seed", "combine"
+                     }
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
         # * integration rate -- shape mismatch with param port input

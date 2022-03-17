@@ -52,7 +52,7 @@ parameter values in its `optimized_parameter_values <ParameterEstimationComposit
 attribute that it estimates best satisfy either of those conditions, and the results of running the `model
 <ParameterEstimationComposition.model>` with those parameters in its `results <ParameterEstimationComposition.results>`
 attribute.  The arguments below are the primary ones used to configure a ParameterEstimationComposition for either
-`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`), followed by
+`ParameterEstimationComposition_Data_Fitting` or `ParameterEstimationComposition_Optimization`, followed by
 sections that describe arguments specific to each.
 
     .. _ParameterEstimationComposition_Model:
@@ -73,7 +73,7 @@ sections that describe arguments specific to each.
 
     * **outcome_variables** - specifies the `OUTPUT` `Nodes <Composition_Nodes>` of the `model
       <ParameterEstimationComposition.model>`, the `values <Mechanism_Base.value>` of which are used
-      to evaluate the fit of the different combination of parameter values sampled.
+      to evaluate the fit of the different combinations of parameter values sampled.
 
     * **num_estimates** - specifies the number of independent samples that are estimated for a given combination of
       parameter values.
@@ -91,15 +91,15 @@ best match a specified set of empirical data.  This requires the following addit
     .. _ParameterEstimationComposition_Data:
 
     * **data** - specifies the data to which the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
-      are fit in the estimation process.  They must be in a format that aligns the specification of
-      `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
+      are fit in the estimation process.  They must be in a format that aligns with the specification of
+      the `outcome_variables <ParameterEstimationComposition.outcome_variables>`.
       COMMENT:
           FIX:  GET MORE FROM DAVE HERE
       COMMENT
 
     * **optimization_function** - specifies the function used to compare the `values <Mechanism_Base.value>` of the
       `outcome_variables <ParameterEstimationComposition.outcome_variables>` with the **data**, and search over values
-      of the `parameters <ParameterEstimationComposition.parameters>` that maximize the fit. This must be either
+      of the `parameters <ParameterEstimationComposition.parameters>` that maximize the fit. This must be either a
       `ParameterEstimationFunction` or a subclass of that.  By default, ParameterEstimationFunction uses maximum
       likelihood estimation (MLE) to compare the `outcome_variables <ParameterEstimationComposition.outcome_variables>`
       and the data, and
@@ -259,7 +259,7 @@ class ParameterEstimationComposition(Composition):
         specifies the number of estimates made for a each combination of `parameter <ParameterEstimationComposition>`
         values (see `num_estimates <ParameterEstimationComposition.num_estimates>` for additional information);
         it is passed to the ParameterEstimationComposition's `controller <Composition.controller>` to set its
-        `num_estimates <OptimizationControlMechanism.same_seed_for_all_allocations>` Parameter.
+        `num_estimates <OptimizationControlMechanism.num_estimates>` Parameter.
 
     num_trials_per_estimate : int : default None
         specifies an exact number of trials to execute for each run of the `model

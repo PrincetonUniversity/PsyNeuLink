@@ -788,13 +788,13 @@ Mechanism used to specify target values for a particular learning pathway in the
 Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputPort(s) and
 OutputPort(s).
 
-    - The `label <InputPort.label>` attribute of an InputPort or OutputPort returns the current label of
-      its value, if one exists, and its value otherwise.
+    - The `label <InputPort.labeled_value>` attribute of an InputPort or OutputPort returns the current label of
+      its value, if one exists, and its numeric value otherwise.
 
-    - The `input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes of
-      Mechanisms return a list containing the labels corresponding to the value(s) of the InputPort(s) or
-      OutputPort(s) of the Mechanism, respectively. If the current value of a port does not have a corresponding
-      label, then its numeric value is used instead.
+    - The `labeled_input_values <Mechanism_Base.labeled_input_values>` and `labeled_output_values
+      <Mechanism_Base.labeled_output_values>` attributes of a Mechanism return lists containing the labels
+      corresponding to the value(s) of the InputPort(s) or OutputPort(s) of the Mechanism, respectively. If the
+      current value of a Port does not have a corresponding label, then its numeric value is reported instead.
 
         >>> output_labels_dict = {"red": [1, 0, 0],
         ...                      "green": [0, 1, 0],
@@ -804,9 +804,9 @@ OutputPort(s).
         >>> C = pnl.Composition(pathways=[M])
         >>> input_dictionary =  {M: [[1, 0, 0]]}
         >>> results = C.run(inputs=input_dictionary)
-        >>> M.get_output_labels(C)
+        >>> M.labeled_output_values(C)
         ['red']
-        >>> M.output_ports[0].get_label(C)
+        >>> M.output_ports[0].labeled_value(C)
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
@@ -1086,7 +1086,6 @@ from numbers import Number
 import numpy as np
 import typecheck as tc
 
-import psyneulink
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.functions.function import FunctionOutputType
@@ -1105,7 +1104,7 @@ from psyneulink.core.globals.keywords import \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, MECHANISM, MECHANISM_VALUE, \
     MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MULTIPLICATIVE_PARAM, \
+    MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
     TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
@@ -1293,9 +1292,9 @@ class Mechanism_Base(Mechanism):
         in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
         of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
-    input_labels : list[str]
-        contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
-        of an InputPort does not have a corresponding label, then its numeric value is used instead.
+    labeled_input_values : list[str]
+        contains the labels corresponding to the current value(s) of the InputPort(s) of the Mechanism. If the
+        current value of an InputPort does not have a corresponding label, then its numeric value is used instead.
 
     external_input_ports : list[InputPort]
         list of the `input_ports <Mechanism_Base.input_ports>` for the Mechanism that are not designated as
@@ -1303,9 +1302,11 @@ class Mechanism_Base(Mechanism):
         <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
 
     external_input_shape : List[List or 1d np.array]
-        list showing shapes of inputs expected for the Mechanism's `input_ports <Mechanism_Base.input_ports>`.
-        Each item corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>` and its shape the
-        expected `value <Projection_Base.value>` of that `Projection`.
+        list of the `input_shape <InputPort.input_shape>`\\s of the Mechanism's external `input_ports
+        <Mechanism_Base.input_ports>` (i.e., excluding any `InputPorts <InputPort>` designated as `internal_only
+        <InputPort.internal_only>`), that shows the shape of the inputs expected for the Mechanism.  Each item
+        corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>`, and its shape is
+        the expected `value <Projection_Base.value>` of that `Projection`.
 
     external_input_variables : List[List or 1d np.array]
         list of the `variable <InputPort.variable>`\\s of the Mechanism's `external_input_ports
@@ -1313,6 +1314,10 @@ class Mechanism_Base(Mechanism):
 
     external_input_values : List[List or 1d np.array]
         list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
+
+    default_external_inputs : List[1d np.array]
+        list of the `default_input <InputPort.default_input>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
 
     COMMENT:
@@ -1373,14 +1378,14 @@ class Mechanism_Base(Mechanism):
                   the `value <OutputPort.OutputPort.value>` of that OutputPort (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
 
+    labeled_output_values : list
+        contains the labels corresponding to the current value(s) of the OutputPort(s) of the Mechanism. If the
+        current value of an OutputPort does not have a corresponding label, then its numeric value is used instead.
+
     output_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
         in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
-
-    output_labels : list
-        contains the labels corresponding to the value(s) of the OutputPort(s) of the Mechanism. If the current value
-        of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
         list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
@@ -2855,7 +2860,11 @@ class Mechanism_Base(Mechanism):
 
     def _get_input_struct_type(self, ctx):
         # Extract the non-modulation portion of InputPort input struct
-        input_type_list = [ctx.get_input_struct_type(port).elements[0] for port in self.input_ports]
+        def _get_data_part_of_input_struct(p):
+            struct_ty = ctx.get_input_struct_type(p)
+            return struct_ty.elements[0] if len(p.mod_afferents) > 0 else struct_ty
+
+        input_type_list = [_get_data_part_of_input_struct(port) for port in self.input_ports]
 
 
         # Get modulatory inputs
@@ -2882,7 +2891,7 @@ class Mechanism_Base(Mechanism):
         return (port_state_init, *mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports, group,
-                        get_output_ptr, fill_input_data,
+                        get_output_ptr, get_input_data_ptr,
                         mech_params, mech_state, mech_input):
         group_ports = getattr(self, group)
         ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, group)
@@ -2892,15 +2901,35 @@ class Mechanism_Base(Mechanism):
         for i, port in enumerate(ports):
             p_function = ctx.import_llvm_function(port)
 
-            # Find output location
+            # Find input and output locations
+            builder, p_input_data = get_input_data_ptr(builder, i)
             builder, p_output = get_output_ptr(builder, i)
 
-            # Allocate the input structure (data + modulation)
-            p_input = builder.alloca(p_function.args[2].type.pointee,
-                                     name=group + "_port_" + str(i) + "_input")
+            if len(port.mod_afferents) == 0:
+                # There's no modulation so the only input is data
+                if p_input_data.type == p_function.args[2].type:
+                    p_input = p_input_data
+                else:
+                    assert port in self.output_ports
+                    # Ports always take at least 2d input. However, parsing
+                    # the function result can result in 1d structure or scalar
+                    # Casting the pointer is LLVM way of adding dimensions
+                    array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
+                    array_2d = pnlvm.ir.ArrayType(array_1d, 1)
+                    assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
+                        "{} vs.{}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                    p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
-            # Copy input data to input structure
-            builder = fill_input_data(builder, p_input, i)
+            else:
+                # Port input structure is: (data, [modulations]),
+                p_input = builder.alloca(p_function.args[2].type.pointee,
+                                         name=group + "_port_" + str(i) + "_input")
+                # Fill in the data.
+                # FIXME: We can potentially hit the same dimensionality issue
+                #        as above, but it's more difficult to manifest and
+                #        not even new tests that modulate output ports hit it.
+                p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.store(builder.load(p_input_data), p_data)
 
             # Copy mod_afferent inputs
             for idx, p_mod in enumerate(port.mod_afferents):
@@ -2943,16 +2972,12 @@ class Mechanism_Base(Mechanism):
             ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, p_input, i):
-            ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            # Input port inputs are {original parameter, [modulations]},
-            # fill in the first one.
-            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(ip_in), data_ptr)
-            return b
+        def _get_input_data_ptr(b, i):
+            ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, self.input_ports, "input_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_input)
 
         return ip_output, builder
@@ -2964,8 +2989,8 @@ class Mechanism_Base(Mechanism):
         # Filter out param ports without corresponding param for this function
         param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
 
-        # Exit early if there's no modulation. LLVM is not aliminating
-        # the redundant copy created below.
+        # Exit early if there's no modulation. It's difficult for compiler
+        # to replace pointer arguments to functions with the source location.
         if len(param_ports) == 0:
             return params_in, builder
 
@@ -2979,20 +3004,13 @@ class Mechanism_Base(Mechanism):
                                               param_ports[i].source.name)
             return b, ptr
 
-        def _fill_input(b, p_input, i):
-            param_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                                    param_ports[i].source.name)
-            # Parameter port inputs are {original parameter, [modulations]},
-            # here we fill in the first one.
-            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            assert data_ptr.type == param_ptr.type, \
-                "Mishandled modulation type for: {} in '{}' in '{}'".format(
-                    param_ports[i].name, obj.name, self.name)
-            b.store(b.load(param_ptr), data_ptr)
-            return b
+        def _get_input_data_ptr(b, i):
+            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
+                                              param_ports[i].source.name)
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_input)
         return params_out, builder
 
@@ -3001,14 +3019,14 @@ class Mechanism_Base(Mechanism):
         port_spec = port._variable_spec
         if port_spec == OWNER_VALUE:
             return value
+        elif port_spec == OWNER_EXECUTION_COUNT:
+            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, EXECUTION_COUNT)
+            return execution_count
         elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
             index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
 
             assert index < len(value.type.pointee)
             return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
-        elif port_spec == OWNER_EXECUTION_COUNT:
-            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
-            return execution_count
         else:
             #TODO: support more spec options
             assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
@@ -3019,24 +3037,13 @@ class Mechanism_Base(Mechanism):
             ptr = b.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, s_input, i):
-            data_ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
+        def _get_input_data_ptr(b, i):
+            ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_ports[i])
-            # Output port inputs are {original parameter, [modulations]},
-            # fill in the first one.
-            input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            if input_ptr.type != data_ptr.type:
-                port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {} parsed value does not match "
-                              "output port: mech value: {} spec: {} parsed {}.".format(
-                              port, self.defaults.value, port._variable_spec,
-                              port.defaults.variable))
-                input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(data_ptr), input_ptr)
-            return b
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, self.output_ports, "output_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_in)
         return builder
 
@@ -3432,9 +3439,9 @@ class Mechanism_Base(Mechanism):
                 value=''
                 if include_value:
                     if use_label and not isinstance(port, ParameterPort):
-                        value = f'<br/>={port.label}'
+                        value = f'<br/>={port.labeled_value}'
                     else:
-                        value = f'<br/>={port.value}'
+                        value = f'<br/>={port.labeled_value}'
                 return f'<td port="{self._get_port_name(port)}"><b>{port.name}</b>{function}{value}</td>'
 
 
@@ -3929,12 +3936,18 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def default_external_inputs(self):
+        try:
+            return [input_port.default_input for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
     def default_external_input_variables(self):
         try:
             return [input_port.defaults.variable for input_port in self.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
-    # MODIFIED 2/3/22 END
 
     @property
     def external_input_values(self):
@@ -3951,7 +3964,7 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
-    def input_labels(self):
+    def labeled_input_values(self):
         """
         Returns a list with as many items as there are InputPorts of the Mechanism. Each list item represents the value
         of the corresponding InputPort, and is populated by a string label (from the input_labels_dict) when one
@@ -3981,7 +3994,7 @@ class Mechanism_Base(Mechanism):
         return [output_port.parameters.value.get(context) for output_port in self.output_ports]
 
     @property
-    def output_labels(self):
+    def labeled_output_values(self):
         """
         Returns a list with as many items as there are OutputPorts of the Mechanism. Each list item represents the
         value of the corresponding OutputPort, and is populated by a string label (from the output_labels_dict) when

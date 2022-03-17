@@ -13,7 +13,7 @@ class TestModels:
             function=psyneulink.core.components.functions.nonstateful.distributionfunctions.DriftDiffusionAnalytical(
                 drift_rate=(1.0),
                 threshold=(10.0),
-                starting_point=0.0,
+                starting_value=0.0,
             ),
             name='My_DDM',
         )
@@ -231,21 +231,6 @@ class TestModels:
             }
             return trialdict
 
-        #   CREATE THRESHOLD FUNCTION
-        # first value of DDM's value is DECISION_VARIABLE
-        # context is always passed to Condition functions and is the context
-        # in which the function gets called - below, during system execution
-        def pass_threshold(mech1, mech2, thresh, context=None):
-            results1 = mech1.output_ports[0].parameters.value.get(context)
-            results2 = mech2.output_ports[0].parameters.value.get(context)
-            for val in results1:
-                if val >= thresh:
-                    return True
-            for val in results2:
-                if val >= thresh:
-                    return True
-            return False
-
         accumulator_threshold = 1.0
 
         mechanisms_to_update = [colors_hidden_layer, words_hidden_layer, response_layer]
@@ -272,12 +257,11 @@ class TestModels:
             # Turn on noise
             switch_noise(mechanisms, psyneulink.core.components.functions.nonstateful.distributionfunctions.NormalDist(mean=0, standard_deviation=unit_noise).function)
             # Execute until one of the accumulators crosses the threshold
+            # first value of DDM's value is DECISION_VARIABLE
             my_Stroop.termination_processing = {
-                pnl.TimeScale.TRIAL: pnl.While(
-                    pass_threshold,
-                    respond_red_accumulator,
-                    respond_green_accumulator,
-                    accumulator_threshold
+                pnl.TimeScale.TRIAL: pnl.Or(
+                    pnl.Threshold(respond_red_accumulator, 'value', accumulator_threshold, '>=', (0, 0)),
+                    pnl.Threshold(respond_green_accumulator, 'value', accumulator_threshold, '>=', (0, 0))
                 )
             }
 

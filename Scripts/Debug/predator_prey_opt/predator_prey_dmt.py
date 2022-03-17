@@ -416,21 +416,20 @@ def run_search():
     import joblib
     import hypertunity as ht
 
-    #client = Client(scheduler_file='scheduler.json')
-    client = Client()
+    client = Client(scheduler_file='scheduler.json')
+    #client = Client() # Setup local cluster
     print(client)
 
     domain = ht.Domain({
                     "cost_rate": set([-.8])
     })
 
-    # with joblib.parallel_backend('dask'):
-    #     with joblib.Parallel() as parallel:
-    #         print("Doing the work ... ")
-    #         results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(1))
-    #
-    # print(results)
-    run_games(-.8)
+    with joblib.parallel_backend('dask'):
+        with joblib.Parallel() as parallel:
+            print("Doing the work ... ")
+            results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(1))
+
+    print(results)
 
 if __name__ == "__main__":
     run_search()

@@ -303,7 +303,7 @@ class TestTargetSpecs:
         assert 'The input dictionary' in error_text
         assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
                'contains input specifications of different lengths ({2, 10})' in error_text
-        assert 'The same number of inputs must be provided for each node in a Composition' in error_text
+        assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
 
 class TestLearningPathwayMethods:
