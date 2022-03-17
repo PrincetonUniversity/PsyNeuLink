@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Mechanism &mdash; PsyNeuLink 0+untagged.18.g0210bfe documentation</title>
+  <title>Mechanism &mdash; PsyNeuLink 0+untagged.15.gef07e57 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.18.g0210bfe
+                  0+untagged.15.gef07e57
                 </div>
               
             
@@ -805,12 +805,11 @@ Mechanism used to specify target values for a particular learning pathway in the
 OutputPort(s).</p>
 <blockquote>
 <div><ul>
-<li><p>The <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.label" title="psyneulink.core.components.ports.inputport.InputPort.label"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">label</span></code></a> attribute of an InputPort or OutputPort returns the current label of
-its value, if one exists, and its value otherwise.</p></li>
-<li><p>The <a class="reference internal" href="#id11" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_labels</span></code></a> and <a class="reference internal" href="#id12" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">output_labels</span></code></a> attributes of
-Mechanisms return a list containing the labels corresponding to the value(s) of the InputPort(s) or
-OutputPort(s) of the Mechanism, respectively. If the current value of a port does not have a corresponding
-label, then its numeric value is used instead.</p>
+<li><p>The <code class="xref any docutils literal notranslate"><span class="pre">label</span></code> attribute of an InputPort or OutputPort returns the current label of
+its value, if one exists, and its numeric value otherwise.</p></li>
+<li><p>The <a class="reference internal" href="#id11" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_input_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">labeled_input_values</span></code></a> and <a class="reference internal" href="#id12" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_output_values"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">labeled_output_values</span></code></a> attributes of a Mechanism return lists containing the labels
+corresponding to the value(s) of the InputPort(s) or OutputPort(s) of the Mechanism, respectively. If the
+current value of a Port does not have a corresponding label, then its numeric value is reported instead.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">output_labels_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;red&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
 <span class="gp">... </span>                     <span class="s2">&quot;green&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
 <span class="gp">... </span>                     <span class="s2">&quot;blue&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]}</span>
@@ -819,9 +818,9 @@ label, then its numeric value is used instead.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[</span><span class="n">M</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">input_dictionary</span> <span class="o">=</span>  <span class="p">{</span><span class="n">M</span><span class="p">:</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="n">input_dictionary</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">get_output_labels</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">labeled_output_values</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
 <span class="go">[&#39;red&#39;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_label</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">M</span><span class="o">.</span><span class="n">output_ports</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">labeled_value</span><span class="p">(</span><span class="n">C</span><span class="p">)</span>
 <span class="go">&#39;red&#39;</span>
 </pre></div>
 </div>
@@ -1121,10 +1120,10 @@ of the Mechanism; see <a class="reference internal" href="#mechanism-labels-dict
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels">
-<span class="sig-name descname"><span class="pre">input_labels</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
-of an InputPort does not have a corresponding label, then its numeric value is used instead.</p>
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_input_values">
+<span class="sig-name descname"><span class="pre">labeled_input_values</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_input_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains the labels corresponding to the current value(s) of the InputPort(s) of the Mechanism. If the
+current value of an InputPort does not have a corresponding label, then its numeric value is used instead.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>list[str]</p>
@@ -1147,9 +1146,9 @@ of an InputPort does not have a corresponding label, then its numeric value is u
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.external_input_shape">
 <span class="sig-name descname"><span class="pre">external_input_shape</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.external_input_shape" title="Permalink to this definition">¶</a></dt>
-<dd><p>list showing shapes of inputs expected for the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a>.
-Each item corresponds to an expected <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferent</span> <span class="pre">Projection</span></code></a> and its shape the
-expected <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of that <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>.</p>
+<dd><p>list of the <a class="reference internal" href="InputPort.html#id0" title="psyneulink.core.components.ports.inputport.InputPort.input_shape"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_shape</span></code></a>s of the Mechanism’s external <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_ports</span></code></a> (i.e., excluding any <a class="reference internal" href="InputPort.html"><span class="doc">InputPorts</span></a> designated as <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="psyneulink.core.components.ports.inputport.InputPort.internal_only"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">internal_only</span></code></a>), that shows the shape of the inputs expected for the Mechanism.  Each item
+corresponds to an expected <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferent</span> <span class="pre">Projection</span></code></a>, and its shape is
+the expected <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> of that <a class="reference internal" href="Projection.html"><span class="doc">Projection</span></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>List[List or 1d np.array]</p>
@@ -1175,6 +1174,17 @@ expected <a class="reference internal" href="Projection.html#psyneulink.core.com
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>List[List or 1d np.array]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.default_external_inputs">
+<span class="sig-name descname"><span class="pre">default_external_inputs</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.default_external_inputs" title="Permalink to this definition">¶</a></dt>
+<dd><p>list of the <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a>s of the Mechanism’s <a class="reference internal" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.external_input_ports" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.external_input_ports"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">external_input_ports</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>List[1d np.array]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1282,6 +1292,18 @@ the Mechanism’s <a class="reference internal" href="#psyneulink.core.component
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_output_values">
+<span class="sig-name descname"><span class="pre">labeled_output_values</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.labeled_output_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>contains the labels corresponding to the current value(s) of the OutputPort(s) of the Mechanism. If the
+current value of an OutputPort does not have a corresponding label, then its numeric value is used instead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict">
 <span class="sig-name descname"><span class="pre">output_labels_dict</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
@@ -1290,18 +1312,6 @@ Mechanism; see <a class="reference internal" href="#mechanism-labels-dicts"><spa
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>dict</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels">
-<span class="sig-name descname"><span class="pre">output_labels</span></span><a class="headerlink" href="#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.output_labels" title="Permalink to this definition">¶</a></dt>
-<dd><p>contains the labels corresponding to the value(s) of the OutputPort(s) of the Mechanism. If the current value
-of an OutputPort does not have a corresponding label, then its numeric value is used instead.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2093,7 +2103,7 @@ If the labels dict does not have subdicts, then use the same dict for the only (
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id11">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">input_labels</span></span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">labeled_input_values</span></span><a class="headerlink" href="#id11" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list with as many items as there are InputPorts of the Mechanism. Each list item represents the value
 of the corresponding InputPort, and is populated by a string label (from the input_labels_dict) when one
 exists, and the numeric value otherwise.</p>
@@ -2101,7 +2111,7 @@ exists, and the numeric value otherwise.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="id12">
-<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">output_labels</span></span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">labeled_output_values</span></span><a class="headerlink" href="#id12" title="Permalink to this definition">¶</a></dt>
 <dd><p>Returns a list with as many items as there are OutputPorts of the Mechanism. Each list item represents the
 value of the corresponding OutputPort, and is populated by a string label (from the output_labels_dict) when
 one exists, and the numeric value otherwise.</p>

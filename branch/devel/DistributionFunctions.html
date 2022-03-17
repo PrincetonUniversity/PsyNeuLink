@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DistributionFunctions &mdash; PsyNeuLink 0+untagged.18.g0210bfe documentation</title>
+  <title>DistributionFunctions &mdash; PsyNeuLink 0+untagged.15.gef07e57 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.18.g0210bfe
+                  0+untagged.15.gef07e57
                 </div>
               
             
@@ -234,16 +234,16 @@ drift diffusion process as described in <a class="reference external" href="http
 <li><p><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
 independently for each element.</p></li>
 <li><p><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>.</p></li>
+it must be the same length as <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>.</p></li>
 <li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>.</p></li>
+it must be the same length as <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>.</p></li>
 <li><p><strong>starting_value</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-array, it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>.</p></li>
+array, it must be the same length as <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>.</p></li>
 <li><p><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
 If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-<code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code> and all elements must be floats from 0 to 1.</p></li>
+<a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> and all elements must be floats from 0 to 1.</p></li>
 <li><p><strong>non_decision_time</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-list or array, it must be the same length as  <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code> and all
+list or array, it must be the same length as  <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> and all
 elements must be floats from 0 to 1.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in

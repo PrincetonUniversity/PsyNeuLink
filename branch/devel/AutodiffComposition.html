@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>AutodiffComposition &mdash; PsyNeuLink 0+untagged.18.g0210bfe documentation</title>
+  <title>AutodiffComposition &mdash; PsyNeuLink 0+untagged.15.gef07e57 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.18.g0210bfe
+                  0+untagged.15.gef07e57
                 </div>
               
             
@@ -441,8 +441,8 @@ argument) then coordinates with the <a class="reference internal" href="Schedule
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>inputs</strong> ({ <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a>: list } : default None) – a dictionary containing a key-value pair for each <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> in the Composition that
 receives inputs from the user. For each pair, the key is the <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> (a <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a> or <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>) and the value is an input, the shape of which must match the Node’s
-default variable. If <strong>inputs</strong> is not specified, the <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> for
-each <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node is used as its input (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Input Formats</span></a> for
+default variable. If <strong>inputs</strong> is not specified, the <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>
+for each <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> Node is used as its input (see <a class="reference internal" href="Composition.html#composition-execution-inputs"><span class="std std-ref">Input Formats</span></a> for
 additional details).</p></li>
 <li><p><strong>clamp_input</strong> (<em>SOFT_CLAMP : default SOFT_CLAMP</em>) – </p></li>
 <li><p><strong>runtime_params</strong> (<em>Dict</em><em>[</em><em>Node: Dict</em><em>[</em><em>Parameter: Tuple</em><em>(</em><em>Value</em><em>, </em><a class="reference internal" href="Condition.html#psyneulink.core.scheduling.condition.Condition" title="psyneulink.core.scheduling.condition.Condition"><em>Condition</em></a><em>)</em><em>]</em><em>] </em><em>: default None</em>) – specifies alternate parameter values to be used only during this <a class="reference internal" href="Log.html#psyneulink.core.globals.log.LogCondition.EXECUTION" title="psyneulink.core.globals.log.LogCondition.EXECUTION"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">EXECUTION</span></code></a> when the specified

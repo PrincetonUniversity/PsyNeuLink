@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0+untagged.18.g0210bfe documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0+untagged.15.gef07e57 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.18.g0210bfe
+                  0+untagged.15.gef07e57
                 </div>
               
             
@@ -687,7 +687,7 @@ This  is useful for assignment to a Mechanism that needs a fixed value as the in
 <p class="admonition-title">Note</p>
 <p>If <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.default_input" title="psyneulink.core.components.ports.inputport.InputPort.default_input"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">default_input</span></code></a> is assigned <em>DEFAULT_VARIABLE</em>, then its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.internal_only" title="psyneulink.core.components.ports.inputport.InputPort.internal_only"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">internal_only</span></code></a> attribute is automtically assigned True. This is so that if the <a class="reference internal" href="Mechanism.html"><span class="doc">Mechanism</span></a>
 to which the InputPort belongs is assigned to a <a class="reference internal" href="Composition.html"><span class="doc">Composition</span></a>, it is not treated as an <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.ORIGIN" title="psyneulink.core.compositions.composition.NodeRole.ORIGIN"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">ORIGIN</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Node</span></a> of that Composition (and automatically assigned a Projection
-from its <code class="xref any docutils literal notranslate"><span class="pre">input_CIM</span></code>.</p>
+from its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_CIM</span></code></a>.</p>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -697,9 +697,21 @@ from its <code class="xref any docutils literal notranslate"><span class="pre">i
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort.input_shape">
+<span class="sig-name descname"><span class="pre">input_shape</span></span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.input_shape" title="Permalink to this definition">¶</a></dt>
+<dd><p>shows the shape of the input to the InputPort;  that is, the shape of the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a>
+expected for any <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferent</span> <span class="pre">Projections</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p>1d array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.inputport.InputPort.function">
 <span class="sig-name descname"><span class="pre">function</span></span><a class="headerlink" href="#psyneulink.core.components.ports.inputport.InputPort.function" title="Permalink to this definition">¶</a></dt>
-<dd><p>If it is a <code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code>, it combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> (e.g., <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>) received by the InputPort  (listed in
+<dd><p>if it is a <code class="xref any docutils literal notranslate"><span class="pre">CombinationFunction</span></code>, it combines the <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.value" title="psyneulink.core.components.projections.projection.Projection_Base.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">values</span></code></a> of the <a class="reference internal" href="PathwayProjection.html"><span class="doc">PathwayProjections</span></a> (e.g., <a class="reference internal" href="MappingProjection.html"><span class="doc">MappingProjections</span></a>) received by the InputPort  (listed in
 its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.path_afferents" title="psyneulink.core.components.ports.port.Port_Base.path_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">path_afferents</span></code></a> attribute), under the possible influence of <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjections</span></a> received by the InputPort (listed in its <a class="reference internal" href="Port.html#psyneulink.core.components.ports.port.Port_Base.mod_afferents" title="psyneulink.core.components.ports.port.Port_Base.mod_afferents"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">mod_afferents</span></code></a>
 attribute). The result is assigned to the InputPort’s <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.value" title="psyneulink.core.components.ports.inputport.InputPort.value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute. For example, the
 the default (<a class="reference internal" href="CombinationFunctions.html#psyneulink.core.components.functions.combinationfunctions.LinearCombination" title="psyneulink.core.components.functions.combinationfunctions.LinearCombination"><code class="xref any py py-class docutils literal notranslate"><span class="pre">LinearCombination</span></code></a> with <em>SUM</em> as it <strong>operation</strong>) performs an element-wise (Hadamard) sum of its
@@ -918,6 +930,12 @@ return None so that it is ignored in execute method (i.e., not combined with bas
 </p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="id0">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">input_shape</span></span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias for default_input_shape_template</p>
 </dd></dl>
 
 <dl class="py method">
