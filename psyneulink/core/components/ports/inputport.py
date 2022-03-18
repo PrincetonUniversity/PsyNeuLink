@@ -365,7 +365,7 @@ should project to the InputPort. Each of these is described below:
 
             >>> A = ProcessingMechanism(name='Mech')
             >>> B = ProcessingMechanism(name='Shadowed Mech')
-            >>> C = ProcessingMechanism(name='Shadowing Mech', input_ports=[B.input_port])
+            >>> C = ProcessingMechanism(name='Shadowing Mech', input_ports=B.input_port)
             >>> ocomp = Composition(pathways=[[A, B], C],
             ...                     show_graph_attributes={'direction':'LR'})
             >>> ocomp.show_graph(show_node_structure=True)
@@ -384,7 +384,7 @@ should project to the InputPort. Each of these is described below:
              >>> import psyneulink as pnl
              >>> mech = pnl.ProcessingMechanism(name='Mech')
              >>> shadowing_mech = pnl.ProcessingMechanism(name='Shadowing Mech',
-             ...                                      input_ports=[mech.input_port])
+             ...                                      input_ports=mech.input_port)
              >>> nested_comp = pnl.Composition([mech], name='Nested Composition')
              >>> outer_comp = pnl.Composition(nodes=[nested_comp, shadowing_mech],
              ...                              name='Outer Composition')

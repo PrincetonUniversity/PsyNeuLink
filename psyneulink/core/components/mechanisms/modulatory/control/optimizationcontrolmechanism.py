@@ -2090,8 +2090,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 if len(state_feature_specs) > len(agent_rep_input_ports):
                     # specs_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
                     #                           for spec in self._get_specs_not_in_agent_rep(state_feature_specs)]
-                    specs_not_in_agent_rep = [f"'{spec.name if isinstance(spec,(Mechanism, Composition)) else spec.owner.name}'"
-                                              for spec in self._get_specs_not_in_agent_rep(user_specs)]
+                    specs_not_in_agent_rep = \
+                        [f"'{spec.name if isinstance(spec,(Mechanism, Composition)) else spec.owner.name}'"
+                         for spec in self._get_specs_not_in_agent_rep(user_specs)]
 
                     if specs_not_in_agent_rep:
                         spec_str = ", ".join(specs_not_in_agent_rep)

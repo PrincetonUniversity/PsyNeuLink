@@ -93,7 +93,9 @@ import numpy as np
 
 from psyneulink.core.components.functions.nonstateful.transferfunctions import SoftMax
 from psyneulink.core.components.functions.nonstateful.selectionfunctions import OneHot
-from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base
+from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, Mechanism
+from psyneulink.core.components.ports.inputport import InputPort
+from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.keywords import \
     FUNCTION, MAX_ABS_INDICATOR, MAX_ABS_ONE_HOT, MAX_ABS_VAL, MAX_INDICATOR, MAX_ONE_HOT, MAX_VAL, MEAN, MEDIAN, \
     NAME, PROB, PROCESSING_MECHANISM, PREFERENCE_SET_NAME, STANDARD_DEVIATION, VARIANCE
@@ -284,7 +286,7 @@ class ProcessingMechanism(ProcessingMechanism_Base):
     def __init__(self,
                  default_variable=None,
                  size=None,
-                 input_ports:tc.optional(tc.any(list, dict))=None,
+                 input_ports:tc.optional(tc.any(Iterable, Mechanism, OutputPort, InputPort))=None,
                  output_ports:tc.optional(tc.any(str, Iterable))=None,
                  function=None,
                  params=None,
