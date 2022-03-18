@@ -1,865 +1,1717 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 2065.5 452.6" style="enable-background:new 0 0 2065.5 452.6;" xml:space="preserve">
+	 viewBox="0 0 2139.8 1307.7" style="enable-background:new 0 0 2139.8 1307.7;" xml:space="preserve">
 <style type="text/css">
-	.st0{clip-path:url(#SVGID_2_);fill:none;stroke:#A52A2A;stroke-miterlimit:10;}
-	.st1{clip-path:url(#SVGID_2_);}
+	.st0{clip-path:url(#SVGID_2_);}
+	.st1{clip-path:url(#SVGID_4_);}
 	.st2{fill:#FFFFF0;}
-	.st3{opacity:0;fill:none;stroke:#FFFFFE;stroke-miterlimit:10;}
-	.st4{fill:#FAFAD0;}
-	.st5{fill:#EEE8AA;}
-	.st6{clip-path:url(#SVGID_2_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
-	.st7{clip-path:url(#SVGID_2_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
-	.st8{clip-path:url(#SVGID_2_);fill:none;stroke:#000000;stroke-miterlimit:10;}
-	.st9{clip-path:url(#SVGID_2_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
-	.st10{clip-path:url(#SVGID_2_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
-	.st11{clip-path:url(#SVGID_4_);}
-	.st12{clip-path:url(#SVGID_4_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
-	.st13{clip-path:url(#SVGID_4_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
-	.st14{clip-path:url(#SVGID_4_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
-	.st15{clip-path:url(#SVGID_4_);fill:none;stroke:#000000;stroke-miterlimit:10;}
-	.st16{clip-path:url(#SVGID_4_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
-	.st17{clip-path:url(#SVGID_6_);}
-	.st18{font-family:'Times-Roman';}
-	.st19{font-size:14px;}
-	.st20{clip-path:url(#SVGID_6_);fill:none;stroke:#A52A2A;stroke-miterlimit:10;}
-	.st21{clip-path:url(#SVGID_6_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
-	.st22{font-family:'ArialMT';}
-	.st23{font-size:12px;}
-	.st24{font-size:16px;}
-	.st25{clip-path:url(#SVGID_6_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
-	.st26{clip-path:url(#SVGID_6_);fill:none;stroke:#000000;stroke-miterlimit:10;}
-	.st27{clip-path:url(#SVGID_6_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
-	.st28{clip-path:url(#SVGID_6_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+	.st3{fill:none;stroke:#FFFFFE;stroke-miterlimit:10;stroke-opacity:0;}
+	.st4{clip-path:url(#SVGID_6_);}
+	.st5{fill:#FAFAD0;}
+	.st6{clip-path:url(#SVGID_8_);}
+	.st7{fill:#EEE8AA;}
+	.st8{clip-path:url(#SVGID_10_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st9{clip-path:url(#SVGID_12_);}
+	.st10{clip-path:url(#SVGID_14_);}
+	.st11{clip-path:url(#SVGID_16_);}
+	.st12{clip-path:url(#SVGID_18_);}
+	.st13{clip-path:url(#SVGID_20_);}
+	.st14{clip-path:url(#SVGID_22_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
+	.st15{clip-path:url(#SVGID_24_);}
+	.st16{clip-path:url(#SVGID_26_);}
+	.st17{clip-path:url(#SVGID_28_);}
+	.st18{clip-path:url(#SVGID_30_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st19{clip-path:url(#SVGID_32_);}
+	.st20{clip-path:url(#SVGID_34_);}
+	.st21{clip-path:url(#SVGID_36_);}
+	.st22{clip-path:url(#SVGID_38_);}
+	.st23{clip-path:url(#SVGID_40_);}
+	.st24{clip-path:url(#SVGID_42_);}
+	.st25{clip-path:url(#SVGID_44_);}
+	.st26{clip-path:url(#SVGID_46_);}
+	.st27{clip-path:url(#SVGID_48_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st28{clip-path:url(#SVGID_50_);}
+	.st29{clip-path:url(#SVGID_52_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st30{clip-path:url(#SVGID_54_);}
+	.st31{clip-path:url(#SVGID_56_);}
+	.st32{clip-path:url(#SVGID_58_);}
+	.st33{clip-path:url(#SVGID_60_);}
+	.st34{clip-path:url(#SVGID_62_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st35{clip-path:url(#SVGID_64_);}
+	.st36{clip-path:url(#SVGID_66_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st37{clip-path:url(#SVGID_68_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st38{clip-path:url(#SVGID_70_);}
+	.st39{clip-path:url(#SVGID_72_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st40{clip-path:url(#SVGID_74_);}
+	.st41{clip-path:url(#SVGID_76_);}
+	.st42{clip-path:url(#SVGID_78_);}
+	.st43{clip-path:url(#SVGID_80_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st44{clip-path:url(#SVGID_82_);}
+	.st45{clip-path:url(#SVGID_84_);}
+	.st46{clip-path:url(#SVGID_86_);}
+	.st47{clip-path:url(#SVGID_88_);}
+	.st48{clip-path:url(#SVGID_90_);}
+	.st49{clip-path:url(#SVGID_92_);}
+	.st50{clip-path:url(#SVGID_94_);}
+	.st51{clip-path:url(#SVGID_96_);}
+	.st52{clip-path:url(#SVGID_98_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st53{clip-path:url(#SVGID_100_);}
+	.st54{clip-path:url(#SVGID_102_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st55{clip-path:url(#SVGID_104_);}
+	.st56{clip-path:url(#SVGID_106_);}
+	.st57{clip-path:url(#SVGID_108_);}
+	.st58{clip-path:url(#SVGID_110_);}
+	.st59{clip-path:url(#SVGID_112_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st60{clip-path:url(#SVGID_114_);}
+	.st61{clip-path:url(#SVGID_116_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st62{clip-path:url(#SVGID_118_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st63{clip-path:url(#SVGID_120_);}
+	.st64{clip-path:url(#SVGID_122_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st65{clip-path:url(#SVGID_124_);}
+	.st66{clip-path:url(#SVGID_126_);}
+	.st67{clip-path:url(#SVGID_128_);}
+	.st68{clip-path:url(#SVGID_130_);}
+	.st69{clip-path:url(#SVGID_132_);}
+	.st70{clip-path:url(#SVGID_134_);}
+	.st71{clip-path:url(#SVGID_136_);}
+	.st72{clip-path:url(#SVGID_138_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st73{clip-path:url(#SVGID_140_);}
+	.st74{clip-path:url(#SVGID_142_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st75{clip-path:url(#SVGID_144_);}
+	.st76{clip-path:url(#SVGID_146_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+	.st77{clip-path:url(#SVGID_148_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st78{clip-path:url(#SVGID_150_);}
+	.st79{clip-path:url(#SVGID_152_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st80{clip-path:url(#SVGID_154_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st81{clip-path:url(#SVGID_156_);}
+	.st82{clip-path:url(#SVGID_158_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st83{clip-path:url(#SVGID_160_);}
+	.st84{font-family:'Times-Roman';}
+	.st85{font-size:14px;}
+	.st86{clip-path:url(#SVGID_162_);fill:none;stroke:#A52A2A;stroke-miterlimit:10;}
+	.st87{clip-path:url(#SVGID_164_);}
+	.st88{clip-path:url(#SVGID_166_);}
+	.st89{clip-path:url(#SVGID_168_);}
+	.st90{clip-path:url(#SVGID_170_);}
+	.st91{clip-path:url(#SVGID_172_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st92{clip-path:url(#SVGID_174_);}
+	.st93{font-family:'ArialMT';}
+	.st94{font-size:12px;}
+	.st95{clip-path:url(#SVGID_176_);}
+	.st96{clip-path:url(#SVGID_178_);}
+	.st97{clip-path:url(#SVGID_180_);}
+	.st98{clip-path:url(#SVGID_182_);}
+	.st99{font-size:16px;}
+	.st100{clip-path:url(#SVGID_184_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
+	.st101{clip-path:url(#SVGID_186_);}
+	.st102{clip-path:url(#SVGID_188_);}
+	.st103{clip-path:url(#SVGID_190_);}
+	.st104{clip-path:url(#SVGID_192_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st105{clip-path:url(#SVGID_194_);}
+	.st106{clip-path:url(#SVGID_196_);}
+	.st107{clip-path:url(#SVGID_198_);}
+	.st108{clip-path:url(#SVGID_200_);}
+	.st109{clip-path:url(#SVGID_202_);}
+	.st110{clip-path:url(#SVGID_204_);}
+	.st111{clip-path:url(#SVGID_206_);}
+	.st112{clip-path:url(#SVGID_208_);}
+	.st113{clip-path:url(#SVGID_210_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st114{clip-path:url(#SVGID_212_);}
+	.st115{clip-path:url(#SVGID_214_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
+	.st116{clip-path:url(#SVGID_216_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st117{clip-path:url(#SVGID_218_);}
+	.st118{clip-path:url(#SVGID_220_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st119{clip-path:url(#SVGID_222_);}
+	.st120{clip-path:url(#SVGID_224_);}
+	.st121{clip-path:url(#SVGID_226_);}
+	.st122{clip-path:url(#SVGID_228_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st123{clip-path:url(#SVGID_230_);}
+	.st124{clip-path:url(#SVGID_232_);}
+	.st125{clip-path:url(#SVGID_234_);}
+	.st126{clip-path:url(#SVGID_236_);}
+	.st127{clip-path:url(#SVGID_238_);}
+	.st128{clip-path:url(#SVGID_240_);}
+	.st129{clip-path:url(#SVGID_242_);}
+	.st130{clip-path:url(#SVGID_244_);}
+	.st131{clip-path:url(#SVGID_246_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st132{clip-path:url(#SVGID_248_);}
+	.st133{clip-path:url(#SVGID_250_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st134{clip-path:url(#SVGID_252_);}
+	.st135{clip-path:url(#SVGID_254_);}
+	.st136{clip-path:url(#SVGID_256_);}
+	.st137{clip-path:url(#SVGID_258_);}
+	.st138{clip-path:url(#SVGID_260_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st139{clip-path:url(#SVGID_262_);}
+	.st140{clip-path:url(#SVGID_264_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st141{clip-path:url(#SVGID_266_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st142{clip-path:url(#SVGID_268_);}
+	.st143{clip-path:url(#SVGID_270_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st144{clip-path:url(#SVGID_272_);}
+	.st145{clip-path:url(#SVGID_274_);}
+	.st146{clip-path:url(#SVGID_276_);}
+	.st147{clip-path:url(#SVGID_278_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st148{clip-path:url(#SVGID_280_);}
+	.st149{clip-path:url(#SVGID_282_);}
+	.st150{clip-path:url(#SVGID_284_);}
+	.st151{clip-path:url(#SVGID_286_);}
+	.st152{clip-path:url(#SVGID_288_);}
+	.st153{clip-path:url(#SVGID_290_);}
+	.st154{clip-path:url(#SVGID_292_);}
+	.st155{clip-path:url(#SVGID_294_);}
+	.st156{clip-path:url(#SVGID_296_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st157{clip-path:url(#SVGID_298_);}
+	.st158{clip-path:url(#SVGID_300_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st159{clip-path:url(#SVGID_302_);}
+	.st160{clip-path:url(#SVGID_304_);}
+	.st161{clip-path:url(#SVGID_306_);}
+	.st162{clip-path:url(#SVGID_308_);}
+	.st163{clip-path:url(#SVGID_310_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st164{clip-path:url(#SVGID_312_);}
+	.st165{clip-path:url(#SVGID_314_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st166{clip-path:url(#SVGID_316_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st167{clip-path:url(#SVGID_318_);}
+	.st168{clip-path:url(#SVGID_320_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st169{clip-path:url(#SVGID_322_);}
+	.st170{clip-path:url(#SVGID_324_);}
+	.st171{clip-path:url(#SVGID_326_);}
+	.st172{clip-path:url(#SVGID_328_);}
+	.st173{clip-path:url(#SVGID_330_);}
+	.st174{clip-path:url(#SVGID_332_);}
+	.st175{clip-path:url(#SVGID_334_);}
+	.st176{clip-path:url(#SVGID_336_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st177{clip-path:url(#SVGID_338_);}
+	.st178{clip-path:url(#SVGID_340_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st179{clip-path:url(#SVGID_342_);}
+	.st180{clip-path:url(#SVGID_344_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+	.st181{clip-path:url(#SVGID_346_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st182{clip-path:url(#SVGID_348_);}
+	.st183{clip-path:url(#SVGID_350_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st184{clip-path:url(#SVGID_352_);}
+	.st185{clip-path:url(#SVGID_354_);}
+	.st186{clip-path:url(#SVGID_356_);}
+	.st187{clip-path:url(#SVGID_358_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st188{clip-path:url(#SVGID_360_);}
+	.st189{clip-path:url(#SVGID_362_);}
+	.st190{clip-path:url(#SVGID_364_);}
+	.st191{clip-path:url(#SVGID_366_);}
+	.st192{clip-path:url(#SVGID_368_);}
+	.st193{clip-path:url(#SVGID_370_);}
+	.st194{clip-path:url(#SVGID_372_);}
+	.st195{clip-path:url(#SVGID_374_);}
+	.st196{clip-path:url(#SVGID_376_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st197{clip-path:url(#SVGID_378_);}
+	.st198{clip-path:url(#SVGID_380_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+	.st199{clip-path:url(#SVGID_382_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st200{clip-path:url(#SVGID_384_);}
+	.st201{clip-path:url(#SVGID_386_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st202{clip-path:url(#SVGID_388_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st203{clip-path:url(#SVGID_390_);}
+	.st204{clip-path:url(#SVGID_392_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st205{clip-path:url(#SVGID_394_);}
+	.st206{opacity:0;fill:none;stroke:#FFFFFE;stroke-width:1.5;stroke-miterlimit:10;}
+	.st207{clip-path:url(#SVGID_394_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;}
+	.st208{font-size:18px;}
+	.st209{font-size:24px;}
+	.st210{clip-path:url(#SVGID_394_);fill:none;stroke:#00FF00;stroke-width:4.5;stroke-miterlimit:10;}
+	.st211{clip-path:url(#SVGID_394_);fill:none;stroke:#FF0000;stroke-width:4.5;stroke-miterlimit:10;}
+	.st212{clip-path:url(#SVGID_394_);fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;}
+	.st213{font-family:'MyriadPro-BoldIt';}
+	.st214{font-size:60px;}
+	.st215{fill:none;stroke:#000000;stroke-width:5;stroke-miterlimit:10;}
 </style>
 <g>
-	<defs>
-		<rect id="SVGID_1_" x="1609.6" y="-993.7" width="769" height="944"/>
-	</defs>
-	<clipPath id="SVGID_2_">
-		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
-	</clipPath>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1940.2767 -96.5436)" class="st18 st19">Outer Composition</text>
+	<g>
+		<defs>
+			<rect id="SVGID_159_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_2_">
+			<use xlink:href="#SVGID_159_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st0">
+			<text transform="matrix(1 0 0 1 1015.7709 1238.4738)" class="st84 st85">Outer Composition</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_161_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_4_">
+			<use xlink:href="#SVGID_161_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="476.1" y="825.3" style="clip-path:url(#SVGID_4_);fill:none;stroke:#A52A2A;stroke-miterlimit:10;" width="867" height="214"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_163_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_6_">
+			<use xlink:href="#SVGID_163_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st4">
+			<text transform="matrix(1 0 0 1 852.2709 840.4736)" class="st84 st85">Nested Composition</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_165_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_8_">
+			<use xlink:href="#SVGID_165_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st6">
+			<rect x="63.1" y="1050.8" class="st2" width="377" height="89"/>
+			<rect x="63.1" y="1050.8" class="st3" width="377" height="89"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_167_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_10_">
+			<use xlink:href="#SVGID_167_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_10_);">
+			<rect x="67.6" y="1055.3" class="st5" width="369" height="48"/>
+			<rect x="67.6" y="1055.3" class="st3" width="369" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_169_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_12_">
+			<use xlink:href="#SVGID_169_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st9">
+			<rect x="71.6" y="1059.3" class="st7" width="361" height="21"/>
+			<rect x="71.6" y="1059.3" class="st3" width="361" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_171_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_14_">
+			<use xlink:href="#SVGID_171_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="72.6" y="1060.3" style="clip-path:url(#SVGID_14_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="359" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_173_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_16_">
+			<use xlink:href="#SVGID_173_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st11">
+			<text transform="matrix(1 0 0 1 75.7325 1071.8732)" class="st93 st94">INPUT_CIM_Nested Composition_INPUT_CIM_Mech_InputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_175_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_18_">
+			<use xlink:href="#SVGID_175_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st12">
+			<text transform="matrix(1 0 0 1 220.1163 1094.8732)" class="st93 st94">OutputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_177_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_20_">
+			<use xlink:href="#SVGID_177_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st13">
+			<text transform="matrix(1 0 0 1 219.788 1116.873)" class="st93 st94">Mechanism</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_179_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_22_">
+			<use xlink:href="#SVGID_179_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_22_);">
+			<text transform="matrix(1 0 0 1 281.1417 1116.873)" class="st93 st94">:</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_181_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_24_">
+			<use xlink:href="#SVGID_181_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st15">
+			<text transform="matrix(1 0 0 1 146.3077 1132.0734)" class="st93 st99">Outer Composition Input_CIM</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_183_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_26_">
+			<use xlink:href="#SVGID_183_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="63.1" y="1050.8" style="clip-path:url(#SVGID_26_);fill:none;stroke:#00FF00;stroke-miterlimit:10;" width="377" height="89"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_185_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_28_">
+			<use xlink:href="#SVGID_185_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st17">
+			<rect x="492.1" y="885.3" class="st2" width="231" height="142"/>
+			<rect x="492.1" y="885.3" class="st3" width="231" height="142"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_187_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_30_">
+			<use xlink:href="#SVGID_187_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_30_);">
+			<rect x="496.6" y="889.3" class="st5" width="223" height="48"/>
+			<rect x="496.6" y="889.3" class="st3" width="223" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_189_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_32_">
+			<use xlink:href="#SVGID_189_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st19">
+			<rect x="500.6" y="893.3" class="st7" width="215" height="21"/>
+			<rect x="500.6" y="893.3" class="st3" width="215" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_191_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_34_">
+			<use xlink:href="#SVGID_191_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="501.6" y="894.3" style="clip-path:url(#SVGID_34_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="213" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_193_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_36_">
+			<use xlink:href="#SVGID_193_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st21">
+			<text transform="matrix(1 0 0 1 524.7676 905.8732)" class="st93 st94">INPUT_CIM_Mech_InputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_195_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_38_">
+			<use xlink:href="#SVGID_195_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st22">
+			<text transform="matrix(1 0 0 1 576.1161 928.8732)" class="st93 st94">OutputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_197_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_40_">
+			<use xlink:href="#SVGID_197_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st23">
+			<text transform="matrix(1 0 0 1 575.788 950.8732)" class="st93 st94">Mechanism</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_199_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_42_">
+			<use xlink:href="#SVGID_199_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st24">
+			<text transform="matrix(1 0 0 1 637.1413 950.8732)" class="st93 st94">:</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_201_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_44_">
+			<use xlink:href="#SVGID_201_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st25">
+			<text transform="matrix(1 0 0 1 496.9677 966.0734)" class="st93 st99">Nested Composition Input_CIM</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_203_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_46_">
+			<use xlink:href="#SVGID_203_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st26">
+			<rect x="496.6" y="975.3" class="st5" width="223" height="48"/>
+			<rect x="496.6" y="975.3" class="st3" width="223" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_205_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_48_">
+			<use xlink:href="#SVGID_205_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_48_);">
+			<text transform="matrix(1 0 0 1 580.7831 987.8732)" class="st93 st94">InputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_207_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_50_">
+			<use xlink:href="#SVGID_207_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st28">
+			<rect x="500.6" y="998.3" class="st7" width="215" height="21"/>
+			<rect x="500.6" y="998.3" class="st3" width="215" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_209_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_52_">
+			<use xlink:href="#SVGID_209_"  style="overflow:visible;"/>
+		</clipPath>
+		<rect x="501.6" y="999.3" class="st29" width="213" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_211_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_54_">
+			<use xlink:href="#SVGID_211_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st30">
+			<text transform="matrix(1 0 0 1 524.7676 1010.8732)" class="st93 st94">INPUT_CIM_Mech_InputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_213_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_56_">
+			<use xlink:href="#SVGID_213_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="492.1" y="885.3" style="clip-path:url(#SVGID_56_);fill:none;stroke:#00FF00;stroke-miterlimit:10;" width="231" height="142"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_215_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_58_">
+			<use xlink:href="#SVGID_215_"  style="overflow:visible;"/>
+		</clipPath>
+		<path style="clip-path:url(#SVGID_58_);fill:none;stroke:#000000;stroke-miterlimit:10;" d="M432.6,1069.3
+			c36.5,0,29.6-49.3,58-58.5"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_217_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_60_">
+			<use xlink:href="#SVGID_217_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon class="st33" points="490.2,1007.3 500.6,1009.3 491.2,1014.2 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_219_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_62_">
+			<use xlink:href="#SVGID_219_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon style="clip-path:url(#SVGID_62_);fill:none;stroke:#000000;stroke-miterlimit:10;" points="490.2,1007.3 500.6,1009.3 
+			491.2,1014.2 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_221_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_64_">
+			<use xlink:href="#SVGID_221_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st35">
+			<rect x="1060.1" y="1051.3" class="st2" width="291" height="168"/>
+			<rect x="1060.1" y="1051.3" class="st3" width="291" height="168"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_223_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_66_">
+			<use xlink:href="#SVGID_223_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_66_);">
+			<rect x="1066.6" y="1057.3" class="st5" width="279" height="48"/>
+			<rect x="1066.6" y="1057.3" class="st3" width="279" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_225_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_68_">
+			<use xlink:href="#SVGID_225_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_68_);">
+			<rect x="1070.6" y="1061.3" class="st7" width="271" height="21"/>
+			<rect x="1070.6" y="1061.3" class="st3" width="271" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_227_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_70_">
+			<use xlink:href="#SVGID_227_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1071.6" y="1062.3" style="clip-path:url(#SVGID_70_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="269" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_229_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_72_">
+			<use xlink:href="#SVGID_229_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_72_);">
+			<text transform="matrix(1 0 0 1 1171.7808 1073.8732)" class="st93 st94">OutputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_231_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_74_">
+			<use xlink:href="#SVGID_231_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st40">
+			<text transform="matrix(1 0 0 1 1174.1157 1096.8732)" class="st93 st94">OutputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_233_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_76_">
+			<use xlink:href="#SVGID_233_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st41">
+			<text transform="matrix(1 0 0 1 1095.2875 1129.8732)" class="st93 st94">Mechanism</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_235_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_78_">
+			<use xlink:href="#SVGID_235_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st42">
+			<text transform="matrix(1 0 0 1 1156.6411 1129.8732)" class="st93 st94">:</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_237_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_80_">
+			<use xlink:href="#SVGID_237_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_80_);">
+			<text transform="matrix(1 0 0 1 1066.2603 1145.0734)" class="st93 st99">Shadowing Mech</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_239_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_82_">
+			<use xlink:href="#SVGID_239_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st44">
+			<rect x="1193.6" y="1110.3" class="st5" width="152" height="50"/>
+			<rect x="1193.6" y="1110.3" class="st3" width="152" height="50"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_241_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_84_">
+			<use xlink:href="#SVGID_241_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st45">
+			<text transform="matrix(1 0 0 1 1197.6167 1136.9738)" class="st93 st94">ParameterPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_243_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_86_">
+			<use xlink:href="#SVGID_243_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st46">
+			<rect x="1287.6" y="1114.3" class="st7" width="54" height="42"/>
+			<rect x="1287.6" y="1114.3" class="st3" width="54" height="42"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_245_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_88_">
+			<use xlink:href="#SVGID_245_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1288.6" y="1115.3" style="clip-path:url(#SVGID_88_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="52" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_247_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_90_">
+			<use xlink:href="#SVGID_247_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st48">
+			<text transform="matrix(1 0 0 1 1291.6187 1126.873)" class="st93 st94">intercept</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_249_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_92_">
+			<use xlink:href="#SVGID_249_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1288.6" y="1136.3" style="clip-path:url(#SVGID_92_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="52" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_251_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_94_">
+			<use xlink:href="#SVGID_251_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st50">
+			<text transform="matrix(1 0 0 1 1300.2876 1147.8732)" class="st93 st94">slope</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_253_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_96_">
+			<use xlink:href="#SVGID_253_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st51">
+			<rect x="1066.6" y="1165.3" class="st5" width="279" height="48"/>
+			<rect x="1066.6" y="1165.3" class="st3" width="279" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_255_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_98_">
+			<use xlink:href="#SVGID_255_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_98_);">
+			<text transform="matrix(1 0 0 1 1178.7827 1177.8732)" class="st93 st94">InputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_257_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_100_">
+			<use xlink:href="#SVGID_257_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st53">
+			<rect x="1070.6" y="1188.3" class="st7" width="271" height="21"/>
+			<rect x="1070.6" y="1188.3" class="st3" width="271" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_259_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_102_">
+			<use xlink:href="#SVGID_259_"  style="overflow:visible;"/>
+		</clipPath>
+		<rect x="1071.6" y="1189.3" class="st54" width="269" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_261_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_104_">
+			<use xlink:href="#SVGID_261_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st55">
+			<text transform="matrix(1 0 0 1 1107.0687 1200.8732)" class="st93 st94">Shadowed input of Mech[InputPort-0]</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_263_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_106_">
+			<use xlink:href="#SVGID_263_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1061.6" y="1052.8" style="clip-path:url(#SVGID_106_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;" width="288" height="165"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_265_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_108_">
+			<use xlink:href="#SVGID_265_"  style="overflow:visible;"/>
+		</clipPath>
+		<path style="clip-path:url(#SVGID_108_);fill:none;stroke:#000000;stroke-miterlimit:10;" d="M432.6,1069.3
+			c286,0,347.2,127,627.9,129.9"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_267_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_110_">
+			<use xlink:href="#SVGID_267_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon class="st58" points="1060.6,1195.8 1070.6,1199.3 1060.6,1202.8 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_269_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_112_">
+			<use xlink:href="#SVGID_269_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon style="clip-path:url(#SVGID_112_);fill:none;stroke:#000000;stroke-miterlimit:10;" points="1060.6,1195.8 
+			1070.6,1199.3 1060.6,1202.8 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_271_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_114_">
+			<use xlink:href="#SVGID_271_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st60">
+			<rect x="775.1" y="859.3" class="st2" width="233" height="168"/>
+			<rect x="775.1" y="859.3" class="st3" width="233" height="168"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_273_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_116_">
+			<use xlink:href="#SVGID_273_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_116_);">
+			<rect x="781.6" y="865.3" class="st5" width="221" height="48"/>
+			<rect x="781.6" y="865.3" class="st3" width="221" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_275_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_118_">
+			<use xlink:href="#SVGID_275_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_118_);">
+			<rect x="785.6" y="869.3" class="st7" width="213" height="21"/>
+			<rect x="785.6" y="869.3" class="st3" width="213" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_277_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_120_">
+			<use xlink:href="#SVGID_277_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="786.6" y="870.3" style="clip-path:url(#SVGID_120_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="211" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_279_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_122_">
+			<use xlink:href="#SVGID_279_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_122_);">
+			<text transform="matrix(1 0 0 1 857.7806 881.8732)" class="st93 st94">OutputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_281_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_124_">
+			<use xlink:href="#SVGID_281_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st65">
+			<text transform="matrix(1 0 0 1 860.1157 904.8732)" class="st93 st94">OutputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_283_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_126_">
+			<use xlink:href="#SVGID_283_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st66">
+			<text transform="matrix(1 0 0 1 781.2875 937.8732)" class="st93 st94">Mechanism</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_285_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_128_">
+			<use xlink:href="#SVGID_285_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st67">
+			<text transform="matrix(1 0 0 1 842.6411 937.8732)" class="st93 st94">:</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_287_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_130_">
+			<use xlink:href="#SVGID_287_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st68">
+			<text transform="matrix(1 0 0 1 794.0688 953.0734)" class="st93 st99">Mech</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_289_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_132_">
+			<use xlink:href="#SVGID_289_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st69">
+			<rect x="850.6" y="918.3" class="st5" width="152" height="50"/>
+			<rect x="850.6" y="918.3" class="st3" width="152" height="50"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_291_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_134_">
+			<use xlink:href="#SVGID_291_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st70">
+			<text transform="matrix(1 0 0 1 854.6166 944.9738)" class="st93 st94">ParameterPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_293_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_136_">
+			<use xlink:href="#SVGID_293_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st71">
+			<rect x="944.6" y="922.3" class="st7" width="54" height="42"/>
+			<rect x="944.6" y="922.3" class="st3" width="54" height="42"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_295_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_138_">
+			<use xlink:href="#SVGID_295_"  style="overflow:visible;"/>
+		</clipPath>
+		<rect x="945.6" y="923.3" class="st72" width="52" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_297_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_140_">
+			<use xlink:href="#SVGID_297_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st73">
+			<text transform="matrix(1 0 0 1 948.6187 934.8732)" class="st93 st94">intercept</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_299_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_142_">
+			<use xlink:href="#SVGID_299_"  style="overflow:visible;"/>
+		</clipPath>
+		<rect x="945.6" y="944.3" class="st74" width="52" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_301_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_144_">
+			<use xlink:href="#SVGID_301_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st75">
+			<text transform="matrix(1 0 0 1 957.2876 955.8732)" class="st93 st94">slope</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_303_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_146_">
+			<use xlink:href="#SVGID_303_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_146_);">
+			<rect x="781.6" y="973.3" class="st5" width="221" height="48"/>
+			<rect x="781.6" y="973.3" class="st3" width="221" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_305_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_148_">
+			<use xlink:href="#SVGID_305_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_148_);">
+			<text transform="matrix(1 0 0 1 864.7827 985.8732)" class="st93 st94">InputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_307_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_150_">
+			<use xlink:href="#SVGID_307_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st78">
+			<rect x="785.6" y="996.3" class="st7" width="213" height="21"/>
+			<rect x="785.6" y="996.3" class="st3" width="213" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_309_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_152_">
+			<use xlink:href="#SVGID_309_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="786.6" y="997.3" style="clip-path:url(#SVGID_152_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="211" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_311_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_154_">
+			<use xlink:href="#SVGID_311_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_154_);">
+			<text transform="matrix(1 0 0 1 862.4477 1008.8732)" class="st93 st94">InputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_313_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_156_">
+			<use xlink:href="#SVGID_313_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="776.6" y="860.8" style="clip-path:url(#SVGID_156_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;" width="230" height="165"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_315_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_158_">
+			<use xlink:href="#SVGID_315_"  style="overflow:visible;"/>
+		</clipPath>
+		<path class="st82" d="M715.6,903.3c51.9,0,19.5,90.3,59.9,102.6"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_317_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_160_">
+			<use xlink:href="#SVGID_317_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon class="st83" points="776.2,1002.5 785.6,1007.3 775.2,1009.4 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_319_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_162_">
+			<use xlink:href="#SVGID_319_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon style="clip-path:url(#SVGID_162_);fill:none;stroke:#000000;stroke-miterlimit:10;" points="776.2,1002.5 785.6,1007.3 
+			775.2,1009.4 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_321_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_164_">
+			<use xlink:href="#SVGID_321_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st87">
+			<rect x="1403.1" y="908.8" class="st2" width="673" height="89"/>
+			<rect x="1403.1" y="908.8" class="st3" width="673" height="89"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_323_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_166_">
+			<use xlink:href="#SVGID_323_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st88">
+			<text transform="matrix(1 0 0 1 1707.7876 921.8732)" class="st93 st94">Mechanism</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_325_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_168_">
+			<use xlink:href="#SVGID_325_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st89">
+			<text transform="matrix(1 0 0 1 1769.141 921.8732)" class="st93 st94">:</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_327_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_170_">
+			<use xlink:href="#SVGID_327_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st90">
+			<text transform="matrix(1 0 0 1 1628.0845 937.0734)" class="st93 st99">Outer Composition Output_CIM</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_329_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_172_">
+			<use xlink:href="#SVGID_329_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_172_);">
+			<rect x="1407.6" y="946.3" class="st5" width="665" height="48"/>
+			<rect x="1407.6" y="946.3" class="st3" width="665" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_331_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_174_">
+			<use xlink:href="#SVGID_331_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st92">
+			<text transform="matrix(1 0 0 1 1712.7827 958.8732)" class="st93 st94">InputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_333_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_176_">
+			<use xlink:href="#SVGID_333_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st95">
+			<rect x="1411.6" y="969.3" class="st7" width="657" height="21"/>
+			<rect x="1411.6" y="969.3" class="st3" width="657" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_335_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_178_">
+			<use xlink:href="#SVGID_335_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1412.6" y="970.3" style="clip-path:url(#SVGID_178_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="395" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_337_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_180_">
+			<use xlink:href="#SVGID_337_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st97">
+			<text transform="matrix(1 0 0 1 1415.7349 981.8732)" class="st93 st94">OUTPUT_CIM_Nested Composition_OUTPUT_CIM_Mech_OutputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_339_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_182_">
+			<use xlink:href="#SVGID_339_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1809.6" y="970.3" style="clip-path:url(#SVGID_182_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="258" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_341_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_184_">
+			<use xlink:href="#SVGID_341_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_184_);">
+			<text transform="matrix(1 0 0 1 1812.5786 981.8732)" class="st93 st94">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_343_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_186_">
+			<use xlink:href="#SVGID_343_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1403.1" y="908.8" style="clip-path:url(#SVGID_186_);fill:none;stroke:#FF0000;stroke-miterlimit:10;" width="673" height="89"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_345_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_188_">
+			<use xlink:href="#SVGID_345_"  style="overflow:visible;"/>
+		</clipPath>
+		<path style="clip-path:url(#SVGID_188_);fill:none;stroke:#000000;stroke-miterlimit:10;" d="M1341.6,1071.3
+			c264.2,0,588.3,181.9,596.8-70.6"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_347_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_190_">
+			<use xlink:href="#SVGID_347_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon class="st103" points="1935,1000.2 1938.6,990.3 1942,1000.4 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_349_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_192_">
+			<use xlink:href="#SVGID_349_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon style="clip-path:url(#SVGID_192_);fill:none;stroke:#000000;stroke-miterlimit:10;" points="1935,1000.2 1938.6,990.3 
+			1942,1000.4 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_351_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_194_">
+			<use xlink:href="#SVGID_351_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st105">
+			<rect x="1084.1" y="871.3" class="st2" width="243" height="142"/>
+			<rect x="1084.1" y="871.3" class="st3" width="243" height="142"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_353_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_196_">
+			<use xlink:href="#SVGID_353_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st106">
+			<rect x="1088.6" y="875.3" class="st5" width="235" height="48"/>
+			<rect x="1088.6" y="875.3" class="st3" width="235" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_355_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_198_">
+			<use xlink:href="#SVGID_355_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st107">
+			<rect x="1092.6" y="879.3" class="st7" width="227" height="21"/>
+			<rect x="1092.6" y="879.3" class="st3" width="227" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_357_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_200_">
+			<use xlink:href="#SVGID_357_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1093.6" y="880.3" style="clip-path:url(#SVGID_200_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="225" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_359_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_202_">
+			<use xlink:href="#SVGID_359_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st109">
+			<text transform="matrix(1 0 0 1 1111.4349 891.8732)" class="st93 st94">OUTPUT_CIM_Mech_OutputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_361_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_204_">
+			<use xlink:href="#SVGID_361_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st110">
+			<text transform="matrix(1 0 0 1 1174.1157 914.8732)" class="st93 st94">OutputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_363_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_206_">
+			<use xlink:href="#SVGID_363_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st111">
+			<text transform="matrix(1 0 0 1 1173.7876 936.8732)" class="st93 st94">Mechanism</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_365_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_208_">
+			<use xlink:href="#SVGID_365_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st112">
+			<text transform="matrix(1 0 0 1 1235.1411 936.8732)" class="st93 st94">:</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_367_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_210_">
+			<use xlink:href="#SVGID_367_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_210_);">
+			<text transform="matrix(1 0 0 1 1088.7445 952.0734)" class="st93 st99">Nested Composition Output_CIM</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_369_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_212_">
+			<use xlink:href="#SVGID_369_"  style="overflow:visible;"/>
+		</clipPath>
+		<g class="st114">
+			<rect x="1088.6" y="961.3" class="st5" width="235" height="48"/>
+			<rect x="1088.6" y="961.3" class="st3" width="235" height="48"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_371_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_214_">
+			<use xlink:href="#SVGID_371_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_214_);">
+			<text transform="matrix(1 0 0 1 1178.7827 973.8732)" class="st93 st94">InputPorts</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_373_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_216_">
+			<use xlink:href="#SVGID_373_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_216_);">
+			<rect x="1092.6" y="984.3" class="st7" width="227" height="21"/>
+			<rect x="1092.6" y="984.3" class="st3" width="227" height="21"/>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_375_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_218_">
+			<use xlink:href="#SVGID_375_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1093.6" y="985.3" style="clip-path:url(#SVGID_218_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;" width="225" height="19"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_377_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_220_">
+			<use xlink:href="#SVGID_377_"  style="overflow:visible;"/>
+		</clipPath>
+		<g style="clip-path:url(#SVGID_220_);">
+			<text transform="matrix(1 0 0 1 1111.4349 996.8732)" class="st93 st94">OUTPUT_CIM_Mech_OutputPort-0</text>
+		</g>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_379_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_222_">
+			<use xlink:href="#SVGID_379_"  style="overflow:visible;"/>
+		</clipPath>
+		
+			<rect x="1084.1" y="871.3" style="clip-path:url(#SVGID_222_);fill:none;stroke:#FF0000;stroke-miterlimit:10;" width="243" height="142"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_381_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_224_">
+			<use xlink:href="#SVGID_381_"  style="overflow:visible;"/>
+		</clipPath>
+		<path style="clip-path:url(#SVGID_224_);fill:none;stroke:#000000;stroke-miterlimit:10;" d="M1319.6,889.3
+			c53.8,0,37.1,79.6,81.8,89.9"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_383_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_226_">
+			<use xlink:href="#SVGID_383_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon class="st121" points="1402,975.8 1411.6,980.3 1401.3,982.7 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_385_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_228_">
+			<use xlink:href="#SVGID_385_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon style="clip-path:url(#SVGID_228_);fill:none;stroke:#000000;stroke-miterlimit:10;" points="1402,975.8 1411.6,980.3 
+			1401.3,982.7 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_387_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_230_">
+			<use xlink:href="#SVGID_387_"  style="overflow:visible;"/>
+		</clipPath>
+		<path style="clip-path:url(#SVGID_230_);fill:none;stroke:#000000;stroke-miterlimit:10;" d="M998.6,879.3
+			c62.7,0,31.6,103.7,84,115"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_389_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_232_">
+			<use xlink:href="#SVGID_389_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon class="st124" points="1083,990.8 1092.6,995.3 1082.3,997.8 		"/>
+	</g>
+	<g>
+		<defs>
+			<rect id="SVGID_391_" x="15.1" y="777.3" width="2109" height="508"/>
+		</defs>
+		<clipPath id="SVGID_234_">
+			<use xlink:href="#SVGID_391_"  style="overflow:visible;"/>
+		</clipPath>
+		<polygon style="clip-path:url(#SVGID_234_);fill:none;stroke:#000000;stroke-miterlimit:10;" points="1083,990.8 1092.6,995.3 
+			1082.3,997.8 		"/>
 	</g>
-	<rect x="1732.1" y="-815.7" class="st0" width="276" height="599"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1812.7767 -223.5436)" class="st18 st19">Nested Composition</text>
-	</g>
-	<g class="st1">
-		<rect x="1802.6" y="-204.7" class="st2" width="377" height="89"/>
-		<rect x="1802.6" y="-204.7" class="st3" width="377" height="89"/>
-	</g>
-	<g class="st1">
-		<rect x="1807.1" y="-200.2" class="st4" width="369" height="48"/>
-		<rect x="1807.1" y="-200.2" class="st3" width="369" height="48"/>
-	</g>
-	<g class="st1">
-		<rect x="1811.1" y="-196.2" class="st5" width="361" height="21"/>
-		<rect x="1811.1" y="-196.2" class="st3" width="361" height="21"/>
-	</g>
-	<rect x="1812.1" y="-195.2" class="st6" width="359" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1815.2377 -183.6442)" class="st22 st23">INPUT_CIM_Nested Composition_INPUT_CIM_Mech_InputPort-0</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1959.6215 -160.6442)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1959.2933 -138.6442)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2020.6469 -138.6442)" class="st22 st23">:</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1885.8129 -123.444)" class="st22 st24">Outer Composition Input_CIM</text>
-	</g>
-	<rect x="1802.6" y="-204.7" class="st7" width="377" height="89"/>
-	<g class="st1">
-		<rect x="1758.6" y="-392.7" class="st2" width="231" height="142"/>
-		<rect x="1758.6" y="-392.7" class="st3" width="231" height="142"/>
-	</g>
-	<g class="st1">
-		<rect x="1763.1" y="-388.7" class="st4" width="223" height="48"/>
-		<rect x="1763.1" y="-388.7" class="st3" width="223" height="48"/>
-	</g>
-	<g class="st1">
-		<rect x="1767.1" y="-384.7" class="st5" width="215" height="21"/>
-		<rect x="1767.1" y="-384.7" class="st3" width="215" height="21"/>
-	</g>
-	<rect x="1768.1" y="-383.7" class="st6" width="213" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1791.2728 -372.1442)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1842.6215 -349.1442)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1842.2933 -327.1442)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1903.6469 -327.1442)" class="st22 st23">:</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1763.473 -311.944)" class="st22 st24">Nested Composition Input_CIM</text>
-	</g>
-	<g class="st1">
-		<rect x="1763.1" y="-302.7" class="st4" width="223" height="48"/>
-		<rect x="1763.1" y="-302.7" class="st3" width="223" height="48"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1847.2885 -290.1442)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="1767.1" y="-279.7" class="st5" width="215" height="21"/>
-		<rect x="1767.1" y="-279.7" class="st3" width="215" height="21"/>
-	</g>
-	<rect x="1768.1" y="-278.7" class="st6" width="213" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1791.2728 -267.1442)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
-	</g>
-	<rect x="1758.6" y="-392.7" class="st7" width="231" height="142"/>
-	<path class="st8" d="M1811.1-186.2c-10,0-6.3-14.7,0-22.5c48.7-60.7,122.3,22.7,171-38c3.1-3.8,5.5-9.3,6-13.9"/>
-	<polygon class="st1" points="1985.2,-258.6 1982.1,-268.7 1990.9,-262.7 	"/>
-	<polygon class="st8" points="1985.2,-258.6 1982.1,-268.7 1990.9,-262.7 	"/>
-	<g class="st1">
-		<rect x="2039.6" y="-816.7" class="st2" width="291" height="168"/>
-		<rect x="2039.6" y="-816.7" class="st3" width="291" height="168"/>
-	</g>
-	<g class="st1">
-		<rect x="2046.1" y="-810.7" class="st4" width="279" height="48"/>
-		<rect x="2046.1" y="-810.7" class="st3" width="279" height="48"/>
-	</g>
-	<g class="st1">
-		<rect x="2050.1" y="-806.7" class="st5" width="271" height="21"/>
-		<rect x="2050.1" y="-806.7" class="st3" width="271" height="21"/>
-	</g>
-	<rect x="2051.1" y="-805.7" class="st6" width="269" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2151.2864 -794.1437)" class="st22 st23">OutputPort-0</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2153.6213 -771.1437)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2074.7932 -738.1437)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2136.1467 -738.1437)" class="st22 st23">:</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2045.766 -722.944)" class="st22 st24">Shadowing Mech</text>
-	</g>
-	<g class="st1">
-		<rect x="2173.1" y="-757.7" class="st4" width="152" height="50"/>
-		<rect x="2173.1" y="-757.7" class="st3" width="152" height="50"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2177.1223 -731.0431)" class="st22 st23">ParameterPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="2267.1" y="-753.7" class="st5" width="54" height="42"/>
-		<rect x="2267.1" y="-753.7" class="st3" width="54" height="42"/>
-	</g>
-	<rect x="2268.1" y="-752.7" class="st6" width="52" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2271.1243 -741.1437)" class="st22 st23">intercept</text>
-	</g>
-	<rect x="2268.1" y="-731.7" class="st6" width="52" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2279.7932 -720.1437)" class="st22 st23">slope</text>
-	</g>
-	<g class="st1">
-		<rect x="2046.1" y="-702.7" class="st4" width="279" height="48"/>
-		<rect x="2046.1" y="-702.7" class="st3" width="279" height="48"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2158.2883 -690.1437)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="2050.1" y="-679.7" class="st5" width="271" height="21"/>
-		<rect x="2050.1" y="-679.7" class="st3" width="271" height="21"/>
-	</g>
-	<rect x="2051.1" y="-678.7" class="st6" width="269" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2086.5754 -667.1437)" class="st22 st23">Shadowed input of Mech[InputPort-0]</text>
-	</g>
-	<rect x="2041.1" y="-815.2" class="st9" width="288" height="165"/>
-	<path class="st8" d="M2172.1-186.2c206.7,0,20.2-254,14.2-462.3"/>
-	<polygon class="st1" points="2182.8,-648.7 2186.1,-658.7 2189.8,-648.8 	"/>
-	<polygon class="st8" points="2182.8,-648.7 2186.1,-658.7 2189.8,-648.8 	"/>
-	<g class="st1">
-		<rect x="1754.6" y="-604.7" class="st2" width="233" height="168"/>
-		<rect x="1754.6" y="-604.7" class="st3" width="233" height="168"/>
-	</g>
-	<g class="st1">
-		<rect x="1761.1" y="-598.7" class="st4" width="221" height="48"/>
-		<rect x="1761.1" y="-598.7" class="st3" width="221" height="48"/>
-	</g>
-	<g class="st1">
-		<rect x="1765.1" y="-594.7" class="st5" width="213" height="21"/>
-		<rect x="1765.1" y="-594.7" class="st3" width="213" height="21"/>
-	</g>
-	<rect x="1766.1" y="-593.7" class="st6" width="211" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1837.2865 -582.1437)" class="st22 st23">OutputPort-0</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1839.6215 -559.1437)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1760.7933 -526.1437)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1822.1469 -526.1437)" class="st22 st23">:</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1773.5746 -510.944)" class="st22 st24">Mech</text>
-	</g>
-	<g class="st1">
-		<rect x="1830.1" y="-545.7" class="st4" width="152" height="50"/>
-		<rect x="1830.1" y="-545.7" class="st3" width="152" height="50"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1834.1224 -519.0431)" class="st22 st23">ParameterPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="1924.1" y="-541.7" class="st5" width="54" height="42"/>
-		<rect x="1924.1" y="-541.7" class="st3" width="54" height="42"/>
-	</g>
-	<rect x="1925.1" y="-540.7" class="st6" width="52" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1928.1244 -529.1437)" class="st22 st23">intercept</text>
-	</g>
-	<rect x="1925.1" y="-519.7" class="st6" width="52" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1936.7933 -508.1437)" class="st22 st23">slope</text>
-	</g>
-	<g class="st1">
-		<rect x="1761.1" y="-490.7" class="st4" width="221" height="48"/>
-		<rect x="1761.1" y="-490.7" class="st3" width="221" height="48"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1844.2885 -478.1437)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="1765.1" y="-467.7" class="st5" width="213" height="21"/>
-		<rect x="1765.1" y="-467.7" class="st3" width="213" height="21"/>
-	</g>
-	<rect x="1766.1" y="-466.7" class="st6" width="211" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1841.9535 -455.1442)" class="st22 st23">InputPort-0</text>
-	</g>
-	<rect x="1756.1" y="-603.2" class="st9" width="230" height="165"/>
-	<path class="st8" d="M1875.1-384.7c0-23.8-2.2-32.2-2.8-51.7"/>
-	<polygon class="st1" points="1868.8,-436.7 1872.1,-446.7 1875.8,-436.8 	"/>
-	<polygon class="st8" points="1868.8,-436.7 1872.1,-446.7 1875.8,-436.8 	"/>
-	<g class="st1">
-		<rect x="1657.6" y="-949.7" class="st2" width="673" height="89"/>
-		<rect x="1657.6" y="-949.7" class="st3" width="673" height="89"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1962.2933 -936.6437)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2023.6469 -936.6437)" class="st22 st23">:</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1882.5902 -921.444)" class="st22 st24">Outer Composition Output_CIM</text>
-	</g>
-	<g class="st1">
-		<rect x="1662.1" y="-912.2" class="st4" width="665" height="48"/>
-		<rect x="1662.1" y="-912.2" class="st3" width="665" height="48"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1967.2885 -899.6437)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="1666.1" y="-889.2" class="st5" width="657" height="21"/>
-		<rect x="1666.1" y="-889.2" class="st3" width="657" height="21"/>
-	</g>
-	<rect x="1667.1" y="-888.2" class="st6" width="395" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1670.2406 -876.6437)" class="st22 st23">OUTPUT_CIM_Nested Composition_OUTPUT_CIM_Mech_OutputPort-0</text>
-	</g>
-	<rect x="2064.1" y="-888.2" class="st6" width="258" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 2067.0842 -876.6437)" class="st22 st23">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
-	</g>
-	<rect x="1657.6" y="-949.7" class="st10" width="673" height="89"/>
-	<path class="st8" d="M2050.1-796.7c-10.7,0-6.2-15.3,0-24c37-51.2,131.4,11.5,142-37.4"/>
-	<polygon class="st1" points="2188.7,-858.6 2193.1,-868.2 2195.7,-858 	"/>
-	<polygon class="st8" points="2188.7,-858.6 2193.1,-868.2 2195.7,-858 	"/>
-	<g class="st1">
-		<rect x="1748.6" y="-803.7" class="st2" width="243" height="142"/>
-		<rect x="1748.6" y="-803.7" class="st3" width="243" height="142"/>
-	</g>
-	<g class="st1">
-		<rect x="1753.1" y="-799.7" class="st4" width="235" height="48"/>
-		<rect x="1753.1" y="-799.7" class="st3" width="235" height="48"/>
-	</g>
-	<g class="st1">
-		<rect x="1757.1" y="-795.7" class="st5" width="227" height="21"/>
-		<rect x="1757.1" y="-795.7" class="st3" width="227" height="21"/>
-	</g>
-	<rect x="1758.1" y="-794.7" class="st6" width="225" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1775.9408 -783.1437)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1838.6215 -760.1437)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1838.2933 -738.1437)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1899.6469 -738.1437)" class="st22 st23">:</text>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1753.2504 -722.944)" class="st22 st24">Nested Composition Output_CIM</text>
-	</g>
-	<g class="st1">
-		<rect x="1753.1" y="-713.7" class="st4" width="235" height="48"/>
-		<rect x="1753.1" y="-713.7" class="st3" width="235" height="48"/>
-	</g>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1843.2885 -701.1437)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st1">
-		<rect x="1757.1" y="-690.7" class="st5" width="227" height="21"/>
-		<rect x="1757.1" y="-690.7" class="st3" width="227" height="21"/>
-	</g>
-	<rect x="1758.1" y="-689.7" class="st6" width="225" height="19"/>
-	<g class="st1">
-		<text transform="matrix(1 0 0 1 1775.9408 -678.1437)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
-	</g>
-	<rect x="1748.6" y="-803.7" class="st10" width="243" height="142"/>
-	<path class="st8" d="M1984.1-785.7c9.8,0,5.1-13.7,0-22c-29.4-47.7-109.1-6.6-119-50.5"/>
-	<polygon class="st1" points="1861.7,-857.9 1864.1,-868.2 1868.6,-858.6 	"/>
-	<polygon class="st8" points="1861.7,-857.9 1864.1,-868.2 1868.6,-858.6 	"/>
-	<path class="st8" d="M1872.1-594.7c0-29.7-0.8-39.5-1-64.9"/>
-	<polygon class="st1" points="1867.7,-659.7 1871.1,-669.7 1874.7,-659.8 	"/>
-	<polygon class="st8" points="1867.7,-659.7 1871.1,-669.7 1874.7,-659.8 	"/>
 </g>
 <g>
 	<defs>
-		<rect id="SVGID_3_" x="167.4" y="-947.4" width="1185" height="472"/>
+		<rect id="SVGID_393_" x="538.4" width="1008" height="754.5"/>
 	</defs>
-	<clipPath id="SVGID_4_">
-		<use xlink:href="#SVGID_3_"  style="overflow:visible;"/>
+	<clipPath id="SVGID_236_">
+		<use xlink:href="#SVGID_393_"  style="overflow:visible;"/>
 	</clipPath>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 705.9998 -522.2406)" class="st18 st19">Outer Composition</text>
+	<g class="st126">
+		<rect x="610.4" y="403.5" class="st2" width="349.5" height="252"/>
+		<rect x="610.4" y="403.5" class="st206" width="349.5" height="252"/>
 	</g>
-	<g class="st11">
-		<rect x="215.4" y="-676.9" class="st2" width="220" height="89"/>
-		<rect x="215.4" y="-676.9" class="st3" width="220" height="89"/>
+	<g class="st126">
+		<rect x="620.1" y="412.5" class="st5" width="331.5" height="72"/>
+		<rect x="620.1" y="412.5" class="st206" width="331.5" height="72"/>
 	</g>
-	<g class="st11">
-		<rect x="219.4" y="-672.4" class="st4" width="212" height="48"/>
-		<rect x="219.4" y="-672.4" class="st3" width="212" height="48"/>
+	<g class="st126">
+		<rect x="626.1" y="418.5" class="st7" width="319.5" height="31.5"/>
+		<rect x="626.1" y="418.5" class="st206" width="319.5" height="31.5"/>
 	</g>
-	<g class="st11">
-		<rect x="223.4" y="-668.4" class="st5" width="204" height="21"/>
-		<rect x="223.4" y="-668.4" class="st3" width="204" height="21"/>
+	
+		<rect x="627.6" y="420" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="316.5" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 734.3498 437.3988)" class="st93 st208">OutputPort-0</text>
 	</g>
-	<rect x="224.4" y="-667.4" class="st12" width="202" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 241.9958 -655.8412)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 737.8517 471.8988)" class="st93 st208">OutputPorts</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 293.3445 -632.8412)" class="st22 st23">OutputPorts</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 619.6096 521.3988)" class="st93 st208">Mechanism</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 293.0163 -610.8412)" class="st22 st23">Mechanism</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 711.6398 521.3988)" class="st93 st208">:</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 354.3698 -610.8412)" class="st22 st23">:</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 638.7814 544.1986)" class="st93 st209">Mech</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 219.5359 -595.641)" class="st22 st24">Outer Composition Input_CIM</text>
+	<g class="st126">
+		<rect x="723.6" y="492" class="st5" width="228" height="75"/>
+		<rect x="723.6" y="492" class="st206" width="228" height="75"/>
 	</g>
-	<rect x="215.4" y="-676.9" class="st13" width="220" height="89"/>
-	<g class="st11">
-		<rect x="516.4" y="-903.4" class="st2" width="233" height="168"/>
-		<rect x="516.4" y="-903.4" class="st3" width="233" height="168"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 729.6037 532.0502)" class="st93 st208">ParameterPorts</text>
 	</g>
-	<g class="st11">
-		<rect x="522.9" y="-897.4" class="st4" width="221" height="48"/>
-		<rect x="522.9" y="-897.4" class="st3" width="221" height="48"/>
+	<g class="st126">
+		<rect x="864.6" y="498" class="st7" width="81" height="63"/>
+		<rect x="864.6" y="498" class="st206" width="81" height="63"/>
 	</g>
-	<g class="st11">
-		<rect x="526.9" y="-893.4" class="st5" width="213" height="21"/>
-		<rect x="526.9" y="-893.4" class="st3" width="213" height="21"/>
+	
+		<rect x="866.1" y="499.5" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="78" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 870.6057 516.8988)" class="st93 st208">intercept</text>
 	</g>
-	<rect x="527.9" y="-892.4" class="st12" width="211" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 599.0095 -880.8412)" class="st22 st23">OutputPort-0</text>
+	
+		<rect x="866.1" y="531" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="78" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 883.6096 548.3988)" class="st93 st208">slope</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 601.3445 -857.8412)" class="st22 st23">OutputPorts</text>
+	<g class="st126">
+		<rect x="620.1" y="574.5" class="st5" width="331.5" height="72"/>
+		<rect x="620.1" y="574.5" class="st206" width="331.5" height="72"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 522.5164 -824.8412)" class="st22 st23">Mechanism</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 744.8517 593.3988)" class="st93 st208">InputPorts</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 583.8699 -824.8412)" class="st22 st23">:</text>
+	<g class="st126">
+		<rect x="626.1" y="609" class="st7" width="319.5" height="31.5"/>
+		<rect x="626.1" y="609" class="st206" width="319.5" height="31.5"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 535.2976 -809.641)" class="st22 st24">Mech</text>
+	
+		<rect x="627.6" y="610.5" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="316.5" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 741.3498 627.8988)" class="st93 st208">InputPort-0</text>
 	</g>
-	<g class="st11">
-		<rect x="591.9" y="-844.4" class="st4" width="152" height="50"/>
-		<rect x="591.9" y="-844.4" class="st3" width="152" height="50"/>
+	
+		<rect x="612.6" y="405.8" style="clip-path:url(#SVGID_236_);fill:none;stroke:#00FF00;stroke-width:4.5;stroke-miterlimit:10;" width="345" height="247.5"/>
+	<g class="st126">
+		<rect x="1040.1" y="66" class="st2" width="432" height="252"/>
+		<rect x="1040.1" y="66" class="st206" width="432" height="252"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 595.8455 -817.7406)" class="st22 st23">ParameterPorts</text>
+	<g class="st126">
+		<rect x="1049.1" y="75" class="st5" width="414" height="72"/>
+		<rect x="1049.1" y="75" class="st206" width="414" height="72"/>
 	</g>
-	<g class="st11">
-		<rect x="685.9" y="-840.4" class="st5" width="54" height="42"/>
-		<rect x="685.9" y="-840.4" class="st3" width="54" height="42"/>
+	<g class="st126">
+		<rect x="1055.1" y="81" class="st7" width="402" height="31.5"/>
+		<rect x="1055.1" y="81" class="st206" width="402" height="31.5"/>
 	</g>
-	<rect x="686.9" y="-839.4" class="st12" width="52" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 689.8474 -827.8412)" class="st22 st23">intercept</text>
+	
+		<rect x="1056.6" y="82.5" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="399" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1204.5999 99.8998)" class="st93 st208">OutputPort-0</text>
 	</g>
-	<rect x="686.9" y="-818.4" class="st12" width="52" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 698.5164 -806.8412)" class="st22 st23">slope</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1208.1018 134.3988)" class="st93 st208">OutputPorts</text>
 	</g>
-	<g class="st11">
-		<rect x="522.9" y="-789.4" class="st4" width="221" height="48"/>
-		<rect x="522.9" y="-789.4" class="st3" width="221" height="48"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1089.8596 183.8988)" class="st93 st208">Mechanism</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 606.0115 -776.8412)" class="st22 st23">InputPorts</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1181.8899 183.8988)" class="st93 st208">:</text>
 	</g>
-	<g class="st11">
-		<rect x="526.9" y="-766.4" class="st5" width="213" height="21"/>
-		<rect x="526.9" y="-766.4" class="st3" width="213" height="21"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1048.9846 206.6986)" class="st93 st209">Shadowed Mech</text>
 	</g>
-	<rect x="527.9" y="-765.4" class="st12" width="211" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 603.6765 -753.8412)" class="st22 st23">InputPort-0</text>
+	<g class="st126">
+		<rect x="1235.1" y="154.5" class="st5" width="228" height="75"/>
+		<rect x="1235.1" y="154.5" class="st206" width="228" height="75"/>
 	</g>
-	<rect x="517.9" y="-901.9" class="st14" width="230" height="165"/>
-	<path class="st15" d="M427.4-658.4c36.6,0,25.1-39.1,52-64c16-14.9,20.6-28.3,37.4-32"/>
-	<polygon class="st11" points="516.6,-758 526.9,-755.4 517.2,-751 	"/>
-	<polygon class="st15" points="516.6,-758 526.9,-755.4 517.2,-751 	"/>
-	<g class="st11">
-		<rect x="487.4" y="-709.4" class="st2" width="291" height="168"/>
-		<rect x="487.4" y="-709.4" class="st3" width="291" height="168"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1241.1038 194.5502)" class="st93 st208">ParameterPorts</text>
 	</g>
-	<g class="st11">
-		<rect x="493.9" y="-703.4" class="st4" width="279" height="48"/>
-		<rect x="493.9" y="-703.4" class="st3" width="279" height="48"/>
+	<g class="st126">
+		<rect x="1376.1" y="160.5" class="st7" width="81" height="63"/>
+		<rect x="1376.1" y="160.5" class="st206" width="81" height="63"/>
 	</g>
-	<g class="st11">
-		<rect x="497.9" y="-699.4" class="st5" width="271" height="21"/>
-		<rect x="497.9" y="-699.4" class="st3" width="271" height="21"/>
+	
+		<rect x="1377.6" y="162" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="78" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1382.1057 179.3988)" class="st93 st208">intercept</text>
 	</g>
-	<rect x="498.9" y="-698.4" class="st12" width="269" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 599.0095 -686.8412)" class="st22 st23">OutputPort-0</text>
+	
+		<rect x="1377.6" y="193.5" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="78" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1395.1096 210.8988)" class="st93 st208">slope</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 601.3445 -663.8412)" class="st22 st23">OutputPorts</text>
+	<g class="st126">
+		<rect x="1049.1" y="237" class="st5" width="414" height="72"/>
+		<rect x="1049.1" y="237" class="st206" width="414" height="72"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 522.5164 -630.8412)" class="st22 st23">Mechanism</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1215.1018 255.8988)" class="st93 st208">InputPorts</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 583.8699 -630.8412)" class="st22 st23">:</text>
+	<g class="st126">
+		<rect x="1055.1" y="271.5" class="st7" width="402" height="31.5"/>
+		<rect x="1055.1" y="271.5" class="st206" width="402" height="31.5"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 493.489 -615.641)" class="st22 st24">Shadowing Mech</text>
+	
+		<rect x="1056.6" y="273" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="399" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1211.5999 290.3988)" class="st93 st208">InputPort-0</text>
 	</g>
-	<g class="st11">
-		<rect x="620.9" y="-650.4" class="st4" width="152" height="50"/>
-		<rect x="620.9" y="-650.4" class="st3" width="152" height="50"/>
+	
+		<rect x="1042.4" y="68.2" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FF0000;stroke-width:4.5;stroke-miterlimit:10;" width="427.5" height="247.5"/>
+	<path style="clip-path:url(#SVGID_236_);fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;" d="M945.6,433.5
+		c75.2,0,35.3-125.8,94.3-143.4"/>
+	<polygon class="st126" points="1039.6,284.8 1055.1,288 1041,295.2 	"/>
+	<polygon style="clip-path:url(#SVGID_236_);fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;" points="
+		1039.6,284.8 1055.1,288 1041,295.2 	"/>
+	<g class="st126">
+		<rect x="1037.9" y="357" class="st2" width="436.5" height="252"/>
+		<rect x="1037.9" y="357" class="st206" width="436.5" height="252"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 624.8455 -623.7406)" class="st22 st23">ParameterPorts</text>
+	<g class="st126">
+		<rect x="1047.6" y="366" class="st5" width="418.5" height="72"/>
+		<rect x="1047.6" y="366" class="st206" width="418.5" height="72"/>
 	</g>
-	<g class="st11">
-		<rect x="714.9" y="-646.4" class="st5" width="54" height="42"/>
-		<rect x="714.9" y="-646.4" class="st3" width="54" height="42"/>
+	<g class="st126">
+		<rect x="1053.6" y="372" class="st7" width="406.5" height="31.5"/>
+		<rect x="1053.6" y="372" class="st206" width="406.5" height="31.5"/>
 	</g>
-	<rect x="715.9" y="-645.4" class="st12" width="52" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 718.8474 -633.8412)" class="st22 st23">intercept</text>
+	
+		<rect x="1055.1" y="373.5" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="403.5" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1205.3499 390.8988)" class="st93 st208">OutputPort-0</text>
 	</g>
-	<rect x="715.9" y="-624.4" class="st12" width="52" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 727.5164 -612.8412)" class="st22 st23">slope</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1208.8518 425.3988)" class="st93 st208">OutputPorts</text>
 	</g>
-	<g class="st11">
-		<rect x="493.9" y="-595.4" class="st4" width="279" height="48"/>
-		<rect x="493.9" y="-595.4" class="st3" width="279" height="48"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1090.6096 474.8988)" class="st93 st208">Mechanism</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 606.0115 -582.8412)" class="st22 st23">InputPorts</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1182.6399 474.8988)" class="st93 st208">:</text>
 	</g>
-	<g class="st11">
-		<rect x="497.9" y="-572.4" class="st5" width="271" height="21"/>
-		<rect x="497.9" y="-572.4" class="st3" width="271" height="21"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1047.0686 497.6986)" class="st93 st209">Shadowing Mech</text>
 	</g>
-	<rect x="498.9" y="-571.4" class="st12" width="269" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 534.2986 -559.8412)" class="st22 st23">Shadowed input of Mech[InputPort-0]</text>
+	<g class="st126">
+		<rect x="1238.1" y="445.5" class="st5" width="228" height="75"/>
+		<rect x="1238.1" y="445.5" class="st206" width="228" height="75"/>
 	</g>
-	<rect x="488.9" y="-707.9" class="st14" width="288" height="165"/>
-	<path class="st15" d="M427.4-658.4c49.5,0,21.8,83.8,60.5,95.6"/>
-	<polygon class="st11" points="488.4,-566.3 497.9,-561.4 487.5,-559.3 	"/>
-	<polygon class="st15" points="488.4,-566.3 497.9,-561.4 487.5,-559.3 	"/>
-	<g class="st11">
-		<rect x="830.4" y="-857.9" class="st2" width="474" height="89"/>
-		<rect x="830.4" y="-857.9" class="st3" width="474" height="89"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1244.1038 485.5502)" class="st93 st208">ParameterPorts</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 1035.0164 -844.8412)" class="st22 st23">Mechanism</text>
+	<g class="st126">
+		<rect x="1379.1" y="451.5" class="st7" width="81" height="63"/>
+		<rect x="1379.1" y="451.5" class="st206" width="81" height="63"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 1096.3699 -844.8412)" class="st22 st23">:</text>
+	
+		<rect x="1380.6" y="453" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="78" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1385.1057 470.3988)" class="st93 st208">intercept</text>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 955.3132 -829.641)" class="st22 st24">Outer Composition Output_CIM</text>
+	
+		<rect x="1380.6" y="484.5" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="78" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1398.1096 501.8988)" class="st93 st208">slope</text>
 	</g>
-	<g class="st11">
-		<rect x="834.4" y="-820.4" class="st4" width="466" height="48"/>
-		<rect x="834.4" y="-820.4" class="st3" width="466" height="48"/>
+	<g class="st126">
+		<rect x="1047.6" y="528" class="st5" width="418.5" height="72"/>
+		<rect x="1047.6" y="528" class="st206" width="418.5" height="72"/>
 	</g>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 1040.0115 -807.8412)" class="st22 st23">InputPorts</text>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1215.8518 546.8988)" class="st93 st208">InputPorts</text>
 	</g>
-	<g class="st11">
-		<rect x="838.4" y="-797.4" class="st5" width="458" height="21"/>
-		<rect x="838.4" y="-797.4" class="st3" width="458" height="21"/>
+	<g class="st126">
+		<rect x="1053.6" y="562.5" class="st7" width="406.5" height="31.5"/>
+		<rect x="1053.6" y="562.5" class="st206" width="406.5" height="31.5"/>
 	</g>
-	<rect x="839.4" y="-796.4" class="st12" width="196" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 842.6638 -784.8412)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
+	
+		<rect x="1055.1" y="564" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FAFAD2;stroke-width:3;stroke-miterlimit:10;" width="403.5" height="28.5"/>
+	<g class="st126">
+		<text transform="matrix(1 0 0 1 1063.2483 581.3988)" class="st93 st208">Shadowed input of Shadowed Mech[InputPort-0]</text>
 	</g>
-	<rect x="1037.4" y="-796.4" class="st12" width="258" height="19"/>
-	<g class="st11">
-		<text transform="matrix(1 0 0 1 1040.3074 -784.8412)" class="st22 st23">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
-	</g>
-	<rect x="830.4" y="-857.9" class="st16" width="474" height="89"/>
-	<path class="st15" d="M739.9-883.4c57.7,0,39.7,85.6,88.2,96"/>
-	<polygon class="st11" points="828.8,-790.9 838.4,-786.4 828.1,-784 	"/>
-	<polygon class="st15" points="828.8,-790.9 838.4,-786.4 828.1,-784 	"/>
-	<path class="st15" d="M768.9-689.4c177.4,0,389.3,90.3,397.3-77"/>
-	<polygon class="st11" points="1162.6,-766.5 1166.4,-776.4 1169.6,-766.4 	"/>
-	<polygon class="st15" points="1162.6,-766.5 1166.4,-776.4 1169.6,-766.4 	"/>
+	
+		<rect x="1040.1" y="359.2" style="clip-path:url(#SVGID_236_);fill:none;stroke:#FF0000;stroke-width:4.5;stroke-miterlimit:10;" width="432" height="247.5"/>
+	<path style="clip-path:url(#SVGID_236_);fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;" d="M945.6,433.5
+		c74.9,0,34.3,125.8,92.9,143.4"/>
+	<polygon class="st126" points="1039.5,571.8 1053.6,579 1038.1,582.2 	"/>
+	<polygon style="clip-path:url(#SVGID_236_);fill:none;stroke:#000000;stroke-width:1.5;stroke-miterlimit:10;" points="
+		1039.5,571.8 1053.6,579 1038.1,582.2 	"/>
 </g>
-<g>
-	<defs>
-		<rect id="SVGID_5_" x="-23.1" y="-24.8" width="2109" height="508"/>
-	</defs>
-	<clipPath id="SVGID_6_">
-		<use xlink:href="#SVGID_5_"  style="overflow:visible;"/>
-	</clipPath>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 977.5596 436.4035)" class="st18 st19">Outer Composition</text>
-	</g>
-	<rect x="437.9" y="23.2" class="st20" width="867" height="214"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 814.0596 38.4035)" class="st18 st19">Nested Composition</text>
-	</g>
-	<g class="st17">
-		<rect x="24.9" y="248.7" class="st2" width="377" height="89"/>
-		<rect x="24.9" y="248.7" class="st3" width="377" height="89"/>
-	</g>
-	<g class="st17">
-		<rect x="29.4" y="253.2" class="st4" width="369" height="48"/>
-		<rect x="29.4" y="253.2" class="st3" width="369" height="48"/>
-	</g>
-	<g class="st17">
-		<rect x="33.4" y="257.2" class="st5" width="361" height="21"/>
-		<rect x="33.4" y="257.2" class="st3" width="361" height="21"/>
-	</g>
-	<rect x="34.4" y="258.2" class="st21" width="359" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 37.5205 269.8029)" class="st22 st23">INPUT_CIM_Nested Composition_INPUT_CIM_Mech_InputPort-0</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 181.9043 292.8029)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 181.5761 314.8029)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 242.9297 314.8029)" class="st22 st23">:</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 108.0957 330.0031)" class="st22 st24">Outer Composition Input_CIM</text>
-	</g>
-	<rect x="24.9" y="248.7" class="st25" width="377" height="89"/>
-	<g class="st17">
-		<rect x="453.9" y="83.2" class="st2" width="231" height="142"/>
-		<rect x="453.9" y="83.2" class="st3" width="231" height="142"/>
-	</g>
-	<g class="st17">
-		<rect x="458.4" y="87.2" class="st4" width="223" height="48"/>
-		<rect x="458.4" y="87.2" class="st3" width="223" height="48"/>
-	</g>
-	<g class="st17">
-		<rect x="462.4" y="91.2" class="st5" width="215" height="21"/>
-		<rect x="462.4" y="91.2" class="st3" width="215" height="21"/>
-	</g>
-	<rect x="463.4" y="92.2" class="st21" width="213" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 486.5556 103.8029)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 537.9043 126.8029)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 537.5762 148.8029)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 598.9297 148.8029)" class="st22 st23">:</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 458.7558 164.0031)" class="st22 st24">Nested Composition Input_CIM</text>
-	</g>
-	<g class="st17">
-		<rect x="458.4" y="173.2" class="st4" width="223" height="48"/>
-		<rect x="458.4" y="173.2" class="st3" width="223" height="48"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 542.5713 185.8029)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="462.4" y="196.2" class="st5" width="215" height="21"/>
-		<rect x="462.4" y="196.2" class="st3" width="215" height="21"/>
-	</g>
-	<rect x="463.4" y="197.2" class="st21" width="213" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 486.5556 208.8029)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
-	</g>
-	<rect x="453.9" y="83.2" class="st25" width="231" height="142"/>
-	<path class="st26" d="M394.4,267.2c36.5,0,29.6-49.3,58-58.5"/>
-	<polygon class="st17" points="452,205.2 462.4,207.2 453,212.1 	"/>
-	<polygon class="st26" points="452,205.2 462.4,207.2 453,212.1 	"/>
-	<g class="st17">
-		<rect x="1021.9" y="249.2" class="st2" width="291" height="168"/>
-		<rect x="1021.9" y="249.2" class="st3" width="291" height="168"/>
-	</g>
-	<g class="st17">
-		<rect x="1028.4" y="255.2" class="st4" width="279" height="48"/>
-		<rect x="1028.4" y="255.2" class="st3" width="279" height="48"/>
-	</g>
-	<g class="st17">
-		<rect x="1032.4" y="259.2" class="st5" width="271" height="21"/>
-		<rect x="1032.4" y="259.2" class="st3" width="271" height="21"/>
-	</g>
-	<rect x="1033.4" y="260.2" class="st21" width="269" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1133.5693 271.8029)" class="st22 st23">OutputPort-0</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1135.9043 294.8029)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1057.0762 327.8029)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1118.4297 327.8029)" class="st22 st23">:</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1028.0488 343.0031)" class="st22 st24">Shadowing Mech</text>
-	</g>
-	<g class="st17">
-		<rect x="1155.4" y="308.2" class="st4" width="152" height="50"/>
-		<rect x="1155.4" y="308.2" class="st3" width="152" height="50"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1159.4053 334.9035)" class="st22 st23">ParameterPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="1249.4" y="312.2" class="st5" width="54" height="42"/>
-		<rect x="1249.4" y="312.2" class="st3" width="54" height="42"/>
-	</g>
-	<rect x="1250.4" y="313.2" class="st21" width="52" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1253.4072 324.8029)" class="st22 st23">intercept</text>
-	</g>
-	<rect x="1250.4" y="334.2" class="st21" width="52" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1262.0762 345.8029)" class="st22 st23">slope</text>
-	</g>
-	<g class="st17">
-		<rect x="1028.4" y="363.2" class="st4" width="279" height="48"/>
-		<rect x="1028.4" y="363.2" class="st3" width="279" height="48"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1140.5713 375.8029)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="1032.4" y="386.2" class="st5" width="271" height="21"/>
-		<rect x="1032.4" y="386.2" class="st3" width="271" height="21"/>
-	</g>
-	<rect x="1033.4" y="387.2" class="st21" width="269" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1068.8574 398.8029)" class="st22 st23">Shadowed input of Mech[InputPort-0]</text>
-	</g>
-	<rect x="1023.4" y="250.7" class="st27" width="288" height="165"/>
-	<path class="st26" d="M394.4,267.2c286,0,347.2,127,627.9,129.9"/>
-	<polygon class="st17" points="1022.4,393.7 1032.4,397.2 1022.4,400.7 	"/>
-	<polygon class="st26" points="1022.4,393.7 1032.4,397.2 1022.4,400.7 	"/>
-	<g class="st17">
-		<rect x="736.9" y="57.2" class="st2" width="233" height="168"/>
-		<rect x="736.9" y="57.2" class="st3" width="233" height="168"/>
-	</g>
-	<g class="st17">
-		<rect x="743.4" y="63.2" class="st4" width="221" height="48"/>
-		<rect x="743.4" y="63.2" class="st3" width="221" height="48"/>
-	</g>
-	<g class="st17">
-		<rect x="747.4" y="67.2" class="st5" width="213" height="21"/>
-		<rect x="747.4" y="67.2" class="st3" width="213" height="21"/>
-	</g>
-	<rect x="748.4" y="68.2" class="st21" width="211" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 819.5693 79.8029)" class="st22 st23">OutputPort-0</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 821.9043 102.8029)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 743.0762 135.8029)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 804.4297 135.8029)" class="st22 st23">:</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 755.8574 151.0031)" class="st22 st24">Mech</text>
-	</g>
-	<g class="st17">
-		<rect x="812.4" y="116.2" class="st4" width="152" height="50"/>
-		<rect x="812.4" y="116.2" class="st3" width="152" height="50"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 816.4053 142.9035)" class="st22 st23">ParameterPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="906.4" y="120.2" class="st5" width="54" height="42"/>
-		<rect x="906.4" y="120.2" class="st3" width="54" height="42"/>
-	</g>
-	<rect x="907.4" y="121.2" class="st21" width="52" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 910.4072 132.8029)" class="st22 st23">intercept</text>
-	</g>
-	<rect x="907.4" y="142.2" class="st21" width="52" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 919.0762 153.8029)" class="st22 st23">slope</text>
-	</g>
-	<g class="st17">
-		<rect x="743.4" y="171.2" class="st4" width="221" height="48"/>
-		<rect x="743.4" y="171.2" class="st3" width="221" height="48"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 826.5713 183.8029)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="747.4" y="194.2" class="st5" width="213" height="21"/>
-		<rect x="747.4" y="194.2" class="st3" width="213" height="21"/>
-	</g>
-	<rect x="748.4" y="195.2" class="st21" width="211" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 824.2363 206.8029)" class="st22 st23">InputPort-0</text>
-	</g>
-	<rect x="738.4" y="58.7" class="st27" width="230" height="165"/>
-	<path class="st26" d="M677.4,101.2c51.9,0,19.5,90.3,59.9,102.6"/>
-	<polygon class="st17" points="738,200.4 747.4,205.2 737,207.3 	"/>
-	<polygon class="st26" points="738,200.4 747.4,205.2 737,207.3 	"/>
-	<g class="st17">
-		<rect x="1364.9" y="106.7" class="st2" width="673" height="89"/>
-		<rect x="1364.9" y="106.7" class="st3" width="673" height="89"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1669.5762 119.8029)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1730.9297 119.8029)" class="st22 st23">:</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1589.873 135.0031)" class="st22 st24">Outer Composition Output_CIM</text>
-	</g>
-	<g class="st17">
-		<rect x="1369.4" y="144.2" class="st4" width="665" height="48"/>
-		<rect x="1369.4" y="144.2" class="st3" width="665" height="48"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1674.5713 156.8029)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="1373.4" y="167.2" class="st5" width="657" height="21"/>
-		<rect x="1373.4" y="167.2" class="st3" width="657" height="21"/>
-	</g>
-	<rect x="1374.4" y="168.2" class="st21" width="395" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1377.5234 179.8029)" class="st22 st23">OUTPUT_CIM_Nested Composition_OUTPUT_CIM_Mech_OutputPort-0</text>
-	</g>
-	<rect x="1771.4" y="168.2" class="st21" width="258" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1774.3672 179.8029)" class="st22 st23">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
-	</g>
-	<rect x="1364.9" y="106.7" class="st28" width="673" height="89"/>
-	<path class="st26" d="M1303.4,269.2c264.2,0,588.3,181.9,596.8-70.6"/>
-	<polygon class="st17" points="1896.8,198.1 1900.4,188.2 1903.8,198.3 	"/>
-	<polygon class="st26" points="1896.8,198.1 1900.4,188.2 1903.8,198.3 	"/>
-	<g class="st17">
-		<rect x="1045.9" y="69.2" class="st2" width="243" height="142"/>
-		<rect x="1045.9" y="69.2" class="st3" width="243" height="142"/>
-	</g>
-	<g class="st17">
-		<rect x="1050.4" y="73.2" class="st4" width="235" height="48"/>
-		<rect x="1050.4" y="73.2" class="st3" width="235" height="48"/>
-	</g>
-	<g class="st17">
-		<rect x="1054.4" y="77.2" class="st5" width="227" height="21"/>
-		<rect x="1054.4" y="77.2" class="st3" width="227" height="21"/>
-	</g>
-	<rect x="1055.4" y="78.2" class="st21" width="225" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1073.2236 89.8029)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1135.9043 112.8029)" class="st22 st23">OutputPorts</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1135.5762 134.8029)" class="st22 st23">Mechanism</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1196.9297 134.8029)" class="st22 st23">:</text>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1050.5332 150.0031)" class="st22 st24">Nested Composition Output_CIM</text>
-	</g>
-	<g class="st17">
-		<rect x="1050.4" y="159.2" class="st4" width="235" height="48"/>
-		<rect x="1050.4" y="159.2" class="st3" width="235" height="48"/>
-	</g>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1140.5713 171.8029)" class="st22 st23">InputPorts</text>
-	</g>
-	<g class="st17">
-		<rect x="1054.4" y="182.2" class="st5" width="227" height="21"/>
-		<rect x="1054.4" y="182.2" class="st3" width="227" height="21"/>
-	</g>
-	<rect x="1055.4" y="183.2" class="st21" width="225" height="19"/>
-	<g class="st17">
-		<text transform="matrix(1 0 0 1 1073.2236 194.8029)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
-	</g>
-	<rect x="1045.9" y="69.2" class="st28" width="243" height="142"/>
-	<path class="st26" d="M1281.4,87.2c53.8,0,37.1,79.6,81.8,89.9"/>
-	<polygon class="st17" points="1363.8,173.7 1373.4,178.2 1363.1,180.6 	"/>
-	<polygon class="st26" points="1363.8,173.7 1373.4,178.2 1363.1,180.6 	"/>
-	<path class="st26" d="M960.4,77.2c62.7,0,31.6,103.7,84,115"/>
-	<polygon class="st17" points="1044.8,188.7 1054.4,193.2 1044.1,195.7 	"/>
-	<polygon class="st26" points="1044.8,188.7 1054.4,193.2 1044.1,195.7 	"/>
-</g>
+<text transform="matrix(1 0 0 1 161.886 200.5302)" class="st213 st214">A</text>
+<text transform="matrix(1 0 0 1 149.6905 898.0426)" class="st213 st214">B</text>
+<rect x="15.1" y="16.1" class="st215" width="2109" height="1277.4"/>
+<line class="st215" x1="15.1" y1="740.2" x2="2124.1" y2="740.2"/>
 </svg>

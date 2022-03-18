@@ -334,6 +334,8 @@ should project to the InputPort. Each of these is described below:
       If an InputPort shadows another, its `shadow_inputs <InputPort.shadow_inputs>` attribute identifies the InputPort
       that it shadows.
 
+      .. _InputPort_Shadow_Nested_Note:
+
       .. note::
          Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
          `Nodes <Composition_Nodes>` of a `nested <Composition_Nested>` can be specified for shadowing.  Note also that
@@ -354,12 +356,21 @@ should project to the InputPort. Each of these is described below:
 
       .. figure:: _static/input_port_shadowing.svg
 
-         **Example of InputPort shadowing**.  The figure above shows a Composition in which the `InputPort` of
-         ``shadowing_mech`` is configured to shadow the input to ``mech`` in ``nested_comp``.  Accordingly
-         ``shadowing_mech`` receives a Projection from the same Port of ``outer_comp``'s `input_CIM
-         <Composition.input_CIM>` as the `input_CIM <Composition.input_CIM>` of ``nested_comp`` that projects to
-         ``mech``. As a result, ``shadowing_mech`` will receive the same input as ``mech`` when ``outer_comp``
-         is  executed::
+         **Examples of InputPort shadowing**.  Panel A shows a simple case of shadowing, as specified below::
+
+            >>> A = ProcessingMechanism(name='Mech')
+            >>> B = ProcessingMechanism(name='Shadowed Mech')
+            >>> C = ProcessingMechanism(name='Shadowing Mech', input_ports=[B.input_port])
+            >>> ocomp = Composition(pathways=[[A, B], C],
+            ...                     show_graph_attributes={'direction':'LR'})
+            >>> ocomp.show_graph(show_node_structure=True)
+
+         Panel B shows a Composition in which the `InputPort` of ``shadowing_mech`` is configured to shadow the input
+         to ``mech`` in ``nested_comp``. Accordingly ``shadowing_mech`` receives a Projection from the same Port of
+         ``outer_comp``'s `input_CIM <Composition.input_CIM>` as the `input_CIM <Composition.input_CIM>` of
+         ``nested_comp`` that projects to ``mech``. As a result, ``shadowing_mech`` will receive the same input as
+         ``mech`` when ``outer_comp`` is  executed (as noted `above <InputPort_Shadow_Nested_Note>`, only the `INPUT
+         <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of a `nested Composition <Composition_Nested>` can be shadowed)::
 
              >>> import psyneulink as pnl
              >>> mech = pnl.ProcessingMechanism(name='Mech')
@@ -367,7 +378,8 @@ should project to the InputPort. Each of these is described below:
              ...                                      input_ports=[mech.input_port])
              >>> nested_comp = pnl.Composition([mech], name='Nested Composition')
              >>> outer_comp = pnl.Composition(nodes=[nested_comp, shadowing_mech],
-             ...                          name='Outer Composition')
+             ...                              name='Outer Composition')
+             ...                              show_graph_attributes={'direction':'LR'})
              >>> outer_comp.show_graph(show_node_structure=True, show_cim=True)
 
 .. _InputPort_Compatability_and_Constraints:
