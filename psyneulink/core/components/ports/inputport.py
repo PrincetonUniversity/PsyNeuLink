@@ -327,9 +327,9 @@ should project to the InputPort. Each of these is described below:
         one(s) specified (see below).
 
       For each InputPort specified, and all of the InputPorts belonging to any Mechanisms specified, a new InputPort
-      is created along with Projections to it that parallel those received by the corresponding InputPort in the
-      list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
-      from the same `senders  <Projection_Base.sender>` as the ones specified.
+      is created along with Projections to it that parallel those received by the corresponding InputPort in the list.
+      In other words, for each InputPort specified, one is created that receives exactly the same inputs from the same
+      `senders  <Projection_Base.sender>` as the ones specified (see `example <InputPort_Shadow_Inputs_Figure>` below).
 
       If an InputPort shadows another, its `shadow_inputs <InputPort.shadow_inputs>` attribute identifies the InputPort
       that it shadows.
@@ -350,6 +350,8 @@ should project to the InputPort. Each of these is described below:
          for that Mechanism;  c) use that Mechanism as the `InputPort specification <InputPort_Specification>`
          for the shadowing InputPort.
 
+      .. _InputPort_Shadow_Inputs_Figure:
+
       .. figure:: _static/input_port_shadowing.svg
 
          **Example of InputPort shadowing**.  The figure above shows a Composition in which the `InputPort` of
@@ -367,7 +369,6 @@ should project to the InputPort. Each of these is described below:
              >>> outer_comp = pnl.Composition(nodes=[nested_comp, shadowing_mech],
              ...                          name='Outer Composition')
              >>> outer_comp.show_graph(show_node_structure=True, show_cim=True)
-
 
 .. _InputPort_Compatability_and_Constraints:
 
