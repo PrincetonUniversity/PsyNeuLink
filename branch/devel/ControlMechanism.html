@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.14.gec047ad documentation</title>
+  <title>ControlMechanism &mdash; PsyNeuLink 0+untagged.13.g8e5d581 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gec047ad
+                  0+untagged.13.g8e5d581
                 </div>
               
             
@@ -354,10 +354,10 @@ OutputPorts monitored (see <a class="reference internal" href="#controlmechanism
 than its <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.OUTPUT" title="psyneulink.core.compositions.composition.NodeRole.OUTPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">OUTPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> to be specified in the <strong>monitor_for_control</strong>
 argument of the ControlMechanism’s constructor or, if <strong>objective_mechanism</strong> is specified, in the
 <strong>monitor</strong> argument of the ObjectiveMechanism’s constructor (see above).  If the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute is False, it is set to <em>CONTROL</em>, and only a ControlMechanism can receive
-projections from <a class="reference internal" href="Composition.html#id24" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes of a nested Composition (the current one as well as any others in
+projections from <a class="reference internal" href="Composition.html#id26" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes of a nested Composition (the current one as well as any others in
 the same Composition);  if the Composition’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.allow_probes" title="psyneulink.core.compositions.composition.Composition.allow_probes"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">allow_probes</span></code></a> attribute is True, then it
 is left that way, and any node within the Comopsition, including the ControlMechanism, can receive projections from
-<a class="reference internal" href="Composition.html#id24" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes (see <a class="reference internal" href="Composition.html#composition-probes"><span class="std std-ref">Probes</span></a> for additional details).</p></li>
+<a class="reference internal" href="Composition.html#id26" title="psyneulink.core.compositions.composition.NodeRole.PROBE"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">PROBE</span></code></a> Nodes (see <a class="reference internal" href="Composition.html#composition-probes"><span class="std std-ref">Probes</span></a> for additional details).</p></li>
 </ul>
 </div></blockquote>
 <p>The OutputPorts monitored by a ControlMechanism or its <a class="reference internal" href="#psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism" title="psyneulink.core.components.mechanisms.modulatory.control.controlmechanism.ControlMechanism.objective_mechanism"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">objective_mechanism</span></code></a>

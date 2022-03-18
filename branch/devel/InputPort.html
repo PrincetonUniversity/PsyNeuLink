@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0+untagged.14.gec047ad documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0+untagged.13.g8e5d581 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gec047ad
+                  0+untagged.13.g8e5d581
                 </div>
               
             
@@ -463,12 +463,11 @@ InputPorts belonging to any Mechanisms specified, along with Projections to them
 one(s) specified (see below).</p></li>
 </ul>
 <p>For each InputPort specified, and all of the InputPorts belonging to any Mechanisms specified, a new InputPort
-is created along with Projections to it that parallel those received by the corresponding InputPort in the
-list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
-from the same <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a> as the ones specified.</p>
+is created along with Projections to it that parallel those received by the corresponding InputPort in the list.
+That is, for each InputPort specified, one is created that receives exactly the same inputs from the same <a class="reference internal" href="Projection.html#psyneulink.core.components.projections.projection.Projection_Base.sender" title="psyneulink.core.components.projections.projection.Projection_Base.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">senders</span></code></a> as the ones specified (see <a class="reference internal" href="#inputport-shadow-inputs-figures"><span class="std std-ref">examples</span></a> below).</p>
 <p>If an InputPort shadows another, its <a class="reference internal" href="#psyneulink.core.components.ports.inputport.InputPort.shadow_inputs" title="psyneulink.core.components.ports.inputport.InputPort.shadow_inputs"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">shadow_inputs</span></code></a> attribute identifies the InputPort
 that it shadows.</p>
-<div class="admonition note">
+<div class="admonition note" id="inputport-shadow-nested-note">
 <p class="admonition-title">Note</p>
 <p>Only InputPorts belonging to Mechanisms in the <em>same Composition</em>, or ones that are <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a>
 <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested</span></a> can be specified for shadowing.  Note also that
@@ -485,6 +484,48 @@ shadowed; b) specify <a class="reference internal" href="Composition.html#psyneu
 for that Mechanism;  c) use that Mechanism as the <a class="reference internal" href="#inputport-specification"><span class="std std-ref">InputPort specification</span></a>
 for the shadowing InputPort.</p>
 </div>
+<blockquote id="inputport-shadow-inputs-figures">
+<div><p><strong>Examples of InputPort Shadowing</strong></p>
+</div></blockquote>
+<figure class="align-default" id="id2">
+<a class="reference internal image-reference" href="_images/input_port_shadowing_1.svg"><img alt="Simple Shadowing" src="_images/input_port_shadowing_1.svg" /></a>
+<figcaption>
+<p><span class="caption-text"><strong>Simple case of shadowing</strong>. The figure above shows a simple case in which <code class="docutils literal notranslate"><span class="pre">Shadowing</span> <span class="pre">Mech</span></code> is configured
+to shadow the input to <code class="docutils literal notranslate"><span class="pre">Shadowed</span> <span class="pre">Mech</span></code>, as specified below:</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<div class="legend">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowed Mech&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span> <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="n">B</span><span class="o">.</span><span class="n">input_port</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ocomp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span> <span class="n">C</span><span class="p">],</span>
+<span class="gp">... </span>                    <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;direction&#39;</span><span class="p">:</span><span class="s1">&#39;LR&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">ocomp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_node_structure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</figcaption>
+</figure>
+<figure class="align-default" id="id3">
+<img alt="Shadowing Nested Mechanism" src="_images/input_port_shadowing_2.svg" /><figcaption>
+<p><span class="caption-text"><strong>Shadowing a nested Mechanism</strong>. This example shows a Composition in which the <a class="reference internal" href="#"><span class="doc">InputPort</span></a> of
+<code class="docutils literal notranslate"><span class="pre">shadowing_mech</span></code> is configured to shadow the input to <code class="docutils literal notranslate"><span class="pre">mech</span></code> in <code class="docutils literal notranslate"><span class="pre">nested_comp</span></code>. Accordingly
+<code class="docutils literal notranslate"><span class="pre">shadowing_mech</span></code> receives a Projection from the same Port of <code class="docutils literal notranslate"><span class="pre">outer_comp</span></code>’s <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_CIM</span></code></a> as the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.Composition.input_CIM" title="psyneulink.core.compositions.composition.Composition.input_CIM"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">input_CIM</span></code></a> of <code class="docutils literal notranslate"><span class="pre">nested_comp</span></code> that projects to
+<code class="docutils literal notranslate"><span class="pre">mech</span></code>. As a result, <code class="docutils literal notranslate"><span class="pre">shadowing_mech</span></code> will receive the same input as <code class="docutils literal notranslate"><span class="pre">mech</span></code> when <code class="docutils literal notranslate"><span class="pre">outer_comp</span></code>
+is executed (as noted <a class="reference internal" href="#inputport-shadow-nested-note"><span class="std std-ref">above</span></a>, only the <a class="reference internal" href="Composition.html#psyneulink.core.compositions.composition.NodeRole.INPUT" title="psyneulink.core.compositions.composition.NodeRole.INPUT"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">INPUT</span></code></a> <a class="reference internal" href="Composition.html#composition-nodes"><span class="std std-ref">Nodes</span></a> of a <a class="reference internal" href="Composition.html#composition-nested"><span class="std std-ref">nested Composition</span></a> can be shadowed):</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<div class="legend">
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">shadowing_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                                     <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="n">mech</span><span class="o">.</span><span class="n">input_port</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nested_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">([</span><span class="n">mech</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Nested Composition&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">nested_comp</span><span class="p">,</span> <span class="n">shadowing_mech</span><span class="p">],</span>
+<span class="gp">... </span>                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Outer Composition&#39;</span><span class="p">)</span>
+<span class="gp">... </span>                             <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;direction&#39;</span><span class="p">:</span><span class="s1">&#39;LR&#39;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_node_structure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">show_cim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</figcaption>
+</figure>
 </li>
 </ul>
 </div></blockquote>
