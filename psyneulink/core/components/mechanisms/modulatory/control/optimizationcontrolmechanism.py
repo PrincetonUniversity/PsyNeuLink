@@ -478,11 +478,6 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   `shadowed <InputPort_Shadow_Inputs>`, then its InputPort must be specified explicitly (as described
   `above <Optimization_Control_Mechanism_Input_Port_State_Feature>`).
 
-  COMMENT:
-      FIX: CONFIRM THAT THE FOLLOWING WORKS
-  State features can also be added to an existing OptimizationControlMechanism using its `add_state_features` method.
-  COMMENT
-
 |
 
 .. _OptimizationControlMechanism_State_Feature_Function_Arg:
@@ -3452,20 +3447,3 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals,
                                   context=context)
-
-    # # FIX: NEEDS TO BE UPDATED / REFACTORED TO WORK WITH _parse_state_feature_specs
-    # # FIX: THE FOLLOWING SHOULD BE MERGED WITH HANDLING OF PredictionMechanisms FOR ORIG MODEL-BASED APPROACH;
-    # # FIX: SHOULD BE GENERALIZED AS SOMETHING LIKE update_feature_values
-    # @tc.typecheck
-    # @handle_external_context()
-    # def add_state_features(self, features, context=None):
-    #     """Add InputPorts and Projections to OptimizationControlMechanism for state_features used to
-    #     predict `net_outcome <ControlMechanism.net_outcome>`
-    #
-    #     **state_features** argument can use any of the forms of specification allowed for InputPort(s)
-    #     """
-    #
-    #     if features:
-    #         features = self._parse_state_feature_specs(features=features,
-    #                                                    context=context)
-    #     self.add_ports(InputPort, features)
