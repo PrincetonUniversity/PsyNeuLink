@@ -327,12 +327,14 @@ should project to the InputPort. Each of these is described below:
         one(s) specified (see below).
 
       For each InputPort specified, and all of the InputPorts belonging to any Mechanisms specified, a new InputPort
-      is created along with Projections to it that parallel those received by the corresponding InputPort in the
-      list.  In other words, for each InputPort specified, a new one is created that receives exactly the same inputs
-      from the same `senders  <Projection_Base.sender>` as the ones specified.
+      is created along with Projections to it that parallel those received by the corresponding InputPort in the list.
+      That is, for each InputPort specified, one is created that receives exactly the same inputs from the same `senders
+      <Projection_Base.sender>` as the ones specified (see `examples <InputPort_Shadow_Inputs_Figures>` below).
 
       If an InputPort shadows another, its `shadow_inputs <InputPort.shadow_inputs>` attribute identifies the InputPort
       that it shadows.
+
+      .. _InputPort_Shadow_Nested_Note:
 
       .. note::
          Only InputPorts belonging to Mechanisms in the *same Composition*, or ones that are `INPUT <NodeRole.INPUT>`
@@ -349,6 +351,45 @@ should project to the InputPort. Each of these is described below:
          shadowed; b) specify `OUTPUT <NodeRole.INPUT>` as a `required_role <Composition.add_node.required_roles>`
          for that Mechanism;  c) use that Mechanism as the `InputPort specification <InputPort_Specification>`
          for the shadowing InputPort.
+
+      .. _InputPort_Shadow_Inputs_Figures:
+
+                                        **Examples of InputPort Shadowing**
+
+      .. figure:: _static/input_port_shadowing_1.svg
+         :scale: 50 %
+         :alt: Simple Shadowing
+
+         **Simple case of shadowing**. The figure above shows a simple case in which ``Shadowing Mech`` is configured
+         to shadow the input to ``Shadowed Mech``, as specified below::
+
+            >>> A = ProcessingMechanism(name='Mech')
+            >>> B = ProcessingMechanism(name='Shadowed Mech')
+            >>> C = ProcessingMechanism(name='Shadowing Mech', input_ports=[B.input_port])
+            >>> ocomp = Composition(pathways=[[A, B], C],
+            ...                     show_graph_attributes={'direction':'LR'})
+            >>> ocomp.show_graph(show_node_structure=True)
+
+      .. figure:: _static/input_port_shadowing_2.svg
+         :alt: Shadowing Nested Mechanism
+
+         **Shadowing a nested Mechanism**. This example shows a Composition in which the `InputPort` of
+         ``shadowing_mech`` is configured to shadow the input to ``mech`` in ``nested_comp``. Accordingly
+         ``shadowing_mech`` receives a Projection from the same Port of ``outer_comp``'s `input_CIM
+         <Composition.input_CIM>` as the `input_CIM <Composition.input_CIM>` of ``nested_comp`` that projects to
+         ``mech``. As a result, ``shadowing_mech`` will receive the same input as ``mech`` when ``outer_comp``
+         is executed (as noted `above <InputPort_Shadow_Nested_Note>`, only the `INPUT <NodeRole.INPUT>` `Nodes
+         <Composition_Nodes>` of a `nested Composition <Composition_Nested>` can be shadowed)::
+
+             >>> import psyneulink as pnl
+             >>> mech = pnl.ProcessingMechanism(name='Mech')
+             >>> shadowing_mech = pnl.ProcessingMechanism(name='Shadowing Mech',
+             ...                                      input_ports=[mech.input_port])
+             >>> nested_comp = pnl.Composition([mech], name='Nested Composition')
+             >>> outer_comp = pnl.Composition(nodes=[nested_comp, shadowing_mech],
+             ...                              name='Outer Composition')
+             ...                              show_graph_attributes={'direction':'LR'})
+             >>> outer_comp.show_graph(show_node_structure=True, show_cim=True)
 
 .. _InputPort_Compatability_and_Constraints:
 
