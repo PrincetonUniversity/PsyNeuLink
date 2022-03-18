@@ -2159,9 +2159,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 if i < num_specs:
 
                     # Assign either state_feature_specs[i] or self.state_feature_default if specified, else None
-                    if state_feature_specs[i] != None:
+                    if state_feature_specs[i] is not None:
                         spec = state_feature_specs[i]
-                    elif self.state_feature_default != None:
+                    elif self.state_feature_default is not None:
                         spec = self.state_feature_default
                     else:
                         spec = None
@@ -2474,6 +2474,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._validate_state_features(context)
             return
 
+        # FIX: 3/18/22 - ??MOVE THIS TO _complete_parsing_state_feature_specs()
+        #                SHOULD NEVER BE THE CASE HERE??
         elif not self.state_input_ports:
             # agent_rep is Composition, but no state_features have been specified,
             #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
