@@ -3349,11 +3349,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 state_features_dict[key] = sources[j]
                 j += 1
             else:
-                key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-            if self.state_feature_specs[i] is not None:
-                state_features_dict[key] = sources[j]
-                j += 1
-            else:
                 state_features_dict[key] = None
 
         return state_features_dict
