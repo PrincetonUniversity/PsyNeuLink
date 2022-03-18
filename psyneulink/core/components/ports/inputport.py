@@ -354,11 +354,13 @@ should project to the InputPort. Each of these is described below:
 
       .. _InputPort_Shadow_Inputs_Figures:
 
-      **Examples of InputPort Shadowing**
+                                        **Examples of InputPort Shadowing**
 
       .. figure:: _static/input_port_shadowing_1.svg
+         :scale: 50 %
+         :alt: Simple Shadowing
 
-         *Simple case of shadowing*. The figure above shows a simple case in which ``Shadowing Mech`` is configured
+         **Simple case of shadowing**. The figure above shows a simple case in which ``Shadowing Mech`` is configured
          to shadow the input to ``Shadowed Mech``, as specified below::
 
             >>> A = ProcessingMechanism(name='Mech')
@@ -369,8 +371,9 @@ should project to the InputPort. Each of these is described below:
             >>> ocomp.show_graph(show_node_structure=True)
 
       .. figure:: _static/input_port_shadowing_2.svg
+         :alt: Shadowing Nested Mechanism
 
-         *Shadowing a nested Mechanism*. This example shows a Composition in which the `InputPort` of
+         **Shadowing a nested Mechanism**. This example shows a Composition in which the `InputPort` of
          ``shadowing_mech`` is configured to shadow the input to ``mech`` in ``nested_comp``. Accordingly
          ``shadowing_mech`` receives a Projection from the same Port of ``outer_comp``'s `input_CIM
          <Composition.input_CIM>` as the `input_CIM <Composition.input_CIM>` of ``nested_comp`` that projects to
