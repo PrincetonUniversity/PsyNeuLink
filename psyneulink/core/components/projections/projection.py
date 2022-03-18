@@ -1067,8 +1067,8 @@ class Projection_Base(Projection):
             else:
                 sender_mech = parse_valid_identifier(self.sender.owner.name)
         else:
-            sender_name = None
-            sender_mech = None
+            sender_name = ''
+            sender_mech = ''
 
         if not isinstance(self.receiver, type):
             try:
@@ -1087,8 +1087,8 @@ class Projection_Base(Projection):
             else:
                 receiver_mech = parse_valid_identifier(self.receiver.owner.name)
         else:
-            receiver_name = None
-            receiver_mech = None
+            receiver_name = ''
+            receiver_mech = ''
 
         socket_dict = {
             MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
@@ -1148,10 +1148,7 @@ class Projection_Base(Projection):
         else:
             metadata = self._mdf_metadata
             try:
-                metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict_format(
-                    self.function.as_mdf_model(),
-                    ordered=False
-                )
+                metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict(self.function.as_mdf_model())
             except AttributeError:
                 # projection is in deferred init, special handling here?
                 pass

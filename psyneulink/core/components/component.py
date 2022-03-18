@@ -3721,7 +3721,9 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 else:
                     try:
                         value = value.as_mdf_model(simple_edge_format=False)
-                    except TypeError:
+                    except TypeError as e:
+                        if "got an unexpected keyword argument 'simple_edge_format'" not in str(e):
+                            raise
                         value = value.as_mdf_model()
             elif isinstance(value, ComponentsMeta):
                 value = value.__name__
