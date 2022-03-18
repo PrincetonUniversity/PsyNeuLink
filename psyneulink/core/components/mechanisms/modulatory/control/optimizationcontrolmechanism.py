@@ -2428,7 +2428,8 @@ class OptimizationControlMechanism(ControlMechanism):
             for input_port in shadowed_input_ports:
                 input_port_name = f"{SHADOW_INPUT_NAME}{input_port.owner.name}[{input_port.name}]"
                 params = {SHADOW_INPUTS: input_port,
-                          INTERNAL_ONLY:True}
+                          INTERNAL_ONLY:True,
+                          PARAMS: {}}
                 if self.state_feature_function:
                     # Use **state_feature_function** if specified by user in constructor
                     params = self._assign_state_feature_function(params)

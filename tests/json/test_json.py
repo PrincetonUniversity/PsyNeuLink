@@ -18,19 +18,19 @@ stroop_stimuli = {
 
 
 json_results_parametrization = [
-    # ('model_basic.py', 'comp', '{A: 1}'),
-    # ('model_nested_comp_with_scheduler.py', 'comp', '{A: 1}'),
-    # (
-    #     'model_with_control.py',
-    #     'comp',
-    #     '{Input: [0.5, 0.123], reward: [20, 20]}'
-    # ),
+    ('model_basic.py', 'comp', '{A: 1}'),
+    ('model_nested_comp_with_scheduler.py', 'comp', '{A: 1}'),
+    (
+        'model_with_control.py',
+        'comp',
+        '{Input: [0.5, 0.123], reward: [20, 20]}'
+    ),
     (
         'stroop_conflict_monitoring.py',
         'Stroop_model',
         str(stroop_stimuli).replace("'", '')
     ),
-    # ('model_backprop.py', 'comp', '{a: [1, 2, 3]}'),
+    ('model_backprop.py', 'comp', '{a: [1, 2, 3]}'),
 ]
 
 
