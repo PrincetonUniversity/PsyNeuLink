@@ -1940,6 +1940,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 warnings.warn(message)
 
     # FIX: 1/29/22 - REFACTOR TO SUPPORT TUPLE AND InportPort SPECIFICATION DICT FOR MULT. PROJS. TO STATE_INPUT_PORT
+    # FIX: 2/25/22 - REFACTOR TO SUPPORT InputPort SPECIFICATIONS IN dict, set and list specs
     def _complete_parsing_state_feature_specs(self, context=None):
         """Parse entries of state_features specifications used to construct state_input_ports.
 
@@ -2125,7 +2126,6 @@ class OptimizationControlMechanism(ControlMechanism):
             num_specs = len(state_feature_specs)
             num_ports = len(agent_rep_input_ports)
             self._num_state_feature_specs = max(num_specs, num_ports)
-
             for i in range(self._num_state_feature_specs):
 
                 # PORT & PORT_NAME
@@ -2495,7 +2495,8 @@ class OptimizationControlMechanism(ControlMechanism):
             for input_port in shadowed_input_ports:
                 input_port_name = f"{SHADOW_INPUT_NAME}{input_port.owner.name}[{input_port.name}]"
                 params = {SHADOW_INPUTS: input_port,
-                          INTERNAL_ONLY:True}
+                          INTERNAL_ONLY:True,
+                          PARAMS: {}}
                 if self.state_feature_function:
                     # Use **state_feature_function** if specified by user in constructor
                     params = self._assign_state_feature_function(params)
@@ -2535,6 +2536,7 @@ class OptimizationControlMechanism(ControlMechanism):
         - state_features are compatible with input format for agent_rep Composition
         """
 
+        # FIX: 3/4/22 - DO user_specs HAVE TO BE RE-VALIDATED? ?IS IT BECAUSE THEY MAY REFER TO NEWLY ADDED NODES?
         from psyneulink.core.compositions.composition import \
             Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
 
@@ -3341,6 +3343,11 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign InputPorts of INPUT Nodes of agent_rep as keys
             if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
                 key = self._specified_INPUT_Node_InputPorts_in_order[i]
+            else:
+                key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
+            if self.state_feature_specs[i] is not None:
+                state_features_dict[key] = sources[j]
+                j += 1
             else:
                 key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
             if self.state_feature_specs[i] is not None:

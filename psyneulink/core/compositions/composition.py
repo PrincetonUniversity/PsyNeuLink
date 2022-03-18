@@ -3526,6 +3526,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         a list of the values of associated of the `InputPorts <InputPort>` listed in `external_input_ports
         <Composition.external_input_ports>`.
 
+    external_input_values : list[InputPort]
+        a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
+        <Composition.external_input_ports>`.
+
     output_CIM : `CompositionInterfaceMechanism`
         aggregates output values from the OUTPUT nodes of the Composition. If the Composition is nested, then the
         output_CIM and its OutputPorts serve as proxies for Composition itself in terms of efferent projections
