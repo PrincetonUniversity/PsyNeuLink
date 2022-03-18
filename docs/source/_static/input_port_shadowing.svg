@@ -1,0 +1,865 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 25.3.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 2065.5 452.6" style="enable-background:new 0 0 2065.5 452.6;" xml:space="preserve">
+<style type="text/css">
+	.st0{clip-path:url(#SVGID_2_);fill:none;stroke:#A52A2A;stroke-miterlimit:10;}
+	.st1{clip-path:url(#SVGID_2_);}
+	.st2{fill:#FFFFF0;}
+	.st3{opacity:0;fill:none;stroke:#FFFFFE;stroke-miterlimit:10;}
+	.st4{fill:#FAFAD0;}
+	.st5{fill:#EEE8AA;}
+	.st6{clip-path:url(#SVGID_2_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st7{clip-path:url(#SVGID_2_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
+	.st8{clip-path:url(#SVGID_2_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st9{clip-path:url(#SVGID_2_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st10{clip-path:url(#SVGID_2_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+	.st11{clip-path:url(#SVGID_4_);}
+	.st12{clip-path:url(#SVGID_4_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st13{clip-path:url(#SVGID_4_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
+	.st14{clip-path:url(#SVGID_4_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st15{clip-path:url(#SVGID_4_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st16{clip-path:url(#SVGID_4_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+	.st17{clip-path:url(#SVGID_6_);}
+	.st18{font-family:'Times-Roman';}
+	.st19{font-size:14px;}
+	.st20{clip-path:url(#SVGID_6_);fill:none;stroke:#A52A2A;stroke-miterlimit:10;}
+	.st21{clip-path:url(#SVGID_6_);fill:none;stroke:#FAFAD2;stroke-width:2;stroke-miterlimit:10;}
+	.st22{font-family:'ArialMT';}
+	.st23{font-size:12px;}
+	.st24{font-size:16px;}
+	.st25{clip-path:url(#SVGID_6_);fill:none;stroke:#00FF00;stroke-miterlimit:10;}
+	.st26{clip-path:url(#SVGID_6_);fill:none;stroke:#000000;stroke-miterlimit:10;}
+	.st27{clip-path:url(#SVGID_6_);fill:none;stroke:#A52A2A;stroke-width:3;stroke-miterlimit:10;}
+	.st28{clip-path:url(#SVGID_6_);fill:none;stroke:#FF0000;stroke-miterlimit:10;}
+</style>
+<g>
+	<defs>
+		<rect id="SVGID_1_" x="1609.6" y="-993.7" width="769" height="944"/>
+	</defs>
+	<clipPath id="SVGID_2_">
+		<use xlink:href="#SVGID_1_"  style="overflow:visible;"/>
+	</clipPath>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1940.2767 -96.5436)" class="st18 st19">Outer Composition</text>
+	</g>
+	<rect x="1732.1" y="-815.7" class="st0" width="276" height="599"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1812.7767 -223.5436)" class="st18 st19">Nested Composition</text>
+	</g>
+	<g class="st1">
+		<rect x="1802.6" y="-204.7" class="st2" width="377" height="89"/>
+		<rect x="1802.6" y="-204.7" class="st3" width="377" height="89"/>
+	</g>
+	<g class="st1">
+		<rect x="1807.1" y="-200.2" class="st4" width="369" height="48"/>
+		<rect x="1807.1" y="-200.2" class="st3" width="369" height="48"/>
+	</g>
+	<g class="st1">
+		<rect x="1811.1" y="-196.2" class="st5" width="361" height="21"/>
+		<rect x="1811.1" y="-196.2" class="st3" width="361" height="21"/>
+	</g>
+	<rect x="1812.1" y="-195.2" class="st6" width="359" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1815.2377 -183.6442)" class="st22 st23">INPUT_CIM_Nested Composition_INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1959.6215 -160.6442)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1959.2933 -138.6442)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2020.6469 -138.6442)" class="st22 st23">:</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1885.8129 -123.444)" class="st22 st24">Outer Composition Input_CIM</text>
+	</g>
+	<rect x="1802.6" y="-204.7" class="st7" width="377" height="89"/>
+	<g class="st1">
+		<rect x="1758.6" y="-392.7" class="st2" width="231" height="142"/>
+		<rect x="1758.6" y="-392.7" class="st3" width="231" height="142"/>
+	</g>
+	<g class="st1">
+		<rect x="1763.1" y="-388.7" class="st4" width="223" height="48"/>
+		<rect x="1763.1" y="-388.7" class="st3" width="223" height="48"/>
+	</g>
+	<g class="st1">
+		<rect x="1767.1" y="-384.7" class="st5" width="215" height="21"/>
+		<rect x="1767.1" y="-384.7" class="st3" width="215" height="21"/>
+	</g>
+	<rect x="1768.1" y="-383.7" class="st6" width="213" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1791.2728 -372.1442)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1842.6215 -349.1442)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1842.2933 -327.1442)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1903.6469 -327.1442)" class="st22 st23">:</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1763.473 -311.944)" class="st22 st24">Nested Composition Input_CIM</text>
+	</g>
+	<g class="st1">
+		<rect x="1763.1" y="-302.7" class="st4" width="223" height="48"/>
+		<rect x="1763.1" y="-302.7" class="st3" width="223" height="48"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1847.2885 -290.1442)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="1767.1" y="-279.7" class="st5" width="215" height="21"/>
+		<rect x="1767.1" y="-279.7" class="st3" width="215" height="21"/>
+	</g>
+	<rect x="1768.1" y="-278.7" class="st6" width="213" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1791.2728 -267.1442)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<rect x="1758.6" y="-392.7" class="st7" width="231" height="142"/>
+	<path class="st8" d="M1811.1-186.2c-10,0-6.3-14.7,0-22.5c48.7-60.7,122.3,22.7,171-38c3.1-3.8,5.5-9.3,6-13.9"/>
+	<polygon class="st1" points="1985.2,-258.6 1982.1,-268.7 1990.9,-262.7 	"/>
+	<polygon class="st8" points="1985.2,-258.6 1982.1,-268.7 1990.9,-262.7 	"/>
+	<g class="st1">
+		<rect x="2039.6" y="-816.7" class="st2" width="291" height="168"/>
+		<rect x="2039.6" y="-816.7" class="st3" width="291" height="168"/>
+	</g>
+	<g class="st1">
+		<rect x="2046.1" y="-810.7" class="st4" width="279" height="48"/>
+		<rect x="2046.1" y="-810.7" class="st3" width="279" height="48"/>
+	</g>
+	<g class="st1">
+		<rect x="2050.1" y="-806.7" class="st5" width="271" height="21"/>
+		<rect x="2050.1" y="-806.7" class="st3" width="271" height="21"/>
+	</g>
+	<rect x="2051.1" y="-805.7" class="st6" width="269" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2151.2864 -794.1437)" class="st22 st23">OutputPort-0</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2153.6213 -771.1437)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2074.7932 -738.1437)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2136.1467 -738.1437)" class="st22 st23">:</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2045.766 -722.944)" class="st22 st24">Shadowing Mech</text>
+	</g>
+	<g class="st1">
+		<rect x="2173.1" y="-757.7" class="st4" width="152" height="50"/>
+		<rect x="2173.1" y="-757.7" class="st3" width="152" height="50"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2177.1223 -731.0431)" class="st22 st23">ParameterPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="2267.1" y="-753.7" class="st5" width="54" height="42"/>
+		<rect x="2267.1" y="-753.7" class="st3" width="54" height="42"/>
+	</g>
+	<rect x="2268.1" y="-752.7" class="st6" width="52" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2271.1243 -741.1437)" class="st22 st23">intercept</text>
+	</g>
+	<rect x="2268.1" y="-731.7" class="st6" width="52" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2279.7932 -720.1437)" class="st22 st23">slope</text>
+	</g>
+	<g class="st1">
+		<rect x="2046.1" y="-702.7" class="st4" width="279" height="48"/>
+		<rect x="2046.1" y="-702.7" class="st3" width="279" height="48"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2158.2883 -690.1437)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="2050.1" y="-679.7" class="st5" width="271" height="21"/>
+		<rect x="2050.1" y="-679.7" class="st3" width="271" height="21"/>
+	</g>
+	<rect x="2051.1" y="-678.7" class="st6" width="269" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2086.5754 -667.1437)" class="st22 st23">Shadowed input of Mech[InputPort-0]</text>
+	</g>
+	<rect x="2041.1" y="-815.2" class="st9" width="288" height="165"/>
+	<path class="st8" d="M2172.1-186.2c206.7,0,20.2-254,14.2-462.3"/>
+	<polygon class="st1" points="2182.8,-648.7 2186.1,-658.7 2189.8,-648.8 	"/>
+	<polygon class="st8" points="2182.8,-648.7 2186.1,-658.7 2189.8,-648.8 	"/>
+	<g class="st1">
+		<rect x="1754.6" y="-604.7" class="st2" width="233" height="168"/>
+		<rect x="1754.6" y="-604.7" class="st3" width="233" height="168"/>
+	</g>
+	<g class="st1">
+		<rect x="1761.1" y="-598.7" class="st4" width="221" height="48"/>
+		<rect x="1761.1" y="-598.7" class="st3" width="221" height="48"/>
+	</g>
+	<g class="st1">
+		<rect x="1765.1" y="-594.7" class="st5" width="213" height="21"/>
+		<rect x="1765.1" y="-594.7" class="st3" width="213" height="21"/>
+	</g>
+	<rect x="1766.1" y="-593.7" class="st6" width="211" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1837.2865 -582.1437)" class="st22 st23">OutputPort-0</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1839.6215 -559.1437)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1760.7933 -526.1437)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1822.1469 -526.1437)" class="st22 st23">:</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1773.5746 -510.944)" class="st22 st24">Mech</text>
+	</g>
+	<g class="st1">
+		<rect x="1830.1" y="-545.7" class="st4" width="152" height="50"/>
+		<rect x="1830.1" y="-545.7" class="st3" width="152" height="50"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1834.1224 -519.0431)" class="st22 st23">ParameterPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="1924.1" y="-541.7" class="st5" width="54" height="42"/>
+		<rect x="1924.1" y="-541.7" class="st3" width="54" height="42"/>
+	</g>
+	<rect x="1925.1" y="-540.7" class="st6" width="52" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1928.1244 -529.1437)" class="st22 st23">intercept</text>
+	</g>
+	<rect x="1925.1" y="-519.7" class="st6" width="52" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1936.7933 -508.1437)" class="st22 st23">slope</text>
+	</g>
+	<g class="st1">
+		<rect x="1761.1" y="-490.7" class="st4" width="221" height="48"/>
+		<rect x="1761.1" y="-490.7" class="st3" width="221" height="48"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1844.2885 -478.1437)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="1765.1" y="-467.7" class="st5" width="213" height="21"/>
+		<rect x="1765.1" y="-467.7" class="st3" width="213" height="21"/>
+	</g>
+	<rect x="1766.1" y="-466.7" class="st6" width="211" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1841.9535 -455.1442)" class="st22 st23">InputPort-0</text>
+	</g>
+	<rect x="1756.1" y="-603.2" class="st9" width="230" height="165"/>
+	<path class="st8" d="M1875.1-384.7c0-23.8-2.2-32.2-2.8-51.7"/>
+	<polygon class="st1" points="1868.8,-436.7 1872.1,-446.7 1875.8,-436.8 	"/>
+	<polygon class="st8" points="1868.8,-436.7 1872.1,-446.7 1875.8,-436.8 	"/>
+	<g class="st1">
+		<rect x="1657.6" y="-949.7" class="st2" width="673" height="89"/>
+		<rect x="1657.6" y="-949.7" class="st3" width="673" height="89"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1962.2933 -936.6437)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2023.6469 -936.6437)" class="st22 st23">:</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1882.5902 -921.444)" class="st22 st24">Outer Composition Output_CIM</text>
+	</g>
+	<g class="st1">
+		<rect x="1662.1" y="-912.2" class="st4" width="665" height="48"/>
+		<rect x="1662.1" y="-912.2" class="st3" width="665" height="48"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1967.2885 -899.6437)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="1666.1" y="-889.2" class="st5" width="657" height="21"/>
+		<rect x="1666.1" y="-889.2" class="st3" width="657" height="21"/>
+	</g>
+	<rect x="1667.1" y="-888.2" class="st6" width="395" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1670.2406 -876.6437)" class="st22 st23">OUTPUT_CIM_Nested Composition_OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<rect x="2064.1" y="-888.2" class="st6" width="258" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 2067.0842 -876.6437)" class="st22 st23">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
+	</g>
+	<rect x="1657.6" y="-949.7" class="st10" width="673" height="89"/>
+	<path class="st8" d="M2050.1-796.7c-10.7,0-6.2-15.3,0-24c37-51.2,131.4,11.5,142-37.4"/>
+	<polygon class="st1" points="2188.7,-858.6 2193.1,-868.2 2195.7,-858 	"/>
+	<polygon class="st8" points="2188.7,-858.6 2193.1,-868.2 2195.7,-858 	"/>
+	<g class="st1">
+		<rect x="1748.6" y="-803.7" class="st2" width="243" height="142"/>
+		<rect x="1748.6" y="-803.7" class="st3" width="243" height="142"/>
+	</g>
+	<g class="st1">
+		<rect x="1753.1" y="-799.7" class="st4" width="235" height="48"/>
+		<rect x="1753.1" y="-799.7" class="st3" width="235" height="48"/>
+	</g>
+	<g class="st1">
+		<rect x="1757.1" y="-795.7" class="st5" width="227" height="21"/>
+		<rect x="1757.1" y="-795.7" class="st3" width="227" height="21"/>
+	</g>
+	<rect x="1758.1" y="-794.7" class="st6" width="225" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1775.9408 -783.1437)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1838.6215 -760.1437)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1838.2933 -738.1437)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1899.6469 -738.1437)" class="st22 st23">:</text>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1753.2504 -722.944)" class="st22 st24">Nested Composition Output_CIM</text>
+	</g>
+	<g class="st1">
+		<rect x="1753.1" y="-713.7" class="st4" width="235" height="48"/>
+		<rect x="1753.1" y="-713.7" class="st3" width="235" height="48"/>
+	</g>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1843.2885 -701.1437)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st1">
+		<rect x="1757.1" y="-690.7" class="st5" width="227" height="21"/>
+		<rect x="1757.1" y="-690.7" class="st3" width="227" height="21"/>
+	</g>
+	<rect x="1758.1" y="-689.7" class="st6" width="225" height="19"/>
+	<g class="st1">
+		<text transform="matrix(1 0 0 1 1775.9408 -678.1437)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<rect x="1748.6" y="-803.7" class="st10" width="243" height="142"/>
+	<path class="st8" d="M1984.1-785.7c9.8,0,5.1-13.7,0-22c-29.4-47.7-109.1-6.6-119-50.5"/>
+	<polygon class="st1" points="1861.7,-857.9 1864.1,-868.2 1868.6,-858.6 	"/>
+	<polygon class="st8" points="1861.7,-857.9 1864.1,-868.2 1868.6,-858.6 	"/>
+	<path class="st8" d="M1872.1-594.7c0-29.7-0.8-39.5-1-64.9"/>
+	<polygon class="st1" points="1867.7,-659.7 1871.1,-669.7 1874.7,-659.8 	"/>
+	<polygon class="st8" points="1867.7,-659.7 1871.1,-669.7 1874.7,-659.8 	"/>
+</g>
+<g>
+	<defs>
+		<rect id="SVGID_3_" x="167.4" y="-947.4" width="1185" height="472"/>
+	</defs>
+	<clipPath id="SVGID_4_">
+		<use xlink:href="#SVGID_3_"  style="overflow:visible;"/>
+	</clipPath>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 705.9998 -522.2406)" class="st18 st19">Outer Composition</text>
+	</g>
+	<g class="st11">
+		<rect x="215.4" y="-676.9" class="st2" width="220" height="89"/>
+		<rect x="215.4" y="-676.9" class="st3" width="220" height="89"/>
+	</g>
+	<g class="st11">
+		<rect x="219.4" y="-672.4" class="st4" width="212" height="48"/>
+		<rect x="219.4" y="-672.4" class="st3" width="212" height="48"/>
+	</g>
+	<g class="st11">
+		<rect x="223.4" y="-668.4" class="st5" width="204" height="21"/>
+		<rect x="223.4" y="-668.4" class="st3" width="204" height="21"/>
+	</g>
+	<rect x="224.4" y="-667.4" class="st12" width="202" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 241.9958 -655.8412)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 293.3445 -632.8412)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 293.0163 -610.8412)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 354.3698 -610.8412)" class="st22 st23">:</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 219.5359 -595.641)" class="st22 st24">Outer Composition Input_CIM</text>
+	</g>
+	<rect x="215.4" y="-676.9" class="st13" width="220" height="89"/>
+	<g class="st11">
+		<rect x="516.4" y="-903.4" class="st2" width="233" height="168"/>
+		<rect x="516.4" y="-903.4" class="st3" width="233" height="168"/>
+	</g>
+	<g class="st11">
+		<rect x="522.9" y="-897.4" class="st4" width="221" height="48"/>
+		<rect x="522.9" y="-897.4" class="st3" width="221" height="48"/>
+	</g>
+	<g class="st11">
+		<rect x="526.9" y="-893.4" class="st5" width="213" height="21"/>
+		<rect x="526.9" y="-893.4" class="st3" width="213" height="21"/>
+	</g>
+	<rect x="527.9" y="-892.4" class="st12" width="211" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 599.0095 -880.8412)" class="st22 st23">OutputPort-0</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 601.3445 -857.8412)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 522.5164 -824.8412)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 583.8699 -824.8412)" class="st22 st23">:</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 535.2976 -809.641)" class="st22 st24">Mech</text>
+	</g>
+	<g class="st11">
+		<rect x="591.9" y="-844.4" class="st4" width="152" height="50"/>
+		<rect x="591.9" y="-844.4" class="st3" width="152" height="50"/>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 595.8455 -817.7406)" class="st22 st23">ParameterPorts</text>
+	</g>
+	<g class="st11">
+		<rect x="685.9" y="-840.4" class="st5" width="54" height="42"/>
+		<rect x="685.9" y="-840.4" class="st3" width="54" height="42"/>
+	</g>
+	<rect x="686.9" y="-839.4" class="st12" width="52" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 689.8474 -827.8412)" class="st22 st23">intercept</text>
+	</g>
+	<rect x="686.9" y="-818.4" class="st12" width="52" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 698.5164 -806.8412)" class="st22 st23">slope</text>
+	</g>
+	<g class="st11">
+		<rect x="522.9" y="-789.4" class="st4" width="221" height="48"/>
+		<rect x="522.9" y="-789.4" class="st3" width="221" height="48"/>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 606.0115 -776.8412)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st11">
+		<rect x="526.9" y="-766.4" class="st5" width="213" height="21"/>
+		<rect x="526.9" y="-766.4" class="st3" width="213" height="21"/>
+	</g>
+	<rect x="527.9" y="-765.4" class="st12" width="211" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 603.6765 -753.8412)" class="st22 st23">InputPort-0</text>
+	</g>
+	<rect x="517.9" y="-901.9" class="st14" width="230" height="165"/>
+	<path class="st15" d="M427.4-658.4c36.6,0,25.1-39.1,52-64c16-14.9,20.6-28.3,37.4-32"/>
+	<polygon class="st11" points="516.6,-758 526.9,-755.4 517.2,-751 	"/>
+	<polygon class="st15" points="516.6,-758 526.9,-755.4 517.2,-751 	"/>
+	<g class="st11">
+		<rect x="487.4" y="-709.4" class="st2" width="291" height="168"/>
+		<rect x="487.4" y="-709.4" class="st3" width="291" height="168"/>
+	</g>
+	<g class="st11">
+		<rect x="493.9" y="-703.4" class="st4" width="279" height="48"/>
+		<rect x="493.9" y="-703.4" class="st3" width="279" height="48"/>
+	</g>
+	<g class="st11">
+		<rect x="497.9" y="-699.4" class="st5" width="271" height="21"/>
+		<rect x="497.9" y="-699.4" class="st3" width="271" height="21"/>
+	</g>
+	<rect x="498.9" y="-698.4" class="st12" width="269" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 599.0095 -686.8412)" class="st22 st23">OutputPort-0</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 601.3445 -663.8412)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 522.5164 -630.8412)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 583.8699 -630.8412)" class="st22 st23">:</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 493.489 -615.641)" class="st22 st24">Shadowing Mech</text>
+	</g>
+	<g class="st11">
+		<rect x="620.9" y="-650.4" class="st4" width="152" height="50"/>
+		<rect x="620.9" y="-650.4" class="st3" width="152" height="50"/>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 624.8455 -623.7406)" class="st22 st23">ParameterPorts</text>
+	</g>
+	<g class="st11">
+		<rect x="714.9" y="-646.4" class="st5" width="54" height="42"/>
+		<rect x="714.9" y="-646.4" class="st3" width="54" height="42"/>
+	</g>
+	<rect x="715.9" y="-645.4" class="st12" width="52" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 718.8474 -633.8412)" class="st22 st23">intercept</text>
+	</g>
+	<rect x="715.9" y="-624.4" class="st12" width="52" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 727.5164 -612.8412)" class="st22 st23">slope</text>
+	</g>
+	<g class="st11">
+		<rect x="493.9" y="-595.4" class="st4" width="279" height="48"/>
+		<rect x="493.9" y="-595.4" class="st3" width="279" height="48"/>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 606.0115 -582.8412)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st11">
+		<rect x="497.9" y="-572.4" class="st5" width="271" height="21"/>
+		<rect x="497.9" y="-572.4" class="st3" width="271" height="21"/>
+	</g>
+	<rect x="498.9" y="-571.4" class="st12" width="269" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 534.2986 -559.8412)" class="st22 st23">Shadowed input of Mech[InputPort-0]</text>
+	</g>
+	<rect x="488.9" y="-707.9" class="st14" width="288" height="165"/>
+	<path class="st15" d="M427.4-658.4c49.5,0,21.8,83.8,60.5,95.6"/>
+	<polygon class="st11" points="488.4,-566.3 497.9,-561.4 487.5,-559.3 	"/>
+	<polygon class="st15" points="488.4,-566.3 497.9,-561.4 487.5,-559.3 	"/>
+	<g class="st11">
+		<rect x="830.4" y="-857.9" class="st2" width="474" height="89"/>
+		<rect x="830.4" y="-857.9" class="st3" width="474" height="89"/>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 1035.0164 -844.8412)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 1096.3699 -844.8412)" class="st22 st23">:</text>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 955.3132 -829.641)" class="st22 st24">Outer Composition Output_CIM</text>
+	</g>
+	<g class="st11">
+		<rect x="834.4" y="-820.4" class="st4" width="466" height="48"/>
+		<rect x="834.4" y="-820.4" class="st3" width="466" height="48"/>
+	</g>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 1040.0115 -807.8412)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st11">
+		<rect x="838.4" y="-797.4" class="st5" width="458" height="21"/>
+		<rect x="838.4" y="-797.4" class="st3" width="458" height="21"/>
+	</g>
+	<rect x="839.4" y="-796.4" class="st12" width="196" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 842.6638 -784.8412)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<rect x="1037.4" y="-796.4" class="st12" width="258" height="19"/>
+	<g class="st11">
+		<text transform="matrix(1 0 0 1 1040.3074 -784.8412)" class="st22 st23">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
+	</g>
+	<rect x="830.4" y="-857.9" class="st16" width="474" height="89"/>
+	<path class="st15" d="M739.9-883.4c57.7,0,39.7,85.6,88.2,96"/>
+	<polygon class="st11" points="828.8,-790.9 838.4,-786.4 828.1,-784 	"/>
+	<polygon class="st15" points="828.8,-790.9 838.4,-786.4 828.1,-784 	"/>
+	<path class="st15" d="M768.9-689.4c177.4,0,389.3,90.3,397.3-77"/>
+	<polygon class="st11" points="1162.6,-766.5 1166.4,-776.4 1169.6,-766.4 	"/>
+	<polygon class="st15" points="1162.6,-766.5 1166.4,-776.4 1169.6,-766.4 	"/>
+</g>
+<g>
+	<defs>
+		<rect id="SVGID_5_" x="-23.1" y="-24.8" width="2109" height="508"/>
+	</defs>
+	<clipPath id="SVGID_6_">
+		<use xlink:href="#SVGID_5_"  style="overflow:visible;"/>
+	</clipPath>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 977.5596 436.4035)" class="st18 st19">Outer Composition</text>
+	</g>
+	<rect x="437.9" y="23.2" class="st20" width="867" height="214"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 814.0596 38.4035)" class="st18 st19">Nested Composition</text>
+	</g>
+	<g class="st17">
+		<rect x="24.9" y="248.7" class="st2" width="377" height="89"/>
+		<rect x="24.9" y="248.7" class="st3" width="377" height="89"/>
+	</g>
+	<g class="st17">
+		<rect x="29.4" y="253.2" class="st4" width="369" height="48"/>
+		<rect x="29.4" y="253.2" class="st3" width="369" height="48"/>
+	</g>
+	<g class="st17">
+		<rect x="33.4" y="257.2" class="st5" width="361" height="21"/>
+		<rect x="33.4" y="257.2" class="st3" width="361" height="21"/>
+	</g>
+	<rect x="34.4" y="258.2" class="st21" width="359" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 37.5205 269.8029)" class="st22 st23">INPUT_CIM_Nested Composition_INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 181.9043 292.8029)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 181.5761 314.8029)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 242.9297 314.8029)" class="st22 st23">:</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 108.0957 330.0031)" class="st22 st24">Outer Composition Input_CIM</text>
+	</g>
+	<rect x="24.9" y="248.7" class="st25" width="377" height="89"/>
+	<g class="st17">
+		<rect x="453.9" y="83.2" class="st2" width="231" height="142"/>
+		<rect x="453.9" y="83.2" class="st3" width="231" height="142"/>
+	</g>
+	<g class="st17">
+		<rect x="458.4" y="87.2" class="st4" width="223" height="48"/>
+		<rect x="458.4" y="87.2" class="st3" width="223" height="48"/>
+	</g>
+	<g class="st17">
+		<rect x="462.4" y="91.2" class="st5" width="215" height="21"/>
+		<rect x="462.4" y="91.2" class="st3" width="215" height="21"/>
+	</g>
+	<rect x="463.4" y="92.2" class="st21" width="213" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 486.5556 103.8029)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 537.9043 126.8029)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 537.5762 148.8029)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 598.9297 148.8029)" class="st22 st23">:</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 458.7558 164.0031)" class="st22 st24">Nested Composition Input_CIM</text>
+	</g>
+	<g class="st17">
+		<rect x="458.4" y="173.2" class="st4" width="223" height="48"/>
+		<rect x="458.4" y="173.2" class="st3" width="223" height="48"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 542.5713 185.8029)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="462.4" y="196.2" class="st5" width="215" height="21"/>
+		<rect x="462.4" y="196.2" class="st3" width="215" height="21"/>
+	</g>
+	<rect x="463.4" y="197.2" class="st21" width="213" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 486.5556 208.8029)" class="st22 st23">INPUT_CIM_Mech_InputPort-0</text>
+	</g>
+	<rect x="453.9" y="83.2" class="st25" width="231" height="142"/>
+	<path class="st26" d="M394.4,267.2c36.5,0,29.6-49.3,58-58.5"/>
+	<polygon class="st17" points="452,205.2 462.4,207.2 453,212.1 	"/>
+	<polygon class="st26" points="452,205.2 462.4,207.2 453,212.1 	"/>
+	<g class="st17">
+		<rect x="1021.9" y="249.2" class="st2" width="291" height="168"/>
+		<rect x="1021.9" y="249.2" class="st3" width="291" height="168"/>
+	</g>
+	<g class="st17">
+		<rect x="1028.4" y="255.2" class="st4" width="279" height="48"/>
+		<rect x="1028.4" y="255.2" class="st3" width="279" height="48"/>
+	</g>
+	<g class="st17">
+		<rect x="1032.4" y="259.2" class="st5" width="271" height="21"/>
+		<rect x="1032.4" y="259.2" class="st3" width="271" height="21"/>
+	</g>
+	<rect x="1033.4" y="260.2" class="st21" width="269" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1133.5693 271.8029)" class="st22 st23">OutputPort-0</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1135.9043 294.8029)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1057.0762 327.8029)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1118.4297 327.8029)" class="st22 st23">:</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1028.0488 343.0031)" class="st22 st24">Shadowing Mech</text>
+	</g>
+	<g class="st17">
+		<rect x="1155.4" y="308.2" class="st4" width="152" height="50"/>
+		<rect x="1155.4" y="308.2" class="st3" width="152" height="50"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1159.4053 334.9035)" class="st22 st23">ParameterPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="1249.4" y="312.2" class="st5" width="54" height="42"/>
+		<rect x="1249.4" y="312.2" class="st3" width="54" height="42"/>
+	</g>
+	<rect x="1250.4" y="313.2" class="st21" width="52" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1253.4072 324.8029)" class="st22 st23">intercept</text>
+	</g>
+	<rect x="1250.4" y="334.2" class="st21" width="52" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1262.0762 345.8029)" class="st22 st23">slope</text>
+	</g>
+	<g class="st17">
+		<rect x="1028.4" y="363.2" class="st4" width="279" height="48"/>
+		<rect x="1028.4" y="363.2" class="st3" width="279" height="48"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1140.5713 375.8029)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="1032.4" y="386.2" class="st5" width="271" height="21"/>
+		<rect x="1032.4" y="386.2" class="st3" width="271" height="21"/>
+	</g>
+	<rect x="1033.4" y="387.2" class="st21" width="269" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1068.8574 398.8029)" class="st22 st23">Shadowed input of Mech[InputPort-0]</text>
+	</g>
+	<rect x="1023.4" y="250.7" class="st27" width="288" height="165"/>
+	<path class="st26" d="M394.4,267.2c286,0,347.2,127,627.9,129.9"/>
+	<polygon class="st17" points="1022.4,393.7 1032.4,397.2 1022.4,400.7 	"/>
+	<polygon class="st26" points="1022.4,393.7 1032.4,397.2 1022.4,400.7 	"/>
+	<g class="st17">
+		<rect x="736.9" y="57.2" class="st2" width="233" height="168"/>
+		<rect x="736.9" y="57.2" class="st3" width="233" height="168"/>
+	</g>
+	<g class="st17">
+		<rect x="743.4" y="63.2" class="st4" width="221" height="48"/>
+		<rect x="743.4" y="63.2" class="st3" width="221" height="48"/>
+	</g>
+	<g class="st17">
+		<rect x="747.4" y="67.2" class="st5" width="213" height="21"/>
+		<rect x="747.4" y="67.2" class="st3" width="213" height="21"/>
+	</g>
+	<rect x="748.4" y="68.2" class="st21" width="211" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 819.5693 79.8029)" class="st22 st23">OutputPort-0</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 821.9043 102.8029)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 743.0762 135.8029)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 804.4297 135.8029)" class="st22 st23">:</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 755.8574 151.0031)" class="st22 st24">Mech</text>
+	</g>
+	<g class="st17">
+		<rect x="812.4" y="116.2" class="st4" width="152" height="50"/>
+		<rect x="812.4" y="116.2" class="st3" width="152" height="50"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 816.4053 142.9035)" class="st22 st23">ParameterPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="906.4" y="120.2" class="st5" width="54" height="42"/>
+		<rect x="906.4" y="120.2" class="st3" width="54" height="42"/>
+	</g>
+	<rect x="907.4" y="121.2" class="st21" width="52" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 910.4072 132.8029)" class="st22 st23">intercept</text>
+	</g>
+	<rect x="907.4" y="142.2" class="st21" width="52" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 919.0762 153.8029)" class="st22 st23">slope</text>
+	</g>
+	<g class="st17">
+		<rect x="743.4" y="171.2" class="st4" width="221" height="48"/>
+		<rect x="743.4" y="171.2" class="st3" width="221" height="48"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 826.5713 183.8029)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="747.4" y="194.2" class="st5" width="213" height="21"/>
+		<rect x="747.4" y="194.2" class="st3" width="213" height="21"/>
+	</g>
+	<rect x="748.4" y="195.2" class="st21" width="211" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 824.2363 206.8029)" class="st22 st23">InputPort-0</text>
+	</g>
+	<rect x="738.4" y="58.7" class="st27" width="230" height="165"/>
+	<path class="st26" d="M677.4,101.2c51.9,0,19.5,90.3,59.9,102.6"/>
+	<polygon class="st17" points="738,200.4 747.4,205.2 737,207.3 	"/>
+	<polygon class="st26" points="738,200.4 747.4,205.2 737,207.3 	"/>
+	<g class="st17">
+		<rect x="1364.9" y="106.7" class="st2" width="673" height="89"/>
+		<rect x="1364.9" y="106.7" class="st3" width="673" height="89"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1669.5762 119.8029)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1730.9297 119.8029)" class="st22 st23">:</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1589.873 135.0031)" class="st22 st24">Outer Composition Output_CIM</text>
+	</g>
+	<g class="st17">
+		<rect x="1369.4" y="144.2" class="st4" width="665" height="48"/>
+		<rect x="1369.4" y="144.2" class="st3" width="665" height="48"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1674.5713 156.8029)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="1373.4" y="167.2" class="st5" width="657" height="21"/>
+		<rect x="1373.4" y="167.2" class="st3" width="657" height="21"/>
+	</g>
+	<rect x="1374.4" y="168.2" class="st21" width="395" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1377.5234 179.8029)" class="st22 st23">OUTPUT_CIM_Nested Composition_OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<rect x="1771.4" y="168.2" class="st21" width="258" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1774.3672 179.8029)" class="st22 st23">OUTPUT_CIM_Shadowing Mech_OutputPort-0</text>
+	</g>
+	<rect x="1364.9" y="106.7" class="st28" width="673" height="89"/>
+	<path class="st26" d="M1303.4,269.2c264.2,0,588.3,181.9,596.8-70.6"/>
+	<polygon class="st17" points="1896.8,198.1 1900.4,188.2 1903.8,198.3 	"/>
+	<polygon class="st26" points="1896.8,198.1 1900.4,188.2 1903.8,198.3 	"/>
+	<g class="st17">
+		<rect x="1045.9" y="69.2" class="st2" width="243" height="142"/>
+		<rect x="1045.9" y="69.2" class="st3" width="243" height="142"/>
+	</g>
+	<g class="st17">
+		<rect x="1050.4" y="73.2" class="st4" width="235" height="48"/>
+		<rect x="1050.4" y="73.2" class="st3" width="235" height="48"/>
+	</g>
+	<g class="st17">
+		<rect x="1054.4" y="77.2" class="st5" width="227" height="21"/>
+		<rect x="1054.4" y="77.2" class="st3" width="227" height="21"/>
+	</g>
+	<rect x="1055.4" y="78.2" class="st21" width="225" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1073.2236 89.8029)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1135.9043 112.8029)" class="st22 st23">OutputPorts</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1135.5762 134.8029)" class="st22 st23">Mechanism</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1196.9297 134.8029)" class="st22 st23">:</text>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1050.5332 150.0031)" class="st22 st24">Nested Composition Output_CIM</text>
+	</g>
+	<g class="st17">
+		<rect x="1050.4" y="159.2" class="st4" width="235" height="48"/>
+		<rect x="1050.4" y="159.2" class="st3" width="235" height="48"/>
+	</g>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1140.5713 171.8029)" class="st22 st23">InputPorts</text>
+	</g>
+	<g class="st17">
+		<rect x="1054.4" y="182.2" class="st5" width="227" height="21"/>
+		<rect x="1054.4" y="182.2" class="st3" width="227" height="21"/>
+	</g>
+	<rect x="1055.4" y="183.2" class="st21" width="225" height="19"/>
+	<g class="st17">
+		<text transform="matrix(1 0 0 1 1073.2236 194.8029)" class="st22 st23">OUTPUT_CIM_Mech_OutputPort-0</text>
+	</g>
+	<rect x="1045.9" y="69.2" class="st28" width="243" height="142"/>
+	<path class="st26" d="M1281.4,87.2c53.8,0,37.1,79.6,81.8,89.9"/>
+	<polygon class="st17" points="1363.8,173.7 1373.4,178.2 1363.1,180.6 	"/>
+	<polygon class="st26" points="1363.8,173.7 1373.4,178.2 1363.1,180.6 	"/>
+	<path class="st26" d="M960.4,77.2c62.7,0,31.6,103.7,84,115"/>
+	<polygon class="st17" points="1044.8,188.7 1054.4,193.2 1044.1,195.7 	"/>
+	<polygon class="st26" points="1044.8,188.7 1054.4,193.2 1044.1,195.7 	"/>
+</g>
+</svg>

@@ -350,6 +350,25 @@ should project to the InputPort. Each of these is described below:
          for that Mechanism;  c) use that Mechanism as the `InputPort specification <InputPort_Specification>`
          for the shadowing InputPort.
 
+      .. figure:: _static/input_port_shadowing.svg
+
+         **Example of InputPort shadowing**.  The figure above shows a Composition in which the `InputPort` of
+         ``shadowing_mech`` is configured to shadow the input to ``mech`` in ``nested_comp``.  Accordingly
+         ``shadowing_mech`` receives a Projection from the same Port of ``outer_comp``'s `input_CIM
+         <Composition.input_CIM>` as the `input_CIM <Composition.input_CIM>` of ``nested_comp`` that projects to
+         ``mech``. As a result, ``shadowing_mech`` will receive the same input as ``mech`` when ``outer_comp``
+         is  executed::
+
+             >>> import psyneulink as pnl
+             >>> mech = pnl.ProcessingMechanism(name='Mech')
+             >>> shadowing_mech = pnl.ProcessingMechanism(name='Shadowing Mech',
+             ...                                      input_ports=[mech.input_port])
+             >>> nested_comp = pnl.Composition([mech], name='Nested Composition')
+             >>> outer_comp = pnl.Composition(nodes=[nested_comp, shadowing_mech],
+             ...                          name='Outer Composition')
+             >>> outer_comp.show_graph(show_node_structure=True, show_cim=True)
+
+
 .. _InputPort_Compatability_and_Constraints:
 
 InputPort `variable <InputPort.variable>`: Compatibility and Constraints
