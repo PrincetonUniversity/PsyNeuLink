@@ -4168,7 +4168,7 @@ class Mechanism_Base(Mechanism):
                 model.functions.append(
                     mdf.Function(
                         id=combination_function_id,
-                        function={'onnx::ReduceSum': combination_function_args},
+                        function='onnx::ReduceSum',
                         args=combination_function_args
                     )
                 )

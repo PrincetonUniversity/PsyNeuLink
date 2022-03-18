@@ -71,7 +71,6 @@ See https://github.com/ModECI/MDF/blob/main/docs/README.md#model
 import ast
 import base64
 import binascii
-import copy
 import dill
 import enum
 import graph_scheduler
@@ -85,12 +84,13 @@ import pint
 import psyneulink
 import re
 import types
+import time
 import warnings
 
 from psyneulink.core.globals.keywords import \
-    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PARAMETER_SOURCE, \
-    MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, \
-    MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_OUTPUT_PORTS, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
+    MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_PARAMETER_SOURCE, \
+    MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE, MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_PSYNEULINK, \
+    MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_SHAPE, MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.parameters import ParameterAlias
 from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import convert_to_list, gen_friendly_comma_str, get_all_explicit_arguments, \
@@ -180,7 +180,36 @@ def _substitute_expression_args(model):
             model.value = model.value.replace(arg, str(val))
 
 
-def _parse_component_type(component_dict):
+def _mdf_obj_from_dict(d):
+    import modeci_mdf.mdf as mdf
+
+    def _get_mdf_object(obj, cls_):
+        try:
+            model_id = obj['id']
+        except KeyError:
+            try:
+                model_id = obj['metadata']['name']
+            except KeyError:
+                model_id = f'{cls_.__name__}_{time.perf_counter_ns()}'
+
+        return cls_.from_dict({model_id: obj})
+
+    for cls_name in mdf.__all__:
+        cls_ = getattr(mdf, cls_name)
+        if all([attr.name in d or attr.name in {'id', 'parameters'} for attr in cls_.__attrs_attrs__]):
+            return _get_mdf_object(d, cls_)
+
+    if 'function' in d and 'args' in d:
+        return _get_mdf_object(d, mdf.Function)
+
+    # nothing else seems to fit, try Function (unreliable)
+    if 'value' in d:
+        return _get_mdf_object(d, mdf.Function)
+
+    return None
+
+
+def _parse_component_type(model_obj):
     def get_pnl_component_type(s):
         from psyneulink.core.components.component import ComponentsMeta
 
@@ -196,14 +225,15 @@ def _parse_component_type(component_dict):
             raise
 
     type_str = None
-    if MODEL_SPEC_ID_TYPE in component_dict:
-        type_dict = component_dict[MODEL_SPEC_ID_TYPE]
-    else:
+    try:
         try:
-            type_dict = component_dict[MODEL_SPEC_ID_METADATA][MODEL_SPEC_ID_TYPE]
-        except KeyError:
-            # specifically for functions the keyword is not 'type'
-            type_str = component_dict['function']
+            type_dict = model_obj.metadata[MODEL_SPEC_ID_TYPE]
+        except AttributeError:
+            # could be a dict specification
+            type_str = model_obj[MODEL_SPEC_ID_METADATA][MODEL_SPEC_ID_TYPE]
+    except (KeyError, TypeError):
+        # specifically for functions the keyword is not 'type'
+        type_str = model_obj.function
 
     if type_str is None:
         try:
@@ -256,21 +286,19 @@ def _parse_component_type(component_dict):
     else:
         return type_str
 
-    raise PNLJSONError(
-        'Invalid type specified for JSON object: {0}'.format(
-            component_dict
-        )
-    )
+    raise PNLJSONError(f'Invalid type specified for JSON object: {model_obj}')
 
 
 def _parse_parameter_value(value, component_identifiers=None, name=None, parent_parameters=None):
+    import modeci_mdf.mdf as mdf
+
     if component_identifiers is None:
         component_identifiers = {}
 
     exec('import numpy')
     try:
         pnl_type = _parse_component_type(value)
-    except (KeyError, TypeError, PNLJSONError):
+    except (AttributeError, TypeError, PNLJSONError):
         # ignore parameters that aren't components
         pnl_type = None
 
@@ -334,57 +362,51 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
                 parent_parameters
             )
         else:
-            # it is either a Component spec or just a plain dict
-            try:
-                # try handling as a Component spec
+            if len(value) == 1:
                 try:
-                    comp_name = value['name']
+                    identifier = list(value.keys())[0]
                 except KeyError:
-                    comp_name = name
+                    identifier = name
 
-                if comp_name is not None:
-                    identifier = parse_valid_identifier(comp_name)
-                    if len(value) == 1:
-                        try:
-                            value = value[comp_name]
-                        except KeyError:
-                            pass
-                else:
-                    if len(value) == 1:
-                        comp_name = list(value.keys())[0]
-                        identifier = parse_valid_identifier(comp_name)
-                        if isinstance(value[comp_name], dict):
-                            value = value[comp_name]
-                    else:
-                        raise PNLJSONError(
-                            f'Component without name could reference multiple objects: {value}',
-                        )
+                mdf_object = value[identifier]
+            else:
+                try:
+                    identifier = value['id']
+                except KeyError:
+                    identifier = name
 
-                if (
-                    identifier in component_identifiers
-                    and component_identifiers[identifier]
-                ):
-                    # if this spec is already created as a node elsewhere,
-                    # then just use a reference
-                    value = identifier
-                else:
+                mdf_object = value
+
+            # it is either a Component spec or just a plain dict
+            if (
+                identifier in component_identifiers
+                and component_identifiers[identifier]
+            ):
+                # if this spec is already created as a node elsewhere,
+                # then just use a reference
+                value = identifier
+            else:
+                if not isinstance(mdf_object, mdf.Base):
+                    mdf_object = _mdf_obj_from_dict(mdf_object)
+
+                try:
                     value = _generate_component_string(
-                        value,
+                        mdf_object,
                         component_identifiers,
-                        component_name=comp_name,
+                        component_name=identifier,
                         parent_parameters=parent_parameters
                     )
-            except (PNLJSONError, KeyError, TypeError):
-                # standard dict handling
-                value = '{{{0}}}'.format(
-                    ', '.join([
-                        '{0}: {1}'.format(
-                            str(_parse_parameter_value(k, component_identifiers, name)),
-                            str(_parse_parameter_value(v, component_identifiers, name))
-                        )
-                        for k, v in value.items()
-                    ])
-                )
+                except (AttributeError, PNLJSONError, KeyError, TypeError):
+                    # standard dict handling
+                    value = '{{{0}}}'.format(
+                        ', '.join([
+                            '{0}: {1}'.format(
+                                str(_parse_parameter_value(k, component_identifiers, name)),
+                                str(_parse_parameter_value(v, component_identifiers, name))
+                            )
+                            for k, v in value.items()
+                        ])
+                    )
 
     elif isinstance(value, str):
         # handle pointer to parent's parameter value
@@ -458,11 +480,19 @@ def _parse_parameter_value(value, component_identifiers=None, name=None, parent_
         ):
             value = f"'{value}'"
 
+    elif isinstance(value, mdf.Base):
+        value = _generate_component_string(
+            value,
+            component_identifiers,
+            component_name=value.id,
+            parent_parameters=parent_parameters
+        )
+
     return value
 
 
 def _generate_component_string(
-    component_dict,
+    component_model,
     component_identifiers,
     component_name=None,
     parent_parameters=None,
@@ -471,63 +501,63 @@ def _generate_component_string(
 ):
     from psyneulink.core.components.functions.function import Function_Base
     from psyneulink.core.components.functions.userdefinedfunction import UserDefinedFunction
-    from psyneulink.core.components.projections.projection import Projection_Base
 
     try:
-        component_type = _parse_component_type(component_dict)
-    except KeyError as e:
+        component_type = _parse_component_type(component_model)
+    except AttributeError as e:
         # acceptable to exclude type currently
         if default_type is not None:
             component_type = default_type
         else:
             raise type(e)(
-                f'{component_dict} has no PNL or generic type and no '
+                f'{component_model} has no PNL or generic type and no '
                 'default_type is specified'
             ) from e
 
     if component_name is None:
-        name = component_dict['name']
+        name = component_model.id
     else:
         name = component_name
         try:
-            assert component_name == component_dict['name']
+            assert component_name == component_model.id
         except KeyError:
             pass
 
     is_user_defined_function = False
     try:
-        parameters = dict(component_dict[component_type._model_spec_id_parameters])
+        parameters = dict(getattr(component_model, component_type._model_spec_id_parameters))
     except AttributeError:
         is_user_defined_function = True
-    except KeyError:
+    except TypeError:
         parameters = {}
 
     if is_user_defined_function or component_type is UserDefinedFunction:
         custom_func = component_type
         component_type = UserDefinedFunction
         try:
-            parameters = dict(component_dict[component_type._model_spec_id_parameters])
-        except KeyError:
+            parameters = dict(getattr(component_model, component_type._model_spec_id_parameters))
+        except TypeError:
             parameters = {}
         parameters['custom_function'] = f'{custom_func}'
         try:
-            del component_dict[MODEL_SPEC_ID_METADATA]['custom_function']
+            del component_model.metadata['custom_function']
         except KeyError:
             pass
 
     try:
-        parameters.update(component_dict[component_type._model_spec_id_stateful_parameters])
-    except KeyError:
+        parameters.update(getattr(component_model, component_type._model_spec_id_parameters))
+    except TypeError:
         pass
 
     try:
         # args in function dict
-        parameters.update(component_dict['function'][list(component_dict['function'].keys())[0]])
+        parameters.update(component_model.function[list(component_model.function.keys())[0]])
     except (AttributeError, KeyError):
         pass
 
     parameter_names = {}
 
+    # TODO: remove this?
     # If there is a parameter that is the psyneulink identifier string
     # (as of this comment, 'pnl'), then expand these parameters as
     # normal ones. We don't check and expand for other
@@ -540,20 +570,20 @@ def _generate_component_string(
         pass
 
     try:
-        metadata = component_dict[MODEL_SPEC_ID_METADATA]
-    except KeyError:
-        metadata = {}
-
-    if issubclass(component_type, Projection_Base):
+        functions = component_model.functions
+    except AttributeError:
         try:
-            component_dict['functions'] = metadata['functions']
+            functions = [_mdf_obj_from_dict(v) for k, v in component_model.metadata['functions'].items()]
         except KeyError:
-            pass
+            functions = None
+        except AttributeError:
+            functions = component_model.metadata['functions']
 
     # pnl objects only have one function unless specified in another way
     # than just "function"
-    if 'functions' in component_dict:
-        dup_function_names = set([name for name in component_dict['functions'] if name in component_identifiers])
+
+    if functions is not None:
+        dup_function_names = set([f.id for f in functions if f.id in component_identifiers])
         if len(dup_function_names) > 0:
             warnings.warn(
                 f'Functions ({gen_friendly_comma_str(dup_function_names)}) of'
@@ -564,8 +594,8 @@ def _generate_component_string(
         function_determined_by_output_port = False
 
         try:
-            output_ports = component_dict[MODEL_SPEC_ID_OUTPUT_PORTS]
-        except KeyError:
+            output_ports = component_model.output_ports
+        except AttributeError:
             pass
         else:
             if len(output_ports) == 1 or isinstance(output_ports, list):
@@ -585,17 +615,15 @@ def _generate_component_string(
                     function_determined_by_output_port = True
 
         # neuroml-style mdf has MODEL_SPEC_ID_PARAMETER_VALUE in output port definitions
-        if function_determined_by_output_port and MODEL_SPEC_ID_PARAMETER_VALUE in primary_output_port:
-            parameter_names['function'] = re.sub(r'(.*)\[\d+\]', '\\1', primary_output_port[MODEL_SPEC_ID_PARAMETER_VALUE])
+        if function_determined_by_output_port and hasattr(primary_output_port, MODEL_SPEC_ID_PARAMETER_VALUE):
+            parameter_names['function'] = re.sub(r'(.*)\[\d+\]', '\\1', getattr(primary_output_port, MODEL_SPEC_ID_PARAMETER_VALUE))
         else:
             parameter_names['function'] = [
-                f for f in component_dict['functions']
-                if not f.endswith(MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION)
+                f.id for f in functions
+                if not f.id.endswith(MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION)
             ][0]
 
-        parameters['function'] = {
-            parameter_names['function']: component_dict['functions'][parameter_names['function']]
-        }
+        parameters['function'] = [f for f in functions if f.id == parameter_names['function']][0]
 
     assignment_str = f'{parse_valid_identifier(name)} = ' if assignment else ''
 
@@ -617,7 +645,7 @@ def _generate_component_string(
     parameters = {
         **{k: v for k, v in parent_parameters.items() if isinstance(v, dict) and MODEL_SPEC_ID_PARAMETER_INITIAL_VALUE in v},
         **parameters,
-        **metadata
+        **(component_model.metadata if component_model.metadata is not None else {})
     }
 
     # MDF input ports do not have functions, so their shape is
@@ -626,13 +654,9 @@ def _generate_component_string(
     # the input port shape if input_ports parameter is specified
     if 'variable' not in parameters and 'input_ports' not in parameters:
         try:
-            ip = parameters['function'][Function_Base._model_spec_id_parameters][MODEL_SPEC_ID_MDF_VARIABLE]
+            ip = getattr(parameters['function'], Function_Base._model_spec_id_parameters)[MODEL_SPEC_ID_MDF_VARIABLE]
             var = convert_to_np_array(
-                numpy.zeros(
-                    ast.literal_eval(
-                        component_dict[MODEL_SPEC_ID_INPUT_PORTS][ip][MODEL_SPEC_ID_SHAPE]
-                    )
-                ),
+                numpy.zeros(ast.literal_eval(component_model.input_ports[ip][MODEL_SPEC_ID_SHAPE])),
                 dimension=2
             ).tolist()
             parameters['variable'] = var
@@ -766,57 +790,46 @@ def _generate_component_string(
 
 def _generate_scheduler_string(
     scheduler_id,
-    scheduler_dict,
+    scheduler_model,
     component_identifiers,
     blacklist=[]
 ):
     output = []
-    try:
-        node_specific_conds = scheduler_dict['node_specific']
-    except KeyError:
-        pass
-    else:
-        for node, condition in node_specific_conds.items():
-            if node not in blacklist:
-                output.append(
-                    '{0}.add_condition({1}, {2})'.format(
-                        scheduler_id,
-                        parse_valid_identifier(node),
-                        _generate_condition_string(
-                            condition,
-                            component_identifiers
-                        )
+
+    for node, condition in scheduler_model.node_specific.items():
+        if node not in blacklist:
+            output.append(
+                '{0}.add_condition({1}, {2})'.format(
+                    scheduler_id,
+                    parse_valid_identifier(node),
+                    _generate_condition_string(
+                        condition,
+                        component_identifiers
                     )
                 )
-
-        output.append('')
+            )
 
     termination_str = []
-    try:
-        termination_conds = scheduler_dict['termination']
-    except KeyError:
-        pass
-    else:
-        for scale, cond in termination_conds.items():
-            termination_str.insert(
-                1,
-                'psyneulink.{0}: {1}'.format(
-                    f'TimeScale.{str.upper(scale)}',
-                    _generate_condition_string(cond, component_identifiers)
-                )
-            )
-
-        output.append(
-            '{0}.termination_conds = {{{1}}}'.format(
-                scheduler_id,
-                ', '.join(termination_str)
+    for scale, cond in scheduler_model.termination.items():
+        termination_str.insert(
+            1,
+            'psyneulink.{0}: {1}'.format(
+                f'TimeScale.{str.upper(scale)}',
+                _generate_condition_string(cond, component_identifiers)
             )
         )
+
+    output.append(
+        '{0}.termination_conds = {{{1}}}'.format(
+            scheduler_id,
+            ', '.join(termination_str)
+        )
+    )
 
     return '\n'.join(output)
 
 
-def _generate_condition_string(condition_dict, component_identifiers):
+def _generate_condition_string(condition_model, component_identifiers):
     def _parse_condition_arg_value(value):
         try:
             identifier = parse_valid_identifier(value)
@@ -827,7 +840,7 @@ def _generate_condition_string(condition_dict, component_identifiers):
                 return str(identifier)
 
         try:
-            getattr(psyneulink.core.scheduling.condition, value['type'])
+            getattr(psyneulink.core.scheduling.condition, value.type)
         except (AttributeError, KeyError, TypeError):
             pass
         else:
@@ -853,7 +866,7 @@ def _generate_condition_string(condition_dict, component_identifiers):
         return typ
 
     args_str = ''
-    cond_type = _parse_graph_scheduler_type(condition_dict[MODEL_SPEC_ID_TYPE])
+    cond_type = _parse_graph_scheduler_type(condition_model.type)
     sig = inspect.signature(getattr(psyneulink, cond_type).__init__)
 
     var_positional_arg_name = None
@@ -863,7 +876,7 @@ def _generate_condition_string(condition_dict, component_identifiers):
             var_positional_arg_name = name
             break
 
-    args_dict = condition_dict['args']
+    args_dict = condition_model.kwargs
 
     try:
         pos_args = args_dict[var_positional_arg_name]
@@ -906,30 +919,8 @@ def _generate_condition_string(condition_dict, component_identifiers):
     return f'psyneulink.{cond_type}({arguments_str})'
 
 
-def _generate_composition_string(graphs_dict, component_identifiers):
-    def _replace_function_node_with_mech_node(function_dict, name, typ=None):
-        if typ is None:
-            typ = _parse_component_type(function_dict)
-        else:
-            typ = typ.__name__
-
-        mech_func_dict = {
-            'functions': {
-                name: {
-                    MODEL_SPEC_ID_TYPE: {MODEL_SPEC_ID_PSYNEULINK: typ},
-                    psyneulink.Function_Base._model_spec_id_parameters: function_dict[psyneulink.Component._model_spec_id_parameters]
-                },
-            }
-        }
-
-        try:
-            del function_dict[MODEL_SPEC_ID_TYPE]
-        except KeyError:
-            pass
-
-        function_dict['name'] = f"{name}_wrapped_mech"
-
-        return {**function_dict, **mech_func_dict}
+def _generate_composition_string(graph, component_identifiers):
+    import modeci_mdf.mdf as mdf
 
     # used if no generic types are specified
     default_composition_type = psyneulink.Composition
@@ -947,410 +938,321 @@ def _generate_composition_string(graphs_dict, component_identifiers):
     )
     output = []
 
-    # may be given multiple compositions
-    for comp_name, composition_dict in graphs_dict.items():
+    comp_identifer = parse_valid_identifier(graph.id)
+
+    def alphabetical_order(items):
+        alphabetical = enumerate(
+            sorted(items)
+        )
+        return {
+            parse_valid_identifier(item[1]): item[0]
+            for item in alphabetical
+        }
+
+    # get order in which nodes were added
+    # may be node names or dictionaries
+    try:
+        node_order = graph.metadata['node_ordering']
+        node_order = {
+            parse_valid_identifier(list(node.keys())[0]) if isinstance(node, dict)
+            else parse_valid_identifier(node): node_order.index(node)
+            for node in node_order
+        }
+
+        unspecified_node_order = {
+            node: position + len(node_order)
+            for node, position in alphabetical_order([
+                parse_valid_identifier(n.id) for n in graph.nodes if n.id not in node_order
+            ]).items()
+        }
+
+        node_order.update(unspecified_node_order)
+
+        assert all([
+            (parse_valid_identifier(node.id) in node_order)
+            for node in graph.nodes
+        ])
+    except (KeyError, TypeError, AssertionError):
+        # if no node_ordering attribute exists, fall back to
+        # alphabetical order
+        node_order = alphabetical_order([parse_valid_identifier(n.id) for n in graph.nodes])
+
+    keys_to_delete = []
+
+    for node in graph.nodes:
         try:
-            assert comp_name == composition_dict['name']
-        except KeyError:
+            component_type = _parse_component_type(node)
+        except (AttributeError, KeyError):
+            # will use a default type
             pass
+        else:
+            # projection was written out as a node for simple_edge_format
+            if issubclass(component_type, psyneulink.Projection_Base):
+                assert len(node.input_ports) == 1
+                assert len(node.output_ports) == 1
 
-        comp_identifer = parse_valid_identifier(comp_name)
+                extra_projs_to_delete = set()
 
-        def alphabetical_order(items):
-            alphabetical = enumerate(
-                sorted(items)
+                sender = None
+                sender_port = None
+                receiver = None
+                receiver_port = None
+
+                for proj in graph.edges:
+                    if proj.receiver == node.id:
+                        assert 'dummy' in proj.id
+                        sender = proj.sender
+                        sender_port = proj.sender_port
+                        extra_projs_to_delete.add(proj.id)
+
+                    if proj.sender == node.id:
+                        assert 'dummy' in proj.id
+                        receiver = proj.receiver
+                        receiver_port = proj.receiver_port
+                        # if for some reason the projection has node as both sender and receiver
+                        # this is a bug, let the deletion fail
+                        extra_projs_to_delete.add(proj.id)
+
+                if sender is None:
+                    raise PNLJSONError(f'Dummy node {node.id} for projection has no sender in projections list')
+
+                if receiver is None:
+                    raise PNLJSONError(f'Dummy node {node.id} for projection has no receiver in projections list')
+
+                main_proj = mdf.Edge(
+                    id=node.id.rstrip('_dummy_node'),
+                    sender=sender,
+                    receiver=receiver,
+                    sender_port=sender_port,
+                    receiver_port=receiver_port,
+                    metadata={
+                        # variable isn't specified for projections
+                        **{k: v for k, v in node.metadata.items() if k != 'variable'},
+                        'functions': node.functions
+                    }
+                )
+                proj.parameters = {p.id: p for p in node.parameters}
+                graph.edges.append(main_proj)
+
+                keys_to_delete.append(node.id)
+                for p in extra_projs_to_delete:
+                    del graph.edges[graph.edges.index([e for e in graph.edges if e.id == p][0])]
+
+                for nr_item in ['required_node_roles', 'excluded_node_roles']:
+                    nr_removal_indices = []
+
+                    for i, (nr_name, nr_role) in enumerate(
+                        graph.metadata[nr_item]
+                    ):
+                        if nr_name == node.id:
+                            nr_removal_indices.append(i)
+
+                    for i in nr_removal_indices:
+                        del graph.metadata[nr_item][i]
+
+    for name_to_delete in keys_to_delete:
+        del graph.nodes[graph.nodes.index([n for n in graph.nodes if n.id == name_to_delete][0])]
+
+    # generate string for Composition itself
+    output.append(
+        "{0} = {1}\n".format(
+            comp_identifer,
+            _generate_component_string(
+                graph,
+                component_identifiers,
+                component_name=graph.id,
+                default_type=default_composition_type
             )
-            return {
-                parse_valid_identifier(item[1]): item[0]
-                for item in alphabetical
-            }
+        )
+    )
+    component_identifiers[comp_identifer] = True
 
-        # get order in which nodes were added
-        # may be node names or dictionaries
-        try:
-            node_order = composition_dict[MODEL_SPEC_ID_METADATA]['node_ordering']
-            node_order = {
-                parse_valid_identifier(list(node.keys())[0]) if isinstance(node, dict)
-                else parse_valid_identifier(node): node_order.index(node)
-                for node in node_order
-            }
+    mechanisms = []
+    compositions = []
+    control_mechanisms = []
+    implicit_mechanisms = []
 
-            unspecified_node_order = {
-                node: position + len(node_order)
-                for node, position in alphabetical_order([
-                    n for n in composition_dict[MODEL_SPEC_ID_NODES] if n not in node_order
-                ]).items()
-            }
-
-            node_order.update(unspecified_node_order)
-
-            assert all([
-                (parse_valid_identifier(node) in node_order)
-                for node in composition_dict[MODEL_SPEC_ID_NODES]
-            ])
-        except (KeyError, TypeError, AssertionError):
-            # if no node_ordering attribute exists, fall back to
-            # alphabetical order
-            node_order = alphabetical_order(composition_dict[MODEL_SPEC_ID_NODES])
-
-        # clean up pnl-specific and other software-specific items
-        pnl_specific_items = {}
-        keys_to_delete = []
-
-        for name, node in composition_dict[MODEL_SPEC_ID_NODES].items():
+    # add nested compositions and mechanisms in order they were added
+    # to this composition
+    for node in sorted(
+        graph.nodes,
+        key=lambda item: node_order[parse_valid_identifier(item.id)]
+    ):
+        if isinstance(node, mdf.Graph):
+            compositions.append(node)
+        else:
             try:
                 component_type = _parse_component_type(node)
-            except KeyError:
-                # will use a default type
-                pass
-            except PNLJSONError:
-                # node isn't a node dictionary, but a dict of dicts,
-                # indicating a software-specific set of nodes or
-                # a composition
-                if name == MODEL_SPEC_ID_PSYNEULINK:
-                    pnl_specific_items = node
-
-                if MODEL_SPEC_ID_COMPOSITION not in node:
-                    keys_to_delete.append(name)
+            except (AttributeError, KeyError):
+                component_type = default_node_type
+            identifier = parse_valid_identifier(node.id)
+            if issubclass(component_type, control_mechanism_types):
+                control_mechanisms.append(node)
+                component_identifiers[identifier] = True
+            elif issubclass(component_type, implicit_types):
+                implicit_mechanisms.append(node)
             else:
-                # projection was written out as a node for simple_edge_format
-                if issubclass(component_type, psyneulink.Projection_Base):
-                    assert len(node[MODEL_SPEC_ID_INPUT_PORTS]) == 1
-                    assert len(node[MODEL_SPEC_ID_OUTPUT_PORTS]) == 1
+                mechanisms.append(node)
+                component_identifiers[identifier] = True
 
-                    extra_projs_to_delete = set()
+    implicit_names = [node.id for node in implicit_mechanisms + control_mechanisms]
 
-                    sender = None
-                    sender_port = None
-                    receiver = None
-                    receiver_port = None
-
-                    for proj_name, proj in composition_dict[MODEL_SPEC_ID_PROJECTIONS].items():
-                        if proj[MODEL_SPEC_ID_RECEIVER_MECH] == name:
-                            assert 'dummy' in proj_name
-                            sender = proj[MODEL_SPEC_ID_SENDER_MECH]
-                            sender_port = proj[MODEL_SPEC_ID_SENDER_PORT]
-                            extra_projs_to_delete.add(proj_name)
-
-                        if proj[MODEL_SPEC_ID_SENDER_MECH] == name:
-                            assert 'dummy' in proj_name
-                            receiver = proj[MODEL_SPEC_ID_RECEIVER_MECH]
-                            receiver_port = proj[MODEL_SPEC_ID_RECEIVER_PORT]
-                            # if for some reason the projection has node as both sender and receiver
-                            # this is a bug, let the deletion fail
-                            extra_projs_to_delete.add(proj_name)
-
-                    if sender is None:
-                        raise PNLJSONError(f'Dummy node {name} for projection has no sender in projections list')
-
-                    if receiver is None:
-                        raise PNLJSONError(f'Dummy node {name} for projection has no receiver in projections list')
-
-                    proj_dict = {
-                        **{
-                            MODEL_SPEC_ID_SENDER_PORT: sender_port,
-                            MODEL_SPEC_ID_RECEIVER_PORT: receiver_port,
-                            MODEL_SPEC_ID_SENDER_MECH: sender,
-                            MODEL_SPEC_ID_RECEIVER_MECH: receiver
-                        },
-                        **{
-                            MODEL_SPEC_ID_METADATA: {
-                                # variable isn't specified for projections
-                                **{k: v for k, v in node[MODEL_SPEC_ID_METADATA].items() if k != 'variable'},
-                                'functions': node['functions']
-                            }
-                        },
-                    }
-                    try:
-                        proj_dict[component_type._model_spec_id_parameters] = node[psyneulink.Component._model_spec_id_parameters]
-                    except KeyError:
-                        pass
-
-                    composition_dict[MODEL_SPEC_ID_PROJECTIONS][name.rstrip('_dummy_node')] = proj_dict
-
-                    keys_to_delete.append(name)
-                    for p in extra_projs_to_delete:
-                        del composition_dict[MODEL_SPEC_ID_PROJECTIONS][p]
-
-                    for nr_item in ['required_node_roles', 'excluded_node_roles']:
-                        nr_removal_indices = []
-
-                        for i, (nr_name, nr_role) in enumerate(
-                            composition_dict[MODEL_SPEC_ID_METADATA][nr_item]
-                        ):
-                            if nr_name == name:
-                                nr_removal_indices.append(i)
-
-                        for i in nr_removal_indices:
-                            del composition_dict[MODEL_SPEC_ID_METADATA][nr_item][i]
-
-        for nodes_dict in pnl_specific_items:
-            for name, node in nodes_dict.items():
-                composition_dict[MODEL_SPEC_ID_NODES][name] = node
-
-        for name_to_delete in keys_to_delete:
-            del composition_dict[MODEL_SPEC_ID_NODES][name_to_delete]
-
+    for mech in mechanisms:
         try:
-            edges_dict = composition_dict[MODEL_SPEC_ID_PROJECTIONS]
-            pnl_specific_items = {}
-            keys_to_delete = []
-        except KeyError:
-            pass
-        else:
-            for name, edge in edges_dict.items():
-                try:
-                    _parse_component_type(edge)
-                except KeyError:
-                    # will use a default type
-                    pass
-                except PNLJSONError:
-                    if name == MODEL_SPEC_ID_PSYNEULINK:
-                        pnl_specific_items = edge
+            mech_type = _parse_component_type(mech)
+        except (AttributeError, KeyError):
+            mech_type = None
 
-                    keys_to_delete.append(name)
-
-            for name, edge in pnl_specific_items.items():
-                # exclude CIM projections because they are automatically
-                # generated
-                if (
-                    edge[MODEL_SPEC_ID_SENDER_MECH] != comp_name
-                    and edge[MODEL_SPEC_ID_RECEIVER_MECH] != comp_name
-                ):
-                    composition_dict[MODEL_SPEC_ID_PROJECTIONS][name] = edge
-
-            for name_to_delete in keys_to_delete:
-                del composition_dict[MODEL_SPEC_ID_PROJECTIONS][name_to_delete]
-
-        # generate string for Composition itself
-        output.append(
-            "{0} = {1}\n".format(
-                comp_identifer,
-                _generate_component_string(
-                    composition_dict,
-                    component_identifiers,
-                    component_name=comp_name,
-                    default_type=default_composition_type
-                )
-            )
-        )
-        component_identifiers[comp_identifer] = True
-
-        mechanisms = {}
-        compositions = {}
-        control_mechanisms = {}
-        implicit_mechanisms = {}
-
-        # add nested compositions and mechanisms in order they were added
-        # to this composition
-        for name, node in sorted(
-            composition_dict[MODEL_SPEC_ID_NODES].items(),
-            key=lambda item: node_order[parse_valid_identifier(item[0])]
+        if (
+            isinstance(mech_type, type)
+            and issubclass(mech_type, psyneulink.Function)
         ):
-            if MODEL_SPEC_ID_COMPOSITION in node:
-                compositions[name] = node[MODEL_SPEC_ID_COMPOSITION]
-            else:
-                try:
-                    component_type = _parse_component_type(node)
-                except KeyError:
-                    component_type = default_node_type
-                identifier = parse_valid_identifier(name)
-                if issubclass(component_type, control_mechanism_types):
-                    control_mechanisms[name] = node
-                    component_identifiers[identifier] = True
-                elif issubclass(component_type, implicit_types):
-                    implicit_mechanisms[name] = node
-                else:
-                    mechanisms[name] = node
-                    component_identifiers[identifier] = True
+            # removed branch converting functions defined as nodes
+            # should no longer happen with recent MDF versions
+            assert False
 
-        implicit_names = [
-            x
-            for x in [*implicit_mechanisms.keys(), *control_mechanisms.keys()]
-        ]
-
-        for name, mech in copy.copy(mechanisms).items():
-            try:
-                mech_type = _parse_component_type(mech)
-            except KeyError:
-                mech_type = None
-
-            if (
-                isinstance(mech_type, type)
-                and issubclass(mech_type, psyneulink.Function)
-            ):
-                mech = _replace_function_node_with_mech_node(mech, name, mech_type)
-
-                component_identifiers[mech['name']] = component_identifiers[name]
-                del component_identifiers[name]
-
-                node_order[mech['name']] = node_order[name]
-                del node_order[name]
-
-                mechanisms[mech['name']] = mechanisms[name]
-                del mechanisms[name]
-
-                composition_dict['nodes'][mech['name']] = composition_dict['nodes'][name]
-                del composition_dict['nodes'][name]
-
-                name = mech['name']
-
-            output.append(
-                _generate_component_string(
-                    mech,
-                    component_identifiers,
-                    component_name=name,
-                    assignment=True,
-                    default_type=default_node_type
-                )
-            )
-        if len(mechanisms) > 0:
-            output.append('')
-
-        for name, mech in control_mechanisms.items():
-            output.append(
-                _generate_component_string(
-                    mech,
-                    component_identifiers,
-                    component_name=name,
-                    assignment=True,
-                    default_type=default_node_type
-                )
-            )
-
-        if len(control_mechanisms) > 0:
-            output.append('')
-
-        # recursively generate string for inner Compositions
-        for name, comp in compositions.items():
-            output.append(
-                _generate_composition_string(
-                    comp,
-                    component_identifiers
-                )
-            )
-        if len(compositions) > 0:
-            output.append('')
-
-        # generate string to add the nodes to this Composition
-        try:
-            node_roles = {
-                parse_valid_identifier(node): role for (node, role) in
-                composition_dict[MODEL_SPEC_ID_METADATA]['required_node_roles']
-            }
-        except KeyError:
-            node_roles = []
-
-        try:
-            excluded_node_roles = {
-                parse_valid_identifier(node): role for (node, role) in
-                composition_dict[MODEL_SPEC_ID_METADATA]['excluded_node_roles']
-            }
-        except KeyError:
-            excluded_node_roles = []
-
-        # do not add the controller as a normal node
-        try:
-            controller_name = list(composition_dict[MODEL_SPEC_ID_METADATA]['controller'].keys())[0]
-        except (AttributeError, KeyError, TypeError):
-            controller_name = None
-
-        for name in sorted(
-            composition_dict[MODEL_SPEC_ID_NODES],
-            key=lambda item: node_order[parse_valid_identifier(item)]
-        ):
-            if (
-                name not in implicit_names
-                and name != controller_name
-            ):
-                name = parse_valid_identifier(name)
-
-                output.append(
-                    '{0}.add_node({1}{2})'.format(
-                        comp_identifer,
-                        name,
-                        ', {0}'.format(
-                            _parse_parameter_value(
-                                node_roles[name],
-                                component_identifiers
-                            )
-                        ) if name in node_roles else ''
-                    )
-                )
-        if len(composition_dict[MODEL_SPEC_ID_NODES]) > 0:
-            output.append('')
-
-        if len(excluded_node_roles) > 0:
-            for node, roles in excluded_node_roles.items():
-                if name not in implicit_names and name != controller_name:
-                    output.append(
-                        f'{comp_identifer}.exclude_node_roles({node}, {_parse_parameter_value(roles, component_identifiers)})'
-                    )
-            output.append('')
-
-        try:
-            edges_dict = composition_dict[MODEL_SPEC_ID_PROJECTIONS]
-        except KeyError:
-            pass
-        else:
-            # generate string to add the projections
-            for name, projection_dict in edges_dict.items():
-                try:
-                    projection_type = _parse_component_type(projection_dict)
-                except KeyError:
-                    projection_type = default_edge_type
-
-                if (
-                    not issubclass(projection_type, implicit_types)
-                    and projection_dict[MODEL_SPEC_ID_SENDER_MECH] not in implicit_names
-                    and projection_dict[MODEL_SPEC_ID_RECEIVER_MECH] not in implicit_names
-                ):
-                    output.append(
-                        '{0}.add_projection(projection={1}, sender={2}, receiver={3})'.format(
-                            comp_identifer,
-                            _generate_component_string(
-                                projection_dict,
-                                component_identifiers,
-                                component_name=name,
-                                default_type=default_edge_type
-                            ),
-                            parse_valid_identifier(
-                                projection_dict[MODEL_SPEC_ID_SENDER_MECH]
-                            ),
-                            parse_valid_identifier(
-                                projection_dict[MODEL_SPEC_ID_RECEIVER_MECH]
-                            ),
-                        )
-                    )
-
-        # add controller if it exists (must happen after projections)
-        if controller_name is not None:
-            output.append(
-                '{0}.add_controller({1})'.format(
-                    comp_identifer,
-                    parse_valid_identifier(controller_name)
-                )
-            )
-
-        # add schedulers
-        # blacklist automatically generated nodes because they will
-        # not exist in the script namespace
-        try:
-            conditions = composition_dict['conditions']
-        except KeyError:
-            conditions = {}
-
-        output.append('')
         output.append(
-            _generate_scheduler_string(
-                f'{comp_identifer}.scheduler',
-                conditions,
+            _generate_component_string(
+                mech,
                 component_identifiers,
-                blacklist=implicit_names
+                component_name=parse_valid_identifier(mech.id),
+                assignment=True,
+                default_type=default_node_type
+            )
+        )
+    if len(mechanisms) > 0:
+        output.append('')
+
+    for mech in control_mechanisms:
+        output.append(
+            _generate_component_string(
+                mech,
+                component_identifiers,
+                component_name=parse_valid_identifier(mech.id),
+                assignment=True,
+                default_type=default_node_type
             )
         )
 
-    return '\n'.join(output)
+    if len(control_mechanisms) > 0:
+        output.append('')
+
+    # recursively generate string for inner Compositions
+    for comp in compositions:
+        output.append(
+            _generate_composition_string(
+                comp,
+                component_identifiers
+            )
+        )
+    if len(compositions) > 0:
+        output.append('')
+
+    # generate string to add the nodes to this Composition
+    try:
+        node_roles = {
+            parse_valid_identifier(node): role for (node, role) in
+            graph.metadata['required_node_roles']
+        }
+    except KeyError:
+        node_roles = []
+
+    try:
+        excluded_node_roles = {
+            parse_valid_identifier(node): role for (node, role) in
+            graph.metadata['excluded_node_roles']
+        }
+    except KeyError:
+        excluded_node_roles = []
+
+    # do not add the controller as a normal node
+    try:
+        controller_name = graph.metadata['controller']['id']
+    except (AttributeError, KeyError, TypeError):
+        controller_name = None
+
+    for node in sorted(
+        graph.nodes,
+        key=lambda item: node_order[parse_valid_identifier(item.id)]
+    ):
+        name = node.id
+        if (
+            name not in implicit_names
+            and name != controller_name
+        ):
+            name = parse_valid_identifier(name)
+
+            output.append(
+                '{0}.add_node({1}{2})'.format(
+                    comp_identifer,
+                    name,
+                    ', {0}'.format(
+                        _parse_parameter_value(
+                            node_roles[name],
+                            component_identifiers
+                        )
+                    ) if name in node_roles else ''
+                )
+            )
+    if len(graph.nodes) > 0:
+        output.append('')
+
+    if len(excluded_node_roles) > 0:
+        for node, roles in excluded_node_roles.items():
+            if name not in implicit_names and name != controller_name:
+                output.append(
+                    f'{comp_identifer}.exclude_node_roles({node}, {_parse_parameter_value(roles, component_identifiers)})'
+                )
+        output.append('')
+
+    # generate string to add the projections
+    for proj in graph.edges:
+        try:
+            projection_type = _parse_component_type(proj)
+        except (AttributeError, KeyError):
+            projection_type = default_edge_type
+
+        if (
+            not issubclass(projection_type, implicit_types)
+            and proj.sender not in implicit_names
+            and proj.receiver not in implicit_names
+        ):
+            output.append(
+                '{0}.add_projection(projection={1}, sender={2}, receiver={3})'.format(
+                    comp_identifer,
+                    _generate_component_string(
+                        proj,
+                        component_identifiers,
+                        default_type=default_edge_type
+                    ),
+                    parse_valid_identifier(proj.sender),
+                    parse_valid_identifier(proj.receiver),
+                )
+            )
+
+    # add controller if it exists (must happen after projections)
+    if controller_name is not None:
+        output.append(
+            '{0}.add_controller({1})'.format(
+                comp_identifer,
+                parse_valid_identifier(controller_name)
+            )
+        )
+
+    # add schedulers
+    # blacklist automatically generated nodes because they will
+    # not exist in the script namespace
+    output.append('')
+    output.append(
+        _generate_scheduler_string(
+            f'{comp_identifer}.scheduler',
+            graph.conditions,
+            component_identifiers,
+            blacklist=implicit_names
+        )
+    )
+
+    return output
 
 
 def generate_script_from_json(model_input, outfile=None):
@@ -1379,129 +1281,11 @@ def generate_script_from_json(model_input, outfile=None):
 
 
     """
-
-    def get_declared_identifiers(graphs_dict):
-        names = set()
-
-        for comp_name, composition_dict in graphs_dict.items():
-            try:
-                assert comp_name == composition_dict['name']
-            except KeyError:
-                pass
-
-            names.add(parse_valid_identifier(comp_name))
-            for name, node in composition_dict[MODEL_SPEC_ID_NODES].items():
-                if MODEL_SPEC_ID_COMPOSITION in node:
-                    names.update(
-                        get_declared_identifiers(
-                            node[MODEL_SPEC_ID_COMPOSITION]
-                        )
-                    )
-
-                names.add(parse_valid_identifier(name))
-
-        return names
-
-    # accept either json string or filename
-    try:
-        model_input = open(model_input, 'r').read()
-    except (FileNotFoundError, OSError):
-        pass
-
-    try:
-        model_input = json.loads(model_input)
-    except json.decoder.JSONDecodeError:
-        raise ValueError(
-            f'{model_input} is neither valid JSON nor a file containing JSON'
-        )
-
-    assert len(model_input.keys()) == 1
-    model_input = model_input[list(model_input.keys())[0]]
-
-    imports_str = ''
-    if MODEL_SPEC_ID_COMPOSITION in model_input:
-        # maps declared names to whether they are accessible in the script
-        # locals. that is, each of these will be names specified in the
-        # composition and subcomposition nodes, and their value in this dict
-        # will correspond to True if they can be referenced by this name in the
-        # script
-        component_identifiers = {
-            i: False
-            for i in get_declared_identifiers(model_input[MODEL_SPEC_ID_COMPOSITION])
-        }
-
-        comp_str = _generate_composition_string(
-            model_input[MODEL_SPEC_ID_COMPOSITION],
-            component_identifiers
-        )
-    else:
-        comp_str = _generate_component_string(
-            model_input,
-            component_identifiers={},
-            assignment=True
-        )
-
-    module_friendly_name_mapping = {
-        'psyneulink': 'pnl',
-        'dill': 'dill',
-        'numpy': 'np'
-    }
-
-    module_names = set()
-
-    # greedy and non-greedy
-    potential_module_names = set([
-        *re.findall(r'([A-Za-z_\.]+)\.', comp_str),
-        *re.findall(r'([A-Za-z_\.]+?)\.', comp_str)
-    ])
-    for module in potential_module_names:
-        if module not in component_identifiers:
-            try:
-                exec(f'import {module}')
-                module_names.add(module)
-            except (ImportError, ModuleNotFoundError, SyntaxError):
-                pass
-
-    for module in module_names.copy():
-        try:
-            friendly_name = module_friendly_name_mapping[module]
-            comp_str = re.sub(f'{module}\\.', f'{friendly_name}.', comp_str)
-        except KeyError:
-            friendly_name = module
-
-        if not re.findall(rf'[^\.]{friendly_name}\.', comp_str):
-            module_names.remove(module)
-
-    for m in module_names.copy():
-        for n in module_names.copy():
-            # remove potential modules that are substrings of another
-            if m is not n and m in n:
-                module_names.remove(m)
-
-    for module in sorted(module_names):
-        try:
-            friendly_name = module_friendly_name_mapping[module]
-        except KeyError:
-            friendly_name = module
-
-        imports_str += 'import {0}{1}\n'.format(
-            module,
-            f' as {friendly_name}' if friendly_name != module else ''
-        )
-
-    model_output = '{0}{1}{2}'.format(
-        imports_str,
-        '\n' if len(imports_str) > 0 else '',
-        comp_str
+    warnings.warn(
+        'generate_script_from_json is replaced by generate_script_from_mdf and will be removed in a future version',
+        FutureWarning
     )
-
-    if outfile is not None:
-        # pass through any file exceptions
-        with open(outfile, 'w') as outfile:
-            outfile.write(model_output)
-            print(f'Wrote JSON to {outfile.name}')
-    else:
-        return model_output
+    return generate_script_from_mdf(model_input, outfile)
 
 
 def generate_script_from_mdf(model_input, outfile=None):
@@ -1524,7 +1308,109 @@ def generate_script_from_mdf(model_input, outfile=None):
 
             Text of Python script : str
     """
-    return generate_script_from_json(model_input.to_json(), outfile)
+    import modeci_mdf.mdf as mdf
+    from modeci_mdf.utils import load_mdf
+
+    def get_declared_identifiers(model):
+        names = set()
+
+        for graph in model.graphs:
+            names.add(parse_valid_identifier(graph.id))
+            for node in graph.nodes:
+                if isinstance(node, mdf.Graph):
+                    names.update(get_declared_identifiers(graph))
+
+                names.add(parse_valid_identifier(node.id))
+
+        return names
+
+    # accept either json string or filename
+    try:
+        model = load_mdf(model_input)
+    except (FileNotFoundError, OSError, ValueError):
+        model = mdf.Model.from_json(model_input)
+
+    imports_str = ''
+    comp_strs = []
+    # maps declared names to whether they are accessible in the script
+    # locals. that is, each of these will be names specified in the
+    # composition and subcomposition nodes, and their value in this dict
+    # will correspond to True if they can be referenced by this name in the
+    # script
+    component_identifiers = {
+        i: False
+        for i in get_declared_identifiers(model)
+    }
+
+    for graph in model.graphs:
+        comp_strs.append(_generate_composition_string(graph, component_identifiers))
+
+    module_friendly_name_mapping = {
+        'psyneulink': 'pnl',
+        'dill': 'dill',
+        'numpy': 'np'
+    }
+
+    potential_module_names = set()
+    module_names = set()
+    model_output = []
+
+    for i in range(len(comp_strs)):
+        # greedy and non-greedy
+        for cs in comp_strs[i]:
+            potential_module_names = set([
+                *re.findall(r'([A-Za-z_\.]+)\.', cs),
+                *re.findall(r'([A-Za-z_\.]+?)\.', cs)
+            ])
+
+        for module in potential_module_names:
+            if module not in component_identifiers:
+                try:
+                    exec(f'import {module}')
+                    module_names.add(module)
+                except (ImportError, ModuleNotFoundError, SyntaxError):
+                    pass
+
+        for j in range(len(comp_strs[i])):
+            for module in module_names.copy():
+                try:
+                    friendly_name = module_friendly_name_mapping[module]
+                    comp_strs[i][j] = re.sub(f'{module}\\.', f'{friendly_name}.', comp_strs[i][j])
+                except KeyError:
+                    pass
+
+        for m in module_names.copy():
+            for n in module_names.copy():
+                # remove potential modules that are substrings of another
+                if m is not n and m in n:
+                    module_names.remove(m)
+
+        for module in sorted(module_names):
+            try:
+                friendly_name = module_friendly_name_mapping[module]
+            except KeyError:
+                friendly_name = module
+
+            imports_str += 'import {0}{1}\n'.format(
+                module,
+                f' as {friendly_name}' if friendly_name != module else ''
+            )
+
+        comp_strs[i] = '\n'.join(comp_strs[i])
+
+    model_output = '{0}{1}{2}'.format(
+        imports_str,
+        '\n' if len(imports_str) > 0 else '',
+        '\n'.join(comp_strs)
+    )
+
+    if outfile is not None:
+        # pass through any file exceptions
+        with open(outfile, 'w') as outfile:
+            outfile.write(model_output)
+            print(f'Wrote script to {outfile.name}')
+    else:
+        return model_output
 
 
 def generate_json(*compositions, simple_edge_format=True):
