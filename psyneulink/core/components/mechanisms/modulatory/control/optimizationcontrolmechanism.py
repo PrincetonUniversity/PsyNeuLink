@@ -1816,7 +1816,7 @@ class OptimizationControlMechanism(ControlMechanism):
         The OptimizationControlMechanism's outcome_input_ports are instantiated by
             ControlMechanism._instantiate_input_ports in the call to super().
 
-        InputPorts are constructed for **state_features** by calling _parse_state_feature_specs
+        InputPorts are constructed for **state_features** by calling _complete_parsing_state_feature_specs
             with them and **state_feature_function** arguments of the OptimizationControlMechanism constructor.
         The constructed state_input_ports  are passed to ControlMechanism_instantiate_input_ports(),
              which appends them to the InputPort(s) that receive input from the **objective_mechanism* (if specified)
@@ -1838,7 +1838,7 @@ class OptimizationControlMechanism(ControlMechanism):
         state_input_ports_specs = None
 
         # FIX: 11/3/21 :
-        #    ADD CHECK IN _parse_state_feature_specs THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
+        #    ADD CHECK IN _complete_parsing_state_feature_specs THAT IF A NODE RATHER THAN InputPort IS SPECIFIED,
         #    ITS PRIMARY IS USED (SEE SCRATCH PAD FOR EXAMPLES)
         if not self.state_feature_specs:
             # If agent_rep is CompositionFunctionApproximator, warn if no state_features specified.
@@ -1849,7 +1849,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
         else:
             # Implement any specified state_features
-            state_input_ports_specs = self._parse_state_feature_specs(context)
+            state_input_ports_specs = self._complete_parsing_state_feature_specs(context)
             # Note:
             #   if state_features were specified and agent_rep is a CompositionFunctionApproximator,
             #   assume they are OK (no way to check their validity for agent_rep.evaluate() method, and skip assignment
@@ -1940,7 +1940,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 warnings.warn(message)
 
     # FIX: 1/29/22 - REFACTOR TO SUPPORT TUPLE AND InportPort SPECIFICATION DICT FOR MULT. PROJS. TO STATE_INPUT_PORT
-    def _parse_state_feature_specs(self, context=None):
+    def _complete_parsing_state_feature_specs(self, context=None):
         """Parse entries of state_features specifications used to construct state_input_ports.
 
         Called from _instantiate_input_ports()
@@ -2129,29 +2129,29 @@ class OptimizationControlMechanism(ControlMechanism):
             for i in range(self._num_state_feature_specs):
 
                 # PORT & PORT_NAME
-                # (and specs for CFA and any nodes not yet in agent_rep)
+                # (and specs for CFA and any Nodes not yet in agent_rep)
                 spec_name = None
                 state_feature_fct = None
                 if self.agent_rep_type == COMPOSITION:
                     # Process number of specs for which there are known INPUT Ports of agent_rep
                     if i < num_ports:
-                        # Just get node and node name (spec will be parsed and assigned below)
+                        # Just get port and port name (spec will be parsed and assigned below)
                         # Node should be in agent_rep, so use that to be sure
                         if self.agent_rep_type == COMPOSITION:
-                            node = agent_rep_input_ports[i]
-                        node_name = node.full_name
+                            port = agent_rep_input_ports[i]
+                        port_name = port.full_name
                     # For Nodes not (yet) in agent_rep, so
                     else:
                         # - get specified value for spec, for later parsing and assignment (once Node is known)
                         spec = state_feature_specs[i]
-                        node = None
+                        port = None
                         # - assign "DEFERRED n" as node name
-                        node_name = f'DEFFERED {str(i-num_ports)}'
-                # For CompositionFunctionApproximator, assign spec as node
+                        port_name = f'DEFFERED {str(i-num_ports)}'
+                # For CompositionFunctionApproximator, assign spec as port
                 else:
                     spec = state_feature_specs[i]
-                    node = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    node_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                    port = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                    port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
 
                 # SPEC
                 # Pare and assign specs for INPUT Nodes already in agent_rep (i.e., unassigned above)
@@ -2168,14 +2168,14 @@ class OptimizationControlMechanism(ControlMechanism):
 
                     # Assign input_port name
                     if is_numeric(spec):
-                        spec_name = f"{node_name} {DEFAULT_VARIABLE.upper()}"
+                        spec_name = f"{port_name} {DEFAULT_VARIABLE.upper()}"
                     elif isinstance(spec, (Port, Mechanism, Composition)):
                         if hasattr(spec, 'full_name'):
                             spec_name = spec.full_name
                         else:
                             spec_name = spec.name
                     elif isinstance(spec, dict):
-                        spec_name = spec[NAME] if NAME in spec else f"STATE FEATURE INPUT for {node_name}"
+                        spec_name = spec[NAME] if NAME in spec else f"STATE FEATURE INPUT for {port_name}"
                         if FUNCTION in spec:
                             state_feature_fct = spec[FUNCTION]
                         elif PARAMS in spec and FUNCTION in spec[PARAMS]:
@@ -2184,7 +2184,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         state_feature_fct = spec[1]
                         spec = spec[0]
                     elif spec == SHADOW_INPUTS:
-                        spec = node
+                        spec = port
                     elif spec is not None:
                         assert False, f"PROGRAM ERROR: unrecognized form of state_feature specification for {self.name}"
 
@@ -2195,7 +2195,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
-                self._specified_INPUT_Node_InputPorts_in_order.append(node)
+                self._specified_INPUT_Node_InputPorts_in_order.append(port)
                 spec_names.append(spec_name)
 
             self.parameters.state_feature_specs.set(parsed_feature_specs, override=True)
