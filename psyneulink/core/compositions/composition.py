@@ -5059,15 +5059,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in input_nodes:
 
-            # loop through all external input ports on input nodes (i.e. ports that are projected to from other nodes)
+            # loop through all external InputPorts on INPUT Nodes (i.e. Ports that are Projected to from other Nodes)
             for input_port in node.external_input_ports:
 
-                # add it to set of current input ports
+                # add it to set of current InputPorts
                 current_input_node_input_ports.add(input_port)
 
                 # if there is not a corresponding CIM InputPort/OutputPort pair, add them
                 if input_port not in set(self.input_CIM_ports.keys()):
-                    # instantiate the input port on the input CIM to correspond to the node's input port
+                    # instantiate the InputPort on the input CIM to correspond to the Node's InputPort
                     interface_input_port = InputPort(owner=self.input_CIM,
                                                      variable=np.atleast_2d(input_port.defaults.variable)[0],
                                                      reference_value=input_port.defaults.value,
@@ -5077,36 +5077,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if NodeRole.TARGET in self.get_roles_by_node(node):
                         interface_input_port.parameters.require_projection_in_composition.set(False, override=True)
 
-                    # add port to the input CIM
+                    # add Port to the input CIM
                     self.input_CIM.add_ports([interface_input_port],
                                              context=context)
 
-                    # instantiate the output port on the input CIM to correspond to the node's input port
+                    # instantiate the OutputPort on the input CIM to correspond to the Node's InputPort
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                        variable=(OWNER_VALUE, functools.partial(self.input_CIM.get_input_port_position, interface_input_port)),
                                                        function=Identity,
                                                        name=INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                        context=context)
 
-                    # add port to the input CIM
+                    # add Port to the input CIM
                     self.input_CIM.add_ports([interface_output_port],
                                              context=context)
 
-                    # add entry to input_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
-                    # input node's input port
+                    # add entry to input_CIM_ports dict, so that the CIM ports that correspond to a given
+                    # input node's InputPort can be retrieved
                     self.input_CIM_ports[input_port] = (interface_input_port, interface_output_port)
 
-                    # create projection from the output port on the input CIM to the input port on the input node
+                    # create Projection from the output port on the input CIM to the input port on the input node
                     projection = MappingProjection(sender=interface_output_port,
                                                    receiver=input_port,
                                                    matrix=IDENTITY_MATRIX,
                                                    name="(" + interface_output_port.name + ") to ("
                                                         + input_port.owner.name + "-" + input_port.name + ")")
 
-                    # activate the projection
+                    # activate the Projection
                     projection._activate_for_compositions(self)
 
-                    # if the node is a nested Composition, activate the projection for the nested Composition as well
+                    # if the node is a nested Composition, activate the Projection for the nested Composition as well
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
@@ -5149,7 +5149,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.output_CIM.add_ports([interface_input_port],
                                               context=context)
 
-                    # instantiate the output port on the output CIM to correspond to the node's output port
+                    # instantiate the OutputPort on the output CIM to correspond to the node's OutputPort
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
                             variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position,
@@ -5163,13 +5163,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.output_CIM.add_ports([interface_output_port],
                                               context=context)
 
-                    # add entry to output_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
-                    # output node's output port
+                    # add entry to output_CIM_ports dict, so that CIM ports that correspond to a given
+                    # output node's OutputPort can be retrieved
                     self.output_CIM_ports[output_port] = (interface_input_port, interface_output_port)
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
-                    # create projection from the output port of the output node to input port on the output CIM
+                    # create Projection from the OutputPort of the output Node to InputPort on the output CIM
                     proj = MappingProjection(
                         sender=output_port,
                         receiver=interface_input_port,
@@ -5182,7 +5182,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # activate the projection
                     proj._activate_for_compositions(self)
 
-                    # if the node is a nested Composition, activate the projection for the nested Composition as well
+                    # if the Node is a nested Composition, activate the Projection for the nested Composition as well
                     if isinstance(node, Composition):
                         proj._activate_for_compositions(node)
 
