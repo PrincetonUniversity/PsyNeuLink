@@ -59,7 +59,7 @@ optimize the performance of the `Composition` for which it is a `controller <Com
 by using the `OptimizationFunction` (assigned as its `function <OptimizationControlMechanism.function>`) to execute
 its `agent_rep <OptimizationControlMechanism.agent_rep>` -- a representation of the Composition to be optimized --
 under different `control_allocations <ControlMechanism.control_allocation>`, and selecting the one that optimizes
-its `net_outcome <ControlMechanism.net_outcome>`.  A OptimizationControlMechanism can be configured to implement
+its `net_outcome <ControlMechanism.net_outcome>`.  An OptimizationControlMechanism can be configured to implement
 various forms of optimization, ranging from fully `model-based optimization <OptimizationControlMechanism_Model_Based>`
 that uses the Composition itself as the  `agent_rep <OptimizationControlMechanism.agent_rep>` to simulate the
 outcome for a given `state <OptimizationControlMechanism_State>` (i.e., a combination of the current input and a
@@ -235,10 +235,6 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   **state_features** *for an agent_rep that is a* **Composition**
 
   |
-
-COMMENT:
-  FIX - 3/18/22 - OLD
-COMMENT
 
   .. _OptimizationControlMechanism_State_Features_Automatic_Assignment:
 
