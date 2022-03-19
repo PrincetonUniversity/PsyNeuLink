@@ -1929,3 +1929,17 @@ def contains_type(
         pass
 
     return False
+
+
+def _is_module_class(class_: type, module: types.ModuleType) -> bool:
+    """
+    Returns:
+        bool: True if **class_** is a member of **module**, False otherwise
+    """
+    if module.__name__ == class_.__module__:
+        try:
+            return class_ is getattr(module, class_.__name__)
+        except AttributeError:
+            pass
+
+    return False

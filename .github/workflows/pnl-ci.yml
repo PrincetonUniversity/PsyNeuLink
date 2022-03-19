@@ -40,10 +40,18 @@ jobs:
             os: macos-latest
 
     steps:
+    # increased fetch-depth and tag checkout needed to get correct
+    # version string from versioneer (must have history to a prior tag);
+    # otherwise install fails due to circular dependency with modeci_mdf
     - name: Checkout sources
       uses: actions/checkout@v3
       with:
-        fetch-depth: 10
+        fetch-depth: 200
+
+    # fetch only master to avoid getting unneeded branches with
+    # characters invalid on windows
+    - name: Checkout tags
+      run: git fetch --tags origin master
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3

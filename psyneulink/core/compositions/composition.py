@@ -2723,7 +2723,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2753,8 +2753,7 @@ from psyneulink.core.globals.keywords import \
     DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
-    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
+    MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
@@ -2767,7 +2766,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric
+    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -3698,7 +3697,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
-        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
+        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
 
@@ -11417,12 +11416,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if param.loggable and param.log_condition is LogCondition.OFF:
                         param.log_condition = LogCondition.EXECUTION
 
-    @property
-    def _dict_summary(self):
-        super_summary = super()._dict_summary
+    # endregion LLVM
 
-        nodes_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
-        projections_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
+    def as_mdf_model(self, simple_edge_format=True):
+        """Creates a ModECI MDF Model representing this Composition
+
+        Args:
+            simple_edge_format (bool, optional): If True, Projections
+            with non-identity matrices are constructed as . Defaults to True.
+
+        Returns:
+            modeci_mdf.Model: a ModECI Model representing this Composition
+        """
+        import modeci_mdf.mdf as mdf
+
+        def is_included_projection(proj):
+            included_types = (
+                CompositionInterfaceMechanism,
+                LearningMechanism,
+                OptimizationControlMechanism,
+            )
+            return (
+                not isinstance(proj.sender.owner, included_types)
+                and not isinstance(proj.receiver.owner, included_types)
+                and not isinstance(proj, (AutoAssociativeProjection, ControlProjection))
+            )
+        nodes_dict = {}
+        projections_dict = {}
+        self_identifier = parse_valid_identifier(self.name)
+        metadata = self._mdf_metadata
 
         additional_projections = []
         additional_nodes = (
@@ -11433,7 +11455,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for n in list(self.nodes) + additional_nodes:
             if not isinstance(n, CompositionInterfaceMechanism):
-                nodes_dict[n.name] = n._dict_summary
+                nodes_dict[parse_valid_identifier(n.name)] = n.as_mdf_model()
 
             # consider making this more general in the future
             try:
@@ -11442,53 +11464,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
 
         for p in list(self.projections) + additional_projections:
-            has_cim_sender = isinstance(
-                p.sender.owner,
-                CompositionInterfaceMechanism
-            )
-            has_cim_receiver = isinstance(
-                p.receiver.owner,
-                CompositionInterfaceMechanism
-            )
+            # filter projections to/from CIMs of this composition
+            # and projections to things outside this composition
+            if is_included_projection(p):
+                try:
+                    pre_edge, edge_node, post_edge = p.as_mdf_model(simple_edge_format)
+                except TypeError:
+                    edges = [p.as_mdf_model(simple_edge_format)]
+                else:
+                    nodes_dict[edge_node.id] = edge_node
+                    edges = [pre_edge, post_edge]
+                    if 'excluded_node_roles' not in metadata[MODEL_SPEC_ID_METADATA]:
+                        metadata[MODEL_SPEC_ID_METADATA]['excluded_node_roles'] = []
 
-            # filter projections to/from CIMs, unless they are to embedded
-            # compositions (any others should be automatically generated)
-            if (
-                (not has_cim_sender or p.sender.owner.composition in self.nodes)
-                and (
-                    not has_cim_receiver
-                    or p.receiver.owner.composition in self.nodes
-                )
-            ):
-                p_summary = p._dict_summary
+                    metadata[MODEL_SPEC_ID_METADATA]['excluded_node_roles'].append([edge_node.id, str(NodeRole.OUTPUT)])
 
-                if has_cim_sender:
-                    p_summary[MODEL_SPEC_ID_SENDER_MECH] = p.sender.owner.composition.name
+                for e in edges:
+                    projections_dict[e.id] = e
 
-                if has_cim_receiver:
-                    p_summary[MODEL_SPEC_ID_RECEIVER_MECH] = p.receiver.owner.composition.name
+        metadata[MODEL_SPEC_ID_METADATA]['controller'] = self.controller.as_mdf_model() if self.controller is not None else None
 
-                projections_dict[p.name] = p_summary
+        graph = mdf.Graph(
+            id=self_identifier,
+            conditions=self.scheduler.as_mdf_model(),
+            **self._mdf_model_parameters[self._model_spec_id_parameters],
+            **metadata
+        )
 
-        if len(nodes_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
-            del nodes_dict[MODEL_SPEC_ID_PSYNEULINK]
+        for _, node in nodes_dict.items():
+            graph.nodes.append(node)
 
-        if len(projections_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
-            del projections_dict[MODEL_SPEC_ID_PSYNEULINK]
+        for _, proj in projections_dict.items():
+            graph.edges.append(proj)
 
-        return {
-            MODEL_SPEC_ID_COMPOSITION: [{
-                **super_summary,
-                **self.scheduler._dict_summary,
-                **{
-                    MODEL_SPEC_ID_NODES: nodes_dict,
-                    MODEL_SPEC_ID_PROJECTIONS: projections_dict,
-                    'controller': self.controller,
-                }
-            }]
-        }
-
-    # endregion LLVM
+        return graph
 
     # ******************************************************************************************************************
     # region ----------------------------------- PROPERTIES ------------------------------------------------------------
