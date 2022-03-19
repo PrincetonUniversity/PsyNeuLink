@@ -4676,8 +4676,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             # Avoid unnecessary updating on repeated calls to run()
             if self.needs_update_controller and hasattr(self.controller, 'state_input_ports'):
-                self.needs_update_controller = \
-                    not self.controller._update_state_input_ports_for_controller(context=context)
+                self.controller._update_state_input_ports_for_controller(context=context)
 
             # Make sure all is in order at run time
             if context.flags & ContextFlags.PREPARING:
@@ -5070,11 +5069,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if input_port not in set(self.input_CIM_ports.keys()):
                     # instantiate the input port on the input CIM to correspond to the node's input port
                     interface_input_port = InputPort(owner=self.input_CIM,
-                                                     # # MODIFIED 2/3/22 OLD:
-                                                     # variable=input_port.defaults.value,
-                                                     # MODIFIED 2/3/22 NEW:
                                                      variable=np.atleast_2d(input_port.defaults.variable)[0],
-                                                     # MODIFIED 2/3/22 END
                                                      reference_value=input_port.defaults.value,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)

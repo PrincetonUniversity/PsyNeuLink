@@ -1633,7 +1633,6 @@ class OptimizationControlMechanism(ControlMechanism):
         saved_values = None
 
         def _validate_state_feature_default(self, state_feature_default):
-            # FIX: 3/16/22 - from psyneulink.core.compositions.composition import Composition
             if not (isinstance(state_feature_default, (InputPort, OutputPort, Mechanism))
                     or state_feature_default == SHADOW_INPUTS
                     or is_numeric(state_feature_default)
@@ -2402,8 +2401,6 @@ class OptimizationControlMechanism(ControlMechanism):
         For agent_rep that is a Composition, call:
            - _update_state_features_dict()
            - _validate_state_features()
-
-        Return True if successful, None if not performed.
         """
 
         # Don't instantiate unless being called by Composition.run()
@@ -2426,7 +2423,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 #                BUT MANAGE ERRORS WRT TO _validate_state_features
                 self._update_state_features_dict()
                 self._validate_state_features(context)
-            return
 
     def _update_state_features_dict(self):
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
@@ -2472,18 +2468,8 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.composition import \
             Composition, CompositionInterfaceMechanism, CompositionError, RunError, NodeRole
 
-        # FIX: 3/17/22 - WHY NOT JUST USE:
-        #                self.parameters.state_feature_specs AND
-        #                self._specified_INPUT_Node_InputPorts_in_order[i]
-
         comp = self.agent_rep
         user_specs = self.parameters.state_feature_specs.spec
-        # user_specs = self.state_feature_specs
-
-        # # FOR DEBUGGING:
-        # self._specified_INPUT_Node_InputPorts_in_order
-        # assert len(self.state_feature_specs) == len(self._specified_INPUT_Node_InputPorts_in_order)
-        # -------------
 
         if isinstance(user_specs, dict) and SHADOW_INPUTS in user_specs:
             state_feature_specs = user_specs[SHADOW_INPUTS]
