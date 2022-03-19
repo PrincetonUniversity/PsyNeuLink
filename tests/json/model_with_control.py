@@ -70,5 +70,3 @@ comp.add_controller(
         ],
     )
 )
-comp._analyze_graph()
-assert True

@@ -7,7 +7,7 @@ B = pnl.TransferMechanism(function=pnl.Logistic, name='B')
 for m in [A, B]:
     comp.add_node(m)
 
-comp.add_projection(pnl.MappingProjection(), A, B)
+comp.add_projection(pnl.MappingProjection(matrix=[[2]]), A, B)
 
 comp.scheduler.add_condition_set({
     A: pnl.EveryNPasses(1),
@@ -16,5 +16,5 @@ comp.scheduler.add_condition_set({
 
 comp.termination_processing = {
     pnl.TimeScale.RUN: pnl.AfterNTrials(1),
-    pnl.TimeScale.TRIAL: pnl.All(pnl.Not(pnl.BeforeNCalls(B, 5)))
+    pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4)
 }

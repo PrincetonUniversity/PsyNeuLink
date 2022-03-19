@@ -20,7 +20,7 @@ from psyneulink.core.globals.keywords import \
     SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
-from psyneulink.core.globals.utilities import iscompatible
+from psyneulink.core.globals.utilities import _is_module_class, iscompatible
 
 from psyneulink.core import llvm as pnlvm
 
@@ -447,6 +447,7 @@ class UserDefinedFunction(Function_Base):
             None,
             stateful=False,
             loggable=False,
+            pnl_internal=True,
         )
 
     @tc.typecheck
@@ -687,3 +688,26 @@ class UserDefinedFunction(Function_Base):
         post_block = builder.append_basic_block(name="post_udf")
         builder.position_at_start(post_block)
         return builder
+
+    def as_mdf_model(self):
+        import math
+        import modeci_mdf.functions.standard
+
+        model = super().as_mdf_model()
+        ext_function_str = None
+
+        if self.custom_function in [
+            func_dict['function']
+            for name, func_dict
+            in modeci_mdf.functions.standard.mdf_functions.items()
+        ]:
+            ext_function_str = self.custom_function.__name__
+
+        if _is_module_class(self.custom_function, math):
+            ext_function_str = f'{self.custom_function.__module__}.{self.custom_function.__name__}'
+
+        if ext_function_str is not None:
+            model.metadata['custom_function'] = ext_function_str
+            del model.metadata['type']
+
+        return model

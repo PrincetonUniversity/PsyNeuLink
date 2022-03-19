@@ -403,16 +403,18 @@ import typecheck as tc
 
 from psyneulink.core import llvm as pnlvm
 from psyneulink.core.components.functions.function import get_matrix
+from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
 from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 from psyneulink.core.components.ports.modulatorysignals.modulatorysignal import _is_modulatory_spec
 from psyneulink.core.components.ports.port import PortError
 from psyneulink.core.components.shellclasses import Mechanism, Process_Base, Projection, Port
 from psyneulink.core.globals.context import ContextFlags
+from psyneulink.core.globals.json import _get_variable_parameter_name
 from psyneulink.core.globals.keywords import \
     CONTROL, CONTROL_PROJECTION, CONTROL_SIGNAL, EXPONENT, FUNCTION_PARAMS, GATE, GATING_PROJECTION, GATING_SIGNAL, \
     INPUT_PORT, LEARNING, LEARNING_PROJECTION, LEARNING_SIGNAL, \
     MAPPING_PROJECTION, MATRIX, MATRIX_KEYWORD_SET, MECHANISM, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, \
+    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_RECEIVER_PORT, MODEL_SPEC_ID_SENDER_MECH, MODEL_SPEC_ID_SENDER_PORT, MODEL_SPEC_ID_METADATA, \
     NAME, OUTPUT_PORT, OUTPUT_PORTS, PARAMS, PATHWAY, PROJECTION, PROJECTION_PARAMS, PROJECTION_SENDER, PROJECTION_TYPE, \
     RECEIVER, SENDER, STANDARD_ARGS, PORT, PORTS, WEIGHT, ADD_INPUT_PORT, ADD_OUTPUT_PORT, \
     PROJECTION_COMPONENT_CATEGORY
@@ -420,7 +422,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.socket import ConnectionInfo
-from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric
+from psyneulink.core.globals.utilities import ContentAddressableList, is_matrix, is_numeric, parse_valid_identifier
 
 __all__ = [
     'Projection_Base', 'projection_keywords', 'PROJECTION_SPEC_KEYWORDS',
@@ -1039,34 +1041,115 @@ class Projection_Base(Projection):
             {'variable'}
         )
 
-    @property
-    def _dict_summary(self):
+    def as_mdf_model(self, simple_edge_format=True):
+        import modeci_mdf.mdf as mdf
+
+        from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
+
         # these may occur during deferred init
         if not isinstance(self.sender, type):
-            sender_name = self.sender.name
-            sender_mech = self.sender.owner.name
+            sender_name = parse_valid_identifier(self.sender.name)
+            if isinstance(self.sender.owner, CompositionInterfaceMechanism):
+                sender_mech = parse_valid_identifier(self.sender.owner.composition.name)
+            else:
+                sender_mech = parse_valid_identifier(self.sender.owner.name)
         else:
             sender_name = None
             sender_mech = None
 
         if not isinstance(self.receiver, type):
-            receiver_name = self.receiver.name
-            receiver_mech = self.receiver.owner.name
+            try:
+                num_path_afferents = len(self.receiver.path_afferents)
+            except PortError:
+                # ParameterPort as receiver
+                num_path_afferents = 0
+
+            if num_path_afferents > 1:
+                receiver_name = parse_valid_identifier(f'input_port_{self.name}')
+            else:
+                receiver_name = parse_valid_identifier(self.receiver.name)
+
+            if isinstance(self.receiver.owner, CompositionInterfaceMechanism):
+                receiver_mech = parse_valid_identifier(self.receiver.owner.composition.name)
+            else:
+                receiver_mech = parse_valid_identifier(self.receiver.owner.name)
         else:
             receiver_name = None
             receiver_mech = None
 
         socket_dict = {
-            MODEL_SPEC_ID_SENDER_PORT: sender_name,
-            MODEL_SPEC_ID_RECEIVER_PORT: receiver_name,
+            MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
+            MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
             MODEL_SPEC_ID_SENDER_MECH: sender_mech,
             MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
         }
 
-        return {
-            **super()._dict_summary,
-            **socket_dict
-        }
+        parameters = self._mdf_model_parameters
+        if self.defaults.weight is None:
+            parameters[self._model_spec_id_parameters]['weight'] = 1
+
+        if simple_edge_format and not self.function._is_identity(defaults=True):
+            edge_node = ProcessingMechanism(
+                name=f'{self.name}_dummy_node',
+                default_variable=self.defaults.variable,
+                function=self.function
+            )
+            edge_function = edge_node.function
+            edge_node = edge_node.as_mdf_model()
+
+            func_model = [f for f in edge_node.functions if f.id == parse_valid_identifier(edge_function.name)][0]
+            var_name = _get_variable_parameter_name(edge_function)
+
+            # 2d variable on LinearMatrix will be incorrect on import back to psyneulink
+            func_model.metadata[var_name] = func_model.metadata[var_name][-1]
+
+            pre_edge = mdf.Edge(
+                id=parse_valid_identifier(f'{self.name}_dummy_pre_edge'),
+                # assume weight applied before function
+                **{
+                    self._model_spec_id_parameters: {
+                        'weight': parameters[self._model_spec_id_parameters]['weight']
+                    },
+                    MODEL_SPEC_ID_SENDER_PORT: f'{sender_mech}_{sender_name}',
+                    MODEL_SPEC_ID_RECEIVER_PORT: edge_node.input_ports[0].id,
+                    MODEL_SPEC_ID_SENDER_MECH: sender_mech,
+                    MODEL_SPEC_ID_RECEIVER_MECH: edge_node.id
+                }
+            )
+
+            for name, value in parameters[self._model_spec_id_parameters].items():
+                if name not in {'weight'}:
+                    edge_node.parameters.append(mdf.Parameter(id=name, value=value))
+            edge_node.metadata.update(self._mdf_metadata[MODEL_SPEC_ID_METADATA])
+
+            post_edge = mdf.Edge(
+                id=parse_valid_identifier(f'{self.name}_dummy_post_edge'),
+                **{
+                    MODEL_SPEC_ID_SENDER_PORT: edge_node.output_ports[0].id,
+                    MODEL_SPEC_ID_RECEIVER_PORT: f'{receiver_mech}_{receiver_name}',
+                    MODEL_SPEC_ID_SENDER_MECH: edge_node.id,
+                    MODEL_SPEC_ID_RECEIVER_MECH: receiver_mech
+                }
+            )
+            return pre_edge, edge_node, post_edge
+        else:
+            metadata = self._mdf_metadata
+            try:
+                metadata[MODEL_SPEC_ID_METADATA]['functions'] = mdf.Function.to_dict_format(
+                    self.function.as_mdf_model(),
+                    ordered=False
+                )
+            except AttributeError:
+                # projection is in deferred init, special handling here?
+                pass
+
+            return mdf.Edge(
+                id=parse_valid_identifier(self.name),
+                **socket_dict,
+                **parameters,
+                **metadata
+            )
+
 
 @tc.typecheck
 def _is_projection_spec(spec, proj_type:tc.optional(type)=None, include_matrix_spec=True):

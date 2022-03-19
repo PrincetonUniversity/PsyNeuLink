@@ -518,8 +518,9 @@ from psyneulink.core.globals.keywords import \
     CONTEXT, CONTROL_PROJECTION, DEFERRED_INITIALIZATION, EXECUTE_UNTIL_FINISHED, \
     FUNCTION, FUNCTION_PARAMS, INIT_FULL_EXECUTE_METHOD, INPUT_PORTS, \
     LEARNING, LEARNING_PROJECTION, MATRIX, MAX_EXECUTIONS_BEFORE_FINISHED, \
-    MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_GENERIC, MODEL_SPEC_ID_TYPE, MODEL_SPEC_ID_PARAMETER_SOURCE, \
-    MODEL_SPEC_ID_PARAMETER_VALUE, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
+    MODEL_SPEC_ID_PSYNEULINK, MODEL_SPEC_ID_METADATA, \
+    MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
+    MODEL_SPEC_ID_MDF_VARIABLE, \
     MODULATORY_SPEC_KEYWORDS, NAME, OUTPUT_PORTS, OWNER, PARAMS, PREFS_ARG, \
     RESET_STATEFUL_FUNCTION_WHEN, VALUE, VARIABLE
 from psyneulink.core.globals.log import LogCondition
@@ -533,7 +534,7 @@ from psyneulink.core.globals.sampleiterator import SampleIterator
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, convert_all_elements_to_np_array, convert_to_np_array, get_deepcopy_with_shared, \
     is_instance_or_subclass, is_matrix, iscompatible, kwCompatibilityLength, prune_unused_args, \
-    get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len
+    get_all_explicit_arguments, call_with_pruned_args, safe_equals, safe_len, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Never
 from psyneulink.core.scheduling.time import Time, TimeScale
 
@@ -910,6 +911,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
     # helper attributes for JSON model spec
     _model_spec_id_parameters = 'parameters'
+    _model_spec_id_stateful_parameters = 'stateful_parameters'
 
     _model_spec_generic_type_name = NotImplemented
     """
@@ -1009,10 +1011,10 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                                     fallback_default=True,
                                     pnl_internal=True)
         is_finished_flag = Parameter(True, loggable=False, stateful=True)
-        execute_until_finished = True
-        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False)
-        num_executions_before_finished = Parameter(0, read_only=True, modulable=False)
-        max_executions_before_finished = Parameter(1000, modulable=False)
+        execute_until_finished = Parameter(True, pnl_internal=True)
+        num_executions = Parameter(Time(), read_only=True, modulable=False, loggable=False, pnl_internal=True)
+        num_executions_before_finished = Parameter(0, read_only=True, modulable=False, pnl_internal=True)
+        max_executions_before_finished = Parameter(1000, modulable=False, pnl_internal=True)
 
         def _parse_variable(self, variable):
             if variable is None:
@@ -3647,26 +3649,41 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
 
         return _all_dependent_parameters(self, filter_name, filter_regex, set())
 
-    @property
-    def _dict_summary(self):
+    def _get_mdf_parameters(self):
+        import modeci_mdf.mdf as mdf
+
         from psyneulink.core.compositions.composition import Composition
         from psyneulink.core.components.ports.port import Port
         from psyneulink.core.components.ports.outputport import OutputPort
-        from psyneulink.core.components.ports.parameterport import ParameterPortError
         from psyneulink.core.components.functions.nonstateful.transferfunctions import LinearMatrix
 
-        def parse_parameter_value(value):
+        def parse_parameter_value(value, no_expand_components=False, functions_as_dill=False):
             if isinstance(value, (list, tuple)):
+                try:
+                    # treat as a collections.namedtuple
+                    type(value)._fields
+                except AttributeError:
+                    pass
+                else:
+                    # cannot expect MDF/neuromllite to handle our namedtuples
+                    value = tuple(value)
+
                 new_item = []
                 for item in value:
-                    new_item.append(parse_parameter_value(item))
+                    new_item.append(
+                        parse_parameter_value(
+                            item,
+                            no_expand_components,
+                            functions_as_dill
+                        )
+                    )
                 try:
                     value = type(value)(new_item)
                 except TypeError:
                     value = type(value)(*new_item)
             elif isinstance(value, dict):
                 value = {
-                    parse_parameter_value(k): parse_parameter_value(v)
+                    parse_parameter_value(k, no_expand_components, functions_as_dill): parse_parameter_value(v, no_expand_components, functions_as_dill)
                     for k, v in value.items()
                 }
             elif isinstance(value, Composition):
@@ -3690,14 +3707,57 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 # is necessary.
                 # in fact this would happen unless the parser specifically
                 # handles it like ours does
-                value = value._dict_summary
-            elif isinstance(value, (types.FunctionType)):
-                value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
+                if no_expand_components:
+                    value = parse_valid_identifier(value.name)
+                else:
+                    try:
+                        value = value.as_mdf_model(simple_edge_format=False)
+                    except TypeError:
+                        value = value.as_mdf_model()
+            elif isinstance(value, ComponentsMeta):
+                value = value.__name__
+            elif isinstance(value, (type, types.BuiltinFunctionType)):
+                if value.__module__ == 'builtins':
+                    # just give standard type, like float or int
+                    value = f'{value.__name__}'
+                elif value is np.ndarray:
+                    value = f'{value.__module__}.array'
+                else:
+                    # some builtin modules are internally "_module"
+                    # but are imported with "module"
+                    value = f"{value.__module__.lstrip('_')}.{value.__name__}"
+            elif isinstance(value, types.MethodType):
+                if isinstance(value.__self__, Component):
+                    # assume reference to a method on a Component is
+                    # automatically assigned (may not be totally
+                    # accurate but is in current known cases)
+                    value = None
+                else:
+                    value = value.__qualname__
+            elif isinstance(value, types.FunctionType):
+                if functions_as_dill:
+                    value = base64.encodebytes(dill.dumps(value)).decode('utf-8')
+                elif '.' in value.__qualname__:
+                    value = value.__qualname__
+                else:
+                    try:
+                        if value is getattr(eval(value.__module__.replace('numpy', 'np')), value.__qualname__):
+                            return f'{value.__module__}.{value.__qualname__}'
+                    except (AttributeError, NameError, TypeError):
+                        pass
+
+                    value = str(value)
+            elif isinstance(value, SampleIterator):
+                value = f'{value.__class__.__name__}({repr(value.specification)})'
+            elif value is NotImplemented:
+                value = None
+            # IntEnum gets treated as int
+            elif isinstance(value, (Enum, types.SimpleNamespace)):
+                value = str(value)
+            elif not isinstance(value, (float, int, str, bool, mdf.Base, type(None), np.ndarray)):
+                value = str(value)
 
             return value
-
-        # attributes (and their values) included in top-level dict
-        basic_attributes = ['name']
 
         # attributes that aren't Parameters but are psyneulink-specific
         # and are stored in the PNL parameters section
@@ -3720,7 +3780,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         for p in self.parameters:
             if (
                 p.name not in self._model_spec_parameter_blacklist
-                and not isinstance(p, ParameterAlias)
+                and not isinstance(p, (ParameterAlias, SharedParameter))
             ):
                 if self.initialization_status is ContextFlags.DEFERRED_INIT:
                     try:
@@ -3740,68 +3800,97 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                     elif p.spec is not None:
                         val = p.spec
                     else:
-                        val = p.default_value
+                        val = None
+                        if not p.stateful and not p.structural:
+                            val = p.get(None)
+                        if val is None:
+                            val = p.default_value
 
-                val = parse_parameter_value(val)
-
-                try:
-                    matching_parameter_port = self.owner.parameter_ports[p.name]
-
-                    if matching_parameter_port.source._owner._owner is self:
-                        val = {
-                            MODEL_SPEC_ID_PARAMETER_SOURCE: '{0}.{1}.{2}'.format(
-                                self.owner.name,
-                                MODEL_SPEC_ID_INPUT_PORTS,
-                                p.name
-                            ),
-                            MODEL_SPEC_ID_PARAMETER_VALUE: val,
-                            MODEL_SPEC_ID_TYPE: type(val)
-                        }
-                # ContentAddressableList uses TypeError when key not found
-                except (AttributeError, TypeError, ParameterPortError):
-                    pass
+                val = parse_parameter_value(val, functions_as_dill=True)
 
                 # split parameters designated as PsyNeuLink-specific and
                 # parameters that are universal
                 if p.pnl_internal:
-                    pnl_specific_parameters[p.name] = val
+                    target_param_dict = pnl_specific_parameters
                 else:
-                    parameters_dict[p.name] = val
+                    target_param_dict = parameters_dict
+
+                if p.mdf_name is not None:
+                    target_param_dict[p.mdf_name] = val
+                else:
+                    target_param_dict[p.name] = val
 
         for attr in implicit_parameter_attributes:
             try:
-                pnl_specific_parameters[attr] = getattr(self, attr)
+                pnl_specific_parameters[attr] = parse_parameter_value(getattr(self, attr), no_expand_components=True, functions_as_dill=True)
             except AttributeError:
                 pass
 
         if len(pnl_specific_parameters) > 0:
             parameters_dict[MODEL_SPEC_ID_PSYNEULINK] = pnl_specific_parameters
 
-        function_dict = {}
+        return {self._model_spec_id_parameters: {k: v for k, v in parameters_dict.items()}}
+
+    @property
+    def _mdf_model_parameters(self):
+        params = self._get_mdf_parameters()
         try:
-            if isinstance(self.function, Component):
-                function_dict['functions'] = [self.function._dict_summary]
+            del params[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]
+        except KeyError:
+            pass
+
+        params[self._model_spec_id_parameters] = {
+            k: v for k, v in params[self._model_spec_id_parameters].items()
+            if (
+                k == MODEL_SPEC_ID_MDF_VARIABLE
+                or (
+                    isinstance(v, (numbers.Number, np.ndarray))
+                    and not isinstance(v, bool)
+                )
+            )
+        }
+
+        return params
+
+    @property
+    def _mdf_metadata(self):
+        all_parameters = self._get_mdf_parameters()
+        try:
+            params = all_parameters[self._model_spec_id_parameters][MODEL_SPEC_ID_PSYNEULINK]
+        except KeyError:
+            params = {}
+
+        params = {
+            **params,
+            **{
+                k: v for k, v in all_parameters[self._model_spec_id_parameters].items()
+                if (
+                    k not in {MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_PSYNEULINK}
+                    and (
+                        not isinstance(v, (numbers.Number, np.ndarray))
+                        or isinstance(v, bool)
+                    )
+                )
+            }
+        }
+
+        return {
+            MODEL_SPEC_ID_METADATA: {
+                'type': type(self).__name__,
+                **params
+            }
+        }
+
+    def _set_mdf_arg(self, model, arg, value):
+        # must set both args attr and args in function because otherwise
+        # mdf dependency tracking doesn't work
+        try:
+            if model.function is not None:
+                model.function[list(model.function.keys())[0]][arg] = value
         except AttributeError:
             pass
 
-        type_dict = {}
-
-        if self._model_spec_class_name_is_generic:
-            type_dict[MODEL_SPEC_ID_GENERIC] = self.__class__.__name__
-        else:
-            if self._model_spec_generic_type_name is not NotImplemented:
-                type_dict[MODEL_SPEC_ID_GENERIC] = self._model_spec_generic_type_name
-            else:
-                type_dict[MODEL_SPEC_ID_GENERIC] = None
-
-            type_dict[MODEL_SPEC_ID_PSYNEULINK] = self.__class__.__name__
-
-        return {
-            **{attr: getattr(self, attr) for attr in basic_attributes},
-            **{self._model_spec_id_parameters: parameters_dict},
-            **function_dict,
-            **{MODEL_SPEC_ID_TYPE: type_dict}
-        }
+        model.args[arg] = value
 
     @property
     def logged_items(self):
@@ -3926,7 +4015,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
             A set of Parameter names that should not be added to the generated
             constructor string
         """
-        return {'function', 'value'}
+        return {'function', 'value', 'execution_count', 'is_finished_flag', 'num_executions', 'num_executions_before_finished'}
 
 
 COMPONENT_BASE_CLASS = Component

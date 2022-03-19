@@ -199,7 +199,7 @@ class StatefulFunction(Function_Base): #  --------------------------------------
         """
         noise = Parameter(0.0, modulable=True, setter=_noise_setter)
         rate = Parameter(1.0, modulable=True)
-        previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
+        previous_value = Parameter(np.array([0]), initializer='initializer')
         initializer = Parameter(np.array([0]), pnl_internal=True)
         has_initializers = Parameter(True, setter=_has_initializers_setter, pnl_internal=True)
 
