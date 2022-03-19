@@ -2086,8 +2086,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
             if self.agent_rep_type == COMPOSITION:
 
-                # FIX: 3/4/22 - THESE SEEM DUPLICATIVE OF _validate_state_features;  JUST CALL THAT HERE?
+                # FIX: 3/18/22 - THESE SEEM DUPLICATIVE OF _validate_state_features;  JUST CALL THAT HERE?
                 #               ALSO, WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
+                #              AT THE LEAST, MOVE TO THEIR OWN VALIDATION HELPER METHOD
                 # Too FEW specs for number of agent_rep receivers
                 if len(self.state_feature_specs) < len(agent_rep_input_ports):
                     warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number "
@@ -2170,13 +2171,17 @@ class OptimizationControlMechanism(ControlMechanism):
                 #     (others may be added to Composition later)
                 if i < num_specs:
 
-                    # Assign either state_feature_specs[i] or self.state_feature_default if specified, else None
-                    if state_feature_specs[i] is not None:
-                        spec = state_feature_specs[i]
-                    elif self.state_feature_default is not None:
-                        spec = self.state_feature_default
-                    else:
-                        spec = None
+                    # MODIFIED 3/18/22 OLD:  FIX: None IS ALLOWED AS A SPEC, AND STATE_FEATURE_DEFAULT ASSIGNED BELOW
+                    # # Assign either state_feature_specs[i] or self.state_feature_default if specified, else None
+                    # if state_feature_specs[i] is not None:
+                    #     spec = state_feature_specs[i]
+                    # elif self.state_feature_default is not None:
+                    #     spec = self.state_feature_default
+                    # else:
+                    #     spec = None
+                    # MODIFIED 3/18/22 NEW
+                    spec = self.state_feature_specs[i]
+                    # MODIFIED 3/18/22 END
 
                     # Assign input_port name
                     if is_numeric(spec):
@@ -2200,10 +2205,16 @@ class OptimizationControlMechanism(ControlMechanism):
                     elif spec is not None:
                         assert False, f"PROGRAM ERROR: unrecognized form of state_feature specification for {self.name}"
 
-                # Fewer specifications than number of INPUT Nodes,
-                #  the remaining ones may be specified later, but for now assume they are meant to be ignored
+                # MODIFIED 3/18/22 OLD:
+                # # Fewer specifications than number of INPUT Nodes,
+                # #  the remaining ones may be specified later, but for now assume they are meant to be ignored
+                # else:
+                #     spec = None
+                # MODIFIED 3/18/22 NEW:
+                # Fewer specifications than number of INPUT Nodes, so assign state_feature_default
                 else:
-                    spec = None
+                    spec = self.state_feature_default
+                # MODIFIED 3/18/22 END
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
@@ -2501,7 +2512,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # FIX: 3/18/22 - ??MOVE THIS TO _parse_state_feature_specs()
         #                SHOULD NEVER BE THE CASE HERE??
         elif not self.state_input_ports:
-            assert False, "AT LEAST SOME ASSIGNEMENTS SHOUD HAVE BEEN MADE IN _parse_state_feature_specs"
+            assert False, "AT LEAST SOME ASSIGNMENTS SHOUD HAVE BEEN MADE IN _parse_state_feature_specs"
             # agent_rep is Composition, but no state_features have been specified,
             #   so assign a state_input_port to shadow every InputPort of every INPUT node of agent_rep
 
