@@ -873,18 +873,18 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('partial_legal_list_spec', messages[0], None, UserWarning),
-        # ('full_list_spec', None, None, None),
-        # ('list_spec_with_none', None, None, None),
-        # ('input_dict_spec', None, None, None),
-        # ('input_dict_spec_short', None, None, None),
-        # ('set_spec_short', None, None, None),
-        # ('set_spec', None, None, None),
-        # ('set_spec_port', None, None, None),
-        ('automatic_assignment', None, None, None),
-        # ('shadow_inputs_dict_spec', None, None, None),
-        # ('shadow_inputs_dict_spec_w_none', None, None, None),
-        # ('misplaced_shadow', messages[1], None, pnl.CompositionError),
+        ('partial_legal_list_spec', messages[0], None, UserWarning),
+        ('full_list_spec', None, None, None),
+        ('list_spec_with_none', None, None, None),
+        ('input_dict_spec', None, None, None),
+        ('input_dict_spec_short', None, None, None),
+        ('set_spec_short', None, None, None),
+        ('set_spec', None, None, None),
+        ('set_spec_port', None, None, None),
+        ('no_specs', None, None, None),
+        ('shadow_inputs_dict_spec', None, None, None),
+        ('shadow_inputs_dict_spec_w_none', None, None, None),
+        ('misplaced_shadow', messages[1], None, pnl.CompositionError),
         ('ext_shadow', messages[2], None, pnl.OptimizationControlMechanismError),
         ('ext_output_port', messages[3], None, pnl.OptimizationControlMechanismError),
         ('input_format_wrong_shape', messages[4], None, pnl.OptimizationControlMechanismError),
@@ -905,11 +905,7 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
-    @pytest.mark.parametrize('obj_mech', [
-        'obj_mech',
-        'mtr_for_ctl',
-        None
-    ])
+    @pytest.mark.parametrize('obj_mech', ['obj_mech', 'mtr_for_ctl', None])
     def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
         """See test_nested_composition_as_agent_rep() for additional tests of state_features specification."""
 
@@ -941,14 +937,14 @@ class TestControlMechanisms:
             'set_spec_short': {oa},
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
             'set_spec_port': {ob.input_port, icomp, oa},
-            'automatic_assignment': None,
+            'no_specs': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]}, # <- ia & ob OK BECAUSE JUST FOR SHADOWING
             'shadow_inputs_dict_spec_w_none': {pnl.SHADOW_INPUTS:[ia, None, ob]},
 
             # Illegal state_features specifications
-            'misplaced_shadow':ib.input_port,
-            'ext_shadow':ext.input_port,
-            'ext_output_port':ext.output_port,
+            'misplaced_shadow': [ib.input_port],
+            'ext_shadow': [ext.input_port],
+            'ext_output_port': [ext.output_port],
             'input_format_wrong_shape': [ia.input_port, oa.output_port, oc.output_port],
             'too_many_inputs_warning': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
             'too_many_inputs_error': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
@@ -962,15 +958,26 @@ class TestControlMechanisms:
         objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
         monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
-        ocm = pnl.OptimizationControlMechanism(state_features=state_features,
-                                               state_feature_default=None,
-                                               objective_mechanism=objective_mechanism,
-                                               monitor_for_control=monitor_for_control,
-                                               function=pnl.GridSearch(),
-                                               control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
-                                                                                  allocation_samples=[10, 20, 30]),
-                                                                pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
-                                                                                  allocation_samples=[10, 20, 30])])
+
+        if test_condition == 'no_specs':
+            ocm = pnl.OptimizationControlMechanism(objective_mechanism=objective_mechanism,
+                                                   monitor_for_control=monitor_for_control,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
+                                                                                      allocation_samples=[10, 20, 30]),
+                                                                    pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
+                                                                                      allocation_samples=[10, 20, 30])])
+
+        else:
+            ocm = pnl.OptimizationControlMechanism(state_features=state_features,
+                                                   state_feature_default=pnl.SHADOW_INPUTS,
+                                                   objective_mechanism=objective_mechanism,
+                                                   monitor_for_control=monitor_for_control,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
+                                                                                      allocation_samples=[10, 20, 30]),
+                                                                    pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
+                                                                                      allocation_samples=[10, 20, 30])])
         if not exception_type:
 
             ocomp.add_controller(ocm)
@@ -1043,7 +1050,7 @@ class TestControlMechanisms:
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
                                                       [[0.], [0.], [0, 0, 0]]))
 
-            elif test_condition == 'automatic_assignment':
+            elif test_condition == 'no_specs':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
@@ -1091,16 +1098,15 @@ class TestControlMechanisms:
                     ocomp.add_controller(ocm)
                     ocomp.run()
                     if test_condition == 'partial_legal_list_spec':
-                        assert len(ocm.state_input_ports) == 1
-                        assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
+                        assert len(ocm.state_input_ports) == 3
+                        assert ocm.state_input_ports.names == ['OA[OutputPort-0]',
+                                                               'Shadowed input of OA[InputPort-0]',
+                                                               'Shadowed input of OB[InputPort-0]']
                         # Note: oa is assigned to icomp due to ordering:
                         assert ocm.state_features == {ia.input_port: oa.output_port,
-                                                      oa.input_port: None,
-                                                      ob.input_port: None}
+                                                      oa.input_port: oa.input_port,
+                                                      ob.input_port: ob.input_port}
                 assert message_1 in [warning[i].message.args[0] for i in range(len(warning))]
-                assert ocm.state_features == {ia.input_port: oa.output_port,
-                                              oa.input_port: None,
-                                              ob.input_port: None}
 
         else:
             with pytest.raises(exception_type) as error:
