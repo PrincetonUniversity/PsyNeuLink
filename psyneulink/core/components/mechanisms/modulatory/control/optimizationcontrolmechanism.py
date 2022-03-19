@@ -2171,7 +2171,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 #     (others may be added to Composition later)
                 if i < num_specs:
 
-                    # MODIFIED 3/18/22 OLD:  FIX: None IS ALLOWED AS A SPEC, AND STATE_FEATURE_DEFAULT ASSIGNED BELOW
+                    # # MODIFIED 3/18/22 OLD:  FIX: None IS ALLOWED AS A SPEC, AND STATE_FEATURE_DEFAULT ASSIGNED BELOW
                     # # Assign either state_feature_specs[i] or self.state_feature_default if specified, else None
                     # if state_feature_specs[i] is not None:
                     #     spec = state_feature_specs[i]
@@ -2180,7 +2180,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     # else:
                     #     spec = None
                     # MODIFIED 3/18/22 NEW
-                    spec = self.state_feature_specs[i]
+                    spec = state_feature_specs[i]
                     # MODIFIED 3/18/22 END
 
                     # Assign input_port name

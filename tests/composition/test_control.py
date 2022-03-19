@@ -142,7 +142,10 @@ class TestControlSpecification:
         assert expected_error in error_msg
 
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
-    @pytest.mark.parametrize("state_features_arg", ['list','dict'])
+    @pytest.mark.parametrize("state_features_arg", [
+        'list',
+        'dict'
+    ])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
@@ -210,6 +213,8 @@ class TestControlSpecification:
         assert any(expected_warning in repr(w.message) for w in warning.list)
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
+        assert comp.controller.state_features == {'EXPECTED INPUT NODE 0 OF evc': (reward.input_port),
+                                                  'EXPECTED INPUT NODE 1 OF evc': (Input.input_port)}
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -217,7 +222,8 @@ class TestControlSpecification:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.enable_controller = True
-
+        assert comp.controller.state_features == {reward.input_port: reward.input_port,
+                                                  Input.input_port: Input.input_port}
         # comp._analyze_graph()
 
         stim_list_dict = {
