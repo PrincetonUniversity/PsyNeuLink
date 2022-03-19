@@ -142,7 +142,8 @@ class TestControlSpecification:
         assert expected_error in error_msg
 
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
-    def test_deferred_init(self, control_spec):
+    @pytest.mark.parametrize("state_features_arg", ['list','dict'])
+    def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
 
@@ -173,22 +174,41 @@ class TestControlSpecification:
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
-        # add the controller to the Composition before adding the relevant Mechanisms
-        comp.add_controller(controller=pnl.OptimizationControlMechanism(
-            agent_rep=comp,
-            state_features=[reward.input_port, Input.input_port],
-            state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-            objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                monitor=[reward,
-                         Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                         (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
-            function=pnl.GridSearch(),
-            control_signals=[{control_spec: ("drift_rate", Decision),
-                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                             {control_spec: ("threshold", Decision),
-                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
-        )
+        state_features = {
+            'list': [reward.input_port, Input.input_port],
+            'dict': {reward: reward.input_port,
+                     Input: Input.input_port}
+        }[state_features_arg]
+
+        if state_features_arg == 'list':
+            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
+                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+                               "agent_rep of a controller before specifying its 'state_features'."
+        else:
+            expected_warning = "that are not in its agent_rep ('evc'). Executing 'evc' before they " \
+                               "are added will generate an error ."
+
+        with pytest.warns(UserWarning) as warning:
+            # add the controller to the Composition before adding the relevant Mechanisms
+            comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                state_features = state_features,
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                    monitor=[reward,
+                             Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                             (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                function=pnl.GridSearch(),
+                control_signals=[{control_spec: ("drift_rate", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                 {control_spec: ("threshold", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+            )
+        assert any(expected_warning in repr(w.message) for w in warning.list)
+
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
