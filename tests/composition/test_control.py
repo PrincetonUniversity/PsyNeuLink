@@ -3277,7 +3277,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         'nested_full_dict',     # <- Specify both of two INPUT Nodes of nested comp in dict format
         'nested_comp_set',      # <- Specify nested comp as itself in set format
         'nested_comp_dict',     # <- Specify nested comp as itself in dict format with a single spec for all INPUT Nodes
-        'automatic',            # <- Automaticaly asign state_features
+        'no_spec',              # <- Assign default state_features
         'bad'                   # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
@@ -3313,7 +3313,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             agent_rep = None
             error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
                          'missing from \'OUTER COMP\' and any Compositions nested within it."'
-        # state_features = D.output_port if state_features_arg is 'bad' else None
+
         if state_features_arg == 'nested_partial_set':
             state_features = {A, I2}
         elif state_features_arg == 'nested_full_set':
@@ -3326,21 +3326,26 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             state_features = {mcomp}
         elif state_features_arg == 'nested_comp_dict':
             state_features = {mcomp:I1}
-        elif state_features_arg == 'automatic':
-            state_features = None
         elif state_features_arg == 'bad':
-            state_features = D.output_port
-        else:
-            assert False, "Bad state_features_arg in test."
+            state_features = [D.output_port]
 
-        ocm = pnl.OptimizationControlMechanism(name='OCM',
-                                               agent_rep=agent_rep,
-                                               state_features=state_features,
-                                               objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
-                                               allow_probes=True,
-                                               function=pnl.GridSearch(),
-                                               control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
-                                                                                 allocation_samples=[10, 20, 30]))
+        if state_features_arg == 'no_spec':
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                                   allow_probes=True,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
+                                                                                     allocation_samples=[10, 20, 30]))
+        else:
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   state_features=state_features,
+                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                                   allow_probes=True,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
+                                                                                     allocation_samples=[10, 20, 30]))
         if state_features_arg == 'bad':
             with pytest.raises(pnl.OptimizationControlMechanismError) as error:
                 ocomp.add_controller(ocm)
