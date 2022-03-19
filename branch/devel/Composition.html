@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0+untagged.13.g8e5d581 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+491.g404030e97 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.13.g8e5d581
+                  0.8.8.1+491
                 </div>
               
             
@@ -4845,6 +4845,26 @@ Recursively process subdicts (Port- or Project-specific dictionaries of params).
 <span class="sig-name descname"><span class="pre">_get_satisfied_runtime_param_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">runtime_params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scheduler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_satisfied_runtime_param_values" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return dict with values for all runtime_params the Conditions of which are currently satisfied.
 Recursively parse nested dictionaries for which Condition on dict is satisfied.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition.as_mdf_model">
+<span class="sig-name descname"><span class="pre">as_mdf_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">simple_edge_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition.as_mdf_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a ModECI MDF Model representing this Composition</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>simple_edge_format</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True, Projections</p></li>
+<li><p><strong>True.</strong> (<em>with non-identity matrices are constructed as . Defaults to</em>) – </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a ModECI Model representing this Composition</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>modeci_mdf.Model</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
