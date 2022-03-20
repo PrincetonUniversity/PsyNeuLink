@@ -145,7 +145,6 @@ the context in which it is being created, such as the specification for its owne
 <InputPort_Forms_of_Specification>` and `Mechanism InputPort specification <Mechanism_InputPort_Specification>`
 for details).
 
-
 Adding InputPorts to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -476,9 +475,9 @@ Structure
 ---------
 
 Every InputPort is owned by a `Mechanism <Mechanism>`. It can receive one or more `MappingProjections
-<MappingProjection>` from other Mechanisms, as well as from the Process or System to which its owner belongs (if it
-is the `ORIGIN` Mechanism for that Process or System).  It has the following attributes, that includes ones specific
-to, and that can be used to customize the InputPort:
+<MappingProjection>` from other Mechanisms or itself (e.g., `RecurrentTransferMechanism`), as well as from the
+Composition to which its owner belongs (if it is the `ORIGIN` Mechanism for that Process or System).  It has the
+following attributes, that includes ones specific to, and that can be used to customize the InputPort:
 
 * `projections <Port_Base.projections>` -- all of the `Projections <Projection>` received by the InputPort.
 
@@ -486,14 +485,23 @@ to, and that can be used to customize the InputPort:
 
 * `path_afferents <Port_Base.path_afferents>` -- `MappingProjections <MappingProjection>` that project to the InputPort,
   the `value <Projection_Base.value>`\\s of which are combined by the InputPort's `function <InputPort.function>`,
-  possibly modified by its `mod_afferents <InputPort_mod_afferents>`, and assigned to the corresponding item of the
-  owner Mechanism's `variable <Mechanism_Base.variable>`.
+  possibly `modulated <ModulatorySignal_Modulation>` by one or more `mod_afferent <InputPort_mod_afferents>`
+  `GatingProjections <GatingProjection>`, and assigned to the corresponding item of the owner Mechanism's
+  `variable <Mechanism_Base.variable>`.
 
 * `mod_afferents <InputPort_Afferent_Projections>` -- `GatingProjections <GatingProjection>` that project to the
   InputPort, the `value <GatingProjection.value>` of which can modify the InputPort's `value <InputPort.value>`
   (see the descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
   <GatingSignal_Modulation>` for additional details).  If the InputPort receives more than one GatingProjection,
   their values are combined before they are used to modify the `value <InputPort.value>` of InputPort.
+
+  .. _InputPort_Internal_Only:
+
+* `internal_only <InputPort.internal_only>` -- specifies whether an InputPort that belongs to an
+  `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of a Composition receives Projections *only from* other
+  `Nodes <Composition_Nodes>` *within the Composition* to which its `owner <InputPort.owner>` belongs; such
+   InputPorts do not receive any `external inputs to that Composition when it is `executed <Composition_Execution>`
+   (see `Composition inputs <Composition_Input_External_InputPorts>` for additional information).
 
 .. _InputPort_Variable:
 
@@ -710,7 +718,7 @@ class InputPort(Port_Base):
 
         .. note::
            If `default_input <InputPort.default_input>` is assigned *DEFAULT_VARIABLE*, then its `internal_only
-           <InputPort.internal_only>` attribute is automtically assigned True. This is so that if the `Mechanism`
+           <InputPort.internal_only>` attribute is automatically assigned True. This is so that if the `Mechanism`
            to which the InputPort belongs is assigned to a `Composition`, it is not treated as an `ORIGIN
            <NodeRole.ORIGIN>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
            from its `input_CIM <Composition.input_CIM>`.

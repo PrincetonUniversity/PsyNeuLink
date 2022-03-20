@@ -871,7 +871,7 @@ class TestControlMechanisms:
         f"The '{pnl.STATE_FEATURES}' argument for 'OptimizationControlMechanism-0' has one or more items in the "
         f"list specified for 'SHADOW_INPUTS' ('IA') that are not (part of) any INPUT Nodes of its 'agent_rep' "
         f"('OUTER COMP').",
-        
+
         # 13
         f"'OptimizationControlMechanism-0' has '{pnl.STATE_FEATURES}' specified "
         f"(['Shadowed input of EXT[InputPort-0]', "
@@ -1163,8 +1163,8 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_fct_assignments', [
-        'partial_w_dict',
-        'partial_w_params_dict',
+        # 'partial_w_dict',
+        # 'partial_w_params_dict',
         'tuple_override_dict',
         'tuple_override_params_dict',
         'port_spec_dict_in_feat_dict',
@@ -1195,7 +1195,8 @@ class TestControlMechanisms:
             state_feature_function = fct_c
         elif state_fct_assignments == 'tuple_override_dict':
             state_features = [({pnl.PROJECTIONS: A,
-                               pnl.FUNCTION: pnl.Buffer}, fct_a),
+                                pnl.FUNCTION: pnl.Buffer},
+                               fct_a),
                               (B, fct_b),
                               C]
             state_feature_function = fct_c
