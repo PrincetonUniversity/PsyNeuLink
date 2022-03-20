@@ -1164,6 +1164,8 @@ contains entries for some but not all of the InputPorts of a Node, the remaining
 information concerning `entries for Nodes <Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
 <Composition_Input_Dictionary_InputPort_Entries>`).
 
+.. _Composition_Input_Dictionary_Input_Values:
+
 *Input values*. The value of each entry is an ndarray or nested list containing the inputs to that Node or InputPort.
 For Nodes, the value is a 3d array (or correspondingly nested list), in which the outermost items are 2d arrays
 containing the 1d array of input values to each of the Node's InputPorts for a given `TRIAL <TimeScale.TRIAL>`. For
@@ -1182,9 +1184,9 @@ when the Composition is executed (as determined by the number of input values sp
 
 *Node entries*.  The key must be an `INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the name of
 one (i.e., the str in its `name <Component.name>` attribute), and the value must specify the input to *all* of its
-InputPorts (other than those designated as `internal_only <InputPort.internal_only>`; see `above
-<Composition_Input_Internal_Only>`) for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  The values for each
-`TRIAL <TimeScale.TRIAL>` must be compatible with each of the corresponding InputPorts (listed in the
+InputPorts (other than those designated as `internal_only <InputPort.internal_only>`; see `note
+<Composition_Input_Internal_Only>` above) for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  The values
+for each `TRIAL <TimeScale.TRIAL>` must be compatible with each of the corresponding InputPorts (listed in the
 `external_input_ports <Mechanism_Base.external_input_ports>` attribute of a Mechanism, and similarly in the
 `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>` attribute of a
 Composition). More specifically, the shape of each item in the outer dimension (i.e., the input for each `TRIAL
