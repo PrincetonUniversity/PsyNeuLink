@@ -2303,9 +2303,9 @@ class OptimizationControlMechanism(ControlMechanism):
             else:
                 # Pass values from user_spec dict to be parsed;
                 #    corresponding ports are safely in all_specified_ports
-                #    unspecified ports are assigned None per requirements of list format
-                specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports else None
-                         for port in all_specified_ports]
+                #    unspecified ports are assigned state_feature_default per requirements of list format
+                specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports
+                         else self.state_feature_default for port in all_specified_ports]
 
             input_port_names = _parse_specs(specs)
 
