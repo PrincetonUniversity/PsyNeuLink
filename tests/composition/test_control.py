@@ -929,16 +929,16 @@ class TestControlMechanisms:
         state_features_dict = {
 
             # Legal state_features specifications
-            'partial_legal_list_spec': [oa.output_port], # Note: only specifies ia;  oa and ob assigned default inputs
+            'partial_legal_list_spec': [oa.output_port], # only specifies ia;  oa and ob assigned default inputs
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
-            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: use icomp & out of order is OK
-            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # Note: missing ia spec and out of order
+            'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # use icomp & out of order is OK
+            'input_dict_spec_short': {ob:ob.output_port, oa:oc.input_port}, # missing ia spec and out of order
             'set_spec_short': {oa},
-            'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
+            'set_spec': {ob, icomp, oa.input_port},  # out of order, use of Nested comp and InputPort as specs all OK
             'set_spec_port': {ob.input_port, icomp, oa},
             'no_specs': None,
-            'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]}, # <- ia & ob OK BECAUSE JUST FOR SHADOWING
+            'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]}, # ia & ob OK because just for shadowing
             'shadow_inputs_dict_spec_w_none': {pnl.SHADOW_INPUTS:[ia, None, ob]},
 
             # Illegal state_features specifications
