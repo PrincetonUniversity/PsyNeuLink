@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>InputPort &mdash; PsyNeuLink 0.8.8.1+491.g404030e97 documentation</title>
+  <title>InputPort &mdash; PsyNeuLink 0.8.8.1+492.g8fa3011b8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+491
+                  0.8.8.1+492
                 </div>
               
             
@@ -495,7 +495,7 @@ to shadow the input to <code class="docutils literal notranslate"><span class="p
 <div class="legend">
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">B</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowed Mech&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span> <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="n">B</span><span class="o">.</span><span class="n">input_port</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span> <span class="o">=</span> <span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span> <span class="n">input_ports</span><span class="o">=</span><span class="n">B</span><span class="o">.</span><span class="n">input_port</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ocomp</span> <span class="o">=</span> <span class="n">Composition</span><span class="p">(</span><span class="n">pathways</span><span class="o">=</span><span class="p">[[</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">],</span> <span class="n">C</span><span class="p">],</span>
 <span class="gp">... </span>                    <span class="n">show_graph_attributes</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;direction&#39;</span><span class="p">:</span><span class="s1">&#39;LR&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">ocomp</span><span class="o">.</span><span class="n">show_graph</span><span class="p">(</span><span class="n">show_node_structure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -515,7 +515,7 @@ is executed (as noted <a class="reference internal" href="#inputport-shadow-nest
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">psyneulink</span> <span class="k">as</span> <span class="nn">pnl</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Mech&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">shadowing_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ProcessingMechanism</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Shadowing Mech&#39;</span><span class="p">,</span>
-<span class="gp">... </span>                                     <span class="n">input_ports</span><span class="o">=</span><span class="p">[</span><span class="n">mech</span><span class="o">.</span><span class="n">input_port</span><span class="p">])</span>
+<span class="gp">... </span>                                     <span class="n">input_ports</span><span class="o">=</span><span class="n">mech</span><span class="o">.</span><span class="n">input_port</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">nested_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">([</span><span class="n">mech</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Nested Composition&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outer_comp</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">Composition</span><span class="p">(</span><span class="n">nodes</span><span class="o">=</span><span class="p">[</span><span class="n">nested_comp</span><span class="p">,</span> <span class="n">shadowing_mech</span><span class="p">],</span>
 <span class="gp">... </span>                             <span class="n">name</span><span class="o">=</span><span class="s1">&#39;Outer Composition&#39;</span><span class="p">)</span>
