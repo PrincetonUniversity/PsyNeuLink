@@ -142,7 +142,11 @@ class TestControlSpecification:
         assert expected_error in error_msg
 
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
-    def test_deferred_init(self, control_spec):
+    @pytest.mark.parametrize("state_features_arg", [
+        'list',
+        'dict'
+    ])
+    def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
 
@@ -173,23 +177,44 @@ class TestControlSpecification:
 
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
-        # add the controller to the Composition before adding the relevant Mechanisms
-        comp.add_controller(controller=pnl.OptimizationControlMechanism(
-            agent_rep=comp,
-            state_features=[reward.input_port, Input.input_port],
-            state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-            objective_mechanism=pnl.ObjectiveMechanism(
-                function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                monitor=[reward,
-                         Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                         (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
-            function=pnl.GridSearch(),
-            control_signals=[{control_spec: ("drift_rate", Decision),
-                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                             {control_spec: ("threshold", Decision),
-                              ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
-        )
+        state_features = {
+            'list': [reward.input_port, Input.input_port],
+            'dict': {reward: reward.input_port,
+                     Input: Input.input_port}
+        }[state_features_arg]
+
+        if state_features_arg == 'list':
+            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
+                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+                               "agent_rep of a controller before specifying its 'state_features'."
+        else:
+            expected_warning = "that are not in its agent_rep ('evc'). Executing 'evc' before they " \
+                               "are added will generate an error ."
+
+        with pytest.warns(UserWarning) as warning:
+            # add the controller to the Composition before adding the relevant Mechanisms
+            comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                agent_rep=comp,
+                state_features = state_features,
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                objective_mechanism=pnl.ObjectiveMechanism(
+                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                    monitor=[reward,
+                             Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                             (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                function=pnl.GridSearch(),
+                control_signals=[{control_spec: ("drift_rate", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                 {control_spec: ("threshold", Decision),
+                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+            )
+        assert any(expected_warning in repr(w.message) for w in warning.list)
+
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
+        assert comp.controller.state_features == {'EXPECTED INPUT NODE 0 OF evc': (reward.input_port),
+                                                  'EXPECTED INPUT NODE 1 OF evc': (Input.input_port)}
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -197,7 +222,8 @@ class TestControlSpecification:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.enable_controller = True
-
+        assert comp.controller.state_features == {reward.input_port: reward.input_port,
+                                                  Input.input_port: Input.input_port}
         # comp._analyze_graph()
 
         stim_list_dict = {
@@ -855,7 +881,7 @@ class TestControlMechanisms:
         ('set_spec_short', None, None, None),
         ('set_spec', None, None, None),
         ('set_spec_port', None, None, None),
-        ('automatic_assignment', None, None, None),
+        ('no_specs', None, None, None),
         ('shadow_inputs_dict_spec', None, None, None),
         ('shadow_inputs_dict_spec_w_none', None, None, None),
         ('misplaced_shadow', messages[1], None, pnl.CompositionError),
@@ -879,11 +905,7 @@ class TestControlMechanisms:
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
-    @pytest.mark.parametrize('obj_mech', [
-        'obj_mech',
-        'mtr_for_ctl',
-        None
-    ])
+    @pytest.mark.parametrize('obj_mech', ['obj_mech', 'mtr_for_ctl', None])
     def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
         """See test_nested_composition_as_agent_rep() for additional tests of state_features specification."""
 
@@ -915,14 +937,14 @@ class TestControlMechanisms:
             'set_spec_short': {oa},
             'set_spec': {ob, icomp, oa},  # Note: out of order is OK, and use of Nested comp as spec
             'set_spec_port': {ob.input_port, icomp, oa},
-            'automatic_assignment': None,
+            'no_specs': None,
             'shadow_inputs_dict_spec': {pnl.SHADOW_INPUTS:[ia, oa, ob]}, # <- ia & ob OK BECAUSE JUST FOR SHADOWING
             'shadow_inputs_dict_spec_w_none': {pnl.SHADOW_INPUTS:[ia, None, ob]},
 
             # Illegal state_features specifications
-            'misplaced_shadow':ib.input_port,
-            'ext_shadow':ext.input_port,
-            'ext_output_port':ext.output_port,
+            'misplaced_shadow': [ib.input_port],
+            'ext_shadow': [ext.input_port],
+            'ext_output_port': [ext.output_port],
             'input_format_wrong_shape': [ia.input_port, oa.output_port, oc.output_port],
             'too_many_inputs_warning': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
             'too_many_inputs_error': [ia.input_port, oa.output_port, ob.output_port, oc.output_port],
@@ -936,14 +958,26 @@ class TestControlMechanisms:
         objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
         monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
-        ocm = pnl.OptimizationControlMechanism(state_features=state_features,
-                                               objective_mechanism=objective_mechanism,
-                                               monitor_for_control=monitor_for_control,
-                                               function=pnl.GridSearch(),
-                                               control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
-                                                                                  allocation_samples=[10, 20, 30]),
-                                                                pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
-                                                                                  allocation_samples=[10, 20, 30])])
+
+        if test_condition == 'no_specs':
+            ocm = pnl.OptimizationControlMechanism(objective_mechanism=objective_mechanism,
+                                                   monitor_for_control=monitor_for_control,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
+                                                                                      allocation_samples=[10, 20, 30]),
+                                                                    pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
+                                                                                      allocation_samples=[10, 20, 30])])
+
+        else:
+            ocm = pnl.OptimizationControlMechanism(state_features=state_features,
+                                                   state_feature_default=pnl.SHADOW_INPUTS,
+                                                   objective_mechanism=objective_mechanism,
+                                                   monitor_for_control=monitor_for_control,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
+                                                                                      allocation_samples=[10, 20, 30]),
+                                                                    pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
+                                                                                      allocation_samples=[10, 20, 30])])
         if not exception_type:
 
             ocomp.add_controller(ocm)
@@ -1016,7 +1050,7 @@ class TestControlMechanisms:
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
                                                       [[0.], [0.], [0, 0, 0]]))
 
-            elif test_condition == 'automatic_assignment':
+            elif test_condition == 'no_specs':
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'Shadowed input of OA[InputPort-0]',
@@ -1064,16 +1098,15 @@ class TestControlMechanisms:
                     ocomp.add_controller(ocm)
                     ocomp.run()
                     if test_condition == 'partial_legal_list_spec':
-                        assert len(ocm.state_input_ports) == 1
-                        assert ocm.state_input_ports.names == ['OA[OutputPort-0]']
+                        assert len(ocm.state_input_ports) == 3
+                        assert ocm.state_input_ports.names == ['OA[OutputPort-0]',
+                                                               'Shadowed input of OA[InputPort-0]',
+                                                               'Shadowed input of OB[InputPort-0]']
                         # Note: oa is assigned to icomp due to ordering:
                         assert ocm.state_features == {ia.input_port: oa.output_port,
-                                                      oa.input_port: None,
-                                                      ob.input_port: None}
+                                                      oa.input_port: oa.input_port,
+                                                      ob.input_port: ob.input_port}
                 assert message_1 in [warning[i].message.args[0] for i in range(len(warning))]
-                assert ocm.state_features == {ia.input_port: oa.output_port,
-                                              oa.input_port: None,
-                                              ob.input_port: None}
 
         else:
             with pytest.raises(exception_type) as error:
@@ -3244,7 +3277,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         'nested_full_dict',     # <- Specify both of two INPUT Nodes of nested comp in dict format
         'nested_comp_set',      # <- Specify nested comp as itself in set format
         'nested_comp_dict',     # <- Specify nested comp as itself in dict format with a single spec for all INPUT Nodes
-        'automatic',            # <- Automaticaly asign state_features
+        'no_spec',              # <- Assign default state_features
         'bad'                   # <- Specify Mechanism not in agent_rep
     ]
     @pytest.mark.control
@@ -3280,7 +3313,7 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             agent_rep = None
             error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
                          'missing from \'OUTER COMP\' and any Compositions nested within it."'
-        # state_features = D.output_port if state_features_arg is 'bad' else None
+
         if state_features_arg == 'nested_partial_set':
             state_features = {A, I2}
         elif state_features_arg == 'nested_full_set':
@@ -3293,21 +3326,26 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
             state_features = {mcomp}
         elif state_features_arg == 'nested_comp_dict':
             state_features = {mcomp:I1}
-        elif state_features_arg == 'automatic':
-            state_features = None
         elif state_features_arg == 'bad':
-            state_features = D.output_port
-        else:
-            assert False, "Bad state_features_arg in test."
+            state_features = [D.output_port]
 
-        ocm = pnl.OptimizationControlMechanism(name='OCM',
-                                               agent_rep=agent_rep,
-                                               state_features=state_features,
-                                               objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
-                                               allow_probes=True,
-                                               function=pnl.GridSearch(),
-                                               control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
-                                                                                 allocation_samples=[10, 20, 30]))
+        if state_features_arg == 'no_spec':
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                                   allow_probes=True,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
+                                                                                     allocation_samples=[10, 20, 30]))
+        else:
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   state_features=state_features,
+                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                                   allow_probes=True,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
+                                                                                     allocation_samples=[10, 20, 30]))
         if state_features_arg == 'bad':
             with pytest.raises(pnl.OptimizationControlMechanismError) as error:
                 ocomp.add_controller(ocm)
