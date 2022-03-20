@@ -1005,6 +1005,8 @@ Executing a Composition
 
     - `Execution Methods <Composition_Execution_Methods>`
     - `Composition_Execution_Inputs`
+        • `Composition_Input_Dictionary`
+        • `Composition_Programmatic_Inputs`
     - `Composition_Execution_Factors`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
@@ -1117,7 +1119,7 @@ format can be used for the `execute <Composition.execute>` method, since it exec
 belonging to its `INPUT` `Nodes <Composition_Nodes>` at *all levels of nesting*, that are not designated as
 `internal_only <InputPort_Internal_Only>`. They are listed in the Composition's `external_input_ports_of_all_input_nodes
 <Composition.external_input_ports_of_all_input_nodes>` attribute, as well as the `external_input_ports
-<Mechanism_Base.external_input_ports>` attribute of each `Mechanism` that is an `INPUT <NodeRoles.INPUT>`
+<Mechanism_Base.external_input_ports>` attribute of each `Mechanism` that is an `INPUT <NodeRole.INPUT>`
 `Node <Composition_Nodes>` of the Composition or any `nested Composition <Composition_Nested>` within it
 The format required can also be seen using the  `get_input_format() <Composition.get_input_format>` method.
 
@@ -1178,7 +1180,7 @@ when the Composition is executed (as determined by the number of input values sp
 
 .. _Composition_Input_Dictionary_Node_Entries:
 
-*Node entries*.  The key must be an `INPUT <NodeRole>` `Node <Composition_Nodes>`of the Composition, or the name of
+*Node entries*.  The key must be an `INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the name of
 one (i.e., the str in its `name <Component.name>` attribute), and the value must specify the input to *all* of its
 InputPorts (other than those designated as `internal_only <InputPort.internal_only>`; see `above
 <Composition_Input_Internal_Only>`) for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  The values for each
@@ -1209,11 +1211,11 @@ case shorthand notations are allowed, as illustrated in the `examples  <Composit
 .. _Composition_Input_Dictionary_InputPort_Entries:
 
 *InputPort Entries*. The key must be an `external InputPort <Composition_Input_External_InputPorts>` for an
-`INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the `full_name <Port.full_name>` of one,
+`INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the `full_name <Port_Base.full_name>` of one,
 and the value must specify the input for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  Any or all of the
 InputPorts for an`INPUT <NodeRole>` `Node <Composition_Nodes>` can be specified, but an inputs dictionary cannot
-have specifications for both the Node and any of its InputPorts.  If the name of an InputPort is used as the key,
-its the str in its `full_name <Port.full_name>` attribute must be used, to ensure disambiguation from any similarly
+have specifications for both the Node and any of its InputPorts.  If the name of an InputPort is used as the key, its
+the str in its `full_name <Port_Base.full_name>` attribute must be used, to ensure disambiguation from any similarly
 named InputPorts of other Nodes.  Specifying InputPorts individually (instead of specifying all of them in a single
 entry for a Node) can be if only some InputPorts should receive inputs, or the input for some needs to remain constant
 across `TRIAL <TimeScale.TRIAL>`\\s (by providing it with only one input value) while the input to others vary
@@ -3505,7 +3507,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Nested>`, then from any `Nodes <Composition_Nodes>` in the outer composition that project to the
         nested Composition (either itself, as a Node in the outer Composition, or to any of its own Nodes).
 
-    external_input_ports_of_all_input_nodes: list[InputPort]
+    external_input_ports_of_all_input_nodes : list[InputPort]
         a list of all `external InputPort <Composition_Input_External_InputPorts>` of all `INPUT <NodeRole.INPUT>`
         `Nodes <Composition_Nodes>` of the Composition, including any that in `nested Compositions
         <Composition_Nested>` within it (i.e., within `INPUT <NodeRole.INPUT>` Nodes at all levels of nesting).
@@ -3513,11 +3515,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         in `external_input_ports <Composition.external_input_ports>`.
 
     external_input_shape : list[1d array]
-        a list of the `input_shape <Input.input_shape>`\\s of all of the InputPorts listed in `external_input_ports
-        <Composition.external_input_ports>` (and are the same as the shapes of those listed in
+        a list of the `input_shape <InputPort.input_shape>`\\s of all of the InputPorts listed in
+        `external_input_ports <Composition.external_input_ports>` (and are the same as the shapes of those listed in
         `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>`); any input
         to the Composition must be compatible with these, whether received from the **inputs** argument of one of the
-        Composition's`execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
+        Composition's `execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
         <Composition_Nested>`, from the enclosing Composition.
 
     external_input_variables : list[2d array]

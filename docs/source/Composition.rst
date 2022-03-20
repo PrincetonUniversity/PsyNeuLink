@@ -32,4 +32,4 @@ Composition
 .. automodule:: psyneulink.core.compositions.composition
    :members: Composition, NodeRole, Graph
    :private-members:
-   :exclude-members: Parameters, show_structure, CompositionError, get_inputs_format
+   :exclude-members: Parameters, show_structure, CompositionError, get_inputs_format, external_input_ports_of_all_input_nodes, external_input_ports

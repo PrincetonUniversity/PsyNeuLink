@@ -222,8 +222,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
   <Composition_Input_External_InputPorts>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`. The input to
   each `state_input_port <OptimizationControlMechanism.state_input_ports>`, after being processed by it `function
   <InputPort.function>`, is assigned as the corresponding value of `state_feature_values
-  <OptimizationControlMechanism.state_feature_values>`, the values of which provided as the input to the
-  corresponding InputPorts of the `INPUT <NodeRole.INPUT>` `Nodes of the agent_rep each time it is `evaluated
+  <OptimizationControlMechanism.state_feature_values>`, the values of which provided as the input to the corresponding
+  InputPorts of the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the agent_rep each time it is `evaluated
   <Composition.evaluate>`.  Accordingly, the specification requirements for **state_features** depend on whether the
   `agent_rep<OptimizationControlMechanism.agent_rep>` is a `Composition` or a `CompositionFunctionApproximator`,
   as described in each of the two sections below.
@@ -294,7 +294,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`
     (entry keys). It must conform to the format used to `specify external inputs <Composition_Input_Dictionary>`
     to the `agent_rep <OptimizationControlMechanism.agent_rep>`, in which entries consist of a key specifying either
-    an `INPUT` <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`
+    an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of the `agent_rep <OptimizationControlMechanism.agent_rep>`
     or one of their `external InputPorts <Composition_Input_External_InputPorts>`, and a value that is the source of
     the input that can be any of the forms of individual input specifications listed `below
     <OptimizationControlMechanism_State_Feature_Individual_Specs>`. The format required for the entries can be seen
