@@ -360,7 +360,10 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
       <InputPort.function>`, the result of which is assigned to the corresponding value of `state_feature_values
       <OptimizationControlMechanism.state_feature_values>` and provided as the input to the corresponding `INPUT
       <NodeRole.INPUT>` `Node <Composition_Nodes>` InputPort each time the `agent_rep
-      <OptimizationControlMechanism.agent_rep>`  is `evaluated <Composition.evaluate>`.
+      <OptimizationControlMechanism.agent_rep>`  is `evaluated <Composition.evaluate>`. The specified value must be
+      compatible with the shape of all of the external InputPorts of all of `agent_rep
+      <OptimizationControlMechanism.agent_rep>`\\'s `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` (see
+      `note <OptimizationControlMechanism_State_Features_Shapes>` above).
 
     .. _OptimizationControlMechanism_SHADOW_INPUTS_State_Feature:
 
@@ -2147,6 +2150,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 if i < num_specs:
                     spec = state_feature_specs[i]
                     # Assign input_port name
+                    if isinstance(spec, tuple):
+                        state_feature_fct = spec[1]
+                        spec = spec[0]
                     if is_numeric(spec):
                         spec_name = f"{port_name} {DEFAULT_VARIABLE.upper()}"
                     elif isinstance(spec, (Port, Mechanism, Composition)):
@@ -2160,9 +2166,6 @@ class OptimizationControlMechanism(ControlMechanism):
                             state_feature_fct = spec[FUNCTION]
                         elif PARAMS in spec and FUNCTION in spec[PARAMS]:
                             state_feature_fct = spec[PARAMS][FUNCTION]
-                    elif isinstance(spec, tuple):
-                        state_feature_fct = spec[1]
-                        spec = spec[0]
                     elif spec == SHADOW_INPUTS:
                         spec = port
                     elif spec is not None:
