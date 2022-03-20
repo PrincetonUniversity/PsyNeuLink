@@ -307,10 +307,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     is used to construct the `state_input_ports <OptimizationControlMechanism.state_input_ports>` for *all* of the
     `external InputPorts <Composition_Input_External_InputPorts>` for that nested Composition, and any nested within
     it at all levels of nesting. If any `INPUT <NodeRole.INPUT>` Nodes or their InputPorts are not specified in the
-    dictionary, the `state_feature_default <OptimizationControlMechanism.state_feature_default>` is assigned as their
-    state_feature (this includes cases in which some but not all `INPUT <NodeRole.INPUT>` Nodes of a nested Composition,
-    or their InputPorts, are specified; any unspecified INPUT Nodes of the corresponding Compositions are assigned
-    `state_feature_default <OptimizationControlMechanism.state_feature_default>` as their state_feature).
+    dictionary, `state_feature_default <OptimizationControlMechanism.state_feature_default>` is assigned as their
+    state_feature specification (this includes cases in which some but not all `INPUT <NodeRole.INPUT>` Nodes of a
+    nested Composition, or their InputPorts, are specified; any unspecified INPUT Nodes of the corresponding
+    Compositions are assigned `state_feature_default <OptimizationControlMechanism.state_feature_default>` as their
+    state_feature specification).
 
   .. _OptimizationControlMechanism_State_Feature_List_Inputs:
 
@@ -320,13 +321,13 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     <OptimizationControlMechanism.agent_rep>`, and must be specified in the order they are listed in the `agent_rep
     <OptimizationControlMechanism.agent_rep>`\\'s `external_input_ports_of_all_input_nodes
     <Composition.external_input_ports_of_all_input_nodes>` attribute. If the list is incomplete, the remaining
-    InputPorts are assigned the `state_feature_default <OptimizationControlMechanism.state_feature_default>`. Items
-    can be included in the list that have not yet been added to the OptimizationControlMechanism's Composition or its
-    `agent_rep <OptimizationControlMechanism.agent_rep>`. However, these must be added before the Composition is
-    executed, and must appear in the list in the same position that the InputPorts to which they pertain are listed
-    in the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `external_input_ports_of_all_input_nodes
-    <Composition.external_input_ports_of_all_input_nodes>` attribute, once construction of the `agent_rep
-    <OptimizationControlMechanism.agent_rep>` is complete.
+    InputPorts are assigned `state_feature_default <OptimizationControlMechanism.state_feature_default>` as their
+    state_feature specification. Items can be included in the list that have not yet been added to the
+    OptimizationControlMechanism's Composition or its `agent_rep <OptimizationControlMechanism.agent_rep>`. However,
+    these must be added before the Composition is executed, and must appear in the list in the same position that the
+    InputPorts to which they pertain are listed in the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s
+    `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>` attribute,
+    once construction of the `agent_rep <OptimizationControlMechanism.agent_rep>` is complete.
 
   .. _OptimizationControlMechanism_State_Feature_Set_Inputs:
 
@@ -336,7 +337,8 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     during evaluation as when the Composition of which the OptimizationControlMechanism is the `controller
     <Composition_Controller>` is fully executed. The order of their specification does not matter;  however, any of
     the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `INPUT <NodeRole.INPUT>` Nodes that are *not* included
-    in the set will be assigned the `state_feature_default <OptimizationControlMechanism.state_feature_default>`.
+    in the set are assigned `state_feature_default <OptimizationControlMechanism.state_feature_default>` as their
+    state_feature specification.
 
   .. _OptimizationControlMechanism_State_Feature_Individual_Specs:
 
