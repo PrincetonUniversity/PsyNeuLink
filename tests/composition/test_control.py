@@ -1064,10 +1064,11 @@ class TestControlMechanisms:
                                                       [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'input_dict_spec_short':
-                assert len(ocm.state_input_ports) == 2
-                assert ocm.state_input_ports.names == ['Shadowed input of OC[InputPort-0]',
+                assert len(ocm.state_input_ports) == 3
+                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
+                                                       'Shadowed input of OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
-                assert ocm.state_features == {ia.input_port: None,
+                assert ocm.state_features == {ia.input_port: ia.input_port,
                                               oa.input_port: oc.input_port,
                                               ob.input_port: ob.output_port}
                 assert all(np.allclose(expected, actual)
@@ -1160,6 +1161,202 @@ class TestControlMechanisms:
                 ocomp.add_controller(ocm)
                 ocomp.run()
             assert error_or_warning_message in str(error.value)
+
+    state_features_arg = [
+        'single_numeric_spec',        # <- same numeric input for all INPUT Node InputPorts
+        'single_tuple_numeric_spec',  # <- same value and function assigned to all INPUT Node InputPorts
+        'single_port_spec',           # <- same Port for all INPUT Node InputPorts
+        'single_mech_spec',           # <- same Mech's InputPort for INPUT Node InputPorts
+        'nested_partial_set',         # <- only one of two INPUT Nodes of nested Comp in set format
+        'nested_partial_dict',        # <- only one of two INPUT Nodes of nested Comp in dict format
+        'nested_partial_list',        # <- specify 1st 3 INPUT Node InputPorts; 4th (I2) should get shaddowed
+        'nested_full_set',            # <- both of two INPUT Nodes of nested Comp in set format
+        'nested_full_dict',           # <- both of two INPUT Nodes of nested Comp in dict format
+        'nested_comp_set',            # <- nested Comp as itself in set format
+        'nested_comp_dict',           # <- nested Comp as itself in dict format with a single spec for all INPUT Nodes
+        'no_spec',                    # <- Assign state_feature_default to all Nodes
+        'bad'                         # <- Mechanism not in agent_rep
+    ]
+    @pytest.mark.control
+    @pytest.mark.composition
+    @pytest.mark.parametrize('nested_agent_rep',
+                             [(False, 'OUTER COMP'),(True, 'MIDDLE COMP')],
+                             ids=['unnested','nested'])
+    @pytest.mark.parametrize('state_features_arg', state_features_arg,
+                             ids= [f"state_feature-{x}" for x in state_features_arg]
+                             )
+    def test_state_features_in_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
+        """Test state_features for agent_rep that is a nested Composition and also has one nested with in.
+        Also test for single state_feature_spec and INPUT Node with multiple InputPorts, not tested in
+        test_ocm_state_feature_specs_and_warnings_and_errors() (see that for tests of basic state_features specs).
+        """
+
+        I1 = pnl.ProcessingMechanism(name='I1')
+        I2 = pnl.ProcessingMechanism(name='I2')
+        icomp = pnl.Composition(nodes=[I1,I2], name='INNER COMP')
+        A = pnl.ComparatorMechanism(name='A')
+        B = pnl.ProcessingMechanism(name='B')
+        C = pnl.ProcessingMechanism(name='C', size=3)
+        D = pnl.ProcessingMechanism(name='D')
+        mcomp = pnl.Composition(pathways=[[A,B,C], icomp], name='MIDDLE COMP')
+        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
+
+        # Test args:
+        if nested_agent_rep is True:
+            agent_rep = mcomp
+            error_text = f"'OCM' has '{STATE_FEATURES}' specified (['D[OutputPort-0]']) that are missing from both " \
+                         f"its `agent_rep` ('{nested_agent_rep[1]}') as well as 'OUTER COMP' and any " \
+                         f"Compositions nested within it."
+        else:
+            agent_rep = None
+            error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
+                         'missing from \'OUTER COMP\' and any Compositions nested within it."'
+
+        state_features = {
+            'single_numeric_spec': [3],
+            'single_tuple_numeric_spec': ([3], pnl.Linear(slope=5)),
+            'single_port_spec': I1.output_port,
+            'single_mech_spec': I1,
+            'nested_partial_list': [I1.output_port, [2], I2],
+            'nested_partial_set': {A.input_ports[pnl.SAMPLE], I2},
+            'nested_full_set': {A, I1, I2},
+            'nested_partial_dict': {A.input_ports[pnl.SAMPLE]:[3.5], I2:I1.input_port},
+            'nested_full_dict': {A:A.input_port, I1:I2.input_port, I2:I1.input_port},
+            'nested_comp_set': {mcomp},
+            'nested_comp_dict': {mcomp: I1},
+            'no_spec': 'SHOULD ASSIGN NONE TO ALL INPUT Node InputPorts',
+            'bad': [D.output_port]
+        }[state_features_arg]
+
+        if state_features_arg == 'nested_partial_set':
+            state_feature_default = None  # Test assignment of SHADOW_INPUTS to specs in set, and None to others
+        else:
+            state_feature_default = pnl.SHADOW_INPUTS
+
+        if state_features_arg == 'no_spec':
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                                   allow_probes=True,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
+                                                                                     allocation_samples=[10, 20, 30]))
+        else:
+            ocm = pnl.OptimizationControlMechanism(name='OCM',
+                                                   agent_rep=agent_rep,
+                                                   state_features=state_features,
+                                                   state_feature_default=state_feature_default,
+                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
+                                                   allow_probes=True,
+                                                   function=pnl.GridSearch(),
+                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
+                                                                                     allocation_samples=[10, 20, 30]))
+        if state_features_arg == 'bad':
+            with pytest.raises(pnl.OptimizationControlMechanismError) as error:
+                ocomp.add_controller(ocm)
+                ocomp.run()
+            assert error_text in str(error.value)
+        else:
+            ocomp.add_controller(ocm)
+            ocomp.run()
+
+            if state_features_arg == 'single_numeric_spec':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: [3],
+                                              A.input_ports[pnl.TARGET]: [3],
+                                              I1.input_port: [3],
+                                              I2.input_port: [3]}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [3],
+                                                                                      A.input_ports[pnl.TARGET]: [3],
+                                                                                      I1.input_port: [3],
+                                                                                      I2.input_port: [3]}
+
+            elif state_features_arg == 'single_tuple_numeric_spec':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: [3],
+                                              A.input_ports[pnl.TARGET]: [3],
+                                              I1.input_port: [3],
+                                              I2.input_port: [3]}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [15],
+                                                                                      A.input_ports[pnl.TARGET]: [15],
+                                                                                      I1.input_port: [15],
+                                                                                      I2.input_port: [15]}
+
+            elif state_features_arg in {'single_port_spec'}:
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.output_port,
+                                              A.input_ports[pnl.TARGET]: I1.output_port,
+                                              I1.input_port: I1.output_port,
+                                              I2.input_port: I1.output_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
+                                                                                      A.input_ports[pnl.TARGET]: [0],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg in {'single_mech_spec'}:
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.input_port,
+                                              A.input_ports[pnl.TARGET]: I1.input_port,
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I1.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
+                                                                                      A.input_ports[pnl.TARGET]: [0],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg in 'nested_partial_list':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.output_port,
+                                              A.input_ports[pnl.TARGET]: [2],
+                                              I1.input_port: I2.input_port,
+                                              I2.input_port: I2.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
+                                                                                      A.input_ports[pnl.TARGET]: [2],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg in 'nested_partial_set':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: A.input_ports[pnl.SAMPLE],
+                                              A.input_ports[pnl.TARGET]: None,
+                                              I1.input_port: None,
+                                              I2.input_port: I2.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg == 'nested_partial_dict':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: [3.5],
+                                              A.input_ports[pnl.TARGET]: A.input_ports[pnl.TARGET],
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I1.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [3.5],
+                                                                                      A.input_ports[pnl.TARGET]: [0],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg == 'nested_full_set':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: A.input_ports[pnl.SAMPLE],
+                                              A.input_ports[pnl.TARGET]: A.input_ports[pnl.TARGET],
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I2.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
+                                                                                      A.input_ports[pnl.TARGET]: [0],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg == 'nested_full_dict':
+                assert ocm.state_features == {A.input_port: A.input_port,
+                                              A.input_ports[pnl.TARGET]: A.input_port,
+                                              I1.input_port: I2.input_port,
+                                              I2.input_port: I1.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[0]: [0],
+                                                                                      A.input_ports[1]: [0],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
+
+            elif state_features_arg == 'nested_comp_dict':
+                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.input_port,
+                                              A.input_ports[pnl.TARGET]: I1.input_port,
+                                              I1.input_port: I1.input_port,
+                                              I2.input_port: I1.input_port}
+                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
+                                                                                      A.input_ports[pnl.TARGET]: [0],
+                                                                                      I1.input_port: [0],
+                                                                                      I2.input_port: [0]}
 
     @pytest.mark.control
     @pytest.mark.parametrize('state_fct_assignments', [
@@ -3319,177 +3516,6 @@ class TestModelBasedOptimizationControlMechanisms_Execution:
         # -7 ((5*-1)+(-2*1))
         assert np.allclose(results, [[7]])
 
-    state_features_arg = [
-        'single_numeric_spec',  # <- Specify same numeric input for all INPUT Node InputPorts
-        'single_port_spec',     # <- Specify same port for all INPUT Node InputPorts
-        'single_mech_spec',     # <- Specify same mech's InputPort for INPUT Node InputPorts
-        'nested_partial_set',   # <- Specify only one of two INPUT Nodes of nested comp in set format
-        'nested_partial_dict',  # <- Specify only one of two INPUT Nodes of nested comp in dict format
-        'nested_full_set',      # <- Specify both of two INPUT Nodes of nested comp in set format
-        'nested_full_dict',     # <- Specify both of two INPUT Nodes of nested comp in dict format
-        'nested_comp_set',      # <- Specify nested comp as itself in set format
-        'nested_comp_dict',     # <- Specify nested comp as itself in dict format with a single spec for all INPUT Nodes
-        'no_spec',              # <- Assign default state_features
-        'bad'                   # <- Specify Mechanism not in agent_rep
-    ]
-    @pytest.mark.control
-    @pytest.mark.composition
-    @pytest.mark.parametrize('nested_agent_rep',
-                             [(False, 'OUTER COMP'),(True, 'MIDDLE COMP')],
-                             ids=['unnested','nested'])
-    @pytest.mark.parametrize('state_features_arg', state_features_arg,
-                             ids= [f"state_feature-{x}" for x in state_features_arg]
-                             )
-    def test_state_features_in_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
-        """Test state_features for agent_rep that is a nested Composition and also has one nested with in.
-        Also test for single state_feature_spec and INPUT Node with multiple InputPorts, not tested in
-        test_ocm_state_feature_specs_and_warnings_and_errors() (see that for tests of basic state_features specs).
-        """
-
-        I1 = pnl.ProcessingMechanism(name='I1')
-        I2 = pnl.ProcessingMechanism(name='I2')
-        icomp = pnl.Composition(nodes=[I1,I2], name='INNER COMP')
-        A = pnl.ComparatorMechanism(name='A')
-        B = pnl.ProcessingMechanism(name='B')
-        C = pnl.ProcessingMechanism(name='C', size=3)
-        D = pnl.ProcessingMechanism(name='D')
-        mcomp = pnl.Composition(pathways=[[A,B,C], icomp], name='MIDDLE COMP')
-        ocomp = pnl.Composition(nodes=[mcomp], name='OUTER COMP')
-
-        # Test args:
-        if nested_agent_rep is True:
-            agent_rep = mcomp
-            error_text = f"'OCM' has '{STATE_FEATURES}' specified (['D[OutputPort-0]']) that are missing from both " \
-                         f"its `agent_rep` ('{nested_agent_rep[1]}') as well as 'OUTER COMP' and any " \
-                         f"Compositions nested within it."
-        else:
-            agent_rep = None
-            error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
-                         'missing from \'OUTER COMP\' and any Compositions nested within it."'
-
-        state_features = {
-            'single_numeric_spec': [3],
-            'single_port_spec': I1.output_port,
-            'single_mech_spec': I1,
-            'nested_partial_set': {A.input_ports[pnl.SAMPLE], I2},
-            'nested_full_set': {A, I1, I2},
-            'nested_partial_dict': {A.input_ports[pnl.SAMPLE]:[3.5], I2:I1.input_port},
-            'nested_full_dict': {A:A.input_port, I1:I2.input_port, I2:I1.input_port},
-            'nested_comp_set': {mcomp},
-            'nested_comp_dict': {mcomp:I1},
-            'no_spec': 'SHOULD ASSIGN NONE TO ALL INPUT Node InputPorts',
-            'bad': [D.output_port]
-        }[state_features_arg]
-
-        if state_features_arg == 'nested_partial_set':
-            state_feature_default = None  # Test assignment of SHADOW_INPUTS to specs in set, and None to others
-        else:
-            state_feature_default = pnl.SHADOW_INPUTS
-
-        if state_features_arg == 'no_spec':
-            ocm = pnl.OptimizationControlMechanism(name='OCM',
-                                                   agent_rep=agent_rep,
-                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
-                                                   allow_probes=True,
-                                                   function=pnl.GridSearch(),
-                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
-                                                                                     allocation_samples=[10, 20, 30]))
-        else:
-            ocm = pnl.OptimizationControlMechanism(name='OCM',
-                                                   agent_rep=agent_rep,
-                                                   state_features=state_features,
-                                                   state_feature_default=state_feature_default,
-                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor=[B]),
-                                                   allow_probes=True,
-                                                   function=pnl.GridSearch(),
-                                                   control_signals=pnl.ControlSignal(modulates=(pnl.SLOPE,I1),
-                                                                                     allocation_samples=[10, 20, 30]))
-        if state_features_arg == 'bad':
-            with pytest.raises(pnl.OptimizationControlMechanismError) as error:
-                ocomp.add_controller(ocm)
-                ocomp.run()
-            assert error_text in str(error.value)
-        else:
-            ocomp.add_controller(ocm)
-            ocomp.run()
-
-            if state_features_arg == 'single_numeric_spec':
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: [3],
-                                              A.input_ports[pnl.TARGET]: [3],
-                                              I1.input_port: [3],
-                                              I2.input_port: [3]}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [3],
-                                                                                      A.input_ports[pnl.TARGET]: [3],
-                                                                                      I1.input_port: [3],
-                                                                                      I2.input_port: [3]}
-
-            elif state_features_arg in {'single_port_spec'}:
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.output_port,
-                                              A.input_ports[pnl.TARGET]: I1.output_port,
-                                              I1.input_port: I1.output_port,
-                                              I2.input_port: I1.output_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
-                                                                                      A.input_ports[pnl.TARGET]: [0],
-                                                                                      I1.input_port: [0],
-                                                                                      I2.input_port: [0]}
-
-            elif state_features_arg in {'single_mech_spec'}:
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.input_port,
-                                              A.input_ports[pnl.TARGET]: I1.input_port,
-                                              I1.input_port: I1.input_port,
-                                              I2.input_port: I1.input_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
-                                                                                      A.input_ports[pnl.TARGET]: [0],
-                                                                                      I1.input_port: [0],
-                                                                                      I2.input_port: [0]}
-
-            elif state_features_arg in 'nested_partial_set':
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: A.input_ports[pnl.SAMPLE],
-                                              A.input_ports[pnl.TARGET]: None,
-                                              I1.input_port: None,
-                                              I2.input_port: I2.input_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
-                                                                                      I2.input_port: [0]}
-
-            elif state_features_arg == 'nested_partial_dict':
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: [3.5],
-                                              A.input_ports[pnl.TARGET]: A.input_ports[pnl.TARGET],
-                                              I1.input_port: I1.input_port,
-                                              I2.input_port: I1.input_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [3.5],
-                                                                                      A.input_ports[pnl.TARGET]: [0],
-                                                                                      I1.input_port: [0],
-                                                                                      I2.input_port: [0]}
-
-            elif state_features_arg == 'nested_full_set':
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: A.input_ports[pnl.SAMPLE],
-                                              A.input_ports[pnl.TARGET]: A.input_ports[pnl.TARGET],
-                                              I1.input_port: I1.input_port,
-                                              I2.input_port: I2.input_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
-                                                                                      A.input_ports[pnl.TARGET]: [0],
-                                                                                      I1.input_port: [0],
-                                                                                      I2.input_port: [0]}
-
-            elif state_features_arg == 'nested_full_dict':
-                assert ocm.state_features == {A.input_port: A.input_port,
-                                              A.input_ports[pnl.TARGET]: A.input_port,
-                                              I1.input_port: I2.input_port,
-                                              I2.input_port: I1.input_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[0]: [0],
-                                                                                      A.input_ports[1]: [0],
-                                                                                      I1.input_port: [0],
-                                                                                      I2.input_port: [0]}
-
-            elif state_features_arg == 'nested_comp_dict':
-                assert ocm.state_features == {A.input_ports[pnl.SAMPLE]: I1.input_port,
-                                              A.input_ports[pnl.TARGET]: I1.input_port,
-                                              I1.input_port: I1.input_port,
-                                              I2.input_port: I1.input_port}
-                assert {k:v.tolist() for k,v in ocm.state_feature_values.items()} == {A.input_ports[pnl.SAMPLE]: [0],
-                                                                                      A.input_ports[pnl.TARGET]: [0],
-                                                                                      I1.input_port: [0],
-                                                                                      I2.input_port: [0]}
 
 @pytest.mark.control
 class TestSampleIterator:

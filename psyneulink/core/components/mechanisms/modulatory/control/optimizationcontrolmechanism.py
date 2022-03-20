@@ -3263,50 +3263,68 @@ class OptimizationControlMechanism(ControlMechanism):
         #              - GET SOURCE OR SHADOWED SPEC
         self._update_state_features_dict()
         agent_rep_input_ports = self._get_agent_rep_input_receivers()
-        # FIX: CONSTRAIN TO ONLY GET SOURCES: HERE OR BY ADDING ARG TO state_distal_sources_and_destinations_dict()
-        sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-                   for source_tuple, value in self.state_feature_sources.items()]
+        # # MODIFIED 3/20/22 OLD:
+        # sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
+        #            for source_tuple, value in self.state_feature_sources.items()]
+        # MODIFIED 3/20/22 NEW:
+        sources = [source if source != DEFAULT_VARIABLE else source
+                   for input_node, source in self._get_state_feature_sources(source_only=True).items()]
+        # MODIFIED 3/20/22 END
         sources = [np.array(s).tolist() if is_numeric(s) else s for s in sources]
         # FIX: USES SOURCES AS VALUES FOR DICT BELOW
         state_features_dict = {}
         # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
         j = 0
         for i in range(self._num_state_feature_specs):
+            # # MODIFIED 3/20/22 OLD:
+            # # Assign InputPorts of INPUT Nodes of agent_rep as keys
+            # if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
+            #     key = self._specified_INPUT_Node_InputPorts_in_order[i]
+            # else:
+            #     key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
+            # if self.state_feature_specs[i] is not None:
+            #     state_features_dict[key] = sources[j]
+            #     j += 1
+            # else:
+            #     state_features_dict[key] = None
+            # MODIFIED 3/20/22 NEW:
+            spec = self.state_feature_specs[i]
             # Assign InputPorts of INPUT Nodes of agent_rep as keys
             if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
                 key = self._specified_INPUT_Node_InputPorts_in_order[i]
             else:
                 key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-            if self.state_feature_specs[i] is not None:
+            if spec is not None:
                 state_features_dict[key] = sources[j]
                 j += 1
             else:
-                state_features_dict[key] = None
+                state_features_dict[key] = spec
+            # MODIFIED 3/20/22 END
 
         return state_features_dict
 
-    @property
-    def state_feature_sources(self):
+    # FIX: 3/20/22 - RESTORE THIS AS PROPERTY ONCE source_and_destinations IS EITHER REMOVED OR REFACTORED SIMILARLY
+    def _get_state_feature_sources(self, source_only=False):
         """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
-        state_dict = {}
+        source_dict = {}
         # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
         specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
         for state_index, port in enumerate(self.state_input_ports):
             if not port.path_afferents:
                 if port.default_input is DEFAULT_VARIABLE:
-                    # MODIFIED 3/4/22 OLD:
-                    source_port = DEFAULT_VARIABLE
-                    # # MODIFIED 3/4/22 NEW:
-                    # if self.state_feature_specs[state_index] is not None:
-                    #     source_port = self.state_feature_specs[state_index]
-                    # else:
-                    #     source_port = DEFAULT_VARIABLE
+                    # # MODIFIED 3/4/22 OLD:
+                    # source = DEFAULT_VARIABLE
+                    # MODIFIED 3/4/22 NEW:
+                    if specified_state_features[state_index] is not None:
+                        source = specified_state_features[state_index]
+                    else:
+                        source = DEFAULT_VARIABLE
                     # MODIFIED 3/4/22 END
-                    node = None
+                    input_node = None
                     comp = None
                 else:
-                    source_port = specified_state_features[state_index]
-                    node = None
+                    source = specified_state_features[state_index]
+                    input_node = None
                     comp = None
             else:
                 get_info_method = self.composition._get_source
@@ -3318,9 +3336,17 @@ class OptimizationControlMechanism(ControlMechanism):
                     else:
                         composition = port.path_afferents[0].sender.owner.composition
                     get_info_method = composition._get_destination
-                source_port, node, comp = get_info_method(port.path_afferents[0])
-            state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
-        return state_dict
+                source, input_node, comp = get_info_method(port.path_afferents[0])
+            # # MODIFIED 3/20/22 OLD:
+            # source_dict.update({(source, input_node, comp, state_index):self.state[state_index]})
+            # MODIFIED 3/20/22 NEW:
+            if source_only:
+                input_node =  self._specified_INPUT_Node_InputPorts_in_order[state_index]
+                source_dict.update({input_node: source})
+            else:
+                source_dict.update({(source, input_node, comp, state_index):self.state[state_index]})
+            # MODIFIED 3/20/22 END
+        return source_dict
 
     @property
     def control_signal_destinations(self):
@@ -3354,7 +3380,7 @@ class OptimizationControlMechanism(ControlMechanism):
               (after it has processed the value of its afferent Projections) that determines the input to the
               state_input_port.
         """
-        sources_and_destinations = self.state_feature_sources
+        sources_and_destinations = self._get_state_feature_sources()
         sources_and_destinations.update(self.control_signal_destinations)
         return sources_and_destinations
 
