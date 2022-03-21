@@ -141,6 +141,7 @@ class TestControlSpecification:
         error_msg = error.value.error_value
         assert expected_error in error_msg
 
+    @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
     @pytest.mark.parametrize("state_features_arg", [
         'list',
@@ -283,6 +284,7 @@ class TestControlSpecification:
             np.testing.assert_allclose(comp.results[trial], expected_results_array[trial], atol=1e-08,
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
+    @pytest.mark.state_features
     @pytest.mark.parametrize('state_features_option', [
         'list',
         'set',
@@ -915,6 +917,7 @@ class TestControlMechanisms:
         print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
         print("***********************************************************************************************")
 
+    @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
     @pytest.mark.parametrize('obj_mech', ['obj_mech', 'mtr_for_ctl', None])
@@ -1177,6 +1180,7 @@ class TestControlMechanisms:
         'no_spec',                    # <- Assign state_feature_default to all Nodes
         'bad'                         # <- Mechanism not in agent_rep
     ]
+    @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.composition
     @pytest.mark.parametrize('nested_agent_rep',
@@ -1445,6 +1449,7 @@ class TestControlMechanisms:
                        for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
                                                    [[2],[2],[2]]))
 
+    @pytest.mark.state_features
     @pytest.mark.control
     def test_ocm_state_and_state_dict(self):
         ia = pnl.ProcessingMechanism(name='IA')
