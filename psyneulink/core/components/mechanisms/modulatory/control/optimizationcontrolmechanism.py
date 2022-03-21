@@ -1271,27 +1271,14 @@ class OptimizationControlMechanism(ControlMechanism):
         of Optimization <OptimizationControlMechanism_Agent_Representation_Types>` for additional details).
 
     state_features : Dict[Node:source]
-        dictionary in which keys are Mechanism's that are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of
-        `agent_rep <OptimizationControlMechanism.agent_rep>` and/or any `nested Compositions <Composition_Nested>`
-        within it, and values are sources of input specified in **state_features**. These are provided as the inputs
-        to `state_input_ports <OptimizationControlMechanism.state_input_ports>`, the `values <InputPort.value>`
+        dictionary in which keys are all `external InputPorts <Composition_Input_External_InputPorts>` for `agent_rep
+        <OptimizationControlMechanism.agent_rep>`, and values are the sources of their input specified in
+        **state_features**. These are provided as the inputs to `state_input_ports
+        <OptimizationControlMechanism.state_input_ports>`, the `values <InputPort.value>`
         of which are assigned to `state_feature_values <OptimizationControlMechanism.state_feature_values>` and
         provided to the `agent_rep <OptimizationControlMechanism.agent_rep>`\\'s `evaluate <Composition.evaluate>`
         method when it is executed (see `state_features <OptimizationControlMechanism_State_Features_Arg>` and
         `OptimizationControlMechanism_State_Input_Ports` for additional details).
-
-        .. technical_note::
-            the state_features dict is used by the _build_predicted_inputs() method of an `agent_rep
-            <OptimizationControlMechanism>` Composition to construct inputs for its `evaluate
-            <Composition.evaluate_method>` method. Only Mechanisms are used as keys, to accommodate the possibility
-            that some but not all of the `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` of any nested
-            composition(s) are specified in the `state_features <OptimizationControlMechanism_State_Features_Arg>`
-            of the OptimizationControlMechanism's constructor, allowing _build_predicted_inputs() to identify and
-            provide defaults for any that are not specified. Accordingly, if **state_features** is not specified in
-            the constructor, and thus assigned automatically, the state_features dictionary will contain entries for
-            shadowing the InputPorts of all Mechanisms that are `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>`
-            in either `agent_rep <OptimizationControlMechanism.agent_rep>` and/or of any Compositions nested at any
-            level within it.
 
     state_feature_default : Mechanism, InputPort, OutputPort, Projection, dict, SHADOW_INPUTS, numeric value
         determines the default used if the state_feature (i.e. source) is not otherwise specified for the `InputPort`of
@@ -3262,13 +3249,9 @@ class OptimizationControlMechanism(ControlMechanism):
         #              for unspecified InputPorts if "needs_update_controller" is False
         #              - GET SOURCE OR SHADOWED SPEC
         self._update_state_features_dict()
-        agent_rep_input_ports = self._get_agent_rep_input_receivers()
-        # # MODIFIED 3/20/22 OLD:
-        # sources = [source_tuple[0] if source_tuple[0] != DEFAULT_VARIABLE else value
-        #            for source_tuple, value in self.state_feature_sources.items()]
-        # MODIFIED 3/20/22 NEW:
+        agent_rep_input_ports = self.agent_rep.external_input_ports_of_all_input_nodes
         sources = [source if source != DEFAULT_VARIABLE else source
-                   for input_node, source in self._get_state_feature_sources(source_only=True).items()]
+                   for input_node, source in self._get_state_feature_sources().items()]
         # MODIFIED 3/20/22 END
         sources = [np.array(s).tolist() if is_numeric(s) else s for s in sources]
         # FIX: USES SOURCES AS VALUES FOR DICT BELOW
@@ -3289,6 +3272,7 @@ class OptimizationControlMechanism(ControlMechanism):
             #     state_features_dict[key] = None
             # MODIFIED 3/20/22 NEW:
             spec = self.state_feature_specs[i]
+            # FIX: 3/20/22 - USE KEYS RETURNED FROM _get_state_feature_sources??
             # Assign InputPorts of INPUT Nodes of agent_rep as keys
             if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
                 key = self._specified_INPUT_Node_InputPorts_in_order[i]
@@ -3304,11 +3288,12 @@ class OptimizationControlMechanism(ControlMechanism):
         return state_features_dict
 
     # FIX: 3/20/22 - RESTORE THIS AS PROPERTY ONCE source_and_destinations IS EITHER REMOVED OR REFACTORED SIMILARLY
-    def _get_state_feature_sources(self, source_only=False):
+    def _get_state_feature_sources(self):
         """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
         source_dict = {}
         # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
         specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
+        missing_port_index = 0
         for state_index, port in enumerate(self.state_input_ports):
             if not port.path_afferents:
                 if port.default_input is DEFAULT_VARIABLE:
@@ -3320,11 +3305,57 @@ class OptimizationControlMechanism(ControlMechanism):
                     else:
                         source = DEFAULT_VARIABLE
                     # MODIFIED 3/4/22 END
-                    input_node = None
+                    # input_node = None
                     comp = None
                 else:
                     source = specified_state_features[state_index]
-                    input_node = None
+                    # input_node = None
+                    comp = None
+                input_node = f"EXPECTED INPUT NODE {missing_port_index} OF {self.agent_rep.name}"
+                missing_port_index += 1
+            else:
+                get_info_method = self.composition._get_source
+                # MODIFIED 1/8/22: ONLY ONE PROJECTION PER STATE FEATURE
+                if port.shadow_inputs:
+                    port = port.shadow_inputs
+                    if port.owner in self.composition.nodes:
+                        composition = self.composition
+                    else:
+                        composition = port.path_afferents[0].sender.owner.composition
+                    get_info_method = composition._get_destination
+                source, _, comp = get_info_method(port.path_afferents[0])
+                input_node = self._specified_INPUT_Node_InputPorts_in_order[state_index]
+            # # MODIFIED 3/20/22 OLD:
+            # source_dict.update({(source, input_node, comp, state_index):self.state[state_index]})
+            # MODIFIED 3/20/22 NEW:
+            # input_node = self._specified_INPUT_Node_InputPorts_in_order[state_index]
+            source_dict.update({input_node: source})
+            # MODIFIED 3/20/22 END
+        return source_dict
+
+
+    @property
+    def state_feature_sources(self):
+        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
+        state_dict = {}
+        # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
+        specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
+        for state_index, port in enumerate(self.state_input_ports):
+            if not port.path_afferents:
+                if port.default_input is DEFAULT_VARIABLE:
+                    # MODIFIED 3/4/22 OLD:
+                    source_port = DEFAULT_VARIABLE
+                    # # MODIFIED 3/4/22 NEW:
+                    # if self.state_feature_specs[state_index] is not None:
+                    #     source_port = self.state_feature_specs[state_index]
+                    # else:
+                    #     source_port = DEFAULT_VARIABLE
+                    # MODIFIED 3/4/22 END
+                    node = None
+                    comp = None
+                else:
+                    source_port = specified_state_features[state_index]
+                    node = None
                     comp = None
             else:
                 get_info_method = self.composition._get_source
@@ -3336,17 +3367,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     else:
                         composition = port.path_afferents[0].sender.owner.composition
                     get_info_method = composition._get_destination
-                source, input_node, comp = get_info_method(port.path_afferents[0])
-            # # MODIFIED 3/20/22 OLD:
-            # source_dict.update({(source, input_node, comp, state_index):self.state[state_index]})
-            # MODIFIED 3/20/22 NEW:
-            if source_only:
-                input_node =  self._specified_INPUT_Node_InputPorts_in_order[state_index]
-                source_dict.update({input_node: source})
-            else:
-                source_dict.update({(source, input_node, comp, state_index):self.state[state_index]})
-            # MODIFIED 3/20/22 END
-        return source_dict
+                source_port, node, comp = get_info_method(port.path_afferents[0])
+            state_dict.update({(source_port, node, comp, state_index):self.state[state_index]})
+        return state_dict
 
     @property
     def control_signal_destinations(self):
@@ -3380,7 +3403,7 @@ class OptimizationControlMechanism(ControlMechanism):
               (after it has processed the value of its afferent Projections) that determines the input to the
               state_input_port.
         """
-        sources_and_destinations = self._get_state_feature_sources()
+        sources_and_destinations = self.state_feature_sources
         sources_and_destinations.update(self.control_signal_destinations)
         return sources_and_destinations
 
