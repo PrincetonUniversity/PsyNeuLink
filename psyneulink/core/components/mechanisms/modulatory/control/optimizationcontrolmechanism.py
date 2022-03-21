@@ -3244,7 +3244,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_features(self):
-        """Return {InputPort: source} for all INPUT Nodes of agent_rep and sources specified by state_feature_specs.
+        """Return {InputPort: source} for all INPUT Nodes of agent_rep and/or ones specified in state_feature_specs.
+        If state_feature_spec is numeric for a Node, assign its value as the source
+        If existing INPUT Node is not specified in state_feature_specs, assign None as source
+        If an InputPort is referenced in state_feature_specs that is not yet in agent_rep,
+            assign "EXPECTED INPUT NODE n" as the entry for the key (where n is the sequential numbering of such refs);
+            it should be resolved by runtime, or an error is generated.
         """
         # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
         #              for unspecified InputPorts if "needs_update_controller" is False
