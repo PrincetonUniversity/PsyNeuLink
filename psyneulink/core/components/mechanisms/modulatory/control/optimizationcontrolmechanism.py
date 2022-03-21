@@ -3257,39 +3257,84 @@ class OptimizationControlMechanism(ControlMechanism):
         state_features_dict = {}
         state_input_port_num = 0
 
+        # # MODIFIED 3/21/22 OLD:
+        # # Process all state_feature_specs, that may include ones for INPUT Nodes not (yet) in agent_rep
+        # for i in range(self._num_state_feature_specs):
+        #     spec = self.state_feature_specs[i]
+        #     # this may or may not (yet) be in agent_rep
+        #     input_port = self._specified_INPUT_Node_InputPorts_in_order[i]
+        #
+        #     # Specified InputPort belongs to an INPUT Node already in agent_rep
+        #     if input_port in agent_rep_input_ports:
+        #         # Use InputPort as key of state_features dict
+        #         key = input_port
+        #
+        #         if spec is None:
+        #             # no state_input_port has been constructed, so assign source as None
+        #             source = None
+        #
+        #         elif is_numeric(spec):
+        #             # assign numeric spec as source
+        #             source = spec
+        #             # increment state_port_num, since one is implemented for numeric spec
+        #             state_input_port_num += 1
+        #
+        #         else: # spec is a Component
+        #             # so get Component that is (distal) source of Projection to state_input_port
+        #             state_input_port = self.state_input_ports[state_input_port_num]
+        #             source = self._get_state_feature_input_source(state_input_port, spec)
+        #             state_input_port_num += 1
+        #         state_features_dict[key] = source
+        #
+        #     # FIX 3/21/22 - WHAT IF SPEC IS NOT YET IN agent_rep
+        #     # Specified InputPort is not (yet) in agent_rep
+        #     else:
+        #         key = f"EXPECT {spec.full_name} IN {self.agent_rep.name}"
+        #         state_features_dict[key] = spec
+        # MODIFIED 3/21/22 NEW:
         # Process all state_feature_specs, that may include ones for INPUT Nodes not (yet) in agent_rep
         for i in range(self._num_state_feature_specs):
             spec = self.state_feature_specs[i]
             # this may or may not (yet) be in agent_rep
-            input_port = self._specified_INPUT_Node_InputPorts_in_order[i]
+            # # MODIFIED 3/21/22 OLD:
+            # input_port = self._specified_INPUT_Node_InputPorts_in_order[i]
+            # MODIFIED 3/21/22 NEW:
+            input_port = (self._specified_INPUT_Node_InputPorts_in_order[i]
+                          or self.parameters.state_feature_specs.spec[i])
+            # MODIFIED 3/21/22 END
 
-            # Specified InputPort belongs to an INPUT Node already in agent_rep
+            # Get key for state_features dict
             if input_port in agent_rep_input_ports:
-                # Use InputPort as key of state_features dict
+                # Specified InputPort belongs to an INPUT Node already in agent_rep, so use as key
                 key = input_port
+            else:
+                # Specified InputPort is not (yet) in agent_rep
+                # key = f"EXPECT {spec.full_name} IN {self.agent_rep.name}"
+                key = f"EXPECT {spec.full_name} IN {self.agent_rep.name}"
 
-                if spec is None:
-                    # no state_input_port has been constructed, so assign source as None
-                    source = None
 
-                elif is_numeric(spec):
+            # Get source for state_features dict
+            if spec is None:
+                # no state_input_port has been constructed, so assign source as None
+                source = None
+            else:
+                if is_numeric(spec):
                     # assign numeric spec as source
                     source = spec
                     # increment state_port_num, since one is implemented for numeric spec
-                    state_input_port_num += 1
-
-                else: # spec is a Component
-                    # so get Component that is (distal) source of Projection to state_input_port
+                else:
+                    # spec is a Component, so get distal source of Projection to state_input_port
+                    #    (spec if it is an OutputPort; or ??input_CIM.output_port if it spec for shadowing an input??
                     state_input_port = self.state_input_ports[state_input_port_num]
-                    source = self._get_state_feature_input_source(state_input_port, spec)
-                    state_input_port_num += 1
-                state_features_dict[key] = source
+                    if spec in self.composition._get_all_nodes():
+                        source = self._get_state_feature_input_source(state_input_port, spec)
+                        assert source == spec
+                    else:
+                        source = spec.full_name
+                state_input_port_num += 1
 
-            # FIX 3/21/22 - WHAT IF SPEC IS NOT YET IN agent_rep
-            # Specified InputPort is not (yet) in agent_rep
-            else:
-                key = f"EXPECT {spec.full_name} IN {self.agent_rep.name}"
-                state_features_dict[key] = spec
+            state_features_dict[key] = source
+        # MODIFIED 3/21/22 END
 
         return state_features_dict
 
