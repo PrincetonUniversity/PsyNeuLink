@@ -8929,10 +8929,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Input dict, with added entries for any input Nodes or Ports for which input was not provided
         """
 
-        # # FIX: 3/12/22 - NEED TO PREPROCESS PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
+        # # FIX: 3/12/22 - DOCUMENT PREPROCESSING OF PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
         # #                TO SET mech_shape FOR BELOW, AND ASSIGN FILLERS FOR ONES THAT ARE SHORT OF THE MAX LENGTH
-        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF MAX
-        # #                (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
+        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF
+        # #                MAX (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
         # #                ALSO NO NEED TO WORRY ABOUT DIFFERENCES ACROSS NODES, AS THAT TOO WILL BE TESTED THERE
 
         # Validate that keys for inputs are all legal entries

@@ -2040,8 +2040,9 @@ class OptimizationControlMechanism(ControlMechanism):
             return input_nodes
 
         # PARSE SPECS  ------------------------------------------------------------------------------------------
-        # Generate parallel lists of INPUT Nodes and corresponding feature specs (for sources of inputs)
-        def _parse_specs(state_feature_specs, spec_type="list"):
+        # Generate parallel lists of state feature specs (for sources of inputs)
+        #                            and INPUT Nodes to which they (if specified in dict or set format)
+        def _parse_specs(state_feature_specs, input_ports=None, spec_type="list"):
             """Validate and parse INPUT Node specs assigned to construct state_feature_specs
             Validate number and identity of specs relative to agent_rep INPUT Nodes.
             Assign spec for every INPUT Mechanism (nested) within agent_rep (i.e., for all nested Compositions)
@@ -2050,7 +2051,9 @@ class OptimizationControlMechanism(ControlMechanism):
             """
             parsed_feature_specs = []
             num_specs = len(state_feature_specs)
-            num_ports = len(agent_rep_input_ports)
+            num_ports = len(input_ports)
+            assert num_specs == num_ports
+            num_agent_rep_input_ports = len(agent_rep_input_ports)
 
             if self.agent_rep_type == COMPOSITION:
 
@@ -2058,7 +2061,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 #               ALSO, WARNING IS TRIGGERED IF MECHANIMS RATHER THAN ITS INPUT_PORTS ARE SPEC'D
                 #              AT THE LEAST, MOVE TO THEIR OWN VALIDATION HELPER METHOD
                 # Too FEW specs for number of agent_rep receivers
-                if len(self.state_feature_specs) < num_ports:
+                if len(self.state_feature_specs) < num_agent_rep_input_ports:
                     warnings.warn(f"There are fewer '{STATE_FEATURES}' specified for '{self.name}' than the number "
                                   f"of {InputPort.__name__}'s for all of the INPUT Nodes of its {AGENT_REP} "
                                   f"('{self.agent_rep.name}'); the remaining inputs will be assigned default values "
@@ -2067,7 +2070,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                   f"inputs.")
 
                 # Too MANY specs for number of agent_rep receivers
-                if num_specs > num_ports:
+                if num_specs > num_agent_rep_input_ports:
                     # specs_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
                     #                           for spec in self._get_specs_not_in_agent_rep(state_feature_specs)]
                     specs_not_in_agent_rep = \
@@ -2079,7 +2082,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         warnings.warn(
                             f"The '{STATE_FEATURES}' specified for {self.name} is associated with a number of "
                             f"{InputPort.__name__}s ({len(state_feature_specs)}) that is greater than for the "
-                            f"{InputPort.__name__}s of the INPUT Nodes ({num_ports}) for the "
+                            f"{InputPort.__name__}s of the INPUT Nodes ({num_agent_rep_input_ports}) for the "
                             f"Composition assigned as its {AGENT_REP} ('{self.agent_rep.name}'), which includes "
                             f"the following that are not (yet) in '{self.agent_rep.name}': {spec_type}. Executing "
                             f"{self.name} before the additional item(s) are added as (part of) INPUT Nodes will "
@@ -2088,7 +2091,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         warnings.warn(
                             f"The '{STATE_FEATURES}' specified for {self.name} is associated with a number of "
                             f"{InputPort.__name__}s ({len(state_feature_specs)}) that is greater than for the "
-                            f"{InputPort.__name__}s of the INPUT Nodes ({num_ports}) for the "
+                            f"{InputPort.__name__}s of the INPUT Nodes ({num_agent_rep_input_ports}) for the "
                             f"Composition assigned as its {AGENT_REP} ('{self.agent_rep.name}'). Executing "
                             f"{self.name} before the additional item(s) are added as (part of) INPUT Nodes will "
                             f"generate an error.")
@@ -2104,7 +2107,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"shadowed.")
 
             spec_names = []
-            self._num_state_feature_specs = max(num_specs, num_ports)
+            self._num_state_feature_specs = max(num_specs, num_agent_rep_input_ports)
             for i in range(self._num_state_feature_specs):
 
                 # PORT & PORT_NAME
@@ -2113,19 +2116,23 @@ class OptimizationControlMechanism(ControlMechanism):
                 state_feature_fct = None
                 if self.agent_rep_type == COMPOSITION:
                     # Process number of specs for which there are known INPUT Ports of agent_rep
-                    if i < num_ports:
+                    if i < num_agent_rep_input_ports:
                         # Just get port and port name (spec will be parsed and assigned below)
                         # Node should be in agent_rep, so use that to be sure
                         if self.agent_rep_type == COMPOSITION:
                             port = agent_rep_input_ports[i]
                         port_name = port.full_name
-                    # For Nodes not (yet) in agent_rep, so
+                    # For Nodes not (yet) in agent_rep:
                     else:
                         # - get specified value for spec, for later parsing and assignment (once Node is known)
                         spec = state_feature_specs[i]
-                        port = None
+                        # # MODIFIED 3/21/22 OLD:
+                        # port = None
+                        # MODIFIED 3/21/22 NEW:
+                        port = f"DEFERRED {input_ports[i].full_name} (NOT YET IN {self.agent_rep.name})"
+                        # MODIFIED 3/21/22 END
                         # - assign "DEFERRED n" as node name
-                        port_name = f'DEFFERED {str(i-num_ports)}'
+                        port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
                 # For CompositionFunctionApproximator, assign spec as port
                 else:
                     spec = state_feature_specs[i]
@@ -2182,7 +2189,9 @@ class OptimizationControlMechanism(ControlMechanism):
             specs = [user_specs] * len(agent_rep_input_ports)
             # OK to assign here (rather than in _parse_secs()) since spec is intended for *all* state_input_ports
             self.parameters.state_feature_specs.set(specs, override=True)
-            input_port_names = _parse_specs(specs, 'list')
+            input_port_names = _parse_specs(state_feature_specs=specs,
+                                            input_ports=agent_rep_input_ports,
+                                            spec_type='list')
 
         # LIST OR SHADOW_INPUTS DICT: source specs
         # Source specs but not INPUT Nodes specified; spec is either:
@@ -2229,7 +2238,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 specs = user_specs[SHADOW_INPUTS]
                 spec_type = f"{SHADOW_INPUTS.upper()} dict"
 
-            input_port_names = _parse_specs(specs, spec_type)
+            input_port_names = _parse_specs(state_feature_specs=specs,
+                                            input_ports=agent_rep_input_ports,
+                                            spec_type=spec_type)
 
         # FIX: 2/25/22 - ?ITEMS IN set ARE SHADOWED, BUT UNSPECIFIED ITEMS IN SET AND DICT ARE ASSIGNED DEFAULT VALUES
         # SET OR DICT: specification by INPUT Nodes
@@ -2280,7 +2291,12 @@ class OptimizationControlMechanism(ControlMechanism):
                     expanded_dict_with_ports.update({port:user_specs[spec] for port in ports})
 
             # # Get specified ports in order of agent_rep INPUT Nodes, with None assigned to any unspecified InputPorts
+            # MODIFIED 3/21/22 OLD:
             all_specified_ports = [port if port in expanded_specified_ports else None for port in agent_rep_input_ports]
+            # # MODIFIED 3/21/22 NEW:
+            # all_specified_ports = [port if port in expanded_specified_ports
+            #                        else port.full_name for port in agent_rep_input_ports]
+            # MODIFIED 3/21/22 END
             # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
             all_specified_ports.extend([port for port in expanded_specified_ports if port not in agent_rep_input_ports])
 
@@ -2291,10 +2307,17 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Pass values from user_spec dict to be parsed;
                 #    corresponding ports are safely in all_specified_ports
                 #    unspecified ports are assigned state_feature_default per requirements of list format
-                specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports
+                # # MODIFIED 3/21/22 OLD:
+                # specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports
+                #          else self.state_feature_default for port in all_specified_ports]
+                # MODIFIED 3/21/22 NEW:
+                specs = [expanded_dict_with_ports[port] if not port is not None and port in all_specified_ports
                          else self.state_feature_default for port in all_specified_ports]
+                # MODIFIED 3/21/22 END
 
-            input_port_names = _parse_specs(specs)
+            input_port_names = _parse_specs(state_feature_specs=specs,
+                                            input_ports=list(all_specified_ports),
+                                            spec_type='dict')
 
         else:
             assert False, f"PROGRAM ERROR: Unanticipated type specified for '{STATE_FEATURES}' arg of '{self.name}: " \
