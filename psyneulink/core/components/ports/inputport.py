@@ -39,10 +39,10 @@ and provide them to the Mechanism's `function <Mechanism_Base.function>`. An Inp
 provided by the `Projections <Projection>` to that Mechanism from others in a `Composition`.  If the InputPort belongs
 to an `ORIGIN` Mechanism (see `Mechanism_Role_In_Compositions`), then it receives the input specified when that
 Composition is `run <Run>`.  The `PathwayProjections <PathWayProjection>` received by an InputPort are listed in its
-`path_afferents <Port.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its `mod_afferents
-<Port.mod_afferents>` attribute.  Its `function <InputPort.function>` combines the values received from its
-PathWayProjections, modifies the combined value according to value(s) any ModulatoryProjections it receives, and
-provides the result to the assigned item of its owner Mechanism's `variable <Mechanism_Base.variable>` and
+`path_afferents <Port_Base.path_afferents>`, and its `ModulatoryProjections <ModulatoryProjection>` in its
+`mod_afferents <Port_Base.mod_afferents>` attribute.  Its `function <InputPort.function>` combines the values received
+from its PathWayProjections, modifies the combined value according to value(s) any ModulatoryProjections it receives,
+and provides the result to the assigned item of its owner Mechanism's `variable <Mechanism_Base.variable>` and
 `input_values <Mechanism_Base.input_values>` attributes (see `below` and `Mechanism InputPorts <Mechanism_InputPorts>`
 for additional details about the role of InputPorts in Mechanisms, and their assignment to the items of a Mechanism's
 `variable <Mechanism_Base.variable>` attribute).
@@ -80,7 +80,7 @@ If the **owner** argument is not specified, `initialization <Port_Deferred_Initi
 
 An InputPort must be owned by a `Mechanism <Mechanism>`.  When InputPort is specified in the constructor for a
 Mechanism (see `below <InputPort_Specification>`), it is automatically assigned to that Mechanism as its owner. If
-the InputPort is created on its own, its `owner <Port.owner>` can specified in the **owner**  argument of its
+the InputPort is created on its own, its `owner <Port_Base.owner>` can specified in the **owner**  argument of its
 constructor, in which case it is assigned to that Mechanism. If its **owner** argument is not specified, its
 initialization is `deferred <Port_Deferred_Initialization>` until
 COMMENT:
@@ -144,7 +144,6 @@ the context in which it is being created, such as the specification for its owne
 <Mechanism_Base.variable>` or for the InputPort in the Mechanism's **input_ports** argument (see `below
 <InputPort_Forms_of_Specification>` and `Mechanism InputPort specification <Mechanism_InputPort_Specification>`
 for details).
-
 
 Adding InputPorts to a Mechanism after it is created
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -253,8 +252,8 @@ should project to the InputPort. Each of these is described below:
     An InputPort can also be specified by specifying one or more Ports, Mechanisms or Projections that should project
     to it, as described below.  Specifying an InputPort in this way creates both the InputPort and any of the
     specified or implied Projection(s) to it (if they don't already exist). `MappingProjections <MappingProjection>`
-    are assigned to the InputPort's `path_afferents <Port.path_afferents>` attribute, while `ControlProjections
-    <ControlProjection>` and `GatingProjections <GatingProjection>` to its `mod_afferents <Port.mod_afferents>`
+    are assigned to the InputPort's `path_afferents <Port_Base.path_afferents>` attribute, while `ControlProjections
+    <ControlProjection>` and `GatingProjections <GatingProjection>` to its `mod_afferents <Port_Base.mod_afferents>`
     attribute. Any of the following can be used to specify an InputPort by the Components that projection to it (see
     `below <InputPort_Compatability_and_Constraints>` for an explanation of the relationship between the `value` of
     these Components and the InputPort's `variable <InputPort.variable>`):
@@ -292,12 +291,12 @@ should project to the InputPort. Each of these is described below:
             * **value, Port specification, or list of Port specifications** -- specifies either the `variable
               <InputPort.variable>` of the InputPort, or one or more Ports that should project to it.  The Port
               specification(s) can be a (Port name, Mechanism) tuple (see above), and/or include Mechanisms (in which
-              case their `primary OutputPort <OutputPortPrimary>` is used.  All of the Port specifications must be
+              case their `primary OutputPort <OutputPort_Primary>` is used.  All of the Port specifications must be
               consistent with (that is, their `value <Port_Base.value>` must be compatible with the `variable
               <Projection_Base.variable>` of) the Projection specified in the fourth item if that is included;
 
             * **weight** -- must be an integer or a float; multiplies the `value <InputPort.value>` of the InputPort
-              before it is combined with others by the Mechanism's `function <Mechanism.function>` (see
+              before it is combined with others by the Mechanism's `function <Mechanism_Base.function>` (see
               ObjectiveMechanism for `examples <ObjectiveMechanism_Weights_and_Exponents_Example>`);
 
             * **exponent** -- must be an integer or float; exponentiates the `value <InputPort.value>` of the
@@ -348,9 +347,9 @@ should project to the InputPort. Each of these is described below:
          one of two ways:  1) by assigning it `INPUT <NodeRole.INPUT>` as a `required NodeRole
          <Composition_Node_Role_Assignment>` where it is added to the nested Composition; and/or 2) by doing the
          following: a) add a Mechanism to the nested Composition with an InputPort that shadows the one to be
-         shadowed; b) specify `OUTPUT <NodeRole.INPUT>` as a `required_role <Composition.add_node.required_roles>`
-         for that Mechanism;  c) use that Mechanism as the `InputPort specification <InputPort_Specification>`
-         for the shadowing InputPort.
+         shadowed; b) specify `INPUT <NodeRole.INPUT>` in the **required_roles** argument of the Composition's
+         `Composition.add_node` method used to add that Mechanism to the Composition;  c) use that Mechanism as the
+         `InputPort specification <InputPort_Specification>` for the shadowing InputPort.
 
       .. _InputPort_Shadow_Inputs_Figures:
 
@@ -397,10 +396,10 @@ InputPort `variable <InputPort.variable>`: Compatibility and Constraints
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The `variable <InputPort.variable>` of an InputPort must be compatible with the item of its owner Mechanism's
-`variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism_Variable_and_InputPorts`). This may
-have consequences that must be taken into account when `specifying an InputPort by Components that project to it
-<InputPort_Projection_Source_Specification>`.  These depend on the context in which the specification is made, and
-possibly the value of other specifications.  These considerations and how they are handled are described below,
+`variable <Mechanism_Base.variable>` to which it is assigned (see `Mechanism <Mechanism_Variable_and_InputPorts>`).
+This may have consequences that must be taken into account when `specifying an InputPort by Components that project
+to it <InputPort_Projection_Source_Specification>`.  These depend on the context in which the specification is made,
+and possibly the value of other specifications.  These considerations and how they are handled are described below,
 starting with constraints that are given the highest precedence:
 
   *  **InputPort is** `specified in a Mechanism's constructor <Mechanism_InputPort_Specification>` and the
@@ -476,9 +475,9 @@ Structure
 ---------
 
 Every InputPort is owned by a `Mechanism <Mechanism>`. It can receive one or more `MappingProjections
-<MappingProjection>` from other Mechanisms, as well as from the Process or System to which its owner belongs (if it
-is the `ORIGIN` Mechanism for that Process or System).  It has the following attributes, that includes ones specific
-to, and that can be used to customize the InputPort:
+<MappingProjection>` from other Mechanisms or itself (e.g., `RecurrentTransferMechanism`), as well as from the
+Composition to which its owner belongs (if it is the `ORIGIN` Mechanism for that Process or System).  It has the
+following attributes, that includes ones specific to, and that can be used to customize the InputPort:
 
 * `projections <Port_Base.projections>` -- all of the `Projections <Projection>` received by the InputPort.
 
@@ -486,14 +485,24 @@ to, and that can be used to customize the InputPort:
 
 * `path_afferents <Port_Base.path_afferents>` -- `MappingProjections <MappingProjection>` that project to the InputPort,
   the `value <Projection_Base.value>`\\s of which are combined by the InputPort's `function <InputPort.function>`,
-  possibly modified by its `mod_afferents <InputPort_mod_afferents>`, and assigned to the corresponding item of the
-  owner Mechanism's `variable <Mechanism_Base.variable>`.
+  possibly `modulated <ModulatorySignal_Modulation>` by one or more `mod_afferent <Port_Base.mod_afferents>`
+  `GatingProjections <GatingProjection>`, and assigned to the corresponding item of the owner Mechanism's
+  `variable <Mechanism_Base.variable>`.
 
-* `mod_afferents <InputPort_Afferent_Projections>` -- `GatingProjections <GatingProjection>` that project to the
+* `mod_afferents <Port_Base.mod_afferents>` -- `GatingProjections <GatingProjection>` that project to the
   InputPort, the `value <GatingProjection.value>` of which can modify the InputPort's `value <InputPort.value>`
   (see the descriptions of Modulation under `ModulatorySignals <ModulatorySignal_Modulation>` and `GatingSignals
   <GatingSignal_Modulation>` for additional details).  If the InputPort receives more than one GatingProjection,
   their values are combined before they are used to modify the `value <InputPort.value>` of InputPort.
+
+  .. _InputPort_Internal_Only:
+
+* `internal_only <InputPort.internal_only>` -- specifies whether an InputPort that belongs to an `INPUT
+  <NodeRole.INPUT>` `Node <Composition_Nodes>` of a `Composition` receives `Projections <Projection>` *only from*
+  other `Nodes <Composition_Nodes>` *within* the Composition to which its `owner <Port_Base.owner>` belongs; such
+  InputPorts do not receive any `external inputs <Composition_Execution_Inputs>` to that Composition when it is
+  `executed <Composition_Execution>` (see `Composition inputs <Composition_Input_External_InputPorts>`
+  for additional information).
 
 .. _InputPort_Variable:
 
@@ -504,8 +513,8 @@ to, and that can be used to customize the InputPort:
   <Mechanism_Base.variable>` to which the InputPort is assigned (see `above <InputPort_Variable_and_Value>` and
   `Mechanism InputPort specification <Mechanism_InputPort_Specification>`).  The InputPort's `variable
   <InputPort.variable>` is composed of the concatenated `values <Projection_Base.value>` of its `path_afferent
-  <Port_Base.path_afferent>` Projections.  If it has none, then the `variable <InputPort.variable>` is either assigned
-  None or its `default value <Parameter_Defaults>`, as determined by its `default_input <InputPport.default_input>`
+  <Port_Base.path_afferents>` Projections.  If it has none, then the `variable <InputPort.variable>` is either assigned
+  None or its `default value <Parameter_Defaults>`, as determined by its `default_input <InputPort.default_input>`
   setting.
 
 .. _InputPort_Function:
@@ -513,9 +522,9 @@ to, and that can be used to customize the InputPort:
 * `function <InputPort.function>` -- combines the `value <Projection_Base.value>` of all of the
   `Projections <Projection>` received by the InputPort, and assigns the result to the InputPort's `value
   <InputPort.value>` attribute.  The default function is `LinearCombination` that performs an elementwise (Hadamard)
-  sums the values. However, the parameters of the `function <InputPort.function>` -- and thus the `value
+  sums the values. However, the parameters of the `function <InputPort.function>` -- and thus the `value
   <InputPort.value>` of the InputPort -- can be modified by any `GatingProjections <GatingProjection>` received by
-  the InputPort (listed in its `mod_afferents <Port.mod_afferents>` attribute.  A custom function can also be
+  the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>` attribute.  A custom function can also be
   specified, so long as it generates a result that is compatible with the item of the Mechanism's `variable
   <Mechanism_Base.variable>` to which the `InputPort is assigned <Mechanism_InputPorts>`.
 
@@ -685,7 +694,7 @@ class InputPort(Port_Base):
         specifies the value of the `exponent <InputPort.exponent>` attribute of the InputPort.
 
     internal_only : bool : False
-        specifies whether the InputPort requires external input when its `owner <Port.owner>` is the `INPUT`
+        specifies whether the InputPort requires external input when its `owner <Port_Base.owner>` is the `INPUT`
         `Node <Composition_Nodes>` of a `Composition (see `internal_only <InputPort.internal_only>` for details).
 
     Attributes
@@ -700,7 +709,7 @@ class InputPort(Port_Base):
 
     default_input : None or DEFAULT_VARIABLE
         determines the value used as `variable <InputPort.variable>` if the InputPort has no `path_afferent
-        <Port.path_afferent>` `Projections <Projection>`. If None (the default), then None is used. This is the
+        <Port_Base.path_afferent>` `Projections <Projection>`. If None (the default), then None is used. This is the
         default behavior, as it is useful for identifying "orphaned" InputPorts (i.e., ones that do not receive
         any inputs) and the `Mechanisms <Mechanism>` to which they belong, as an error is returned if an InputPort
         is executed and its variable is assigned None. If *default_input* is assigned *DEFAULT_VARIABLE*, then the
@@ -710,7 +719,7 @@ class InputPort(Port_Base):
 
         .. note::
            If `default_input <InputPort.default_input>` is assigned *DEFAULT_VARIABLE*, then its `internal_only
-           <InputPort.internal_only>` attribute is automtically assigned True. This is so that if the `Mechanism`
+           <InputPort.internal_only>` attribute is automatically assigned True. This is so that if the `Mechanism`
            to which the InputPort belongs is assigned to a `Composition`, it is not treated as an `ORIGIN
            <NodeRole.ORIGIN>` `Node <Composition_Nodes>` of that Composition (and automatically assigned a Projection
            from its `input_CIM <Composition.input_CIM>`.
@@ -720,20 +729,21 @@ class InputPort(Port_Base):
         expected for any `path_afferent Projections <Port_Base.path_afferents>`.
 
     function : Function
-        if it is a `CombinationFunction`, it combines the `values <Projection_Base.value>` of the `PathwayProjections
-        <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the InputPort  (listed in
-        its `path_afferents <Port_Base.path_afferents>` attribute), under the possible influence of `GatingProjections
-        <GatingProjection>` received by the InputPort (listed in its `mod_afferents <Port_Base.mod_afferents>`
-        attribute). The result is assigned to the InputPort's `value <InputPort.value>` attribute. For example, the
-        the default (`LinearCombination` with *SUM* as it **operation**) performs an element-wise (Hadamard) sum of its
-        Projection `values <Projection_Base.value>`, and assigns to `value <InputPort.value>` an array that is of the
-        same length as each of the Projection `values <Projection_Base.value>`.  If the InputPort receives only one
-        Projection, then any other function can be applied and it will generate a value that is the same length as the
-        Projection's `value <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
+        if it is a `CombinationFunction <CombinationFunctions>`, it combines the `values <Projection_Base.value>` of
+        the `PathwayProjections <PathwayProjection>` (e.g., `MappingProjections <MappingProjection>`) received by the
+        InputPort  (listed in its `path_afferents <Port_Base.path_afferents>` attribute), under the possible
+        influence of `GatingProjections <GatingProjection>` received by the InputPort (listed in its `mod_afferents
+        <Port_Base.mod_afferents>` attribute). The result is assigned to the InputPort's `value <InputPort.value>`
+        attribute. For example, the the default (`LinearCombination` with *SUM* as it **operation**) performs an
+        element-wise (Hadamard) sum of its Projection `values <Projection_Base.value>`, and assigns to `value
+        <InputPort.value>` an array that is of the same length as each of the Projection `values
+        <Projection_Base.value>`.  If the InputPort receives only one Projection, then any other function can be
+        applied and it will generate a value that is the same length as the Projection's `value
+        <Projection_Base.value>`. However, if the InputPort receives more than one Projection and
         uses a function other than a CombinationFunction, a warning is generated and only the `value
-        <Projection_Base.value>` of the first Projection list in `path_afferents <Port_Base.path_afferents>` is used
-        by the function, which may generate unexpected results when executing the Mechanism or Composition to which it
-        belongs.
+        <Projection_Base.value>` of the first Projection list in `path_afferents <Port_Base.path_afferents>`
+        is used by the function, which may generate unexpected results when executing the Mechanism or Composition
+        to which it belongs.
 
     value : value or ndarray
         the output of the InputPort's `function <InputPort.function>`, that is assigned to an item of the owner
@@ -893,7 +903,7 @@ class InputPort(Port_Base):
         if default_input == DEFAULT_VARIABLE:
             internal_only = True
 
-        # If owner or reference_value has not been assigned, defer init to Port._instantiate_projection()
+        # If owner or reference_value has not been assigned, defer init to Port_Base._instantiate_projection()
         # if owner is None or (variable is None and reference_value is None and projections is None):
         if owner is None:
             # Temporarily name InputPort
@@ -1004,7 +1014,7 @@ class InputPort(Port_Base):
                                      f"({ target_set[EXPONENT]}) must be an int or float.")
 
     def _validate_against_reference_value(self, reference_value):
-        """Validate that Port.value is compatible with reference_value
+        """Validate that Port_Base.value is compatible with reference_value
 
         reference_value is the item of the owner Mechanism's variable to which the InputPort is assigned
         """
