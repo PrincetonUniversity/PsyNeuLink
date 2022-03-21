@@ -3244,67 +3244,93 @@ class OptimizationControlMechanism(ControlMechanism):
 
     @property
     def state_features(self):
-        """Return {InputPort: source} for all INPUT Nodes of agent_rep and sources specified by state_feature_specs.
+        """Return {InputPort: source} for all INPUT Nodes of agent_rep and/or ones specified in state_feature_specs.
+        If state_feature_spec is numeric for a Node, assign its value as the source
+        If existing INPUT Node is not specified in state_feature_specs, assign None as source
+        If an InputPort is referenced in state_feature_specs that is not yet in agent_rep,
+            assign "EXPECTED INPUT NODE n" as the entry for the key (where n is the sequential numbering of such refs);
+            it should be resolved by runtime, or an error is generated.
         """
+
+        # # MODIFIED 3/21/22 OLD:
+        # # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
+        # #              for unspecified InputPorts if "needs_update_controller" is False
+        # #              - GET SOURCE OR SHADOWED SPEC
+        # self._update_state_features_dict()
+        # agent_rep_input_ports = self.agent_rep.external_input_ports_of_all_input_nodes
+        # sources = [np.array(s).tolist() if is_numeric(s) else s
+        #            for s in list(self._get_state_feature_sources().values())]
+        # # FIX: USES SOURCES AS VALUES FOR DICT BELOW
+        # state_features_dict = {}
+        # # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
+        # j = 0
+        # for i in range(self._num_state_feature_specs):
+        #     spec = self.state_feature_specs[i]
+        #     # FIX: 3/20/22 - USE KEYS RETURNED FROM _get_state_feature_sources??
+        #     # Assign InputPorts of INPUT Nodes of agent_rep as keys
+        #     if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
+        #         key = self._specified_INPUT_Node_InputPorts_in_order[i]
+        #     else:
+        #         key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
+        #     if spec is not None:
+        #         state_features_dict[key] = sources[j]
+        #         j += 1
+        #     else:
+        #         state_features_dict[key] = spec
+        #
+        # return state_features_dict
+
+        # MODIFIED 3/21/22 NEW:
         # FIX: 3/4/22 - REPLACE "EXPECTED" IN KEY WITH "DEFAULT VALUE FOR <INPUT PORT FULL_NAME>"
         #              for unspecified InputPorts if "needs_update_controller" is False
         #              - GET SOURCE OR SHADOWED SPEC
         self._update_state_features_dict()
         agent_rep_input_ports = self.agent_rep.external_input_ports_of_all_input_nodes
-        sources = [np.array(s).tolist() if is_numeric(s) else s
-                   for s in list(self._get_state_feature_sources().values())]
         # FIX: USES SOURCES AS VALUES FOR DICT BELOW
         state_features_dict = {}
         # Use num_state_feature_specs here instead of num_state_input_ports as there may be some "null" (None) specs
-        j = 0
+        existing_port_num = missing_port_num = 0
         for i in range(self._num_state_feature_specs):
             spec = self.state_feature_specs[i]
             # FIX: 3/20/22 - USE KEYS RETURNED FROM _get_state_feature_sources??
+            input_port = self._specified_INPUT_Node_InputPorts_in_order[i]
             # Assign InputPorts of INPUT Nodes of agent_rep as keys
-            if self._specified_INPUT_Node_InputPorts_in_order[i] in agent_rep_input_ports:
-                key = self._specified_INPUT_Node_InputPorts_in_order[i]
+            if input_port in agent_rep_input_ports:
+                # Specified INPUT Node is in agent_rep and state_input_port has been constructed for it, so get source
+                state_features_dict[input_port] = \
+                    self._get_state_feature_source(self.state_input_ports[existing_port_num], spec)
+                existing_port_num += 1
             else:
-                key = f"EXPECTED INPUT NODE {i} OF {self.agent_rep.name}"
-            if spec is not None:
-                state_features_dict[key] = sources[j]
-                j += 1
-            else:
+                key = f"EXPECTED INPUT NODE {missing_port_num} OF {self.agent_rep.name}"
                 state_features_dict[key] = spec
+                missing_port_num += 1
 
         return state_features_dict
+        # MODIFIED 3/21/22 END
 
     # FIX: 3/20/22 - RESTORE THIS AS PROPERTY ONCE source_and_destinations IS EITHER REMOVED OR REFACTORED SIMILARLY
-    def _get_state_feature_sources(self):
+    def _get_state_feature_source(self, input_port, spec):
         """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
-        source_dict = {}
-        # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
-        specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
-        missing_port_index = 0
-        for state_index, port in enumerate(self.state_input_ports):
-            if not port.path_afferents:
-                if port.default_input is DEFAULT_VARIABLE:
-                    if specified_state_features[state_index] is not None:
-                        source = specified_state_features[state_index]
-                    else:
-                        source = DEFAULT_VARIABLE
+        if input_port.path_afferents:
+            get_info_method = self.composition._get_source
+            # FIX: 1/8/22: ASSUMES ONLY ONE PROJECTION PER STATE FEATURE
+            if input_port.shadow_inputs:
+                port = input_port.shadow_inputs
+                if port.owner in self.composition.nodes:
+                    composition = self.composition
                 else:
-                    source = specified_state_features[state_index]
-                input_node = f"EXPECTED INPUT NODE {missing_port_index} OF {self.agent_rep.name}"
-                missing_port_index += 1
+                    composition = port.path_afferents[0].sender.owner.composition
+                get_info_method = composition._get_destination
+            source, _, comp = get_info_method(input_port.path_afferents[0])
+        else:
+            if input_port.default_input is DEFAULT_VARIABLE:
+                if spec is not None:
+                    source = spec
+                else:
+                    source = DEFAULT_VARIABLE
             else:
-                get_info_method = self.composition._get_source
-                # FIX: 1/8/22: ASSUMES ONLY ONE PROJECTION PER STATE FEATURE
-                if port.shadow_inputs:
-                    port = port.shadow_inputs
-                    if port.owner in self.composition.nodes:
-                        composition = self.composition
-                    else:
-                        composition = port.path_afferents[0].sender.owner.composition
-                    get_info_method = composition._get_destination
-                source, _, comp = get_info_method(port.path_afferents[0])
-                input_node = self._specified_INPUT_Node_InputPorts_in_order[state_index]
-            source_dict.update({input_node: source})
-        return source_dict
+                source = spec
+        return source
 
     @property
     def state_feature_sources(self):
