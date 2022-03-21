@@ -3277,7 +3277,6 @@ class OptimizationControlMechanism(ControlMechanism):
     def _get_state_feature_sources(self):
         """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
         source_dict = {}
-        # FIX: 3/4/22 - THIS NEEDS TO HANDLE BOTH state_input_ports BUT ALSO state_feature_values FOR WHICH THERE ARE NO INPUTPORTS
         specified_state_features = [spec for spec in self.state_feature_specs if spec is not None]
         missing_port_index = 0
         for state_index, port in enumerate(self.state_input_ports):
