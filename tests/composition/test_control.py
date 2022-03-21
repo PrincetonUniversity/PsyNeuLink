@@ -143,10 +143,7 @@ class TestControlSpecification:
 
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
-    @pytest.mark.parametrize("state_features_arg", [
-        'list',
-        'dict'
-    ])
+    @pytest.mark.parametrize("state_features_arg", ['list','dict'])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
@@ -214,8 +211,8 @@ class TestControlSpecification:
         assert any(expected_warning in repr(w.message) for w in warning.list)
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
-        assert comp.controller.state_features == {'EXPECTED INPUT NODE 0 OF evc': (reward.input_port),
-                                                  'EXPECTED INPUT NODE 1 OF evc': (Input.input_port)}
+        assert comp.controller.state_features == {'EXPECT reward[InputPort-0] IN evc': (reward.input_port),
+                                                   'EXPECT Input[InputPort-0] IN evc': (Input.input_port)}
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -285,12 +282,7 @@ class TestControlSpecification:
                                        err_msg='Failed on expected_output[{0}]'.format(trial))
 
     @pytest.mark.state_features
-    @pytest.mark.parametrize('state_features_option', [
-        'list',
-        'set',
-        'dict',
-        'shadow_inputs_dict'
-    ])
+    @pytest.mark.parametrize('state_features_option', ['list','set','dict','shadow_inputs_dict'])
     def test_partial_deferred_init(self, state_features_option):
         initial_node_a = pnl.TransferMechanism(name='ia')
         initial_node_b = pnl.ProcessingMechanism(name='ib')
@@ -339,7 +331,7 @@ class TestControlSpecification:
                 ])
         )
         assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
-                                                   'EXPECTED INPUT NODE 1 OF ocomp':deferred_node.input_port}
+                                                   'EXPECT deferred[InputPort-0] IN ocomp':deferred_node.input_port}
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             # expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
