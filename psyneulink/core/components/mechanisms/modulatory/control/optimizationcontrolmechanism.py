@@ -1107,41 +1107,24 @@ def _state_feature_values_getter(owning_component=None, context=None):
         # Get key
         if not isinstance(key, InputPort):
             # INPUT Node InputPort is not fully or properly specified
-            # MODIFIED 3/21/22 OLD:
-            # key = f"DEFERRED {key or str(i-num_agent_rep_input_ports)} OF {owning_component.agent_rep.name}"
-            # MODIFIED 3/21/22 NEW:
             key = deferred_state_feature_node_msg((key or str(i-num_agent_rep_input_ports)),
                                                   owning_component.agent_rep.name)
-            # MODIFIED 3/21/22 END
         elif key not in owning_component._get_agent_rep_input_receivers():
             # INPUT Node InputPort is not (yet) in agent_rep
-            # # MODIFIED 3/21/22 OLD:
-            # key = f"DEFERRED {key.full_name} OF {owning_component.agent_rep.name}"
-            # MODIFIED 3/21/22 NEW:
             key = deferred_state_feature_node_msg(key.full_name, owning_component.agent_rep.name)
-            # MODIFIED 3/21/22 END
 
         # Get state_feature_value
         if spec is None:
             # state_feature not specified; default input will be assigned in _instantiate_input_dict()
-            # # MODIFIED 3/21/22 OLD:
-            # state_feature_value = f"NO SPECIFICATION (YET) FOR {key if isinstance(key, str) else key.full_name} " \
-            #                       f"OF {owning_component.agent_rep.name}"
-            # MODIFIED 3/21/22 NEW:
             state_feature_value = not_specified_state_feature_spec_msg((key if isinstance(key, str) else key.full_name),
                                                                        owning_component.composition.name)
         elif is_numeric(spec):
             # if spec is numeric, use that
             state_feature_value = state_input_port.function(spec)
-            # MODIFIED 3/21/22 END
         elif (hasattr(owning_component, 'composition')
               and spec.owner not in owning_component.composition._get_all_nodes()):
             # spec is not in ocm.composition
-            # # MODIFIED 3/21/22 OLD:
-            # state_feature_value = f"{spec.full_name} NOT (YET) IN {owning_component.agent_rep.name}"
-            # MODIFIED 3/21/22 NEW:
             state_feature_value = deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
-            # MODIFIED 3/21/22 END
         elif state_input_port.parameters.value._get(context) is not None:
             # if state_input_port returns a value, use that
             state_feature_value = state_input_port.parameters.value._get(context)
@@ -2166,13 +2149,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     else:
                         # - get specified value for spec, for later parsing and assignment (once Node is known)
                         spec = state_feature_specs[i]
-                        # # MODIFIED 3/21/22 OLD:
-                        # port = None
-                        # # MODIFIED 3/21/22 NEW:
-                        # port = f"DEFERRED {specified_input_ports[i].full_name} (NOT YET IN {self.agent_rep.name})"
-                        # MODIFIED 3/21/22 NEWER: # FIX: ?? ASSIGN DEFERRED AGENT_REP INPUTPORT NAME HERE
                         port = specified_input_ports[i]
-                        # MODIFIED 3/21/22 END
                         # - assign "DEFERRED n" as node name
                         state_input_port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
                 # For CompositionFunctionApproximator, assign spec as port
@@ -2347,13 +2324,8 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Pass values from user_spec dict to be parsed;
                 #    corresponding ports are safely in all_specified_ports
                 #    unspecified ports are assigned state_feature_default per requirements of list format
-                # MODIFIED 3/21/22 OLD:
                 specs = [expanded_dict_with_ports[port] if port is not None and port in all_specified_ports
                          else self.state_feature_default for port in all_specified_ports]
-                # # MODIFIED 3/21/22 NEW:
-                # specs = [expanded_dict_with_ports[port] if not port is not None and port in all_specified_ports
-                #          else self.state_feature_default for port in all_specified_ports]
-                # MODIFIED 3/21/22 END
 
             state_input_port_names = _parse_specs(state_feature_specs=specs,
                                                   specified_input_ports=list(all_specified_ports),
@@ -2508,11 +2480,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 node = None
             if not (isinstance(node, str) and 'DEFERRED' in node):
                 continue
-            # # MODIFIED 3/21/22 OLD:
-            # if feature.owner not in self._get_agent_rep_input_receivers(comp_as_node=ALL):
-            # MODIFIED 3/21/22 NEW:
             if feature.owner not in self._get_agent_rep_input_receivers():
-            # MODIFIED 3/21/22 END
                 # Don't add to dict, will be dealt with or raise an error at run time
                 continue
             self.state_feature_specs[i] = feature
@@ -3339,11 +3307,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Specified InputPort is not (yet) in agent_rep
                 input_port_name = (f"{input_port.full_name} AS INPUT NODE" if input_port
                                    else f"INPUT NODE {str(i-len(agent_rep_input_ports))}")
-                # # MODIFIED 3/21/22 OLD:
-                # key = f"DEFERRED {input_port_name} OF {self.agent_rep.name}"
-                # MODIFIED 3/21/22 NEW:
                 key = deferred_state_feature_node_msg(input_port_name, self.agent_rep.name)
-                # MODIFIED 3/21/22 END
 
             # Get source for state_features dict
             if spec is None:
@@ -3367,11 +3331,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         assert source == spec, f"ALERT: source returned != state_feature_spec in state_features"
                         source = spec.full_name
                     else:
-                        # MODIFIED 3/21/22 OLD:
-                        # source = f"{spec.full_name} NOT (YET) IN {self.composition.name}"
-                        # MODIFIED 3/21/22 NEW:
                         source = deferred_state_feature_spec_msg(spec.full_name, self.composition.name)
-                        # MODIFIED 3/21/22 END
                 state_input_port_num += 1
 
             state_features_dict[key] = source
