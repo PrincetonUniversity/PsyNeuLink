@@ -354,11 +354,19 @@ class TestControlSpecification:
                                                            'ia[InputPort-0]',
                                                        'DEFERRED INPUT NODE 0 OF ocomp':
                                                            'deferred[InputPort-0] NOT (YET) IN ocomp'}
+            assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
+                                                             'DEFERRED 0 OF ocomp':
+                                                                 'DEFERRED deferred[InputPort-0] OF ocomp'}
+
         elif state_features_option in {'dict', 'set'}:
             assert ocomp.controller.state_features == {'ia[InputPort-0]':
                                                            'ia[InputPort-0]',
                                                        'DEFERRED deferred[InputPort-0] AS INPUT NODE OF ocomp':
                                                            'deferred[InputPort-0] NOT (YET) IN ocomp'}
+            assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
+                                                             'DEFERRED deferred[InputPort-0] OF ocomp':
+                                                                 'DEFERRED deferred[InputPort-0] OF ocomp'}
+
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_option}'"
 
@@ -384,6 +392,8 @@ class TestControlSpecification:
         assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
                                                    'deferred[InputPort-0]': 'deferred[InputPort-0]'}
 
+        assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
+                                                         deferred_node.input_port: [0.]}
         result = ocomp.run({
             initial_node_a: [1],
             deferred_node: [1]
