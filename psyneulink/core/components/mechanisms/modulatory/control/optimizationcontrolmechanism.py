@@ -1075,6 +1075,9 @@ def _state_feature_values_getter(owning_component=None, context=None):
        default input will be assigned for all other INPUT Node InputPorts in composition._instantiate_input_dict().
     """
 
+    # FIX: REFACTOR TO DO VALIDATIONS ON INIT AND INITIAL RUN-TIME CHECK
+    #      AND SIMPLY RETURN VALUES (WHICH SHOULD ALL BE ASSIGNED BY RUN TIME) DURING EXECUTION / SIMULATIONS
+
     # If no state_input_ports return empty list
     if (not owning_component.num_state_input_ports):
         return {}
@@ -1107,7 +1110,7 @@ def _state_feature_values_getter(owning_component=None, context=None):
         # Get key
         if not isinstance(key, InputPort):
             # INPUT Node InputPort is not fully or properly specified
-            key = deferred_state_feature_node_msg((key or str(i-num_agent_rep_input_ports)),
+            key = deferred_state_feature_node_msg((key or str(i - num_agent_rep_input_ports)),
                                                   owning_component.agent_rep.name)
         elif key not in owning_component._get_agent_rep_input_receivers():
             # INPUT Node InputPort is not (yet) in agent_rep
@@ -1122,7 +1125,7 @@ def _state_feature_values_getter(owning_component=None, context=None):
             # if spec is numeric, use that
             state_feature_value = state_input_port.function(spec)
         elif (hasattr(owning_component, 'composition')
-              and spec.owner not in owning_component.composition._get_all_nodes()):
+              and not owning_component.composition._is_in_composition(spec)):
             # spec is not in ocm.composition
             state_feature_value = deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
         elif state_input_port.parameters.value._get(context) is not None:
@@ -3322,10 +3325,8 @@ class OptimizationControlMechanism(ControlMechanism):
                     # spec is a Component, so get distal source of Projection to state_input_port
                     #    (spec if it is an OutputPort; or ??input_CIM.output_port if it spec for shadowing an input??
                     state_input_port = self.state_input_ports[state_input_port_num]
-                    if any(spec is node or (isinstance(spec, Port)
-                                            and (spec in node.ports
-                            if isinstance(node, Mechanism) else spec in node.input_ports + node.output_ports))
-                           for node in self.composition._get_all_nodes()):
+                    # FIX 3/22/22: USE is_in_composition() METHOD
+                    if self.composition._is_in_composition(spec):
                         # FIX: 3/21/22 DELETE ONCE ALL TESTS PASS:
                         source = self._get_state_feature_input_source(state_input_port, spec)
                         assert source == spec, f"ALERT: source returned != state_feature_spec in state_features"

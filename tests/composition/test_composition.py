@@ -4783,7 +4783,6 @@ class TestNestedCompositions:
                 intensity_cost_function=lambda _: 0,
                 modulates=(SLOPE, p_lvl3),
                 allocation_samples=[10, 20, 30])))
-
         result = c_lvl0.run([5])
         assert result == [4500]
 
