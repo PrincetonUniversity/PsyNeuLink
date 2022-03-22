@@ -216,8 +216,8 @@ class TestControlSpecification:
                                                           'reward[InputPort-0] NOT (YET) IN evc',
                                                       'DEFERRED INPUT NODE 1 OF evc':
                                                           'Input[InputPort-0] NOT (YET) IN evc'}
-            assert comp.controller.state_feature_values == {'DEFERRED 0 OF evc': 'DEFERRED reward[InputPort-0] OF evc',
-                                                            'DEFERRED 1 OF evc': 'DEFERRED Input[InputPort-0] OF evc'}
+            assert comp.controller.state_feature_values == {'DEFERRED 0 OF evc': 'reward[InputPort-0] NOT (YET) IN evc',
+                                                            'DEFERRED 1 OF evc': 'Input[InputPort-0] NOT (YET) IN evc'}
 
         elif state_features_arg == 'dict':
             assert comp.controller.state_features == {'DEFERRED reward[InputPort-0] AS INPUT NODE OF evc':
@@ -225,9 +225,9 @@ class TestControlSpecification:
                                                       'DEFERRED Input[InputPort-0] AS INPUT NODE OF evc':
                                                           'Input[InputPort-0] NOT (YET) IN evc'}
             assert comp.controller.state_feature_values == {'DEFERRED reward[InputPort-0] OF evc':
-                                                                'DEFERRED reward[InputPort-0] OF evc',
+                                                                'reward[InputPort-0] NOT (YET) IN evc',
                                                             'DEFERRED Input[InputPort-0] OF evc':
-                                                                'DEFERRED Input[InputPort-0] OF evc'}
+                                                                'Input[InputPort-0] NOT (YET) IN evc'}
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
 
@@ -356,7 +356,7 @@ class TestControlSpecification:
                                                            'deferred[InputPort-0] NOT (YET) IN ocomp'}
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                              'DEFERRED 0 OF ocomp':
-                                                                 'DEFERRED deferred[InputPort-0] OF ocomp'}
+                                                                'deferred[InputPort-0] NOT (YET) IN ocomp'}
 
         elif state_features_option in {'dict', 'set'}:
             assert ocomp.controller.state_features == {'ia[InputPort-0]':
@@ -365,7 +365,7 @@ class TestControlSpecification:
                                                            'deferred[InputPort-0] NOT (YET) IN ocomp'}
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                              'DEFERRED deferred[InputPort-0] OF ocomp':
-                                                                 'DEFERRED deferred[InputPort-0] OF ocomp'}
+                                                                 'deferred[InputPort-0] NOT (YET) IN ocomp'}
 
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_option}'"
