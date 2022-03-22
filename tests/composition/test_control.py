@@ -216,7 +216,7 @@ class TestControlSpecification:
                                                           'reward[InputPort-0] NOT (YET) IN evc',
                                                       'DEFERRED INPUT NODE 1 OF evc':
                                                           'Input[InputPort-0] NOT (YET) IN evc'}
-        elif state_features_arg == 'list':
+        elif state_features_arg == 'dict':
             assert comp.controller.state_features == {'DEFERRED reward[InputPort-0] AS INPUT NODE OF evc':
                                                           'reward[InputPort-0] NOT (YET) IN evc',
                                                       'DEFERRED Input[InputPort-0] AS INPUT NODE OF evc':

@@ -1081,9 +1081,9 @@ def _state_feature_values_getter(owning_component=None, context=None):
            owning_component.num_state_input_ports
 
     # If OptimizationControlMechanism is still under construction, use items from input_values as placemarkers
-    if context.source == ContextFlags.CONSTRUCTOR:
-        return {k:v for k,v in zip(specified_INPUT_Node_InputPorts,
-                                   owning_component.input_values[owning_component.num_outcome_input_ports:])}
+    # if context.source == ContextFlags.CONSTRUCTOR:
+    #     return {k:v for k,v in zip(specified_INPUT_Node_InputPorts,
+    #                                owning_component.input_values[owning_component.num_outcome_input_ports:])}
 
     # Construct state_feature_values dict
     state_feature_values = {}
@@ -1092,23 +1092,42 @@ def _state_feature_values_getter(owning_component=None, context=None):
         state_input_port = owning_component.state_input_ports[i]
         spec = specified_state_features[i]
 
-        # FIX: 3/18/22:  REMOVE THIS TO ALLOW INCLUSION OF None SPECS IN DICT:
-        # state_input_port not (yet) specified; default input will be assigned in _instantiate_input_dict()
-        if not isinstance(key, InputPort) or spec is None:
-            continue
-        # # FIX: 3/18/22 - RESTORE?
-        # elif spec is None:
-        #     # # FIX: ??TRY IGNORING RATHER THAN ASSIGNING, AS IT WILL BE ASSIGNED IN _instantiate_input_dict()
-        #     # MODIFIED 3/18/22 OLD:
-        #     state_feature_value = state_input_port.default_input_shape
-        #     # MODIFIED 3/18/22 NEW:
-        #     # continue
-        #     # MODIFIED 3/18/22 END
+        # Get key
+        if not isinstance(key, InputPort):
+            # INPUT Node InputPort is not (yet) in agent_rep
+            # # MODIFIED 3/18/22 OLD:
+            # continue
+            # MODIFIED 3/18/22 NEW:
+            key = f"DEFERRED {key} OF {owning_component.agent_rep.name}"
+            # # MODIFIED 3/18/22 NEWER
+            # assert False, f"ALERT: FAILURE PROCESS {key} in state_feature_values OF {self.name}."
+            # MODIFIED 3/18/22 END
+        elif key not in owning_component._get_agent_rep_input_receivers():
+            # INPUT Node InputPort is not (yet) in agent_rep
+            key = f"DEFERRED {key} OF {owning_component.agent_rep.name}"
+
+        # Get state_feature_value
+        if spec is None:
+            # state_feature not specified; default input will be assigned in _instantiate_input_dict()
+            # # MODIFIED 3/18/22 OLD:
+            # state_feature_value = state_input_port.default_input_shape
+            # # MODIFIED 3/18/22 NEW:
+            # continue
+            # MODIFIED 3/18/22 NEWER
+            state_feature_value = f"DEFERRED {key} OF {owning_component.agent_rep.name}"
+            # MODIFIED 3/18/22 END
+        elif (hasattr(owning_component, 'composition')
+              and spec.owner not in owning_component.composition._get_all_nodes()):
+            # spec is not in ocm.composition
+            state_feature_value = f"DEFERRED {spec.full_name} OF {owning_component.agent_rep.name}"
         elif is_numeric(spec):
+            # if spec is numeric, use that
             state_feature_value = state_input_port.function(spec)
         elif state_input_port.parameters.value._get(context) is not None:
+            # if state_input_port returns a value, use that
             state_feature_value = state_input_port.parameters.value._get(context)
         else:
+            # otherwise use state_input_port's default input value
             state_feature_value = state_input_port.default_input_shape
 
         # state_feature_values[key] = convert_to_np_array(state_feature_value)
@@ -2244,7 +2263,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 specs = user_specs[SHADOW_INPUTS]
                 spec_type = f"{SHADOW_INPUTS.upper()} dict"
-
 
             specified_input_ports = agent_rep_input_ports + [None] * (len(specs) - len(agent_rep_input_ports))
             state_input_port_names = _parse_specs(state_feature_specs=specs,
