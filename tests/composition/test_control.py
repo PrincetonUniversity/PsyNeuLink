@@ -211,8 +211,18 @@ class TestControlSpecification:
         assert any(expected_warning in repr(w.message) for w in warning.list)
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
-        assert comp.controller.state_features == {'EXPECT reward[InputPort-0] IN evc': (reward.input_port),
-                                                   'EXPECT Input[InputPort-0] IN evc': (Input.input_port)}
+        if state_features_arg == 'list':
+            assert comp.controller.state_features == {'DEFERRED INPUT NODE 0 OF evc':
+                                                          'reward[InputPort-0] NOT (YET) IN evc',
+                                                      'DEFERRED INPUT NODE 1 OF evc':
+                                                          'Input[InputPort-0] NOT (YET) IN evc'}
+        elif state_features_arg == 'list':
+            assert comp.controller.state_features == {'DEFERRED reward[InputPort-0] AS INPUT NODE OF evc':
+                                                          'reward[InputPort-0] NOT (YET) IN evc',
+                                                      'DEFERRED Input[InputPort-0] AS INPUT NODE OF evc':
+                                                          'Input[InputPort-0] NOT (YET) IN evc'}
+        else:
+            assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -220,8 +230,8 @@ class TestControlSpecification:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.enable_controller = True
-        assert comp.controller.state_features == {reward.input_port: reward.input_port,
-                                                  Input.input_port: Input.input_port}
+        assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
+                                                  'Input[InputPort-0]': 'Input[InputPort-0]'}
         # comp._analyze_graph()
 
         stim_list_dict = {
@@ -330,8 +340,19 @@ class TestControlSpecification:
                     deferred_node_control_signal
                 ])
         )
-        assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
-                                                   'EXPECT deferred[InputPort-0] IN ocomp':deferred_node.input_port}
+        if state_features_option in {'list', 'shadow_inputs_dict'}:
+            assert ocomp.controller.state_features == {'ia[InputPort-0]':
+                                                           'ia[InputPort-0]',
+                                                       'DEFERRED INPUT NODE 0 OF ocomp':
+                                                           'deferred[InputPort-0] NOT (YET) IN ocomp'}
+        elif state_features_option in {'dict', 'set'}:
+            assert ocomp.controller.state_features == {'ia[InputPort-0]':
+                                                           'ia[InputPort-0]',
+                                                       'DEFERRED deferred[InputPort-0] AS INPUT NODE OF ocomp':
+                                                           'deferred[InputPort-0] NOT (YET) IN ocomp'}
+        else:
+            assert False, f"TEST ERROR: unrecognized option '{state_features_option}'"
+
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             # expected_text = 'The number of \'state_features\' specified for Controller (2) is more than the ' \
@@ -351,8 +372,8 @@ class TestControlSpecification:
         assert expected_text in error_text.value.error_value
 
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
-        assert ocomp.controller.state_features == {initial_node_a.input_port: initial_node_a.input_port,
-                                                   deferred_node.input_port: deferred_node.input_port}
+        assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
+                                                   'deferred[InputPort-0]': 'deferred[InputPort-0]'}
 
         result = ocomp.run({
             initial_node_a: [1],
