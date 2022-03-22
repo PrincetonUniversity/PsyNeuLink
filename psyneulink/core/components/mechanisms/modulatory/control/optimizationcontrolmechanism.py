@@ -1130,6 +1130,9 @@ def _state_feature_values_getter(owning_component=None, context=None):
             # MODIFIED 3/21/22 NEW:
             state_feature_value = not_specified_state_feature_spec_msg((key if isinstance(key, str) else key.full_name),
                                                                        owning_component.composition.name)
+        elif is_numeric(spec):
+            # if spec is numeric, use that
+            state_feature_value = state_input_port.function(spec)
             # MODIFIED 3/21/22 END
         elif (hasattr(owning_component, 'composition')
               and spec.owner not in owning_component.composition._get_all_nodes()):
@@ -1139,9 +1142,6 @@ def _state_feature_values_getter(owning_component=None, context=None):
             # MODIFIED 3/21/22 NEW:
             state_feature_value = deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
             # MODIFIED 3/21/22 END
-        elif is_numeric(spec):
-            # if spec is numeric, use that
-            state_feature_value = state_input_port.function(spec)
         elif state_input_port.parameters.value._get(context) is not None:
             # if state_input_port returns a value, use that
             state_feature_value = state_input_port.parameters.value._get(context)
@@ -3358,7 +3358,9 @@ class OptimizationControlMechanism(ControlMechanism):
                     # spec is a Component, so get distal source of Projection to state_input_port
                     #    (spec if it is an OutputPort; or ??input_CIM.output_port if it spec for shadowing an input??
                     state_input_port = self.state_input_ports[state_input_port_num]
-                    if any(spec is node or (isinstance(spec, Port) and spec in node.ports)
+                    if any(spec is node or (isinstance(spec, Port)
+                                            and (spec in node.ports
+                            if isinstance(node, Mechanism) else spec in node.input_ports + node.output_ports))
                            for node in self.composition._get_all_nodes()):
                         # FIX: 3/21/22 DELETE ONCE ALL TESTS PASS:
                         source = self._get_state_feature_input_source(state_input_port, spec)
