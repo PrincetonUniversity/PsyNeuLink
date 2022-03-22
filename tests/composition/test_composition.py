@@ -4709,6 +4709,7 @@ class TestNestedCompositions:
         result = c1.run({c2: [[2], [2]], ctrl1: [5]})
         assert result == [10, 10]
 
+    @pytest.mark.state_features
     def test_four_level_nested_transfer_mechanism_composition_parallel(self):
         # mechanisms
         A = ProcessingMechanism(name="A",
@@ -4730,6 +4731,7 @@ class TestNestedCompositions:
         ret = comp_lvl0.run(inputs={comp_lvl1: {comp_lvl2: {comp_lvl3a: [[1.0]], comp_lvl3b: [[1.0]]}}})
         assert np.allclose(ret, [[[0.52497918747894]], [[0.52497918747894]]])
 
+    @pytest.mark.state_features
     @pytest.mark.control
     def test_four_level_nested_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')
@@ -4752,6 +4754,7 @@ class TestNestedCompositions:
         result = c_lvl0.run([5])
         assert result == [150]
 
+    @pytest.mark.state_features
     @pytest.mark.control
     def test_four_level_nested_dual_OCM_control(self):
         p_lvl3 = ProcessingMechanism(name='p_lvl3')

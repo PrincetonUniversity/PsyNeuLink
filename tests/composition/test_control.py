@@ -1392,17 +1392,20 @@ class TestControlMechanisms:
                                                                                       I1.input_port: [0],
                                                                                       I2.input_port: [0]}
 
+    @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.parametrize('state_fct_assignments', [
-        # 'partial_w_dict',
-        # 'partial_w_params_dict',
+        'partial_w_dict',
+        'partial_w_params_dict',
         'tuple_override_dict',
         'tuple_override_params_dict',
         'port_spec_dict_in_feat_dict',
-        'all',
+        # 'all',
         None
     ])
     def test_state_feature_function_specs(self, state_fct_assignments):
+        """Test assignment of state_feature_functions in various configurations
+        Also test use of InputPort specification dictionary as state_feature_specification"""
 
         fct_a = pnl.AdaptiveIntegrator
         fct_b = pnl.Buffer(history=2)
