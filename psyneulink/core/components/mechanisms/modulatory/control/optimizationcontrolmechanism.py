@@ -1076,6 +1076,8 @@ def _state_feature_values_getter(owning_component=None, context=None):
                                        in zip(owning_component._specified_INPUT_Node_InputPorts_in_order,
                                               owning_component.state_feature_specs)
                                        if spec is not None]
+    num_agent_rep_input_ports = len(owning_component._get_agent_rep_input_receivers())
+
     assert len(specified_state_features) == \
            len(specified_INPUT_Node_InputPorts) == \
            owning_component.num_state_input_ports
@@ -1098,13 +1100,13 @@ def _state_feature_values_getter(owning_component=None, context=None):
             # # MODIFIED 3/18/22 OLD:
             # continue
             # MODIFIED 3/18/22 NEW:
-            key = f"DEFERRED {key} OF {owning_component.agent_rep.name}"
+            key = f"DEFERRED {key or str(i-num_agent_rep_input_ports)} OF {owning_component.agent_rep.name}"
             # # MODIFIED 3/18/22 NEWER
             # assert False, f"ALERT: FAILURE PROCESS {key} in state_feature_values OF {self.name}."
             # MODIFIED 3/18/22 END
         elif key not in owning_component._get_agent_rep_input_receivers():
             # INPUT Node InputPort is not (yet) in agent_rep
-            key = f"DEFERRED {key} OF {owning_component.agent_rep.name}"
+            key = f"DEFERRED {key.full_name} OF {owning_component.agent_rep.name}"
 
         # Get state_feature_value
         if spec is None:
@@ -1114,7 +1116,7 @@ def _state_feature_values_getter(owning_component=None, context=None):
             # # MODIFIED 3/18/22 NEW:
             # continue
             # MODIFIED 3/18/22 NEWER
-            state_feature_value = f"DEFERRED {key} OF {owning_component.agent_rep.name}"
+            state_feature_value = f"DEFERRED {spec} OF {owning_component.agent_rep.name}"
             # MODIFIED 3/18/22 END
         elif (hasattr(owning_component, 'composition')
               and spec.owner not in owning_component.composition._get_all_nodes()):

@@ -216,11 +216,18 @@ class TestControlSpecification:
                                                           'reward[InputPort-0] NOT (YET) IN evc',
                                                       'DEFERRED INPUT NODE 1 OF evc':
                                                           'Input[InputPort-0] NOT (YET) IN evc'}
+            assert comp.controller.state_feature_values == {'DEFERRED 0 OF evc': 'DEFERRED reward[InputPort-0] OF evc',
+                                                            'DEFERRED 1 OF evc': 'DEFERRED Input[InputPort-0] OF evc'}
+
         elif state_features_arg == 'dict':
             assert comp.controller.state_features == {'DEFERRED reward[InputPort-0] AS INPUT NODE OF evc':
                                                           'reward[InputPort-0] NOT (YET) IN evc',
                                                       'DEFERRED Input[InputPort-0] AS INPUT NODE OF evc':
                                                           'Input[InputPort-0] NOT (YET) IN evc'}
+            assert comp.controller.state_feature_values == {'DEFERRED reward[InputPort-0] OF evc':
+                                                                'DEFERRED reward[InputPort-0] OF evc',
+                                                            'DEFERRED Input[InputPort-0] OF evc':
+                                                                'DEFERRED Input[InputPort-0] OF evc'}
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
 
@@ -232,6 +239,8 @@ class TestControlSpecification:
         comp.enable_controller = True
         assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
                                                   'Input[InputPort-0]': 'Input[InputPort-0]'}
+        assert comp.controller.state_feature_values == {reward.input_port: [0.],
+                                                        Input.input_port: [0.]}
         # comp._analyze_graph()
 
         stim_list_dict = {
