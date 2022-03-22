@@ -141,6 +141,7 @@ Class Reference
 """
 
 import abc
+import inspect
 import numbers
 import types
 import warnings
@@ -149,21 +150,22 @@ from enum import Enum, IntEnum
 import numpy as np
 import typecheck as tc
 
-from psyneulink.core.components.component import ComponentError, DefaultsFlexibility
+from psyneulink.core.components.component import Component, ComponentError, DefaultsFlexibility
 from psyneulink.core.components.shellclasses import Function, Mechanism
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
 from psyneulink.core.globals.keywords import (
     ARGUMENT_THERAPY_FUNCTION, AUTO_ASSIGN_MATRIX, EXAMPLE_FUNCTION_TYPE, FULL_CONNECTIVITY_MATRIX,
     FUNCTION_COMPONENT_CATEGORY, FUNCTION_OUTPUT_TYPE, FUNCTION_OUTPUT_TYPE_CONVERSION, HOLLOW_MATRIX,
-    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE
+    IDENTITY_MATRIX, INVERSE_HOLLOW_MATRIX, NAME, PREFERENCE_SET_NAME, RANDOM_CONNECTIVITY_MATRIX, VALUE, VARIABLE,
+    MODEL_SPEC_ID_METADATA, MODEL_SPEC_ID_MDF_VARIABLE
 )
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import REPORT_OUTPUT_PREF, is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceEntry, PreferenceLevel
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import (
-    convert_to_np_array, get_global_seed, object_has_single_value, parameter_spec, safe_len,
-    SeededRandomState, contains_type, is_instance_or_subclass
+    convert_to_np_array, get_global_seed, is_instance_or_subclass, object_has_single_value, parameter_spec, parse_valid_identifier, safe_len,
+    SeededRandomState, contains_type
 )
 
 __all__ = [
@@ -813,6 +815,91 @@ class Function_Base(Function):
         return super()._model_spec_parameter_blacklist.union({
             'multiplicative_param', 'additive_param',
         })
+
+    def _get_mdf_noise_function(self):
+        import modeci_mdf.mdf as mdf
+
+        extra_noise_functions = []
+
+        def handle_noise(noise):
+            if is_instance_or_subclass(noise, Component):
+                if inspect.isclass(noise) and issubclass(noise, Component):
+                    noise = noise()
+                noise_func_model = noise.as_mdf_model()
+                extra_noise_functions.append(noise_func_model)
+                return noise_func_model.id
+            elif isinstance(noise, (list, np.ndarray)):
+                return type(noise)(handle_noise(item) for item in noise)
+            else:
+                return None
+
+        noise = handle_noise(self.defaults.noise)
+
+        if noise is not None:
+            return mdf.Function(
+                id=f'{parse_valid_identifier(self.name)}_noise',
+                value=MODEL_SPEC_ID_MDF_VARIABLE,
+                args={MODEL_SPEC_ID_MDF_VARIABLE: noise},
+            ), extra_noise_functions
+
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+        import modeci_mdf.functions.standard as mdf_functions
+
+        parameters = self._mdf_model_parameters
+        metadata = self._mdf_metadata
+        metadata[MODEL_SPEC_ID_METADATA]['function_stateful_params'] = {}
+        stateful_params = set()
+
+        # add stateful parameters into metadata for mechanism to get
+        for name in parameters[self._model_spec_id_parameters]:
+            try:
+                param = getattr(self.parameters, name)
+            except AttributeError:
+                continue
+
+            if param.initializer is not None:
+                # in this case, parameter gets updated to its function's final value
+                try:
+                    initializer_value = parameters[self._model_spec_id_parameters][param.initializer]
+                except KeyError:
+                    initializer_value = metadata[MODEL_SPEC_ID_METADATA]['initializer']
+
+                metadata[MODEL_SPEC_ID_METADATA]['function_stateful_params'][name] = {
+                    'id': name,
+                    'default_initial_value': initializer_value,
+                    'value': parse_valid_identifier(self.name)
+                }
+                stateful_params.add(name)
+
+        # stateful parameters cannot show up as args or they will not be
+        # treated statefully in mdf
+        for sp in stateful_params:
+            del parameters[self._model_spec_id_parameters][sp]
+
+        model = mdf.Function(
+            id=parse_valid_identifier(self.name),
+            **parameters,
+            **metadata,
+        )
+
+        try:
+            model.value = self.as_expression()
+        except AttributeError:
+            if self._model_spec_generic_type_name is not NotImplemented:
+                typ = self._model_spec_generic_type_name
+            else:
+                try:
+                    typ = self.custom_function.__name__
+                except AttributeError:
+                    typ = type(self).__name__.lower()
+
+            if typ not in mdf_functions.mdf_functions:
+                warnings.warn(f'{typ} is not an MDF standard function, this is likely to produce an incompatible model.')
+
+            model.function = {typ: parameters[self._model_spec_id_parameters]}
+
+        return model
 
 
 # *****************************************   EXAMPLE FUNCTION   *******************************************************

@@ -15,6 +15,7 @@ import pint
 from psyneulink import _unit_registry
 from psyneulink.core.globals.context import Context, handle_external_context
 from psyneulink.core.globals.json import JSONDumpable
+from psyneulink.core.globals.utilities import parse_valid_identifier
 from psyneulink.core.scheduling.condition import _create_as_pnl_condition
 
 __all__ = [
@@ -95,18 +96,17 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
             skip_environment_state_update_time_increment=skip_trial_time_increment,
         )
 
-    @property
-    def _dict_summary(self):
-        return {
-            'conditions': {
-                'termination': {
-                    str.lower(k.name): v._dict_summary for k, v in self.termination_conds.items()
-                },
-                'node_specific': {
-                    n.name: self.conditions[n]._dict_summary for n in self.nodes if n in self.conditions
-                }
-            }
-        }
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        return mdf.ConditionSet(
+            node_specific={
+                parse_valid_identifier(n.name): self.conditions[n].as_mdf_model() for n in self.nodes if n in self.conditions
+            },
+            termination={
+                str.lower(k.name): v.as_mdf_model() for k, v in self.termination_conds.items()
+            },
+        )
 
     @handle_external_context()
     def get_clock(self, context):

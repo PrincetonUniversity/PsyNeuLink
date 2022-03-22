@@ -635,7 +635,7 @@ from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, parse_valid_identifier
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -1292,16 +1292,25 @@ class OutputPort(Port_Base):
             label_dictionary = {}
         return self._get_value_label(label_dictionary, self.owner.output_ports, context=context)
 
-    @property
-    def _dict_summary(self):
-        return {
-            **super()._dict_summary,
-            **{
-                'shape': str(self.defaults.value.shape),
-                'dtype': str(self.defaults.value.dtype)
-            }
-        }
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
 
+        owner_func_name = parse_valid_identifier(self.owner.function.name)
+        if self._variable_spec == OWNER_VALUE:
+            value = owner_func_name
+        elif isinstance(self._variable_spec, tuple) and self._variable_spec[0] == OWNER_VALUE:
+            if len(self.owner.defaults.value) == 1:
+                value = owner_func_name
+            else:
+                value = f'{owner_func_name}[{self._variable_spec[1]}]'
+        else:
+            raise ValueError(f'Unsupported variable spec for MDF: {self._variable_spec}')
+
+        return mdf.OutputPort(
+            id=parse_valid_identifier(self.name),
+            value=value,
+            **self._mdf_metadata
+        )
 
 def _instantiate_output_ports(owner, output_ports=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of OutputPort(s)
@@ -1655,6 +1664,7 @@ class StandardOutputPorts():
     # @property
     # def indices(self):
     #     return [item[INDEX] for item in self.data]
+
 
 def _parse_output_port_function(owner, output_port_name, function, params_dict_as_variable=False):
     """Parse specification of function as Function, Function class, Function.function, types.FunctionType or types.MethodType.

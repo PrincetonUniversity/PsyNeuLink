@@ -1098,22 +1098,23 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, MECHANISM, MECHANISM_VALUE, \
-    MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
+    MECHANISM_COMPONENT_CATEGORY, \
     MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
+    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list
+    iscompatible, kwCompatibilityNumeric, convert_to_list, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -4096,28 +4097,87 @@ class Mechanism_Base(Mechanism):
             self.parameter_ports,
         ))
 
-    @property
-    def _dict_summary(self):
-        inputs_dict = {
-            MODEL_SPEC_ID_INPUT_PORTS: [
-                s._dict_summary for s in self.input_ports
-            ]
-        }
-        inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
-            [s._dict_summary for s in self.parameter_ports]
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        model = mdf.Node(
+            id=parse_valid_identifier(self.name),
+            **self._mdf_metadata,
         )
 
-        outputs_dict = {
-            MODEL_SPEC_ID_OUTPUT_PORTS: [
-                s._dict_summary for s in self.output_ports
-            ]
-        }
+        for name, val in self._mdf_model_parameters[self._model_spec_id_parameters].items():
+            model.parameters.append(mdf.Parameter(id=name, value=val))
 
-        return {
-            **super()._dict_summary,
-            **inputs_dict,
-            **outputs_dict
-        }
+        for ip in self.input_ports:
+            if len(ip.path_afferents) > 1:
+                for aff in ip.path_afferents:
+                    ip_model = mdf.InputPort(
+                        id=parse_valid_identifier(f'{self.name}_input_port_{aff.name}'),
+                        shape=str(aff.defaults.value.shape),
+                        type=str(aff.defaults.value.dtype)
+                    )
+                    model.input_ports.append(ip_model)
+
+                # create combination function
+                model.parameters.append(
+                    mdf.Parameter(
+                        id='combination_function_input_data',
+                        value=f"[{', '.join(f'{mip.id}' for mip in model.input_ports)}]"
+                    )
+                )
+                combination_function_id = f'{parse_valid_identifier(self.name)}_{MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION}'
+                combination_function_args = {
+                    'data': "combination_function_input_data",
+                    'axes': 0
+                }
+                model.functions.append(
+                    mdf.Function(
+                        id=combination_function_id,
+                        function={'onnx::ReduceSum': combination_function_args},
+                        args=combination_function_args
+                    )
+                )
+                combination_function_dimreduce_id = f'{combination_function_id}_dimreduce'
+                model.functions.append(
+                    mdf.Function(
+                        id=combination_function_dimreduce_id,
+                        value=f'{MODEL_SPEC_ID_MDF_VARIABLE}[0][0]',
+                        args={
+                            MODEL_SPEC_ID_MDF_VARIABLE: combination_function_id,
+                        }
+                    )
+                )
+            else:
+                ip_model = ip.as_mdf_model()
+                ip_model.id = f'{parse_valid_identifier(self.name)}_{ip_model.id}'
+
+                model.input_ports.append(ip_model)
+
+        for op in self.output_ports:
+            op_model = op.as_mdf_model()
+            op_model.id = f'{parse_valid_identifier(self.name)}_{op_model.id}'
+
+            model.output_ports.append(op_model)
+
+        function_model = self.function.as_mdf_model()
+
+        for _, func_param in function_model.metadata['function_stateful_params'].items():
+            model.parameters.append(mdf.Parameter(**func_param))
+
+        if len(ip.path_afferents) > 1:
+            primary_function_input_name = combination_function_dimreduce_id
+        else:
+            primary_function_input_name = model.input_ports[0].id
+
+        self.function._set_mdf_arg(
+            function_model, _get_variable_parameter_name(self.function), primary_function_input_name
+        )
+        model.functions.append(function_model)
+
+        for func_model in model.functions:
+            _substitute_expression_args(func_model)
+
+        return model
 
 
 def _is_mechanism_spec(spec):

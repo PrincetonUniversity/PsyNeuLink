@@ -971,7 +971,7 @@ class ParameterPort(Port_Base):
         # FIX 3/6/19: source does not yet seem to have been assigned to owner.function
         return self.source._get(context)
 
-    def get_label(self, context):
+    def get_label(self, context=None):
         raise ParameterPortError(f"{ParameterPort.__name__}s do not have labels.")
 
     @property
