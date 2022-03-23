@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.8.1+495.g639751334 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+496.g7a406ca0f documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+495
+                  0.8.8.1+496
                 </div>
               
             
@@ -3434,7 +3434,7 @@ input_CIM.output_port corresponding to input_CIM.input_port (for ease of trackin
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._get_nested_compositions">
 <span class="sig-name descname"><span class="pre">_get_nested_compositions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nested_compositions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visited_compositions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">NotImplemented</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_nested_compositions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Recursive search for and return all nested compositions.</p>
+<dd><p>Recursively search for and return all nested compositions.</p>
 <p>:return</p>
 <p>A list of nested compositions.</p>
 </dd></dl>
@@ -3444,6 +3444,13 @@ input_CIM.output_port corresponding to input_CIM.input_port (for ease of trackin
 <span class="sig-name descname"><span class="pre">_get_all_nodes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._get_all_nodes" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return all nodes, including those within nested Compositions at any level
 Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._is_in_composition">
+<span class="sig-name descname"><span class="pre">_is_in_composition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">component</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nested</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._is_in_composition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return True if component is in Composition, including any nested Compositions if <strong>nested</strong> is True
+Include input_CIM and output_CIM for self and all nested Compositions</p>
 </dd></dl>
 
 <dl class="py method">
