@@ -1016,6 +1016,7 @@ import ast
 import copy
 import warnings
 from collections.abc import Iterable
+from typing import Union
 
 import numpy as np
 import typecheck as tc
@@ -2062,6 +2063,28 @@ class OptimizationControlMechanism(ControlMechanism):
                     input_nodes.append(node)
             return input_nodes
 
+        def get_port_for_mech_spec(spec:Union[Port,Mechanism]):
+            """Return port for specified Mechanism:
+               - if agent_rep is Composition:  Primary InputPort of Mechanism (to be shadowed)
+               - if agent_rep is CF:  OutputPort (per standard treatment)
+            """
+            # assert isinstance(mech, Mechanism), \
+            #     f"PROGRAM ERROR: {mech} should be Mechanism in call to get_port_for_mech_spec() for '{self.name}'"
+            if isinstance(spec, Port):
+                return spec
+            if self.agent_rep_type == COMPOSITION:
+                # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
+                #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICT TO InputPorts IN GENERAL)
+                if len(spec.input_ports)!=1:
+                    raise OptimizationControlMechanismError(
+                        f"A Mechanism ({spec.name}) is specified to be shadowed in the '{STATE_FEATURES}' arg "
+                        f"for '{self.name}', but it has more than one {InputPort.__name__}; a specific one of its "
+                        f"{InputPort.__name__}s must be specified to be shadowed.")
+                return spec.input_port
+            else:
+                # agent_rep is a CFA
+                return spec.output_port
+
         # PARSE SPECS  ------------------------------------------------------------------------------------------
         # Generate parallel lists of state feature specs (for sources of inputs)
         #                            and INPUT Nodes to which they (if specified in dict or set format)
@@ -2186,6 +2209,7 @@ class OptimizationControlMechanism(ControlMechanism):
                             elif PARAMS in spec and FUNCTION in spec[PARAMS]:
                                 state_feature_fct = spec[PARAMS][FUNCTION]
                     elif spec == SHADOW_INPUTS:
+                        # Shadow the specified port
                         spec = port
                     elif spec is not None:
                         assert False, f"PROGRAM ERROR: unrecognized form of state_feature specification for {self.name}"
@@ -2341,43 +2365,70 @@ class OptimizationControlMechanism(ControlMechanism):
         # CONSTRUCT InputPort SPECS -----------------------------------------------------------------------------
 
         state_input_port_specs = []
+
         for i in range(self._num_state_feature_specs):
             # Note: state_feature_specs have now been parsed (user's specs are in parameters.state_feature_specs.spec);
             #       state_feature_specs correspond to all InputPorts of agent_rep's INPUT Nodes (including nested ones)
             spec = self.state_feature_specs[i]
+
             if spec is None:
                 continue
+
+            # FIX: 3/22/22 - MUCH OF THE FOLLOWING COULD/SHOULD BE DONE IN _parse_specs():
+
+            # Get InputPort specification dict for any shadowing InputPorts, and unmodified spec for any others
             spec = _parse_shadow_inputs(self, spec)
-            # If spec is numeric, assign its `default_value <InputPport.default_value>` attribute as DEFAULT_VARIABLE,
-            # and the spec's value to the VALUE entry, which will assign it as its default_variable attribute
+
             if is_numeric(spec):
+                # If spec is numeric, construct InputPort specification dict that configures it to use its
+                #     InputPort.default_variable as its input, and assigns the spec's value to the VALUE entry,
+                #     which assigns it as the value of the InputPort.default_variable
                 spec_val = copy.copy(spec)
                 spec = {VALUE: spec_val,
                         PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}
                 }
             else:
                 spec = spec[0] # _parse_shadow_inputs(self, spec) returns a list, even when passed a single item
-            # If optimization uses Composition, assume that shadowing a Mechanism means shadowing its primary InputPort
+
             if isinstance(spec, Mechanism):
-                if self.agent_rep_type == COMPOSITION:
-                    # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
-                    #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICT TO InputPorts IN GENERAL)
-                    if len(spec.input_ports)!=1:
-                        raise OptimizationControlMechanismError(
-                            f"A Mechanism ({spec.name}) is specified to be shadowed in the '{STATE_FEATURES}' arg "
-                            f"for '{self.name}', but it has more than one {InputPort.__name__}; a specific one of its "
-                            f"{InputPort.__name__}s must be specified to be shadowed.")
-                    spec = spec.input_port
-                else:
-                    spec = spec.output_port
-                # Update Mechanism spec with Port
-                self.state_feature_specs[i] = spec
+                # MODIFIED 3/22/22 OLD:
+                # if self.agent_rep_type == COMPOSITION:
+                #     # If agent_rep is Composition, assume shadowing a Mechanism means shadowing its primary InputPort
+                #     # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
+                #     #      (ADD ARG TO THAT FOR DOING SO, OR RESTRICT TO InputPorts IN GENERAL)
+                #     if len(spec.input_ports)!=1:
+                #         raise OptimizationControlMechanismError(
+                #             f"A Mechanism ({spec.name}) is specified to be shadowed in the '{STATE_FEATURES}' arg "
+                #             f"for '{self.name}', but it has more than one {InputPort.__name__}; a specific one of its "
+                #             f"{InputPort.__name__}s must be specified to be shadowed.")
+                #     spec = spec.input_port
+                # else:
+                #     # If agent_rep is a CFA, use standard assumption that Mechanism spec is for its primary OutputPort
+                #     spec = spec.output_port
+                # # If spec is a Mechanism, update to be the specified Port
+                # MODIFIED 3/22/22 END
+                self.state_feature_specs[i] = get_port_for_mech_spec(spec)
+
             if isinstance(spec, dict):
-                # Note: clear any functions specified; will be assigned in _assign_state_feature_function
                 if self._state_feature_functions[i]:
+                    # Clear any functions specified; will be assigned in _assign_state_feature_function
                     spec.pop(FUNCTION, None)
                     if PARAMS in spec:
                         spec[PARAMS].pop(FUNCTION, None)
+                # Extract source and, if Mechanism, convert to Port
+                # MODIFIED 3/22/22 NEW:
+                assert True
+                if PROJECTIONS in spec:
+                    source = spec[PROJECTIONS]
+                elif [PARAMS] in spec and [PROJECTIONS] in spec[PARAMS]:
+                    source = spec[PARAMS][PROJECTIONS]
+                else:
+                    raise OptimizationControlMechanismError(f"InputPort specification dictionary specified in "
+                                                            f"'{STATE_FEATURES}' arg of '{self.name}' that is missing"
+                                                            f"a PROJECTIONS entry specifying the source of the input.")
+                self.state_feature_specs[i] = get_port_for_mech_spec(source)
+                # MODIFIED 3/22/22 END
+
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
             if not parsed_spec[NAME]:
