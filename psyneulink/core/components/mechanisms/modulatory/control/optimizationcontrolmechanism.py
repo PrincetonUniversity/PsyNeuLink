@@ -2385,63 +2385,63 @@ class OptimizationControlMechanism(ControlMechanism):
             if spec is None:
                 continue
 
-            # FIX: 3/22/22 - MUCH OF THE FOLLOWING COULD/SHOULD BE DONE IN _parse_specs():
+            # FIX: 3/22/22 - COULD/SHOULD ANY OF THE FOLLOWING BE DONE IN _parse_specs():
 
-            # Get InputPort specification dict for any shadowing InputPorts, and unmodified spec for any others
-            spec = _parse_shadow_inputs(self, spec)
+            if isinstance(self.state_feature_specs[i], dict):
+                # If spec is an InputPort specification dict:
+                # - if a Mechanism is specified as the source, specify for shadowing:
+                #    - add SHADOW_INPUTS entry to specify shadowing of Mechanism's primary InputPort
+                #    - process dict through _parse_shadow_inputs(),
+                #      (preserves spec as dict in case other parameters (except function, handled below) are specified)
+                #    - replace self.state_feature_specs[i] with the InputPort (required by state_feature_values)
+                # - if a function is specified, clear from dict
+                #    - it has already been assigned to self._state_feature_functions in _parse_spec()
+                #    - it will be properly assigned to InputPort specification dict in _assign_state_feature_function
+                def error_check(spec=None, source=None):
+                    if spec and source:
+                        if (SHADOW_INPUTS in spec) or (PARAMS in spec and SHADOW_INPUTS in spec[PARAMS]):
+                            error_msg = "both PROJECTIONS and SHADOW_INPUTS cannot specified"
+                        elif len(convert_to_list(source)) != 1:
+                            error_msg = "PROJECTIONS entry has more than one source"
+                        return
+                    else:
+                        error_msg = f"missing a 'PROJECTIONS' entry specifying the source of the input."
+                    raise OptimizationControlMechanismError(f"Error in InputPort specification dictionary used in '"
+                                                            f"{STATE_FEATURES}' arg of '{self.name}': {error_msg}.")
+                # Handle shadowing of Mechanism as source
+                if PROJECTIONS in spec:
+                    source = get_port_for_mech_spec(spec.pop(PROJECTIONS))
+                    if spec:  # No need to check if nothing left in dict
+                        error_check(spec, source)
+                    spec[SHADOW_INPUTS] = source
+                elif PARAMS in spec and PROJECTIONS in spec[PARAMS]:
+                    source = get_port_for_mech_spec(spec[PARAMS].pop(PROJECTIONS))
+                    error_check(spec, source)
+                    spec[PARAMS][SHADOW_INPUTS] = source
+                else:
+                    error_check()
 
-            if is_numeric(spec):
-                # If spec is numeric, construct InputPort specification dict that configures it to use its
-                #     InputPort.default_variable as its input, and assigns the spec's value to the VALUE entry,
-                #     which assigns it as the value of the InputPort.default_variable
-                spec_val = copy.copy(spec)
-                spec = {VALUE: spec_val,
-                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}
-                }
-            else:
-                spec = spec[0] # _parse_shadow_inputs(self, spec) returns a list, even when passed a single item
-
-            # FIX: 3/22/22 - HANDLE THIS IN _parse_shadow_inputs
-            if isinstance(spec, Mechanism):
-                spec = get_port_for_mech_spec(spec)
-                self.state_feature_specs[i] = spec
-
-            if isinstance(spec, dict):
+                # Clear FUNCTION entry
                 if self._state_feature_functions[i]:
-                    # Clear any functions specified; will be assigned in _assign_state_feature_function
                     spec.pop(FUNCTION, None)
                     if PARAMS in spec:
                         spec[PARAMS].pop(FUNCTION, None)
-                # MODIFIED 3/22/22 NEW:
-                # FIX: 3/22/22 - HANDLE THIS IN _parse_shadow_inputs
-                # Extract source and, if Mechanism, convert to Port
-                if isinstance(self.state_feature_specs[i], dict):
-                    if PROJECTIONS in spec:
-                        source = spec[PROJECTIONS]
-                    elif PARAMS in spec and PROJECTIONS in spec[PARAMS]:
-                        source = spec[PARAMS][PROJECTIONS]
-                    else:
-                        raise OptimizationControlMechanismError(
-                            f"InputPort specification dictionary specified in '{STATE_FEATURES}' arg of '{self.name}' "
-                            f"that is missing a 'PROJECTIONS' entry specifying the source of the input.")
-                    spec = get_port_for_mech_spec(source)
-                    self.state_feature_specs[i] = spec
-                # # MODIFIED 3/22/22 NEWER: FIX; ADD SHADOW SPEC TO DICT
-                # # Extract source and, if Mechanism, convert to Port
-                # if isinstance(self.state_feature_specs[i], dict):
-                #     if PROJECTIONS in spec:
-                #         source = get_port_for_mech_spec(spec[PROJECTIONS])
-                #         spec[PROJECTIONS] = source
-                #     elif PARAMS in spec and PROJECTIONS in spec[PARAMS]:
-                #         source = get_port_for_mech_spec(spec[PARAMS][PROJECTIONS])
-                #         spec[PARAMS][PROJECTIONS] = source
-                #     else:
-                #         raise OptimizationControlMechanismError(
-                #             f"InputPort specification dictionary specified in '{STATE_FEATURES}' arg of '{self.name}' "
-                #             f"that is missing a 'PROJECTIONS' entry specifying the source of the input.")
-                #     # spec = get_port_for_mech_spec(source)
-                #     self.state_feature_specs[i] = source
-                # MODIFIED 3/22/22 END
+
+                spec = _parse_shadow_inputs(self, spec)[0] # _parse_shadow_inputs returns a list, so get item
+                self.state_feature_specs[i] = source
+
+            if is_numeric(spec):
+                # Construct InputPort specification dict that configures it to use its InputPort.default_variable
+                #    as its input, and assigns the spec's value to the VALUE entry,
+                #    which assigns it as the value of the InputPort.default_variable
+                spec_val = copy.copy(spec)
+                spec = {VALUE: spec_val,
+                        PARAMS: {DEFAULT_INPUT: DEFAULT_VARIABLE}}
+
+            if isinstance(spec, Mechanism):
+                # Replace with primary InputPort to be shadowed
+                spec = get_port_for_mech_spec(spec)
+                self.state_feature_specs[i] = spec
 
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
@@ -3390,11 +3390,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     # spec is a Component, so get distal source of Projection to state_input_port
                     #    (spec if it is an OutputPort; or ??input_CIM.output_port if it spec for shadowing an input??
                     state_input_port = self.state_input_ports[state_input_port_num]
-                    # FIX 3/22/22: USE is_in_composition() METHOD
                     if self.composition._is_in_composition(spec):
-                        # FIX: 3/21/22 DELETE ONCE ALL TESTS PASS:
-                        source = self._get_state_feature_input_source(state_input_port, spec)
-                        assert source == spec, f"ALERT: source returned != state_feature_spec in state_features"
                         source = spec.full_name
                     else:
                         source = deferred_state_feature_spec_msg(spec.full_name, self.composition.name)
@@ -3403,31 +3399,6 @@ class OptimizationControlMechanism(ControlMechanism):
             state_features_dict[key] = source
 
         return state_features_dict
-
-    # FIX: 3/21/22 DELETE ONCE ALL TESTS PASS:
-    def _get_state_feature_input_source(self, input_port, spec):
-        """Dict with {InputPort: source} for all INPUT Nodes of agent_rep, and sources in **state_feature_specs."""
-        if input_port.path_afferents:
-            get_info_method = self.composition._get_source
-            # FIX: 1/8/22: ASSUMES ONLY ONE PROJECTION PER STATE FEATURE
-            port = input_port
-            if input_port.shadow_inputs:
-                port = input_port.shadow_inputs
-                if port.owner in self.composition.nodes:
-                    composition = self.composition
-                else:
-                    composition = port.path_afferents[0].sender.owner.composition
-                get_info_method = composition._get_destination
-            source, _, _ = get_info_method(port.path_afferents[0])
-        else:
-            if input_port.default_input is DEFAULT_VARIABLE:
-                if spec is not None:
-                    source = spec
-                else:
-                    source = DEFAULT_VARIABLE
-            else:
-                source = spec
-        return source
 
     @property
     def state(self):
