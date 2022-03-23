@@ -915,10 +915,10 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        # ('single_none_spec', None, None),
-        # ('single_shadow_spec', None, None),
-        # ('single_tuple_shadow_spec', None, None),
-        # ('partial_legal_list_spec', messages[0], UserWarning),
+        ('single_none_spec', None, None),
+        ('single_shadow_spec', None, None),
+        ('single_tuple_shadow_spec', None, None),
+        ('partial_legal_list_spec', messages[0], UserWarning),
         ('full_list_spec', None, None),
         ('list_spec_with_none', None, None),
         ('input_dict_spec', None, None),
