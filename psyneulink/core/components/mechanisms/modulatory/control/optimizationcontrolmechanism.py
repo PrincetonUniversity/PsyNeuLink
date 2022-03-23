@@ -2387,11 +2387,12 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # FIX: 3/22/22 - MUCH OF THE FOLLOWING COULD/SHOULD BE DONE IN _parse_specs():
 
-            # FIX: 3/22/22: REMOVE THE FOLLOWING IF PASSES ALL TESTS
-
-            # MODIFIED 3/22/22 NEW: FIX; ADD SHADOW SPEC TO DICT
-            # FIX: 3/22/22 - THIS IS CURRENTLY CRASHES WHEN PARSING "PROJECTIONS" ENTRY (?needs "SHADOW_INPUTS"?)
-            # Extract source and, if Mechanism, convert to  primary InputPort to be shadowed
+            # MODIFIED 3/22/22 NEW:
+            # If spec is an InputPort specification dict with a Mechanism specified as the source ,
+            #     - modify spec to specify shadowing of Mechanism's primary InputPort
+            #     - process dict through _parse_shadow_inputs,
+            #       but preserve spec as dict in case any parameters (other than function, handled below) are specified
+            #     - replace self.state_feature_specs[i] with the InputPort (required by state_feature_values)
             if isinstance(self.state_feature_specs[i], dict):
                 if PROJECTIONS in spec:
                     source = get_port_for_mech_spec(spec.pop(PROJECTIONS))
@@ -2403,10 +2404,11 @@ class OptimizationControlMechanism(ControlMechanism):
                     raise OptimizationControlMechanismError(
                         f"InputPort specification dictionary specified in '{STATE_FEATURES}' arg of '{self.name}' "
                         f"that is missing a 'PROJECTIONS' entry specifying the source of the input.")
-                # spec = get_port_for_mech_spec(source)
-                self.state_feature_specs[i] = source
                 spec = _parse_shadow_inputs(self, spec)[0] # _parse_shadow_inputs returns a list, so get item
+                self.state_feature_specs[i] = source
             # MODIFIED 3/22/22 END
+
+            # FIX: 3/22/22: REMOVE THE FOLLOWING IF PASSES ALL TESTS
             # old_spec = spec
             # # Get InputPort specification dict for any shadowing InputPorts, and unmodified spec for any others
             # spec = _parse_shadow_inputs(self, spec)
@@ -2432,8 +2434,10 @@ class OptimizationControlMechanism(ControlMechanism):
                 self.state_feature_specs[i] = spec
 
             if isinstance(spec, dict):
+                # Clear any functions specified:
+                #   - have been assigned to self._state_feature_functions in _parse_spec()
+                #   - will be assigned to InputPort specification dict in _assign_state_feature_function
                 if self._state_feature_functions[i]:
-                    # Clear any functions specified; will be assigned in _assign_state_feature_function
                     spec.pop(FUNCTION, None)
                     if PARAMS in spec:
                         spec[PARAMS].pop(FUNCTION, None)
