@@ -435,11 +435,11 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 
       .. note::
          The use of a Mechanism to specify the shadowing of its `primary InputPort <InputPort_Primary>` is unique to
-         its specification the **state_features** argument of an OptimizationControlMechanism, and differs from the
-         ordinary usage where its specifies a Projection from its `primary OutputPort <OutputPort_Primary>` (see
+         its specification in the **state_features** argument of an OptimizationControlMechanism, and differs from the
+         ordinary usage where it specifies a Projection from its `primary OutputPort <OutputPort_Primary>` (see
          `InputPort specification <InputPort_Projection_Source_Specification>`).  This difference extends to the use
          of a Mechanism in the *PROJECTIONS* entry of an `InputPort specification dictionary
-         <InputPort_Specification_Dictionary>` that is assigned to the **state_features** argument, where there too
+         <InputPort_Specification_Dictionary>` used in the **state_features** argument, where there too
          it designates shadowing of its `primary InputPort <InputPort_Primary>` rather than a `Projection` from its
          `primary OutputPort <OutputPort_Primary>`.
 
@@ -491,7 +491,7 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
 * **state_feature_function** -- specifies a `function <InputPort.function>` to be used as the default
   function for `state_input_ports <OptimizationControlMechanism.state_input_ports>`. This is assigned as
   the `function <InputPort.function>` to any state_input_ports for which *no other* `Function` is specified --
-  that is, in either an InputPort specification dictionary <InputPort_Specification_Dictionary>` or a `2-item tuple
+  that is, in either an `InputPort specification dictionary <InputPort_Specification_Dictionary>` or a `2-item tuple
   <OptimizationControlMechanism_Tuple_State_Feature>` in the **state_features** argument (see `state_features
   <OptimizationControlMechanism_State_Features_Arg>`).  If either of the latter is specified, they override
   the specification in **state_feature_function**.  If **state_feature_function** is *not* specified, then
