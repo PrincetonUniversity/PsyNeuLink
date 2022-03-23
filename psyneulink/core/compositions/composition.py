@@ -4112,37 +4112,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
                                        f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
 
+    def remove_node(self, node):
+        self._remove_node(node)
+
+    def _remove_node(self, node, analyze_graph=True):
+        for proj in node.afferents + node.efferents:
+            self.remove_projection(proj)
+
+        for param_port in node.parameter_ports:
+            for proj in param_port.mod_afferents:
+                self.remove_projection(proj)
+
+        # deactivate any shadowed projections
+        for shadow_target, shadow_port_original in self.shadowing_dict.items():
+            if shadow_port_original in node.input_ports:
+                for shadow_proj in shadow_target.all_afferents:
+                    if shadow_proj.sender.owner.composition is self:
+                        self.remove_projection(shadow_proj)
+
+                        # NOTE: deactivation should be sufficient but
+                        # asserts in OCM _update_state_input_port_names
+                        # need target input ports of shadowed
+                        # projections to be active or not present at all
+                        try:
+                            self.controller.state_input_ports.remove(shadow_target)
+                        except AttributeError:
+                            pass
+
+        self.graph.remove_component(node)
+        del self.nodes_to_roles[node]
+
+        # Remove any entries for node in required_node_roles or excluded_node_roles
+        node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
+        for item in node_role_pairs:
+            self.required_node_roles.remove(item)
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node]
+        for item in node_role_pairs:
+            self.excluded_node_roles.remove(item)
+
+        del self.nodes[node]
+        self.node_ordering.remove(node)
+
+        for p in self.pathways:
+            try:
+                p.pathway.remove(node)
+            except ValueError:
+                pass
+
+        self.needs_update_graph_processing = True
+        self.needs_update_scheduler = True
+
+        if analyze_graph:
+            self._analyze_graph()
+
     def remove_nodes(self, nodes):
         if not isinstance(nodes, (list, Mechanism, Composition)):
             assert False, 'Argument of remove_nodes must be a Mechanism, Composition or list containing either or both'
         nodes = convert_to_list(nodes)
         for node in nodes:
-            for proj in node.afferents + node.efferents:
-                try:
-                    del self.projections[proj]
-                except ValueError:
-                    # why are these not present?
-                    pass
+            self._remove_node(node, analyze_graph=False)
 
-                try:
-                    self.graph.remove_component(proj)
-                except CompositionError:
-                    # why are these not present?
-                    pass
-
-            self.graph.remove_component(node)
-            del self.nodes_to_roles[node]
-
-            # Remove any entries for node in required_node_roles or excluded_node_roles
-            node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
-            for item in node_role_pairs:
-                self.required_node_roles.remove(item)
-            node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node]
-            for item in node_role_pairs:
-                self.excluded_node_roles.remove(item)
-
-            del self.nodes[node]
-            self.node_ordering.remove(node)
+        self._analyze_graph()
 
     @handle_external_context()
     def _add_required_node_role(self, node, role, context=None):
