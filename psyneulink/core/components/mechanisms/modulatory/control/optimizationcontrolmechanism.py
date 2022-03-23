@@ -2397,7 +2397,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 # - if a function is specified, clear from dict
                 #    - it has already been assigned to self._state_feature_functions in _parse_spec()
                 #    - it will be properly assigned to InputPort specification dict in _assign_state_feature_function
-                def error_check(spec=None, source=None):
+                def _validate_entries(spec=None, source=None):
                     if spec and source:
                         if (SHADOW_INPUTS in spec) or (PARAMS in spec and SHADOW_INPUTS in spec[PARAMS]):
                             error_msg = "both PROJECTIONS and SHADOW_INPUTS cannot specified"
@@ -2412,14 +2412,14 @@ class OptimizationControlMechanism(ControlMechanism):
                 if PROJECTIONS in spec:
                     source = get_port_for_mech_spec(spec.pop(PROJECTIONS))
                     if spec:  # No need to check if nothing left in dict
-                        error_check(spec, source)
+                        _validate_entries(spec, source)
                     spec[SHADOW_INPUTS] = source
                 elif PARAMS in spec and PROJECTIONS in spec[PARAMS]:
                     source = get_port_for_mech_spec(spec[PARAMS].pop(PROJECTIONS))
-                    error_check(spec, source)
+                    _validate_entries(spec, source)
                     spec[PARAMS][SHADOW_INPUTS] = source
                 else:
-                    error_check()
+                    _validate_entries()
 
                 # Clear FUNCTION entry
                 if self._state_feature_functions[i]:
