@@ -915,10 +915,10 @@ class TestControlMechanisms:
     ]
 
     state_feature_args = [
-        ('single_none_spec', None, None),
-        ('single_shadow_spec', None, None),
-        ('single_tuple_shadow_spec', None, None),
-        ('partial_legal_list_spec', messages[0], UserWarning),
+        # ('single_none_spec', None, None),
+        # ('single_shadow_spec', None, None),
+        # ('single_tuple_shadow_spec', None, None),
+        # ('partial_legal_list_spec', messages[0], UserWarning),
         ('full_list_spec', None, None),
         ('list_spec_with_none', None, None),
         ('input_dict_spec', None, None),
@@ -1400,7 +1400,7 @@ class TestControlMechanisms:
         'tuple_override_dict',
         'tuple_override_params_dict',
         'port_spec_dict_in_feat_dict',
-        # 'all',
+        'all',
         None
     ])
     def test_state_feature_function_specs(self, state_fct_assignments):
@@ -1416,7 +1416,7 @@ class TestControlMechanisms:
         R = pnl.ProcessingMechanism(name='D')
 
         if state_fct_assignments == 'partial_w_dict':
-            state_features = [{pnl.PROJECTIONS: A,
+            state_features = [{pnl.PROJECTIONS: A, # Note: specification of A in dict is still interpreted as shadowing
                                pnl.FUNCTION: fct_a},
                               (B, fct_b),
                               C]
@@ -1447,7 +1447,7 @@ class TestControlMechanisms:
                               C: C}
             state_feature_function = fct_c
         elif state_fct_assignments == 'all':
-            state_features = [(A.output_port, fct_a), (B, fct_b), (C, fct_c)]
+            state_features = [(A, fct_a), (B, fct_b), (C, fct_c)]
             state_feature_function = None
         else:
             state_features = [A, B, C]
@@ -1470,7 +1470,7 @@ class TestControlMechanisms:
             assert result == [[24.]]
             assert all(np.allclose(actual, expected)
                        for actual, expected in zip(list(ocm.parameters.state_feature_values.get('test').values()),
-                                                   [[20],[[1],[2]],[3]]))
+                                                   [[2],[[1],[2]],[3]]))
         else:
             assert isinstance(ocm.state_input_ports[0].function, pnl.LinearCombination)
             assert isinstance(ocm.state_input_ports[1].function, pnl.LinearCombination)

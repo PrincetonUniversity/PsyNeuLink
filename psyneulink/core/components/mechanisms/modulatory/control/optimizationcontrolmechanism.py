@@ -427,11 +427,21 @@ exceptions/additions, which are specific to the OptimizationControlMechanism:
     * *Mechanism* -- create a `state_input_port <OptimizationControlMechanism.state_input_ports>` that `shadows
       <InputPort_Shadow_Inputs>` the input to the `primary InputPort <InputPort_Primary>` of the specified Mechanism
       (this is the same as explicitly specifying the Mechanism's  input_port, as described `above
-      <OptimizationControlMechanism_Input_Port_State_Feature>`).  If the Mechanism is in a `nested Composition
+      <OptimizationControlMechanism_Input_Port_State_Feature>`). If the Mechanism is in a `nested Composition
       <Composition_Nested>`, it must be an `INPUT <NodeRole.INPUT>` `Node <Composition_Nodes>` of that Composition
       (see `note <OptimizationControlMechanism_INPUT_Node_Specification>` above).  If the Mechanism's `OutputPort`
       needs to be used, it must be specified explicitly (as described `above
       <OptimizationControlMechanism_Output_Port_State_Feature>`).
+
+      .. note::
+         The use of a Mechanism to specify the shadowing of its `primary InputPort <InputPort_Primary>` is unique to
+         its specification the **state_features** argument of an OptimizationControlMechanism, and differs from the
+         ordinary usage where its specifies a Projection from its `primary OutputPort <OutputPort_Primary>` (see
+         `InputPort specification <InputPort_Projection_Source_Specification>`).  This difference extends to the use
+         of a Mechanism in the *PROJECTIONS* entry of an `InputPort specification dictionary
+         <InputPort_Specification_Dictionary>` that is assigned to the **state_features** argument, where there too
+         it designates shadowing of its `primary InputPort <InputPort_Primary>` rather than a `Projection` from its
+         `primary OutputPort <OutputPort_Primary>`.
 
     .. _OptimizationControlMechanism_Tuple_State_Feature:
 
@@ -2064,9 +2074,10 @@ class OptimizationControlMechanism(ControlMechanism):
             return input_nodes
 
         def get_port_for_mech_spec(spec:Union[Port,Mechanism]):
-            """Return port for specified Mechanism:
-               - if agent_rep is Composition:  Primary InputPort of Mechanism (to be shadowed)
-               - if agent_rep is CF:  OutputPort (per standard treatment)
+            """Return port for Mechanism specified as state_feature
+            This is used to override the standard interpretation of a Mechanism in an InputPort specification:
+               - return Primary InputPort of Mechanism (to be shadowed) if agent_rep is Composition
+               - return Primary OutputPort of Mechanism (standard behavior) if agent_rep is a CFA
             """
             # assert isinstance(mech, Mechanism), \
             #     f"PROGRAM ERROR: {mech} should be Mechanism in call to get_port_for_mech_spec() for '{self.name}'"
@@ -2391,7 +2402,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 spec = spec[0] # _parse_shadow_inputs(self, spec) returns a list, even when passed a single item
 
             if isinstance(spec, Mechanism):
-                # MODIFIED 3/22/22 OLD:
+                # # MODIFIED 3/22/22 OLD:
                 # if self.agent_rep_type == COMPOSITION:
                 #     # If agent_rep is Composition, assume shadowing a Mechanism means shadowing its primary InputPort
                 #     # FIX: 11/29/21: MOVE THIS TO _parse_shadow_inputs
@@ -2406,8 +2417,11 @@ class OptimizationControlMechanism(ControlMechanism):
                 #     # If agent_rep is a CFA, use standard assumption that Mechanism spec is for its primary OutputPort
                 #     spec = spec.output_port
                 # # If spec is a Mechanism, update to be the specified Port
+                # self.state_feature_specs[i] = spec
+                # # MODIFIED 3/22/22 NEW:
+                spec = get_port_for_mech_spec(spec)
+                self.state_feature_specs[i] = spec
                 # MODIFIED 3/22/22 END
-                self.state_feature_specs[i] = get_port_for_mech_spec(spec)
 
             if isinstance(spec, dict):
                 if self._state_feature_functions[i]:
@@ -2415,19 +2429,22 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec.pop(FUNCTION, None)
                     if PARAMS in spec:
                         spec[PARAMS].pop(FUNCTION, None)
-                # Extract source and, if Mechanism, convert to Port
                 # MODIFIED 3/22/22 NEW:
-                assert True
+                # Extract source and, if Mechanism, convert to Port
+                source = None
                 if PROJECTIONS in spec:
                     source = spec[PROJECTIONS]
-                elif [PARAMS] in spec and [PROJECTIONS] in spec[PARAMS]:
+                elif PARAMS in spec and PROJECTIONS in spec[PARAMS]:
                     source = spec[PARAMS][PROJECTIONS]
-                else:
-                    raise OptimizationControlMechanismError(f"InputPort specification dictionary specified in "
-                                                            f"'{STATE_FEATURES}' arg of '{self.name}' that is missing"
-                                                            f"a PROJECTIONS entry specifying the source of the input.")
-                self.state_feature_specs[i] = get_port_for_mech_spec(source)
-                # MODIFIED 3/22/22 END
+                # else:
+                #     raise OptimizationControlMechanismError(f"InputPort specification dictionary specified in "
+                #                                             f"'{STATE_FEATURES}' arg of '{self.name}' that is missing"
+                #                                             f"a PROJECTIONS entry specifying the source of the input.")
+                # spec = get_port_for_mech_spec(source)
+                if source:
+                    self.state_feature_specs[i] = get_port_for_mech_spec(source)
+                    # FIX: THE ABOVE FAILS TO PROCESS A IN DICT AS InputPort
+            # MODIFIED 3/22/22 END
 
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
@@ -2636,10 +2653,10 @@ class OptimizationControlMechanism(ControlMechanism):
             raise OptimizationControlMechanismError(
                 self_has_state_features_str + f"({[d.name for d in invalid_state_features]}) " + not_in_comps_str)
 
-        # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
-        print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
-        inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
-        #  END DEBUGGING ---------------------------------------------------------------------
+        # # FOLLOWING IS FOR DEBUGGING: (TO SEE CODING ERRORS DIRECTLY) -----------------------
+        # print("****** DEBUGGING CODE STILL IN OCM -- REMOVE FOR PROPER TESTING ************")
+        # inputs_dict, num_inputs = self.agent_rep._parse_input_dict(self.parameters.state_feature_values._get(context))
+        # #  END DEBUGGING ---------------------------------------------------------------------
 
         # Ensure state_features are compatible with input format for agent_rep Composition
         try:
