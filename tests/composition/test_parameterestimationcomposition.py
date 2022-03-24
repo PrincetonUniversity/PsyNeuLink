@@ -1,6 +1,7 @@
 import logging
 
 import numpy as np
+import pandas as pd
 import pytest
 
 import psyneulink as pnl
@@ -8,6 +9,7 @@ from psyneulink.core.components.functions.nonstateful.combinationfunctions impor
     LinearCombination, Concatenate
 from psyneulink.core.components.functions.nonstateful.distributionfunctions import DriftDiffusionAnalytical
 from psyneulink.core.components.functions.nonstateful.optimizationfunctions import GridSearch
+from psyneulink.core.components.functions.fitfunctions import MaxLikelihoodEstimator
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.library.components.mechanisms.processing.integrator.ddm import \
     DDM, DECISION_VARIABLE, RESPONSE_TIME, PROBABILITY_UPPER_THRESHOLD
@@ -81,8 +83,8 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
     comp.add_linear_processing_pathway(task_execution_pathway)
 
     pec = pnl.ParameterEstimationComposition(name='pec',
-                                             model = comp if model_spec else None,
-                                             nodes = comp if node_spec else None,
+                                             model=comp if model_spec else None,
+                                             nodes=comp if node_spec else None,
                                              # data = [1,2,3],    # For testing error
                                              parameters={('drift_rate',Decision):[1,2],
                                                          ('threshold',Decision):[1,2],},
@@ -113,3 +115,50 @@ def test_parameter_estimation_composition(objective_function_arg, expected_input
     assert pnl.RANDOMIZATION_CONTROL_SIGNAL in ctlr.control_signals.names
     assert ctlr.control_signals[pnl.RANDOMIZATION_CONTROL_SIGNAL].allocation_samples.num == 3
     # pec.run()
+
+
+def test_parameter_estimation_mle():
+    """Test parameter estimation of a DDM in integrator mode with MLE."""
+
+    ddm_params = dict(starting_value=0.0, rate=0.3, noise=1.0,
+                      threshold=0.6, non_decision_time=0.15, time_step_size=0.01)
+
+    # Create a simple one mechanism composition containing a DDM in integrator mode.
+    decision = pnl.DDM(function=pnl.DriftDiffusionIntegrator(**ddm_params),
+                       output_ports=[pnl.DECISION_VARIABLE, pnl.RESPONSE_TIME],
+                       name='DDM')
+
+    comp = pnl.Composition(pathways=decision)
+
+    # Lets generate an "experimental" dataset to fit. This is a parameter recovery test
+    # The input will be 250 trials of the same constant stimulus drift rate of 1
+    input = np.ones((250, 1))
+    inputs_dict = {decision: input}
+
+    # Run the composition to generate some data to fit
+    comp.run(inputs=inputs_dict,
+             num_trials=len(input),
+             execution_mode=pnl.ExecutionMode.LLVMRun)
+
+    # Store the results of this "experiment" as a numpy array. This should be a
+    # 2D array of shape (len(input), 2). The first column being a discrete variable
+    # specifying the upper or lower decision boundary and the second column is the
+    # reaction time. We will put the data into a pandas DataFrame, this makes it
+    # easier to specify which columns in the data are categorical or not.
+    data_to_fit = pd.DataFrame(np.squeeze(np.array(comp.results)),
+                               columns=['decision', 'rt'])
+    data_to_fit['decision'] = pd.Categorical(data_to_fit['decision'])
+
+    pec = pnl.ParameterEstimationComposition(name='pec',
+                                             model=comp,
+                                             parameters={('drift_rate', decision): [1, 2],
+                                                         ('threshold', decision): [1, 2], },
+                                             outcome_variables=[decision.output_ports[DECISION_VARIABLE],
+                                                                decision.output_ports[RESPONSE_TIME]],
+                                             objective_function=None,
+                                             optimization_function=MaxLikelihoodEstimator,
+                                             num_estimates=100,
+                                             )
+    ctlr = pec.controller
+
+    pec.run()

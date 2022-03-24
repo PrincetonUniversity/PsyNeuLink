@@ -369,22 +369,26 @@ def make_likelihood_function(
     return log_likelihood, param_name_map
 
 
-class MaxLikelihoodEstimatorFunction(OptimizationFunction):
+class MaxLikelihoodEstimator(OptimizationFunction):
     """
-    A class for performing parameter estimation for a  maximum likelihood estimation on a PsyNeuLink composition using the
-    ParameterEstimationComposition.
-    """
-    pass
-
-class MaxLikelihoodEstimator:
-    """
-    Implements a maximum likelihood estimation given a likelihood function
+    A class for performing parameter estimation for a composition using maximum likelihood estimation (MLE).
     """
 
     def __init__(
         self,
-        log_likelihood_function: typing.Callable,
-        fit_params_bounds: typing.Dict[str, typing.Tuple],
+        default_variable=None,
+        objective_function = None,
+        search_space=None,
+        direction=None,
+        save_samples=None,
+        save_values=None,
+        select_randomly_from_optimal_values=None,
+        seed=None,
+        params=None,
+        owner=None,
+        prefs=None,
+        log_likelihood_function: typing.Callable=None,
+        fit_params_bounds: typing.Dict[str, typing.Tuple]=None,
     ):
         self.log_likelihood_function = log_likelihood_function
         self.fit_params_bounds = fit_params_bounds
@@ -394,6 +398,54 @@ class MaxLikelihoodEstimator:
             "IterRecord",
             f"{' '.join(self.fit_params_bounds.keys())} neg_log_likelihood likelihood_eval_time",
         )
+
+        search_function = self._traverse_grid
+        search_termination_function = self._grid_complete
+        self._return_values = save_values
+        self._return_samples = save_values
+        try:
+            search_space = [x if isinstance(x, SampleIterator) else SampleIterator(x) for x in search_space]
+        except TypeError:
+            pass
+
+        self.num_iterations = 1 if search_space is None else np.product([i.num for i in search_space])
+
+        super().__init__(
+            default_variable=default_variable,
+            objective_function=objective_function,
+            search_function=search_function,
+            search_termination_function=search_termination_function,
+            search_space=search_space,
+            select_randomly_from_optimal_values=select_randomly_from_optimal_values,
+            save_samples=save_samples,
+            save_values=save_values,
+            seed=seed,
+            direction=direction,
+            params=params,
+            owner=owner,
+            prefs=prefs,
+        )
+
+    def _validate_params(self, request_set, target_set=None, context=None):
+
+        super()._validate_params(request_set=request_set, target_set=target_set, context=context)
+        if SEARCH_SPACE in request_set and request_set[SEARCH_SPACE] is not None:
+            search_space = request_set[SEARCH_SPACE]
+
+            # Check that all iterators are finite (i.e., with num!=None)
+            if not all(s.num is not None for s in search_space if (s is not None and s.num)):
+                raise OptimizationFunctionError("All {}s in {} arg of {} must be finite (i.e., SampleIteror.num!=None)".
+                                                format(SampleIterator.__name__,
+                                                       repr(SEARCH_SPACE),
+                                                       self.__class__.__name__))
+
+
+    def _function(self,
+                 variable=None,
+                 context=None,
+                 params=None,
+                 **kwargs):
+        pass
 
     def fit(self, display_iter: bool = False, save_iterations: bool = False):
 

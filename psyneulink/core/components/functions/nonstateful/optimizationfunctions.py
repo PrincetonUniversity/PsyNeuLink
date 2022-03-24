@@ -162,10 +162,10 @@ class OptimizationFunction(Function_Base):
         their `function <Mechanism_Base.function>` (such as the `OptimizationControlMechanism`), but will require it be
         done explicitly for Components for which that is not the case. A warning is issued if defaults are used for
         the arguments of an OptimizationFunction or its subclasses;  this can be suppressed by specifying the
-        relevant argument(s) as `NotImplemnted`.
+        relevant argument(s) as `NotImplemented`.
 
     .. technical_note::
-       - Constructors of subclasses should include **kwargs in their constructor method, to accomodate arguments
+       - Constructors of subclasses should include **kwargs in their constructor method, to accommodate arguments
          required by some subclasses but not others (e.g., search_space needed by `GridSearch` but not
          `GradientOptimization`) so that subclasses can be used interchangeably by OptimizationControlMechanism.
 
