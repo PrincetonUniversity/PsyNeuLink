@@ -1042,6 +1042,20 @@ class Logistic(TransferFunction):  # -------------------------------------------
 
         return gain * scale * output * (1 - output)
 
+    def as_mdf_model(self):
+        model = super().as_mdf_model()
+
+        # x_0 is included in bias in MDF logistic
+        self._set_mdf_arg(model, 'bias', model.args['bias'] - model.args['x_0'])
+        self._set_mdf_arg(model, 'x_0', 0)
+
+        if model.args['scale'] != 1.0:
+            warnings.warn(
+                f"Scale (set to {model.args['scale']} is not a supported"
+                ' parameter for MDF logistic'
+            )
+        return model
+
 
 # **********************************************************************************************************************
 #                                                    Tanh
@@ -2870,6 +2884,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
 
     DEFAULT_FILLER_VALUE = 0
 
+    _model_spec_generic_type_name = 'onnx::MatMul'
+
     class Parameters(TransferFunction.Parameters):
         """
             Attributes
@@ -2881,7 +2897,8 @@ class LinearMatrix(TransferFunction):  # ---------------------------------------
                     :default value: None
                     :type:
         """
-        matrix = Parameter(None, modulable=True)
+        variable = Parameter(np.array([0]), read_only=True, pnl_internal=True, constructor_argument='default_variable', mdf_name='A')
+        matrix = Parameter(None, modulable=True, mdf_name='B')
         bounds = None
 
     # def is_matrix_spec(m):

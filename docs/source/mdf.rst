@@ -1,5 +1,5 @@
-JSON
-====
+MDF
+===
 
 .. automodule:: psyneulink.core.globals.json
    :members:

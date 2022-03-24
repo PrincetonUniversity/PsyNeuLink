@@ -47,7 +47,7 @@ from psyneulink.core.globals.keywords import \
     INCREMENT, INITIALIZER, INPUT_PORTS, INTEGRATOR_FUNCTION, INTEGRATOR_FUNCTION_TYPE, \
     INTERACTIVE_ACTIVATION_INTEGRATOR_FUNCTION, LEAKY_COMPETING_INTEGRATOR_FUNCTION, \
     MULTIPLICATIVE_PARAM, NOISE, OFFSET, OPERATION, ORNSTEIN_UHLENBECK_INTEGRATOR_FUNCTION, OUTPUT_PORTS, PRODUCT, \
-    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE
+    RATE, REST, SIMPLE_INTEGRATOR_FUNCTION, SUM, TIME_STEP_SIZE, THRESHOLD, VARIABLE, MODEL_SPEC_ID_MDF_VARIABLE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.utilities import parameter_spec, all_within_range, \
@@ -217,7 +217,7 @@ class IntegratorFunction(StatefulFunction):  # ---------------------------------
         noise = Parameter(
             0.0, modulable=True, function_arg=True, setter=_noise_setter
         )
-        previous_value = Parameter(np.array([0]), initializer='initializer', pnl_internal=True)
+        previous_value = Parameter(np.array([0]), initializer='initializer')
         initializer = Parameter(np.array([0]), pnl_internal=True)
 
     @tc.typecheck
@@ -689,6 +689,9 @@ class AccumulatorIntegrator(IntegratorFunction):  # ----------------------------
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
 
+    def as_expression(self):
+        return 'previous_value * rate + noise + increment'
+
 
 class SimpleIntegrator(IntegratorFunction):  # -------------------------------------------------------------------------
     """
@@ -916,6 +919,10 @@ class SimpleIntegrator(IntegratorFunction):  # ---------------------------------
         vo_ptr = builder.gep(vo, [ctx.int32_ty(0), index])
         builder.store(res, vo_ptr)
         builder.store(res, prev_ptr)
+
+    def as_expression(self):
+        return f'previous_value + ({MODEL_SPEC_ID_MDF_VARIABLE} * rate) + noise + offset'
+
 
 class AdaptiveIntegrator(IntegratorFunction):  # -----------------------------------------------------------------------
     """
@@ -1235,6 +1242,9 @@ class AdaptiveIntegrator(IntegratorFunction):  # -------------------------------
         # MODIFIED 6/21/19 NEW: [JDC]
         return self.convert_output_type(adjusted_value, variable)
         # MODIFIED 6/21/19 END
+
+    def as_expression(self):
+        return f'(1 - rate) * previous_value + rate * {MODEL_SPEC_ID_MDF_VARIABLE} + noise + offset'
 
 
 S_MINUS_L = 's-l'
@@ -3836,6 +3846,9 @@ class LeakyCompetingIntegrator(IntegratorFunction):  # -------------------------
         builder.store(ret, out_ptr)
         builder.store(ret, prev_ptr)
 
+    def as_expression(self):
+        return f'previous_value + (-rate * previous_value + {MODEL_SPEC_ID_MDF_VARIABLE}) * time_step_size + noise * (time_step_size ** 0.5)'
+
 
 class FitzHughNagumoIntegrator(IntegratorFunction):  # ----------------------------------------------------------------------------
     """
@@ -4391,7 +4404,7 @@ class FitzHughNagumoIntegrator(IntegratorFunction):  # -------------------------
 
         # this should be removed because it's unused, but this will
         # require a larger refactoring on previous_value/value
-        previous_value = Parameter(None, initializer='initializer', pnl_internal=True)
+        previous_value = Parameter(None, initializer='initializer')
 
         enable_output_type_conversion = Parameter(
             False,

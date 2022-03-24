@@ -180,10 +180,10 @@ the items in its `variable <Mechanism_Base.variable>`. However, by assigning val
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `CombinationFunction`, or any python function that takes an 2d array as its input (with a number
-of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates a 1d array as its result.
-If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned from `weight
-<InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
+be replaced with any `CombinationFunction <CombinationFunctions>`, or any python function that takes an 2d array as
+its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates
+a 1d array as its result. If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned
+from `weight <InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
 <ObjectiveMechanism.input_ports>` (also listed in the `monitor_weights_and_exponents
 <ObjectiveMechanism.monitor_weights_and_exponents>` attribute);  otherwise, they are ignored.
 
@@ -464,10 +464,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         OutputPorts specified in its `monitor <ObjectiveMechanism.monitor>` attribute.
 
     function : CombinationFunction, ObjectiveFunction, function, or method
-        the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be
-        any PsyNeuLink `CombinationFunction` or a Python function that takes a 2d array with an arbitrary number of
-        items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e., its number of
-        input_ports) and returns a 1d array.
+        the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
+        `CombinationFunction <CombinationFunctions>` or a Python function that takes a 2d array with an arbitrary
+        number of items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e.,
+        its number of input_ports) and returns a 1d array.
 
     output_port : OutputPort
         contains the `primary OutputPort <OutputPort_Primary>` of the ObjectiveMechanism; the default is

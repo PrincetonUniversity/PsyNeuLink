@@ -380,8 +380,8 @@ from Nodes in a nested Composition that are not `OUTPUT <NodeRole.OUTPUT>` Nodes
 *Inputs for nested Compositions*.  If a nested Composition is an `INPUT` Node of all of the Compositions within
 which it is nested, including the outermost one, then when the latter is `executed <Composition_Execution>`,
 the `inputs specified <Composition_Execution_Inputs>` to its `execution method <Composition_Execution_Methods>` must
-include the InputPorts of the nested Composition.  These can be accessed using the Composition's `exernal_input_ports
-<Composition.external_input_ports>` attribute.
+include the InputPorts of the nested Composition.  These can be accessed using the Composition's
+`external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>` attribute.
 
 .. _Composition_Nested_Results:
 
@@ -838,7 +838,7 @@ and assigns to them the `NodeRoles <NodeRole>` indicated:
 It also assigns the following item to the list of `learning_components` for the pathway:
 
     .. _OUTPUT_MECHANISM:
-    * *OUTPUT_MECHANISM* -- the final `Node <Component_Nodes>` in the learning Pathway, the target `value
+    * *OUTPUT_MECHANISM* -- the final `Node <Composition_Nodes>` in the learning Pathway, the target `value
       <Mechanism_Base.value>` for which is specified as input to the `TARGET_MECHANISM`; the Node is assigned
       the `NodeRoles <NodeRole>` `OUTPUT` in the Composition.
 
@@ -1005,6 +1005,8 @@ Executing a Composition
 
     - `Execution Methods <Composition_Execution_Methods>`
     - `Composition_Execution_Inputs`
+        • `Composition_Input_Dictionary`
+        • `Composition_Programmatic_Inputs`
     - `Composition_Execution_Factors`
         • `Composition_Runtime_Params`
         • `Composition_Cycles_and_Feedback`
@@ -1110,13 +1112,16 @@ argument of the `learn <Composition.learn>` method) can be specified in either w
 format can be used for the `execute <Composition.execute>` method, since it executes only one `TRIAL
 <TimeScale.TRIAL>` at a time, and therefore can only accept inputs for asingle `TRIAL <TimeScale.TRIAL>`.
 
+.. _Composition_Input_External_InputPorts:
+
 *Inputs and input_ports*. All formats must specify the inputs to be assigned, on each `TRIAL <TimeScale.TRIAL>`, to
-the InputPorts of the Composition's `INPUT` `Nodes <Composition_Nodes>` that require external inputs. These are listed
-in the `external_input_ports <Mechanism_Base.external_input_ports>` attribute of the Composition's `INPUT`
-`Mechanisms <Mechanism>`, and the corresponding attribute (`external_input_ports <Composition.external_input_ports>`)
-of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the Composition being executed
-(see `above <Composition_Nested_External_Input_Ports>`).  The format required can also be seen using the
-`get_input_format() <Composition.get_input_format>` method.
+*all* of the **external InputPorts** of the Composition's `INPUT` `Nodes <Composition_Nodes>`. These are InputPorts
+belonging to its `INPUT` `Nodes <Composition_Nodes>` at *all levels of nesting*, that are not designated as
+`internal_only <InputPort_Internal_Only>`. They are listed in the Composition's `external_input_ports_of_all_input_nodes
+<Composition.external_input_ports_of_all_input_nodes>` attribute, as well as the `external_input_ports
+<Mechanism_Base.external_input_ports>` attribute of each `Mechanism` that is an `INPUT <NodeRole.INPUT>`
+`Node <Composition_Nodes>` of the Composition or any `nested Composition <Composition_Nested>` within it
+The format required can also be seen using the  `get_input_format() <Composition.get_input_format>` method.
 
 .. _Composition_Input_Internal_Only:
 
@@ -1127,10 +1132,10 @@ of any `nested Composition <Composition_Nested>` that is an `INPUT` Node of the 
    <Composition_Input_Dictionary_InputPort_Entries>`). Conversely, some Mechanisms have InputPorts that are designated
    as `internal_only <InputPort.internal_only>` (for example, the `input_port <Mechanism_Base.input_port>` for a
    `RecurrentTransferMechanism`, if its `has_recurrent_input_port <RecurrentTransferMechanism.has_recurrent_input_port>`
-   attribute is True), in which case no input should be specified for those input_ports.  Similar considerations
-   extend to the `external_input_ports <Composition.external_input_ports>` of a `nested Composition
-   <Composition_Nested>`, based on the Mechanisms (and/or additionally nested Compositions) that comprise its set of
-   `INPUT` `Nodes <Composition_Nodes>`.
+   attribute is True), in which case no input should be specified for those input_ports. Similar considerations
+   extend to the `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>` of a
+   `nested Composition <Composition_Nested>`, based on the Mechanisms (and/or additionally nested Compositions) that
+   comprise its set of `INPUT` `Nodes <Composition_Nodes>`.
 
 The factors above determine the format of each entry in an `inputs dictionary <Composition_Input_Dictionary>`, or the
 return value of the function or generator used for `programmatic specification <Composition_Programmatic_Inputs>` of
@@ -1159,6 +1164,8 @@ contains entries for some but not all of the InputPorts of a Node, the remaining
 information concerning `entries for Nodes <Composition_Input_Dictionary_Node_Entries>` and `entries for InputPorts
 <Composition_Input_Dictionary_InputPort_Entries>`).
 
+.. _Composition_Input_Dictionary_Input_Values:
+
 *Input values*. The value of each entry is an ndarray or nested list containing the inputs to that Node or InputPort.
 For Nodes, the value is a 3d array (or correspondingly nested list), in which the outermost items are 2d arrays
 containing the 1d array of input values to each of the Node's InputPorts for a given `TRIAL <TimeScale.TRIAL>`. For
@@ -1175,19 +1182,19 @@ when the Composition is executed (as determined by the number of input values sp
 
 .. _Composition_Input_Dictionary_Node_Entries:
 
-*Node entries*.  The key must be an `INPUT <NodeRole>` `Node <Composition_Nodes>`of the Composition, or the name of
+*Node entries*.  The key must be an `INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the name of
 one (i.e., the str in its `name <Component.name>` attribute), and the value must specify the input to *all* of its
-InputPorts (other than those designated as `internal_only <InputPort.internal_only>`; see `above
-<Composition_Input_Internal_Only>`) for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  The values for each
-`TRIAL <TimeScale.TRIAL>` must be compatible with each of the corresponding InputPorts (listed in the
+InputPorts (other than those designated as `internal_only <InputPort.internal_only>`; see `note
+<Composition_Input_Internal_Only>` above) for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  The values
+for each `TRIAL <TimeScale.TRIAL>` must be compatible with each of the corresponding InputPorts (listed in the
 `external_input_ports <Mechanism_Base.external_input_ports>` attribute of a Mechanism, and similarly in the
-`external_input_ports <Composition.external_input_ports>` attribute of a Composition). More specifically,
-the shape of each item in the outer dimension (i.e., the input for each `TRIAL <TimeScale.TRIAL>`, as described `above
-<Composition_Input_Dictionary_Input_Values>`) must be compatible with the shape of the Node's
-`external_input_shape <Mechanism_Base.external_input_shape>` attribute if it is Mechanism, and similarly the
-`external_input_shape <Composition.external_input_shape>` attribute of a Composition). While these are always 2d
-arrays, the number and size of the 1d arrays within them (corresponding to each InputPort) may vary; in some case
-shorthand notations are allowed, as illustrated in the `examples <Composition_Examples_Input_Dictionary>` below.
+`external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>` attribute of a
+Composition). More specifically, the shape of each item in the outer dimension (i.e., the input for each `TRIAL
+<TimeScale.TRIAL>`, as described `above <Composition_Input_Dictionary_Input_Values>`) must be compatible with the
+shape of the Node's `external_input_shape <Mechanism_Base.external_input_shape>` attribute if it is Mechanism, and
+similarly the `external_input_shape <Composition.external_input_shape>` attribute of a Composition). While these are
+always 2d arrays, the number and size of the 1d arrays within them (corresponding to each InputPort) may vary; in some
+case shorthand notations are allowed, as illustrated in the `examples  <Composition_Examples_Input_Dictionary>` below.
 
     .. _Composition_Execution_Input_Dict_Fig:
 
@@ -1205,21 +1212,20 @@ shorthand notations are allowed, as illustrated in the `examples <Composition_Ex
 
 .. _Composition_Input_Dictionary_InputPort_Entries:
 
-*InputPort Entries*. The key must be an external `InputPort` (that is, one that is not designated as `internal_only
-<InputPort.internal_only>`; see `above <Composition_Input_Internal_Only>`) for an `INPUT <NodeRole>` `Node
-<Composition_Nodes>` of the Composition, or the `full_name <Port.full_name>` of one, and the value must specify the
-input for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  Any or all of the InputPorts for an`INPUT <NodeRole>`
-`Node <Composition_Nodes>` can be specified, but an inputs dictionary cannot have specifications for both the Node
-and any of its InputPorts.  If the name of an InputPort is used as the key, its the str in its `full_name
-<Port.full_name>` attribute must be used, to ensure disambiguation from any similarly named InputPorts of other
-Nodes.  Specifying InputPorts individually (instead of specifying all of them in a single entry for a Node) can be
-if only some InputPorts should receive inputs, or the input for some needs to remain constant across `TRIAL
-<TimeScale.TRIAL>`\\s (by providing it with only one input value) while the input to others vary (i.e., by providing
-input_values for every `TRIAL <TimeScale.TRIAL>`).  The value of each entry must be a 2d array or nested list
-containing the input for either a single `TRIAL <TimeScale.TRIAL>` or all `TRIAL <TimeScale.TRIAL>`\\s, each of which
-must match the `input_shape <InputPort.input_shape>` of the InputPort. As with Nodes, if there are entries for some
-but not all of a Node's InputPorts, the ones not specified are assigned their `default_input <InputPort.default_input>`
-values for every `TRIAL <TimeScale.TRIAL>` of execution.
+*InputPort Entries*. The key must be an `external InputPort <Composition_Input_External_InputPorts>` for an
+`INPUT <NodeRole>` `Node <Composition_Nodes>` of the Composition, or the `full_name <Port_Base.full_name>` of one,
+and the value must specify the input for one or all `TRIAL <TimeScale.TRIAL>`\\s of execution.  Any or all of the
+InputPorts for an`INPUT <NodeRole>` `Node <Composition_Nodes>` can be specified, but an inputs dictionary cannot
+have specifications for both the Node and any of its InputPorts.  If the name of an InputPort is used as the key, its
+the str in its `full_name <Port_Base.full_name>` attribute must be used, to ensure disambiguation from any similarly
+named InputPorts of other Nodes.  Specifying InputPorts individually (instead of specifying all of them in a single
+entry for a Node) can be if only some InputPorts should receive inputs, or the input for some needs to remain constant
+across `TRIAL <TimeScale.TRIAL>`\\s (by providing it with only one input value) while the input to others vary
+(i.e., by providing input_values for every `TRIAL <TimeScale.TRIAL>`).  The value of each entry must be a 2d array
+or nested list containing the input for either a single `TRIAL <TimeScale.TRIAL>` or all `TRIAL <TimeScale.TRIAL>`\\s,
+each of which must match the `input_shape <InputPort.input_shape>` of the InputPort. As with Nodes, if there are
+entries for some but not all of a Node's InputPorts, the ones not specified are assigned their `default_input
+<InputPort.default_input>` values for every `TRIAL <TimeScale.TRIAL>` of execution.
 
 COMMENT:
     Example of input dictionary show various ways of specifying inputs for Nodes and InputPorts::
@@ -1252,7 +1258,7 @@ COMMENT:
     ...                              [[14]],[[15]]]}   #       for each TRIAL of execution
     >>> outer_comp.get_input_format()
     >>> outer_comp.external_input_shape
-    >>> outer_comp.get_external_input_ports
+    >>> outer_comp.external_input_ports_of_all_input_nodes
     >>> outer_comp.run(inputs=inputs)
     Add output here
 
@@ -1485,10 +1491,10 @@ are always restored after execution.
 Runtime parameter values for a Composition are specified in a dictionary assigned to the **runtime_params** argument
 of a Composition's `execution method <Composition_Execution_Methods>`.  The key of each entry is a Node of the
 Composition, and the value is a subdictionary specifying the **runtime_params** argument that will be passed to the
-Node when it is executed.  The format of the dictionary for each `Node <Component_Nodes>` follows that for a Mechanism's
-`runtime specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to specifying the
-value of a parameter directly (in which case, the value will apply throughout the execution), its value can also be
-placed in a tuple together with a `Condition` specifying when that value should be applied, as follows:
+Node when it is executed.  The format of the dictionary for each `Node <Composition_Nodes>` follows that for a
+Mechanism's `runtime specification dictionary <Mechanism_Runtime_Param_Specification>`, except that in addition to
+specifying the value of a parameter directly (in which case, the value will apply throughout the execution), its value
+can also be placed in a tuple together with a `Condition` specifying when that value should be applied, as follows:
 
     * Dictionary assigned to **runtime_parms** argument: {<Node>: Runtime Parameter Specification Dictionary}
        - *key* - Node
@@ -1774,10 +1780,10 @@ or in arguments to its `run <Composition.run>` and `learn <Composition.learn>` m
      COMMENT:
         ?? OR JUST THEIR `previous_value <StatefulFunction.previous_value>` ??
      COMMENT
-     of its `StatefulFunction`. If it is called  without any arguments, it calls the `reset <Component.reset>` method
-     for every `Node <Component_Nodes>` in the Composition that has a `StatefulFunction`.  It can also be called with a
-     dictionary that specifies a subsset of Nodes to reset (see format descdribed for **reset_stateful_functions_when**
-     below).
+     of its `StatefulFunction`. If it is called  without any arguments, it calls the `reset <Component.reset>`
+     method for every `Node <Composition_Nodes>` in the Composition that has a `StatefulFunction`.
+     It can also be called with a dictionary that specifies a subsset of Nodes to reset (see format descdribed for
+     **reset_stateful_functions_when** below).
 
    * **reset_stateful_functions_when** and **reset_stateful_functions_to** -- these are arguments of the Composition's
      `run <Composition.run>`  and `learn <Composition.learn>` methods, that can be used to specify the `Conditions
@@ -2154,9 +2160,10 @@ COMMENT
     <Mechanism_Base.variable>`.  However, some Mechanisms may have InputPorts marked as `internal_only
     <InputPort.internal_only>` which are excluded from its `external_input_ports <Mechanism_Base.external_input_ports>`
     and therefore its `external_input_variables <Mechanism_Base.external_input_variables>`, and so should not receive
-    an input value.  The same considerations extend to the `external_input_ports <Composition.external_input_ports>`
-    and `external_input_variables <Composition.external_input_variables>` of a Composition, based on the Mechanisms
-    and/or `nested Compositions <Composition_Nested>` that comprise its `INPUT` Nodes.
+    an input value.  The same considerations extend to the `external_input_ports_of_all_input_nodes
+    <Composition.external_input_ports_of_all_input_nodes>` and `external_input_variables
+    <Composition.external_input_variables>` of a Composition, based on the Mechanisms and/or `nested Compositions
+    <Composition_Nested>` that comprise its `INPUT` Nodes.
 
 If num_trials is not in use, the number of inputs provided determines the number of `TRIAL <TimeScale.TRIAL>`\\s in
 the run. For example, if five inputs are provided for each `INPUT` `Node <Composition_Nodes>`, and num_trials is not
@@ -2723,7 +2730,7 @@ from psyneulink.core.components.functions.nonstateful.learningfunctions import \
 from psyneulink.core.components.functions.nonstateful.transferfunctions import Identity
 from psyneulink.core.components.mechanisms.mechanism import Mechanism_Base, MechanismError, MechanismList
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP, OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import \
     LearningMechanism, ACTIVATION_INPUT_INDEX, ACTIVATION_OUTPUT_INDEX, ERROR_SIGNAL, ERROR_SIGNAL_INDEX
 from psyneulink.core.components.mechanisms.modulatory.modulatorymechanism import ModulatoryMechanism_Base
@@ -2753,8 +2760,7 @@ from psyneulink.core.globals.keywords import \
     DICT, FEEDBACK, FULL, FUNCTION, HARD_CLAMP, IDENTITY_MATRIX, INPUT, INPUT_PORTS, INPUTS, INPUT_CIM_NAME, \
     LEARNED_PROJECTIONS, LEARNING_FUNCTION, LEARNING_MECHANISM, LEARNING_MECHANISMS, LEARNING_PATHWAY, \
     MATRIX, MATRIX_KEYWORD_VALUES, MAYBE, \
-    MODEL_SPEC_ID_COMPOSITION, MODEL_SPEC_ID_NODES, MODEL_SPEC_ID_PROJECTIONS, MODEL_SPEC_ID_PSYNEULINK, \
-    MODEL_SPEC_ID_RECEIVER_MECH, MODEL_SPEC_ID_SENDER_MECH, \
+    MODEL_SPEC_ID_METADATA, \
     MONITOR, MONITOR_FOR_CONTROL, NAME, NESTED, NO_CLAMP, NODE, OBJECTIVE_MECHANISM, ONLINE, OUTCOME, \
     OUTPUT, OUTPUT_CIM_NAME, OUTPUT_MECHANISM, OUTPUT_PORTS, OWNER_VALUE, \
     PARAMETER, PARAMETER_CIM_NAME, PORT, \
@@ -2767,7 +2773,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric
+    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -2903,7 +2909,7 @@ class Graph(object):
         maps `Component` in the graph to the `Vertices <Vertex>` that represent them.
 
     vertices : List[Vertex]
-        the `Vertices <Vertex>` contained in this Graph;  each can be a `Node <Component_Nodes>` or a
+        the `Vertices <Vertex>` contained in this Graph;  each can be a `Node <Composition_Nodes>` or a
         `Projection <Component_Projections>`.
 
     dependency_dict : Dict[`Component` : Set(`Component`)]
@@ -3503,20 +3509,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <Composition_Nested>`, then from any `Nodes <Composition_Nodes>` in the outer composition that project to the
         nested Composition (either itself, as a Node in the outer Composition, or to any of its own Nodes).
 
-    external_input_shape : list[InputPort]
-        a list of the `external_input_shape <Mechanism.external_input_shape>`\\s of all of the `InputPorts <InputPort>`
-        of the Composition's `INPUT <NodeRole.INPUT>` `Nodes <Composition_Nodes>` (corresponding to the external
-        InputPots of its `input_CIM <Composition>`); any input to the Composition must be compatible with the shape of
-        this, whether received from the **inputs** argument of one of the Composition's`execution methods
-        <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
-        Composition.
+    external_input_ports_of_all_input_nodes : list[InputPort]
+        a list of all `external InputPort <Composition_Input_External_InputPorts>` of all `INPUT <NodeRole.INPUT>`
+        `Nodes <Composition_Nodes>` of the Composition, including any that in `nested Compositions
+        <Composition_Nested>` within it (i.e., within `INPUT <NodeRole.INPUT>` Nodes at all levels of nesting).
+        Note that the InputPorts listed are those of the actual Mechanisms projected to by the ones listed
+        in `external_input_ports <Composition.external_input_ports>`.
 
-    external_input_variables : list[InputPort]
-        a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
-        <Composition.external_input_ports>`;  any input to the Composition must be compatible with the shape of this,
-        whether received from the **input_ports** argument of oneo f the Composition's`execution methods
-        <Composition_Execution_Methods>` or, if it is a `nested Composition <Composition_Nested>`, from the outer
-        Composition.
+    external_input_shape : list[1d array]
+        a list of the `input_shape <InputPort.input_shape>`\\s of all of the InputPorts listed in
+        `external_input_ports <Composition.external_input_ports>` (and are the same as the shapes of those listed in
+        `external_input_ports_of_all_input_nodes <Composition.external_input_ports_of_all_input_nodes>`); any input
+        to the Composition must be compatible with these, whether received from the **inputs** argument of one of the
+        Composition's `execution methods <Composition_Execution_Methods>` or, if it is a `nested Composition
+        <Composition_Nested>`, from the enclosing Composition.
+
+    external_input_variables : list[2d array]
+        a list of the `variable <InputPort.variable>`\\s associated with the `InputPorts <InputPort>` listed in
+        `external_input_ports <Composition.external_input_ports>`.
+
+    external_input_values : list[1d array]
+        a list of the values of associated of the `InputPorts <InputPort>` listed in `external_input_ports
+        <Composition.external_input_ports>`.
 
     external_input_values : list[InputPort]
         a list of the values of associated with the `InputPorts <InputPort>` listed in `external_input_ports
@@ -3690,7 +3704,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         results = Parameter([], loggable=False, pnl_internal=True)
         simulation_results = Parameter([], loggable=False, pnl_internal=True)
-        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False)
+        retain_old_simulation_data = Parameter(False, stateful=False, loggable=False, pnl_internal=True)
         input_specification = Parameter(None, stateful=False, loggable=False, pnl_internal=True)
 
 
@@ -4336,6 +4350,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - True, include the nested Composition but not its INPUT Nodes
             - ALL, include the nested Composition AND its INPUT Nodes
         """
+
+        # FIX: 3/16/22:
+        # CAN THIS BE REPLACED BY:
+        # return [self._get_destination(output_port.efferents[0])[0]
+        #         for _,output_port in self.input_CIM.port_map.values()]
+
         assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
                                                     f"for 'ports' and 'nodes' at the same time."
         input_items = []
@@ -4440,7 +4460,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_compositions(self,
                                  nested_compositions=NotImplemented,
                                  visited_compositions=NotImplemented):
-        """Recursive search for and return all nested compositions.
+        """Recursively search for and return all nested compositions.
 
         :return
 
@@ -4465,6 +4485,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level
         """
         return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
+
+    def _is_in_composition(self, component, nested=True):
+        """Return True if component is in Composition, including any nested Compositions if **nested** is True
+        Include input_CIM and output_CIM for self and all nested Compositions
+        """
+        if isinstance(component, Port):
+            component = component.owner
+
+        if component in self._all_nodes:
+            return True
+        if nested:
+            return any(component in comp._all_nodes for comp in self._get_nested_compositions())
 
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
@@ -4663,8 +4695,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if self.controller:
             # Avoid unnecessary updating on repeated calls to run()
             if self.needs_update_controller and hasattr(self.controller, 'state_input_ports'):
-                self.needs_update_controller = \
-                    not self.controller._update_state_input_ports_for_controller(context=context)
+                self.controller._update_state_input_ports_for_controller(context=context)
 
             # Make sure all is in order at run time
             if context.flags & ContextFlags.PREPARING:
@@ -5047,21 +5078,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
         for node in input_nodes:
 
-            # loop through all external input ports on input nodes (i.e. ports that are projected to from other nodes)
+            # loop through all external InputPorts on INPUT Nodes (i.e. Ports that are Projected to from other Nodes)
             for input_port in node.external_input_ports:
 
-                # add it to set of current input ports
+                # add it to set of current InputPorts
                 current_input_node_input_ports.add(input_port)
 
                 # if there is not a corresponding CIM InputPort/OutputPort pair, add them
                 if input_port not in set(self.input_CIM_ports.keys()):
-                    # instantiate the input port on the input CIM to correspond to the node's input port
+                    # instantiate the InputPort on the input CIM to correspond to the Node's InputPort
                     interface_input_port = InputPort(owner=self.input_CIM,
-                                                     # # MODIFIED 2/3/22 OLD:
-                                                     # variable=input_port.defaults.value,
-                                                     # MODIFIED 2/3/22 NEW:
                                                      variable=np.atleast_2d(input_port.defaults.variable)[0],
-                                                     # MODIFIED 2/3/22 END
                                                      reference_value=input_port.defaults.value,
                                                      name= INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                      context=context)
@@ -5069,36 +5096,36 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if NodeRole.TARGET in self.get_roles_by_node(node):
                         interface_input_port.parameters.require_projection_in_composition.set(False, override=True)
 
-                    # add port to the input CIM
+                    # add Port to the input CIM
                     self.input_CIM.add_ports([interface_input_port],
                                              context=context)
 
-                    # instantiate the output port on the input CIM to correspond to the node's input port
+                    # instantiate the OutputPort on the input CIM to correspond to the Node's InputPort
                     interface_output_port = OutputPort(owner=self.input_CIM,
                                                        variable=(OWNER_VALUE, functools.partial(self.input_CIM.get_input_port_position, interface_input_port)),
                                                        function=Identity,
                                                        name=INPUT_CIM_NAME + "_" + node.name + "_" + input_port.name,
                                                        context=context)
 
-                    # add port to the input CIM
+                    # add Port to the input CIM
                     self.input_CIM.add_ports([interface_output_port],
                                              context=context)
 
-                    # add entry to input_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
-                    # input node's input port
+                    # add entry to input_CIM_ports dict, so that the CIM ports that correspond to a given
+                    # input node's InputPort can be retrieved
                     self.input_CIM_ports[input_port] = (interface_input_port, interface_output_port)
 
-                    # create projection from the output port on the input CIM to the input port on the input node
+                    # create Projection from the output port on the input CIM to the input port on the input node
                     projection = MappingProjection(sender=interface_output_port,
                                                    receiver=input_port,
                                                    matrix=IDENTITY_MATRIX,
                                                    name="(" + interface_output_port.name + ") to ("
                                                         + input_port.owner.name + "-" + input_port.name + ")")
 
-                    # activate the projection
+                    # activate the Projection
                     projection._activate_for_compositions(self)
 
-                    # if the node is a nested Composition, activate the projection for the nested Composition as well
+                    # if the node is a nested Composition, activate the Projection for the nested Composition as well
                     if isinstance(node, Composition):
                         projection._activate_for_compositions(node)
 
@@ -5141,7 +5168,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.output_CIM.add_ports([interface_input_port],
                                               context=context)
 
-                    # instantiate the output port on the output CIM to correspond to the node's output port
+                    # instantiate the OutputPort on the output CIM to correspond to the node's OutputPort
                     interface_output_port = OutputPort(
                             owner=self.output_CIM,
                             variable=(OWNER_VALUE, functools.partial(self.output_CIM.get_input_port_position,
@@ -5155,13 +5182,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     self.output_CIM.add_ports([interface_output_port],
                                               context=context)
 
-                    # add entry to output_CIM_ports dict, so that we can retrieve the CIM ports that correspond to a given
-                    # output node's output port
+                    # add entry to output_CIM_ports dict, so that CIM ports that correspond to a given
+                    # output node's OutputPort can be retrieved
                     self.output_CIM_ports[output_port] = (interface_input_port, interface_output_port)
 
                     proj_name = "(" + output_port.name + ") to (" + interface_input_port.name + ")"
 
-                    # create projection from the output port of the output node to input port on the output CIM
+                    # create Projection from the OutputPort of the output Node to InputPort on the output CIM
                     proj = MappingProjection(
                         sender=output_port,
                         receiver=interface_input_port,
@@ -5174,7 +5201,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     # activate the projection
                     proj._activate_for_compositions(self)
 
-                    # if the node is a nested Composition, activate the projection for the nested Composition as well
+                    # if the Node is a nested Composition, activate the Projection for the nested Composition as well
                     if isinstance(node, Composition):
                         proj._activate_for_compositions(node)
 
@@ -8914,10 +8941,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Input dict, with added entries for any input Nodes or Ports for which input was not provided
         """
 
-        # # FIX: 3/12/22 - NEED TO PREPROCESS PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
+        # # FIX: 3/12/22 - DOCUMENT PREPROCESSING OF PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
         # #                TO SET mech_shape FOR BELOW, AND ASSIGN FILLERS FOR ONES THAT ARE SHORT OF THE MAX LENGTH
-        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF MAX
-        # #                (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
+        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF
+        # #                MAX (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
         # #                ALSO NO NEED TO WORRY ABOUT DIFFERENCES ACROSS NODES, AS THAT TOO WILL BE TESTED THERE
 
         # Validate that keys for inputs are all legal entries
@@ -11403,12 +11430,35 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if param.loggable and param.log_condition is LogCondition.OFF:
                         param.log_condition = LogCondition.EXECUTION
 
-    @property
-    def _dict_summary(self):
-        super_summary = super()._dict_summary
+    # endregion LLVM
 
-        nodes_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
-        projections_dict = {MODEL_SPEC_ID_PSYNEULINK: {}}
+    def as_mdf_model(self, simple_edge_format=True):
+        """Creates a ModECI MDF Model representing this Composition
+
+        Args:
+            simple_edge_format (bool, optional): If True, Projections
+            with non-identity matrices are constructed as . Defaults to True.
+
+        Returns:
+            modeci_mdf.Model: a ModECI Model representing this Composition
+        """
+        import modeci_mdf.mdf as mdf
+
+        def is_included_projection(proj):
+            included_types = (
+                CompositionInterfaceMechanism,
+                LearningMechanism,
+                OptimizationControlMechanism,
+            )
+            return (
+                not isinstance(proj.sender.owner, included_types)
+                and not isinstance(proj.receiver.owner, included_types)
+                and not isinstance(proj, (AutoAssociativeProjection, ControlProjection))
+            )
+        nodes_dict = {}
+        projections_dict = {}
+        self_identifier = parse_valid_identifier(self.name)
+        metadata = self._mdf_metadata
 
         additional_projections = []
         additional_nodes = (
@@ -11419,7 +11469,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         for n in list(self.nodes) + additional_nodes:
             if not isinstance(n, CompositionInterfaceMechanism):
-                nodes_dict[n.name] = n._dict_summary
+                nodes_dict[parse_valid_identifier(n.name)] = n.as_mdf_model()
 
             # consider making this more general in the future
             try:
@@ -11428,53 +11478,40 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pass
 
         for p in list(self.projections) + additional_projections:
-            has_cim_sender = isinstance(
-                p.sender.owner,
-                CompositionInterfaceMechanism
-            )
-            has_cim_receiver = isinstance(
-                p.receiver.owner,
-                CompositionInterfaceMechanism
-            )
+            # filter projections to/from CIMs of this composition
+            # and projections to things outside this composition
+            if is_included_projection(p):
+                try:
+                    pre_edge, edge_node, post_edge = p.as_mdf_model(simple_edge_format)
+                except TypeError:
+                    edges = [p.as_mdf_model(simple_edge_format)]
+                else:
+                    nodes_dict[edge_node.id] = edge_node
+                    edges = [pre_edge, post_edge]
+                    if 'excluded_node_roles' not in metadata[MODEL_SPEC_ID_METADATA]:
+                        metadata[MODEL_SPEC_ID_METADATA]['excluded_node_roles'] = []
 
-            # filter projections to/from CIMs, unless they are to embedded
-            # compositions (any others should be automatically generated)
-            if (
-                (not has_cim_sender or p.sender.owner.composition in self.nodes)
-                and (
-                    not has_cim_receiver
-                    or p.receiver.owner.composition in self.nodes
-                )
-            ):
-                p_summary = p._dict_summary
+                    metadata[MODEL_SPEC_ID_METADATA]['excluded_node_roles'].append([edge_node.id, str(NodeRole.OUTPUT)])
 
-                if has_cim_sender:
-                    p_summary[MODEL_SPEC_ID_SENDER_MECH] = p.sender.owner.composition.name
+                for e in edges:
+                    projections_dict[e.id] = e
 
-                if has_cim_receiver:
-                    p_summary[MODEL_SPEC_ID_RECEIVER_MECH] = p.receiver.owner.composition.name
+        metadata[MODEL_SPEC_ID_METADATA]['controller'] = self.controller.as_mdf_model() if self.controller is not None else None
 
-                projections_dict[p.name] = p_summary
+        graph = mdf.Graph(
+            id=self_identifier,
+            conditions=self.scheduler.as_mdf_model(),
+            **self._mdf_model_parameters[self._model_spec_id_parameters],
+            **metadata
+        )
 
-        if len(nodes_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
-            del nodes_dict[MODEL_SPEC_ID_PSYNEULINK]
+        for _, node in nodes_dict.items():
+            graph.nodes.append(node)
 
-        if len(projections_dict[MODEL_SPEC_ID_PSYNEULINK]) == 0:
-            del projections_dict[MODEL_SPEC_ID_PSYNEULINK]
+        for _, proj in projections_dict.items():
+            graph.edges.append(proj)
 
-        return {
-            MODEL_SPEC_ID_COMPOSITION: [{
-                **super_summary,
-                **self.scheduler._dict_summary,
-                **{
-                    MODEL_SPEC_ID_NODES: nodes_dict,
-                    MODEL_SPEC_ID_PROJECTIONS: projections_dict,
-                    'controller': self.controller,
-                }
-            }]
-        }
-
-    # endregion LLVM
+        return graph
 
     # ******************************************************************************************************************
     # region ----------------------------------- PROPERTIES ------------------------------------------------------------
@@ -11538,9 +11575,22 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def external_input_ports(self):
-        """Returns all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
+        """Return all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
             return [input_port for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def external_input_ports_of_all_input_nodes(self):
+        """Return all external InputPorts of all INPUT Nodes (including nested ones) of Composition.
+        Note: the InputPorts returned are those of the actual Mechanisms
+              to which the ones returned by external_input_ports ultimately project.
+        """
+        try:
+            # return [self._get_destination(output_port.efferents[0])[0]
+            #         for _,output_port in self.input_CIM.port_map.values()]
+            return self._get_input_receivers(comp=self, type=PORT, comp_as_node=False)
         except (TypeError, AttributeError):
             return None
 
@@ -11551,7 +11601,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     @property
     def _default_external_input_shape(self):
-        """Returns default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
+        """Return default_input_shape of all external InputPorts that belong to Input CompositionInterfaceMechanism"""
         try:
             return [input_port.default_input_shape for input_port in self.input_CIM.input_ports
                     # FIX: 2/4/22 - IS THIS NEEDED (HERE OR BELOW -- DO input_CIM.input_ports EVER GET ASSIGNED THIS?
@@ -11563,7 +11613,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def external_input_variables(self):
         """Return variables of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
-            return [input_port.variable for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+            return [input_port.parameters.variable.get()
+                    for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 
@@ -11583,7 +11634,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """Return values of all external InputPorts that belong to the Input CompositionInterfaceMechanism"""
         try:
             #  FIX: 2/4/22 SHOULD input_port.variable REPLACE input_port.value HERE?
-            return [input_port.value for input_port in self.input_CIM.input_ports if not input_port.internal_only]
+            return [input_port.parameters.value.get()
+                    for input_port in self.input_CIM.input_ports if not input_port.internal_only]
         except (TypeError, AttributeError):
             return None
 

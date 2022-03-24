@@ -29,7 +29,8 @@ inner_comp.add_projection(pnl.MappingProjection(), E, F)
 comp.scheduler.add_condition_set({
     A: pnl.EveryNPasses(1),
     B: pnl.EveryNCalls(A, 2),
-    C: pnl.EveryNCalls(B, 2)
+    C: pnl.EveryNCalls(B, 2),
+    D: pnl.TimeInterval(start=1),
 })
 
 comp.termination_processing = {
