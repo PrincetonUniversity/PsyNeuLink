@@ -1070,7 +1070,7 @@ class TestControlMechanisms:
                 assert len(ocm.state_input_ports) == 3
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
                                                        'OA[OutputPort-0]',
-                                                       'OB[InputPort-0] DEFAULT_VARIABLE']
+                                                       'NUMERIC INPUT FOR OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[OutputPort-0]',
                                               'OB[InputPort-0]': [3, 1, 2]}
@@ -1081,7 +1081,7 @@ class TestControlMechanisms:
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
                 assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'OB[InputPort-0] DEFAULT_VARIABLE']
+                                                       'NUMERIC INPUT FOR OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': None,
                                               'OB[InputPort-0]': [3, 1, 2]}

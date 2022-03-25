@@ -1060,8 +1060,9 @@ from psyneulink.core.globals.context import handle_external_context
 from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
-    FUNCTION, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, PROJECTIONS, \
-    SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE
+    FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, \
+    PROJECTIONS, SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE
+from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
@@ -1080,9 +1081,11 @@ RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
 RANDOM_VARIABLES = 'random_variables'
 NUM_ESTIMATES = 'num_estimates'
 
+DEFERRED_STATE_INPUT_PORT_PREFIX = 'DEFERRED '
+NUMERIC_STATE_INPUT_PORT_PREFIX = "NUMERIC INPUT FOR "
 
 def deferred_state_feature_node_msg(node_name, agent_rep_name):
-    return f"DEFERRED {node_name} OF {agent_rep_name}"
+    return f"{DEFERRED_STATE_INPUT_PORT_PREFIX}{node_name} OF {agent_rep_name}"
 
 def deferred_state_feature_spec_msg(spec_str, comp_name):
     return f"{spec_str} NOT (YET) IN {comp_name}"
@@ -2209,7 +2212,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         # # MODIFIED 3/25/22 OLD:
                         # state_input_port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
                         # MODIFIED 3/25/22 NEW:
-                        port_name = f'DEFERRED {str(i-num_agent_rep_input_ports)}'
+                        port_name = f'{DEFERRED_STATE_INPUT_PORT_PREFIX}{str(i-num_agent_rep_input_ports)}'
                         # MODIFIED 3/25/22 END
                 # For CompositionFunctionApproximator, assign spec as port
                 else:
@@ -2232,7 +2235,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         spec = spec[0]
                     if is_numeric(spec):
                         # state_input_port_name = f"{port_name} {DEFAULT_VARIABLE.upper()}"
-                        state_input_port_name = f"NUMERIC INPUT FOR {port_name}]"
+                        state_input_port_name = f"{NUMERIC_STATE_INPUT_PORT_PREFIX}{port_name}"
                     elif isinstance(spec, (Port, Mechanism, Composition)):
                         if hasattr(spec, 'full_name'):
                             state_input_port_name = spec.full_name
@@ -2593,7 +2596,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 elif is_numeric(default):
                     params[VALUE]: default
                     # FIX: 3/24/22 - NEED TO STANDARDIZE NAME FOR NUMERIC spec AND ALIGN WITH OTHER USES
-                    input_port_name = f"NUMERIC INPUT FOR {input_port.full_name}]"
+                    input_port_name = f"{NUMERIC_STATE_INPUT_PORT_PREFIX}{input_port.full_name}"
                     self.state_feature_specs.append(default)
                 elif isinstance(default, (Port, Mechanism, Composition)):
                     params[PROJECTIONS]: default
@@ -2653,7 +2656,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 node = specified_input_ports[i] = agent_rep_input_ports[i]
             else:
                 node = None
-            if not (isinstance(node, str) and 'DEFERRED' in node):
+            if not (isinstance(node, str) and DEFERRED_STATE_INPUT_PORT_PREFIX in node):
                 continue
             if feature.owner not in agent_rep_input_ports:
                 # Don't add to dict, will be dealt with or raise an error at run time
@@ -2662,13 +2665,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
         # MODIFIED 3/25/22 NEW:
         # Rename any deferred state_input_ports for NUMERIC VALUES
-        from psyneulink.core.globals.registry import rename_instance_in_registry
-        from psyneulink.core.globals.keywords import INPUT_PORT
         for i, input_port in enumerate([port for port in self.state_input_ports
-                                        if 'NUMERIC INPUT FOR DEFERRED ' in port.name]):
+                                        if (NUMERIC_STATE_INPUT_PORT_PREFIX in port.name
+                                            and DEFERRED_STATE_INPUT_PORT_PREFIX in port.name)]):
+            new_name = f"{NUMERIC_STATE_INPUT_PORT_PREFIX}{agent_rep_input_ports[i].full_name}"
             input_port.name = rename_instance_in_registry(registry=self._portRegistry,
                                                           category=INPUT_PORT,
-                                                          new_name= f"NUMERIC INPUT FOR {agent_rep_input_ports[i].full_name}",
+                                                          new_name= new_name,
                                                           component=input_port)
         # MODIFIED 3/25/22 END
 
