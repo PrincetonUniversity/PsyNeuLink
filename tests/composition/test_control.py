@@ -241,6 +241,7 @@ class TestControlSpecification:
                                                   'Input[InputPort-0]': 'Input[InputPort-0]'}
         assert comp.controller.state_feature_values == {reward.input_port: [0.],
                                                         Input.input_port: [0.]}
+        assert all(p.path_afferents for p in comp.controller.state_input_ports)
         # comp._analyze_graph()
 
         stim_list_dict = {
@@ -394,6 +395,8 @@ class TestControlSpecification:
 
         assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                          deferred_node.input_port: [0.]}
+        assert all(p.path_afferents for p in ocomp.controller.state_input_ports)
+
         result = ocomp.run({
             initial_node_a: [1],
             deferred_node: [1]
