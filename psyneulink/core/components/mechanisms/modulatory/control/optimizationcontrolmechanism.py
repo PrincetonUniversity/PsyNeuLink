@@ -2206,12 +2206,20 @@ class OptimizationControlMechanism(ControlMechanism):
                         spec = state_feature_specs[i]
                         port = specified_input_ports[i]
                         # - assign "DEFERRED n" as node name
-                        state_input_port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
+                        # # MODIFIED 3/25/22 OLD:
+                        # state_input_port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
+                        # MODIFIED 3/25/22 NEW:
+                        port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
+                        # MODIFIED 3/25/22 END
                 # For CompositionFunctionApproximator, assign spec as port
                 else:
                     spec = state_feature_specs[i]
                     port = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    state_input_port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                    # # MODIFIED 3/25/22 OLD:
+                    # state_input_port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                    # MODIFIED 3/25/22 NEW:
+                    port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                    # MODIFIED 3/25/22 END
 
                 # SPEC
                 # Pare and assign specs for INPUT Nodes already in agent_rep (i.e., unassigned above)
@@ -2223,7 +2231,8 @@ class OptimizationControlMechanism(ControlMechanism):
                         state_feature_fct = spec[1]
                         spec = spec[0]
                     if is_numeric(spec):
-                        state_input_port_name = f"{port_name} {DEFAULT_VARIABLE.upper()}"
+                        # state_input_port_name = f"{port_name} {DEFAULT_VARIABLE.upper()}"
+                        state_input_port_name = f"NUMERIC INPUT FOR {port_name}]"
                     elif isinstance(spec, (Port, Mechanism, Composition)):
                         if hasattr(spec, 'full_name'):
                             state_input_port_name = spec.full_name
@@ -2265,7 +2274,7 @@ class OptimizationControlMechanism(ControlMechanism):
         # SINGLE ITEM spec, SO APPLY TO ALL agent_rep_input_ports
         if (user_specs is None
                 or isinstance(user_specs, (str, tuple, InputPort, OutputPort, Mechanism, Composition))
-                or is_numeric(user_specs)):
+                or (is_numeric(user_specs) and (np.array(user_specs).ndim < 2))):
             specs = [user_specs] * len(agent_rep_input_ports)
             # OK to assign here (rather than in _parse_secs()) since spec is intended for *all* state_input_ports
             self.parameters.state_feature_specs.set(specs, override=True)
