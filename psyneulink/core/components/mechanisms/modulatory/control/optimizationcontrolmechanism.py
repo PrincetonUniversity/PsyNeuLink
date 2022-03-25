@@ -1738,17 +1738,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
         function = function or GridSearch
 
-        # MODIFIED 3/24/22 NEW:
-        # FIX:
-        # import inspect
-        # inspect.signature(OptimizationControlMechanism.__init__)
-        # from psyneulink.core.globals.utilities import get_args, _get_arg_from_stack
-        # get_args(inspect.currentframe())
-        # inspect.getargspec(OptimizationControlMechanism.__init__)
-        # inspect.currentframe().f_locals['state_feature_default']
-        # assert True
-        # MODIFIED 3/24/22 END
-
         # If agent_rep hasn't been specified, put into deferred init
         if agent_rep is None:
             if context.source==ContextFlags.COMMAND_LINE:
@@ -2562,8 +2551,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type != COMPOSITION:
             return
 
-        # FIX: 3/22/22 - CHECK HERE FOR ANY NEW self.agent_rep_input_nodes
-        # MODIFIED 3/24/22 NEW: [BASED ON EARLIER VERSION PRE-3/19/22
         from psyneulink.core.compositions.composition import Composition
         num_agent_rep_input_ports = len(self.agent_rep_input_ports)
         num_state_feature_specs = len(self.state_feature_specs)
@@ -2571,7 +2558,7 @@ class OptimizationControlMechanism(ControlMechanism):
         if num_state_feature_specs < num_agent_rep_input_ports:
             # agent_rep is Composition, but state_input_ports are missing for some agent_rep INPUT Node InputPorts
             #   so construct a state_input_port for each missing one, using state_feature_default;
-            #   note: assumes ones added are at the end of the list in self.agent_rep_input_ports
+            #   note: assumes INPUT Nodes added are at the end of the list in self.agent_rep_input_ports
             # FIX: 3/24/22 - HANDLED ELSEWHWERE WITH ERROR MESSAGE (SHOULD FIGURE OUT WHERE)
             # if context.flags & ContextFlags.PREPARING:
             #     # At run time, insure that there not *more* state_input_ports than agent_rep INPUT Node InputPorts
@@ -2622,24 +2609,10 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
-            # MODIFIED 3/24/22 OLD:
-            # self.parameters.state_feature_specs.set(
-            #     self.parameters.state_feature_specs.get().append(self.state_feature_default), override=True)
-            # MODIFIED 3/24/22 END:
-
             # FIX: 3/24/22 - ?OK:
             # self._num_state_feature_specs = len(self.state_input_ports)
             self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
             # MODIFIED 3/24/22 END
-
-            # # MODIFIED 3/24/22 NEW:  FIX - PUT THIS IN LOOP ABOVE?
-            # # Add projections to new any state_input_ports:
-            # for state_input_port, agent_rep_input_port in zip(state_input_ports, new_agent_rep_input_ports):
-            #     self.composition.add_projection(sender=agent_rep_input_port,
-            #                                     receiver=state_input_port)
-            # MODIFIED 3/24/22 END
-
-        # MODIFIED 3/24/22 END
 
         if self.state_feature_specs:
             # Restrict validation and any further instantiation of state_input_ports
