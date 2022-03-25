@@ -242,6 +242,9 @@ class TestControlSpecification:
         assert comp.controller.state_feature_values == {reward.input_port: [0.],
                                                         Input.input_port: [0.]}
         assert all(p.path_afferents for p in comp.controller.state_input_ports)
+        assert comp.controller.state_input_ports.names == ['Shadowed input of reward[InputPort-0]',
+                                                           'Shadowed input of Input[InputPort-0]']
+
         # comp._analyze_graph()
 
         stim_list_dict = {
@@ -358,6 +361,9 @@ class TestControlSpecification:
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                              'DEFERRED 0 OF ocomp':
                                                                 'deferred[InputPort-0] NOT (YET) IN ocomp'}
+            assert ocomp.controller.state_input_ports.names == ['Shadowed input of ia[InputPort-0]',
+                                                               'Shadowed input of deferred[InputPort-0]']
+
 
         elif state_features_option in {'dict', 'set'}:
             assert ocomp.controller.state_features == {'ia[InputPort-0]':
@@ -392,10 +398,11 @@ class TestControlSpecification:
         ocomp.add_linear_processing_pathway([deferred_node, initial_node_b])
         assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
                                                    'deferred[InputPort-0]': 'deferred[InputPort-0]'}
-
         assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                          deferred_node.input_port: [0.]}
         assert all(p.path_afferents for p in ocomp.controller.state_input_ports)
+        assert ocomp.controller.state_input_ports.names == ['Shadowed input of ia[InputPort-0]',
+                                                           'Shadowed input of deferred[InputPort-0]']
 
         result = ocomp.run({
             initial_node_a: [1],
