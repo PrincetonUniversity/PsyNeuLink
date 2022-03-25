@@ -4460,7 +4460,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     def _get_nested_compositions(self,
                                  nested_compositions=NotImplemented,
                                  visited_compositions=NotImplemented):
-        """Recursive search for and return all nested compositions.
+        """Recursively search for and return all nested compositions.
 
         :return
 
@@ -4485,6 +4485,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         Note:  this is distinct from the _all_nodes property, which returns all nodes at the top level
         """
         return [k[0] for k in self._get_nested_nodes()] + list(self.nodes)
+
+    def _is_in_composition(self, component, nested=True):
+        """Return True if component is in Composition, including any nested Compositions if **nested** is True
+        Include input_CIM and output_CIM for self and all nested Compositions
+        """
+        if isinstance(component, Port):
+            component = component.owner
+
+        if component in self._all_nodes:
+            return True
+        if nested:
+            return any(component in comp._all_nodes for comp in self._get_nested_compositions())
 
     def _determine_origin_and_terminal_nodes_from_consideration_queue(self):
         """Assigns NodeRole.ORIGIN to all nodes in the first entry of the consideration queue and NodeRole.TERMINAL
@@ -8929,10 +8941,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             Input dict, with added entries for any input Nodes or Ports for which input was not provided
         """
 
-        # # FIX: 3/12/22 - NEED TO PREPROCESS PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
+        # # FIX: 3/12/22 - DOCUMENT PREPROCESSING OF PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
         # #                TO SET mech_shape FOR BELOW, AND ASSIGN FILLERS FOR ONES THAT ARE SHORT OF THE MAX LENGTH
-        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF MAX
-        # #                (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
+        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF
+        # #                MAX (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
         # #                ALSO NO NEED TO WORRY ABOUT DIFFERENCES ACROSS NODES, AS THAT TOO WILL BE TESTED THERE
 
         # Validate that keys for inputs are all legal entries
