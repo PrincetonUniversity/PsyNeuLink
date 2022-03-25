@@ -1203,11 +1203,11 @@ class TestControlMechanisms:
             assert error_or_warning_message in str(error.value)
 
     state_features_arg = [
-        # 'single_numeric_spec',        # <- same numeric input for all INPUT Node InputPorts
-        # 'single_tuple_numeric_spec',  # <- same value and function assigned to all INPUT Node InputPorts
-        # 'single_port_spec',           # <- same Port for all INPUT Node InputPorts
-        # 'single_mech_spec',           # <- same Mech's InputPort for INPUT Node InputPorts
-        # 'nested_partial_list',        # <- specify 1st 3 INPUT Node InputPorts; 4th (I2) should get shaddowed
+        'single_numeric_spec',        # <- same numeric input for all INPUT Node InputPorts
+        'single_tuple_numeric_spec',  # <- same value and function assigned to all INPUT Node InputPorts
+        'single_port_spec',           # <- same Port for all INPUT Node InputPorts
+        'single_mech_spec',           # <- same Mech's InputPort for INPUT Node InputPorts
+        'nested_partial_list',        # <- specify 1st 3 INPUT Node InputPorts; 4th (I2) should get shaddowed
         'nested_partial_set',         # <- only 2 of 3 INPUT Nodes of nested Comp in set format;
         'nested_partial_dict',        # <- only 2 of 3 INPUT Nodes of nested Comp in dict format
         'nested_full_set',            # <- all 3 INPUT Nodes of nested Comp in set format

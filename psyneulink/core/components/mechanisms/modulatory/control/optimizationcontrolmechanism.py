@@ -1618,13 +1618,16 @@ class OptimizationControlMechanism(ControlMechanism):
                     :type:
 
                 state_feature_specs
-                    see `state_feature_specs <OptimizationControlMechanism_State_Features_Arg>`
+                    This is for internal use only, including population of the state_features property
+                    (see `state_features <OptimizationControlMechanism.state_features>`)
 
                     :default value: SHADOW_INPUTS
                     :type: ``dict``
 
                 state_feature_default_spec
-                    see `state_feature_default <Optimization.state_feature_default>`
+                    This is a shell parameter to validate its assignment and explicity user specification of None
+                    to override Parameter default;  its .spec attribute is assigned to the user-facing
+                    self.state_feature_default (see `state_feature_default <Optimization.state_feature_default>`).
 
                     :default value: SHADOW_INPUTS
                     :type:
@@ -2567,8 +2570,6 @@ class OptimizationControlMechanism(ControlMechanism):
         if self.agent_rep_type != COMPOSITION:
             return
 
-
-
         # FIX: 3/22/22 - CHECK HERE FOR ANY NEW self.agent_rep_input_nodes
         # MODIFIED 3/24/22 NEW: [BASED ON EARLIER VERSION PRE-3/19/22
         from psyneulink.core.compositions.composition import Composition
@@ -2596,7 +2597,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 # OLD: [MODIFIED]
                 params = {INTERNAL_ONLY:True,
                           PARAMS: {}}
-                if default == None:
+                if default is None:
                     continue
                 if default == SHADOW_INPUTS:
                     params[SHADOW_INPUTS]: input_port
