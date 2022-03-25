@@ -2609,8 +2609,6 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
-            # FIX: 3/24/22 - ?OK:
-            # self._num_state_feature_specs = len(self.state_input_ports)
             self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
             # MODIFIED 3/24/22 END
 
@@ -2624,7 +2622,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 self._validate_state_features(context)
 
     def _update_state_features_dict(self):
-        agent_rep_input_ports = self._get_agent_rep_input_receivers()
+        agent_rep_input_ports = self.agent_rep_input_ports
         specified_input_ports = self._specified_INPUT_Node_InputPorts_in_order
 
         for i, port in enumerate(self.state_input_ports):
@@ -2642,7 +2640,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 node = None
             if not (isinstance(node, str) and 'DEFERRED' in node):
                 continue
-            if feature.owner not in self._get_agent_rep_input_receivers():
+            if feature.owner not in agent_rep_input_ports:
                 # Don't add to dict, will be dealt with or raise an error at run time
                 continue
             self.state_feature_specs[i] = feature
@@ -2734,7 +2732,7 @@ class OptimizationControlMechanism(ControlMechanism):
         invalid_state_features = [input_port for input_port in self.state_input_ports
                                   if (input_port.shadow_inputs
                                       and not (input_port.shadow_inputs.owner
-                                               in self._get_agent_rep_input_receivers())
+                                               in self.agent_rep_input_ports)
                                       and (isinstance(input_port.shadow_inputs.owner,
                                                       CompositionInterfaceMechanism)
                                            and not (input_port.shadow_inputs.owner.composition in
@@ -3442,6 +3440,10 @@ class OptimizationControlMechanism(ControlMechanism):
             return len(self.state_input_ports)
         except:
             return 0
+
+    # @property
+    # def _num_state_feature_specs(self):
+    #     return len(self.state_feature_specs)
 
     @property
     def state_features(self):
