@@ -5799,7 +5799,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if projection in self.projections:
             self.projections.remove(projection)
 
-        # step 3 - TBI? remove Projection from afferents & efferents lists of any node
+        # step 3 - deactivate Projection in this Composition
+        projection._deactivate_for_compositions(self)
+
+        # step 4 - TBI? remove Projection from afferents & efferents lists of any node
+
 
     def _validate_projection(self,
                              projection,
