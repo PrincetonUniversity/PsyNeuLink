@@ -2259,27 +2259,19 @@ class OptimizationControlMechanism(ControlMechanism):
                     spec = self.state_feature_default
 
                 parsed_feature_specs.append(spec)
-                # MODIFIED 3/24/22 OLD:
                 self._state_feature_functions.append(state_feature_fct)
-                # # MODIFIED 3/24/22 NEW:
-                # state_feature_functions.append(state_feature_fct)
-                # MODIFIED 3/24/22 END
                 self._specified_INPUT_Node_InputPorts_in_order.append(port)
                 state_input_port_names.append(state_input_port_name)
 
-            # MODIFIED 3/24/22 NEW:
             if not any(self._state_feature_functions):
                 self._state_feature_functions = None
-            # MODIFIED 3/24/22 END
             self.parameters.state_feature_specs.set(parsed_feature_specs, override=True)
             return state_input_port_names or []
 
         # END OF PARSE SPECS  -----------------------------------------------------------------------------------
 
         user_specs = self.parameters.state_feature_specs.spec
-        # MODIFIED 3/24/22 NEW:
         self.state_feature_default = self.parameters.state_feature_default_spec.spec
-        # MODIFIED 3/24/22 END
 
         # SINGLE ITEM spec, SO APPLY TO ALL agent_rep_input_ports
         if (user_specs is None
@@ -2580,19 +2572,18 @@ class OptimizationControlMechanism(ControlMechanism):
             # agent_rep is Composition, but state_input_ports are missing for some agent_rep INPUT Node InputPorts
             #   so construct a state_input_port for each missing one, using state_feature_default;
             #   note: assumes ones added are at the end of the list in self.agent_rep_input_ports
-
             # FIX: 3/24/22 - HANDLED ELSEWHWERE WITH ERROR MESSAGE (SHOULD FIGURE OUT WHERE)
             # if context.flags & ContextFlags.PREPARING:
             #     # At run time, insure that there not *more* state_input_ports than agent_rep INPUT Node InputPorts
             #     assert self.num_state_input_ports < len(self.agent_rep_input_ports), \
             #         f"PROGRAM ERROR: More state_input_ports assigned to '{self.name}' ({self.num_state_input_ports}) " \
             #         f"than agent_rep ('{self.agent_rep.name}') has INPUT Node InputPorts ({num_agent_rep_input_ports})."
-
             # FIX: 3/24/22 - SHOULD PROBABLY REFACTOR THIS TO CALL _parse_state_feature_specs
             state_input_ports = []
             local_context = Context(source=ContextFlags.METHOD)
             default = self.state_feature_default
-            for input_port in self.agent_rep_input_ports[self.num_state_input_ports:]:
+            new_agent_rep_input_ports = self.agent_rep_input_ports[self.num_state_input_ports:]
+            for input_port in new_agent_rep_input_ports:
                 # Instantiate state_input_port for each agent_rep INPUT Node InputPort not already specified:
                 # OLD: [MODIFIED]
                 params = {INTERNAL_ONLY:True,
@@ -2600,7 +2591,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 if default is None:
                     continue
                 if default == SHADOW_INPUTS:
-                    params[SHADOW_INPUTS]: input_port
+                    params[SHADOW_INPUTS] = input_port
                     input_port_name = f"{SHADOW_INPUT_NAME}{input_port.full_name}]"
                     self.state_feature_specs.append(input_port)
                 elif is_numeric(default):
@@ -2622,6 +2613,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                                      context=local_context)
 
                 state_input_ports.append(state_input_port)
+                # FIX: 3/24/22 - MAKE THIS A PROPERTY? (OR NEED IT REMAIN STABLE FOR LOOPS?)
                 self._num_state_feature_specs += 1
 
             self.add_ports(state_input_ports,
@@ -2630,22 +2622,24 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
+            # MODIFIED 3/24/22 OLD:
             # self.parameters.state_feature_specs.set(
             #     self.parameters.state_feature_specs.get().append(self.state_feature_default), override=True)
-            assert True
+            # MODIFIED 3/24/22 END:
+
             # FIX: 3/24/22 - ?OK:
             # self._num_state_feature_specs = len(self.state_input_ports)
             self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
-            # self.parameters.state_feature_specs.set([input_port.shadow_inputs for input_port in self.state_input_ports],
-            #                                             override=True)
-            # OLD END
             # MODIFIED 3/24/22 END
 
+            # # MODIFIED 3/24/22 NEW:  FIX - PUT THIS IN LOOP ABOVE?
+            # # Add projections to new any state_input_ports:
+            # for state_input_port, agent_rep_input_port in zip(state_input_ports, new_agent_rep_input_ports):
+            #     self.composition.add_projection(sender=agent_rep_input_port,
+            #                                     receiver=state_input_port)
+            # MODIFIED 3/24/22 END
 
-
-
-
-
+        # MODIFIED 3/24/22 END
 
         if self.state_feature_specs:
             # Restrict validation and any further instantiation of state_input_ports
