@@ -274,12 +274,12 @@ def register_instance(entry, name, base_class, registry, sub_dict):
         else:
             renamed_instance_counts[match.groups()[0]] += 1
 
-def rename_instance_in_registry(registry, category, name=None, component=None):
+def rename_instance_in_registry(registry, category, new_name, old_name=None, component=None):
     """Rename instance in category registry
 
     Instance to be renamed can be specified by a reference to the component or its name.
     COMMENT:
-    DEPRECACTED (SEE IMPLEMENTATION NOTE BELOW)
+    DEPRECATED (SEE IMPLEMENTATION NOTE BELOW)
     If the name of the instance was a default name, and it was the last in the sequence,
         decrement renamed_instance_counts and if it was the only one, remove that name from the renamed_instance list
     COMMENT
@@ -287,24 +287,27 @@ def rename_instance_in_registry(registry, category, name=None, component=None):
 
     registry_entry = registry[category]
 
-    if not (name or component):
+    if not (old_name or component):
         raise RegistryError("Must specify a name or component to remove an entry of {}".
                             format(registry.__class__.__name__))
-    if (name and component) and name != component.name:
+    if (old_name and component) and old_name != component.old_name:
         raise RegistryError("Conflicting  name ({}) and component ({}) specified for entry to remove from {}".
-                            format(name, component.name, registry.__class__.__name__))
-    if component and not name:
+                            format(old_name, component.old_name, registry.__class__.__name__))
+    if component and not old_name:
         for n, c in registry_entry.instanceDict.items():
             if component == c:
-                name = n
+                old_name = n
 
     try:
-        clear_registry(registry_entry.instanceDict[name]._portRegistry)
+        clear_registry(registry_entry.instanceDict[old_name]._portRegistry)
     except (AttributeError):
         pass
 
-    # Delete instance
-    del registry_entry.instanceDict[name]
+    entry = registry_entry.instanceDict[old_name]
+    # Delete entry for instance
+    del registry_entry.instanceDict[old_name]
+    # Add entry for instance under new name
+    registry_entry.instanceDict[new_name] = entry 
 
     # Decrement count for instances in entry
     instance_count = registry_entry.instanceCount - 1
@@ -327,6 +330,7 @@ def rename_instance_in_registry(registry, category, name=None, component=None):
                                        instance_count,
                                        registry_entry.renamed_instance_counts,
                                        registry_entry.default)
+    return new_name
 
 def remove_instance_from_registry(registry, category, name=None, component=None):
     """Remove instance from registry category entry

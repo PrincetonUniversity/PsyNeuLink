@@ -2209,7 +2209,7 @@ class OptimizationControlMechanism(ControlMechanism):
                         # # MODIFIED 3/25/22 OLD:
                         # state_input_port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
                         # MODIFIED 3/25/22 NEW:
-                        port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
+                        port_name = f'DEFERRED {str(i-num_agent_rep_input_ports)}'
                         # MODIFIED 3/25/22 END
                 # For CompositionFunctionApproximator, assign spec as port
                 else:
@@ -2621,6 +2621,12 @@ class OptimizationControlMechanism(ControlMechanism):
             self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
             # MODIFIED 3/24/22 END
 
+        # MODIFIED 3/25/22 NEW:
+        # for i, input_port in enumerate([port for port in self.state_input_ports
+        #                                 if 'NUMERIC INPUT FOR DEFERRED ' in port.name]):
+        #     input_port.name = f"NUMERIC INPUT FOR {list(self.state_feature_values.keys())[i]}"
+        # MODIFIED 3/25/22 END
+
         if self.state_feature_specs:
             # Restrict validation and any further instantiation of state_input_ports
             #    until run time, when the Composition is expected to be fully constructed
@@ -2653,6 +2659,19 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Don't add to dict, will be dealt with or raise an error at run time
                 continue
             self.state_feature_specs[i] = feature
+
+        # MODIFIED 3/25/22 NEW:
+        # Rename any deferred state_input_ports for NUMERIC VALUES
+        from psyneulink.core.globals.registry import rename_instance_in_registry
+        from psyneulink.core.globals.keywords import INPUT_PORT
+        for i, input_port in enumerate([port for port in self.state_input_ports
+                                        if 'NUMERIC INPUT FOR DEFERRED ' in port.name]):
+            input_port.name = rename_instance_in_registry(registry=self._portRegistry,
+                                                          category=INPUT_PORT,
+                                                          new_name= f"NUMERIC INPUT FOR {agent_rep_input_ports[i].full_name}",
+                                                          component=input_port)
+        # MODIFIED 3/25/22 END
+
 
     def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
