@@ -837,7 +837,6 @@ class TestControlMechanisms:
             assert err.value.error_value == err_msg
 
     messages = [
-
         # 0
         f"There are fewer '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' than the number "
         f"of InputPort's for all of the INPUT Nodes of its agent_rep ('OUTER COMP'); the remaining inputs will be "
@@ -913,42 +912,40 @@ class TestControlMechanisms:
         f"'Shadowed input of EXT[InputPort-0]-2']) "
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
-
     state_feature_args = [
-        ('single_none_spec', None, None),
-        ('single_shadow_spec', None, None),
-        ('single_tuple_shadow_spec', None, None),
-        ('partial_legal_list_spec', messages[0], UserWarning),
-        ('full_list_spec', None, None),
-        ('list_spec_with_none', None, None),
-        ('input_dict_spec', None, None),
-        ('input_dict_spec_short', None, None),
-        ('set_spec_short', None, None),
-        ('set_spec', None, None),
-        ('set_spec_port', None, None),
-        ('no_specs', None, None),
-        ('shadow_inputs_dict_spec', None, None),
-        ('shadow_inputs_dict_spec_w_none', None, None),
-        ('misplaced_shadow', messages[1], pnl.CompositionError),
-        ('ext_shadow', messages[2], pnl.OptimizationControlMechanismError),
-        ('ext_output_port', messages[3], pnl.OptimizationControlMechanismError),
-        ('input_format_wrong_shape', messages[4], pnl.OptimizationControlMechanismError),
-        ('too_many_inputs_warning', messages[5], UserWarning),
-        ('too_many_w_node_not_in_composition_warning', messages[6], UserWarning),
-        ('too_many_inputs_error', messages[7], pnl.OptimizationControlMechanismError),
-        ('bad_single_spec', messages[13], pnl.OptimizationControlMechanismError),
-        ('bad_dict_spec_warning', messages[8], UserWarning),
-        ('bad_dict_spec_error', messages[8], pnl.OptimizationControlMechanismError),
-        ('bad_shadow_inputs_dict_spec_error', messages[12], pnl.OptimizationControlMechanismError),
-        ('comp_in_list_spec', messages[10], pnl.OptimizationControlMechanismError),
-        ('comp_in_shadow_inupts_spec', messages[11], pnl.OptimizationControlMechanismError)
+        # STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
+        ('single_none_spec', pnl.SHADOW_INPUTS, None, None),
+        ('single_shadow_spec', pnl.SHADOW_INPUTS, None, None),
+        ('single_tuple_shadow_spec', pnl.SHADOW_INPUTS, None, None),
+        ('partial_legal_list_spec', pnl.SHADOW_INPUTS, messages[0], UserWarning),
+        ('full_list_spec', pnl.SHADOW_INPUTS, None, None),
+        ('list_spec_with_none', pnl.SHADOW_INPUTS, None, None),
+        ('input_dict_spec', pnl.SHADOW_INPUTS, None, None),
+        ('input_dict_spec_short', pnl.SHADOW_INPUTS, None, None),
+        ('set_spec_short', None, None, None),
+        ('set_spec', pnl.SHADOW_INPUTS, None, None),
+        ('set_spec_port', pnl.SHADOW_INPUTS, None, None),
+        ('no_specs', None, None, None),
+        ('shadow_inputs_dict_spec', pnl.SHADOW_INPUTS, None, None),
+        ('shadow_inputs_dict_spec_w_none', pnl.SHADOW_INPUTS, None, None),
+        ('misplaced_shadow', pnl.SHADOW_INPUTS, messages[1], pnl.CompositionError),
+        ('ext_shadow', pnl.SHADOW_INPUTS, messages[2], pnl.OptimizationControlMechanismError),
+        ('ext_output_port', pnl.SHADOW_INPUTS, messages[3], pnl.OptimizationControlMechanismError),
+        ('input_format_wrong_shape', pnl.SHADOW_INPUTS, messages[4], pnl.OptimizationControlMechanismError),
+        ('too_many_inputs_warning', pnl.SHADOW_INPUTS, messages[5], UserWarning),
+        ('too_many_w_node_not_in_composition_warning', pnl.SHADOW_INPUTS, messages[6], UserWarning),
+        ('too_many_inputs_error', pnl.SHADOW_INPUTS, messages[7], pnl.OptimizationControlMechanismError),
+        ('bad_single_spec', pnl.SHADOW_INPUTS, messages[13], pnl.OptimizationControlMechanismError),
+        ('bad_dict_spec_warning', pnl.SHADOW_INPUTS, messages[8], UserWarning),
+        ('bad_dict_spec_error', pnl.SHADOW_INPUTS, messages[8], pnl.OptimizationControlMechanismError),
+        ('bad_shadow_inputs_dict_spec_error', pnl.SHADOW_INPUTS, messages[12], pnl.OptimizationControlMechanismError),
+        ('comp_in_list_spec', pnl.SHADOW_INPUTS, messages[10], pnl.OptimizationControlMechanismError),
+        ('comp_in_shadow_inupts_spec', pnl.SHADOW_INPUTS, messages[11], pnl.OptimizationControlMechanismError)
     ]
-
     if len(state_feature_args) != 23:
         print("\n\n**********************************************************************************************")
         print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
         print("***********************************************************************************************")
-
     @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
@@ -957,8 +954,9 @@ class TestControlMechanisms:
         """See test_nested_composition_as_agent_rep() for additional tests of state_features specification."""
 
         test_condition = state_feature_args[0]
-        error_or_warning_message = state_feature_args[1]
-        exception_type = state_feature_args[2]
+        state_feature_default = state_feature_args[1]
+        error_or_warning_message = state_feature_args[2]
+        exception_type = state_feature_args[3]
 
         ia = pnl.ProcessingMechanism(name='IA')
         ib = pnl.ProcessingMechanism(name='IB')
@@ -977,7 +975,7 @@ class TestControlMechanisms:
             # Legal state_features specifications
             'single_none_spec': None,
             'single_shadow_spec': pnl.SHADOW_INPUTS,
-            'single_tuple_shadow_spec': (pnl.SHADOW_INPUTS, pnl.Logistic),
+            'single_tuple_shadow_spec': (pnl.SHADOW_INPUTS, pnl.Logistic), # state_feature_values should be 0.5
             'partial_legal_list_spec': [oa.output_port], # only specifies ia;  oa and ob assigned default inputs
             'full_list_spec': [ia.input_port, oa.output_port, [3,1,2]],
             'list_spec_with_none': [ia.input_port, None, [3,1,2]],
@@ -1021,7 +1019,7 @@ class TestControlMechanisms:
 
         else:
             ocm = pnl.OptimizationControlMechanism(state_features=state_features,
-                                                   state_feature_default=pnl.SHADOW_INPUTS,
+                                                   state_feature_default=state_feature_default,
                                                    objective_mechanism=objective_mechanism,
                                                    monitor_for_control=monitor_for_control,
                                                    function=pnl.GridSearch(),
@@ -1205,20 +1203,24 @@ class TestControlMechanisms:
             assert error_or_warning_message in str(error.value)
 
     state_features_arg = [
-        'single_numeric_spec',        # <- same numeric input for all INPUT Node InputPorts
-        'single_tuple_numeric_spec',  # <- same value and function assigned to all INPUT Node InputPorts
-        'single_port_spec',           # <- same Port for all INPUT Node InputPorts
-        'single_mech_spec',           # <- same Mech's InputPort for INPUT Node InputPorts
-        'nested_partial_list',        # <- specify 1st 3 INPUT Node InputPorts; 4th (I2) should get shaddowed
-        'nested_partial_set',         # <- only one of two INPUT Nodes of nested Comp in set format
-        'nested_partial_dict',        # <- only one of two INPUT Nodes of nested Comp in dict format
-        'nested_full_set',            # <- both of two INPUT Nodes of nested Comp in set format
-        'nested_full_dict',           # <- both of two INPUT Nodes of nested Comp in dict format
+        # 'single_numeric_spec',        # <- same numeric input for all INPUT Node InputPorts
+        # 'single_tuple_numeric_spec',  # <- same value and function assigned to all INPUT Node InputPorts
+        # 'single_port_spec',           # <- same Port for all INPUT Node InputPorts
+        # 'single_mech_spec',           # <- same Mech's InputPort for INPUT Node InputPorts
+        # 'nested_partial_list',        # <- specify 1st 3 INPUT Node InputPorts; 4th (I2) should get shaddowed
+        'nested_partial_set',         # <- only 2 of 3 INPUT Nodes of nested Comp in set format;
+        'nested_partial_dict',        # <- only 2 of 3 INPUT Nodes of nested Comp in dict format
+        'nested_full_set',            # <- all 3 INPUT Nodes of nested Comp in set format
+        'nested_full_dict',           # <- both of 2 INPUT Nodes of nested Comp in dict format
         'nested_comp_set',            # <- nested Comp as itself in set format
         'nested_comp_dict',           # <- nested Comp as itself in dict format with a single spec for all INPUT Nodes
         'no_spec',                    # <- Assign state_feature_default to all Nodes
         'bad'                         # <- Mechanism not in agent_rep
     ]
+    if len(state_feature_args) != 13:
+        print("\n\n**********************************************************************************************")
+        print("*** RESTORE state_feature_args IN test_state_features_in_nested_composition_as_agent_rep() *****")
+        print("***********************************************************************************************")
     @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.composition
