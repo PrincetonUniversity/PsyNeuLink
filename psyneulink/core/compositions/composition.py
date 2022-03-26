@@ -3880,11 +3880,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
-            self._scheduler = Scheduler(composition=self)
-
             if old_scheduler is not None:
-                self._scheduler.add_condition_set(old_scheduler.conditions)
+                orig_conds = old_scheduler._user_specified_conds
+            else:
+                orig_conds = None
 
+            self._scheduler = Scheduler(composition=self, conditions=orig_conds)
             self.needs_update_scheduler = False
 
         return self._scheduler
