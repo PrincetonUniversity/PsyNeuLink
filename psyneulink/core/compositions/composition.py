@@ -10288,7 +10288,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
                     self.input_CIM.execute(build_CIM_input, context=context)
                 else:
-                    assert inputs is None, "Ignoring composition input!"
+                    assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
+                                           f"only be called on outer-most composition within which it is nested."
                     self.input_CIM.execute(context=context)
                 self.parameter_CIM.execute(context=context)
             else:

@@ -1071,7 +1071,8 @@ from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
-    'AGENT_REP', 'STATE_FEATURES', 'STATE_FEATURE_FUNCTION', 'RANDOMIZATION_CONTROL_SIGNAL', 'NUM_ESTIMATES'
+    'AGENT_REP', 'STATE_FEATURES', 'STATE_FEATURE_FUNCTION', 'RANDOMIZATION_CONTROL_SIGNAL', 'NUM_ESTIMATES',
+    'DEFERRED_STATE_INPUT_PORT_PREFIX', 'NUMERIC_STATE_INPUT_PORT_PREFIX', 'SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX'
 ]
 
 AGENT_REP = 'agent_rep'
@@ -1083,6 +1084,7 @@ NUM_ESTIMATES = 'num_estimates'
 
 DEFERRED_STATE_INPUT_PORT_PREFIX = 'DEFERRED '
 NUMERIC_STATE_INPUT_PORT_PREFIX = "NUMERIC INPUT FOR "
+SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX = "SHADOWED INPUT OF "
 
 def deferred_state_feature_node_msg(node_name, agent_rep_name):
     return f"{DEFERRED_STATE_INPUT_PORT_PREFIX}{node_name} OF {agent_rep_name}"
@@ -2129,10 +2131,13 @@ class OptimizationControlMechanism(ControlMechanism):
             """
 
             parsed_feature_specs = []
-            num_specs = len(state_feature_specs)
+            num_user_specs = len(state_feature_specs)
             num_specified_ports = len(specified_input_ports)
             num_agent_rep_input_ports = len(agent_rep_input_ports)
-            assert num_specs == num_specified_ports, f"ALERT: num state_feature_specs != num ports in _parse_spec()"
+            # Total number of specs to be parsed:
+            self._num_state_feature_specs = max(num_user_specs, num_agent_rep_input_ports)
+
+            assert num_user_specs == num_specified_ports, f"ALERT: num state_feature_specs != num ports in _parse_spec()"
             # Note: there may be more state_feature_specs (i.e., ones for unspecified input_ports)
             #       than num_specified_ports
 
@@ -2151,7 +2156,7 @@ class OptimizationControlMechanism(ControlMechanism):
                                   f"inputs.")
 
                 # Too MANY specs for number of agent_rep receivers
-                if num_specs > num_agent_rep_input_ports:
+                if num_user_specs > num_agent_rep_input_ports:
                     # specs_not_in_agent_rep = [f"'{spec.name if isinstance(spec, Mechanism) else spec.owner.name}'"
                     #                           for spec in self._get_specs_not_in_agent_rep(state_feature_specs)]
                     specs_not_in_agent_rep = \
@@ -2188,80 +2193,77 @@ class OptimizationControlMechanism(ControlMechanism):
                     f"shadowed.")
 
             state_input_port_names = []
-            self._num_state_feature_specs = max(num_specs, num_agent_rep_input_ports)
             for i in range(self._num_state_feature_specs):
 
-                # PORT & PORT_NAME
+                # FIX: CONSOLIDATE THIS WITH PARSING OF SPEC BELOW
+                # AGENT_REP INPUT NODE INPUTPORT
+                #    Assign it's name to be used in state_features
                 # (and specs for CFA and any Nodes not yet in agent_rep)
                 state_input_port_name = None
                 state_feature_fct = None
                 if self.agent_rep_type == COMPOSITION:
-                    # Process number of specs for which there are known INPUT Ports of agent_rep
                     if i < num_agent_rep_input_ports:
-                        # Just get port and port name (spec will be parsed and assigned below)
-                        # Node should be in agent_rep, so use that to be sure
-                        if self.agent_rep_type == COMPOSITION:
-                            port = agent_rep_input_ports[i]
-                        port_name = port.full_name
-                    # For Nodes not (yet) in agent_rep:
+                        # spec is for Input{ort of INPUT Node already in agent_rep
+                        #    so get agent_rep_input_port and its name (spec will be parsed and assigned below)
+                        agent_rep_input_port = agent_rep_input_ports[i]
+                        agent_rep_input_port_name = agent_rep_input_port.full_name
                     else:
-                        # - get specified value for spec, for later parsing and assignment (once Node is known)
-                        spec = state_feature_specs[i]
-                        port = specified_input_ports[i]
+                        # spec is for InputPort of Nodes not (yet)
+                        #    so get specified value for spec, for later parsing and assignment (once Node is known)
+                        agent_rep_input_port = specified_input_ports[i]
                         # - assign "DEFERRED n" as node name
-                        # # MODIFIED 3/25/22 OLD:
-                        # state_input_port_name = f'DEFFERED {str(i-num_agent_rep_input_ports)}'
-                        # MODIFIED 3/25/22 NEW:
-                        port_name = f'{DEFERRED_STATE_INPUT_PORT_PREFIX}{str(i-num_agent_rep_input_ports)}'
-                        # MODIFIED 3/25/22 END
-                # For CompositionFunctionApproximator, assign spec as port
+                        agent_rep_input_port_name = f'{DEFERRED_STATE_INPUT_PORT_PREFIX}' \
+                                                    f'{str(i-num_agent_rep_input_ports)}'
+                # For CompositionFunctionApproximator, assign spec as agent_rep_input_port
                 else:
                     spec = state_feature_specs[i]
-                    port = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
-                    # # MODIFIED 3/25/22 OLD:
-                    # state_input_port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
-                    # MODIFIED 3/25/22 NEW:
-                    port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                    agent_rep_input_port = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                    # MODIFIED 3/25/22 OLD:
+                    state_input_port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
+                    # # MODIFIED 3/25/22 NEW:
+                    # agent_rep_input_port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
                     # MODIFIED 3/25/22 END
 
                 # SPEC
-                # Pare and assign specs for INPUT Nodes already in agent_rep (i.e., unassigned above)
-                #     (others may be added to Composition later)
-                if i < num_specs:
+                # Parse and assign user specifications (note: may be for INPUT Node InputPorts not yet inagent_rep)
+                if i < num_user_specs:               # i.e., if num_agent_rep_input_ports < num_user_specs)
                     spec = state_feature_specs[i]
-                    # Assign input_port name
+                    # Parse tuple
                     if isinstance(spec, tuple):
                         state_feature_fct = spec[1]
                         spec = spec[0]
+                    # Assign spec and state_input_port name
                     if is_numeric(spec):
-                        # state_input_port_name = f"{port_name} {DEFAULT_VARIABLE.upper()}"
-                        state_input_port_name = f"{NUMERIC_STATE_INPUT_PORT_PREFIX}{port_name}"
+                        state_input_port_name = f"{NUMERIC_STATE_INPUT_PORT_PREFIX}{agent_rep_input_port_name}"
                     elif isinstance(spec, (Port, Mechanism, Composition)):
+                        # FIX: 3/25/22 - ??SHOULDN'T "INPUT FROM" OR "INPUT FOR" BE ADDED TO state_input_port_name:
+                        #                SOMETHING LIKE: f"INPUT FOR {agent_rep_input_port_name}"
                         if hasattr(spec, 'full_name'):
                             state_input_port_name = spec.full_name
                         else:
                             state_input_port_name = spec.name
+                    elif spec == SHADOW_INPUTS:
+                        # Shadow the specified agent_rep_input_port (Name assigned where shadow input is parsed)
+                        spec = agent_rep_input_port
                     elif isinstance(spec, dict):
-                        state_input_port_name = spec[NAME] if NAME in spec else f"STATE FEATURE INPUT for {port_name}"
+                        state_input_port_name = spec[NAME] if NAME in spec else f"INPUT FOR {agent_rep_input_port_name}"
                         # tuple specification of function (assigned above) overrides dictionary specification
                         if state_feature_fct is None:
                             if FUNCTION in spec:
                                 state_feature_fct = spec[FUNCTION]
                             elif PARAMS in spec and FUNCTION in spec[PARAMS]:
                                 state_feature_fct = spec[PARAMS][FUNCTION]
-                    elif spec == SHADOW_INPUTS:
-                        # Shadow the specified port
-                        spec = port
                     elif spec is not None:
                         assert False, f"PROGRAM ERROR: unrecognized form of state_feature specification for {self.name}"
 
-                # Fewer specifications than number of INPUT Nodes, so assign state_feature_default
+                # Fewer specifications than number of INPUT Nodes, so assign state_feature_default to the rest
                 else:
+                    # Note: state_input_port name assigned above
                     spec = self.state_feature_default
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
-                self._specified_INPUT_Node_InputPorts_in_order.append(port)
+                self._specified_INPUT_Node_InputPorts_in_order.append(agent_rep_input_port)
                 state_input_port_names.append(state_input_port_name)
 
             if not any(self._state_feature_functions):
@@ -2483,6 +2485,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
             parsed_spec = _parse_port_spec(owner=self, port_type=InputPort, port_spec=spec)
 
+            # FIX: 3/25/22 MODIFY NAMES FOR NODES THAT ARE DEFERRED,
+            #              AND CAPITALIZE FOR ONES WITH Shadow input IN NAME USING PREFIX
             if not parsed_spec[NAME]:
                 parsed_spec[NAME] = state_input_port_names[i]
 

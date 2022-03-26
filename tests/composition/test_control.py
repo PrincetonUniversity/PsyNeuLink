@@ -242,8 +242,9 @@ class TestControlSpecification:
         assert comp.controller.state_feature_values == {reward.input_port: [0.],
                                                         Input.input_port: [0.]}
         assert all(p.path_afferents for p in comp.controller.state_input_ports)
-        assert comp.controller.state_input_ports.names == ['Shadowed input of reward[InputPort-0]',
-                                                           'Shadowed input of Input[InputPort-0]']
+        assert comp.controller.state_input_ports.names == \
+               [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0]',
+                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'Input[InputPort-0]']
 
         # comp._analyze_graph()
 
@@ -361,8 +362,9 @@ class TestControlSpecification:
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                              'DEFERRED 0 OF ocomp':
                                                                 'deferred[InputPort-0] NOT (YET) IN ocomp'}
-            assert ocomp.controller.state_input_ports.names == ['Shadowed input of ia[InputPort-0]',
-                                                               'Shadowed input of deferred[InputPort-0]']
+            assert ocomp.controller.state_input_ports.names == \
+                   [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'ia[InputPort-0]',
+                    pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0]']
 
 
         elif state_features_option in {'dict', 'set'}:
@@ -401,8 +403,9 @@ class TestControlSpecification:
         assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                          deferred_node.input_port: [0.]}
         assert all(p.path_afferents for p in ocomp.controller.state_input_ports)
-        assert ocomp.controller.state_input_ports.names == ['Shadowed input of ia[InputPort-0]',
-                                                           'Shadowed input of deferred[InputPort-0]']
+        assert ocomp.controller.state_input_ports.names == \
+               [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'ia[InputPort-0]',
+                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0]']
 
         result = ocomp.run({
             initial_node_a: [1],
@@ -917,9 +920,9 @@ class TestControlMechanisms:
 
         # 13
         f"'OptimizationControlMechanism-0' has '{pnl.STATE_FEATURES}' specified "
-        f"(['Shadowed input of EXT[InputPort-0]', "
-        f"'Shadowed input of EXT[InputPort-0]-1', "
-        f"'Shadowed input of EXT[InputPort-0]-2']) "
+        f"(['{pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX}EXT[InputPort-0]', "
+        f"'{pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX}EXT[InputPort-0]-1', "
+        f"'{pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX}EXT[InputPort-0]-2']) "
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
     state_feature_args = [
@@ -1049,11 +1052,15 @@ class TestControlMechanisms:
                                               'OB[InputPort-0]': None}
                 assert ocm.state_feature_values == {}
 
-            if test_condition == 'single_shadow_spec':
+            if test_condition in {'single_shadow_spec',
+                                  'set_spec',
+                                  'set_spec_port',
+                                  'shadow_inputs_dict_spec'
+                                  'no_specs'}:
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
+                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[InputPort-0]'}
@@ -1062,9 +1069,9 @@ class TestControlMechanisms:
                                                                                       ob.input_port: [0., 0., 0.]}
 
             if test_condition == 'single_tuple_shadow_spec':
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
+                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[InputPort-0]'}
@@ -1075,9 +1082,9 @@ class TestControlMechanisms:
 
             if test_condition == 'full_list_spec':
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
                                                        'OA[OutputPort-0]',
-                                                       'NUMERIC INPUT FOR OB[InputPort-0]']
+                                                       pnl.NUMERIC_STATE_INPUT_PORT_PREFIX+'OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[OutputPort-0]',
                                               'OB[InputPort-0]': [3, 1, 2]}
@@ -1087,8 +1094,8 @@ class TestControlMechanisms:
 
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'NUMERIC INPUT FOR OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+                                                       pnl.NUMERIC_STATE_INPUT_PORT_PREFIX+'OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': None,
                                               'OB[InputPort-0]': [3, 1, 2]}
@@ -1096,12 +1103,11 @@ class TestControlMechanisms:
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
                                                       [[0.], [3, 1, 2]]))
 
-            elif test_condition == 'input_dict_spec':
+            elif test_condition in {'input_dict_spec', 'input_dict_spec_short'}:
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OC[InputPort-0]',
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OC[InputPort-0]',
                                                        'OB[OutputPort-0]']
-                # 'input_dict_spec': {oa:oc.input_port, icomp:ia, ob:ob.output_port}, # Note: out of order is OK
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OC[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[OutputPort-0]'}
@@ -1109,21 +1115,21 @@ class TestControlMechanisms:
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
                                                       [[0.], [0.], [0, 0, 0]]))
 
-            elif test_condition == 'input_dict_spec_short':
-                assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OC[InputPort-0]',
-                                                       'OB[OutputPort-0]']
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': 'OC[InputPort-0]',
-                                              'OB[InputPort-0]': 'OB[OutputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
+            # elif test_condition == 'input_dict_spec_short':
+            #     assert len(ocm.state_input_ports) == 3
+            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OC[InputPort-0]',
+            #                                            'OB[OutputPort-0]']
+            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
+            #                                   'OA[InputPort-0]': 'OC[InputPort-0]',
+            #                                   'OB[InputPort-0]': 'OB[OutputPort-0]'}
+            #     assert all(np.allclose(expected, actual)
+            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
+            #                                           [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
-                assert ocm.state_input_ports.names == ['Shadowed input of OA[InputPort-0]']
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]']
                 # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
                 assert ocm.state_features == {'IA[InputPort-0]': None,
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
@@ -1132,46 +1138,46 @@ class TestControlMechanisms:
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
                                                       [[0.], [0.], [0, 0, 0]]))
 
-            elif test_condition in {'set_spec', 'set_spec_port'}:
-                assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': 'OA[InputPort-0]',
-                                              'OB[InputPort-0]': 'OB[InputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
-
-            elif test_condition == 'no_specs':
-                assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': 'OA[InputPort-0]',
-                                              'OB[InputPort-0]': 'OB[InputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
-
-            elif test_condition == 'shadow_inputs_dict_spec':
-                assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': 'OA[InputPort-0]',
-                                              'OB[InputPort-0]': 'OB[InputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
+            # elif test_condition in {'set_spec', 'set_spec_port', 'no_specs', 'shadow_inputs_dict_spec'}:
+            #     assert len(ocm.state_input_ports) == 3
+            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
+            #                                   'OA[InputPort-0]': 'OA[InputPort-0]',
+            #                                   'OB[InputPort-0]': 'OB[InputPort-0]'}
+            #     assert all(np.allclose(expected, actual)
+            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
+            #                                           [[0.], [0.], [0, 0, 0]]))
+            #
+            # elif test_condition == 'no_specs':
+            #     assert len(ocm.state_input_ports) == 3
+            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
+            #                                   'OA[InputPort-0]': 'OA[InputPort-0]',
+            #                                   'OB[InputPort-0]': 'OB[InputPort-0]'}
+            #     assert all(np.allclose(expected, actual)
+            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
+            #                                           [[0.], [0.], [0, 0, 0]]))
+            #
+            # elif test_condition == 'shadow_inputs_dict_spec':
+            #     assert len(ocm.state_input_ports) == 3
+            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
+            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
+            #                                   'OA[InputPort-0]': 'OA[InputPort-0]',
+            #                                   'OB[InputPort-0]': 'OB[InputPort-0]'}
+            #     assert all(np.allclose(expected, actual)
+            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
+            #                                           [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'shadow_inputs_dict_spec_w_none':
                 assert len(ocm.state_input_ports) == 2
-                assert ocm.state_input_ports.names == ['Shadowed input of IA[InputPort-0]',
-                                                       'Shadowed input of OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': None,
                                               'OB[InputPort-0]': 'OB[InputPort-0]'}
@@ -1193,9 +1199,10 @@ class TestControlMechanisms:
                     ocomp.run()
                     if test_condition == 'partial_legal_list_spec':
                         assert len(ocm.state_input_ports) == 3
-                        assert ocm.state_input_ports.names == ['OA[OutputPort-0]',
-                                                               'Shadowed input of OA[InputPort-0]',
-                                                               'Shadowed input of OB[InputPort-0]']
+                        assert ocm.state_input_ports.names == \
+                               ['OA[OutputPort-0]',
+                                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
+                                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
                         # Note: oa is assigned to icomp due to ordering:
                         assert ocm.state_features == {'IA[InputPort-0]': 'OA[OutputPort-0]',
                                                       'OA[InputPort-0]': 'OA[InputPort-0]',
