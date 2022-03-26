@@ -730,8 +730,9 @@ class TestControlMechanisms:
          ),
         ("state_features_test_not_in_agent_rep",
          "icomp", "A", "I", True, None, pnl.OptimizationControlMechanismError,
-         '\'OCM\' has \'state_features\' specified ([\'Shadowed input of A[InputPort-0]\']) that are missing '
-         'from both its `agent_rep` (\'INNER COMP\') as well as \'OUTER COMP\' and any Compositions nested within it.'
+        '\'OCM\' has \'state_features\' specified ([\'SHADOWED INPUT OF A[InputPort-0] FOR I[InputPort-0]\']) '
+        'that are missing from both its `agent_rep` (\'INNER COMP\') as well as \'OUTER COMP\' '
+        'and any Compositions nested within it.'
          ),
         ("monitor_for_control_test_not_in_agent_rep",
          "icomp", "I", "B", True, None, pnl.OptimizationControlMechanismError,

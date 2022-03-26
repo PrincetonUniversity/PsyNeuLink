@@ -2232,13 +2232,15 @@ class OptimizationControlMechanism(ControlMechanism):
                         # agent_rep_input_port_name = f'{DEFERRED_STATE_INPUT_PORT_PREFIX}' \
                         #                             f'{str(i-num_agent_rep_input_ports)}'
                         # MODIFIED 3/25/22 NEW:
-                        agent_rep_input_port_name = _deferred_agent_rep_input_port_name(str(i-num_agent_rep_input_ports),
-                                                                                        self.agent_rep.name)
+                        agent_rep_input_port_name = \
+                            _deferred_agent_rep_input_port_name(str(i - num_agent_rep_input_ports),
+                                                                self.agent_rep.name)
                         # MODIFIED 3/25/22 END
                 # For CompositionFunctionApproximator, assign spec as agent_rep_input_port
                 else:
                     spec = state_feature_specs[i]
-                    agent_rep_input_port = spec if isinstance(spec, (Mechanism, Composition)) else spec.owner
+                    agent_rep_input_port = spec
+                    agent_rep_input_port_name = spec.full_name if isinstance(spec, Port) else spec.name
                     # Assign state_input_port_name here as won't get done below (i can't be < num_user_specs for CFA)
                     state_input_port_name = f"FEATURE {i} FOR {self.agent_rep.name}"
 

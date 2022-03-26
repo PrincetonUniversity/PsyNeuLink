@@ -307,7 +307,7 @@ def rename_instance_in_registry(registry, category, new_name, old_name=None, com
     # Delete entry for instance
     del registry_entry.instanceDict[old_name]
     # Add entry for instance under new name
-    registry_entry.instanceDict[new_name] = entry 
+    registry_entry.instanceDict[new_name] = entry
 
     # Decrement count for instances in entry
     instance_count = registry_entry.instanceCount - 1
