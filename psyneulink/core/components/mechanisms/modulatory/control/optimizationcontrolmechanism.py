@@ -1072,9 +1072,11 @@ from psyneulink.core.llvm.debug import debug_env
 __all__ = [
     'OptimizationControlMechanism', 'OptimizationControlMechanismError',
     'AGENT_REP', 'STATE_FEATURES', 'STATE_FEATURE_FUNCTION', 'RANDOMIZATION_CONTROL_SIGNAL', 'NUM_ESTIMATES',
-    'DEFERRED_STATE_INPUT_PORT_PREFIX', 'NUMERIC_STATE_INPUT_PORT_PREFIX', 'SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX'
+    'DEFERRED_STATE_INPUT_PORT_PREFIX', 'NUMERIC_STATE_INPUT_PORT_PREFIX', 'SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX',
+    'INPUT_SOURCE_FOR_STATE_INPUT_PORT_PREFIX'
 ]
 
+# constructor arguments
 AGENT_REP = 'agent_rep'
 STATE_FEATURES = 'state_features'
 STATE_FEATURE_FUNCTION = 'state_feature_function'
@@ -1082,17 +1084,20 @@ RANDOMIZATION_CONTROL_SIGNAL = 'RANDOMIZATION_CONTROL_SIGNAL'
 RANDOM_VARIABLES = 'random_variables'
 NUM_ESTIMATES = 'num_estimates'
 
-DEFERRED_STATE_INPUT_PORT_PREFIX = 'DEFERRED '
+# state_input_port names
 NUMERIC_STATE_INPUT_PORT_PREFIX = "NUMERIC INPUT FOR "
-SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX = "SHADOWED INPUT OF "
+INPUT_SOURCE_FOR_STATE_INPUT_PORT_PREFIX = "SOURCE OF INPUT FOR "
+# SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX = "SHADOWED INPUT OF "
+SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX = "Shadowed input of "
+DEFERRED_STATE_INPUT_PORT_PREFIX = 'DEFERRED INPUT NODE InputPort '
 
-def deferred_state_feature_node_msg(node_name, agent_rep_name):
+def _deferred_state_feature_node_msg(node_name, agent_rep_name):
     return f"{DEFERRED_STATE_INPUT_PORT_PREFIX}{node_name} OF {agent_rep_name}"
 
-def deferred_state_feature_spec_msg(spec_str, comp_name):
+def _deferred_state_feature_spec_msg(spec_str, comp_name):
     return f"{spec_str} NOT (YET) IN {comp_name}"
 
-def not_specified_state_feature_spec_msg(spec_str, comp_name):
+def _not_specified_state_feature_spec_msg(spec_str, comp_name):
     return f"NO SPECIFICATION (YET) FOR {spec_str} IN {comp_name}"
 
 def _state_feature_values_getter(owning_component=None, context=None):
@@ -1136,16 +1141,16 @@ def _state_feature_values_getter(owning_component=None, context=None):
         # Get key
         if not isinstance(key, InputPort):
             # INPUT Node InputPort is not fully or properly specified
-            key = deferred_state_feature_node_msg((key or str(i - num_agent_rep_input_ports)),
+            key = _deferred_state_feature_node_msg((key or str(i - num_agent_rep_input_ports)),
                                                   owning_component.agent_rep.name)
         elif key not in owning_component._get_agent_rep_input_receivers():
             # INPUT Node InputPort is not (yet) in agent_rep
-            key = deferred_state_feature_node_msg(key.full_name, owning_component.agent_rep.name)
+            key = _deferred_state_feature_node_msg(key.full_name, owning_component.agent_rep.name)
 
         # Get state_feature_value
         if spec is None:
             # state_feature not specified; default input will be assigned in _instantiate_input_dict()
-            state_feature_value = not_specified_state_feature_spec_msg((key if isinstance(key, str) else key.full_name),
+            state_feature_value = _not_specified_state_feature_spec_msg((key if isinstance(key, str) else key.full_name),
                                                                        owning_component.composition.name)
         elif is_numeric(spec):
             # if spec is numeric, use that
@@ -1153,7 +1158,7 @@ def _state_feature_values_getter(owning_component=None, context=None):
         elif (hasattr(owning_component, 'composition')
               and not owning_component.composition._is_in_composition(spec)):
             # spec is not in ocm.composition
-            state_feature_value = deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
+            state_feature_value = _deferred_state_feature_spec_msg(spec.full_name, owning_component.agent_rep.name)
         elif state_input_port.parameters.value._get(context) is not None:
             # if state_input_port returns a value, use that
             state_feature_value = state_input_port.parameters.value._get(context)
@@ -2487,6 +2492,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # FIX: 3/25/22 MODIFY NAMES FOR NODES THAT ARE DEFERRED,
             #              AND CAPITALIZE FOR ONES WITH Shadow input IN NAME USING PREFIX
+            #              ??OR SIMPLY OVERRIDE parsed_spec[NAME] HERE WITH NAMES FROM state_input_port_names
             if not parsed_spec[NAME]:
                 parsed_spec[NAME] = state_input_port_names[i]
 
@@ -3508,9 +3514,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 key = input_port.full_name
             else:
                 # Specified InputPort is not (yet) in agent_rep
-                input_port_name = (f"{input_port.full_name} AS INPUT NODE" if input_port
-                                   else f"INPUT NODE {str(i-len(agent_rep_input_ports))}")
-                key = deferred_state_feature_node_msg(input_port_name, self.agent_rep.name)
+                input_port_name = (f"{input_port.full_name}" if input_port
+                                   else f"{str(i-len(agent_rep_input_ports))}")
+                key = _deferred_state_feature_node_msg(input_port_name, self.agent_rep.name)
 
             # Get source for state_features dict
             if spec is None:
@@ -3528,7 +3534,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     if self.composition._is_in_composition(spec):
                         source = spec.full_name
                     else:
-                        source = deferred_state_feature_spec_msg(spec.full_name, self.composition.name)
+                        source = _deferred_state_feature_spec_msg(spec.full_name, self.composition.name)
                 state_input_port_num += 1
 
             state_features_dict[key] = source

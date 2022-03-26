@@ -8,6 +8,8 @@ from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, PROJEC
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.utilities import _SeededPhilox
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism \
+    import _deferred_state_feature_spec_msg
 
 @pytest.mark.control
 class TestControlSpecification:
@@ -210,24 +212,30 @@ class TestControlSpecification:
             )
         assert any(expected_warning in repr(w.message) for w in warning.list)
 
+        deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
+        deferred_Input_input_port = _deferred_state_feature_spec_msg('Input[InputPort-0]', 'evc')
+
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
         if state_features_arg == 'list':
-            assert comp.controller.state_features == {'DEFERRED INPUT NODE 0 OF evc':
-                                                          'reward[InputPort-0] NOT (YET) IN evc',
-                                                      'DEFERRED INPUT NODE 1 OF evc':
-                                                          'Input[InputPort-0] NOT (YET) IN evc'}
-            assert comp.controller.state_feature_values == {'DEFERRED 0 OF evc': 'reward[InputPort-0] NOT (YET) IN evc',
-                                                            'DEFERRED 1 OF evc': 'Input[InputPort-0] NOT (YET) IN evc'}
-
+            assert comp.controller.state_features == {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF evc':
+                                                          deferred_reward_input_port,
+                                                      pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '1 OF evc':
+                                                          deferred_Input_input_port}
+            assert comp.controller.state_feature_values == {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF evc':
+                                                                deferred_reward_input_port,
+                                                            pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '1 OF evc':
+                                                                deferred_Input_input_port}
         elif state_features_arg == 'dict':
-            assert comp.controller.state_features == {'DEFERRED reward[InputPort-0] AS INPUT NODE OF evc':
-                                                          'reward[InputPort-0] NOT (YET) IN evc',
-                                                      'DEFERRED Input[InputPort-0] AS INPUT NODE OF evc':
-                                                          'Input[InputPort-0] NOT (YET) IN evc'}
-            assert comp.controller.state_feature_values == {'DEFERRED reward[InputPort-0] OF evc':
-                                                                'reward[InputPort-0] NOT (YET) IN evc',
-                                                            'DEFERRED Input[InputPort-0] OF evc':
-                                                                'Input[InputPort-0] NOT (YET) IN evc'}
+            assert comp.controller.state_features == \
+                   {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0] OF evc':
+                        deferred_reward_input_port,
+                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'Input[InputPort-0] OF evc':
+                        deferred_Input_input_port}
+            assert comp.controller.state_feature_values == \
+                   {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0] OF evc':
+                        deferred_reward_input_port,
+                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'Input[InputPort-0] OF evc':
+                        deferred_Input_input_port}
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
 
@@ -239,8 +247,7 @@ class TestControlSpecification:
         comp.enable_controller = True
         assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
                                                   'Input[InputPort-0]': 'Input[InputPort-0]'}
-        assert comp.controller.state_feature_values == {reward.input_port: [0.],
-                                                        Input.input_port: [0.]}
+        assert comp.controller.state_feature_values == {reward.input_port: [0.], Input.input_port: [0.]}
         assert all(p.path_afferents for p in comp.controller.state_input_ports)
         assert comp.controller.state_input_ports.names == \
                [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0]',
@@ -318,16 +325,12 @@ class TestControlSpecification:
         member_node_control_signal = pnl.ControlSignal(control=[(pnl.SLOPE, initial_node_a)],
                                                        variable=1.0,
                                                        intensity_cost_function=pnl.Linear(slope=0.0),
-                                                       allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                         stop=5.0,
-                                                                                         num=5))
+                                                       allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))
 
         deferred_node_control_signal = pnl.ControlSignal(projections=[(pnl.SLOPE, deferred_node)],
                                                          variable=1.0,
                                                          intensity_cost_function=pnl.Linear(slope=0.0),
-                                                         allocation_samples=pnl.SampleSpec(start=1.0,
-                                                                                           stop=5.0,
-                                                                                           num=5))
+                                                         allocation_samples=pnl.SampleSpec(start=1.0, stop=5.0, num=5))
         state_features = {
             'list': [initial_node_a.input_port,
                      deferred_node.input_port],
@@ -354,27 +357,27 @@ class TestControlSpecification:
                     deferred_node_control_signal
                 ])
         )
+        deferred_input_port = _deferred_state_feature_spec_msg('deferred[InputPort-0]', 'ocomp')
         if state_features_option in {'list', 'shadow_inputs_dict'}:
-            assert ocomp.controller.state_features == {'ia[InputPort-0]':
-                                                           'ia[InputPort-0]',
-                                                       'DEFERRED INPUT NODE 0 OF ocomp':
-                                                           'deferred[InputPort-0] NOT (YET) IN ocomp'}
+            assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
+                                                       pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF ocomp':
+                                                           deferred_input_port}
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
-                                                             'DEFERRED 0 OF ocomp':
-                                                                'deferred[InputPort-0] NOT (YET) IN ocomp'}
+                                                             pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF ocomp':
+                                                                 deferred_input_port}
             assert ocomp.controller.state_input_ports.names == \
                    [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'ia[InputPort-0]',
                     pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0]']
 
-
         elif state_features_option in {'dict', 'set'}:
-            assert ocomp.controller.state_features == {'ia[InputPort-0]':
-                                                           'ia[InputPort-0]',
-                                                       'DEFERRED deferred[InputPort-0] AS INPUT NODE OF ocomp':
-                                                           'deferred[InputPort-0] NOT (YET) IN ocomp'}
-            assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
-                                                             'DEFERRED deferred[InputPort-0] OF ocomp':
-                                                                 'deferred[InputPort-0] NOT (YET) IN ocomp'}
+            assert ocomp.controller.state_features == \
+                   {'ia[InputPort-0]': 'ia[InputPort-0]',
+                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0] OF ocomp':
+                        deferred_input_port}
+            assert ocomp.controller.state_feature_values == \
+                   {initial_node_a.input_port: [0.],
+                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0] OF ocomp':
+                        deferred_input_port}
 
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_option}'"
@@ -411,7 +414,8 @@ class TestControlSpecification:
             initial_node_a: [1],
             deferred_node: [1]
         })
-        # result = 10, the sum of the input (1) multiplied by the value of the ControlSignals projecting, respectively, to Node "ia" and Node "deferred_node"
+        # result = 10, the sum of the input (1) multiplied by the value of the ControlSignals projecting,
+        #              respectively, to Node "ia" and Node "deferred_node"
         # Control Signal "ia": Maximizes over the search space consisting of ints 1-5
         # Control Signal "deferred_node": Maximizes over the search space consisting of ints 1-5
         assert result == [[10]]
@@ -1101,7 +1105,7 @@ class TestControlMechanisms:
                                               'OB[InputPort-0]': [3, 1, 2]}
                 assert all(np.allclose(expected, actual)
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [3, 1, 2]]))
+                                                       [[0.], [3, 1, 2]]))
 
             elif test_condition in {'input_dict_spec', 'input_dict_spec_short'}:
                 assert len(ocm.state_input_ports) == 3
@@ -1113,19 +1117,7 @@ class TestControlMechanisms:
                                               'OB[InputPort-0]': 'OB[OutputPort-0]'}
                 assert all(np.allclose(expected, actual)
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
-
-            # elif test_condition == 'input_dict_spec_short':
-            #     assert len(ocm.state_input_ports) == 3
-            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OC[InputPort-0]',
-            #                                            'OB[OutputPort-0]']
-            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-            #                                   'OA[InputPort-0]': 'OC[InputPort-0]',
-            #                                   'OB[InputPort-0]': 'OB[OutputPort-0]'}
-            #     assert all(np.allclose(expected, actual)
-            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
-            #                                           [[0.], [0.], [0, 0, 0]]))
+                                                       [[0.], [0.], [0, 0, 0]]))
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
@@ -1136,54 +1128,18 @@ class TestControlMechanisms:
                                               'OB[InputPort-0]': None}
                 assert all(np.allclose(expected, actual)
                            for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
+                                                       [[0.], [0.], [0, 0, 0]]))
 
-            # elif test_condition in {'set_spec', 'set_spec_port', 'no_specs', 'shadow_inputs_dict_spec'}:
-            #     assert len(ocm.state_input_ports) == 3
-            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
-            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-            #                                   'OA[InputPort-0]': 'OA[InputPort-0]',
-            #                                   'OB[InputPort-0]': 'OB[InputPort-0]'}
-            #     assert all(np.allclose(expected, actual)
-            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
-            #                                           [[0.], [0.], [0, 0, 0]]))
-            #
-            # elif test_condition == 'no_specs':
-            #     assert len(ocm.state_input_ports) == 3
-            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
-            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-            #                                   'OA[InputPort-0]': 'OA[InputPort-0]',
-            #                                   'OB[InputPort-0]': 'OB[InputPort-0]'}
-            #     assert all(np.allclose(expected, actual)
-            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
-            #                                           [[0.], [0.], [0, 0, 0]]))
-            #
-            # elif test_condition == 'shadow_inputs_dict_spec':
-            #     assert len(ocm.state_input_ports) == 3
-            #     assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
-            #                                            pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
-            #     assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-            #                                   'OA[InputPort-0]': 'OA[InputPort-0]',
-            #                                   'OB[InputPort-0]': 'OB[InputPort-0]'}
-            #     assert all(np.allclose(expected, actual)
-            #                for expected, actual in zip(list(ocm.state_feature_values.values()),
-            #                                           [[0.], [0.], [0, 0, 0]]))
-
-            elif test_condition == 'shadow_inputs_dict_spec_w_none':
-                assert len(ocm.state_input_ports) == 2
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
-                assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
-                                              'OA[InputPort-0]': None,
-                                              'OB[InputPort-0]': 'OB[InputPort-0]'}
-                assert all(np.allclose(expected, actual)
-                           for expected, actual in zip(list(ocm.state_feature_values.values()),
-                                                      [[0.], [0.], [0, 0, 0]]))
+        elif test_condition == 'shadow_inputs_dict_spec_w_none':
+            assert len(ocm.state_input_ports) == 2
+            assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
+                                                   pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+            assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
+                                          'OA[InputPort-0]': None,
+                                          'OB[InputPort-0]': 'OB[InputPort-0]'}
+            assert all(np.allclose(expected, actual)
+                       for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                                   [[0.], [0.], [0, 0, 0]]))
 
         elif exception_type is UserWarning:
             # These also produce errors, tested below
