@@ -8,8 +8,9 @@ from psyneulink.core.globals.keywords import ALLOCATION_SAMPLES, CONTROL, PROJEC
 from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.utilities import _SeededPhilox
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism \
-    import _deferred_state_feature_node_msg, _deferred_state_feature_spec_msg
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    _deferred_agent_rep_input_port_name, _deferred_state_feature_spec_msg, \
+    _state_input_port_name, _numeric_state_input_port_name, _shadowed_state_input_port_name
 
 @pytest.mark.control
 class TestControlSpecification:
@@ -214,12 +215,18 @@ class TestControlSpecification:
 
         deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
         deferred_Input_input_port = _deferred_state_feature_spec_msg('Input[InputPort-0]', 'evc')
-        deferred_node_0 = _deferred_state_feature_node_msg('0','evc')
-        deferred_node_1 = _deferred_state_feature_node_msg('1','evc')
-        deferred_reward_node = _deferred_state_feature_node_msg('reward[InputPort-0]','evc')
-        deferred_Input_node = _deferred_state_feature_node_msg('Input[InputPort-0]','evc')
+        deferred_node_0 = _deferred_agent_rep_input_port_name('0','evc')
+        deferred_node_1 = _deferred_agent_rep_input_port_name('1','evc')
+        deferred_shadowed_0 = _shadowed_state_input_port_name('reward[InputPort-0]' , deferred_node_0)
+        deferred_shadowed_1 = _shadowed_state_input_port_name('Input[InputPort-0]' , deferred_node_1)
+        deferred_reward_node = _deferred_agent_rep_input_port_name('reward[InputPort-0]','evc')
+        deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]','evc')
+        shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]' ,'reward[InputPort-0]')
+        shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]' ,'Input[InputPort-0]')
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
+        assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
+
         if state_features_arg == 'list':
             assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port,
                                                       deferred_node_1: deferred_Input_input_port}
@@ -243,9 +250,7 @@ class TestControlSpecification:
                                                   'Input[InputPort-0]': 'Input[InputPort-0]'}
         assert comp.controller.state_feature_values == {reward.input_port: [0.], Input.input_port: [0.]}
         assert all(p.path_afferents for p in comp.controller.state_input_ports)
-        assert comp.controller.state_input_ports.names == \
-               [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0]',
-                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'Input[InputPort-0]']
+        assert comp.controller.state_input_ports.names == [shadowed_reward_node, shadowed_Input_node]
 
         # comp._analyze_graph()
 
@@ -352,24 +357,26 @@ class TestControlSpecification:
                 ])
         )
         deferred_input_port = _deferred_state_feature_spec_msg('deferred[InputPort-0]', 'ocomp')
-        deferred_node_0 = _deferred_state_feature_node_msg('0','ocomp')
-        deferred_node_deferred = _deferred_state_feature_node_msg('deferred[InputPort-0]','ocomp')
+        deferred_node_0 = _deferred_agent_rep_input_port_name('0','ocomp')
+        deferred_shadowed_0 = _shadowed_state_input_port_name('deferred[InputPort-0]' , deferred_node_0)
+        deferred_node_deferred = _deferred_agent_rep_input_port_name('deferred[InputPort-0]','ocomp')
+        shadowed_ia_node = _shadowed_state_input_port_name('ia[InputPort-0]' ,'ia[InputPort-0]')
+        shadowed_deferred_node_0 = _shadowed_state_input_port_name('deferred[InputPort-0]', deferred_node_0)
+        shadowed_deferred_node_deferred = _shadowed_state_input_port_name('deferred[InputPort-0]',
+                                                                          'deferred[InputPort-0]')
+
+        assert ocomp.controller.state_input_ports.names == [shadowed_ia_node, shadowed_deferred_node_0]
 
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
                                                        deferred_node_0: deferred_input_port}
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                              deferred_node_0: deferred_input_port}
-            assert ocomp.controller.state_input_ports.names == \
-                   [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'ia[InputPort-0]',
-                    pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0]']
-
         elif state_features_option in {'dict', 'set'}:
             assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
                                                        deferred_node_deferred: deferred_input_port}
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                              deferred_node_deferred: deferred_input_port}
-
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_option}'"
 
@@ -397,9 +404,7 @@ class TestControlSpecification:
         assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
                                                          deferred_node.input_port: [0.]}
         assert all(p.path_afferents for p in ocomp.controller.state_input_ports)
-        assert ocomp.controller.state_input_ports.names == \
-               [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'ia[InputPort-0]',
-                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0]']
+        assert ocomp.controller.state_input_ports.names == [shadowed_ia_node, shadowed_deferred_node_deferred]
 
         result = ocomp.run({
             initial_node_a: [1],
@@ -856,12 +861,12 @@ class TestControlMechanisms:
         f'that is not an INPUT Node of that Composition is not currently supported.\'',
 
         # 2
-        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'Shadowed input of '
-        f'EXT[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'SHADOWED INPUT OF EXT[InputPort-0] '
+        f'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         # 3
-        f'"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'EXT[OutputPort-0]\']) '
-        f'that are missing from \'OUTER COMP\' and any Compositions nested within it."',
+        '"\'OptimizationControlMechanism-0\' has \'state_features\' specified ([\'INPUT FROM EXT[OutputPort-0] '
+        'FOR IA[InputPort-0]\']) that are missing from \'OUTER COMP\' and any Compositions nested within it."',
 
         # 4
         f"The '{pnl.STATE_FEATURES}' argument has been specified for 'OptimizationControlMechanism-0' that is using "
@@ -915,9 +920,9 @@ class TestControlMechanisms:
 
         # 13
         f"'OptimizationControlMechanism-0' has '{pnl.STATE_FEATURES}' specified "
-        f"(['{pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX}EXT[InputPort-0]', "
-        f"'{pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX}EXT[InputPort-0]-1', "
-        f"'{pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX}EXT[InputPort-0]-2']) "
+        f"(['SHADOWED INPUT OF EXT[InputPort-0] FOR IA[InputPort-0]', "
+        f"'SHADOWED INPUT OF EXT[InputPort-0] FOR OA[InputPort-0]', "
+        f"'SHADOWED INPUT OF EXT[InputPort-0] FOR OB[InputPort-0]']) "
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
     state_feature_args = [
@@ -1016,6 +1021,15 @@ class TestControlMechanisms:
         monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
 
+        ia_node = _state_input_port_name('OA[OutputPort-0]', 'IA[InputPort-0]')
+        oa_node = _state_input_port_name('OA[OutputPort-0]', 'OA[InputPort-0]')
+        ob_node = _state_input_port_name('OB[OutputPort-0]', 'OB[InputPort-0]')
+        numeric_ob = _numeric_state_input_port_name('OB[InputPort-0]')
+        shadowed_ia_node = _shadowed_state_input_port_name('IA[InputPort-0]', 'IA[InputPort-0]')
+        shadowed_oa_node = _shadowed_state_input_port_name('OA[InputPort-0]', 'OA[InputPort-0]')
+        shadowed_oa_oc = _shadowed_state_input_port_name('OC[InputPort-0]', 'OA[InputPort-0]')
+        shadowed_ob_node = _shadowed_state_input_port_name('OB[InputPort-0]', 'OB[InputPort-0]')
+
         if test_condition == 'no_specs':
             ocm = pnl.OptimizationControlMechanism(objective_mechanism=objective_mechanism,
                                                    monitor_for_control=monitor_for_control,
@@ -1053,9 +1067,7 @@ class TestControlMechanisms:
                                   'shadow_inputs_dict_spec'
                                   'no_specs'}:
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
-                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [shadowed_ia_node, shadowed_oa_node, shadowed_ob_node]
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[InputPort-0]'}
@@ -1064,9 +1076,7 @@ class TestControlMechanisms:
                                                                                       ob.input_port: [0., 0., 0.]}
 
             if test_condition == 'single_tuple_shadow_spec':
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
-                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [shadowed_ia_node, shadowed_oa_node, shadowed_ob_node]
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[InputPort-0]'}
@@ -1077,9 +1087,7 @@ class TestControlMechanisms:
 
             if test_condition == 'full_list_spec':
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                       'OA[OutputPort-0]',
-                                                       pnl.NUMERIC_STATE_INPUT_PORT_PREFIX+'OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [shadowed_ia_node, oa_node, numeric_ob]
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OA[OutputPort-0]',
                                               'OB[InputPort-0]': [3, 1, 2]}
@@ -1089,8 +1097,7 @@ class TestControlMechanisms:
 
             if test_condition == 'list_spec_with_none':
                 assert len(ocm.state_input_ports) == 2
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                       pnl.NUMERIC_STATE_INPUT_PORT_PREFIX+'OB[InputPort-0]']
+                assert ocm.state_input_ports.names == [shadowed_ia_node, numeric_ob]
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': None,
                                               'OB[InputPort-0]': [3, 1, 2]}
@@ -1100,9 +1107,7 @@ class TestControlMechanisms:
 
             elif test_condition in {'input_dict_spec', 'input_dict_spec_short'}:
                 assert len(ocm.state_input_ports) == 3
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                       pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OC[InputPort-0]',
-                                                       'OB[OutputPort-0]']
+                assert ocm.state_input_ports.names == [shadowed_ia_node, shadowed_oa_oc, ob_node]
                 assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                               'OA[InputPort-0]': 'OC[InputPort-0]',
                                               'OB[InputPort-0]': 'OB[OutputPort-0]'}
@@ -1112,7 +1117,7 @@ class TestControlMechanisms:
 
             elif test_condition == 'set_spec_short':
                 assert len(ocm.state_input_ports) == 1
-                assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]']
+                assert ocm.state_input_ports.names == [shadowed_oa_node]
                 # 'set_spec': {ob, icomp, oa},  # Note: out of order is OK
                 assert ocm.state_features == {'IA[InputPort-0]': None,
                                               'OA[InputPort-0]': 'OA[InputPort-0]',
@@ -1123,8 +1128,7 @@ class TestControlMechanisms:
 
         elif test_condition == 'shadow_inputs_dict_spec_w_none':
             assert len(ocm.state_input_ports) == 2
-            assert ocm.state_input_ports.names == [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'IA[InputPort-0]',
-                                                   pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+            assert ocm.state_input_ports.names == [shadowed_ia_node, shadowed_ob_node]
             assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
                                           'OA[InputPort-0]': None,
                                           'OB[InputPort-0]': 'OB[InputPort-0]'}
@@ -1146,10 +1150,7 @@ class TestControlMechanisms:
                     ocomp.run()
                     if test_condition == 'partial_legal_list_spec':
                         assert len(ocm.state_input_ports) == 3
-                        assert ocm.state_input_ports.names == \
-                               ['OA[OutputPort-0]',
-                                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OA[InputPort-0]',
-                                pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'OB[InputPort-0]']
+                        assert ocm.state_input_ports.names == [ia_node, shadowed_oa_node, shadowed_ob_node]
                         # Note: oa is assigned to icomp due to ordering:
                         assert ocm.state_features == {'IA[InputPort-0]': 'OA[OutputPort-0]',
                                                       'OA[InputPort-0]': 'OA[InputPort-0]',
@@ -1212,13 +1213,13 @@ class TestControlMechanisms:
         # Test args:
         if nested_agent_rep is True:
             agent_rep = mcomp
-            error_text = f"'OCM' has '{STATE_FEATURES}' specified (['D[OutputPort-0]']) that are missing from both " \
+            error_text = f"'OCM' has '{pnl.STATE_FEATURES}' specified (['D[OutputPort-0]']) that are missing from both " \
                          f"its `agent_rep` ('{nested_agent_rep[1]}') as well as 'OUTER COMP' and any " \
                          f"Compositions nested within it."
         else:
             agent_rep = None
-            error_text = '"\'OCM\' has \'state_features\' specified ([\'D[OutputPort-0]\']) that are ' \
-                         'missing from \'OUTER COMP\' and any Compositions nested within it."'
+            error_text = f"'OCM' has '{pnl.STATE_FEATURES}' specified (['INPUT FROM D[OutputPort-0] FOR A[SAMPLE]']) " \
+                         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
 
         state_features = {
             'single_numeric_spec': [3],
