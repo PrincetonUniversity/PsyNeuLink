@@ -5833,7 +5833,28 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # step 3 - deactivate Projection in this Composition
         projection._deactivate_for_compositions(self)
 
-        # step 4 - TBI? remove Projection from afferents & efferents lists of any node
+        # step 4 - deactivate any learning to this Projection
+        for param_port in projection.parameter_ports:
+            for proj in param_port.mod_afferents:
+                self.remove_projection(proj)
+                if isinstance(proj.sender.owner, LearningMechanism):
+                    for path in self.pathways:
+                        # TODO: make learning_components values consistent type
+                        try:
+                            learning_mechs = path.learning_components['LEARNING_MECHANISMS']
+                        except KeyError:
+                            continue
+
+                        if isinstance(learning_mechs, LearningMechanism):
+                            learning_mechs = [learning_mechs]
+
+                        if proj.sender.owner in learning_mechs:
+                            for mech in learning_mechs:
+                                self.remove_node(mech)
+                            self.remove_node(path.learning_components['objective_mechanism'])
+                            self.remove_node(path.learning_components['TARGET_MECHANISM'])
+
+        # step 5 - TBI? remove Projection from afferents & efferents lists of any node
 
 
     def _validate_projection(self,

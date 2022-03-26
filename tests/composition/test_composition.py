@@ -7294,6 +7294,22 @@ class TestMisc:
         comp.run(inputs={C: [0]})
         assert_conditions_do_not_contain(A, B)
 
+    def test_remove_node_learning(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+
+        comp = Composition()
+        comp.add_linear_learning_pathway(pathway=[A, B], learning_function=BackPropagation)
+        comp.add_linear_learning_pathway(pathway=[C, D], learning_function=Reinforcement)
+
+        comp.remove_node(A)
+        comp.learn(inputs={n: [0] for n in comp.get_nodes_by_role(pnl.NodeRole.INPUT)})
+
+        comp.remove_node(D)
+        comp.learn(inputs={n: [0] for n in comp.get_nodes_by_role(pnl.NodeRole.INPUT)})
+
 
 class TestInputSpecsDocumentationExamples:
 
