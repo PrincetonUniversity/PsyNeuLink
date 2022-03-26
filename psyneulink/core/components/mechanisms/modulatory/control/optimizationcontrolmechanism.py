@@ -1092,7 +1092,8 @@ SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX = "Shadowed input of "
 DEFERRED_STATE_INPUT_PORT_PREFIX = 'DEFERRED INPUT NODE InputPort '
 
 def _deferred_state_feature_node_msg(node_name, agent_rep_name):
-    return f"{DEFERRED_STATE_INPUT_PORT_PREFIX}{node_name} OF {agent_rep_name}"
+    # return f"{DEFERRED_STATE_INPUT_PORT_PREFIX}{node_name} OF {agent_rep_name}"
+    return f"{DEFERRED_STATE_INPUT_PORT_PREFIX}OF {agent_rep_name} ({node_name})"
 
 def _deferred_state_feature_spec_msg(spec_str, comp_name):
     return f"{spec_str} NOT (YET) IN {comp_name}"

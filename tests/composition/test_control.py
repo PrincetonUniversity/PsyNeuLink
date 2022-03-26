@@ -9,7 +9,7 @@ from psyneulink.core.globals.log import LogCondition
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleIteratorError, SampleSpec
 from psyneulink.core.globals.utilities import _SeededPhilox
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism \
-    import _deferred_state_feature_spec_msg
+    import _deferred_state_feature_node_msg, _deferred_state_feature_spec_msg
 
 @pytest.mark.control
 class TestControlSpecification:
@@ -214,28 +214,22 @@ class TestControlSpecification:
 
         deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
         deferred_Input_input_port = _deferred_state_feature_spec_msg('Input[InputPort-0]', 'evc')
+        deferred_node_0 = _deferred_state_feature_node_msg('0','evc')
+        deferred_node_1 = _deferred_state_feature_node_msg('1','evc')
+        deferred_reward_node = _deferred_state_feature_node_msg('reward[InputPort-0]','evc')
+        deferred_Input_node = _deferred_state_feature_node_msg('Input[InputPort-0]','evc')
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
         if state_features_arg == 'list':
-            assert comp.controller.state_features == {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF evc':
-                                                          deferred_reward_input_port,
-                                                      pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '1 OF evc':
-                                                          deferred_Input_input_port}
-            assert comp.controller.state_feature_values == {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF evc':
-                                                                deferred_reward_input_port,
-                                                            pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '1 OF evc':
-                                                                deferred_Input_input_port}
+            assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port,
+                                                      deferred_node_1: deferred_Input_input_port}
+            assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port,
+                                                            deferred_node_1: deferred_Input_input_port}
         elif state_features_arg == 'dict':
-            assert comp.controller.state_features == \
-                   {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0] OF evc':
-                        deferred_reward_input_port,
-                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'Input[InputPort-0] OF evc':
-                        deferred_Input_input_port}
-            assert comp.controller.state_feature_values == \
-                   {pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'reward[InputPort-0] OF evc':
-                        deferred_reward_input_port,
-                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'Input[InputPort-0] OF evc':
-                        deferred_Input_input_port}
+            assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port,
+                                                      deferred_Input_node: deferred_Input_input_port}
+            assert comp.controller.state_feature_values == {deferred_reward_node: deferred_reward_input_port,
+                                                            deferred_Input_node: deferred_Input_input_port}
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
 
@@ -358,26 +352,23 @@ class TestControlSpecification:
                 ])
         )
         deferred_input_port = _deferred_state_feature_spec_msg('deferred[InputPort-0]', 'ocomp')
+        deferred_node_0 = _deferred_state_feature_node_msg('0','ocomp')
+        deferred_node_deferred = _deferred_state_feature_node_msg('deferred[InputPort-0]','ocomp')
+
         if state_features_option in {'list', 'shadow_inputs_dict'}:
             assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
-                                                       pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF ocomp':
-                                                           deferred_input_port}
+                                                       deferred_node_0: deferred_input_port}
             assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
-                                                             pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + '0 OF ocomp':
-                                                                 deferred_input_port}
+                                                             deferred_node_0: deferred_input_port}
             assert ocomp.controller.state_input_ports.names == \
                    [pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'ia[InputPort-0]',
                     pnl.SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0]']
 
         elif state_features_option in {'dict', 'set'}:
-            assert ocomp.controller.state_features == \
-                   {'ia[InputPort-0]': 'ia[InputPort-0]',
-                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0] OF ocomp':
-                        deferred_input_port}
-            assert ocomp.controller.state_feature_values == \
-                   {initial_node_a.input_port: [0.],
-                    pnl.DEFERRED_STATE_INPUT_PORT_PREFIX + 'deferred[InputPort-0] OF ocomp':
-                        deferred_input_port}
+            assert ocomp.controller.state_features == {'ia[InputPort-0]': 'ia[InputPort-0]',
+                                                       deferred_node_deferred: deferred_input_port}
+            assert ocomp.controller.state_feature_values == {initial_node_a.input_port: [0.],
+                                                             deferred_node_deferred: deferred_input_port}
 
         else:
             assert False, f"TEST ERROR: unrecognized option '{state_features_option}'"
