@@ -7,7 +7,6 @@ import pytest
 class TestOutputPorts:
 
     @pytest.mark.mechanism
-    @pytest.mark.lca_mechanism
     def test_output_port_variable_spec(self, mech_mode):
         # Test specification of OutputPort's variable
         mech = pnl.ProcessingMechanism(default_variable=[[1.],[2.],[3.]],
@@ -33,28 +32,28 @@ class TestOutputPorts:
             assert np.array_equal(i, e)
 
     @pytest.mark.mechanism
-    @pytest.mark.lca_mechanism
-    def test_output_port_variable_spec_composition(self, comp_mode):
+    @pytest.mark.parametrize('spec, expected1, expected2',
+                             [((pnl.OWNER_VALUE, 0), [1], [1]),
+                              ((pnl.OWNER_VALUE, 1), [2], [2]),
+                              ((pnl.OWNER_VALUE, 2), [3], [3]),
+                              pytest.param((pnl.OWNER_VALUE, 3), [3], [3], marks=[pytest.mark.xfail()]),
+                              ((pnl.OWNER_EXECUTION_COUNT), [1], [2]),
+                             ], ids=lambda x: str(x) if len(x) != 1 else '')
+    def tests_output_port_variable_spec_composition(self, comp_mode, spec, expected1, expected2):
         # Test specification of OutputPort's variable
         # OutputPort mech.output_ports['all'] has a different dimensionality than the other OutputPorts;
         #    as a consequence, when added as a terminal node, the Composition can't construct an IDENTITY_MATRIX
         #    from the mech's OutputPorts to the Composition's output_CIM.
         # FIX: Remove the following line and correct assertions below once above condition is resolved
-        mech = pnl.ProcessingMechanism(default_variable=[[1.],[2.],[3.]],
-                                       name='MyMech',
-                                       output_ports=[
-                                           pnl.OutputPort(name='z', variable=(pnl.OWNER_VALUE, 2)),
-                                           pnl.OutputPort(name='y', variable=(pnl.OWNER_VALUE, 1)),
-                                           pnl.OutputPort(name='x', variable=(pnl.OWNER_VALUE, 0)),
-#                                           pnl.OutputPort(name='all', variable=(pnl.OWNER_VALUE)),
-                                           pnl.OutputPort(name='execution count', variable=(pnl.OWNER_EXECUTION_COUNT))
-                                       ])
+        var = [[1], [2], [3]]
+        mech = pnl.ProcessingMechanism(default_variable=var, name='MyMech',
+                                       output_ports=[pnl.OutputPort(variable=spec)])
         C = pnl.Composition(name='MyComp')
         C.add_node(node=mech)
-        outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=comp_mode)
-        assert np.array_equal(outs, [[3], [2], [1], [1]])
-        outs = C.run(inputs={mech: [[1.],[2.],[3.]]}, execution_mode=comp_mode)
-        assert np.array_equal(outs, [[3], [2], [1], [2]])
+        outs = C.run(inputs={mech: var}, execution_mode=comp_mode)
+        assert np.allclose(outs, expected1)
+        outs = C.run(inputs={mech: var}, execution_mode=comp_mode)
+        assert np.allclose(outs, expected2)
 
     def test_no_path_afferents(self):
         A = pnl.OutputPort()
