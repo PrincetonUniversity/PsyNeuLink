@@ -773,6 +773,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
 
 
         # Reset internal TRIAL/PASS/TIME_STEP clock for each node
+        # This also resets TIME_STEP counter for input_CIM and parameter_CIM
+        # executed above
         for time_loc in num_exec_locs.values():
             for scale in (TimeScale.TRIAL, TimeScale.PASS, TimeScale.TIME_STEP):
                 num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
@@ -833,6 +835,8 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
         # Generate loop body
         builder.position_at_end(loop_body)
 
+        previous_step = builder.load(run_set_ptr)
+
         zero = ctx.int32_ty(0)
         any_cond = ctx.bool_ty(0)
         # Calculate execution set before running the mechanisms
@@ -850,12 +854,15 @@ def gen_composition_exec(ctx, composition, *, tags:frozenset):
             builder.store(node_cond, run_set_node_ptr)
 
         # Reset internal TIME_STEP clock for each node
-        # NOTE: This is done _after_ condition evluation, otherwise
+        # NOTE: This is done _after_ condition evaluation, otherwise
         #       TIME_STEP related conditions will only see 0 executions
-        for time_loc in num_exec_locs.values():
-            num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
-                                                       ctx.int32_ty(TimeScale.TIME_STEP.value)])
-            builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+        for idx, node in enumerate(composition.nodes):
+            ran_prev_step = builder.extract_value(previous_step, [idx])
+            time_loc = num_exec_locs[node]
+            with builder.if_then(ran_prev_step):
+                num_exec_time_ptr = builder.gep(time_loc, [ctx.int32_ty(0),
+                                                           ctx.int32_ty(TimeScale.TIME_STEP.value)])
+                builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
         for idx, node in enumerate(composition.nodes):
 
