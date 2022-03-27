@@ -621,6 +621,42 @@ the results of which are combined with the `costs <ControlMechanism_Costs_NetOut
 `state <OptimizationControlMechanism.state>` attribute, and `state_dict <OptimizationControlMechanism.state_dict>`
 contains the Components associated with each value of `state <OptimizationControlMechanism.state>`.
 
+COMMENT:
+          > Attributes that pertain to the state of the agent_rep for a given evaluation:
+              state_feature_specs: a list of the sources for state_feature_values, one for each InputPort of each INPUT Node of the agent_rep
+                                   (at all levels of nesting);  None for any sources not specified in **state_features**
+                                   (corresponding InputPorts are are assigned their default input when agent_rep.evaluate() is executed).
+              state_feature_values: a dict with entries for each item specified in **state_features** arg of constructor,
+                                    in which the key of each entry is an InputPort of an INPUT Node of agent_rep (at any level of nesting)
+                                    and the value is the current value of the corresponding state_input_port;  the dict is suitable for
+                                    use as the **predicted_inputs** or **feature_values** arg of the agent_rep's evaluate() method
+                                    (depending on whether the agent_rep is a Composition or a CFA);
+                                    note:  there are not entries for InputPorts of INPUT Nodes that are not specified in **state_features**;
+                                           those are assigned either their default input values (LINK XXX) or the shadowed input of
+                                           the corresponding INPUT Node InputPort (LINK XXX), depending on how **state_features** was formatted;
+                                           (see LINK XXX for details of formatting).
+              state_features: a dict with entries corresponding to each item of state_feature_specs,
+                              the keys of which are InputPorts of the INPUT Nodes of the agent_rep,
+                              and values of which are the corresponding state_feature_specs
+                              (i.e., sources of input for those InputPorts when evaluate() is called);
+              control_allocation: a list of the current values of the OCM's control_signals that are used to modulate the Parameters
+                                  specified for control when the agent_rep's evaluate() method is called;
+              state: a list of the values of the current state, starting with state_feature_values and ending with
+                     control_allocations
+              state_dict: a dictionary with entries for each state_feature and ControlSignal, keys?? values??
+                                   their source/destination, and their current values
+          > Constituents of state specifications:
+            - agent_rep_input_port:  an InputPort of an INPUT Node of the agent_rep,
+                                     that will receive a value from state_feature_values passed to agent_rep.evaluate()
+            - source: the source of the input to an agent_rep_input_port,
+                      that sends a Projection to the corresponding state_input_port
+
+          > Relationship of numeric spec to ignoring it (i.e. assigning it None):
+               allows specification of value as input *just* for simulations (i.e., agent_rep_evaluate)
+               and not normal execution of comp
+
+COMMENT
+
 .. _OptimizationControlMechanism_Input:
 
 *Input*
