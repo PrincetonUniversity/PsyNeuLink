@@ -9444,15 +9444,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
 
-        if self._need_check_for_unused_projections:
-            self._check_for_unused_projections(context=context)
-
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_controller_initialization_status()
             self._check_nodes_initialization_status()
 
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
+
+        if self._need_check_for_unused_projections:
+            self._check_for_unused_projections(context=context)
 
         if scheduler is None:
             scheduler = self.scheduler
@@ -10288,7 +10288,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
                     self.input_CIM.execute(build_CIM_input, context=context)
                 else:
-                    assert inputs is None, "Ignoring composition input!"
+                    assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
+                                           f"only be called on outer-most composition within which it is nested."
                     self.input_CIM.execute(context=context)
                 self.parameter_CIM.execute(context=context)
             else:
