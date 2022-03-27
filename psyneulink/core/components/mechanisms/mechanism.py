@@ -2918,7 +2918,7 @@ class Mechanism_Base(Mechanism):
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     array_2d = pnlvm.ir.ArrayType(array_1d, 1)
                     assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
-                        "{} vs.{}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                        "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
                     p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
             else:
@@ -3026,7 +3026,7 @@ class Mechanism_Base(Mechanism):
 
         try:
             name = port_spec[0]
-            ids = (x() if callable(x) else x for x in port_spec[1:])
+            ids = (x() if callable(x) else getattr(x, 'value', x) for x in port_spec[1:])
         except TypeError as e:
             # TypeError means we can't index.
             # Convert this to assertion failure below
@@ -3035,7 +3035,21 @@ class Mechanism_Base(Mechanism):
             #TODO: support more spec options
             if name == OWNER_VALUE:
                 data = value
-            return builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+            elif name in self.llvm_state_ids:
+                data = pnlvm.helpers.get_state_ptr(builder, self, mech_state, name)
+            else:
+                data = None
+
+            if data is not None:
+                parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+                # "num_executions" are kept as int64, we need to convert the value to float first
+                if name == "num_executions":
+                    count = builder.load(parsed)
+                    count_fp = builder.uitofp(count, ctx.float_ty)
+                    parsed = builder.alloca(count_fp.type)
+                    builder.store(count_fp, parsed)
+
+                return parsed
 
         assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
