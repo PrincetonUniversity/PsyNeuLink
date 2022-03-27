@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.8.1+498.g138a291f1 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.8.1+499.gc79f7bb40 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+498
+                  0.8.8.1+499
                 </div>
               
             
@@ -1389,8 +1389,7 @@ rather, all will be run in the same (original) execution context.</p>
 <span class="sig-name descname"><span class="pre">_instantiate_input_ports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_input_ports" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate InputPorts for state_features (with state_feature_function if specified).</p>
 <dl class="simple">
-<dt>This instantiates the OptimizationControlMechanism’s <a href="#id1"><span class="problematic" id="id2">`</span></a>state_input_ports;</dt><dd><p>these are used to provide input to the agent_rep when its evaluate method is called
-(see Composition._build_predicted_inputs_dict).</p>
+<dt>This instantiates the OptimizationControlMechanism’s <a href="#id1"><span class="problematic" id="id2">`</span></a>state_input_ports;</dt><dd><p>these are used to provide input to the agent_rep when its evaluate method is called</p>
 </dd>
 <dt>The OptimizationControlMechanism’s outcome_input_ports are instantiated by</dt><dd><p>ControlMechanism._instantiate_input_ports in the call to super().</p>
 </dd>
@@ -1576,12 +1575,19 @@ Return state_input_port_dicts with FUNCTION entries added as appropriate.</p>
 <dt>If no agent_rep has been specified or it is a CompositionFunctionApproximator, return</dt><dd><p>(note: validation of state_features specified for CompositionFunctionApproximator optimization
 is up to the CompositionFunctionApproximator)</p>
 </dd>
-<dt>For agent_rep that is a Composition, call:</dt><dd><ul class="simple">
+<dt>If agent_rep is a Composition, call:</dt><dd><ul class="simple">
+<li><p>_update_state_input_port_names()</p></li>
 <li><p>_update_state_features_dict()</p></li>
 <li><p>_validate_state_features()</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_state_input_port_names">
+<span class="sig-name descname"><span class="pre">_update_state_input_port_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_state_input_port_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update names of state_input_port for any newly instantiated INPUT Node InputPorts</p>
 </dd></dl>
 
 <dl class="py method">
