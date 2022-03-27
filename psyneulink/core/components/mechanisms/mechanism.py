@@ -3021,8 +3021,11 @@ class Mechanism_Base(Mechanism):
         if port_spec == OWNER_VALUE:
             return value
         elif port_spec == OWNER_EXECUTION_COUNT:
-            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, EXECUTION_COUNT)
-            return execution_count
+            # Convert execution count to (num_executions, TimeScale.LIFE)
+            # The difference in Python PNL is that the former counts across
+            # all contexts. This is not possible in compiled code, thus
+            # the two are identical.
+            port_spec = ("num_executions", TimeScale.LIFE)
 
         try:
             name = port_spec[0]
@@ -3103,13 +3106,8 @@ class Mechanism_Base(Mechanism):
                                                             m_params, m_state, arg_in,
                                                             ip_output, tags=tags)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
 
-        # Update internal clock (i.e. num_executions parameter)
+        # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
         for scale in TimeScale:
             assert scale.value < len(num_executions_ptr.type.pointee)
