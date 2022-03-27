@@ -37,8 +37,9 @@ class TestOutputPorts:
                               ((pnl.OWNER_VALUE, 1), [2], [2]),
                               ((pnl.OWNER_VALUE, 2), [3], [3]),
                               pytest.param((pnl.OWNER_VALUE, 3), [3], [3], marks=[pytest.mark.xfail()]),
-                              ((pnl.OWNER_EXECUTION_COUNT), [1], [2]),
+                              ((pnl.OWNER_EXECUTION_COUNT), [4], [8]),
                              ], ids=lambda x: str(x) if len(x) != 1 else '')
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
     def tests_output_port_variable_spec_composition(self, comp_mode, spec, expected1, expected2):
         # Test specification of OutputPort's variable
         # OutputPort mech.output_ports['all'] has a different dimensionality than the other OutputPorts;
@@ -50,9 +51,10 @@ class TestOutputPorts:
                                        output_ports=[pnl.OutputPort(variable=spec)])
         C = pnl.Composition(name='MyComp')
         C.add_node(node=mech)
-        outs = C.run(inputs={mech: var}, execution_mode=comp_mode)
+        C.termination_processing[pnl.TimeScale.TRIAL] = pnl.AtPass(2)
+        outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
         assert np.allclose(outs, expected1)
-        outs = C.run(inputs={mech: var}, execution_mode=comp_mode)
+        outs = C.run(inputs={mech: var}, num_trials=2, execution_mode=comp_mode)
         assert np.allclose(outs, expected2)
 
     def test_no_path_afferents(self):
