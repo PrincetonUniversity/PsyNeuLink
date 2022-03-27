@@ -38,15 +38,19 @@ class TestOutputPorts:
                               ((pnl.OWNER_VALUE, 2), [3], [3]),
                               pytest.param((pnl.OWNER_VALUE, 3), [3], [3], marks=[pytest.mark.xfail()]),
                               ((pnl.OWNER_EXECUTION_COUNT), [4], [8]),
-# FIXME: LIFE fails in python, RUN fails in LLVM
+# FIXME: LIFE fails in python
 #                              (("num_executions", pnl.TimeScale.LIFE), [4], [8]),
-#                              (("num_executions", pnl.TimeScale.RUN), [4], [4]),
+                              (("num_executions", pnl.TimeScale.RUN), [4], [4]),
                               (("num_executions", pnl.TimeScale.TRIAL), [2], [2]),
                               (("num_executions", pnl.TimeScale.PASS), [1], [1]),
                               (("num_executions", pnl.TimeScale.TIME_STEP), [1], [1]),
                              ], ids=lambda x: str(x) if len(x) != 1 else '')
     @pytest.mark.usefixtures("comp_mode_no_llvm")
     def tests_output_port_variable_spec_composition(self, comp_mode, spec, expected1, expected2):
+        if (len(spec) == 2) and (spec[1] == pnl.TimeScale.RUN) and \
+           ((comp_mode & pnl.ExecutionMode._Exec) == pnl.ExecutionMode._Exec):
+            pytest.skip("{} is not supported in {}".format(spec[1], comp_mode))
+
         # Test specification of OutputPort's variable
         # OutputPort mech.output_ports['all'] has a different dimensionality than the other OutputPorts;
         #    as a consequence, when added as a terminal node, the Composition can't construct an IDENTITY_MATRIX

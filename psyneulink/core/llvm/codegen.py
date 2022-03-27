@@ -984,6 +984,13 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
         builder.store(data_in.type.pointee(input_init), data_in)
         builder.store(inputs_ptr.type.pointee(1), inputs_ptr)
 
+    # Reset internal 'RUN' clocks of each node
+    for idx, node in enumerate(composition._all_nodes):
+        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
+        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
+        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
+        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
+
     # Allocate and initialize condition structure
     cond_gen = helpers.ConditionGenerator(ctx, composition)
     cond_type = cond_gen.get_condition_struct_type()
@@ -1027,13 +1034,6 @@ def gen_composition_run(ctx, composition, *, tags:frozenset):
     # Get the right input stimulus
     input_idx = builder.urem(iters, builder.load(inputs_ptr))
     data_in_ptr = builder.gep(data_in, [input_idx])
-
-    # Reset internal 'RUN' clocks of each node
-    for idx, node in enumerate(composition._all_nodes):
-        node_state = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0), ctx.int32_ty(idx)])
-        num_executions_ptr = helpers.get_state_ptr(builder, node, node_state, "num_executions")
-        num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(TimeScale.RUN.value)])
-        builder.store(num_exec_time_ptr.type.pointee(0), num_exec_time_ptr)
 
     # Call execution
     exec_tags = tags.difference({"run"})
