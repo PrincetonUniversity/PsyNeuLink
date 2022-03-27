@@ -3120,7 +3120,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self._update_current_execution_time(context=context)
                 self._increment_num_executions(
                     context,
-                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]
+                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN, TimeScale.LIFE]
                 )
 
         value = None
