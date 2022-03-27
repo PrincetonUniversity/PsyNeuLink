@@ -8827,7 +8827,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            f"following InputPorts *and* the Mechanisms to which they belong; only one or the other "
                            f"can be specified as inputs to run():  {', '.join(bad_entries)}.")
 
-        # # FIX: CHECK FOR SPECIFICATION OF AN InputPort OF AN input_CIM AND THE COMPOSITION TO WHICH IT BELONGS
+        # Validate that an InputPort of an input_CIM *and* its Composition are not *both* specified in inputs
+        #    (this is unlikely but possible)
+        bad_entries = [key.full_name for key in inputs
+                       if (isinstance(key, InputPort)
+                           and isinstance(key.owner, CompositionInterfaceMechanism)
+                           and key.owner.composition in inputs)]
+        if bad_entries:
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
+                           f"following InputPort(s) of a CompositionInterfaceMechanism *and* the Composition to which "
+                           f"they belong; only one or the other can be specified as inputs to run(): "
+                           f"{', '.join(bad_entries)}.")
 
         # # Validate that InputPort or Mechanism and the Composition(s) under which it is nested are not both specified
         def check_for_items_in_nested_comp(comp):
