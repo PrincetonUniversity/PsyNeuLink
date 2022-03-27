@@ -2328,9 +2328,8 @@ class Port_Base(Port):
         # Check that either all inputs or none are delivered by projections.
         if len_path_afferents > 0:
             assert len(func_input_type) == len_path_afferents, \
-                "{} shape mismatch: {}\nport:\n\t{}\n\tfunc: {}\npath_afferents: {}".format(
-                    self, func_input_type, self.defaults.variable,
-                    self.function.defaults.variable, len(self.path_afferents))
+                f"{self.name} shape mismatch: {func_input_type}\nport:\n\t{self.defaults.variable}" \
+                f"\n\tfunc: {self.function.defaults.variable}\npath_afferents: {len(self.path_afferents)}."
 
         if len(self.mod_afferents) == 0:
             # Not need to wrap inputs of non-modulated ports inside mechanisms
