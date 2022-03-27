@@ -9444,15 +9444,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # If they can not be initialized, raise a warning.
         self._complete_init_of_partially_initialized_nodes(context=context)
 
-        if self._need_check_for_unused_projections:
-            self._check_for_unused_projections(context=context)
-
         if ContextFlags.SIMULATION_MODE not in context.runmode:
             self._check_controller_initialization_status()
             self._check_nodes_initialization_status()
 
             if not skip_analyze_graph:
                 self._analyze_graph(context=context)
+
+        if self._need_check_for_unused_projections:
+            self._check_for_unused_projections(context=context)
 
         if scheduler is None:
             scheduler = self.scheduler

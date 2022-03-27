@@ -2600,7 +2600,7 @@ class OptimizationControlMechanism(ControlMechanism):
             #     assert self.num_state_input_ports < len(self.agent_rep_input_ports), \
             #         f"PROGRAM ERROR: More state_input_ports assigned to '{self.name}' ({self.num_state_input_ports}) " \
             #         f"than agent_rep ('{self.agent_rep.name}') has INPUT Node InputPorts ({num_agent_rep_input_ports})."
-            # FIX: 3/24/22 - SHOULD PROBABLY REFACTOR THIS TO CALL _parse_state_feature_specs
+            # FIX: 3/24/22 - REFACTOR THIS TO CALL _parse_state_feature_specs?
             state_input_ports = []
             local_context = Context(source=ContextFlags.METHOD)
             default = self.state_feature_default
@@ -2617,7 +2617,6 @@ class OptimizationControlMechanism(ControlMechanism):
                     self.state_feature_specs.append(input_port)
                 elif is_numeric(default):
                     params[VALUE]: default
-                    # FIX: 3/24/22 - NEED TO STANDARDIZE NAME FOR NUMERIC spec AND ALIGN WITH OTHER USES
                     input_port_name = _numeric_state_input_port_name(input_port.full_name)
                     self.state_feature_specs.append(default)
                 elif isinstance(default, (Port, Mechanism, Composition)):
@@ -2647,18 +2646,18 @@ class OptimizationControlMechanism(ControlMechanism):
 
         self._update_state_input_port_names()
 
-        if self.state_feature_specs:
-            # Restrict validation and any further instantiation of state_input_ports
-            #    until run time, when the Composition is expected to be fully constructed
-            if context._execution_phase == ContextFlags.PREPARING:
-                # FIX: 1/30/22 - NEEDS TO EXECUTE ON UPDATES WITHOUT RUN,
-                #                BUT MANAGE ERRORS WRT TO _validate_state_features
-                self._update_state_features_dict()
-                self._validate_state_features(context)
+        if context._execution_phase == ContextFlags.PREPARING:
+            # Restrict validation until run time, when the Composition is expected to be fully constructed
+            self._validate_state_features(context)
 
     def _update_state_input_port_names(self):
-        """Update names of state_input_port for any newly instantiated INPUT Node InputPorts """
+        """Update names of state_input_port for any newly instantiated INPUT Node InputPorts
+        """
         for i, state_input_port in enumerate(self.state_input_ports):
+
+            if i < len(self.agent_rep_input_ports):
+                self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
+
             if i == len(self.agent_rep_input_ports):
                 # All state_input_ports beyond number of agent_rep_input_ports must be for deferred nodes
                 assert DEFERRED_STATE_INPUT_PORT_PREFIX in state_input_port.name, \
@@ -2677,30 +2676,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                     category=INPUT_PORT,
                                                                     new_name= new_name,
                                                                 component=state_input_port)
-
-    def _update_state_features_dict(self):
-        agent_rep_input_ports = self.agent_rep_input_ports
-        specified_input_ports = self._specified_INPUT_Node_InputPorts_in_order
-
-        for i, port in enumerate(self.state_input_ports):
-            # Get value (need first, to determine whether it belongs to a nested Comp, for assigning key)
-            spec = self.state_feature_specs[i]
-            # Get INPUT Node of agent_rep as key:
-            if (isinstance(spec, Component) and
-                    spec.owner in [n[0] for n in self.agent_rep._get_nested_nodes()]):
-                node = spec.owner
-            elif specified_input_ports[i]:
-                node = specified_input_ports[i]
-            elif i < len(agent_rep_input_ports):
-                node = specified_input_ports[i] = agent_rep_input_ports[i]
-            else:
-                node = None
-            if not (isinstance(node, str) and DEFERRED_STATE_INPUT_PORT_PREFIX in node):
-                continue
-            if spec.owner not in agent_rep_input_ports:
-                # Don't add to dict, will be dealt with or raise an error at run time
-                continue
-            self.state_feature_specs[i] = spec
 
     def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
@@ -3515,7 +3490,9 @@ class OptimizationControlMechanism(ControlMechanism):
             (it should be resolved by runtime, or an error is generated).
         """
 
-        self._update_state_features_dict()
+        # self._update_state_features_dict()
+        self._update_state_input_port_names()
+
         agent_rep_input_ports = self.agent_rep.external_input_ports_of_all_input_nodes
         state_features_dict = {}
         state_input_port_num = 0

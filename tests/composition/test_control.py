@@ -2160,18 +2160,17 @@ class TestControlMechanisms:
         ctl = pnl.ControlMechanism(name='CONTROL MECHANISM')
         warning_msg_1 = '"OutputPort (\'ControlSignal-0\') of \'CONTROL MECHANISM\' doesn\'t have any efferent ' \
                         'Projections in \'COMPOSITION\'."'
-        warning_msg_4 = '"\\nThe following Projections were specified but are not being used by Nodes in ' \
-                        '\'COMPOSITION\':\\n\\tControlProjection for MECH[slope]"'
-        warning_msg_5 = '"The \'slope\' parameter of \'MECH\' is specified for control, but the Composition it is in ' \
+        warning_msg_2 = '"The \'slope\' parameter of \'MECH\' is specified for control, but the Composition it is in ' \
                         '(\'COMPOSITION\') does not have a controller; if a controller is not added to COMPOSITION ' \
                         'the control specification will be ignored."'
+        warning_msg_3 = '"\\nThe following Projections were specified but are not being used by Nodes in ' \
+                        '\'COMPOSITION\':\\n\\tControlProjection for MECH[slope]"'
         with pytest.warns(UserWarning) as warning:
             comp = pnl.Composition(name='COMPOSITION', pathways=[ctl])
             comp.add_node(mech)
             comp.run()
-        assert repr(warning[1].message.args[0]) == warning_msg_1
-        assert repr(warning[4].message.args[0]) == warning_msg_4
-        assert repr(warning[5].message.args[0]) == warning_msg_5
+        assert all(msg in [repr(w.message.args[0]) for w in warning]
+                   for msg in {warning_msg_1, warning_msg_2, warning_msg_3})
 
     @pytest.mark.control
     @pytest.mark.composition
