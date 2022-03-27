@@ -3442,7 +3442,7 @@ class Mechanism_Base(Mechanism):
                     if use_label and not isinstance(port, ParameterPort):
                         value = f'<br/>={port.labeled_value}'
                     else:
-                        value = f'<br/>={port.labeled_value}'
+                        value = f'<br/>={port.value}'
                 return f'<td port="{self._get_port_name(port)}"><b>{port.name}</b>{function}{value}</td>'
 
 
