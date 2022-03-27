@@ -3023,14 +3023,21 @@ class Mechanism_Base(Mechanism):
         elif port_spec == OWNER_EXECUTION_COUNT:
             execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, EXECUTION_COUNT)
             return execution_count
-        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
 
-            assert index < len(value.type.pointee)
-            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
+        try:
+            name = port_spec[0]
+            ids = (x() if callable(x) else x for x in port_spec[1:])
+        except TypeError as e:
+            # TypeError means we can't index.
+            # Convert this to assertion failure below
+            pass
         else:
             #TODO: support more spec options
-            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            if name == OWNER_VALUE:
+                data = value
+            return builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+
+        assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
