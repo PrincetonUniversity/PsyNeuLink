@@ -2411,11 +2411,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # # Get specified ports in order of agent_rep INPUT Nodes, with None assigned to any unspecified InputPorts
             all_specified_ports = [port if port in expanded_specified_ports
-                                   # MODIFIED 3/24/22 OLD:
                                    else None for port in agent_rep_input_ports]
-                                   # MODIFIED 3/24/22 NEW:
-                                   # else self.state_feature_default for port in agent_rep_input_ports]
-                                    # MODIFIED 3/24/22 END
             # Get any not found anywhere (including nested) in agent_rep, which are placed at the end of list
             all_specified_ports.extend([port for port in expanded_specified_ports if port not in agent_rep_input_ports])
 
@@ -2537,12 +2533,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 assert len(self._state_feature_functions) == self._num_state_feature_specs, \
                     f"PROGRAM ERROR: Length of _state_feature_functions for {self.name} should be same " \
                     f"as number of state_input_port_dicts passed to _assign_state_feature_function"
-            # # MODIFIED 3/24/22 OLD:
-            # state_feature_functions = (self._state_feature_functions
-            #                            if self._state_feature_functions[0] is not None else None)
-            # MODIFIED 3/24/22 NEW:
             state_feature_functions = self._state_feature_functions
-            # MODIFIED 3/24/22 END
         except AttributeError:
             # state_features assigned automatically in _update_state_input_ports_for_controller,
             #    so _state_feature_functions (for individual state_features) not created
