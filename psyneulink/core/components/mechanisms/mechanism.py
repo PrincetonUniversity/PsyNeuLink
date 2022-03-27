@@ -3120,14 +3120,15 @@ class Mechanism_Base(Mechanism):
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
-
         val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
         if val_ptr.type.pointee == value.type.pointee:
             pnlvm.helpers.push_state_val(builder, self, m_state, "value", value)
         else:
             # FIXME: Does this need some sort of parsing?
             warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
+
+        # Run output ports after updating the mech state (num_executions and value)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
