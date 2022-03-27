@@ -8687,7 +8687,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
         _inputs = self._parse_labels(_inputs)
-        self._validate_input_keys(_inputs)
+        self._validate_input_dict_keys(_inputs)
         _inputs = self._instantiate_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
@@ -8794,12 +8794,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return _inputs
 
-    def _validate_input_keys(self, inputs):
+    def _validate_input_dict_keys(self, inputs):
         """Validate that keys of inputs are all legal:
-            - they are all InputPorts, Mechanisms or Compositions
-            - they are all (or InputPorts of) INPUT Nodes of Composition at any level of nesting
-            - an InputPort and the Mechanism to which it belongs are not *both* specified
-            - an InputPort or Mechanism and any Composition under whicht it is nested are not *both* specified
+            - they are all InputPorts, Mechanisms or Compositions;
+            - they are all (or InputPorts of) INPUT Nodes of Composition at any level of nesting;
+            - an InputPort and the Mechanism to which it belongs are not *both* specified;
+            - an InputPort of an input_CIM and the Composition to which it belongs are not *both* specified;
+            - an InputPort or Mechanism and any Composition under which it is nested are not *both* specified.
         """
 
         # Validate that keys for inputs are all legal *types*
@@ -8973,7 +8974,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if remaining_inputs:
             assert False, f"PROGRAM ERROR: the following items specified in the 'inputs' arg of the run() method " \
                           f"for '{self.name}' are not INPUT Nodes of that Composition (nor InputPorts of them): " \
-                          f"{remaining_inputs} -- SHOULD HAVE RAISED ERROR IN composition._validate_input_keys()"
+                          f"{remaining_inputs} -- SHOULD HAVE RAISED ERROR IN composition._validate_input_dict_keys()"
 
         # If any INPUT Nodes of the Composition are not specified, add them and assign default_external_input_values
         for node in input_nodes:
