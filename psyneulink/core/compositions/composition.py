@@ -4371,8 +4371,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                 include_roles=NodeRole.INPUT)
             if _input_nodes:
                 for node in _input_nodes:
-                    input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
-                # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
+                    # Exclude internal_only and shadowers of input (since the latter get inputs for the shadowed item)
+                    input_items.extend([input_port for input_port in node.input_ports
+                                        if not (input_port.internal_only or input_port.shadow_inputs)])
+                # Ensure correct number of InputPorts have been identified
+                #    (i.e., number of InputPorts on comp's input_CIM)
                 if _update_cim:
                     context = Context()
                     self._determine_pathway_roles(context=context)
@@ -8684,7 +8687,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # compute number of input sets and return that as well
         _inputs = self._parse_names_in_inputs(inputs)
         _inputs = self._parse_labels(_inputs)
-        self._validate_input_keys(_inputs)
+        self._validate_input_dict_keys(_inputs)
         _inputs = self._instantiate_input_dict(_inputs)
         _inputs = self._flatten_nested_dicts(_inputs)
         _inputs = self._validate_input_shapes(_inputs)
@@ -8791,12 +8794,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return _inputs
 
-    def _validate_input_keys(self, inputs):
-        """Validate that keys of inputs are all legal
-        - they are all InputPorts, Mechanisms or Compositions
-        - they are all (or InputPorts of) INPUT Nodes of Composition at any level of nesting
-        - an InputPort and the Mechanism to which it belongs are not *both* specified
-        - an InputPort or Mechanism and any Composition under whicht it is nested are not *both* specified
+    def _validate_input_dict_keys(self, inputs):
+        """Validate that keys of inputs are all legal:
+            - they are all InputPorts, Mechanisms or Compositions;
+            - they are all (or InputPorts of) INPUT Nodes of Composition at any level of nesting;
+            - an InputPort and the Mechanism to which it belongs are not *both* specified;
+            - an InputPort of an input_CIM and the Composition to which it belongs are not *both* specified;
+            - an InputPort or Mechanism and any Composition under which it is nested are not *both* specified.
         """
 
         # Validate that keys for inputs are all legal *types*
@@ -8824,12 +8828,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                            f"following InputPorts *and* the Mechanisms to which they belong; only one or the other "
                            f"can be specified as inputs to run():  {', '.join(bad_entries)}.")
 
-        # # FIX: CHECK FOR SPECIFICATION OF AN InputPort OF AN input_CIM AND THE COMPOSITION TO WHICH IT BELONGS
+        # Validate that an InputPort of an input_CIM *and* its Composition are not *both* specified in inputs
+        #    (this is unlikely but possible)
+        bad_entries = [key.full_name for key in inputs
+                       if (isinstance(key, InputPort)
+                           and isinstance(key.owner, CompositionInterfaceMechanism)
+                           and key.owner.composition in inputs)]
+        if bad_entries:
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
+                           f"following InputPort(s) of a CompositionInterfaceMechanism *and* the Composition to which "
+                           f"they belong; only one or the other can be specified as inputs to run(): "
+                           f"{', '.join(bad_entries)}.")
+
         # # Validate that InputPort or Mechanism and the Composition(s) under which it is nested are not both specified
         def check_for_items_in_nested_comp(comp):
             bad_entries = []
             for node in comp._all_nodes:  # note: this only includes nodes as top level of comp
-                if isinstance(node, Composition):
+                if isinstance(node, Composition) and node in inputs:
                     all_nested_items = node._get_input_receivers(type=PORT) \
                                        + node._get_input_receivers(type=NODE, comp_as_node=ALL)
                     bad_entries.extend([(entry, node) for entry in inputs if entry in all_nested_items])
@@ -8957,9 +8972,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             remaining_inputs = remaining_inputs - inputs_to_remove
 
         if remaining_inputs:
-            raise CompositionError(f"The following items specified in the 'inputs' arg of the run() method for "
-                                   f"'{self.name}' are not INPUT Nodes of that Composition (nor InputPorts "
-                                   f"of them): {remaining_inputs}.")
+            assert False, f"PROGRAM ERROR: the following items specified in the 'inputs' arg of the run() method " \
+                          f"for '{self.name}' are not INPUT Nodes of that Composition (nor InputPorts of them): " \
+                          f"{remaining_inputs} -- SHOULD HAVE RAISED ERROR IN composition._validate_input_dict_keys()"
 
         # If any INPUT Nodes of the Composition are not specified, add them and assign default_external_input_values
         for node in input_nodes:
