@@ -2635,6 +2635,10 @@ class TestRunInputSpecifications:
          '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
          'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
          '[(\'IA\', \'Composition-0\')]."'
+         ),
+        ('run_nested_with_inputs',
+         '\'Input provided to nested Composition Composition-0; run() method should only be called '
+         'on outer-most composition within which it is nested.\''
          )
     ]
     @pytest.mark.parametrize('input_args', input_args, ids=[x[0] for x in input_args])
@@ -2672,8 +2676,9 @@ class TestRunInputSpecifications:
             inputs={ia:[1]}
 
         with pytest.raises(RunError) as error_text:
-            if input_args == 'run_nested':
-                icomp.run(inputs=inputs)
+            if condition == 'run_nested_with_inputs':  # Should fail since icomp is nested w/in ocomp
+                ocomp._analyze_graph()
+                icomp.run(inputs={ia:[1]})
             else:
                 ocomp.run(inputs=inputs)
         assert expected_error_text in str(error_text.value)

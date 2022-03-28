@@ -4070,7 +4070,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         self._need_check_for_unused_projections = True
 
-        # # MODIFIED 1/27/22 NEW: FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
+        # # MODIFIED 1/27/22 NEW - FIX - BREAKS test_learning_output_shape() in ExecuteMode.LLVM
+        #                                [3/25/22] STILL NEEDED (e.g., FOR test_inputs_key_errors()
         # if context.source != ContextFlags.METHOD:
         #     # Call _analyze_graph with ContextFlags.METHOD to avoid recursion
         #     self._analyze_graph(context=Context(source=ContextFlags.METHOD))
@@ -10164,11 +10165,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 # These are meant to be assigned in run method;  needed here for direct call to execute method
                 self._animate = False
 
-            # KAM Note 4/29/19
+            # IMPLEMENTATION NOTE:
+            # KAM 4/29/19
             # The nested var is set to True if the Composition is nested in another Composition, otherwise False
             # Later on, this is used to determine:
             #   (1) whether to initialize from context
             #   (2) whether to assign values to CIM from input dict (if not nested) or simply execute CIM (if nested)
+            # JDC 3/28/22:
+            #    This currently prevents a Composition that is nested within another to be tested on its own
+            #    Would be good to figure out a way to accomodate that
             nested = False
             if len(self.input_CIM.path_afferents) > 0:
                 nested = True
@@ -10339,8 +10344,14 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
                     self.input_CIM.execute(build_CIM_input, context=context)
                 else:
-                    assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
-                                           f"only be called on outer-most composition within which it is nested."
+                    # # MODIFIED 3/28/22 OLD:
+                    # assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
+                    #                        f"only be called on outer-most composition within which it is nested."
+                    # MODIFIED 3/28/22 NEW:
+                    if inputs is not None:
+                        raise RunError(f"Input provided to nested Composition {self.name}; run() method should " \
+                                       f"only be called on outer-most composition within which it is nested.")
+                    # MODIFIED 3/28/22 END
                     self.input_CIM.execute(context=context)
                 self.parameter_CIM.execute(context=context)
             else:
