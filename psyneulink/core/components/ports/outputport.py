@@ -674,10 +674,7 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
             return spec
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
-            try:
-                owner_param_name = output_port_spec_to_parameter_name[spec[0]]
-            except KeyError:
-                owner_param_name = spec[0]
+            owner_param_name = output_port_spec_to_parameter_name.get(spec[0], spec[0])
 
             try:
                 index = spec[1]() if callable(spec[1]) else spec[1]
@@ -685,19 +682,14 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
                 # context is None during initialization, and we don't want to
                 # incur the cost of .get during execution
                 if context is None:
-                    return getattr(owner.parameters, owner_param_name).get(context)[index]
+                    val = getattr(owner.parameters, owner_param_name).get(context)
                 else:
-                    return getattr(owner.parameters, owner_param_name)._get(context)[index]
-            except TypeError:
-                if context is None:
-                    if getattr(owner.parameters, owner_param_name).get(context) is None:
-                        return None
-                elif getattr(owner.parameters, owner_param_name)._get(context) is None:
-                    return None
-                else:
-                    # raise OutputPortError("Can't parse variable ({}) for {} of {}".
-                    #                        format(spec, output_port_name or OutputPort.__name__, owner.name))
-                    raise Exception
+                    val = getattr(owner.parameters, owner_param_name)._get(context)
+
+                if hasattr(val, '_get_by_time_scale'):
+                    return val._get_by_time_scale(index)
+
+                return val if val is None else val[index]
             except:
                 raise OutputPortError(f"Can't parse variable ({spec}) for "
                                        f"{output_port_name or OutputPort.__name__} of {owner.name}.")
