@@ -894,7 +894,7 @@ class Reduce(CombinationFunction):  # ------------------------------------------
         else:
             assert False, "Unknown operation: {}".format(operation)
 
-        val_p = builder.alloca(val.type)
+        val_p = builder.alloca(val.type, name="reduced_result")
         builder.store(val, val_p)
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
@@ -1428,7 +1428,7 @@ class LinearCombination(
         else:
             assert False, "Unknown operation: {}".format(operation)
 
-        val_p = builder.alloca(val.type)
+        val_p = builder.alloca(val.type, name="combined_result")
         builder.store(val, val_p)
 
         pow_f = ctx.get_builtin("pow", [ctx.float_ty])
