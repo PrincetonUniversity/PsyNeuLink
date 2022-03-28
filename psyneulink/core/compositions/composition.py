@@ -10339,23 +10339,48 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #        but node execution of nested compositions with
                 #        outside control is not supported yet.
                 assert not nested or len(self.parameter_CIM.afferents) == 0
+
             elif nested:
-                # check that inputs are specified - autodiff does not in some cases
-                if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
-                    self.input_CIM.execute(build_CIM_input, context=context)
-                else:
-                    # FIX: 3/28/22 -- SHOULD THIS ALSO BE RESTRICTED TO SIMULATION MODE?
-                    #                 AND OTHER MODES ALLOW IT?  OR AT LEAST COMMAND-LINE SHOULD ALLOW IT?
-                    # # MODIFIED 3/28/22 OLD:
-                    # assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
-                    #                        f"only be called on outer-most composition within which it is nested."
-                    # MODIFIED 3/28/22 NEW:
+
+                # # MODIFIED 3/28/22 OLD:
+                # # check that inputs are specified - autodiff does not in some cases
+                # if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
+                #     self.input_CIM.execute(build_CIM_input, context=context)
+                # else:
+                #     # FIX: 3/28/22 -- SHOULD THIS ALSO BE RESTRICTED TO SIMULATION MODE?
+                #     #                 AND OTHER MODES ALLOW IT?  OR AT LEAST COMMAND-LINE SHOULD ALLOW IT?
+                #     # # MODIFIED 3/28/22 OLDEST:
+                #     # assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
+                #     #                        f"only be called on outer-most composition within which it is nested."
+                #     # MODIFIED 3/28/22 NEWISH:
+                #     if inputs is not None:
+                #         raise RunError(f"Input provided to nested Composition {self.name}; run() method should "
+                #                        f"only be called on outer-most composition within which it is nested.")
+                #     # MODIFIED 3/28/22 END
+                #     self.input_CIM.execute(context=context)
+
+                # MODIFIED 3/28/22 NEWEST:
+                # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
+                direct_call = (f"{context.source.name} EXECUTING" not in context.string)
+                simulation = ContextFlags.SIMULATION_MODE in context.runmode
+                if simulation or direct_call:
+                    # For simulations, or direct call to nested Composition (e.g., from COMMAND_LINE to test it)
+                    #  assign inputs if they not provided (e.g., # autodiff)
                     if inputs is not None:
-                        raise RunError(f"Input provided to nested Composition {self.name}; run() method should " \
-                                       f"only be called on outer-most composition within which it is nested.")
-                    # MODIFIED 3/28/22 END
+                        self.input_CIM.execute(build_CIM_input, context=context)
+                    else:
+                        self.input_CIM.execute(context=context)
+                else:
+                    # regular run (DEFAULT_MODE) of nested Composition called from enclosing Composition,
+                    #    so inputs should be None, and be assigned from nested Composition's input_CIM
+                    assert inputs is None,\
+                        f"Input provided to a nested Composition {self.name} in call from outer composition."
                     self.input_CIM.execute(context=context)
+
+                # MODIFIED 3/28/22 END
+
                 self.parameter_CIM.execute(context=context)
+
             else:
                 self.input_CIM.execute(build_CIM_input, context=context)
 

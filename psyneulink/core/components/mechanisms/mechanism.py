@@ -2406,11 +2406,10 @@ class Mechanism_Base(Mechanism):
         """
 
         if self.initialization_status == ContextFlags.INITIALIZED:
-            context.string = "{} EXECUTING {}: {}".format(context.source.name,self.name,
-                                                               ContextFlags._get_context_string(
-                                                                       context.flags, EXECUTION_PHASE))
+            context.string = f"{context.source.name} EXECUTING {self.name}: " \
+                             f"{ContextFlags._get_context_string(context.flags, EXECUTION_PHASE)}."
         else:
-            context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
+            context.string = f"{context.source.name} INITIALIZING {self.name}."
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
