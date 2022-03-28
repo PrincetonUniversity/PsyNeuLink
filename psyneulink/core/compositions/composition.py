@@ -4351,13 +4351,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             - ALL, include the nested Composition AND its INPUT Nodes
         """
 
-        # FIX: 3/16/22:
-        # CAN THIS BE REPLACED BY:
+        # FIX: 3/16/22 - CAN THIS BE REPLACED BY:
         # return [self._get_destination(output_port.efferents[0])[0]
         #         for _,output_port in self.input_CIM.port_map.values()]
 
         assert not (type == PORT and comp_as_node), f"PROGRAM ERROR: _get_input_receivers() can't be called " \
                                                     f"for 'ports' and 'nodes' at the same time."
+        comp = comp or self
         input_items = []
         _update_cim = False
 
@@ -4371,18 +4371,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                                                                 include_roles=NodeRole.INPUT)
             if _input_nodes:
                 for node in _input_nodes:
-                    input_items.extend([input_port for input_port in node.input_ports if not input_port.internal_only])
-                # Insure correct number of InputPorts have been identified (i.e., number of InputPorts on comp's input_CIM)
-                # MODIFIED 3/12/22 NEW:
+                    # Exclude internal_only and shadowers of input (since the latter get inputs for the shadowed item)
+                    input_items.extend([input_port for input_port in node.input_ports
+                                        if not (input_port.internal_only or input_port.shadow_inputs)])
+                # Ensure correct number of InputPorts have been identified
+                #    (i.e., number of InputPorts on comp's input_CIM)
                 if _update_cim:
                     context = Context()
                     self._determine_pathway_roles(context=context)
                     self._determine_pathway_roles(context)
                     self._create_CIM_ports(context)
                 _update_cim = False
-                # MODIFIED 3/12/22 OLD:
                 assert len(input_items) == len(comp.input_CIM_ports)
-                # MODIFIED 3/12/22 END
         else:
             # Return all INPUT Nodes
             _input_nodes = comp.get_nodes_by_role(NodeRole.INPUT)
@@ -8669,137 +8669,30 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             _input = None
         return _input
 
-    def _validate_input_shapes(self, inputs):
+    def _parse_input_dict(self, inputs, context=None):
         """
-        Validates that all inputs provided in input dict are valid
+        Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
+            its execution
 
         Returns
         -------
-
         `dict` :
-            The input dict, with shapes corrected if necessary.
+            Parsed and standardized input dict
+
+        `int` :
+            Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
 
         """
-         # Loop over all dictionary entries to validate their content and adjust any convenience notations:
-
-         # (1) Replace any user provided convenience notations with values that match the following specs:
-         # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
-         # b - each input value is a 2d array that matches variable
-         # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
-         #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
-         # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
-        _inputs = {}
-        input_lengths = set()
-        inputs_to_duplicate = []
-        # loop through input dict
-        for receiver, stimulus in inputs.items():
-            # see if the entire stimulus set provided is a valid input for the receiver (i.e. in the case of a call with a
-            # single trial of provided input)
-            _input = self._validate_single_input(receiver, stimulus)
-            if _input is not None:
-                _input = [_input]
-            else:
-                # if _input is None, it may mean there are multiple trials of input in the stimulus set,
-                #     so in list comprehension below loop through and validate each individual input;
-                _input = [self._validate_single_input(receiver, single_trial_input) for single_trial_input in stimulus]
-                # Look for any bad ones (for which _validate_single_input() returned None) and report if found
-                if any(i is None for i in _input):
-                    if isinstance(receiver, InputPort):
-                        receiver_shape = receiver.default_input_shape
-                        receiver_name = receiver.full_name
-                    elif isinstance(receiver, Mechanism):
-                        receiver_shape = receiver.external_input_shape
-                        receiver_name = receiver.name
-                    elif isinstance(receiver, Composition):
-                        receiver_shape = receiver.input_CIM.external_input_shape
-                        receiver_name = receiver.name
-                    # # MODIFIED 3/12/22 OLD:
-                    # bad_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)], dtype=object)))
-                    # correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
-                    # err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
-                    #           f"the shape of its external input ({correct_stimulus})."
-                    # MODIFIED 3/12/22 NEW:
-                    # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
-                    #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
-                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object)))
-                    bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
-                    bad_stimulus = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object)))
-                    err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
-                              f"the shape of its external input ({receiver_shape})."
-                    # MODIFIED 3/12/22 END
-                    # 8/3/17 CW: I admit the error message implementation here is very hacky;
-                    # but it's at least not a hack for "functionality" but rather a hack for user clarity
-                    if "KWTA" in str(type(receiver)):
-                        err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
-                                            "(or other values) to represent the outside stimulus for " \
-                                            "the inhibition InputPort, and for Compositions, put your inputs"
-                    raise RunError(err_msg)
-            _inputs[receiver] = _input
-            input_length = len(_input)
-            if input_length == 1:
-                inputs_to_duplicate.append(receiver)
-            # track input lengths. stimulus sets of length 1 can be duplicated to match another stimulus set length.
-            # there can be at maximum 1 other stimulus set length besides 1.
-            input_lengths.add(input_length)
-        if 1 in input_lengths:
-            input_lengths.remove(1)
-        if len(input_lengths) > 1:
-            raise CompositionError(f"The input dictionary for {self.name} contains input specifications of different "
-                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each "
-                                   f"receiver in a Composition.")
-        elif len(input_lengths) > 0:
-            num_trials = list(input_lengths)[0]
-            for mechanism in inputs_to_duplicate:
-                # hacky, but need to convert to list to use * syntax to duplicate element
-                if type(_inputs[mechanism]) == np.ndarray:
-                    _inputs[mechanism] = _inputs[mechanism].tolist()
-                _inputs[mechanism] *= num_trials
-        return _inputs
-
-    def _flatten_nested_dicts(self, inputs):
-        """
-        Converts inputs provided in the form of a dict for a nested Composition to a list corresponding to the
-            Composition's input CIM ports
-
-        Returns
-        -------
-
-        `dict` :
-            The input dict, with nested dicts corresponding to nested Compositions converted to lists
-
-        """
-        # Inputs provided for nested compositions in the form of a nested dict need to be converted into a list,
-        # to be provided to the outer Composition's input port that corresponds to the nested Composition
-        _inputs = {}
-        for node, inp in inputs.items():
-            if node.componentType == 'Composition' and type(inp) == dict:
-                # If there are multiple levels of nested dicts, we need to convert them starting from the deepest level,
-                # so recurse down the chain here
-                inp, num_trials = node._parse_input_dict(inp)
-                translated_stimulus_dict = {}
-
-                # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
-                # InputPorts and the values are lists containing the first input value
-                for nested_input_node, values in inp.items():
-                    first_value = values[0]
-                    for i in range(len(first_value)):
-                        input_port = nested_input_node.external_input_ports[i]
-                        input_cim_input_port = node.input_CIM_ports[input_port][0]
-                        translated_stimulus_dict[input_cim_input_port] = [first_value[i]]
-                        # then loop through the stimulus dictionary again for each remaining trial
-                        for trial in range(1, num_trials):
-                            translated_stimulus_dict[input_cim_input_port].append(values[trial][i])
-
-                adjusted_stimulus_list = []
-                for trial in range(num_trials):
-                    trial_adjusted_stimulus_list = []
-                    for port in node.external_input_ports:
-                        trial_adjusted_stimulus_list.append(translated_stimulus_dict[port][trial])
-                    adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
-                _inputs[node] = adjusted_stimulus_list
-            else:
-                _inputs.update({node:inp})
-        return _inputs
+        # parse a user-provided input dict to format it properly for execution.
+        # compute number of input sets and return that as well
+        _inputs = self._parse_names_in_inputs(inputs)
+        _inputs = self._parse_labels(_inputs)
+        self._validate_input_dict_keys(_inputs)
+        _inputs = self._instantiate_input_dict(_inputs)
+        _inputs = self._flatten_nested_dicts(_inputs)
+        _inputs = self._validate_input_shapes(_inputs)
+        num_inputs_sets = len(next(iter(_inputs.values()),[]))
+        return _inputs, num_inputs_sets
 
     def _parse_names_in_inputs(self, inputs):
         names = []
@@ -8901,58 +8794,84 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         return _inputs
 
-    def _parse_input_dict(self, inputs, context=None):
+    def _validate_input_dict_keys(self, inputs):
+        """Validate that keys of inputs are all legal:
+            - they are all InputPorts, Mechanisms or Compositions;
+            - they are all (or InputPorts of) INPUT Nodes of Composition at any level of nesting;
+            - an InputPort and the Mechanism to which it belongs are not *both* specified;
+            - an InputPort of an input_CIM and the Composition to which it belongs are not *both* specified;
+            - an InputPort or Mechanism and any Composition under which it is nested are not *both* specified.
         """
-        Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout
-            its execution
 
-        Returns
-        -------
-        `dict` :
-            Parsed and standardized input dict
+        # Validate that keys for inputs are all legal *types*
+        bad_entries = [key for key in inputs if not isinstance(key, (InputPort, Mechanism, Composition))]
+        if bad_entries:
+            bad_entry_names = [repr(key.full_name) if isinstance(key, Port) else repr(key.name) for key in bad_entries]
+            raise RunError(f"The following items specified in the 'inputs' arg of the run() method for "
+                           f"'{self.name}' that are not a Mechanism, Composition, or an InputPort of one: "
+                           f"{', '.join(bad_entry_names)}.")
 
-        `int` :
-            Number of input sets (i.e., trials' worths of inputs) in dict for each input node in the Composition
+        # Validate that keys for inputs all are or belong to *INPUT Nodes* of Composition (at any level of nesting)
+        all_allowable_entries = self._get_input_receivers(type=PORT) \
+                                + self._get_input_receivers(type=NODE, comp_as_node=ALL)
+        bad_entries = [key for key in inputs if key not in all_allowable_entries]
+        if bad_entries:
+            bad_entry_names = [repr(key.full_name) if isinstance(key, Port) else repr(key.name) for key in bad_entries]
+            raise RunError(f"The following items specified in the 'inputs' arg of the run() method for '{self.name}' "
+                           f"are not INPUT Nodes of that Composition (nor InputPorts of them): "
+                           f"{', '.join(bad_entry_names)}.")
 
-        """
-        # parse a user-provided input dict to format it properly for execution.
-        # compute number of input sets and return that as well
-        _inputs = self._parse_names_in_inputs(inputs)
-        _inputs = self._parse_labels(_inputs)
-        _inputs = self._instantiate_input_dict(_inputs)
-        _inputs = self._flatten_nested_dicts(_inputs)
-        _inputs = self._validate_input_shapes(_inputs)
-        num_inputs_sets = len(next(iter(_inputs.values()),[]))
-        return _inputs, num_inputs_sets
+        # Validate that an InputPort *and* its owner are not *both* specified in inputs
+        bad_entries = [key.full_name for key in inputs if isinstance(key, InputPort) and key.owner in inputs]
+        if bad_entries:
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
+                           f"following InputPorts *and* the Mechanisms to which they belong; only one or the other "
+                           f"can be specified as inputs to run():  {', '.join(bad_entries)}.")
+
+        # Validate that an InputPort of an input_CIM *and* its Composition are not *both* specified in inputs
+        #    (this is unlikely but possible)
+        bad_entries = [key.full_name for key in inputs
+                       if (isinstance(key, InputPort)
+                           and isinstance(key.owner, CompositionInterfaceMechanism)
+                           and key.owner.composition in inputs)]
+        if bad_entries:
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
+                           f"following InputPort(s) of a CompositionInterfaceMechanism *and* the Composition to which "
+                           f"they belong; only one or the other can be specified as inputs to run(): "
+                           f"{', '.join(bad_entries)}.")
+
+        # # Validate that InputPort or Mechanism and the Composition(s) under which it is nested are not both specified
+        def check_for_items_in_nested_comp(comp):
+            bad_entries = []
+            for node in comp._all_nodes:  # note: this only includes nodes as top level of comp
+                if isinstance(node, Composition) and node in inputs:
+                    all_nested_items = node._get_input_receivers(type=PORT) \
+                                       + node._get_input_receivers(type=NODE, comp_as_node=ALL)
+                    bad_entries.extend([(entry, node) for entry in inputs if entry in all_nested_items])
+                    bad_entries.extend(check_for_items_in_nested_comp(node))
+            return bad_entries
+        bad_entries = check_for_items_in_nested_comp(self)
+        if bad_entries:
+            bad_entry_names = [(key.full_name, comp.name) if isinstance(key, Port) else (key.name, comp.name)
+                               for key,comp in bad_entries]
+            raise RunError(f"The 'inputs' arg of the run() method for '{self.name}' includes specifications of the "
+                           f"following InputPorts or Mechanisms *and* the Composition within which they are nested: "
+                           # f"{', '.join(bad_entry_names)}.")
+                           f"{bad_entry_names}.")
 
     def _instantiate_input_dict(self, inputs):
-        """Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
+        """Implement dict with all INPUT Node of Composition as keys and their assigned inputs or defaults as values
         **inputs** can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,
             that can be at any level of nesting within self.
-        Validate that all Nodes included in input dict are INPUT nodes of Composition.
         Consolidate any entries of **inputs** with InputPorts as keys to Mechanism or Composition entries
-        If any INPUT nodes of Composition are not included, add them to the input_dict using their default values.
-        Note: all entries must specify either a single trial's worth of input, or the same number as all others.
+        If any INPUT Nodes of Composition are not included, add them to the input_dict using their default values.
+        InputPort entries must specify either a single trial or the same number as all other InPorts for that Node:
+          - preprocess InputPorts for a Node to determine maximum number of trials specified, and use to set mech_shape
+          - if more than one trial is specified for any InputPort, assign fillers to ones that specify only one trial
+          (this does not apply to Mechanism or Composition specifications, as they are tested in validate_input_shapes)
 
-        Returns
-        -------
-
-        `dict` :
-            Input dict, with added entries for any input Nodes or Ports for which input was not provided
+        Return input_dict, with added entries for any INPUT Nodes or InputPorts for which input was not provided
         """
-
-        # # FIX: 3/12/22 - DOCUMENT PREPROCESSING OF PORTS FOR EACH NODE TO DETERMINE MAXIMUM NUMBER OF TRIALS FOR EACH,
-        # #                TO SET mech_shape FOR BELOW, AND ASSIGN FILLERS FOR ONES THAT ARE SHORT OF THE MAX LENGTH
-        # #                SHOULD ALSO ENFORCE 1 OR SAME NUMBER FOR ALL PORTS, AND FILL IN FOR ONES THAT ARE SHORT OF
-        # #                MAX (NO NEED TO DO SO FOR MECH OR COMP SPECS SINCE THOSE ARE TESTED IN _validate_input_shapes
-        # #                ALSO NO NEED TO WORRY ABOUT DIFFERENCES ACROSS NODES, AS THAT TOO WILL BE TESTED THERE
-
-        # Validate that keys for inputs are all legal entries
-        bad_entries = [repr(key) for key in inputs
-                       if not isinstance(key, (InputPort, Mechanism, Composition))]
-        if bad_entries:
-            assert False, f"One or more entries are specified in the inputs for '{self.name}' that are not " \
-                          f"a Mechanism, Composition, or an InputPort of one: {', '.join(bad_entries)}."
 
         input_dict = {}
         input_nodes = self.get_nodes_by_role(NodeRole.INPUT)
@@ -9053,9 +8972,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             remaining_inputs = remaining_inputs - inputs_to_remove
 
         if remaining_inputs:
-            raise CompositionError(f"The following items specified in the 'inputs' arg of the run() method for "
-                                   f"'{self.name}' are not INPUT Nodes of that Composition (nor InputPorts "
-                                   f"of them): {remaining_inputs}.")
+            assert False, f"PROGRAM ERROR: the following items specified in the 'inputs' arg of the run() method " \
+                          f"for '{self.name}' are not INPUT Nodes of that Composition (nor InputPorts of them): " \
+                          f"{remaining_inputs} -- SHOULD HAVE RAISED ERROR IN composition._validate_input_dict_keys()"
 
         # If any INPUT Nodes of the Composition are not specified, add them and assign default_external_input_values
         for node in input_nodes:
@@ -9063,6 +8982,138 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 input_dict[node] = node.external_input_shape
 
         return input_dict
+
+    def _flatten_nested_dicts(self, inputs):
+        """
+        Converts inputs provided in the form of a dict for a nested Composition to a list corresponding to the
+            Composition's input CIM ports
+
+        Returns
+        -------
+
+        `dict` :
+            The input dict, with nested dicts corresponding to nested Compositions converted to lists
+
+        """
+        # Inputs provided for nested compositions in the form of a nested dict need to be converted into a list,
+        # to be provided to the outer Composition's input port that corresponds to the nested Composition
+        _inputs = {}
+        for node, inp in inputs.items():
+            if node.componentType == 'Composition' and type(inp) == dict:
+                # If there are multiple levels of nested dicts, we need to convert them starting from the deepest level,
+                # so recurse down the chain here
+                inp, num_trials = node._parse_input_dict(inp)
+                translated_stimulus_dict = {}
+
+                # first time through the stimulus dictionary, assemble a dictionary in which the keys are input CIM
+                # InputPorts and the values are lists containing the first input value
+                for nested_input_node, values in inp.items():
+                    first_value = values[0]
+                    for i in range(len(first_value)):
+                        input_port = nested_input_node.external_input_ports[i]
+                        input_cim_input_port = node.input_CIM_ports[input_port][0]
+                        translated_stimulus_dict[input_cim_input_port] = [first_value[i]]
+                        # then loop through the stimulus dictionary again for each remaining trial
+                        for trial in range(1, num_trials):
+                            translated_stimulus_dict[input_cim_input_port].append(values[trial][i])
+
+                adjusted_stimulus_list = []
+                for trial in range(num_trials):
+                    trial_adjusted_stimulus_list = []
+                    for port in node.external_input_ports:
+                        trial_adjusted_stimulus_list.append(translated_stimulus_dict[port][trial])
+                    adjusted_stimulus_list.append(trial_adjusted_stimulus_list)
+                _inputs[node] = adjusted_stimulus_list
+            else:
+                _inputs.update({node:inp})
+        return _inputs
+
+    def _validate_input_shapes(self, inputs):
+        """
+        Validates that all inputs provided in input dict are valid
+
+        Returns
+        -------
+
+        `dict` :
+            The input dict, with shapes corrected if necessary.
+
+        """
+         # Loop over all dictionary entries to validate their content and adjust any convenience notations:
+
+         # (1) Replace any user provided convenience notations with values that match the following specs:
+         # a - all dictionary values are lists containing an input value for each trial (even if only one trial)
+         # b - each input value is a 2d array that matches variable
+         # example: { Mech1: [Fully_specified_input_for_mech1_on_trial_1, Fully_specified_input_for_mech1_on_trial_2 … ],
+         #            Mech2: [Fully_specified_input_for_mech2_on_trial_1, Fully_specified_input_for_mech2_on_trial_2 … ]}
+         # (2) Verify that all nodes provide the same number of inputs (check length of each dictionary value)
+        _inputs = {}
+        input_lengths = set()
+        inputs_to_duplicate = []
+        # loop through input dict
+        for receiver, stimulus in inputs.items():
+            # see if the entire stimulus set provided is a valid input for the receiver (i.e. in the case of a call with a
+            # single trial of provided input)
+            _input = self._validate_single_input(receiver, stimulus)
+            if _input is not None:
+                _input = [_input]
+            else:
+                # if _input is None, it may mean there are multiple trials of input in the stimulus set,
+                #     so in list comprehension below loop through and validate each individual input;
+                _input = [self._validate_single_input(receiver, single_trial_input) for single_trial_input in stimulus]
+                # Look for any bad ones (for which _validate_single_input() returned None) and report if found
+                if any(i is None for i in _input):
+                    if isinstance(receiver, InputPort):
+                        receiver_shape = receiver.default_input_shape
+                        receiver_name = receiver.full_name
+                    elif isinstance(receiver, Mechanism):
+                        receiver_shape = receiver.external_input_shape
+                        receiver_name = receiver.name
+                    elif isinstance(receiver, Composition):
+                        receiver_shape = receiver.input_CIM.external_input_shape
+                        receiver_name = receiver.name
+                    # # MODIFIED 3/12/22 OLD:
+                    # bad_stimulus = np.atleast_1d(np.squeeze(np.array(stimulus[_input.index(None)], dtype=object)))
+                    # correct_stimulus = np.atleast_1d(np.array(receiver_shape[_input.index(None)], dtype=object))
+                    # err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
+                    #           f"the shape of its external input ({correct_stimulus})."
+                    # MODIFIED 3/12/22 NEW:
+                    # FIX: MIS-REPORTS INCOMPATIBLITY AS BEING FOR SHAPE IF NUM TRIALS IS DIFFERENT FOR DIFF PORTS
+                    #      SHOULD BE HANDLED SAME AS FOR DIFFERNCE ACROSS NODES (PER BELOW)
+                    receiver_shape = np.atleast_1d(np.squeeze(np.array(receiver_shape, dtype=object)))
+                    bad_stimulus = [stim for stim, _inp in zip(stimulus, _input) if _inp is None]
+                    bad_stimulus = np.atleast_1d(np.squeeze(np.array(bad_stimulus, dtype=object)))
+                    err_msg = f"Input stimulus ({bad_stimulus}) for {receiver_name} is incompatible with " \
+                              f"the shape of its external input ({receiver_shape})."
+                    # MODIFIED 3/12/22 END
+                    # 8/3/17 CW: I admit the error message implementation here is very hacky;
+                    # but it's at least not a hack for "functionality" but rather a hack for user clarity
+                    if "KWTA" in str(type(receiver)):
+                        err_msg = err_msg + " For KWTA mechanisms, remember to append an array of zeros " \
+                                            "(or other values) to represent the outside stimulus for " \
+                                            "the inhibition InputPort, and for Compositions, put your inputs"
+                    raise RunError(err_msg)
+            _inputs[receiver] = _input
+            input_length = len(_input)
+            if input_length == 1:
+                inputs_to_duplicate.append(receiver)
+            # track input lengths. stimulus sets of length 1 can be duplicated to match another stimulus set length.
+            # there can be at maximum 1 other stimulus set length besides 1.
+            input_lengths.add(input_length)
+        if 1 in input_lengths:
+            input_lengths.remove(1)
+        if len(input_lengths) > 1:
+            raise CompositionError(f"The input dictionary for {self.name} contains input specifications of different "
+                                    f"lengths ({input_lengths}). The same number of inputs must be provided for each "
+                                   f"receiver in a Composition.")
+        elif len(input_lengths) > 0:
+            num_trials = list(input_lengths)[0]
+            for mechanism in inputs_to_duplicate:
+                # hacky, but need to convert to list to use * syntax to duplicate element
+                if type(_inputs[mechanism]) == np.ndarray:
+                    _inputs[mechanism] = _inputs[mechanism].tolist()
+                _inputs[mechanism] *= num_trials
+        return _inputs
 
     def _parse_run_inputs(self, inputs, context=None):
         """
