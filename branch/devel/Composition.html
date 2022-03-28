@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Composition &mdash; PsyNeuLink 0.8.8.1+499.gc79f7bb40 documentation</title>
+  <title>Composition &mdash; PsyNeuLink 0.8.8.1+500.g69d09a8a8 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+499
+                  0.8.8.1+500
                 </div>
               
             
@@ -221,6 +221,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Pathway.html">Pathway</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="CompositionInterfaceMechanism.html">CompositionInterfaceMechanism</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OptimizationControlMechanism.html">OptimizationControlMechanism</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Scheduling.html">Scheduling</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Visualization.html">Visualization</a></li>
 <li class="toctree-l1"><a class="reference internal" href="Report.html">Reporting</a></li>
@@ -4340,32 +4341,19 @@ If the input is specified without an outer list (i.e. Composition.run(inputs = [
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._validate_input_shapes">
-<span class="sig-name descname"><span class="pre">_validate_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._validate_input_shapes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validates that all inputs provided in input dict are valid</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The input dict, with shapes corrected if necessary.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._flatten_nested_dicts">
-<span class="sig-name descname"><span class="pre">_flatten_nested_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._flatten_nested_dicts" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._parse_input_dict">
+<span class="sig-name descname"><span class="pre">_parse_input_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._parse_input_dict" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="simple">
-<dt>Converts inputs provided in the form of a dict for a nested Composition to a list corresponding to the</dt><dd><p>Composition’s input CIM ports</p>
+<dt>Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout</dt><dd><p>its execution</p>
 </dd>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>The input dict, with nested dicts corresponding to nested Compositions converted to lists</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></p>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code> – Parsed and standardized input dict</p></li>
+<li><p><code class="xref any docutils literal notranslate"><span class="pre">int</span></code> – Number of input sets (i.e., trials’ worths of inputs) in dict for each input node in the Composition</p></li>
+</ul>
+</p>
 </dd>
 </dl>
 </dd></dl>
@@ -4386,38 +4374,61 @@ If <strong>port</strong> is passed, inputs is only for a single port, so manage 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._parse_input_dict">
-<span class="sig-name descname"><span class="pre">_parse_input_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._parse_input_dict" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="simple">
-<dt>Validate and parse a dict provided as input to a Composition into a standardized form to be used throughout</dt><dd><p>its execution</p>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p><ul class="simple">
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code> – Parsed and standardized input dict</p></li>
-<li><p><code class="xref any docutils literal notranslate"><span class="pre">int</span></code> – Number of input sets (i.e., trials’ worths of inputs) in dict for each input node in the Composition</p></li>
-</ul>
-</p>
-</dd>
-</dl>
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._validate_input_dict_keys">
+<span class="sig-name descname"><span class="pre">_validate_input_dict_keys</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._validate_input_dict_keys" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate that keys of inputs are all legal:
+- they are all InputPorts, Mechanisms or Compositions;
+- they are all (or InputPorts of) INPUT Nodes of Composition at any level of nesting;
+- an InputPort and the Mechanism to which it belongs are not <em>both</em> specified;
+- an InputPort of an input_CIM and the Composition to which it belongs are not <em>both</em> specified;
+- an InputPort or Mechanism and any Composition under which it is nested are not <em>both</em> specified.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._instantiate_input_dict">
 <span class="sig-name descname"><span class="pre">_instantiate_input_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._instantiate_input_dict" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implement dict with all INPUT Nodes of Composition as keys and their assigned inputs or defaults as values
+<dd><p>Implement dict with all INPUT Node of Composition as keys and their assigned inputs or defaults as values
 <strong>inputs</strong> can contain specifications for inputs to InputPorts, Mechanisms and/or nested Compositions,</p>
 <blockquote>
 <div><p>that can be at any level of nesting within self.</p>
 </div></blockquote>
-<p>Validate that all Nodes included in input dict are INPUT nodes of Composition.
-Consolidate any entries of <strong>inputs</strong> with InputPorts as keys to Mechanism or Composition entries
-If any INPUT nodes of Composition are not included, add them to the input_dict using their default values.
-Note: all entries must specify either a single trial’s worth of input, or the same number as all others.</p>
+<p>Consolidate any entries of <strong>inputs</strong> with InputPorts as keys to Mechanism or Composition entries
+If any INPUT Nodes of Composition are not included, add them to the input_dict using their default values.
+InputPort entries must specify either a single trial or the same number as all other InPorts for that Node:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>preprocess InputPorts for a Node to determine maximum number of trials specified, and use to set mech_shape</p></li>
+<li><p>if more than one trial is specified for any InputPort, assign fillers to ones that specify only one trial</p></li>
+</ul>
+<p>(this does not apply to Mechanism or Composition specifications, as they are tested in validate_input_shapes)</p>
+</div></blockquote>
+<p>Return input_dict, with added entries for any INPUT Nodes or InputPorts for which input was not provided</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._flatten_nested_dicts">
+<span class="sig-name descname"><span class="pre">_flatten_nested_dicts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._flatten_nested_dicts" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Converts inputs provided in the form of a dict for a nested Composition to a list corresponding to the</dt><dd><p>Composition’s input CIM ports</p>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Input dict, with added entries for any input Nodes or Ports for which input was not provided</p>
+<dd class="field-odd"><p>The input dict, with nested dicts corresponding to nested Compositions converted to lists</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="psyneulink.core.compositions.composition.Composition._validate_input_shapes">
+<span class="sig-name descname"><span class="pre">_validate_input_shapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.compositions.composition.Composition._validate_input_shapes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validates that all inputs provided in input dict are valid</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The input dict, with shapes corrected if necessary.</p>
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p><code class="xref any docutils literal notranslate"><span class="pre">dict</span></code></p>

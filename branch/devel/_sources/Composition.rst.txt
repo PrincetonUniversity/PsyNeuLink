@@ -25,6 +25,7 @@ Composition
 
        Pathway
        CompositionInterfaceMechanism
+       OptimizationControlMechanism
        Scheduling
        Visualization
        Report
