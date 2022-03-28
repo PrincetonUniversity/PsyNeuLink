@@ -10344,6 +10344,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 if ContextFlags.SIMULATION_MODE in context.runmode and inputs is not None:
                     self.input_CIM.execute(build_CIM_input, context=context)
                 else:
+                    # FIX: 3/28/22 -- SHOULD THIS ALSO BE RESTRICTED TO SIMULATION MODE?
+                    #                 AND OTHER MODES ALLOW IT?  OR AT LEAST COMMAND-LINE SHOULD ALLOW IT?
                     # # MODIFIED 3/28/22 OLD:
                     # assert inputs is None, f"Input provided to nested Composition {self.name}; run() method should " \
                     #                        f"only be called on outer-most composition within which it is nested."
