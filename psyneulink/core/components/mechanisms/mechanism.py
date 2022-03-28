@@ -3033,7 +3033,7 @@ class Mechanism_Base(Mechanism):
         except TypeError as e:
             # TypeError means we can't index.
             # Convert this to assertion failure below
-            pass
+            data = None
         else:
             #TODO: support more spec options
             if name == OWNER_VALUE:
@@ -3043,18 +3043,17 @@ class Mechanism_Base(Mechanism):
             else:
                 data = None
 
-            if data is not None:
-                parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
-                # "num_executions" are kept as int64, we need to convert the value to float first
-                if name == "num_executions":
-                    count = builder.load(parsed)
-                    count_fp = builder.uitofp(count, ctx.float_ty)
-                    parsed = builder.alloca(count_fp.type)
-                    builder.store(count_fp, parsed)
+        assert data is not None, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
-                return parsed
+        parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+        # "num_executions" are kept as int64, we need to convert the value to float first
+        if name == "num_executions":
+            count = builder.load(parsed)
+            count_fp = builder.uitofp(count, ctx.float_ty)
+            parsed = builder.alloca(count_fp.type)
+            builder.store(count_fp, parsed)
 
-        assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+        return parsed
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
