@@ -3459,7 +3459,8 @@ class OptimizationControlMechanism(ControlMechanism):
 
         return f
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, params, context,
+                                  variable, out, *, tags:frozenset):
         fun = ctx.import_llvm_function(function)
         fun_out = builder.alloca(fun.args[3].type.pointee, name="func_out")
 

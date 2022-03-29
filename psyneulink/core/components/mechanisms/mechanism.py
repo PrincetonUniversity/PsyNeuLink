@@ -3071,7 +3071,9 @@ class Mechanism_Base(Mechanism):
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state,
+                                  variable, out, *, tags:frozenset):
+
         fun = ctx.import_llvm_function(function, tags=tags)
         fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
 
@@ -3082,18 +3084,18 @@ class Mechanism_Base(Mechanism):
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
         return ctx.bool_ty(1)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, arg_in,
-                                      ip_output, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, m_in,
+                                      m_val, ip_output, *, tags:frozenset):
 
         # Default mechanism runs only the main function
         f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_base_params, ctx, builder, m_base_params, m_state, arg_in)
+                self.function, f_base_params, ctx, builder, m_base_params, m_state, m_in)
         f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
 
         return self._gen_llvm_invoke_function(ctx, builder, self.function,
                                               f_params, f_state, ip_output,
-                                              tags=tags)
+                                              m_val, tags=tags)
 
     def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in,
                                     arg_out, m_base_params, *, tags:frozenset):
@@ -3106,6 +3108,7 @@ class Mechanism_Base(Mechanism):
 
         value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
                                                             m_params, m_state, arg_in,
+                                                            mech_val_ptr,
                                                             ip_output, tags=tags)
 
 

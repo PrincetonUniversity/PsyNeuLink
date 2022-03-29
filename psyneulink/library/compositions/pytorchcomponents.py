@@ -131,7 +131,9 @@ class PytorchMechanismWrapper():
                 self._mechanism.function, f_params_ptr, ctx, builder, mech_params, mech_state, mech_input)
         f_state = pnlvm.helpers.get_state_ptr(builder, self._mechanism, mech_state, "function")
 
-        output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function, f_params, f_state, mech_input, tags=frozenset({"derivative"}))
+        output, _ = self._mechanism._gen_llvm_invoke_function(ctx, builder, self._mechanism.function,
+                                                              f_params, f_state, mech_input, None,
+                                                              tags=frozenset({"derivative"}))
         return builder.gep(output, [ctx.int32_ty(0),
                                     ctx.int32_ty(0)])
 
