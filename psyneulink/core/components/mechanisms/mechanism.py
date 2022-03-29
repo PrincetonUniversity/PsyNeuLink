@@ -3075,11 +3075,14 @@ class Mechanism_Base(Mechanism):
                                   variable, out, *, tags:frozenset):
 
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
+        if out is None or out.type != fun.args[3].type:
+            f_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
+        else:
+            f_out = out
 
-        builder.call(fun, [f_params, f_state, variable, fun_out])
+        builder.call(fun, [f_params, f_state, variable, f_out])
 
-        return fun_out, builder
+        return f_out, builder
 
     def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
         return ctx.bool_ty(1)
@@ -3113,8 +3116,7 @@ class Mechanism_Base(Mechanism):
 
 
         if mech_val_ptr.type.pointee == value.type.pointee:
-            # copy output of the last function to mech val parameter
-            builder.store(builder.load(value), mech_val_ptr)
+            assert value is mech_val_ptr
         else:
             # FIXME: Does this need some sort of parsing?
             warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, mech_val_ptr.type.pointee))
