@@ -3880,11 +3880,12 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
         if self.needs_update_scheduler or not isinstance(self._scheduler, Scheduler):
             old_scheduler = self._scheduler
-            self._scheduler = Scheduler(composition=self)
-
             if old_scheduler is not None:
-                self._scheduler.add_condition_set(old_scheduler.conditions)
+                orig_conds = old_scheduler._user_specified_conds
+            else:
+                orig_conds = None
 
+            self._scheduler = Scheduler(composition=self, conditions=orig_conds)
             self.needs_update_scheduler = False
 
         return self._scheduler
@@ -4112,37 +4113,67 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                        f"({node}) must be a {Mechanism.__name__}, {Composition.__name__}, "
                                        f"or a tuple containing one of those and a {NodeRole.__name__} or list of them")
 
+    def remove_node(self, node):
+        self._remove_node(node)
+
+    def _remove_node(self, node, analyze_graph=True):
+        for proj in node.afferents + node.efferents:
+            self.remove_projection(proj)
+
+        for param_port in node.parameter_ports:
+            for proj in param_port.mod_afferents:
+                self.remove_projection(proj)
+
+        # deactivate any shadowed projections
+        for shadow_target, shadow_port_original in self.shadowing_dict.items():
+            if shadow_port_original in node.input_ports:
+                for shadow_proj in shadow_target.all_afferents:
+                    if shadow_proj.sender.owner.composition is self:
+                        self.remove_projection(shadow_proj)
+
+                        # NOTE: deactivation should be sufficient but
+                        # asserts in OCM _update_state_input_port_names
+                        # need target input ports of shadowed
+                        # projections to be active or not present at all
+                        try:
+                            self.controller.state_input_ports.remove(shadow_target)
+                        except AttributeError:
+                            pass
+
+        self.graph.remove_component(node)
+        del self.nodes_to_roles[node]
+
+        # Remove any entries for node in required_node_roles or excluded_node_roles
+        node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
+        for item in node_role_pairs:
+            self.required_node_roles.remove(item)
+        node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node]
+        for item in node_role_pairs:
+            self.excluded_node_roles.remove(item)
+
+        del self.nodes[node]
+        self.node_ordering.remove(node)
+
+        for p in self.pathways:
+            try:
+                p.pathway.remove(node)
+            except ValueError:
+                pass
+
+        self.needs_update_graph_processing = True
+        self.needs_update_scheduler = True
+
+        if analyze_graph:
+            self._analyze_graph()
+
     def remove_nodes(self, nodes):
         if not isinstance(nodes, (list, Mechanism, Composition)):
             assert False, 'Argument of remove_nodes must be a Mechanism, Composition or list containing either or both'
         nodes = convert_to_list(nodes)
         for node in nodes:
-            for proj in node.afferents + node.efferents:
-                try:
-                    del self.projections[proj]
-                except ValueError:
-                    # why are these not present?
-                    pass
+            self._remove_node(node, analyze_graph=False)
 
-                try:
-                    self.graph.remove_component(proj)
-                except CompositionError:
-                    # why are these not present?
-                    pass
-
-            self.graph.remove_component(node)
-            del self.nodes_to_roles[node]
-
-            # Remove any entries for node in required_node_roles or excluded_node_roles
-            node_role_pairs = [item for item in self.required_node_roles if item[0] is node]
-            for item in node_role_pairs:
-                self.required_node_roles.remove(item)
-            node_role_pairs = [item for item in self.excluded_node_roles if item[0] is node]
-            for item in node_role_pairs:
-                self.excluded_node_roles.remove(item)
-
-            del self.nodes[node]
-            self.node_ordering.remove(node)
+        self._analyze_graph()
 
     @handle_external_context()
     def _add_required_node_role(self, node, role, context=None):
@@ -5800,7 +5831,32 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if projection in self.projections:
             self.projections.remove(projection)
 
-        # step 3 - TBI? remove Projection from afferents & efferents lists of any node
+        # step 3 - deactivate Projection in this Composition
+        projection._deactivate_for_compositions(self)
+
+        # step 4 - deactivate any learning to this Projection
+        for param_port in projection.parameter_ports:
+            for proj in param_port.mod_afferents:
+                self.remove_projection(proj)
+                if isinstance(proj.sender.owner, LearningMechanism):
+                    for path in self.pathways:
+                        # TODO: make learning_components values consistent type
+                        try:
+                            learning_mechs = path.learning_components['LEARNING_MECHANISMS']
+                        except KeyError:
+                            continue
+
+                        if isinstance(learning_mechs, LearningMechanism):
+                            learning_mechs = [learning_mechs]
+
+                        if proj.sender.owner in learning_mechs:
+                            for mech in learning_mechs:
+                                self.remove_node(mech)
+                            self.remove_node(path.learning_components['objective_mechanism'])
+                            self.remove_node(path.learning_components['TARGET_MECHANISM'])
+
+        # step 5 - TBI? remove Projection from afferents & efferents lists of any node
+
 
     def _validate_projection(self,
                              projection,
