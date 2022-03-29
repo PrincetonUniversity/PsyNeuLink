@@ -2916,8 +2916,7 @@ class Mechanism_Base(Mechanism):
                     # the function result can result in 1d structure or scalar
                     # Casting the pointer is LLVM way of adding dimensions
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
-                    array_2d = pnlvm.ir.ArrayType(array_1d, 1)
-                    assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
+                    assert array_1d == p_function.args[2].type.pointee, \
                         "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
                     p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
