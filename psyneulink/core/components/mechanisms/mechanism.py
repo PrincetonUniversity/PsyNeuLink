@@ -3101,10 +3101,20 @@ class Mechanism_Base(Mechanism):
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
                                                         m_base_params, m_state, arg_in)
 
+        # This will move history items around to make space for a new entry
+        mech_val_ptr = pnlvm.helpers.get_state_space(builder, self, m_state, "value")
+
         value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
                                                             m_params, m_state, arg_in,
                                                             ip_output, tags=tags)
 
+
+        if mech_val_ptr.type.pointee == value.type.pointee:
+            # copy output of the last function to mech val parameter
+            builder.store(builder.load(value), mech_val_ptr)
+        else:
+            # FIXME: Does this need some sort of parsing?
+            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, mech_val_ptr.type.pointee))
 
         # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
@@ -3116,13 +3126,6 @@ class Mechanism_Base(Mechanism):
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
-
-        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
-        if val_ptr.type.pointee == value.type.pointee:
-            pnlvm.helpers.push_state_val(builder, self, m_state, "value", value)
-        else:
-            # FIXME: Does this need some sort of parsing?
-            warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
 
         # Run output ports after updating the mech state (num_executions and value)
         builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)

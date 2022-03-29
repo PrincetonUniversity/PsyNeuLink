@@ -144,15 +144,14 @@ def get_state_ptr(builder, component, state_ptr, stateful_name, hist_idx=0):
     return ptr
 
 
-def push_state_val(builder, component, state_ptr, name, new_val):
+def get_state_space(builder, component, state_ptr, name):
     val_ptr = get_state_ptr(builder, component, state_ptr, name, None)
     for i in range(len(val_ptr.type.pointee) - 1, 0, -1):
         dest_ptr = get_state_ptr(builder, component, state_ptr, name, i)
         src_ptr = get_state_ptr(builder, component, state_ptr, name, i - 1)
         builder.store(builder.load(src_ptr), dest_ptr)
 
-    dest_ptr = get_state_ptr(builder, component, state_ptr, name)
-    builder.store(builder.load(new_val), dest_ptr)
+    return get_state_ptr(builder, component, state_ptr, name)
 
 
 def unwrap_2d_array(builder, element):
