@@ -8399,6 +8399,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             buffer_animate_state = self._animate
 
         # Run Composition in "SIMULATION" context
+        # # MODIFIED 3/28/22 NEW:
+        # context.source = ContextFlags.COMPOSITION
+        # MODIFIED 3/28/22 END
         context.add_flag(ContextFlags.SIMULATION_MODE)
         context.remove_flag(ContextFlags.CONTROL)
 
@@ -9214,7 +9217,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     #                                           EXECUTION
     # ******************************************************************************************************************
 
+    # MODIFIED 3/28/22 OLD:
     @handle_external_context()
+    # # MODIFIED 3/28/22 NEW:
+    # @handle_external_context(source = ContextFlags.COMMAND_LINE)
+    # MODIFIED 3/28/22 END
     def run(
             self,
             inputs=None,
@@ -9472,7 +9479,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             trials.
 
         """
+        # MODIFIED 3/28/22 OLD:
         context.source = ContextFlags.COMPOSITION
+        # MODIFIED 3/28/22 END
         execution_phase = context.execution_phase
         context.execution_phase = ContextFlags.PREPARING
 
@@ -9919,6 +9928,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         runner = CompositionRunner(self)
 
         context.add_flag(ContextFlags.LEARNING_MODE)
+        # # MODIFIED 3/28/22 NEW:
+        # context.source = ContextFlags.COMPOSITION
+        # MODIFIED 3/28/22 END
         # # FIX 5/28/20
         # context.add_flag(ContextFlags.PREPARING)
         # context.execution_phase=ContextFlags.PREPARING
@@ -10358,10 +10370,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 #                        f"only be called on outer-most composition within which it is nested.")
                 #     # MODIFIED 3/28/22 END
                 #     self.input_CIM.execute(context=context)
-
                 # MODIFIED 3/28/22 NEWEST:
                 # IMPLEMENTATION NOTE: context.string set in Mechanism.execute
                 direct_call = (f"{context.source.name} EXECUTING" not in context.string)
+                # direct_call = (context.source == ContextFlags.COMMAND_LINE)
                 simulation = ContextFlags.SIMULATION_MODE in context.runmode
                 if simulation or direct_call:
                     # For simulations, or direct call to nested Composition (e.g., from COMMAND_LINE to test it)
@@ -10376,7 +10388,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     assert inputs is None,\
                         f"Input provided to a nested Composition {self.name} in call from outer composition."
                     self.input_CIM.execute(context=context)
-
                 # MODIFIED 3/28/22 END
 
                 self.parameter_CIM.execute(context=context)
