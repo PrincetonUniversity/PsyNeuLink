@@ -996,7 +996,7 @@ class TestControlMechanisms:
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
     state_feature_args = [
-        STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
+        # STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
         ('single_none_spec', pnl.SHADOW_INPUTS, None, None),
         ('single_shadow_spec', pnl.SHADOW_INPUTS, None, None),
         ('single_tuple_shadow_spec', pnl.SHADOW_INPUTS, None, None),
@@ -1026,9 +1026,9 @@ class TestControlMechanisms:
         ('comp_in_shadow_inupts_spec', pnl.SHADOW_INPUTS, messages[11], pnl.OptimizationControlMechanismError)
     ]
     if len(state_feature_args) != 27:
-        print("\n\n**********************************************************************************************")
-        print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
-        print("***********************************************************************************************")
+        print("\n\n************************************************************************************************")
+        print("*** UNCOMMENT state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
+        print("************************************************************************************************")
     @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
