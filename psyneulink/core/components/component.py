@@ -1399,7 +1399,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
                      "auto", "hetero", "cost", "costs", "combined_costs",
-                     "control_signal", "intensity",
+                     "control_signal", "intensity", "competition",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "bounds", "internal_only",
