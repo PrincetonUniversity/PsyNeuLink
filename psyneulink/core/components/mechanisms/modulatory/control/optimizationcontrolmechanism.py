@@ -2688,17 +2688,19 @@ class OptimizationControlMechanism(ControlMechanism):
 
         num_agent_rep_input_ports = len(self.agent_rep_input_ports)
         for i, state_input_port in enumerate(self.state_input_ports):
+
+            if context and context.flags & ContextFlags.PREPARING:
+                # by run time, state_input_port should either have path_afferents assigned or be for a numeric spec
+                assert state_input_port.path_afferents or NUMERIC_STATE_INPUT_PORT_PREFIX in state_input_port.name, \
+                    f"PROGRAM ERROR: state_input_port instantiated for '{self.name}' ({state_input_port.name}) " \
+                    f"with a specification in '{STATE_FEATURES}' ({self.parameters.state_feature_specs.spec[i]}) " \
+                    f"that is not numeric but has not been assigned any path_afferents."
+
             if DEFERRED_STATE_INPUT_PORT_PREFIX not in state_input_port.name:
                 # state_input_port should be associated with existing agent_rep INPUT Node InputPort
                 assert i < num_agent_rep_input_ports, \
                     f"PROGRAM ERROR: state_input_port instantiated for '{self.name}' ({state_input_port.name}) " \
                     f"but there is no corresponding INPUT Node in '{AGENT_REP}'."
-                if context and context.flags & ContextFlags.PREPARING:
-                    # by run time, state_input_port should either have path_afferents assigned or be for a numeric spec
-                    assert state_input_port.path_afferents or NUMERIC_STATE_INPUT_PORT_PREFIX in state_input_port.name, \
-                        f"PROGRAM ERROR: state_input_port instantiated for '{self.name}' ({state_input_port.name}) " \
-                        f"with a specification in '{STATE_FEATURES}' ({self.parameters.state_feature_specs.spec[i]}) " \
-                        f"that is not numeric but has not been assigned any path_afferents."
                 continue
 
             if i >= num_agent_rep_input_ports:
@@ -2719,12 +2721,6 @@ class OptimizationControlMechanism(ControlMechanism):
             elif NUMERIC_STATE_INPUT_PORT_PREFIX in state_input_port.name:
                 # Numeric spec, so change name accordingly
                 new_name = _numeric_state_input_port_name(agent_rep_input_port_name)
-            elif context and context.flags & ContextFlags.PREPARING:
-                # by run time, state_input_port should either have path_afferents assigned or be for a numeric spec
-                assert False, \
-                    f"PROGRAM ERROR: state_input_port instantiated for '{self.name}' ({state_input_port.name}) " \
-                    f"with a specification in '{STATE_FEATURES}' ({self.parameters.state_feature_specs.spec[i]}) " \
-                    f"that is not numeric but has not been assigned any path_afferents."
             else:
                 # Non-numeric but path_afferents haven't yet been assigned (will get tested again at run time)
                 continue
