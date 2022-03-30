@@ -3954,11 +3954,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
-        # FIX: 12/29/21: MOVE TO _update_shadow_projections
-        # Call again to accomodate any changes from _update_shadow_projections
+        # FIX: 12/29/21 / 3/30/22: MOVE TO _update_shadow_projections
+        # Call again to accommodate any changes from _update_shadow_projections
         self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
-
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -6135,7 +6134,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
-
         Validate that all InputPorts with require_projection_in_composition == True have an afferent Projection.
         Validate that all OutputPorts with require_projection_in_composition == True have an efferent Projection.
         Validate that all Projections have senders and receivers.

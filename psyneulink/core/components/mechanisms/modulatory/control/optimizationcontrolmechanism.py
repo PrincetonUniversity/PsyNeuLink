@@ -2666,7 +2666,9 @@ class OptimizationControlMechanism(ControlMechanism):
             self.state_input_ports.extend(state_input_ports)
             self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
 
-        self._update_state_input_port_names(context)
+        # # MODIFIED 3/30/22 OLD:
+        # self._update_state_input_port_names(context)
+        # MODIFIED 3/30/22 END
 
         if context._execution_phase == ContextFlags.PREPARING:
             # Restrict validation until run time, when the Composition is expected to be fully constructed
@@ -2674,54 +2676,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _update_state_input_port_names(self, context=None):
         """Update names of state_input_port for any newly instantiated INPUT Node InputPorts
-           - For existing state_input_ports:
-             - if agent_rep INPUT PORT exists and DEFERRED is in its name:
-               - replace its name
-               if it is not numeric:
-               - assign it to _specified_INPUT_Node_InputPorts_in_order
-
-                     -  NUMERIC_SPEC, state_input_port.path_afferents = []
-                   - NO AGENT_REPS FOR WHICH AGENT
-
-        #    FIX: 3/30/22 - HANDLE CASES:
-        #         - NOT DEFERRED:
-        #           - ASSERT CORRESPONDING agent_rep INPUT Node InputPort is in Composition
-        #           - ASSERT HAS state_input_port has PATH_AFFERENTS OR for a numeric spec
-        #         - DEFFERED:
-        #           - FOR ANY MORE AGENT_REP INPUT NODE InputPorts:
-        #             - ADD AGENT REP TO _specified_INPUT_Node_InputPorts_in_order
-        #             - HAS PATH_AFFERENTS:
-        #               - GET SOURCE AND PUT IN NEW NAME
-        #             - DOES NOT HAVE PATH_AFFERENTS:
-        #               - ASSERT NUMERIC and GET NAME
-        #             - ASSIGN NEW NAME
-
+        If its instantiation has NOT been DEFERRED, assert that:
+            - corresponding agent_rep INPUT Node InputPort is in Composition
+            - state_input_port either has path_afferents or it is for a numeric spec
+        If it's instantiation HAS been DEFERRED, for any newly added agent_rep INPUT Node InputPorts:
+            - add agent_rep to _specified_INPUT_Node_InputPorts_in_order
+            - if state_input_port has path_afferents, get source and generate new name
+            - if state_input_port does not have path_afferents, assert it is for a numeric spec and generate new name
+            - assign new name
         """
 
-        # # MODIFIED 3/30/22 OLD:
-        # num_agent_rep_input_ports = len(self.agent_rep_input_ports)
-        # for i, state_input_port in enumerate(self.state_input_ports):
-        #     if i < num_agent_rep_input_ports:
-        #         self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
-        #     if i == len(self.agent_rep_input_ports):
-        #         # All state_input_ports beyond number of agent_rep_input_ports must be for deferred nodes
-        #         assert DEFERRED_STATE_INPUT_PORT_PREFIX in state_input_port.name, \
-        #             f"PROGRAM ERROR: {state_input_port.name} should have 'DEFERRED' in its name."
-        #         continue
-        #     if state_input_port.path_afferents and DEFERRED_STATE_INPUT_PORT_PREFIX in state_input_port.name:
-        #         agent_rep_input_port_name = self.agent_rep_input_ports[i].full_name
-        #         source_input_port_name = self.state_feature_specs[i].full_name
-        #         if 'INPUT FROM' in state_input_port.name:
-        #             new_name = _state_input_port_name(source_input_port_name, agent_rep_input_port_name)
-        #         elif NUMERIC_STATE_INPUT_PORT_PREFIX in state_input_port.name:
-        #             new_name = _numeric_state_input_port_name(agent_rep_input_port_name)
-        #         elif SHADOWED_INPUT_STATE_INPUT_PORT_PREFIX in state_input_port.name:
-        #             new_name = _shadowed_state_input_port_name(source_input_port_name, agent_rep_input_port_name)
-        #         state_input_port.name = rename_instance_in_registry(registry=self._portRegistry,
-        #                                                             category=INPUT_PORT,
-        #                                                             new_name= new_name,
-        #                                                         component=state_input_port)
-        # # MODIFIED 3/30/22 NEW:
         num_agent_rep_input_ports = len(self.agent_rep_input_ports)
         for i, state_input_port in enumerate(self.state_input_ports):
             if DEFERRED_STATE_INPUT_PORT_PREFIX not in state_input_port.name:
@@ -2729,7 +2693,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 assert i < num_agent_rep_input_ports, \
                     f"PROGRAM ERROR: state_input_port instantiated for '{self.name}' ({state_input_port.name}) " \
                     f"but there is no corresponding INPUT Node in '{AGENT_REP}'."
-                # FIX: 3/30/22 - DEAL WITH THE FOLLOWING ASSERTION (USING CONTEXT?)
                 if context and context.flags & ContextFlags.PREPARING:
                     # by run time, state_input_port should either have path_afferents assigned or be for a numeric spec
                     assert state_input_port.path_afferents or NUMERIC_STATE_INPUT_PORT_PREFIX in state_input_port.name, \

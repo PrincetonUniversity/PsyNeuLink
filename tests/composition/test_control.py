@@ -147,9 +147,9 @@ class TestControlSpecification:
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
     @pytest.mark.parametrize("state_features_arg", [
-        # 'list_ports',
-        'list_numeric'
-        # 'dict'
+        'list_ports',
+        'list_numeric',
+        'dict'
     ])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -189,7 +189,7 @@ class TestControlSpecification:
                      Input: Input.input_port}
         }[state_features_arg]
 
-        if state_features_arg == 'list_port':
+        if state_features_arg == 'list_ports':
             expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
                                "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
                                "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
@@ -241,14 +241,13 @@ class TestControlSpecification:
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
-        if state_features_arg == 'list_port':
+        if state_features_arg == 'list_ports':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port,
                                                       deferred_node_1: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port,
                                                             deferred_node_1: deferred_Input_input_port}
-
-        if state_features_arg == 'list_numeric':
+        elif state_features_arg == 'list_numeric':
             assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
                                                                deferred_numeric_input_port_1]
             assert comp.controller.state_features == {deferred_node_0: [1.1],
@@ -1026,7 +1025,7 @@ class TestControlMechanisms:
         ('comp_in_list_spec', pnl.SHADOW_INPUTS, messages[10], pnl.OptimizationControlMechanismError),
         ('comp_in_shadow_inupts_spec', pnl.SHADOW_INPUTS, messages[11], pnl.OptimizationControlMechanismError)
     ]
-    if len(state_feature_args) != 23:
+    if len(state_feature_args) != 27:
         print("\n\n**********************************************************************************************")
         print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
         print("***********************************************************************************************")
