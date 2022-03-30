@@ -8,6 +8,7 @@ grpcio-tools<1.43.0
 llvmlite<0.39
 matplotlib<3.5.2
 modeci_mdf>=0.3.2, <0.3.4
+modelspec<0.2.0
 networkx<2.8
 numpy<1.21.4, >=1.17.0
 pillow<9.1.0
