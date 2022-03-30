@@ -1325,8 +1325,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
         # and need to track executions
         if hasattr(self, 'ports'):
             whitelist.update({"value", "num_executions_before_finished",
-                              "num_executions", "is_finished_flag",
-                              "execution_count"})
+                              "num_executions", "is_finished_flag"})
 
         # Only mechanisms and compositions need 'num_executions'
         if hasattr(self, 'nodes'):
@@ -3120,7 +3119,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                 self._update_current_execution_time(context=context)
                 self._increment_num_executions(
                     context,
-                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]
+                    [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN, TimeScale.LIFE]
                 )
 
         value = None

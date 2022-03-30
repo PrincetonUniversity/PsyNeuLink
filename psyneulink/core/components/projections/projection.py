@@ -978,6 +978,18 @@ class Projection_Base(Projection):
     def _activate_for_all_compositions(self):
         self._activate_for_compositions(ConnectionInfo.ALL)
 
+    def _deactivate_for_compositions(self, composition):
+        try:
+            self.receiver.afferents_info[self].remove_composition(composition)
+        except KeyError:
+            warnings.warn(f'{self} was not active for {composition}')
+
+    def _deactivate_for_all_compositions(self):
+        self._deactivate_for_all_compositions(ConnectionInfo.ALL)
+
+    def is_active_in_composition(self, composition):
+        return self.receiver.afferents_info[self].is_active_in_composition(composition)
+
     def _delete_projection(projection, context=None):
         """Delete Projection, its entries in receiver and sender Ports, and in ProjectionRegistry"""
         projection.sender._remove_projection_from_port(projection)

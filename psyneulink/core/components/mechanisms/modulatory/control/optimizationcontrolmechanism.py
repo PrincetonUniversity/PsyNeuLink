@@ -1172,11 +1172,6 @@ def _state_feature_values_getter(owning_component=None, context=None):
            len(specified_INPUT_Node_InputPorts) == \
            owning_component.num_state_input_ports
 
-    # If OptimizationControlMechanism is still under construction, use items from input_values as placemarkers
-    # if context.source == ContextFlags.CONSTRUCTOR:
-    #     return {k:v for k,v in zip(specified_INPUT_Node_InputPorts,
-    #                                owning_component.input_values[owning_component.num_outcome_input_ports:])}
-
     # Construct state_feature_values dict
     state_feature_values = {}
     for i in range(owning_component.num_state_input_ports):

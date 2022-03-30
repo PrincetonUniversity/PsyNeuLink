@@ -7,6 +7,7 @@
 
 
 # ********************************************* Scheduler **************************************************************
+import copy
 import typing
 
 import graph_scheduler
@@ -47,6 +48,9 @@ class Scheduler(graph_scheduler.Scheduler, JSONDumpable):
             graph = composition.graph_processing.prune_feedback_edges()[0]
             if default_execution_id is None:
                 default_execution_id = composition.default_execution_id
+
+        # TODO: consider integrating something like this into graph-scheduler?
+        self._user_specified_conds = copy.copy(conditions)
 
         super().__init__(
             graph=graph,

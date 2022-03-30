@@ -703,12 +703,10 @@ class TestCondition:
         ]
     )
     @pytest.mark.parametrize('threshold', [10, 10.0])
+    @pytest.mark.usefixtures("comp_mode_no_llvm")
     def test_Threshold_parameters(
         self, parameter, indices, default_variable, integration_rate, expected_results, threshold, comp_mode
     ):
-        if comp_mode is pnl.ExecutionMode.LLVM:
-            pytest.skip('ExecutionMode.LLVM does not support Parameter access in conditions')
-
         A = TransferMechanism(
             default_variable=default_variable,
             integrator_mode=True,
