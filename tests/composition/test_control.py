@@ -272,12 +272,12 @@ class TestControlSpecification:
 
         if state_features_arg == 'list_numeric':
             assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_input_ports.names == ['NUMERIC INPUT FOR reward[InputPort-0]',
+                                                               'NUMERIC INPUT FOR Input[InputPort-0]']
             assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
                                                       'Input[InputPort-0]': [2.2]}
             assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
             assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
-            assert comp.controller.state_input_ports.names == ['NUMERIC INPUT FOR reward[InputPort-0]',
-                                                               'NUMERIC INPUT FOR Input[InputPort-0]']
         else:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
             assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
@@ -996,7 +996,7 @@ class TestControlMechanisms:
         f"that are missing from 'OUTER COMP' and any Compositions nested within it."
     ]
     state_feature_args = [
-        # STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
+        STATE_FEATURE_ARGS, STATE_FEATURE_DEFAULT, ERROR_OR_WARNING_MSG, EXCEPTION_TYPE
         ('single_none_spec', pnl.SHADOW_INPUTS, None, None),
         ('single_shadow_spec', pnl.SHADOW_INPUTS, None, None),
         ('single_tuple_shadow_spec', pnl.SHADOW_INPUTS, None, None),

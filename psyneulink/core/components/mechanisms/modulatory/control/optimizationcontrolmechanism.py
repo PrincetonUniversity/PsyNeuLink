@@ -2666,13 +2666,11 @@ class OptimizationControlMechanism(ControlMechanism):
             self.state_input_ports.extend(state_input_ports)
             self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
 
-        # # MODIFIED 3/30/22 OLD:
-        # self._update_state_input_port_names(context)
-        # MODIFIED 3/30/22 END
-
         if context._execution_phase == ContextFlags.PREPARING:
             # Restrict validation until run time, when the Composition is expected to be fully constructed
             self._validate_state_features(context)
+
+        self._update_state_input_port_names(context)
 
     def _update_state_input_port_names(self, context=None):
         """Update names of state_input_port for any newly instantiated INPUT Node InputPorts
@@ -2690,7 +2688,7 @@ class OptimizationControlMechanism(ControlMechanism):
         for i, state_input_port in enumerate(self.state_input_ports):
 
             if context and context.flags & ContextFlags.PREPARING:
-                # by run time, state_input_port should either have path_afferents assigned or be for a numeric spec
+                # By run time, state_input_port should either have path_afferents assigned or be for a numeric spec
                 assert state_input_port.path_afferents or NUMERIC_STATE_INPUT_PORT_PREFIX in state_input_port.name, \
                     f"PROGRAM ERROR: state_input_port instantiated for '{self.name}' ({state_input_port.name}) " \
                     f"with a specification in '{STATE_FEATURES}' ({self.parameters.state_feature_specs.spec[i]}) " \
