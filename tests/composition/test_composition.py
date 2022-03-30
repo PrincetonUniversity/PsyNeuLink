@@ -28,7 +28,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, RunError
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
@@ -2605,6 +2605,82 @@ class TestRunInputSpecifications:
         run_result = C.run(inputs={})
         assert np.allclose(T.parameters.value.get(C), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
         assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+
+    input_args = [
+        ('non_input_node',
+         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'are not INPUT Nodes of that Composition (nor InputPorts of them): \'OB\'."'
+         ),
+        ('non_input_port',
+         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'that are not a Mechanism, Composition, or an InputPort of one: \'OA[OutputPort-0]\'."'
+         ),
+        ('nested_non_input_node',
+         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'are not INPUT Nodes of that Composition (nor InputPorts of them): \'IB\'."'
+         ),
+        ('nested_non_input_port',
+        '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'that are not a Mechanism, Composition, or an InputPort of one: \'IA[OutputPort-0]\'."'
+         ),
+        ('input_port_and_mech',
+         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
+         'the following InputPorts *and* the Mechanisms to which they belong; '
+         'only one or the other can be specified as inputs to run():  OA[InputPort-0]."'
+         ),
+        ('nested_input_port_and_comp',
+         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
+         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
+         '[(\'IA[InputPort-0]\', \'Composition-0\')]."'
+         ),
+        ('nested_mech_and_comp',
+         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
+         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
+         '[(\'IA\', \'Composition-0\')]."'
+         ),
+        ('run_nested_with_inputs', None)
+    ]
+    @pytest.mark.parametrize('input_args', input_args, ids=[x[0] for x in input_args])
+    def test_inputs_key_errors(self, input_args):
+
+        condition = input_args[0]
+        expected_error_text = input_args[1]
+
+        ia = ProcessingMechanism(name='IA')
+        ib = ProcessingMechanism(name='IB')
+        oa = ProcessingMechanism(name='OA')
+        ob = ProcessingMechanism(name='OB')
+        icomp = Composition([ia, ib])
+        ocomp = Composition([oa, ob])
+        ocomp.add_node(icomp)
+
+        if condition in {'nested_non_input_node', 'nested_non_input_port'}:
+            X = ia
+            Y = ib
+        else:
+            X = oa
+            Y = ob
+
+        if 'non_input_node' in condition:
+            inputs={X:[1], Y:[1]}
+        elif 'non_input_port' in condition:
+            inputs={X.output_port:[1]}
+        elif condition == 'input_port_and_mech':
+            inputs={X.input_port:[1], X:[1]}
+        elif condition == 'nested_input_port_and_comp':
+            inputs={ia.input_port:[1], icomp:[1]}
+        elif condition == 'nested_mech_and_comp':
+            inputs={ia:[1], icomp:[1]}
+        elif condition == 'run_nested':
+            inputs={ia:[1]}
+
+        if expected_error_text:
+            with pytest.raises(RunError) as error_text:
+                ocomp.run(inputs=inputs)
+            assert expected_error_text in str(error_text.value)
+        else:
+            ocomp._analyze_graph()
+            icomp.run(inputs={ia:[1]})
 
     def test_some_inputs_not_specified(self):
         comp = Composition()
