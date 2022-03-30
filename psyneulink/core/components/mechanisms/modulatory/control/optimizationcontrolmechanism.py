@@ -3397,19 +3397,19 @@ class OptimizationControlMechanism(ControlMechanism):
         param_is_zero = builder.icmp_unsigned("==", num_trials_per_estimate,
                                                     ctx.int32_ty(0))
         num_sims = builder.select(param_is_zero, ctx.int32_ty(1),
-                                  num_trials_per_estimate, "corrected_estimates")
+                                  num_trials_per_estimate, "corrected_trials per_estimate")
 
-        num_runs = builder.alloca(ctx.int32_ty, name="num_runs")
-        builder.store(num_sims, num_runs)
+        num_trials = builder.alloca(ctx.int32_ty, name="num_sim_trials")
+        builder.store(num_sims, num_trials)
 
         # We only provide one input
-        num_inputs = builder.alloca(ctx.int32_ty, name="num_inputs")
+        num_inputs = builder.alloca(ctx.int32_ty, name="num_sim_inputs")
         builder.store(num_inputs.type.pointee(1), num_inputs)
 
         # Simulations don't store output
         comp_output = sim_f.args[4].type(None)
         builder.call(sim_f, [comp_state, comp_params, comp_data, comp_input,
-                             comp_output, num_runs, num_inputs])
+                             comp_output, num_trials, num_inputs])
 
         # Extract objective mechanism value
         idx = self.agent_rep._get_node_index(self.objective_mechanism)
