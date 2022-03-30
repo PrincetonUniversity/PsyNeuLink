@@ -146,7 +146,11 @@ class TestControlSpecification:
 
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
-    @pytest.mark.parametrize("state_features_arg", ['list','dict'])
+    @pytest.mark.parametrize("state_features_arg", [
+        # 'list_ports',
+        'list_numeric'
+        # 'dict'
+    ])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
@@ -179,20 +183,29 @@ class TestControlSpecification:
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
         state_features = {
-            'list': [reward.input_port, Input.input_port],
+            'list_ports': [reward.input_port, Input.input_port],
+            'list_numeric': [[1.1],[2.2]],
             'dict': {reward: reward.input_port,
                      Input: Input.input_port}
         }[state_features_arg]
 
-        if state_features_arg == 'list':
+        if state_features_arg == 'list_port':
             expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
                                "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
                                "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
                                "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
                                "agent_rep of a controller before specifying its 'state_features'."
-        else:
+        elif state_features_arg == 'list_numeric':
+            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
+                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+                               "agent_rep of a controller before specifying its 'state_features'."
+        elif state_features_arg == 'dict':
             expected_warning = "that are not in its agent_rep ('evc'). Executing 'evc' before they " \
                                "are added will generate an error ."
+        else:
+            assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
         with pytest.warns(UserWarning) as warning:
             # add the controller to the Composition before adding the relevant Mechanisms
@@ -219,26 +232,37 @@ class TestControlSpecification:
         deferred_node_1 = _deferred_agent_rep_input_port_name('1','evc')
         deferred_shadowed_0 = _shadowed_state_input_port_name('reward[InputPort-0]' , deferred_node_0)
         deferred_shadowed_1 = _shadowed_state_input_port_name('Input[InputPort-0]' , deferred_node_1)
+        deferred_numeric_input_port_0 = _numeric_state_input_port_name(deferred_node_0)
+        deferred_numeric_input_port_1 = _numeric_state_input_port_name(deferred_node_1)
         deferred_reward_node = _deferred_agent_rep_input_port_name('reward[InputPort-0]','evc')
         deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]','evc')
         shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]' ,'reward[InputPort-0]')
         shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]' ,'Input[InputPort-0]')
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
-        assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
 
-        if state_features_arg == 'list':
+        if state_features_arg == 'list_port':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port,
                                                       deferred_node_1: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port,
                                                             deferred_node_1: deferred_Input_input_port}
+
+        if state_features_arg == 'list_numeric':
+            assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
+                                                               deferred_numeric_input_port_1]
+            assert comp.controller.state_features == {deferred_node_0: [1.1],
+                                                      deferred_node_1: [2.2]}
+            assert np.allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
+            assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
         elif state_features_arg == 'dict':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port,
                                                       deferred_Input_node: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_reward_node: deferred_reward_input_port,
                                                             deferred_Input_node: deferred_Input_input_port}
         else:
-            assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
+            assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -246,11 +270,21 @@ class TestControlSpecification:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.enable_controller = True
-        assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
-                                                  'Input[InputPort-0]': 'Input[InputPort-0]'}
-        assert comp.controller.state_feature_values == {reward.input_port: [0.], Input.input_port: [0.]}
-        assert all(p.path_afferents for p in comp.controller.state_input_ports)
-        assert comp.controller.state_input_ports.names == [shadowed_reward_node, shadowed_Input_node]
+
+        if state_features_arg == 'list_numeric':
+            assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
+                                                      'Input[InputPort-0]': [2.2]}
+            assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
+            assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
+            assert comp.controller.state_input_ports.names == ['NUMERIC INPUT FOR reward[InputPort-0]',
+                                                               'NUMERIC INPUT FOR Input[InputPort-0]']
+        else:
+            assert all(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
+                                                      'Input[InputPort-0]': 'Input[InputPort-0]'}
+            assert comp.controller.state_feature_values == {reward.input_port: [0.], Input.input_port: [0.]}
+            assert comp.controller.state_input_ports.names == [shadowed_reward_node, shadowed_Input_node]
 
         # comp._analyze_graph()
 
