@@ -1399,7 +1399,7 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "allocation_samples", "control_allocation_search_space",
                      # not used in computation
                      "auto", "hetero", "cost", "costs", "combined_costs",
-                     "control_signal", "intensity",
+                     "control_signal", "intensity", "competition",
                      "has_recurrent_input_port", "enable_learning",
                      "enable_output_type_conversion", "changes_shape",
                      "output_type", "bounds", "internal_only",
@@ -1409,7 +1409,8 @@ class Component(JSONDumpable, metaclass=ComponentsMeta):
                      "adjustment_cost", "intensity_cost", "duration_cost",
                      "enabled_cost_functions", "control_signal_costs",
                      "default_allocation", "same_seed_for_all_allocations",
-                     "search_statefulness", "initial_seed", "combine"
+                     "search_statefulness", "initial_seed", "combine",
+                     "smoothing_factor",
                      }
         # Mechanism's need few extra entires:
         # * matrix -- is never used directly, and is flatened below
