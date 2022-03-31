@@ -148,6 +148,7 @@ class TestControlSpecification:
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
     @pytest.mark.parametrize("state_features_arg", [
         'list_ports',
+        'list_none',
         'list_numeric',
         'dict'
     ])
@@ -185,6 +186,7 @@ class TestControlSpecification:
         state_features = {
             'list_ports': [reward.input_port, Input.input_port],
             'list_numeric': [[1.1],[2.2]],
+            'list_none': [None, None],
             'dict': {reward: reward.input_port,
                      Input: Input.input_port}
         }[state_features_arg]
@@ -196,6 +198,12 @@ class TestControlSpecification:
                                "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
                                "agent_rep of a controller before specifying its 'state_features'."
         elif state_features_arg == 'list_numeric':
+            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
+                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+                               "agent_rep of a controller before specifying its 'state_features'."
+        elif state_features_arg == 'list_none':
             expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
                                "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
                                "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
@@ -238,6 +246,8 @@ class TestControlSpecification:
         deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]','evc')
         shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]' ,'reward[InputPort-0]')
         shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]' ,'Input[InputPort-0]')
+        numeric_reward_node = _numeric_state_input_port_name('reward[InputPort-0]')
+        numeric_Input_node = _numeric_state_input_port_name('Input[InputPort-0]')
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
@@ -250,10 +260,13 @@ class TestControlSpecification:
         elif state_features_arg == 'list_numeric':
             assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
                                                                deferred_numeric_input_port_1]
-            assert comp.controller.state_features == {deferred_node_0: [1.1],
-                                                      deferred_node_1: [2.2]}
+            assert comp.controller.state_features == {deferred_node_0: [1.1], deferred_node_1: [2.2]}
             assert np.allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
             assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
+        elif state_features_arg == 'list_none':
+            assert comp.controller.state_input_ports.names == []
+            assert comp.controller.state_features == {deferred_node_0: None, deferred_node_1: None}
+            assert comp.controller.state_feature_values == {}
         elif state_features_arg == 'dict':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port,
@@ -272,17 +285,22 @@ class TestControlSpecification:
 
         if state_features_arg == 'list_numeric':
             assert not any(p.path_afferents for p in comp.controller.state_input_ports)
-            assert comp.controller.state_input_ports.names == ['NUMERIC INPUT FOR reward[InputPort-0]',
-                                                               'NUMERIC INPUT FOR Input[InputPort-0]']
+            assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
             assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
                                                       'Input[InputPort-0]': [2.2]}
             assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
             assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
+        elif state_features_arg == 'list_none':
+            assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': None,
+                                                      'Input[InputPort-0]': None}
+            assert comp.controller.state_feature_values == {}
+            assert comp.controller.state_input_ports.names == []
         else:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
             assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
                                                       'Input[InputPort-0]': 'Input[InputPort-0]'}
-            assert comp.controller.state_feature_values == {reward.input_port: [0.], Input.input_port: [0.]}
+            assert comp.controller.state_feature_values == {reward.input_port: [0], Input.input_port: [0]}
             assert comp.controller.state_input_ports.names == [shadowed_reward_node, shadowed_Input_node]
 
         # comp._analyze_graph()
@@ -329,6 +347,40 @@ class TestControlSpecification:
                 [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
                 [[1.1], [1.1], [0.], [0.90454543], [0.99999998]]]
 
+        elif state_features_arg == 'list_none':
+            expected_sim_results_array = [
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]]]
         else:
             # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
             expected_sim_results_array = [
@@ -363,8 +415,7 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
                 [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
                 [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
-                [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
-            ]
+                [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
         
         for simulation in range(len(expected_sim_results_array)):
             assert np.allclose(expected_sim_results_array[simulation],

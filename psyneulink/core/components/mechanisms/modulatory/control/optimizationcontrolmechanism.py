@@ -2318,7 +2318,9 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
+                # MODIFIED 3/30/22 OLD:
                 self._specified_INPUT_Node_InputPorts_in_order.append(agent_rep_input_port)
+                # MODIFIED 3/30/22 END
                 state_input_port_names.append(state_input_port_name)
 
             if not any(self._state_feature_functions):
@@ -2611,17 +2613,11 @@ class OptimizationControlMechanism(ControlMechanism):
         from psyneulink.core.compositions.composition import Composition
         num_agent_rep_input_ports = len(self.agent_rep_input_ports)
         num_state_feature_specs = len(self.state_feature_specs)
-        # if self.num_state_input_ports != num_agent_rep_input_ports:
+
         if num_state_feature_specs < num_agent_rep_input_ports:
             # agent_rep is Composition, but state_input_ports are missing for some agent_rep INPUT Node InputPorts
             #   so construct a state_input_port for each missing one, using state_feature_default;
             #   note: assumes INPUT Nodes added are at the end of the list in self.agent_rep_input_ports
-            # FIX: 3/24/22 - HANDLED ELSEWHWERE WITH ERROR MESSAGE (SHOULD FIGURE OUT WHERE)
-            # if context.flags & ContextFlags.PREPARING:
-            #     # At run time, insure that there not *more* state_input_ports than agent_rep INPUT Node InputPorts
-            #     assert self.num_state_input_ports < len(self.agent_rep_input_ports), \
-            #         f"PROGRAM ERROR: More state_input_ports assigned to '{self.name}' ({self.num_state_input_ports}) " \
-            #         f"than agent_rep ('{self.agent_rep.name}') has INPUT Node InputPorts ({num_agent_rep_input_ports})."
             # FIX: 3/24/22 - REFACTOR THIS TO CALL _parse_state_feature_specs?
             state_input_ports = []
             local_context = Context(source=ContextFlags.METHOD)
@@ -2664,7 +2660,13 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
-            self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
+        # FIX: 3/30/22 - MOVE OUT OF IF TO HANDLE CASE IN WHICH _specified_INPUT_Node_InputPorts_in_order HAD None's
+        # # MODIFIED 3/30/22 OLD:
+        #     self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
+        # # MODIFIED 3/30/22 NEW:
+        for i in range(num_agent_rep_input_ports):
+            self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
+        # MODIFIED 3/30/22 END
 
         if context._execution_phase == ContextFlags.PREPARING:
             # Restrict validation until run time, when the Composition is expected to be fully constructed
@@ -2706,7 +2708,9 @@ class OptimizationControlMechanism(ControlMechanism):
                 break
 
             # Add new agent_rep INPUT Node InputPorts
+            # MODIFIED 3/30/22 OLD:
             self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
+            # MODIFIED 3/30/22 END
             agent_rep_input_port_name = self.agent_rep_input_ports[i].full_name
 
             if state_input_port.path_afferents:
@@ -2728,6 +2732,10 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                 category=INPUT_PORT,
                                                                 new_name= new_name,
                                                             component=state_input_port)
+        # # MODIFIED 3/30/22 NEW:
+        # self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
+        # MODIFIED 3/30/22 END
+
 
     def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
@@ -3558,6 +3566,11 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Specified InputPort belongs to an INPUT Node already in agent_rep, so use as key
                 key = input_port.full_name
             else:
+                # FIX: 3/30/22 - SHOULD HAVE ASSIGNED agent_rep INPUT Node InputPort to
+                #                 _specified_INPUT_Node_InputPorts_in_order SOMEWHERE EARLIER;
+                #                 OTHERWISE:
+                #                IF i < len(agent_rep_input_ports) and spec is None,
+                #                USE agent_rep_input_ports[i].name as input_port_name
                 # Specified InputPort is not (yet) in agent_rep
                 input_port_name = (f"{input_port.full_name}" if input_port
                                    else f"{str(i-len(agent_rep_input_ports))}")
