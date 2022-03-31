@@ -2318,9 +2318,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
                 parsed_feature_specs.append(spec)
                 self._state_feature_functions.append(state_feature_fct)
-                # MODIFIED 3/30/22 OLD:
                 self._specified_INPUT_Node_InputPorts_in_order.append(agent_rep_input_port)
-                # MODIFIED 3/30/22 END
                 state_input_port_names.append(state_input_port_name)
 
             if not any(self._state_feature_functions):
@@ -2660,13 +2658,11 @@ class OptimizationControlMechanism(ControlMechanism):
 
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
-        # FIX: 3/30/22 - MOVE OUT OF IF TO HANDLE CASE IN WHICH _specified_INPUT_Node_InputPorts_in_order HAD None's
-        # # MODIFIED 3/30/22 OLD:
-        #     self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
-        # # MODIFIED 3/30/22 NEW:
+
+        # Update _specified_INPUT_Node_InputPorts_in_order with any agent_rep_input_ports that have been added to comp
+        #   (including case in which they were specified as None in state_feature_specs)
         for i in range(num_agent_rep_input_ports):
             self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
-        # MODIFIED 3/30/22 END
 
         if context._execution_phase == ContextFlags.PREPARING:
             # Restrict validation until run time, when the Composition is expected to be fully constructed
@@ -2708,9 +2704,7 @@ class OptimizationControlMechanism(ControlMechanism):
                 break
 
             # Add new agent_rep INPUT Node InputPorts
-            # MODIFIED 3/30/22 OLD:
             self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
-            # MODIFIED 3/30/22 END
             agent_rep_input_port_name = self.agent_rep_input_ports[i].full_name
 
             if state_input_port.path_afferents:
@@ -2732,10 +2726,6 @@ class OptimizationControlMechanism(ControlMechanism):
                                                                 category=INPUT_PORT,
                                                                 new_name= new_name,
                                                             component=state_input_port)
-        # # MODIFIED 3/30/22 NEW:
-        # self._specified_INPUT_Node_InputPorts_in_order = self.agent_rep_input_ports
-        # MODIFIED 3/30/22 END
-
 
     def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
@@ -3566,11 +3556,6 @@ class OptimizationControlMechanism(ControlMechanism):
                 # Specified InputPort belongs to an INPUT Node already in agent_rep, so use as key
                 key = input_port.full_name
             else:
-                # FIX: 3/30/22 - SHOULD HAVE ASSIGNED agent_rep INPUT Node InputPort to
-                #                 _specified_INPUT_Node_InputPorts_in_order SOMEWHERE EARLIER;
-                #                 OTHERWISE:
-                #                IF i < len(agent_rep_input_ports) and spec is None,
-                #                USE agent_rep_input_ports[i].name as input_port_name
                 # Specified InputPort is not (yet) in agent_rep
                 input_port_name = (f"{input_port.full_name}" if input_port
                                    else f"{str(i-len(agent_rep_input_ports))}")
