@@ -2590,10 +2590,12 @@ class OptimizationControlMechanism(ControlMechanism):
             (note: validation of state_features specified for CompositionFunctionApproximator optimization
             is up to the CompositionFunctionApproximator)
 
-        If agent_rep is a Composition, call:
-           - _update_state_input_port_names()
-           - _update_state_features_dict()
-           - _validate_state_features()
+        If agent_rep is a Composition:
+           - if  has any new INPUT Node InputPorts:
+               - construct state_input_ports for them
+               - add to _specified_INPUT_Node_InputPorts_in_order
+           - call _validate_state_features()
+           - call _update_state_input_port_names()
         """
 
         # Don't instantiate unless being called by Composition.run()
@@ -2672,13 +2674,16 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _update_state_input_port_names(self, context=None):
         """Update names of state_input_port for any newly instantiated INPUT Node InputPorts
+
         If its instantiation has NOT been DEFERRED, assert that:
             - corresponding agent_rep INPUT Node InputPort is in Composition
             - state_input_port either has path_afferents or it is for a numeric spec
+
         If it's instantiation HAS been DEFERRED, for any newly added agent_rep INPUT Node InputPorts:
-            - add agent_rep to _specified_INPUT_Node_InputPorts_in_order
-            - if state_input_port has path_afferents, get source and generate new name
-            - if state_input_port does not have path_afferents, assert it is for a numeric spec and generate new name
+            - add agent_rep INPUT Node InputPort to _specified_INPUT_Node_InputPorts_in_order
+            - if state_input_port:
+                - HAS path_afferents, get source and generate new name
+                - does NOT have path_afferents, assert it is for a numeric spec and generate new name
             - assign new name
         """
 
@@ -2725,7 +2730,7 @@ class OptimizationControlMechanism(ControlMechanism):
             state_input_port.name = rename_instance_in_registry(registry=self._portRegistry,
                                                                 category=INPUT_PORT,
                                                                 new_name= new_name,
-                                                            component=state_input_port)
+                                                                component=state_input_port)
 
     def _validate_state_features(self, context):
         """Validate that state_features are legal and consistent with agent_rep.
@@ -2876,6 +2881,7 @@ class OptimizationControlMechanism(ControlMechanism):
 
     def _instantiate_control_signals(self, context):
         """Size control_allocation and assign modulatory_signals
+
         Set size of control_allocation equal to number of modulatory_signals.
         Assign each modulatory_signal sequentially to corresponding item of control_allocation.
         Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables
@@ -3540,7 +3546,6 @@ class OptimizationControlMechanism(ControlMechanism):
             (it should be resolved by runtime, or an error is generated).
         """
 
-        # self._update_state_features_dict()
         self._update_state_input_port_names()
 
         agent_rep_input_ports = self.agent_rep.external_input_ports_of_all_input_nodes
