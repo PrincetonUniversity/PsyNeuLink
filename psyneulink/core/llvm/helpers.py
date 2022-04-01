@@ -717,6 +717,13 @@ class ConditionGenerator:
             comparator = condition.comparator
             indices = condition.indices
 
+            # Convert execution_count to  ('num_executions', TimeScale.LIFE).
+            # These two are identical in compiled semantics.
+            if param == 'execution_count':
+                assert indices is None
+                param = 'num_executions'
+                indices = TimeScale.LIFE
+
             assert param in target.llvm_state_ids, (
                 f"Threshold for {target} only supports items in llvm_state_ids"
                 f" ({target.llvm_state_ids})"

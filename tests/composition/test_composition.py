@@ -1,3 +1,4 @@
+import collections
 import functools
 import logging
 from timeit import timeit
@@ -18,6 +19,7 @@ from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism i
 from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
     OptimizationControlMechanism
 from psyneulink.core.components.mechanisms.modulatory.learning.learningmechanism import LearningMechanism
+from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.integratormechanism import IntegratorMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.mechanisms.processing.processingmechanism import ProcessingMechanism
@@ -26,7 +28,7 @@ from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.modulatorysignals.controlsignal import ControlSignal, CostFunctions
 from psyneulink.core.components.projections.modulatory.controlprojection import ControlProjection
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection
-from psyneulink.core.compositions.composition import Composition, CompositionError, NodeRole
+from psyneulink.core.compositions.composition import Composition, NodeRole, CompositionError, RunError
 from psyneulink.core.compositions.pathway import Pathway, PathwayRole
 from psyneulink.core.globals.context import Context
 from psyneulink.core.globals.keywords import \
@@ -2603,6 +2605,82 @@ class TestRunInputSpecifications:
         run_result = C.run(inputs={})
         assert np.allclose(T.parameters.value.get(C), [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]])
         assert np.allclose(run_result, [[np.array([2.0, 4.0])]])
+
+    input_args = [
+        ('non_input_node',
+         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'are not INPUT Nodes of that Composition (nor InputPorts of them): \'OB\'."'
+         ),
+        ('non_input_port',
+         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'that are not a Mechanism, Composition, or an InputPort of one: \'OA[OutputPort-0]\'."'
+         ),
+        ('nested_non_input_node',
+         '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'are not INPUT Nodes of that Composition (nor InputPorts of them): \'IB\'."'
+         ),
+        ('nested_non_input_port',
+        '"The following items specified in the \'inputs\' arg of the run() method for \'Composition-1\' '
+         'that are not a Mechanism, Composition, or an InputPort of one: \'IA[OutputPort-0]\'."'
+         ),
+        ('input_port_and_mech',
+         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
+         'the following InputPorts *and* the Mechanisms to which they belong; '
+         'only one or the other can be specified as inputs to run():  OA[InputPort-0]."'
+         ),
+        ('nested_input_port_and_comp',
+         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
+         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
+         '[(\'IA[InputPort-0]\', \'Composition-0\')]."'
+         ),
+        ('nested_mech_and_comp',
+         '"The \'inputs\' arg of the run() method for \'Composition-1\' includes specifications of '
+         'the following InputPorts or Mechanisms *and* the Composition within which they are nested: '
+         '[(\'IA\', \'Composition-0\')]."'
+         ),
+        ('run_nested_with_inputs', None)
+    ]
+    @pytest.mark.parametrize('input_args', input_args, ids=[x[0] for x in input_args])
+    def test_inputs_key_errors(self, input_args):
+
+        condition = input_args[0]
+        expected_error_text = input_args[1]
+
+        ia = ProcessingMechanism(name='IA')
+        ib = ProcessingMechanism(name='IB')
+        oa = ProcessingMechanism(name='OA')
+        ob = ProcessingMechanism(name='OB')
+        icomp = Composition([ia, ib])
+        ocomp = Composition([oa, ob])
+        ocomp.add_node(icomp)
+
+        if condition in {'nested_non_input_node', 'nested_non_input_port'}:
+            X = ia
+            Y = ib
+        else:
+            X = oa
+            Y = ob
+
+        if 'non_input_node' in condition:
+            inputs={X:[1], Y:[1]}
+        elif 'non_input_port' in condition:
+            inputs={X.output_port:[1]}
+        elif condition == 'input_port_and_mech':
+            inputs={X.input_port:[1], X:[1]}
+        elif condition == 'nested_input_port_and_comp':
+            inputs={ia.input_port:[1], icomp:[1]}
+        elif condition == 'nested_mech_and_comp':
+            inputs={ia:[1], icomp:[1]}
+        elif condition == 'run_nested':
+            inputs={ia:[1]}
+
+        if expected_error_text:
+            with pytest.raises(RunError) as error_text:
+                ocomp.run(inputs=inputs)
+            assert expected_error_text in str(error_text.value)
+        else:
+            ocomp._analyze_graph()
+            icomp.run(inputs={ia:[1]})
 
     def test_some_inputs_not_specified(self):
         comp = Composition()
@@ -7166,6 +7244,147 @@ class TestMisc:
         ])
         comp.add_node(Reward)
         # no assert, should only complete without error
+
+    @pytest.mark.parametrize(
+        'removed_nodes, expected_dependencies',
+        [
+            (['A'], {'B': set(), 'C': set('B'), 'D': set('C'), 'E': set('C')}),
+            (['C'], {'A': set(), 'B': set(), 'D': set(), 'E': set()}),
+            (['E'], {'A': set(), 'B': set(), 'C': {'A', 'B'}, 'D': set('C')}),
+            (['A', 'B'], {'C': set(), 'D': set('C'), 'E': set('C')}),
+            (['D', 'E'], {'A': set(), 'B': set(), 'C': {'A', 'B'}}),
+            (['A', 'B', 'C', 'D', 'E'], {}),
+        ]
+    )
+    def test_remove_node(self, removed_nodes, expected_dependencies):
+        def stringify_dependency_dict(dd):
+            return {node.name: {n.name for n in deps} for node, deps in dd.items()}
+
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+        D = pnl.TransferMechanism(name='D')
+        E = pnl.TransferMechanism(name='E')
+
+        locs = locals()
+        removed_nodes = [locs[n] for n in removed_nodes]
+
+        comp = pnl.Composition(
+            pathways=[
+                [A, C, D],
+                [A, C, D],
+                [B, C, D],
+                [B, C, E],
+            ]
+        )
+
+        comp.remove_nodes(removed_nodes)
+
+        assert stringify_dependency_dict(comp.scheduler.dependency_dict) == expected_dependencies
+        assert stringify_dependency_dict(comp.graph_processing.dependency_dict) == expected_dependencies
+
+        proj_dependencies = collections.defaultdict(set)
+        for node in comp.nodes:
+            if node not in removed_nodes:
+                for proj in node.afferents:
+                    if (
+                        proj.sender.owner not in removed_nodes
+                        and proj.receiver.owner not in removed_nodes
+                        and not isinstance(proj.sender.owner, CompositionInterfaceMechanism)
+                        and not isinstance(proj.receiver.owner, CompositionInterfaceMechanism)
+                    ):
+                        proj_dependencies[node.name].add(proj.name)
+                        proj_dependencies[proj.name].add(proj.sender.owner.name)
+        assert stringify_dependency_dict(comp.graph.dependency_dict) == {**expected_dependencies, **proj_dependencies}
+
+        for node in removed_nodes:
+            assert node not in comp.nodes
+            assert node not in comp.nodes_to_roles
+            assert node not in comp.graph.comp_to_vertex
+            assert node not in comp.graph_processing.comp_to_vertex
+            assert node not in comp.scheduler.conditions
+
+            for proj in node.afferents + node.efferents:
+                assert proj not in comp.projections
+                assert not proj.is_active_in_composition(comp)
+
+        comp.run(inputs={n: [0] for n in comp.get_nodes_by_role(pnl.NodeRole.INPUT)})
+
+    @pytest.mark.parametrize('slope_A', [1, (1, pnl.CONTROL)])
+    @pytest.mark.parametrize('slope_B', [1, (1, pnl.CONTROL)])
+    @pytest.mark.parametrize('removed_nodes', [['A'], ['B'], ['A', 'B']])
+    def test_remove_node_control(self, slope_A, slope_B, removed_nodes):
+        A = pnl.TransferMechanism(name='A', function=pnl.Linear(slope=slope_A))
+        B = pnl.TransferMechanism(name='B', function=pnl.Linear(slope=slope_B))
+
+        locs = locals()
+        removed_nodes = [locs[n] for n in removed_nodes]
+
+        search_space_len = sum(1 if isinstance(s, tuple) else 0 for s in [slope_A, slope_B])
+
+        comp = pnl.Composition(pathways=[A, B])
+        comp.add_controller(
+            pnl.OptimizationControlMechanism(
+                agent_rep=comp, search_space=[0, 1] * search_space_len
+            )
+        )
+        comp.remove_nodes(removed_nodes)
+
+        for n in removed_nodes:
+            for proj in n.parameter_ports['slope'].all_afferents:
+                assert not proj.is_active_in_composition(comp), f'{n.name} {proj.name}'
+
+    def test_remove_node_from_conditions(self):
+        def assert_conditions_do_not_contain(*args):
+            conds_queue = list(comp.scheduler.conditions.conditions.values())
+            while len(conds_queue) > 0:
+                cur_cond = conds_queue.pop()
+                deps = []
+
+                try:
+                    deps = [cur_cond.dependency]
+                except AttributeError:
+                    try:
+                        deps = cur_cond.dependencies
+                    except AttributeError:
+                        pass
+
+                for d in deps:
+                    if isinstance(d, pnl.Condition):
+                        conds_queue.append(d)
+                    assert d not in args
+
+        A = pnl.TransferMechanism(name='A')
+        B = pnl.TransferMechanism(name='B')
+        C = pnl.TransferMechanism(name='C')
+        D = pnl.TransferMechanism(name='D')
+
+        comp = pnl.Composition(pathways=[[A, D], [B, D], [C, D]])
+
+        comp.run(inputs={A: [0], B: [0], C: [0]})
+        comp.remove_node(A)
+        comp.run(inputs={B: [0], C: [0]})
+        assert_conditions_do_not_contain(A)
+
+        comp.remove_node(B)
+        comp.run(inputs={C: [0]})
+        assert_conditions_do_not_contain(A, B)
+
+    def test_remove_node_learning(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        D = ProcessingMechanism(name='D')
+
+        comp = Composition()
+        comp.add_linear_learning_pathway(pathway=[A, B], learning_function=BackPropagation)
+        comp.add_linear_learning_pathway(pathway=[C, D], learning_function=Reinforcement)
+
+        comp.remove_node(A)
+        comp.learn(inputs={n: [0] for n in comp.get_nodes_by_role(pnl.NodeRole.INPUT)})
+
+        comp.remove_node(D)
+        comp.learn(inputs={n: [0] for n in comp.get_nodes_by_role(pnl.NodeRole.INPUT)})
 
 
 class TestInputSpecsDocumentationExamples:

@@ -2406,11 +2406,10 @@ class Mechanism_Base(Mechanism):
         """
 
         if self.initialization_status == ContextFlags.INITIALIZED:
-            context.string = "{} EXECUTING {}: {}".format(context.source.name,self.name,
-                                                               ContextFlags._get_context_string(
-                                                                       context.flags, EXECUTION_PHASE))
+            context.string = f"{context.source.name} EXECUTING {self.name}: " \
+                             f"{ContextFlags._get_context_string(context.flags, EXECUTION_PHASE)}."
         else:
-            context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
+            context.string = f"{context.source.name} INITIALIZING {self.name}."
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
@@ -2918,7 +2917,7 @@ class Mechanism_Base(Mechanism):
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     array_2d = pnlvm.ir.ArrayType(array_1d, 1)
                     assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
-                        "{} vs.{}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                        "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
                     p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
             else:
@@ -3021,16 +3020,40 @@ class Mechanism_Base(Mechanism):
         if port_spec == OWNER_VALUE:
             return value
         elif port_spec == OWNER_EXECUTION_COUNT:
-            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, EXECUTION_COUNT)
-            return execution_count
-        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
+            # Convert execution count to (num_executions, TimeScale.LIFE)
+            # The difference in Python PNL is that the former counts across
+            # all contexts. This is not possible in compiled code, thus
+            # the two are identical.
+            port_spec = ("num_executions", TimeScale.LIFE)
 
-            assert index < len(value.type.pointee)
-            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
+        try:
+            name = port_spec[0]
+            ids = (x() if callable(x) else getattr(x, 'value', x) for x in port_spec[1:])
+        except TypeError as e:
+            # TypeError means we can't index.
+            # Convert this to assertion failure below
+            pass
         else:
             #TODO: support more spec options
-            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            if name == OWNER_VALUE:
+                data = value
+            elif name in self.llvm_state_ids:
+                data = pnlvm.helpers.get_state_ptr(builder, self, mech_state, name)
+            else:
+                data = None
+
+            if data is not None:
+                parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+                # "num_executions" are kept as int64, we need to convert the value to float first
+                if name == "num_executions":
+                    count = builder.load(parsed)
+                    count_fp = builder.uitofp(count, ctx.float_ty)
+                    parsed = builder.alloca(count_fp.type)
+                    builder.store(count_fp, parsed)
+
+                return parsed
+
+        assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
@@ -3082,21 +3105,17 @@ class Mechanism_Base(Mechanism):
                                                             m_params, m_state, arg_in,
                                                             ip_output, tags=tags)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
 
-        # Update internal clock (i.e. num_executions parameter)
+        # Update  num_executions parameter
         num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+        for scale in TimeScale:
+            assert scale.value < len(num_executions_ptr.type.pointee)
+            num_exec_time_ptr = builder.gep(num_executions_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(scale.value)],
+                                            name="num_executions_{}_ptr".format(scale))
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
-
-        builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
         val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
         if val_ptr.type.pointee == value.type.pointee:
@@ -3104,6 +3123,9 @@ class Mechanism_Base(Mechanism):
         else:
             # FIXME: Does this need some sort of parsing?
             warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
+
+        # Run output ports after updating the mech state (num_executions and value)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
 
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
@@ -3442,7 +3464,7 @@ class Mechanism_Base(Mechanism):
                     if use_label and not isinstance(port, ParameterPort):
                         value = f'<br/>={port.labeled_value}'
                     else:
-                        value = f'<br/>={port.labeled_value}'
+                        value = f'<br/>={port.value}'
                 return f'<td port="{self._get_port_name(port)}"><b>{port.name}</b>{function}{value}</td>'
 
 
