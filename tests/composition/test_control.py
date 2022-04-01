@@ -416,7 +416,7 @@ class TestControlSpecification:
                 [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
                 [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
                 [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
-        
+
         for simulation in range(len(expected_sim_results_array)):
             assert np.allclose(expected_sim_results_array[simulation],
                                # Note: Skip decision variable OutputPort

@@ -2661,6 +2661,10 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
 
+        # IMPLEMENTATION NOTE: Can't just assign agent_rep_input_ports to _specified_INPUT_Node_InputPorts_in_order
+        #                      below since there may be specifications in _specified_INPUT_Node_InputPorts_in_order
+        #                      for agent_rep INPUT Node InputPorts that have not yet been added to Composition
+        #                      (i.e., they are deferred)
         # Update _specified_INPUT_Node_InputPorts_in_order with any new agent_rep_input_ports
         for i in range(num_agent_rep_input_ports):
             if i < len(self._specified_INPUT_Node_InputPorts_in_order):
