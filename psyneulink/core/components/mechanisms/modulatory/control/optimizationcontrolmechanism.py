@@ -1097,7 +1097,7 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, \
-    PROJECTIONS, SHADOW_INPUTS, SHADOW_INPUT_NAME, VALUE
+    PROJECTIONS, SHADOW_INPUTS, VALUE
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
@@ -2631,7 +2631,7 @@ class OptimizationControlMechanism(ControlMechanism):
                     continue
                 if default == SHADOW_INPUTS:
                     params[SHADOW_INPUTS] = input_port
-                    input_port_name = f"{SHADOW_INPUT_NAME}{input_port.full_name}]"
+                    input_port_name = _shadowed_state_input_port_name(input_port.full_name, input_port.full_name)
                     self.state_feature_specs.append(input_port)
                 elif is_numeric(default):
                     params[VALUE]: default

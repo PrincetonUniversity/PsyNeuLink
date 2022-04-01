@@ -147,10 +147,12 @@ class TestControlSpecification:
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
     @pytest.mark.parametrize("state_features_arg", [
-        'list_ports',
+        'none',
+        'default_none',
         'list_none',
+        'list_ports',
         'list_numeric',
-        'dict'
+        'dict',
     ])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -184,31 +186,39 @@ class TestControlSpecification:
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
         state_features = {
+            'none' : None,
+            'default_none' : 'DEFAULT NONE',
+            'list_none': [None, None],
             'list_ports': [reward.input_port, Input.input_port],
             'list_numeric': [[1.1],[2.2]],
-            'list_none': [None, None],
             'dict': {reward: reward.input_port,
                      Input: Input.input_port}
         }[state_features_arg]
 
-        if state_features_arg == 'list_ports':
+        if state_features == 'DEFAULT NONE':
+            state_feature_default = None
+        else:
+            state_feature_default = pnl.SHADOW_INPUTS
+
+        # if state_features_arg == 'list_ports':
+        if state_features_arg in {'none', 'default_none',  'list_none', 'list_ports', 'list_numeric'}:
             expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
                                "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
                                "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
                                "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
                                "agent_rep of a controller before specifying its 'state_features'."
-        elif state_features_arg == 'list_numeric':
-            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
-                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
-                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
-                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
-                               "agent_rep of a controller before specifying its 'state_features'."
-        elif state_features_arg == 'list_none':
-            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
-                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
-                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
-                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
-                               "agent_rep of a controller before specifying its 'state_features'."
+        # elif state_features_arg == 'list_numeric':
+        #     expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
+        #                        "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+        #                        "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+        #                        "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+        #                        "agent_rep of a controller before specifying its 'state_features'."
+        # elif state_features_arg == 'list_none':
+        #     expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
+        #                        "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+        #                        "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+        #                        "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+        #                        "agent_rep of a controller before specifying its 'state_features'."
         elif state_features_arg == 'dict':
             expected_warning = "that are not in its agent_rep ('evc'). Executing 'evc' before they " \
                                "are added will generate an error ."
@@ -217,21 +227,40 @@ class TestControlSpecification:
 
         with pytest.warns(UserWarning) as warning:
             # add the controller to the Composition before adding the relevant Mechanisms
-            comp.add_controller(controller=pnl.OptimizationControlMechanism(
-                agent_rep=comp,
-                state_features = state_features,
-                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                objective_mechanism=pnl.ObjectiveMechanism(
-                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                    monitor=[reward,
-                             Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                             (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
-                function=pnl.GridSearch(),
-                control_signals=[{control_spec: ("drift_rate", Decision),
-                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {control_spec: ("threshold", Decision),
-                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
-            )
+            if 'default_none' in state_features_arg:
+                comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                    agent_rep=comp,
+                    # state_features = state_features, # Don't specify in order to test default assignments
+                    state_feature_default=state_feature_default,
+                    state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                    objective_mechanism=pnl.ObjectiveMechanism(
+                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                        monitor=[reward,
+                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                    function=pnl.GridSearch(),
+                    control_signals=[{control_spec: ("drift_rate", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                     {control_spec: ("threshold", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+                )
+            else:
+                comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                    agent_rep=comp,
+                    state_features = state_features,
+                    state_feature_default=state_feature_default,
+                    state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                    objective_mechanism=pnl.ObjectiveMechanism(
+                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                        monitor=[reward,
+                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                    function=pnl.GridSearch(),
+                    control_signals=[{control_spec: ("drift_rate", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                     {control_spec: ("threshold", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+                )
         assert any(expected_warning in repr(w.message) for w in warning.list)
 
         deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
@@ -251,7 +280,15 @@ class TestControlSpecification:
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
 
-        if state_features_arg == 'list_ports':
+        if state_features_arg in {'none', 'default_none'}:
+            assert comp.controller.state_input_ports.names == []
+            assert comp.controller.state_features == {}
+            assert comp.controller.state_feature_values == {}
+        elif state_features_arg == 'list_none':
+            assert comp.controller.state_input_ports.names == []
+            assert comp.controller.state_features == {deferred_node_0: None, deferred_node_1: None}
+            assert comp.controller.state_feature_values == {}
+        elif state_features_arg == 'list_ports':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port,
                                                       deferred_node_1: deferred_Input_input_port}
@@ -263,10 +300,6 @@ class TestControlSpecification:
             assert comp.controller.state_features == {deferred_node_0: [1.1], deferred_node_1: [2.2]}
             assert np.allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
             assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
-        elif state_features_arg == 'list_none':
-            assert comp.controller.state_input_ports.names == []
-            assert comp.controller.state_features == {deferred_node_0: None, deferred_node_1: None}
-            assert comp.controller.state_feature_values == {}
         elif state_features_arg == 'dict':
             assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port,
@@ -283,19 +316,24 @@ class TestControlSpecification:
 
         comp.enable_controller = True
 
-        if state_features_arg == 'list_numeric':
+        if state_features_arg == 'default_none':
             assert not any(p.path_afferents for p in comp.controller.state_input_ports)
-            assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
-            assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
-                                                      'Input[InputPort-0]': [2.2]}
-            assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
-            assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
+            assert comp.controller.state_features == {}
+            assert comp.controller.state_feature_values == {}
+            assert comp.controller.state_input_ports.names == []
         elif state_features_arg == 'list_none':
             assert not any(p.path_afferents for p in comp.controller.state_input_ports)
             assert comp.controller.state_features == {'reward[InputPort-0]': None,
                                                       'Input[InputPort-0]': None}
             assert comp.controller.state_feature_values == {}
             assert comp.controller.state_input_ports.names == []
+        elif state_features_arg == 'list_numeric':
+            assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
+            assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
+                                                      'Input[InputPort-0]': [2.2]}
+            assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
+            assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
         else:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
             assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
@@ -312,42 +350,7 @@ class TestControlSpecification:
 
         comp.run(inputs=stim_list_dict)
 
-        if state_features_arg == 'list_numeric':
-            expected_sim_results_array = [
-                [[1.09785156], [1.09785156], [0.], [0.48989747], [0.5438015]],
-                [[1.09946289], [1.09946289], [0.], [1.06483807], [0.66899791]],
-                [[1.09986572], [1.09986572], [0.], [2.19475384], [0.77414214]],
-                [[1.09996643], [1.09996643], [0.], [3.66103375], [0.85320293]],
-                [[1.09999161], [1.09999161], [0.], [0.48842594], [0.66907284]],
-                [[1.0999979], [1.0999979], [0.], [0.85321354], [0.94353405]],
-                [[1.09999948], [1.09999948], [0.], [1.23401798], [0.99281107]],
-                [[1.09999987], [1.09999987], [0.], [1.58437432], [0.99912464]],
-                [[1.09999997], [1.09999997], [0.], [0.48560629], [0.77416842]],
-                [[1.09999999], [1.09999999], [0.], [0.70600576], [0.99281108]],
-                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
-                [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
-                [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
-                [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
-                [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
-                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]],
-                [[1.1], [1.1], [0.], [0.48989707], [0.54388677]],
-                [[1.1], [1.1], [0.], [1.06481464], [0.66907403]],
-                [[1.1], [1.1], [0.], [2.19470819], [0.77416843]],
-                [[1.1], [1.1], [0.], [3.66099691], [0.85320966]],
-                [[1.1], [1.1], [0.], [0.48842592], [0.66907403]],
-                [[1.1], [1.1], [0.], [0.85321303], [0.94353433]],
-                [[1.1], [1.1], [0.], [1.23401763], [0.99281108]],
-                [[1.1], [1.1], [0.], [1.58437418], [0.99912464]],
-                [[1.1], [1.1], [0.], [0.48560629], [0.77416843]],
-                [[1.1], [1.1], [0.], [0.70600576], [0.99281108]],
-                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
-                [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
-                [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
-                [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
-                [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
-                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]]]
-
-        elif state_features_arg == 'list_none':
+        if state_features_arg in {'default_none', 'list_none'}:
             expected_sim_results_array = [
                 [[0.], [0.], [0.], [0.49], [0.5]],
                 [[0.], [0.], [0.], [1.09], [0.5]],
@@ -381,6 +384,40 @@ class TestControlSpecification:
                 [[0.], [0.], [0.], [1.09], [0.5]],
                 [[0.], [0.], [0.], [2.41], [0.5]],
                 [[0.], [0.], [0.], [4.45], [0.5]]]
+        elif state_features_arg == 'list_numeric':
+            expected_sim_results_array = [
+                [[1.09785156], [1.09785156], [0.], [0.48989747], [0.5438015]],
+                [[1.09946289], [1.09946289], [0.], [1.06483807], [0.66899791]],
+                [[1.09986572], [1.09986572], [0.], [2.19475384], [0.77414214]],
+                [[1.09996643], [1.09996643], [0.], [3.66103375], [0.85320293]],
+                [[1.09999161], [1.09999161], [0.], [0.48842594], [0.66907284]],
+                [[1.0999979], [1.0999979], [0.], [0.85321354], [0.94353405]],
+                [[1.09999948], [1.09999948], [0.], [1.23401798], [0.99281107]],
+                [[1.09999987], [1.09999987], [0.], [1.58437432], [0.99912464]],
+                [[1.09999997], [1.09999997], [0.], [0.48560629], [0.77416842]],
+                [[1.09999999], [1.09999999], [0.], [0.70600576], [0.99281108]],
+                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
+                [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
+                [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
+                [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]],
+                [[1.1], [1.1], [0.], [0.48989707], [0.54388677]],
+                [[1.1], [1.1], [0.], [1.06481464], [0.66907403]],
+                [[1.1], [1.1], [0.], [2.19470819], [0.77416843]],
+                [[1.1], [1.1], [0.], [3.66099691], [0.85320966]],
+                [[1.1], [1.1], [0.], [0.48842592], [0.66907403]],
+                [[1.1], [1.1], [0.], [0.85321303], [0.94353433]],
+                [[1.1], [1.1], [0.], [1.23401763], [0.99281108]],
+                [[1.1], [1.1], [0.], [1.58437418], [0.99912464]],
+                [[1.1], [1.1], [0.], [0.48560629], [0.77416843]],
+                [[1.1], [1.1], [0.], [0.70600576], [0.99281108]],
+                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
+                [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
+                [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
+                [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]]]
         else:
             # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
             expected_sim_results_array = [
