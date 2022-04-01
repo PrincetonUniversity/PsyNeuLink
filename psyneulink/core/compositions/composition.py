@@ -3954,11 +3954,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
-        # FIX: 12/29/21: MOVE TO _update_shadow_projections
-        # Call again to accomodate any changes from _update_shadow_projections
-        self._determine_node_roles(context=context)
+        # # FIX: 12/29/21 / 3/30/22: MOVE TO _update_shadow_projections
+        # # Call again to accommodate any changes from _update_shadow_projections
+        # self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
-
         self.needs_update_graph = False
 
     def _update_processing_graph(self):
@@ -6119,23 +6118,24 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"Composition, neither of which are supported by shadowing.")
             return original_senders
 
-        for shadowing_port, shadowed_port in self.shadowing_dict.items():
-            senders = _instantiate_missing_shadow_projections(shadowing_port,
-                                                              shadowed_port.path_afferents)
-            for shadow_projection in shadowing_port.path_afferents:
-                if shadow_projection.sender not in senders:
-                    self.remove_projection(shadow_projection)
-                    Projection_Base._delete_projection(shadow_projection)
-                    if not shadow_projection.sender.efferents:
-                        if isinstance(shadow_projection.sender.owner, CompositionInterfaceMechanism):
-                            ports = shadow_projection.sender.owner.port_map.pop(shadow_projection.receiver)
-                            shadow_projection.sender.owner.remove_ports(list(ports))
-                        else:
-                            shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
+        if self.shadowing_dict.items:
+            for shadowing_port, shadowed_port in self.shadowing_dict.items():
+                senders = _instantiate_missing_shadow_projections(shadowing_port,
+                                                                  shadowed_port.path_afferents)
+                for shadow_projection in shadowing_port.path_afferents:
+                    if shadow_projection.sender not in senders:
+                        self.remove_projection(shadow_projection)
+                        Projection_Base._delete_projection(shadow_projection)
+                        if not shadow_projection.sender.efferents:
+                            if isinstance(shadow_projection.sender.owner, CompositionInterfaceMechanism):
+                                ports = shadow_projection.sender.owner.port_map.pop(shadow_projection.receiver)
+                                shadow_projection.sender.owner.remove_ports(list(ports))
+                            else:
+                                shadow_projection.sender.owner.remove_ports(shadow_projection.sender)
+            self._determine_node_roles(context=context)
 
     def _check_for_projection_assignments(self, context=None):
         """Check that all Projections and Ports with require_projection_in_composition attribute are configured.
-
         Validate that all InputPorts with require_projection_in_composition == True have an afferent Projection.
         Validate that all OutputPorts with require_projection_in_composition == True have an efferent Projection.
         Validate that all Projections have senders and receivers.
