@@ -1194,7 +1194,10 @@ def _state_feature_values_getter(owning_component=None, context=None):
             state_feature_value = _not_specified_state_feature_spec_msg((key if isinstance(key, str) else key.full_name),
                                                                        owning_component.composition.name)
         elif is_numeric(spec):
-            # if spec is numeric, use that
+            # FIX: 4/1/22 - THIS COULD BE DANGEROUS IF function IS STATEFUL AND USER CALLS IT
+            #               AT THE LEAST, MAYBE SHOULD BE CALLED WITH CONTEXT,
+            #               OR MAYBE DISALLOW NUMERIC SPEC WITH STATEFUL FUNCTION in _parse_state_feature_spec??
+            # if spec is numeric, use that, processed by state_input_port's function
             state_feature_value = state_input_port.function(spec)
         elif (hasattr(owning_component, 'composition')
               and not owning_component.composition._is_in_composition(spec)):

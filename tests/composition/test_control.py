@@ -1075,6 +1075,46 @@ class TestControlMechanisms:
                 ocomp.run()
             assert err.value.error_value == err_msg
 
+    @pytest.mark.control
+    @pytest.mark.parametrize('obj_mech', ['obj_mech', 'mtr_for_ctl', None])
+    def test_identicality_of_objective_mechanism_and_monitor_for_control(self, obj_mech):
+
+        ia = pnl.ProcessingMechanism(name='IA')
+        ib = pnl.ProcessingMechanism(name='IB')
+        ic = pnl.ProcessingMechanism(name='IC')
+        oa = pnl.ProcessingMechanism(name='OA')
+        ob = pnl.ProcessingMechanism(name='OB', size=3)
+        oc = pnl.ProcessingMechanism(name='OC')
+        ext = pnl.ProcessingMechanism(name='EXT')
+        icomp = pnl.Composition(pathways=[ia,ib,ic], name='INNER COMP')
+        ocomp = pnl.Composition(pathways=[icomp], name='OUTER COMP')
+        ocomp.add_linear_processing_pathway([oa,oc])
+        ocomp.add_linear_processing_pathway([ob,oc])
+
+        objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
+        monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
+
+        ocm = pnl.OptimizationControlMechanism(state_features={oa:oc.input_port, icomp:ia, ob:ob.output_port},
+                                               objective_mechanism=objective_mechanism,
+                                               monitor_for_control=monitor_for_control,
+                                               function=pnl.GridSearch(),
+                                               control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
+                                                                                  allocation_samples=[10, 20, 30]),
+                                                                pnl.ControlSignal(modulates=(pnl.INTERCEPT,oc),
+                                                                                  allocation_samples=[10, 20, 30])])
+        ocomp.add_controller(ocm)
+        ocomp.run()
+        assert len(ocm.state_input_ports) == 3
+        assert ocm.state_input_ports.names == [_shadowed_state_input_port_name('IA[InputPort-0]', 'IA[InputPort-0]'),
+                                               _shadowed_state_input_port_name('OC[InputPort-0]', 'OA[InputPort-0]'),
+                                               _state_input_port_name('OB[OutputPort-0]', 'OB[InputPort-0]')]
+        assert ocm.state_features == {'IA[InputPort-0]': 'IA[InputPort-0]',
+                                      'OA[InputPort-0]': 'OC[InputPort-0]',
+                                      'OB[InputPort-0]': 'OB[OutputPort-0]'}
+        assert all(np.allclose(expected, actual)
+                   for expected, actual in zip(list(ocm.state_feature_values.values()),
+                                               [[0.], [0.], [0, 0, 0]]))
+
     messages = [
         # 0
         f"There are fewer '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' than the number "
@@ -1188,14 +1228,14 @@ class TestControlMechanisms:
     @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
-    @pytest.mark.parametrize('obj_mech', ['obj_mech', 'mtr_for_ctl', None])
-    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args, obj_mech):
+    def test_ocm_state_feature_specs_and_warnings_and_errors(self, state_feature_args):
         """See test_nested_composition_as_agent_rep() for additional tests of state_features specification."""
 
         test_condition = state_feature_args[0]
         state_feature_default = state_feature_args[1]
         error_or_warning_message = state_feature_args[2]
         exception_type = state_feature_args[3]
+        objective_mechanism = [ic,ib]
 
         ia = pnl.ProcessingMechanism(name='IA')
         ib = pnl.ProcessingMechanism(name='IB')
@@ -1243,8 +1283,6 @@ class TestControlMechanisms:
             'comp_in_list_spec':[icomp, oa.output_port, [3,1,2]],  # FIX: REMOVE ONCE TUPLE FORMAT SUPPORTED
             'comp_in_shadow_inupts_spec':{pnl.SHADOW_INPUTS:[icomp, oa, ob]}
         }
-        objective_mechanism = [ic,ib] if obj_mech == 'obj_mech' else None
-        monitor_for_control = [ic] if obj_mech == 'mtr_for_ctl' else None # Needs to be a single item for GridSearch
         state_features = state_features_dict[test_condition]
 
         ia_node = _state_input_port_name('OA[OutputPort-0]', 'IA[InputPort-0]')
@@ -1258,7 +1296,6 @@ class TestControlMechanisms:
 
         if test_condition == 'no_specs':
             ocm = pnl.OptimizationControlMechanism(objective_mechanism=objective_mechanism,
-                                                   monitor_for_control=monitor_for_control,
                                                    function=pnl.GridSearch(),
                                                    control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
                                                                                       allocation_samples=[10, 20, 30]),
@@ -1269,7 +1306,6 @@ class TestControlMechanisms:
             ocm = pnl.OptimizationControlMechanism(state_features=state_features,
                                                    state_feature_default=state_feature_default,
                                                    objective_mechanism=objective_mechanism,
-                                                   monitor_for_control=monitor_for_control,
                                                    function=pnl.GridSearch(),
                                                    control_signals=[pnl.ControlSignal(modulates=(pnl.SLOPE,ia),
                                                                                       allocation_samples=[10, 20, 30]),
@@ -1421,9 +1457,9 @@ class TestControlMechanisms:
                              ids= [f"state_feature-{x}" for x in state_features_arg]
                              )
     def test_state_features_in_nested_composition_as_agent_rep(self, nested_agent_rep, state_features_arg):
-        """Test state_features for agent_rep that is a nested Composition and also has one nested with in.
-        Also test for single state_feature_spec and INPUT Node with multiple InputPorts, not tested in
-        test_ocm_state_feature_specs_and_warnings_and_errors() (see that for tests of basic state_features specs).
+        """Test state_features for agent_rep that is a nested Composition and also has one nested within it.
+        Also test for single state_feature_spec and INPUT Node with multiple InputPorts
+          (not tested in test_ocm_state_feature_specs_and_warnings_and_errors()
         """
 
         I1 = pnl.ProcessingMechanism(name='I1')
