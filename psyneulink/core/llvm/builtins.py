@@ -640,8 +640,8 @@ def _setup_mt_rand_integer(ctx, state_ty):
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
         mag01 = ir.ArrayType(array.type.pointee.element, 2)([0, 0x9908b0df])
-        pmag01 = builder.alloca(mag01.type, name="mag01")
-        builder.store(mag01, pmag01)
+        mag0 = builder.extract_value(mag01, [0])
+        mag1 = builder.extract_value(mag01, [1])
 
         with helpers.for_loop_zero_inc(builder,
                                        ctx.int32_ty(_MERSENNE_N - _MERSENNE_M),
@@ -653,9 +653,9 @@ def _setup_mt_rand_integer(ctx, state_ty):
             val_kk_1 = b.and_(b.load(pkk_1), pkk_1.type.pointee(0x7fffffff))
             val = b.or_(val_kk, val_kk_1)
 
-            val_1 = b.and_(val, val.type(1))
-            pval_mag = b.gep(pmag01, [ctx.int32_ty(0), val_1])
-            val_mag = b.load(pval_mag)
+            val_i1 = b.and_(val, val.type(1))
+            val_b = b.trunc(val_i1, ctx.bool_ty)
+            val_mag = b.select(val_b, mag1, mag0)
 
             val_shift = b.lshr(val, val.type(1))
 
@@ -681,9 +681,9 @@ def _setup_mt_rand_integer(ctx, state_ty):
             val_kk_1 = b.and_(b.load(pkk_1), pkk.type.pointee(0x7fffffff))
             val = b.or_(val_kk, val_kk_1)
 
-            val_1 = b.and_(val, val.type(1))
-            pval_mag = b.gep(pmag01, [ctx.int32_ty(0), val_1])
-            val_mag = b.load(pval_mag)
+            val_i1 = b.and_(val, val.type(1))
+            val_b = b.trunc(val_i1, ctx.bool_ty)
+            val_mag = b.select(val_b, mag1, mag0)
 
             val_shift = b.lshr(val, val.type(1))
 
