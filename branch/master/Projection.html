@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Projection &mdash; PsyNeuLink 0+untagged.14.gaeddf3e documentation</title>
+  <title>Projection &mdash; PsyNeuLink 0.10.0.0+11.g7072684f5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gaeddf3e
+                  0.10.0.0+11
                 </div>
               
             
@@ -340,7 +340,7 @@ as its the ControlProjection’s <a class="reference internal" href="ControlProj
 additional details.</p>
 </div></blockquote>
 <ul class="simple">
-<li><p><em>GATING_PROJECTION</em> (or <em>GATING</em>) – this can be used when specifying an <a class="reference internal" href="InputPort.html#inputport-projection-source-specification"><span class="std std-ref">InputPort</span></a> or an <code class="xref any docutils literal notranslate"><span class="pre">OutputPort</span></code>, to create a
+<li><p><em>GATING_PROJECTION</em> (or <em>GATE</em>) – this can be used when specifying an <a class="reference internal" href="InputPort.html#inputport-projection-source-specification"><span class="std std-ref">InputPort</span></a> or an <code class="xref any docutils literal notranslate"><span class="pre">OutputPort</span></code>, to create a
 default <a class="reference internal" href="GatingProjection.html"><span class="doc">GatingProjection</span></a> to the <a class="reference internal" href="Port.html"><span class="doc">Port</span></a>. If the GatingProjection’s <a class="reference internal" href="GatingProjection.html#psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender" title="psyneulink.core.components.projections.modulatory.gatingprojection.GatingProjection.sender"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">sender</span></code></a>
 cannot be inferred from the context in which this specification occurs, then its <a class="reference internal" href="GatingProjection.html#gatingprojection-deferred-initialization"><span class="std std-ref">initialization is deferred</span></a> until it can be determined (e.g., a <a class="reference internal" href="GatingMechanism.html"><span class="doc">Gating Mechanism</span></a> or
 <a class="reference internal" href="GatingSignal.html"><span class="doc">GatingSignal</span></a> is created to which it is assigned).</p></li>
@@ -366,7 +366,7 @@ attribute of its <a class="reference internal" href="MappingProjection.html#psyn
 context of the specification.</p></li>
 </ul>
 <ul id="projection-specification-dictionary">
-<li><p><strong>Specification dictionary</strong> – can contain an entry specifying the type of Projection, and/or entries
+<li><p><strong>Projection specification dictionary</strong> – can contain an entry specifying the type of Projection, and/or entries
 specifying the value of parameters used to instantiate it. These should take the following form:</p>
 <blockquote>
 <div><ul class="simple">

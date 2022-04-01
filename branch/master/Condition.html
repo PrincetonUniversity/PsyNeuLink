@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Condition &mdash; PsyNeuLink 0+untagged.14.gaeddf3e documentation</title>
+  <title>Condition &mdash; PsyNeuLink 0.10.0.0+11.g7072684f5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gaeddf3e
+                  0.10.0.0+11
                 </div>
               
             
@@ -1891,6 +1891,68 @@ and <a class="reference internal" href="Time.html#psyneulink.core.scheduling.tim
 <ul class="simple">
 <li><p>identical to <code class="xref any docutils literal notranslate"><span class="pre">All(AtTrial(0),</span> <span class="pre">AtRun(n))</span></code></p></li>
 </ul>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.scheduling.condition.</span></span><span class="sig-name descname"><span class="pre">Threshold</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parameter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comparator</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.dependency">
+<span class="sig-name descname"><span class="pre">dependency</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.dependency" title="Permalink to this definition">¶</a></dt>
+<dd><p>the node on which the Condition depends</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.parameter">
+<span class="sig-name descname"><span class="pre">parameter</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.parameter" title="Permalink to this definition">¶</a></dt>
+<dd><p>the name of the parameter of <strong>dependency</strong> whose value is
+to be compared to <strong>threshold</strong></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.threshold">
+<span class="sig-name descname"><span class="pre">threshold</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>the fixed value compared to the value of the <strong>parameter</strong></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.comparator">
+<span class="sig-name descname"><span class="pre">comparator</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.comparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>the string comparison operator determining the direction or
+type of comparison of the value of the <strong>parameter</strong>
+relative to <strong>threshold</strong></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.indices">
+<span class="sig-name descname"><span class="pre">indices</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.indices" title="Permalink to this definition">¶</a></dt>
+<dd><p>if specified, a series of indices that reach the desired
+number given an iterable value for <strong>parameter</strong></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.atol">
+<span class="sig-name descname"><span class="pre">atol</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.atol" title="Permalink to this definition">¶</a></dt>
+<dd><p>absolute tolerance for the comparison</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="psyneulink.core.scheduling.condition.Threshold.rtol">
+<span class="sig-name descname"><span class="pre">rtol</span></span><a class="headerlink" href="#psyneulink.core.scheduling.condition.Threshold.rtol" title="Permalink to this definition">¶</a></dt>
+<dd><p>relative tolerance (to <strong>threshold</strong>) for the comparison</p>
+</dd></dl>
+
+<p>Satisfied when:</p>
+<blockquote>
+<div><p>The comparison between the value of the <strong>parameter</strong> and
+<strong>threshold</strong> using <strong>comparator</strong> is true. If <strong>comparator</strong> is
+an equality (==, !=), the comparison will be considered equal
+within tolerances <strong>atol</strong> and <strong>rtol</strong>.</p>
+</div></blockquote>
+<p class="rubric">Notes</p>
+<p>The comparison must be done with scalars. If the value of
+<strong>parameter</strong> contains more than one item, <strong>indices</strong> must be
+specified.</p>
 </dd></dl>
 
 </section>

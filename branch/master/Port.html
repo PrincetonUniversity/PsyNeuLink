@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Port &mdash; PsyNeuLink 0+untagged.14.gaeddf3e documentation</title>
+  <title>Port &mdash; PsyNeuLink 0.10.0.0+11.g7072684f5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gaeddf3e
+                  0.10.0.0+11
                 </div>
               
             
@@ -371,7 +371,7 @@ context of the specification (see <a class="reference internal" href="#port-spec
 any of the following entries, each of which can contain any of the forms used to <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">specify a Projection</span></a>:</p>
 <ul class="simple">
 <li><dl class="simple">
-<dt><em>PROJECTIONS</em>:List[&lt;<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">projection specification</span></a>&gt;,…]</dt><dd><p>the list must contain a one or more <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specifications</span></a> to or from
+<dt><em>PROJECTIONS</em>:List[&lt;<a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">projection specification</span></a>&gt;,…]</dt><dd><p>the list must contain one or more <a class="reference internal" href="Projection.html#projection-specification"><span class="std std-ref">Projection specifications</span></a> to or from
 the Port, and/or <a class="reference internal" href="ModulatorySignal.html"><span class="doc">ModulatorySignals</span></a> from which it should receive projections (see
 <a class="reference internal" href="#port-projections"><span class="std std-ref">Projections</span></a> below).</p>
 </dd>
@@ -632,7 +632,7 @@ belong.  For example, the following specifies that <code class="docutils literal
 a variety of other ways, as described <a class="reference internal" href="#port-specification"><span class="std std-ref">above</span></a> and illustrated in the examples below.
 Note that when one or more Ports is specified in the argument of a Mechanism’s constructor, it replaces any defaults
 Ports created by the Mechanism when none are specified (see <a class="reference internal" href="Mechanism.html#mechanism-default-port-suppression-note"><span class="std std-ref">note</span></a>.</p>
-<p id="port-value-spec-example">For example, the following specifies the InputPort by a value to use as its <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code> attribute:</p>
+<p id="port-value-spec-example">For example, the following specifies the InputPort by a value to use as its <a class="reference internal" href="InputPort.html#psyneulink.core.components.ports.inputport.InputPort.variable" title="psyneulink.core.components.ports.inputport.InputPort.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> attribute:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">TransferMechanism</span><span class="p">(</span><span class="n">input_ports</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -741,20 +741,22 @@ ParameterPorts of a <a class="reference internal" href="DDM.html"><span class="d
     <span class="nb">print</span><span class="p">(</span><span class="n">control_signal</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">control_projection</span> <span class="ow">in</span> <span class="n">control_signal</span><span class="o">.</span><span class="n">efferents</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;     </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">control_projection</span><span class="o">.</span><span class="n">receiver</span><span class="p">))</span>
-<span class="o">&gt;</span> <span class="n">MY</span> <span class="n">DDM</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">AND</span> <span class="n">THREHOLD</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
+<span class="o">&gt;</span> <span class="n">MY</span> <span class="n">DDM</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">AND</span> <span class="n">THRESHOLD</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">drift_rate</span><span class="p">)</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">threshold</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Note that a ControlMechanism uses a <strong>control_signals</strong> argument in place of an <strong>output_ports</strong> argument (since it
-uses <code class="xref any docutils literal notranslate"><span class="pre">ControlSignal</span></code> for its <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  In the example above,
-both ControlProjections are assigned to a single ControlSignal.  However, they could each be assigned to their own by
-specifying them in separate itesm of the <strong>control_signals</strong> argument:</p>
+uses <code class="xref any docutils literal notranslate"><span class="pre">ControlSignal</span></code> for its <a class="reference internal" href="OutputPort.html"><span class="doc">OutputPorts</span></a>.  Note also that, for specifying Projections
+of a ControlSignal (i.e., its ControlProjections), the keyword <em>CONTROL</em> can be used in place of the more generic
+<em>PROJECTIONS</em> keyword (as shown in the example below).</p>
+<p>In the example above, both ControlProjections are assigned to a single ControlSignal.  However, they could each be
+assigned to their own by specifying them in separate items of the <strong>control_signals</strong> argument:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">my_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;MY DDM&#39;</span><span class="p">)</span>
 <span class="n">my_ctl_mech</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">ControlMechanism</span><span class="p">(</span><span class="n">control_signals</span><span class="o">=</span><span class="p">[{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;DRIFT RATE CONTROL SIGNAL&#39;</span><span class="p">,</span>
-                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">]]},</span>
+                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">DRIFT_RATE</span><span class="p">]]},</span>
                                                     <span class="p">{</span><span class="n">pnl</span><span class="o">.</span><span class="n">NAME</span><span class="p">:</span> <span class="s1">&#39;THRESHOLD RATE CONTROL SIGNAL&#39;</span><span class="p">,</span>
-                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">PROJECTIONS</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]]}])</span>
+                                                     <span class="n">pnl</span><span class="o">.</span><span class="n">CONTROL</span><span class="p">:</span> <span class="p">[</span><span class="n">my_mech</span><span class="o">.</span><span class="n">parameter_ports</span><span class="p">[</span><span class="n">pnl</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">]]}])</span>
 <span class="c1"># Print ControlSignals and their ControlProjections...</span>
 <span class="o">&gt;</span> <span class="n">DRIFT</span> <span class="n">RATE</span> <span class="n">CONTROL</span> <span class="n">SIGNAL</span>
 <span class="o">&gt;</span>     <span class="n">MY</span> <span class="n">DDM</span><span class="p">:</span> <span class="p">(</span><span class="n">ParameterPort</span> <span class="n">drift_rate</span><span class="p">)</span>
@@ -1299,6 +1301,12 @@ or MULTIPLICATIVE if not specified</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base._get_variable_from_projections">
 <em class="property"><span class="pre">abstract</span> </em><span class="sig-name descname"><span class="pre">_get_variable_from_projections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base._get_variable_from_projections" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a variable to be used for self.execute when the variable passed in is None</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="psyneulink.core.components.ports.port.Port_Base.value_label">
+<em class="property"><span class="pre">property</span> </em><span class="sig-name descname"><span class="pre">value_label</span></span><a class="headerlink" href="#psyneulink.core.components.ports.port.Port_Base.value_label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alias of labeled_value</p>
 </dd></dl>
 
 <dl class="py property">

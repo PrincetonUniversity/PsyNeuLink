@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DistributionFunctions &mdash; PsyNeuLink 0+untagged.14.gaeddf3e documentation</title>
+  <title>DistributionFunctions &mdash; PsyNeuLink 0.10.0.0+11.g7072684f5 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gaeddf3e
+                  0.10.0.0+11
                 </div>
               
             
@@ -219,13 +219,13 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.distributionfunctions.</span></span><span class="sig-name descname"><span class="pre">DriftDiffusionAnalytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">drift_rate=1.0</span></em>, <em class="sig-param"><span class="pre">threshold=1.0</span></em>, <em class="sig-param"><span class="pre">starting_point=0.0</span></em>, <em class="sig-param"><span class="pre">t0=0.2</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">noise=0.5</span></em>, <em class="sig-param"><span class="pre">params=None</span></em>, <em class="sig-param"><span class="pre">owner=None</span></em>, <em class="sig-param"><span class="pre">prefs=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.distributionfunctions.</span></span><span class="sig-name descname"><span class="pre">DriftDiffusionAnalytical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">default_variable=None</span></em>, <em class="sig-param"><span class="pre">drift_rate=1.0</span></em>, <em class="sig-param"><span class="pre">threshold=1.0</span></em>, <em class="sig-param"><span class="pre">starting_value=0.0</span></em>, <em class="sig-param"><span class="pre">non_decision_time=0.2</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">noise=0.5</span></em>, <em class="sig-param"><span class="pre">params=None</span></em>, <em class="sig-param"><span class="pre">owner=None</span></em>, <em class="sig-param"><span class="pre">prefs=None</span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical" title="Permalink to this definition">¶</a></dt>
 <dd><p id="driftdiffusionanalytical">Return terminal value of decision variable, mean accuracy, and mean response time computed analytically for the
 drift diffusion process as described in <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pubmed/17014301">Bogacz et al (2006)</a>.</p>
 <p><em>Modulatory Parameters:</em></p>
 <div class="line-block">
 <div class="line"><em>MULTIPLICATIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.drift_rate"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">drift_rate</span></code></a></div>
-<div class="line"><em>ADDITIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">starting_point</span></code></a></div>
+<div class="line"><em>ADDITIVE_PARAM:</em> <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">starting_value</span></code></a></div>
 <div class="line"><br /></div>
 </div>
 <dl class="field-list simple">
@@ -234,16 +234,16 @@ drift diffusion process as described in <a class="reference external" href="http
 <li><p><strong>default_variable</strong> (<em>number</em><em>, </em><em>list</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for decision variable(s);  if it is list or array, a separate solution is computed
 independently for each element.</p></li>
 <li><p><strong>drift_rate</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the drift_rate of the drift diffusion process.  If it is a list or array,
-it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>.</p></li>
+it must be the same length as <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>.</p></li>
 <li><p><strong>threshold</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the threshold (boundary) of the drift diffusion process.  If it is a list or array,
-it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>.</p></li>
-<li><p><strong>starting_point</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
-array, it must be the same length as <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code>.</p></li>
+it must be the same length as <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>.</p></li>
+<li><p><strong>starting_value</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 1.0</em>) – specifies the initial value of the decision variable for the drift diffusion process.  If it is a list or
+array, it must be the same length as <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a>.</p></li>
 <li><p><strong>noise</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.0</em>) – specifies the noise term (corresponding to the diffusion component) of the drift diffusion process.
 If it is a float, it must be a number from 0 to 1.  If it is a list or array, it must be the same length as
-<code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code> and all elements must be floats from 0 to 1.</p></li>
-<li><p><strong>t0</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
-list or array, it must be the same length as  <code class="xref any docutils literal notranslate"><span class="pre">default_variable</span></code> and all
+<a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> and all elements must be floats from 0 to 1.</p></li>
+<li><p><strong>non_decision_time</strong> (<em>float</em><em>, </em><em>list</em><em> or </em><em>1d array : default 0.2</em>) – specifies the non-decision time for solution. If it is a float, it must be a number from 0 to 1.  If it is a
+list or array, it must be the same length as  <a class="reference internal" href="Component.html#component-variable"><span class="std std-ref">default_variable</span></a> and all
 elements must be floats from 0 to 1.</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
@@ -291,8 +291,8 @@ process is assumed to terminate).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point">
-<span class="sig-name descname"><span class="pre">starting_point</span></span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value">
+<span class="sig-name descname"><span class="pre">starting_value</span></span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the initial value of the decision variable for the drift diffusion process.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -314,8 +314,8 @@ Gaussian random process).</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.t0">
-<span class="sig-name descname"><span class="pre">t0</span></span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.t0" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.non_decision_time">
+<span class="sig-name descname"><span class="pre">non_decision_time</span></span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.non_decision_time" title="Permalink to this definition">¶</a></dt>
 <dd><p>determines the assumed non-decision time to determine the response time returned by the solution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -328,7 +328,7 @@ Gaussian random process).</p>
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias">
 <span class="sig-name descname"><span class="pre">bias</span></span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.bias" title="Permalink to this definition">¶</a></dt>
 <dd><p>normalized starting point:
-(<a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_point"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">starting_point</span></code></a> + <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>) /
+(<a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.starting_value"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">starting_value</span></code></a> + <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>) /
 (2 * <a class="reference internal" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold" title="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical.threshold"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">threshold</span></code></a>)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
@@ -423,7 +423,7 @@ arguments of the constructor.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._compute_conditional_rt_moments">
-<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">_compute_conditional_rt_moments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drift_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_point</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._compute_conditional_rt_moments" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">static</span> </em><span class="sig-name descname"><span class="pre">_compute_conditional_rt_moments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drift_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">starting_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_decision_time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.distributionfunctions.DriftDiffusionAnalytical._compute_conditional_rt_moments" title="Permalink to this definition">¶</a></dt>
 <dd><p>This is a helper function for computing the conditional decison time moments for the DDM.
 It is based completely off of MatlabDDMFunctionsddm_metrics_cond_Mat.m.</p>
 <dl class="field-list simple">
@@ -432,8 +432,8 @@ It is based completely off of MatlabDDMFunctionsddm_metrics_cond_Mat.m.</p>
 <li><p><strong>drift_rate</strong> – The drift rate of the DDM</p></li>
 <li><p><strong>noise</strong> – The diffusion rate.</p></li>
 <li><p><strong>threshold</strong> – The symmetric threshold of the DDM</p></li>
-<li><p><strong>starting_point</strong> – The initial condition.</p></li>
-<li><p><strong>t0</strong> – The non decision time.</p></li>
+<li><p><strong>starting_value</strong> – The initial condition.</p></li>
+<li><p><strong>non_decision_time</strong> – The non decision time.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>

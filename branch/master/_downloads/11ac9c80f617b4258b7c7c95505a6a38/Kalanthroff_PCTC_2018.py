@@ -290,20 +290,13 @@ PCTC = pnl.Composition(
     reinitialize_mechanisms_when=pnl.Never(),
     name='PCTC_MODEL')
 
-# Create threshold function -------------------------------------------------------------------------------------------
-
-def pass_threshold(response_layer, thresh, context):
-    results1 = response_layer.get_output_values(context)[0][0]  # red response
-    results2 = response_layer.get_output_values(context)[0][1]  # green response
-    # print(results1)
-    # print(results2)
-    if results1 >= thresh or results2 >= thresh:
-        return True
-    return False
-
+# Create threshold condition -------------------------------------------------------------------------------------------
 
 terminate_trial = {
-    pnl.TimeScale.TRIAL: pnl.While(pass_threshold, response_layer, threshold)
+    pnl.TimeScale.TRIAL: pnl.Or(
+        pnl.Threshold(response_layer.output_ports['SPECIAL_LOGISTIC'], 'value', threshold, '>=', 0),
+        pnl.Threshold(response_layer.output_ports['SPECIAL_LOGISTIC'], 'value', threshold, '>=', 1),
+    )
 }
 
 # Create test trials function -----------------------------------------------------------------------------------------

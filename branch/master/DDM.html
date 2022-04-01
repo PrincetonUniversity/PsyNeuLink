@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>DDM &mdash; PsyNeuLink 0+untagged.14.gaeddf3e documentation</title>
+  <title>DDM &mdash; PsyNeuLink 0.10.0.0+11.g7072684f5 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0+untagged.14.gaeddf3e
+                  0.10.0.0+11
                 </div>
               
             
@@ -322,10 +322,10 @@ correct responses  (<a class="reference internal" href="#ddm-rt-correct-mean"><s
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_DDM_DriftDiffusionAnalytical</span> <span class="o">=</span> <span class="n">pnl</span><span class="o">.</span><span class="n">DDM</span><span class="p">(</span>
 <span class="gp">... </span>    <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionAnalytical</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">drift_rate</span><span class="o">=</span><span class="mf">0.08928</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="n">starting_point</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">starting_value</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.2645</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="n">t0</span><span class="o">=</span><span class="mf">0.15</span>
+<span class="gp">... </span>        <span class="n">non_decision_time</span><span class="o">=</span><span class="mf">0.15</span>
 <span class="gp">... </span>    <span class="p">),</span>
 <span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_DDM_DriftDiffusionAnalytical&#39;</span>
 <span class="gp">... </span><span class="p">)</span>
@@ -342,7 +342,7 @@ mode, only the <a class="reference internal" href="#ddm-decision-variable"><span
 <span class="gp">... </span>    <span class="n">function</span><span class="o">=</span><span class="n">pnl</span><span class="o">.</span><span class="n">DriftDiffusionIntegrator</span><span class="p">(</span>
 <span class="gp">... </span>        <span class="n">noise</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="n">initializer</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-<span class="gp">... </span>        <span class="n">starting_point</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="n">non_decision_time</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="n">rate</span><span class="o">=</span><span class="mf">3.0</span>
 <span class="gp">... </span>    <span class="p">),</span>
 <span class="gp">... </span>    <span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_DDM_path_integrator&#39;</span>
@@ -383,10 +383,17 @@ ISSN 0022-2496,
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.library.components.mechanisms.processing.integrator.ddm.</span></span><span class="sig-name descname"><span class="pre">DDM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DriftDiffusionAnalytical</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM" title="Permalink to this definition">¶</a></dt>
 <dd><p>Implements a drift diffusion process (also known as the <a class="reference external" href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2474742/">Diffusion Decision Model</a>, either by calculating an <a class="reference internal" href="#ddm-analytic-mode"><span class="std std-ref">analytic solution</span></a> or carrying out <a class="reference internal" href="#ddm-integration-mode"><span class="std std-ref">step-wise numerical integration</span></a>.
 See <a class="reference internal" href="Mechanism.html#mechanism-class-reference"><span class="std std-ref">Mechanism</span></a> for additional arguments and attributes.</p>
+<p>The default behaviour for the DDM is to reset its integration state on each new trial, this can be overridden by
+setting the <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.reset_stateful_function_when" title="psyneulink.core.components.component.Component.reset_stateful_function_when"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">reset_stateful_function_when</span></code></a> attribute to a different condition.
+In addition, unlike <code class="xref any docutils literal notranslate"><span class="pre">TransferMechamism</span></code>, the DDM’s
+<a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a>
+attribute is set to <code class="code docutils literal notranslate"><span class="pre">True</span></code> by default. This will cause the DDM to execute multiple time steps per
+call to its <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute" title="psyneulink.core.components.component.Component.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a>  method until the decision threshold is reached. This default behavior can
+be changed by setting <a class="reference internal" href="Component.html#psyneulink.core.components.component.Component.execute_until_finished" title="psyneulink.core.components.component.Component.execute_until_finished"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">execute_until_finished</span></code></a> to <code class="code docutils literal notranslate"><span class="pre">False</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>default_variable</strong> (<em>value</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_POINT</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> or
+<li><p><strong>default_variable</strong> (<em>value</em><em>, </em><em>list</em><em> or </em><em>np.ndarray : default FUNCTION_PARAMS</em><em>[</em><em>STARTING_VALUE</em><em>]</em>) – the input to the Mechanism used if none is provided in a call to its <a class="reference internal" href="Mechanism.html#psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute" title="psyneulink.core.components.mechanisms.mechanism.Mechanism_Base.execute"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">execute</span></code></a> or
 <code class="xref any docutils literal notranslate"><span class="pre">run</span></code> methods; also serves as a template to specify the length of the <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> for its <a class="reference internal" href="#psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function" title="psyneulink.library.components.mechanisms.processing.integrator.ddm.DDM.function"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">function</span></code></a>, and the <code class="xref any docutils literal notranslate"><span class="pre">primary</span> <span class="pre">OutputPort</span></code> of the
 DDM (see <code class="xref any docutils literal notranslate"><span class="pre">Input</span></code> &lt;DDM_Creation&gt;` for how an input with a length of greater than 1 is handled).</p></li>
 <li><p><strong>function</strong> (<em>IntegratorFunction : default DriftDiffusionAnalytical</em>) – specifies the function to use to <a class="reference internal" href="#ddm-execution"><span class="std std-ref">execute</span></a> the decision process; determines the mode of
@@ -401,7 +408,7 @@ execution (see <a class="reference internal" href="#psyneulink.library.component
 <strong>drift_rate</strong> parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>value : default  FUNCTION_PARAMS[STARTING_POINT]</p>
+<dd class="field-odd"><p>value : default  FUNCTION_PARAMS[STARTING_VALUE]</p>
 </dd>
 </dl>
 </dd></dl>
