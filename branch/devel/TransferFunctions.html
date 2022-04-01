@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>TransferFunctions &mdash; PsyNeuLink 0.8.8.1+531.g41ac3a023 documentation</title>
+  <title>TransferFunctions &mdash; PsyNeuLink 0.8.8.1+532.g98f353bf4 documentation</title>
   
 
   
@@ -99,7 +99,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+531
+                  0.8.8.1+532
                 </div>
               
             
@@ -1229,14 +1229,16 @@ arguments of the constructor.</p></li>
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">psyneulink.core.components.functions.transferfunctions.</span></span><span class="sig-name descname"><span class="pre">Logistic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_variable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x_0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">owner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic" title="Permalink to this definition">¶</a></dt>
 <dd><p id="logistic-function"><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic._function" title="psyneulink.core.components.functions.transferfunctions.Logistic._function"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">function</span></code></a> returns logistic transform of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a>:</p>
 <div class="math notranslate nohighlight">
-\[\frac{1}{1 + e^{ - gain ( variable + bias  - x_{0}) + offset}}\]</div>
-<p>(this is an offset and scaled version of the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Tanh" title="psyneulink.core.components.functions.transferfunctions.Tanh"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Tanh</span></code></a>, which is centered on origin).</p>
-<div class="admonition note">
+\[scale * \frac{1}{1 + e^{ - gain ( variable + bias - x_{0} ) + offset}}\]</div>
+<p>(this is a vertically offset and scaled version of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Tanh" title="psyneulink.core.components.functions.transferfunctions.Tanh"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Tanh</span></code></a>, which is centered on origin).</p>
+<div class="admonition note" id="logistic-note">
 <p class="admonition-title">Note</p>
-<p>The <strong>bias</strong> and <strong>x_0</strong> arguments are identical, apart from opposite signs: <strong>bias</strong> is included to
-accomodate the convention in the machine learning community; <strong>x_0</strong> is included to match the <a class="reference external" href="https://en.wikipedia.org/wiki/Logistic_function">standard
+<p>The <strong>bias</strong> and <strong>x_0</strong> arguments are identical, apart from having opposite signs: <strong>bias</strong> is included to
+accommodate the convention in the machine learning community; <strong>x_0</strong> is included to match the <a class="reference external" href="https://en.wikipedia.org/wiki/Logistic_function">standard
 form of the Logistic Function</a> (in which <strong>gain</strong>
-corresponds to the <em>k</em> parameter and <strong>scale</strong> corresponds to the <em>L</em> parameter).</p>
+corresponds to the <em>k</em> parameter and <strong>scale</strong> corresponds to the <em>L</em> parameter); <strong>offset</strong> implements a
+form of bias that is not modulated by gain (i.e., it produces an offset of the function along the horizontal
+axis).</p>
 </div>
 <p><a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.derivative" title="psyneulink.core.components.functions.transferfunctions.Logistic.derivative"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">derivative</span></code></a> returns the derivative of the Logistic using its <strong>output</strong>:</p>
 <div class="math notranslate nohighlight">
@@ -1245,14 +1247,17 @@ corresponds to the <em>k</em> parameter and <strong>scale</strong> corresponds t
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>default_variable</strong> (<em>number</em><em> or </em><em>array : default class_defaults.variable</em>) – specifies a template for the value to be transformed.</p></li>
-<li><p><strong>gain</strong> (<em>float : default 1.0</em>) – specifies value by which to multiply <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before logistic transformation</p></li>
-<li><p><strong>bias</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
-and before logistic transformation. This argument is identical to x_0, with the opposite sign.</p></li>
-<li><p><strong>x_0</strong> (<em>float : default 0.0</em>) – specifies value to subtract from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
-and before logistic transformation. This argument is identical to bias, with the opposite sign.</p></li>
-<li><p><strong>offset</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
-but before logistic transformation.</p></li>
-<li><p><strong>scale</strong> (<em>float : default 0.0</em>) – specifies value by which each element is multiplied after applying the logistic transformation.</p></li>
+<li><p><strong>gain</strong> (<em>float : default 1.0</em>) – specifies value by which to multiply each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after it is adjusted by
+<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.x_0" title="psyneulink.core.components.functions.transferfunctions.Logistic.x_0"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">x_0</span></code></a>, but before adjustment by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.offset" title="psyneulink.core.components.functions.transferfunctions.Logistic.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> and
+logistic transformation (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p></li>
+<li><p><strong>bias</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>;
+this argument has an effect identical to x_0, but with the opposite sign (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p></li>
+<li><p><strong>x_0</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>;
+this argument has an effect identical to bias, but with the opposite sign (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p></li>
+<li><p><strong>offset</strong> (<em>float : default 0.0</em>) – specifies value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after adjusting by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.x_0" title="psyneulink.core.components.functions.transferfunctions.Logistic.x_0"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">x_0</span></code></a> and applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>, but before logistic
+transformation (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p></li>
+<li><p><strong>scale</strong> (<em>float : default 0.0</em>) – specifies value by which to multiply each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after all other parameters
+and logistic transformation have been applied (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p></li>
 <li><p><strong>params</strong> (<em>Dict</em><em>[</em><em>param keyword: param value</em><em>] </em><em>: default None</em>) – a <a class="reference internal" href="ParameterPort.html#parameterport-specification"><span class="std std-ref">parameter dictionary</span></a> that specifies the parameters for the
 function.  Values specified for parameters in the dictionary override any assigned to those parameters in
 arguments of the constructor.</p></li>
@@ -1276,11 +1281,11 @@ arguments of the constructor.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic.gain">
 <span class="sig-name descname"><span class="pre">gain</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="Permalink to this definition">¶</a></dt>
-<dd><p>value by which each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> is multiplied before applying the
-<a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> (if it is specified).</p>
+<dd><p>value by which to multiply each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after it is adjusted by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a> and/or <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.x_0" title="psyneulink.core.components.functions.transferfunctions.Logistic.x_0"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">x_0</span></code></a>, but before adjustment by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.offset" title="psyneulink.core.components.functions.transferfunctions.Logistic.offset"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">offset</span></code></a> and
+logistic transformation (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float : default 1.0</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1288,11 +1293,11 @@ arguments of the constructor.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic.bias">
 <span class="sig-name descname"><span class="pre">bias</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="Permalink to this definition">¶</a></dt>
-<dd><p>value added to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
-(if it is specified). This attribute is identical to x_0, with the opposite sign.</p>
+<dd><p>value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>;
+this argument has an effect identical to x_0, but with the opposite sign (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float : default 0.0</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1300,11 +1305,11 @@ arguments of the constructor.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic.x_0">
 <span class="sig-name descname"><span class="pre">x_0</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.x_0" title="Permalink to this definition">¶</a></dt>
-<dd><p>value subtracted from each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying the <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
-(if it is specified). This attribute is identical to bias, with the opposite sign.</p>
+<dd><p>value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> before applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>;
+this argument has an effect identical to bias, but with the opposite sign (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float : default 0.0</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1312,11 +1317,12 @@ arguments of the constructor.</p></li>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic.offset">
 <span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.offset" title="Permalink to this definition">¶</a></dt>
-<dd><p>value to added to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>
-but before logistic transformation.</p>
+<dd><p>value to add to each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after adjusting by <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.bias" title="psyneulink.core.components.functions.transferfunctions.Logistic.bias"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">bias</span></code></a>
+and/or <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.x_0" title="psyneulink.core.components.functions.transferfunctions.Logistic.x_0"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">x_0</span></code></a> and applying <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.gain" title="psyneulink.core.components.functions.transferfunctions.Logistic.gain"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">gain</span></code></a>, but before logistic transformation
+(see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float : default 0.0</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1324,10 +1330,11 @@ but before logistic transformation.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="psyneulink.core.components.functions.transferfunctions.Logistic.scale">
 <span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#psyneulink.core.components.functions.transferfunctions.Logistic.scale" title="Permalink to this definition">¶</a></dt>
-<dd><p>value by which each element is multiplied after applying the Logistic transform.</p>
+<dd><p>value by which to multiply each element of <a class="reference internal" href="#psyneulink.core.components.functions.transferfunctions.Logistic.variable" title="psyneulink.core.components.functions.transferfunctions.Logistic.variable"><code class="xref any py py-attr docutils literal notranslate"><span class="pre">variable</span></code></a> after all other parameters and
+logistic transformation have been applied (see <a class="reference internal" href="#logistic-note"><span class="std std-ref">note</span></a> above).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>float : default 0.0</p>
+<dd class="field-odd"><p>float</p>
 </dd>
 </dl>
 </dd></dl>

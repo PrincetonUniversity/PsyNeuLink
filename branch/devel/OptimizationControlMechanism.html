@@ -10,7 +10,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.8.1+531.g41ac3a023 documentation</title>
+  <title>OptimizationControlMechanism &mdash; PsyNeuLink 0.8.8.1+532.g98f353bf4 documentation</title>
   
 
   
@@ -101,7 +101,7 @@
               
               
                 <div class="version">
-                  0.8.8.1+531
+                  0.8.8.1+532
                 </div>
               
             
@@ -1575,10 +1575,17 @@ Return state_input_port_dicts with FUNCTION entries added as appropriate.</p>
 <dt>If no agent_rep has been specified or it is a CompositionFunctionApproximator, return</dt><dd><p>(note: validation of state_features specified for CompositionFunctionApproximator optimization
 is up to the CompositionFunctionApproximator)</p>
 </dd>
-<dt>If agent_rep is a Composition, call:</dt><dd><ul class="simple">
-<li><p>_update_state_input_port_names()</p></li>
-<li><p>_update_state_features_dict()</p></li>
-<li><p>_validate_state_features()</p></li>
+<dt>If agent_rep is a Composition:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>if  has any new INPUT Node InputPorts:</dt><dd><ul>
+<li><p>construct state_input_ports for them</p></li>
+<li><p>add to _specified_INPUT_Node_InputPorts_in_order</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>call _validate_state_features()</p></li>
+<li><p>call _update_state_input_port_names()</p></li>
 </ul>
 </dd>
 </dl>
@@ -1586,8 +1593,28 @@ is up to the CompositionFunctionApproximator)</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_state_input_port_names">
-<span class="sig-name descname"><span class="pre">_update_state_input_port_names</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_state_input_port_names" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">_update_state_input_port_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._update_state_input_port_names" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update names of state_input_port for any newly instantiated INPUT Node InputPorts</p>
+<dl class="simple">
+<dt>If its instantiation has NOT been DEFERRED, assert that:</dt><dd><ul class="simple">
+<li><p>corresponding agent_rep INPUT Node InputPort is in Composition</p></li>
+<li><p>state_input_port either has path_afferents or it is for a numeric spec</p></li>
+</ul>
+</dd>
+<dt>If it’s instantiation HAS been DEFERRED, for any newly added agent_rep INPUT Node InputPorts:</dt><dd><ul class="simple">
+<li><p>add agent_rep INPUT Node InputPort to _specified_INPUT_Node_InputPorts_in_order</p></li>
+<li><dl class="simple">
+<dt>if state_input_port:</dt><dd><ul>
+<li><p>HAS path_afferents, get source and generate new name</p></li>
+<li><p>does NOT have path_afferents, assert it is for a numeric spec and generate new name</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>assign new name</p></li>
+</ul>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -1622,8 +1649,8 @@ If monitor_for_control is specified as an ObjectiveMechanism, warn and move to o
 <dl class="py method">
 <dt class="sig sig-object py" id="psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_control_signals">
 <span class="sig-name descname"><span class="pre">_instantiate_control_signals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism.OptimizationControlMechanism._instantiate_control_signals" title="Permalink to this definition">¶</a></dt>
-<dd><p>Size control_allocation and assign modulatory_signals
-Set size of control_allocation equal to number of modulatory_signals.
+<dd><p>Size control_allocation and assign modulatory_signals</p>
+<p>Set size of control_allocation equal to number of modulatory_signals.
 Assign each modulatory_signal sequentially to corresponding item of control_allocation.
 Assign RANDOMIZATION_CONTROL_SIGNAL for random_variables</p>
 </dd></dl>
