@@ -16,5 +16,5 @@ comp.scheduler.add_condition_set({
 
 comp.termination_processing = {
     pnl.TimeScale.RUN: pnl.AfterNTrials(1),
-    pnl.TimeScale.TRIAL: pnl.AfterNCalls(B, 4)
+    pnl.TimeScale.TRIAL: pnl.All(pnl.Not(pnl.BeforeNCalls(B, 5)))
 }

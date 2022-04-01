@@ -288,7 +288,7 @@ class OneHot(SelectionFunction):
                 cmp_op = ">="
                 cmp_prev = b1.call(fabs, [prev])
                 cmp_curr = b1.call(fabs, [current])
-                val = current
+                val = b1.call(fabs, [current])
             elif self.mode == MAX_INDICATOR:
                 cmp_op = ">="
                 cmp_prev = prev

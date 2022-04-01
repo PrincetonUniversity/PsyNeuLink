@@ -543,13 +543,13 @@ def _setup_mt_rand_init(ctx, state_ty, init_scalar):
     builder.call(init_scalar, [state, default_seed])
 
     # python considers everything to be an array
-    key_array = builder.alloca(ir.ArrayType(seed.type, 1))
+    key_array = builder.alloca(ir.ArrayType(seed.type, 1), name="key_array")
     key_p = builder.gep(key_array, [ctx.int32_ty(0), ctx.int32_ty(0)])
     builder.store(seed, key_p)
 
-    pi = builder.alloca(ctx.int32_ty)
+    pi = builder.alloca(ctx.int32_ty, name="pi_slot")
     builder.store(ctx.int32_ty(1), pi)
-    pj = builder.alloca(ctx.int32_ty)
+    pj = builder.alloca(ctx.int32_ty, name="pj_slot")
     builder.store(ctx.int32_ty(0), pj)
     array = builder.gep(state, [ctx.int32_ty(0), ctx.int32_ty(0)])
     a_0 = builder.gep(array, [ctx.int32_ty(0), ctx.int32_ty(0)])
@@ -640,8 +640,8 @@ def _setup_mt_rand_integer(ctx, state_ty):
     cond = builder.icmp_signed(">=", idx, ctx.int32_ty(_MERSENNE_N))
     with builder.if_then(cond, likely=False):
         mag01 = ir.ArrayType(array.type.pointee.element, 2)([0, 0x9908b0df])
-        pmag01 = builder.alloca(mag01.type)
-        builder.store(mag01, pmag01)
+        mag0 = builder.extract_value(mag01, [0])
+        mag1 = builder.extract_value(mag01, [1])
 
         with helpers.for_loop_zero_inc(builder,
                                        ctx.int32_ty(_MERSENNE_N - _MERSENNE_M),
@@ -653,9 +653,9 @@ def _setup_mt_rand_integer(ctx, state_ty):
             val_kk_1 = b.and_(b.load(pkk_1), pkk_1.type.pointee(0x7fffffff))
             val = b.or_(val_kk, val_kk_1)
 
-            val_1 = b.and_(val, val.type(1))
-            pval_mag = b.gep(pmag01, [ctx.int32_ty(0), val_1])
-            val_mag = b.load(pval_mag)
+            val_i1 = b.and_(val, val.type(1))
+            val_b = b.trunc(val_i1, ctx.bool_ty)
+            val_mag = b.select(val_b, mag1, mag0)
 
             val_shift = b.lshr(val, val.type(1))
 
@@ -681,9 +681,9 @@ def _setup_mt_rand_integer(ctx, state_ty):
             val_kk_1 = b.and_(b.load(pkk_1), pkk.type.pointee(0x7fffffff))
             val = b.or_(val_kk, val_kk_1)
 
-            val_1 = b.and_(val, val.type(1))
-            pval_mag = b.gep(pmag01, [ctx.int32_ty(0), val_1])
-            val_mag = b.load(pval_mag)
+            val_i1 = b.and_(val, val.type(1))
+            val_b = b.trunc(val_i1, ctx.bool_ty)
+            val_mag = b.select(val_b, mag1, mag0)
 
             val_shift = b.lshr(val, val.type(1))
 
@@ -741,10 +741,10 @@ def _setup_mt_rand_float(ctx, state_ty, gen_int):
     builder = _setup_builtin_func_builder(ctx, "mt_rand_double", (state_ty.as_pointer(), ctx.float_ty.as_pointer()))
     state, out = builder.function.args
 
-    al = builder.alloca(gen_int.args[1].type.pointee)
+    al = builder.alloca(gen_int.args[1].type.pointee, name="al_gen_int")
     builder.call(gen_int, [state, al])
 
-    bl = builder.alloca(gen_int.args[1].type.pointee)
+    bl = builder.alloca(gen_int.args[1].type.pointee, name="bl_gen_int")
     builder.call(gen_int, [state, bl])
 
     a = builder.load(al)
@@ -802,7 +802,7 @@ def _setup_mt_rand_normal(ctx, state_ty, gen_float):
 
     builder.branch(loop_block)
     builder.position_at_end(loop_block)
-    tmp = builder.alloca(out.type.pointee)
+    tmp = builder.alloca(out.type.pointee, name="mt_rand_normal_tmp")
 
     # X1 is in (-1, 1)
     builder.call(gen_float, [state, tmp])
@@ -1085,7 +1085,7 @@ def _setup_philox_rand_int32(ctx, state_ty, gen_int64):
         builder.ret_void()
 
 
-    val_ptr = builder.alloca(gen_int64.args[1].type.pointee)
+    val_ptr = builder.alloca(gen_int64.args[1].type.pointee, name="rand_i64")
     builder.call(gen_int64, [state, val_ptr])
     val = builder.load(val_ptr)
 
@@ -1112,7 +1112,7 @@ def _setup_philox_rand_double(ctx, state_ty, gen_int64):
     rhs = double_ty(1.0 / 9007199254740992.0)
 
     # Generate random integer
-    lhs_ptr = builder.alloca(gen_int64.args[1].type.pointee)
+    lhs_ptr = builder.alloca(gen_int64.args[1].type.pointee, name="rand_int64")
     builder.call(gen_int64, [state, lhs_ptr])
 
     # convert to float
@@ -1138,7 +1138,7 @@ def _setup_philox_rand_float(ctx, state_ty, gen_int32):
     rhs = float_ty(1.0 / 8388608.0)
 
     # Generate random integer
-    lhs_ptr = builder.alloca(gen_int32.args[1].type.pointee)
+    lhs_ptr = builder.alloca(gen_int32.args[1].type.pointee, name="rand_int32")
     builder.call(gen_int32, [state, lhs_ptr])
 
     # convert to float
@@ -1880,8 +1880,8 @@ def _setup_philox_rand_normal(ctx, state_ty, gen_float, gen_int, wi_data, ki_dat
 
     # Allocate storage for calling int/float PRNG
     # outside of the loop
-    tmp_fptype = builder.alloca(fptype)
-    tmp_itype = builder.alloca(itype)
+    tmp_fptype = builder.alloca(fptype, name="tmp_fp")
+    tmp_itype = builder.alloca(itype, name="tmp_int")
 
     # Enter the main generation loop
     builder.branch(loop_block)

@@ -13,7 +13,7 @@ f_d = 1
 
 
 # EVC params for Umemoto et al
-t0 = 0.2
+non_decision_time = 0.2
 c = 0.19
 thresh = 0.21
 x_0 = 0 # starting point
@@ -55,8 +55,8 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
        # drift_rate=(0.1170),
         threshold=(thresh),
         noise=(c),
-        starting_point=(x_0),
-        t0=t0
+        starting_value=(x_0),
+        non_decision_time=non_decision_time
     ),name='Decision',
     output_ports=[
         pnl.DECISION_VARIABLE,
@@ -67,7 +67,7 @@ Decision = pnl.DDM(function=pnl.DriftDiffusionAnalytical(
             pnl.VARIABLE: (pnl.OWNER_VALUE, 2),
             pnl.FUNCTION: pnl.Linear(0, slope=1.0, intercept=1)
         }
-    ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),starting_point=(0), t0=0.15
+    ],) #drift_rate=(1.0),threshold=(0.2645),noise=(0.5),non_decision_time=(0), non_decision_time=0.15
 
 Decision.set_log_conditions('InputPort-0')
 
@@ -114,7 +114,7 @@ Distractor_Rep_Control_Signal = pnl.ControlSignal(modulates=[(pnl.SLOPE, Distrac
 
 Umemoto_comp.add_model_based_optimizer(optimizer=pnl.OptimizationControlMechanism(agent_rep=Umemoto_comp,
                                                                                   state_features={pnl.SHADOW_EXTERNAL_INPUTS: [Target_Stim, Distractor_Stim, Reward]},
-                                                                                  state_feature_functions=pnl.AdaptiveIntegrator(rate=1.0),
+                                                                                  state_feature_function=pnl.AdaptiveIntegrator(rate=1.0),
                                                                                   objective_mechanism=pnl.ObjectiveMechanism(monitor_for_control=[Reward,
                                                                                                                                                  (Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD], 1, -1)],
                                                                                                                              ),

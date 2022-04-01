@@ -274,13 +274,13 @@ class TestTargetSpecs:
             comp.run(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
         assert ("Input stimulus" in str(error_text.value) and
-                "for Target is incompatible with its external_input_values" in str(error_text.value))
+                "for Target is incompatible with the shape of its external input" in str(error_text.value))
         # Elicit error with learn
         with pytest.raises(RunError) as error_text:
             comp.learn(inputs={A: [1.0, 2.0, 3.0],
                              p.target: [[[3.0], [4.0]], [[5.0], [6.0]], [[7.0], [8.0]]]})
         assert ("Input stimulus" in str(error_text.value) and
-                "for Target is incompatible with its external_input_values" in str(error_text.value))
+                "for Target is incompatible with the shape of its external input" in str(error_text.value))
 
     # The input sizes were picked because the lengths conflict in set:
     # >>> print({10, 2}, {2, 10})
@@ -303,7 +303,7 @@ class TestTargetSpecs:
         assert 'The input dictionary' in error_text
         assert 'contains input specifications of different lengths ({10, 2})' in error_text or \
                'contains input specifications of different lengths ({2, 10})' in error_text
-        assert 'The same number of inputs must be provided for each node in a Composition' in error_text
+        assert 'The same number of inputs must be provided for each receiver in a Composition' in error_text
 
 
 class TestLearningPathwayMethods:

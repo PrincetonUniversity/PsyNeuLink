@@ -9,6 +9,7 @@ from llvmlite import ir
 DIM_X = 1000
 DIM_Y = 2000
 u = np.random.rand(DIM_X, DIM_Y)
+trans_u = u.transpose()
 v = np.random.rand(DIM_X, DIM_Y)
 vector = np.random.rand(DIM_X)
 trans_vector = np.random.rand(DIM_Y)
@@ -24,7 +25,7 @@ mat_add_res = np.add(u,v)
 mat_sub_res = np.subtract(u,v)
 mat_mul_res = np.multiply(u, v)
 dot_res = np.dot(vector, u)
-trans_dot_res = np.dot(trans_vector, u.transpose())
+trans_dot_res = np.dot(trans_vector, trans_u)
 mat_sadd_res = np.add(u, scalar)
 mat_smul_res = np.multiply(u, scalar)
 
@@ -95,7 +96,8 @@ def test_mat_scalar(benchmark, op, builtin, result, func_mode):
 @pytest.mark.benchmark(group="Dot")
 def test_dot(benchmark, func_mode):
     if func_mode == 'Python':
-        ex = lambda : np.dot(vector, u)
+        def ex():
+            return np.dot(vector, u)
     elif func_mode == 'LLVM':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm")
         def ex():
@@ -153,8 +155,8 @@ def test_dot_llvm_constant_dim(benchmark, mode):
 @pytest.mark.benchmark(group="Dot")
 def test_dot_transposed(benchmark, func_mode):
     if func_mode == 'Python':
-        trans_u = u.transpose()
-        ex = lambda : np.dot(trans_vector, trans_u)
+        def ex():
+            return np.dot(trans_vector, trans_u)
     elif func_mode == 'LLVM':
         bin_f = pnlvm.LLVMBinaryFunction.get("__pnl_builtin_vxm_transposed")
         def ex():

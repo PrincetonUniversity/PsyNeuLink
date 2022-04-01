@@ -195,7 +195,7 @@ class PredatorPreySimulator:
         # **************************************  CONOTROL APPARATUS ***********************************************************
         self.ocm = OptimizationControlMechanism(name='EVC',
                                                 state_features=[self.prey_pred_trial_input_mech, self.single_prey_trial_input_mech, self.double_prey_trial_input_mech],
-                                                # state_feature_functions=FEATURE_FUNCTION,
+                                                # state_feature_function=FEATURE_FUNCTION,
                                                 agent_rep=RegressionCFA(
                                update_weights=BayesGLM(mu_0=-0.0, sigma_0=0.0001),
                                prediction_terms=[PV.F, PV.C, PV.COST]
@@ -416,21 +416,20 @@ def run_search():
     import joblib
     import hypertunity as ht
 
-    #client = Client(scheduler_file='scheduler.json')
-    client = Client()
+    client = Client(scheduler_file='scheduler.json')
+    #client = Client() # Setup local cluster
     print(client)
 
     domain = ht.Domain({
                     "cost_rate": set([-.8])
     })
 
-    # with joblib.parallel_backend('dask'):
-    #     with joblib.Parallel() as parallel:
-    #         print("Doing the work ... ")
-    #         results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(1))
-    #
-    # print(results)
-    run_games(-.8)
+    with joblib.parallel_backend('dask'):
+        with joblib.Parallel() as parallel:
+            print("Doing the work ... ")
+            results = parallel(joblib.delayed(run_games)(*domain.sample().as_namedtuple()) for s in range(1))
+
+    print(results)
 
 if __name__ == "__main__":
     run_search()

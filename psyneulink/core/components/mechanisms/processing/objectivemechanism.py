@@ -72,7 +72,7 @@ ObjectiveMechanism will be assigned Projections from all of the OutputPorts that
 used to specify attributes of the InputPort and/or MappingProjection(s) to it, that the ObjectiveMechanism creates to
 monitor the specified OutputPort.  In general, the `value <OutputPort.value>` of each specified OutputPort determines
 the format of the `variable <InputPort.variable>` of the InputPort that is created for it by the ObjectiveMechanism.
-However, this can be overridden using the ObjectiveMechanism's `default_variable <ObjectiveMechanism.default_variable>`
+However, this can be overridden using the ObjectiveMechanism's `default_variable <Component_Variable>`
 or `size <Mechanism_Base.size>` attributes (see `Mechanism InputPort specification
 <Mechanism_InputPort_Specification>`), or by specifying a Projection from the OutputPort to the InputPort (see
 `Input Source Specification <InputPort_Projection_Source_Specification>`). If an item in the
@@ -180,10 +180,10 @@ the items in its `variable <Mechanism_Base.variable>`. However, by assigning val
 <InputPort.weight>` and/or 'exponent <InputPort.exponent>` attributes of the corresponding InputPorts,
 it can be configured to calculate differences, ratios,  etc. (see `example
 <ObjectiveMechanism_Weights_and_Exponents_Example>` below).  The `function <ObjectiveMechanism.function>`  can also
-be replaced with any `CombinationFunction`, or any python function that takes an 2d array as its input (with a number
-of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates a 1d array as its result.
-If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned from `weight
-<InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
+be replaced with any `CombinationFunction <CombinationFunctions>`, or any python function that takes an 2d array as
+its input (with a number of items in axis 0 equal to the number of the ObjectiveMechanism's InputPorts), and generates
+a 1d array as its result. If it implements :keyword:`weight` and/or :keyword:`exponent` attributes, those are assigned
+from `weight <InputPort.weight>` and `exponent <InputPort.exponent>` attributes of its `input_ports
 <ObjectiveMechanism.input_ports>` (also listed in the `monitor_weights_and_exponents
 <ObjectiveMechanism.monitor_weights_and_exponents>` attribute);  otherwise, they are ignored.
 
@@ -464,10 +464,10 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
         OutputPorts specified in its `monitor <ObjectiveMechanism.monitor>` attribute.
 
     function : CombinationFunction, ObjectiveFunction, function, or method
-        the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be
-        any PsyNeuLink `CombinationFunction` or a Python function that takes a 2d array with an arbitrary number of
-        items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e., its number of
-        input_ports) and returns a 1d array.
+        the function used to evaluate the values monitored by the ObjectiveMechanism.  The function can be any
+        `CombinationFunction <CombinationFunctions>` or a Python function that takes a 2d array with an arbitrary
+        number of items or a number equal to the number of items in the ObjectiveMechanism's variable (i.e.,
+        its number of input_ports) and returns a 1d array.
 
     output_port : OutputPort
         contains the `primary OutputPort <OutputPort_Primary>` of the ObjectiveMechanism; the default is
@@ -498,7 +498,7 @@ class ObjectiveMechanism(ProcessingMechanism_Base):
 
     """
 
-    componentType = OBJECTIVE_MECHANISM
+    componentType = 'ObjectiveMechanism'
 
     classPreferenceLevel = PreferenceLevel.SUBTYPE
     # These will override those specified in TYPE_DEFAULT_PREFERENCES

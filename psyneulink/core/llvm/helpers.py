@@ -10,12 +10,16 @@
 
 from contextlib import contextmanager
 from ctypes import util
+import warnings
+import sys
 
 from llvmlite import ir
+import llvmlite.binding as llvm
+
 
 from .debug import debug_env
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, AtPass, AtTrial, BeforeNCalls, AtNCalls, AfterNCalls, \
-    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll
+    EveryNCalls, Never, Not, WhenFinished, WhenFinishedAny, WhenFinishedAll, Threshold
 from psyneulink.core.scheduling.time import TimeScale
 
 
@@ -61,6 +65,37 @@ def array_ptr_loop(builder, array, id):
     # Assume we'll never have more than 4GB arrays
     stop = ir.IntType(32)(array.type.pointee.count)
     return for_loop_zero_inc(builder, stop, id)
+
+def memcpy(builder, dst, src):
+
+    bool_ty = ir.IntType(1)
+    char_ptr_ty = ir.IntType(8).as_pointer()
+    ptr_src = builder.bitcast(src, char_ptr_ty)
+    ptr_dst = builder.bitcast(dst, char_ptr_ty)
+
+    obj_size_ty = ir.FunctionType(ir.IntType(64), [char_ptr_ty, bool_ty, bool_ty, bool_ty])
+    obj_size_f = builder.function.module.declare_intrinsic("llvm.objectsize.i64", [], obj_size_ty)
+    # the params are: obj pointer, 0 on unknown size, NULL is unknown, size at runtime
+    obj_size = builder.call(obj_size_f, [ptr_dst, bool_ty(1), bool_ty(0), bool_ty(0)])
+
+    if "unaligned_copy" in debug_env:
+        memcpy_ty = ir.FunctionType(ir.VoidType(), [char_ptr_ty, char_ptr_ty, obj_size.type, bool_ty])
+        memcpy_f = builder.function.module.declare_intrinsic("llvm.memcpy", [], memcpy_ty)
+        builder.call(memcpy_f, [ptr_dst, ptr_src, obj_size, bool_ty(0)])
+    else:
+        int_ty = ir.IntType(32)
+        int_ptr_ty = int_ty.as_pointer()
+        obj_size = builder.add(obj_size, obj_size.type((int_ty.width // 8) - 1))
+        obj_size = builder.udiv(obj_size, obj_size.type(int_ty.width // 8))
+        ptr_src = builder.bitcast(src, int_ptr_ty)
+        ptr_dst = builder.bitcast(dst, int_ptr_ty)
+
+        with for_loop_zero_inc(builder, obj_size, id="memcopy_loop") as (b, idx):
+            src = b.gep(ptr_src, [idx])
+            dst = b.gep(ptr_dst, [idx])
+            b.store(b.load(src), dst)
+
+    return builder
 
 
 def fclamp(builder, val, min_val, max_val):
@@ -192,11 +227,11 @@ def is_close(ctx, builder, val1, val2, rtol=1e-05, atol=1e-08):
 
 def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     assert arr1.type == arr2.type
-    all_ptr = builder.alloca(ir.IntType(1))
+    all_ptr = builder.alloca(ir.IntType(1), name="all_close_slot")
     builder.store(all_ptr.type.pointee(1), all_ptr)
     with array_ptr_loop(builder, arr1, "all_close") as (b1, idx):
         val1_ptr = b1.gep(arr1, [idx.type(0), idx])
-        val2_ptr = b1.gep(arr1, [idx.type(0), idx])
+        val2_ptr = b1.gep(arr2, [idx.type(0), idx])
         val1 = b1.load(val1_ptr)
         val2 = b1.load(val2_ptr)
         res_close = is_close(ctx, b1, val1, val2, rtol, atol)
@@ -208,7 +243,7 @@ def all_close(ctx, builder, arr1, arr2, rtol=1e-05, atol=1e-08):
     return builder.load(all_ptr)
 
 
-def create_allocation(builder, allocation, search_space, idx):
+def create_sample(builder, allocation, search_space, idx):
     # Construct allocation corresponding to this index
     for i in reversed(range(len(search_space.type.pointee))):
         slot_ptr = builder.gep(allocation, [idx.type(0), idx.type(i)])
@@ -352,14 +387,19 @@ def call_elementwise_operation(ctx, builder, x, operation, output_ptr):
 def printf(builder, fmt, *args, override_debug=False):
     if "print_values" not in debug_env and not override_debug:
         return
+
     #FIXME: Fix builtin printf and use that instead of this
-    try:
-        import llvmlite.binding as llvm
-        libc = util.find_library("c")
-        llvm.load_library_permanently(libc)
-        # Address will be none if the symbol is not found
-        printf_address = llvm.address_of_symbol("printf")
-    except Exception as e:
+    libc_name = "msvcrt" if sys.platform == "win32" else "c"
+    libc = util.find_library(libc_name)
+    if libc is None:
+        warnings.warn("Standard libc library not found, 'printf' not available!")
+        return
+
+    llvm.load_library_permanently(libc)
+    # Address will be none if the symbol is not found
+    printf_address = llvm.address_of_symbol("printf")
+    if printf_address is None:
+        warnings.warn("'printf' symbol not found in libc, 'printf' not available!")
         return
 
     # Direct pointer constants don't work
@@ -539,8 +579,10 @@ class ConditionGenerator:
 
         return builder.icmp_signed("==", node_trial, global_trial)
 
+    # TODO: replace num_exec_locs use with equivalent from nodes_states
     def generate_sched_condition(self, builder, condition, cond_ptr, node,
-                                 is_finished_callbacks, num_exec_locs):
+                                 is_finished_callbacks, num_exec_locs,
+                                 nodes_states):
 
 
         if isinstance(condition, Always):
@@ -550,13 +592,13 @@ class ConditionGenerator:
             return self.ctx.bool_ty(0)
 
         elif isinstance(condition, Not):
-            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs)
+            orig_condition = self.generate_sched_condition(builder, condition.condition, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
             return builder.not_(orig_condition)
 
         elif isinstance(condition, All):
             agg_cond = self.ctx.bool_ty(1)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
                 agg_cond = builder.and_(agg_cond, cond_res)
             return agg_cond
 
@@ -580,7 +622,7 @@ class ConditionGenerator:
         elif isinstance(condition, Any):
             agg_cond = self.ctx.bool_ty(0)
             for cond in condition.args:
-                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs)
+                cond_res = self.generate_sched_condition(builder, cond, cond_ptr, node, is_finished_callbacks, num_exec_locs, nodes_states)
                 agg_cond = builder.or_(agg_cond, cond_res)
             return agg_cond
 
@@ -667,5 +709,48 @@ class ConditionGenerator:
                 run_cond = builder.and_(run_cond, node_is_finished)
 
             return run_cond
+
+        elif isinstance(condition, Threshold):
+            target = condition.dependency
+            param = condition.parameter
+            threshold = condition.threshold
+            comparator = condition.comparator
+            indices = condition.indices
+
+            # Convert execution_count to  ('num_executions', TimeScale.LIFE).
+            # These two are identical in compiled semantics.
+            if param == 'execution_count':
+                assert indices is None
+                param = 'num_executions'
+                indices = TimeScale.LIFE
+
+            assert param in target.llvm_state_ids, (
+                f"Threshold for {target} only supports items in llvm_state_ids"
+                f" ({target.llvm_state_ids})"
+            )
+
+            node_idx = self.composition._get_node_index(target)
+            node_state = builder.gep(nodes_states, [self.ctx.int32_ty(0), self.ctx.int32_ty(node_idx)])
+            param_ptr = get_state_ptr(builder, target, node_state, param)
+
+            if isinstance(param_ptr.type.pointee, ir.ArrayType):
+                if indices is None:
+                    indices = [0, 0]
+                elif isinstance(indices, TimeScale):
+                    indices = [indices.value]
+
+                indices = [self.ctx.int32_ty(x) for x in [0] + list(indices)]
+                param_ptr = builder.gep(param_ptr, indices)
+
+            val = builder.load(param_ptr)
+            val = convert_type(builder, val, ir.DoubleType())
+            threshold = val.type(threshold)
+
+            if comparator == '==':
+                return is_close(self.ctx, builder, val, threshold, condition.rtol, condition.atol)
+            elif comparator == '!=':
+                return builder.not_(is_close(self.ctx, builder, val, threshold, condition.rtol, condition.atol))
+            else:
+                return builder.fcmp_ordered(comparator, val, threshold)
 
         assert False, "Unsupported scheduling condition: {}".format(condition)

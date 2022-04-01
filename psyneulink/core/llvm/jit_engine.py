@@ -90,8 +90,8 @@ def _cpu_jit_constructor():
 
     # And an execution engine with a builtins backing module
     builtins_module = _generate_cpu_builtins_module(LLVMBuilderContext.get_current().float_ty)
-    if "llvm" in debug_env:
-        with open(builtins_module.name + '.parse.ll', 'w') as dump_file:
+    if "dump-llvm-gen" in debug_env:
+        with open(builtins_module.name + '.generated.ll', 'w') as dump_file:
             dump_file.write(str(builtins_module))
 
     __backing_mod = binding.parse_assembly(str(builtins_module))
@@ -103,12 +103,14 @@ def _cpu_jit_constructor():
 def _ptx_jit_constructor():
     _binding_initialize()
 
-    opt_level = int(debug_env.get('opt', 0))
+    opt_level = int(debug_env.get('opt', 2))
 
-    # PassManagerBuilder can be shared
+    # PassManagerBuilder is used only for inlining simple functions
     __pass_manager_builder = binding.PassManagerBuilder()
-    __pass_manager_builder.opt_level = opt_level
-    __pass_manager_builder.size_level = 1 # Try to reduce size to reduce PTX parsing time
+    __pass_manager_builder.opt_level = 0
+    __pass_manager_builder.size_level = 1
+    # The threshold of '7' is empirically selected.
+    __pass_manager_builder.inlining_threshold = 7
 
     # Use default device
     # TODO: Add support for multiple devices
@@ -116,7 +118,7 @@ def _ptx_jit_constructor():
     __ptx_sm = "sm_{}{}".format(__compute_capability[0], __compute_capability[1])
     # Create compilation target, use 64bit triple
     __ptx_target = binding.Target.from_triple("nvptx64-nvidia-cuda")
-    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm)
+    __ptx_target_machine = __ptx_target.create_target_machine(cpu=__ptx_sm, opt=opt_level)
 
     __ptx_pass_manager = binding.ModulePassManager()
     __ptx_target_machine.add_analysis_passes(__ptx_pass_manager)
@@ -126,8 +128,8 @@ def _ptx_jit_constructor():
 
 
 def _try_parse_module(module):
-    if "llvm" in debug_env:
-        with open(module.name + '.parse.ll', 'w') as dump_file:
+    if "dump-llvm-gen" in debug_env:
+        with open(module.name + '.generated.ll', 'w') as dump_file:
             dump_file.write(str(module))
 
     # IR module is not the same as binding module.
@@ -177,12 +179,12 @@ class jit_engine:
         if "time_stat" in debug_env:
             print("Time to optimize LLVM module bundle '{}': {}".format(module.name, finish - start))
 
-        if "opt" in self.__debug_env:
+        if "dump-llvm-opt" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.opt.ll', 'w') as dump_file:
                 dump_file.write(str(module))
 
         # This prints generated x86 assembly
-        if "isa" in self.__debug_env:
+        if "dump-asm" in self.__debug_env:
             with open(self.__class__.__name__ + '-' + str(self.__optimized_modules) + '.S', 'w') as dump_file:
                 dump_file.write(self._target_machine.emit_assembly(module))
 
@@ -208,7 +210,7 @@ class jit_engine:
             self.__mod.link_in(module)
             self.__linked_modules += 1
 
-        if "llvm" in debug_env:
+        if "dump-llvm-gen" in debug_env:
             with open(mod_name + '.linked.ll', 'w') as dump_file:
                 dump_file.write(str(self.__mod))
 
@@ -356,6 +358,6 @@ class ptx_jit_engine(jit_engine):
             self.stage_compilation({wrapper_mod})
             self.compile_staged()
             kernel = self._engine._find_kernel(name + "_cuda_kernel")
-            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
+#            kernel.set_cache_config(pycuda.driver.func_cache.PREFER_L1)
 
         return kernel

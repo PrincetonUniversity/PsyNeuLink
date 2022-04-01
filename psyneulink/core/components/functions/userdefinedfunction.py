@@ -11,7 +11,7 @@
 
 import numpy as np
 import typecheck as tc
-from inspect import signature, _empty, getsourcelines
+from inspect import signature, _empty, getsourcelines, getsourcefile, getclosurevars
 import ast
 
 from psyneulink.core.components.functions.function import FunctionError, Function_Base
@@ -20,7 +20,7 @@ from psyneulink.core.globals.keywords import \
     SELF, USER_DEFINED_FUNCTION, USER_DEFINED_FUNCTION_TYPE
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences import is_pref_set
-from psyneulink.core.globals.utilities import iscompatible
+from psyneulink.core.globals.utilities import _is_module_class, iscompatible
 
 from psyneulink.core import llvm as pnlvm
 
@@ -447,6 +447,7 @@ class UserDefinedFunction(Function_Base):
             None,
             stateful=False,
             loggable=False,
+            pnl_internal=True,
         )
 
     @tc.typecheck
@@ -659,27 +660,54 @@ class UserDefinedFunction(Function_Base):
     def _gen_llvm_function_body(self, ctx, builder, params, state,
                                 arg_in, arg_out, *, tags:frozenset):
 
-        srclines = getsourcelines(self.custom_function)[0]
-        # strip preceeding space characters
-        first_line = srclines[0]
-        prefix_len = len(first_line) - len(first_line.lstrip())
-        formatted_src = ''.join(line[prefix_len:] for line in srclines)
-        func_ast = ast.parse(formatted_src)
+        # Check for global and nonlocal vars. we can't compile those.
+        closure_vars = getclosurevars(self.custom_function)
+        assert len(closure_vars.nonlocals) == 0, "Compiling functions with non-local variables is not supported!"
 
-        func_globals = self.custom_function.__globals__
+        srcfile = getsourcefile(self.custom_function)
+        first_line = getsourcelines(self.custom_function)[1]
+
+        with open(srcfile) as f:
+            for node in ast.walk(ast.parse(f.read(), srcfile)):
+                if getattr(node, 'lineno', -1) == first_line and isinstance(node, (ast.FunctionDef, ast.Lambda)):
+                    func_ast = node
+                    break
+                func_ast = None
+
+        assert func_ast is not None, "UDF function source code not found"
+
+        func_globals = closure_vars.globals
+        assert len(func_globals) == 0 or (
+               len(func_globals) == 1 and np in func_globals.values()), \
+               "Compiling functions with global variables is not supported! ({})".format(closure_vars.globals)
         func_params = {param_id: pnlvm.helpers.get_param_ptr(builder, self, params, param_id) for param_id in self.llvm_param_ids}
 
-        udf_block = builder.append_basic_block(name="post_udf")
-        udf_builder = pnlvm.ir.IRBuilder(udf_block)
+        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
 
-        pnlvm.codegen.UserDefinedFunctionVisitor(ctx, builder, udf_builder, func_globals, func_params, arg_in, arg_out).visit(func_ast)
-        # After we're done with allocating variable stack space, jump to the code
-        builder.branch(udf_block)
-
+        # The generic '_gen_llvm' will append another ret void to this block
         post_block = builder.append_basic_block(name="post_udf")
-        # If the function didn't use return as the last statement jump back to the outer block
-        if not udf_builder.block.is_terminated:
-            udf_builder.branch(post_block)
-
         builder.position_at_start(post_block)
         return builder
+
+    def as_mdf_model(self):
+        import math
+        import modeci_mdf.functions.standard
+
+        model = super().as_mdf_model()
+        ext_function_str = None
+
+        if self.custom_function in [
+            func_dict['function']
+            for name, func_dict
+            in modeci_mdf.functions.standard.mdf_functions.items()
+        ]:
+            ext_function_str = self.custom_function.__name__
+
+        if _is_module_class(self.custom_function, math):
+            ext_function_str = f'{self.custom_function.__module__}.{self.custom_function.__name__}'
+
+        if ext_function_str is not None:
+            model.metadata['custom_function'] = ext_function_str
+            del model.metadata['type']
+
+        return model

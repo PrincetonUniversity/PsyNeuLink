@@ -45,7 +45,7 @@ class TestMechanism:
         'noise',
         [pnl.GaussianDistort, pnl.NormalDist]
     )
-    def test_noise_variations(self, noise):
+    def test_noise_assignment_equivalence(self, noise):
         t1 = pnl.TransferMechanism(name='t1', size=2, noise=noise())
         t2 = pnl.TransferMechanism(name='t2', size=2)
         t2.integrator_function.parameters.noise.set(noise())
@@ -55,6 +55,80 @@ class TestMechanism:
 
         for _ in range(5):
             np.testing.assert_equal(t1.execute([1, 1]), t2.execute([1, 1]))
+
+    @pytest.mark.parametrize(
+        'noise, included_parameter_ports, excluded_parameter_ports, noise_statefulness',
+        [
+            (0, ['noise'], ['seed'], True),
+            ([0], ['noise'], ['seed'], True),
+            ([0, 0], ['noise'], ['seed'], True),
+            ([0, pnl.NormalDist()], [], ['noise', 'seed'], False),
+            (pnl.NormalDist, ['seed'], ['noise'], False),
+            ([pnl.NormalDist(), pnl.NormalDist()], [], ['noise', 'seed'], False),
+        ]
+    )
+    def test_numeric_noise_specifications(
+        self,
+        noise,
+        included_parameter_ports,
+        excluded_parameter_ports,
+        noise_statefulness
+    ):
+        try:
+            size = len(noise)
+        except TypeError:
+            size = 1
+
+        t = pnl.TransferMechanism(size=size, noise=noise)
+
+        assert all(p in t.parameter_ports for p in included_parameter_ports)
+        assert all(p not in t.parameter_ports for p in excluded_parameter_ports)
+
+        assert t.parameters.noise.stateful is noise_statefulness
+
+    @pytest.mark.parametrize(
+        'noise',
+        [
+            [0, pnl.NormalDist()],
+            pnl.NormalDist,
+            [pnl.NormalDist(), pnl.NormalDist()]
+        ]
+    )
+    def test_noise_change_warning_to_numeric(self, noise):
+        try:
+            size = len(noise)
+        except TypeError:
+            size = 1
+
+        t = pnl.TransferMechanism(size=size, noise=noise)
+
+        with pytest.warns(
+            UserWarning,
+            match='Setting noise to a numeric value after instantiation.*'
+        ):
+            t.parameters.noise.set(0)
+
+    @pytest.mark.parametrize(
+        'noise',
+        [
+            0,
+            [0],
+            [0, 0],
+        ]
+    )
+    def test_noise_change_warning_to_function(self, noise):
+        try:
+            size = len(noise)
+        except TypeError:
+            size = 1
+
+        t = pnl.TransferMechanism(size=size, noise=noise)
+
+        with pytest.warns(
+            UserWarning,
+            match='Setting noise to a value containing functions after instantiation.*'
+        ):
+            t.parameters.noise.set(pnl.NormalDist)
 
 
 class TestMechanismFunctionParameters:
@@ -155,7 +229,7 @@ class TestMechanismFunctionParameters:
 class TestResetValues:
 
     def test_reset_state_integrator_mechanism(self):
-        A = pnl.IntegratorMechanism(name='A', function=pnl.DriftDiffusionIntegrator())
+        A = pnl.IntegratorMechanism(name='A', function=pnl.DriftDiffusionIntegrator(time_step_size=1.0))
 
         # Execute A twice
         #  [0] saves decision variable only (not time)

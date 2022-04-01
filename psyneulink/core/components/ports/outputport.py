@@ -615,10 +615,11 @@ Class Reference
 """
 
 import copy
-import numpy as np
-import typecheck as tc
 import types
 import warnings
+
+import numpy as np
+import typecheck as tc
 
 from psyneulink.core.components.component import Component, ComponentError
 from psyneulink.core.components.functions.function import Function
@@ -627,13 +628,14 @@ from psyneulink.core.globals.context import ContextFlags, handle_external_contex
 from psyneulink.core.globals.keywords import \
     ALL, ASSIGN, CALCULATE, CONTEXT, CONTROL_SIGNAL, FUNCTION, GATING_SIGNAL, INDEX, INPUT_PORT, INPUT_PORTS, \
     MAPPING_PROJECTION, MECHANISM_VALUE, NAME, OUTPUT_PORT, OUTPUT_PORTS, OUTPUT_PORT_PARAMS, \
-    OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, VALUE, VARIABLE, \
+    OWNER_VALUE, PARAMS, PARAMS_DICT, PROJECTION, PROJECTIONS, RECEIVER, REFERENCE_VALUE, STANDARD_OUTPUT_PORTS, PORT, \
+    VALUE, VARIABLE, \
     output_port_spec_to_parameter_name, INPUT_PORT_VARIABLES
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update
+    convert_to_np_array, is_numeric, iscompatible, make_readonly_property, recursive_update, parse_valid_identifier
 
 __all__ = [
     'OutputPort', 'OutputPortError', 'PRIMARY', 'SEQUENTIAL', 'StandardOutputPorts', 'StandardOutputPortsError',
@@ -672,10 +674,7 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
             return spec
         elif isinstance(spec, tuple):
             # Tuple indexing item of owner's attribute (e.g.,: OWNER_VALUE, int))
-            try:
-                owner_param_name = output_port_spec_to_parameter_name[spec[0]]
-            except KeyError:
-                owner_param_name = spec[0]
+            owner_param_name = output_port_spec_to_parameter_name.get(spec[0], spec[0])
 
             try:
                 index = spec[1]() if callable(spec[1]) else spec[1]
@@ -683,19 +682,14 @@ def _parse_output_port_variable(variable, owner, context=None, output_port_name=
                 # context is None during initialization, and we don't want to
                 # incur the cost of .get during execution
                 if context is None:
-                    return getattr(owner.parameters, owner_param_name).get(context)[index]
+                    val = getattr(owner.parameters, owner_param_name).get(context)
                 else:
-                    return getattr(owner.parameters, owner_param_name)._get(context)[index]
-            except TypeError:
-                if context is None:
-                    if getattr(owner.parameters, owner_param_name).get(context) is None:
-                        return None
-                elif getattr(owner.parameters, owner_param_name)._get(context) is None:
-                    return None
-                else:
-                    # raise OutputPortError("Can't parse variable ({}) for {} of {}".
-                    #                        format(spec, output_port_name or OutputPort.__name__, owner.name))
-                    raise Exception
+                    val = getattr(owner.parameters, owner_param_name)._get(context)
+
+                if hasattr(val, '_get_by_time_scale'):
+                    return val._get_by_time_scale(index)
+
+                return val if val is None else val[index]
             except:
                 raise OutputPortError(f"Can't parse variable ({spec}) for "
                                        f"{output_port_name or OutputPort.__name__} of {owner.name}.")
@@ -763,6 +757,7 @@ class OutputPortError(Exception):
 
     def __str__(self):
         return repr(self.error_value)
+
 
 class OutputPort(Port_Base):
     """
@@ -1056,6 +1051,12 @@ class OutputPort(Port_Base):
     def _get_primary_port(self, mechanism):
         return mechanism.output_port
 
+    def _get_all_afferents(self):
+        return self.mod_afferents
+
+    def _get_all_projections(self):
+        return self.mod_afferents + self.efferents
+
     def _parse_arg_variable(self, default_variable):
         return _parse_output_port_variable(default_variable, self.owner)
 
@@ -1263,14 +1264,18 @@ class OutputPort(Port_Base):
     def pathway_projections(self, assignment):
         self.efferents = assignment
 
+    @property
+    def efferents(self):
+        try:
+            return self._efferents
+        except:
+            self._efferents = []
+            return self._efferents
+
     # For backward compatibility with INDEX and ASSIGN
     @property
     def calculate(self):
         return self.assign
-
-    @property
-    def label(self):
-        return self.get_label()
 
     def get_label(self, context=None):
         try:
@@ -1279,16 +1284,25 @@ class OutputPort(Port_Base):
             label_dictionary = {}
         return self._get_value_label(label_dictionary, self.owner.output_ports, context=context)
 
-    @property
-    def _dict_summary(self):
-        return {
-            **super()._dict_summary,
-            **{
-                'shape': str(self.defaults.value.shape),
-                'dtype': str(self.defaults.value.dtype)
-            }
-        }
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
 
+        owner_func_name = parse_valid_identifier(self.owner.function.name)
+        if self._variable_spec == OWNER_VALUE:
+            value = owner_func_name
+        elif isinstance(self._variable_spec, tuple) and self._variable_spec[0] == OWNER_VALUE:
+            if len(self.owner.defaults.value) == 1:
+                value = owner_func_name
+            else:
+                value = f'{owner_func_name}[{self._variable_spec[1]}]'
+        else:
+            raise ValueError(f'Unsupported variable spec for MDF: {self._variable_spec}')
+
+        return mdf.OutputPort(
+            id=parse_valid_identifier(self.name),
+            value=value,
+            **self._mdf_metadata
+        )
 
 def _instantiate_output_ports(owner, output_ports=None, context=None):
     """Call Port._instantiate_port_list() to instantiate ContentAddressableList of OutputPort(s)
@@ -1642,6 +1656,7 @@ class StandardOutputPorts():
     # @property
     # def indices(self):
     #     return [item[INDEX] for item in self.data]
+
 
 def _parse_output_port_function(owner, output_port_name, function, params_dict_as_variable=False):
     """Parse specification of function as Function, Function class, Function.function, types.FunctionType or types.MethodType.

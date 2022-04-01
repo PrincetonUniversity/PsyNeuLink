@@ -32,8 +32,8 @@ decision = DDM(name='DECISION',
                function=DriftDiffusionAnalytical(drift_rate=(1.0),
                                                  threshold=(0.2645),
                                                  noise=(0.5),
-                                                 starting_point=(0),
-                                                 t0=0.15),
+                                                 starting_value=(0),
+                                                 non_decision_time=0.15),
                output_ports=[DECISION_VARIABLE,
                               RESPONSE_TIME,
                               PROBABILITY_UPPER_THRESHOLD]
@@ -64,8 +64,8 @@ control_signal_search_range = SampleSpec(start=1.0, stop=1.8, step=0.2)
 evc = OptimizationControlMechanism(name='EVC',
                                    agent_rep=Stroop_model,
                                    state_features=[color_input.input_port, word_input.input_port, reward.input_port],
-                                   state_feature_functions=AdaptiveIntegrator(rate=1.0),
-                                   # state_feature_functions=AdaptiveIntegrator,
+                                   state_feature_function=AdaptiveIntegrator(rate=1.0),
+                                   # state_feature_function=AdaptiveIntegrator,
                                    objective_mechanism= \
                                        ObjectiveMechanism(
                                                name='EVC Objective Mechanism',

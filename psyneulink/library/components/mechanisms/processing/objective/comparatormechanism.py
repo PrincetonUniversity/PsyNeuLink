@@ -224,9 +224,9 @@ class ComparatorMechanism(ObjectiveMechanism):
         (see `ComparatorMechanism_Structure` for additional details).
 
     function : CombinationFunction, function or method
-        used to compare the `sample` with the `target`.  It can be any PsyNeuLink `CombinationFunction`,
-        or a python function that takes a 2d array with two items and returns a 1d array of the same length
-        as the two input items.
+        used to compare the `sample` with the `target`.  It can be any `CombinationFunction <CombinationFunctions>`,
+        or a python function that takes a 2d array with two items and returns a 1d array of the same length as the
+        two input items.
 
     output_port : OutputPort
         contains the `primary <OutputPort_Primary>` OutputPort of the ComparatorMechanism; the default is

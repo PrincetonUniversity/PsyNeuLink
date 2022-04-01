@@ -788,13 +788,13 @@ Mechanism used to specify target values for a particular learning pathway in the
 Several attributes are available for viewing the labels for the current value(s) of a Mechanism's InputPort(s) and
 OutputPort(s).
 
-    - The `label <InputPort.label>` attribute of an InputPort or OutputPort returns the current label of
-      its value, if one exists, and its value otherwise.
+    - The `label <InputPort.labeled_value>` attribute of an InputPort or OutputPort returns the current label of
+      its value, if one exists, and its numeric value otherwise.
 
-    - The `input_labels <Mechanism_Base.input_labels>` and `output_labels <Mechanism_Base.output_labels>` attributes of
-      Mechanisms return a list containing the labels corresponding to the value(s) of the InputPort(s) or
-      OutputPort(s) of the Mechanism, respectively. If the current value of a port does not have a corresponding
-      label, then its numeric value is used instead.
+    - The `labeled_input_values <Mechanism_Base.labeled_input_values>` and `labeled_output_values
+      <Mechanism_Base.labeled_output_values>` attributes of a Mechanism return lists containing the labels
+      corresponding to the value(s) of the InputPort(s) or OutputPort(s) of the Mechanism, respectively. If the
+      current value of a Port does not have a corresponding label, then its numeric value is reported instead.
 
         >>> output_labels_dict = {"red": [1, 0, 0],
         ...                      "green": [0, 1, 0],
@@ -804,13 +804,13 @@ OutputPort(s).
         >>> C = pnl.Composition(pathways=[M])
         >>> input_dictionary =  {M: [[1, 0, 0]]}
         >>> results = C.run(inputs=input_dictionary)
-        >>> M.get_output_labels(C)
+        >>> M.labeled_output_values(C)
         ['red']
-        >>> M.output_ports[0].get_label(C)
+        >>> M.output_ports[0].labeled_value(C)
         'red'
 
 Labels may be used to visualize the input and outputs of Mechanisms in a Composition with the **show_structure** option
-of the Composition's `show_graph`show_graph <ShowGraph_show_graph_Method>` method with the keyword **LABELS**.
+of the Composition's `show_graph`show_graph <ShowGraph.graph>` method with the keyword **LABELS**.
 
         >>> C.show_graph(show_mechanism_structure=pnl.LABELS)  #doctest: +SKIP
 
@@ -1098,22 +1098,23 @@ from psyneulink.core.components.ports.port import \
     REMOVE_PORTS, PORT_SPEC, _parse_port_spec, PORT_SPECIFIC_PARAMS, PROJECTION_SPECIFIC_PARAMS
 from psyneulink.core.components.shellclasses import Mechanism, Projection, Port
 from psyneulink.core.globals.context import Context, ContextFlags, handle_external_context
+from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
 # TODO: remove unused keywords
 from psyneulink.core.globals.keywords import \
     ADDITIVE_PARAM, EXECUTION_PHASE, EXPONENT, FUNCTION_PARAMS, \
     INITIALIZING, INIT_EXECUTE_METHOD_ONLY, INIT_FUNCTION_METHOD_ONLY, INPUT, \
     INPUT_LABELS_DICT, INPUT_PORT, INPUT_PORT_PARAMS, INPUT_PORTS, MECHANISM, MECHANISM_VALUE, \
-    MECHANISM_COMPONENT_CATEGORY, MODEL_SPEC_ID_INPUT_PORTS, MODEL_SPEC_ID_OUTPUT_PORTS, \
-    MULTIPLICATIVE_PARAM, \
+    MECHANISM_COMPONENT_CATEGORY, \
+    MULTIPLICATIVE_PARAM, EXECUTION_COUNT, \
     NAME, OUTPUT, OUTPUT_LABELS_DICT, OUTPUT_PORT, OUTPUT_PORT_PARAMS, OUTPUT_PORTS, OWNER_EXECUTION_COUNT, OWNER_VALUE, \
     PARAMETER_PORT, PARAMETER_PORT_PARAMS, PARAMETER_PORTS, PROJECTIONS, REFERENCE_VALUE, RESULT, \
-    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT
+    TARGET_LABELS_DICT, VALUE, VARIABLE, WEIGHT, MODEL_SPEC_ID_MDF_VARIABLE, MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION
 from psyneulink.core.globals.parameters import Parameter
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import register_category, remove_instance_from_registry
 from psyneulink.core.globals.utilities import \
     ContentAddressableList, append_type_to_name, convert_all_elements_to_np_array, convert_to_np_array, \
-    iscompatible, kwCompatibilityNumeric, convert_to_list
+    iscompatible, kwCompatibilityNumeric, convert_to_list, parse_valid_identifier
 from psyneulink.core.scheduling.condition import Condition
 from psyneulink.core.scheduling.time import TimeScale
 
@@ -1292,17 +1293,32 @@ class Mechanism_Base(Mechanism):
         in which each label (key) specifies a string associated with a value for the corresponding InputPort(s)
         of the Mechanism; see `Mechanism_Labels_Dicts` for additional details.
 
-    input_labels : list[str]
-        contains the labels corresponding to the value(s) of the InputPort(s) of the Mechanism. If the current value
-        of an InputPort does not have a corresponding label, then its numeric value is used instead.
+    labeled_input_values : list[str]
+        contains the labels corresponding to the current value(s) of the InputPort(s) of the Mechanism. If the
+        current value of an InputPort does not have a corresponding label, then its numeric value is used instead.
 
     external_input_ports : list[InputPort]
         list of the `input_ports <Mechanism_Base.input_ports>` for the Mechanism that are not designated as
         `internal_only <InputPort.internal_only>`;  these receive `inputs from a Composition
         <Composition_Execution_Inputs>` if the Mechanism is one of its `INPUT` `Nodes <Composition_Nodes>`.
 
+    external_input_shape : List[List or 1d np.array]
+        list of the `input_shape <InputPort.input_shape>`\\s of the Mechanism's external `input_ports
+        <Mechanism_Base.input_ports>` (i.e., excluding any `InputPorts <InputPort>` designated as `internal_only
+        <InputPort.internal_only>`), that shows the shape of the inputs expected for the Mechanism.  Each item
+        corresponds to an expected `path_afferent Projection <Port_Base.path_afferents>`, and its shape is
+        the expected `value <Projection_Base.value>` of that `Projection`.
+
+    external_input_variables : List[List or 1d np.array]
+        list of the `variable <InputPort.variable>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
+
     external_input_values : List[List or 1d np.array]
         list of the `value <InputPort.value>`\\s of the Mechanism's `external_input_ports
+        <Mechanism_Base.external_input_ports>`.
+
+    default_external_inputs : List[1d np.array]
+        list of the `default_input <InputPort.default_input>`\\s of the Mechanism's `external_input_ports
         <Mechanism_Base.external_input_ports>`.
 
     COMMENT:
@@ -1363,14 +1379,14 @@ class Mechanism_Base(Mechanism):
                   the `value <OutputPort.OutputPort.value>` of that OutputPort (and its corresponding item in the
                   the Mechanism's `output_values <Mechanism_Base.output_values>` attribute).
 
+    labeled_output_values : list
+        contains the labels corresponding to the current value(s) of the OutputPort(s) of the Mechanism. If the
+        current value of an OutputPort does not have a corresponding label, then its numeric value is used instead.
+
     output_labels_dict : dict
         contains entries that are either label:value pairs, or sub-dictionaries containing label:value pairs,
         in which each label (key) specifies a string associated with a value for the OutputPort(s) of the
         Mechanism; see `Mechanism_Labels_Dicts` for additional details.
-
-    output_labels : list
-        contains the labels corresponding to the value(s) of the OutputPort(s) of the Mechanism. If the current value
-        of an OutputPort does not have a corresponding label, then its numeric value is used instead.
 
     standard_output_ports : list[dict]
         list of the dictionary specifications for `StandardOutputPorts <OutputPort_Standard>` that can be assigned as
@@ -2390,11 +2406,10 @@ class Mechanism_Base(Mechanism):
         """
 
         if self.initialization_status == ContextFlags.INITIALIZED:
-            context.string = "{} EXECUTING {}: {}".format(context.source.name,self.name,
-                                                               ContextFlags._get_context_string(
-                                                                       context.flags, EXECUTION_PHASE))
+            context.string = f"{context.source.name} EXECUTING {self.name}: " \
+                             f"{ContextFlags._get_context_string(context.flags, EXECUTION_PHASE)}."
         else:
-            context.string = "{} INITIALIZING {}".format(context.source.name, self.name)
+            context.string = f"{context.source.name} INITIALIZING {self.name}."
 
         if context.source is ContextFlags.COMMAND_LINE:
             self._initialize_from_context(context, override=False)
@@ -2480,17 +2495,15 @@ class Mechanism_Base(Mechanism):
                 # Executing or simulating Composition, so get input by updating input_ports
                 if (input is None
                     and (context.execution_phase is not ContextFlags.IDLE)
-                    and (self.input_port.path_afferents != [])):
+                    and any(p.path_afferents for p in self.input_ports)):
                     variable = self._update_input_ports(runtime_port_params[INPUT_PORT_PARAMS], context)
 
                 # Direct call to execute Mechanism with specified input, so assign input to Mechanism's input_ports
                 else:
                     if context.source & ContextFlags.COMMAND_LINE:
                         context.execution_phase = ContextFlags.PROCESSING
-
                         if input is not None:
                             input = convert_all_elements_to_np_array(input)
-
                     if input is None:
                         input = self.defaults.variable
                     #     FIX:  this input value is sent to input CIMs when compositions are nested
@@ -2588,6 +2601,15 @@ class Mechanism_Base(Mechanism):
         return value
 
     def _get_variable_from_input(self, input, context=None):
+        """Return array of results from each InputPort function executed with corresponding input item as its variable
+        This is called when Mechanism is executed on its own (e.g., during init or from the command line).
+        It:
+        - bypasses call to Port._update(), thus ignoring any afferent Projections assigned to the Mechanism;
+        - assigns each item of **input** to variable of corresponding InputPort;
+        - executes function of each InputPort using corresponding item of input as its variable;
+        - returns array of values generated by execution of each InputPort function.
+        """
+
         input = convert_to_np_array(input, dimension=2)
         num_inputs = np.size(input, 0)
         num_input_ports = len(self.input_ports)
@@ -2603,13 +2625,29 @@ class Mechanism_Base(Mechanism):
                                   "its number of input_ports ({2})".
                                   format(num_inputs, self.name,  num_input_ports ))
         for input_item, input_port in zip(input, self.input_ports):
-            if len(input_port.defaults.value) == len(input_item):
-                input_port.parameters.value._set(input_item, context)
+            if input_port.default_input_shape.size == np.array(input_item).size:
+                from psyneulink.core.compositions.composition import RunError
+
+                # Assign input_item as input_port.variable
+                input_port.parameters.variable._set(np.atleast_2d(input_item), context)
+
+                # Call input_port._execute with newly assigned variable and assign result to input_port.value
+                base_error_msg = f"Input to '{self.name}' ({input_item}) is incompatible " \
+                                 f"with its corresponding {InputPort.__name__} ({input_port.full_name})"
+                try:
+                    input_port.parameters.value._set(
+                        input_port._execute(input_port.parameters.variable.get(context), context),
+                        context)
+                except (RunError,TypeError) as error:
+                    raise MechanismError(f"{base_error_msg}: '{error.args[0]}.'")
+                except:
+                    raise MechanismError(f"{base_error_msg}.")
             else:
                 raise MechanismError(f"Length ({len(input_item)}) of input ({input_item}) does not match "
-                                     f"required length ({len(input_port.defaults.variable)}) for input "
+                                     f"required length ({input_port.default_input_shape.size}) for input "
                                      f"to {InputPort.__name__} {repr(input_port.name)} of {self.name}.")
 
+        # Return values of input_ports for use as variable of Mechanism
         return convert_to_np_array(self.get_input_values(context))
 
     def _update_input_ports(self, runtime_input_port_params=None, context=None):
@@ -2822,7 +2860,11 @@ class Mechanism_Base(Mechanism):
 
     def _get_input_struct_type(self, ctx):
         # Extract the non-modulation portion of InputPort input struct
-        input_type_list = [ctx.get_input_struct_type(port).elements[0] for port in self.input_ports]
+        def _get_data_part_of_input_struct(p):
+            struct_ty = ctx.get_input_struct_type(p)
+            return struct_ty.elements[0] if len(p.mod_afferents) > 0 else struct_ty
+
+        input_type_list = [_get_data_part_of_input_struct(port) for port in self.input_ports]
 
 
         # Get modulatory inputs
@@ -2849,7 +2891,7 @@ class Mechanism_Base(Mechanism):
         return (port_state_init, *mech_state_init)
 
     def _gen_llvm_ports(self, ctx, builder, ports, group,
-                        get_output_ptr, fill_input_data,
+                        get_output_ptr, get_input_data_ptr,
                         mech_params, mech_state, mech_input):
         group_ports = getattr(self, group)
         ports_param = pnlvm.helpers.get_param_ptr(builder, self, mech_params, group)
@@ -2859,14 +2901,35 @@ class Mechanism_Base(Mechanism):
         for i, port in enumerate(ports):
             p_function = ctx.import_llvm_function(port)
 
-            # Find output location
+            # Find input and output locations
+            builder, p_input_data = get_input_data_ptr(builder, i)
             builder, p_output = get_output_ptr(builder, i)
 
-            # Allocate the input structure (data + modulation)
-            p_input = builder.alloca(p_function.args[2].type.pointee)
+            if len(port.mod_afferents) == 0:
+                # There's no modulation so the only input is data
+                if p_input_data.type == p_function.args[2].type:
+                    p_input = p_input_data
+                else:
+                    assert port in self.output_ports
+                    # Ports always take at least 2d input. However, parsing
+                    # the function result can result in 1d structure or scalar
+                    # Casting the pointer is LLVM way of adding dimensions
+                    array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
+                    array_2d = pnlvm.ir.ArrayType(array_1d, 1)
+                    assert array_1d == p_function.args[2].type.pointee or array_2d == p_function.args[2].type.pointee, \
+                        "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                    p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
-            # Copy input data to input structure
-            builder = fill_input_data(builder, p_input, i)
+            else:
+                # Port input structure is: (data, [modulations]),
+                p_input = builder.alloca(p_function.args[2].type.pointee,
+                                         name=group + "_port_" + str(i) + "_input")
+                # Fill in the data.
+                # FIXME: We can potentially hit the same dimensionality issue
+                #        as above, but it's more difficult to manifest and
+                #        not even new tests that modulate output ports hit it.
+                p_data = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
+                builder.store(builder.load(p_input_data), p_data)
 
             # Copy mod_afferent inputs
             for idx, p_mod in enumerate(port.mod_afferents):
@@ -2903,58 +2966,51 @@ class Mechanism_Base(Mechanism):
         else:
             ip_output_type = pnlvm.ir.LiteralStructType(ip_output_list)
 
-        ip_output = builder.alloca(ip_output_type)
+        ip_output = builder.alloca(ip_output_type, name="input_ports_out")
 
         def _get_output_ptr(b, i):
             ptr = b.gep(ip_output, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, p_input, i):
-            ip_in = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            # Input port inputs are {original parameter, [modulations]},
-            # fill in the first one.
-            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(ip_in), data_ptr)
-            return b
+        def _get_input_data_ptr(b, i):
+            ptr = builder.gep(mech_input, [ctx.int32_ty(0), ctx.int32_ty(i)])
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, self.input_ports, "input_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_input)
 
         return ip_output, builder
 
     def _gen_llvm_param_ports_for_obj(self, obj, params_in, ctx, builder,
                                       mech_params, mech_state, mech_input):
-        # Allocate a shadow structure to overload user supplied parameters
-        params_out = builder.alloca(params_in.type.pointee)
-        # Copy original values. This handles params without param ports.
-        # Few extra copies will be eliminated by the compiler.
-        builder.store(builder.load(params_in), params_out)
-
         # This should be faster than 'obj._get_compilation_params'
         compilation_params = (getattr(obj.parameters, p_id, None) for p_id in obj.llvm_param_ids)
         # Filter out param ports without corresponding param for this function
         param_ports = [self._parameter_ports[param] for param in compilation_params if param in self._parameter_ports]
+
+        # Exit early if there's no modulation. It's difficult for compiler
+        # to replace pointer arguments to functions with the source location.
+        if len(param_ports) == 0:
+            return params_in, builder
+
+        # Allocate a shadow structure to overload user supplied parameters
+        params_out = builder.alloca(params_in.type.pointee, name="modulated_parameters")
+        if len(param_ports) != len(obj.llvm_param_ids):
+            builder = pnlvm.helpers.memcpy(builder, params_out, params_in)
 
         def _get_output_ptr(b, i):
             ptr = pnlvm.helpers.get_param_ptr(b, obj, params_out,
                                               param_ports[i].source.name)
             return b, ptr
 
-        def _fill_input(b, p_input, i):
-            param_ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
-                                                    param_ports[i].source.name)
-            # Parameter port inputs are {original parameter, [modulations]},
-            # here we fill in the first one.
-            data_ptr = builder.gep(p_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            assert data_ptr.type == param_ptr.type, \
-                "Mishandled modulation type for: {} in '{}' in '{}'".format(
-                    param_ports[i].name, obj.name, self.name)
-            b.store(b.load(param_ptr), data_ptr)
-            return b
+        def _get_input_data_ptr(b, i):
+            ptr = pnlvm.helpers.get_param_ptr(b, obj, params_in,
+                                              param_ports[i].source.name)
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, param_ports, "_parameter_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_input)
         return params_out, builder
 
@@ -2963,17 +3019,41 @@ class Mechanism_Base(Mechanism):
         port_spec = port._variable_spec
         if port_spec == OWNER_VALUE:
             return value
-        elif isinstance(port_spec, tuple) and port_spec[0] == OWNER_VALUE:
-            index = port_spec[1]() if callable(port_spec[1]) else port_spec[1]
-
-            assert index < len(value.type.pointee)
-            return builder.gep(value, [ctx.int32_ty(0), ctx.int32_ty(index)])
         elif port_spec == OWNER_EXECUTION_COUNT:
-            execution_count = pnlvm.helpers.get_state_ptr(builder, self, mech_state, "execution_count")
-            return execution_count
+            # Convert execution count to (num_executions, TimeScale.LIFE)
+            # The difference in Python PNL is that the former counts across
+            # all contexts. This is not possible in compiled code, thus
+            # the two are identical.
+            port_spec = ("num_executions", TimeScale.LIFE)
+
+        try:
+            name = port_spec[0]
+            ids = (x() if callable(x) else getattr(x, 'value', x) for x in port_spec[1:])
+        except TypeError as e:
+            # TypeError means we can't index.
+            # Convert this to assertion failure below
+            pass
         else:
             #TODO: support more spec options
-            assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
+            if name == OWNER_VALUE:
+                data = value
+            elif name in self.llvm_state_ids:
+                data = pnlvm.helpers.get_state_ptr(builder, self, mech_state, name)
+            else:
+                data = None
+
+            if data is not None:
+                parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
+                # "num_executions" are kept as int64, we need to convert the value to float first
+                if name == "num_executions":
+                    count = builder.load(parsed)
+                    count_fp = builder.uitofp(count, ctx.float_ty)
+                    parsed = builder.alloca(count_fp.type)
+                    builder.store(count_fp, parsed)
+
+                return parsed
+
+        assert False, "Unsupported OutputPort spec: {} ({})".format(port_spec, value.type)
 
     def _gen_llvm_output_ports(self, ctx, builder, value,
                                mech_params, mech_state, mech_in, mech_out):
@@ -2981,88 +3061,75 @@ class Mechanism_Base(Mechanism):
             ptr = b.gep(mech_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
             return b, ptr
 
-        def _fill_input(b, s_input, i):
-            data_ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
+        def _get_input_data_ptr(b, i):
+            ptr = self._gen_llvm_output_port_parse_variable(ctx, b,
                mech_params, mech_state, value, self.output_ports[i])
-            # Output port inputs are {original parameter, [modulations]},
-            # fill in the first one.
-            input_ptr = builder.gep(s_input, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            if input_ptr.type != data_ptr.type:
-                port = self.output_ports[i]
-                warnings.warn("Shape mismatch: {} parsed value does not match "
-                              "output port: mech value: {} spec: {} parsed {}.".format(
-                              port, self.defaults.value, port._variable_spec,
-                              port.defaults.variable))
-                input_ptr = builder.gep(input_ptr, [ctx.int32_ty(0), ctx.int32_ty(0)])
-            b.store(b.load(data_ptr), input_ptr)
-            return b
+            return b, ptr
 
         builder = self._gen_llvm_ports(ctx, builder, self.output_ports, "output_ports",
-                                       _get_output_ptr, _fill_input,
+                                       _get_output_ptr, _get_input_data_ptr,
                                        mech_params, mech_state, mech_in)
         return builder
 
-    def _gen_llvm_invoke_function(self, ctx, builder, function, params, state, variable, *, tags:frozenset):
+    def _gen_llvm_invoke_function(self, ctx, builder, function, f_params, f_state, variable, *, tags:frozenset):
         fun = ctx.import_llvm_function(function, tags=tags)
-        fun_out = builder.alloca(fun.args[3].type.pointee)
+        fun_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
 
-        builder.call(fun, [params, state, variable, fun_out])
+        builder.call(fun, [f_params, f_state, variable, fun_out])
 
         return fun_out, builder
 
-    def _gen_llvm_is_finished_cond(self, ctx, builder, params, state):
+    def _gen_llvm_is_finished_cond(self, ctx, builder, m_params, m_state):
         return ctx.bool_ty(1)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params, m_state, arg_in,
                                       ip_output, *, tags:frozenset):
 
         # Default mechanism runs only the main function
-        f_params_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        f_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         f_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, f_params_ptr, ctx, builder, params, state, arg_in)
-        f_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
+                self.function, f_base_params, ctx, builder, m_base_params, m_state, arg_in)
+        f_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
 
         return self._gen_llvm_invoke_function(ctx, builder, self.function,
                                               f_params, f_state, ip_output,
                                               tags=tags)
 
-    def _gen_llvm_function_internal(self, ctx, builder, params, state, arg_in,
-                                    arg_out, *, tags:frozenset):
+    def _gen_llvm_function_internal(self, ctx, builder, m_params, m_state, arg_in,
+                                    arg_out, m_base_params, *, tags:frozenset):
 
         ip_output, builder = self._gen_llvm_input_ports(ctx, builder,
-                                                        params, state, arg_in)
+                                                        m_base_params, m_state, arg_in)
 
-        value, builder = self._gen_llvm_mechanism_functions(ctx, builder, params,
-                                                            state, arg_in,
-                                                            ip_output,
-                                                            tags=tags)
+        value, builder = self._gen_llvm_mechanism_functions(ctx, builder, m_base_params,
+                                                            m_params, m_state, arg_in,
+                                                            ip_output, tags=tags)
 
-        # Update execution counter
-        exec_count_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "execution_count")
-        exec_count = builder.load(exec_count_ptr)
-        exec_count = builder.fadd(exec_count, exec_count.type(1))
-        builder.store(exec_count, exec_count_ptr)
 
-        # Update internal clock (i.e. num_executions parameter)
-        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "num_executions")
-        for scale in [TimeScale.TIME_STEP, TimeScale.PASS, TimeScale.TRIAL, TimeScale.RUN]:
-            num_exec_time_ptr = builder.gep(num_executions_ptr, [ctx.int32_ty(0), ctx.int32_ty(scale.value)])
+        # Update  num_executions parameter
+        num_executions_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "num_executions")
+        for scale in TimeScale:
+            assert scale.value < len(num_executions_ptr.type.pointee)
+            num_exec_time_ptr = builder.gep(num_executions_ptr,
+                                            [ctx.int32_ty(0), ctx.int32_ty(scale.value)],
+                                            name="num_executions_{}_ptr".format(scale))
             new_val = builder.load(num_exec_time_ptr)
             new_val = builder.add(new_val, new_val.type(1))
             builder.store(new_val, num_exec_time_ptr)
 
-        builder = self._gen_llvm_output_ports(ctx, builder, value, params, state, arg_in, arg_out)
-
-        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, state, "value")
+        val_ptr = pnlvm.helpers.get_state_ptr(builder, self, m_state, "value")
         if val_ptr.type.pointee == value.type.pointee:
-            pnlvm.helpers.push_state_val(builder, self, state, "value", value)
+            pnlvm.helpers.push_state_val(builder, self, m_state, "value", value)
         else:
             # FIXME: Does this need some sort of parsing?
             warnings.warn("Shape mismatch: function result does not match mechanism value param: {} vs. {}".format(value.type.pointee, val_ptr.type.pointee))
 
+        # Run output ports after updating the mech state (num_executions and value)
+        builder = self._gen_llvm_output_ports(ctx, builder, value, m_base_params, m_state, arg_in, arg_out)
+
         # is_finished should be checked after output ports ran
         is_finished_f = ctx.import_llvm_function(self, tags=tags.union({"is_finished"}))
-        is_finished_cond = builder.call(is_finished_f, [params, state, arg_in,
+        is_finished_cond = builder.call(is_finished_f, [m_params, m_state, arg_in,
                                                         arg_out])
         return builder, is_finished_cond
 
@@ -3071,8 +3138,8 @@ class Mechanism_Base(Mechanism):
         reinit_func = ctx.import_llvm_function(self.function, tags=tags)
         reinit_params = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
         reinit_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        reinit_in = builder.alloca(reinit_func.args[2].type.pointee)
-        reinit_out = builder.alloca(reinit_func.args[3].type.pointee)
+        reinit_in = builder.alloca(reinit_func.args[2].type.pointee, name="reinit_in")
+        reinit_out = builder.alloca(reinit_func.args[3].type.pointee, name="reinit_out")
         builder.call(reinit_func, [reinit_params, reinit_state, reinit_in,
                                    reinit_out])
 
@@ -3096,11 +3163,11 @@ class Mechanism_Base(Mechanism):
         builder.ret(finished)
         return builder.function
 
-    def _gen_llvm_function_body(self, ctx, builder, params, state, arg_in, arg_out, *, tags:frozenset):
+    def _gen_llvm_function_body(self, ctx, builder, base_params, state, arg_in, arg_out, *, tags:frozenset):
         assert "reset" not in tags
 
         params, builder = self._gen_llvm_param_ports_for_obj(
-                self, params, ctx, builder, params, state, arg_in)
+                self, base_params, ctx, builder, base_params, state, arg_in)
 
         is_finished_flag_ptr = pnlvm.helpers.get_state_ptr(builder, self, state,
                                                            "is_finished_flag")
@@ -3126,17 +3193,19 @@ class Mechanism_Base(Mechanism):
 
         # Get internal function
         args_t = [a.type for a in builder.function.args]
+        args_t[4:4] = [base_params.type]
         internal_builder = ctx.create_llvm_function(args_t, self,
                                                     name=builder.function.name + "_internal",
                                                     return_type=ctx.bool_ty)
-        iparams, istate, iin, iout = internal_builder.function.args[:4]
+        iparams, istate, iin, iout, ibase_params = internal_builder.function.args[:5]
         internal_builder, is_finished = self._gen_llvm_function_internal(ctx, internal_builder,
-                                                                         iparams, istate, iin, iout, tags=tags)
+                                                                         iparams, istate, iin, iout,
+                                                                         ibase_params, tags=tags)
         internal_builder.ret(is_finished)
 
         # Call Internal Function
         internal_f = internal_builder.function
-        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, *builder.function.args[4:]])
+        is_finished_cond = builder.call(internal_f, [params, state, arg_in, arg_out, base_params, *builder.function.args[4:]])
 
         #FIXME: Flag and count should be int instead of float
         # Check if we reached maximum iteration count
@@ -3393,7 +3462,7 @@ class Mechanism_Base(Mechanism):
                 value=''
                 if include_value:
                     if use_label and not isinstance(port, ParameterPort):
-                        value = f'<br/>={port.label}'
+                        value = f'<br/>={port.labeled_value}'
                     else:
                         value = f'<br/>={port.value}'
                 return f'<td port="{self._get_port_name(port)}"><b>{port.name}</b>{function}{value}</td>'
@@ -3824,6 +3893,17 @@ class Mechanism_Base(Mechanism):
     def input_port(self):
         return self.input_ports[0]
 
+    def get_input_variables(self, context=None):
+        # FIX: 2/4/22 THIS WOULD PARALLEL get_input_values BUT MAY NOT BE NEEDED:
+        # input_variables = []
+        # for input_port in self.input_ports:
+        #     if "LearningSignal" in input_port.name:
+        #         input_variables.append(input_port.parameters.variable.get(context).flatten())
+        #     else:
+        #         input_variables.append(input_port.parameters.variable.get(context))
+        # return input_variables
+        return [input_port.parameters.variable.get(context) for input_port in self.input_ports]
+
     @property
     def input_values(self):
         try:
@@ -3848,6 +3928,51 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
+    def external_input_shape(self):
+        """Alias for _default_external_input_shape"""
+        return self._default_external_input_shape
+
+    @property
+    def _default_external_input_shape(self):
+        try:
+            shape = []
+            for input_port in self.input_ports:
+                if input_port.internal_only or input_port.default_input:
+                    continue
+                if input_port._input_shape_template == VARIABLE:
+                    shape.append(input_port.defaults.variable)
+                elif input_port._input_shape_template == VALUE:
+                    shape.append(input_port.defaults.value)
+                else:
+                    assert False, f"PROGRAM ERROR: bad changes_shape in attempt to assign " \
+                                  f"default_external_input_shape for '{input_port.name}' of '{self.name}."
+            return shape
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def external_input_variables(self):
+        """Returns variables of all external InputPorts that belong to the Mechanism"""
+        try:
+            return [input_port.variable for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_inputs(self):
+        try:
+            return [input_port.default_input for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
+    def default_external_input_variables(self):
+        try:
+            return [input_port.defaults.variable for input_port in self.input_ports if not input_port.internal_only]
+        except (TypeError, AttributeError):
+            return None
+
+    @property
     def external_input_values(self):
         try:
             return [input_port.value for input_port in self.input_ports if not input_port.internal_only]
@@ -3862,7 +3987,7 @@ class Mechanism_Base(Mechanism):
             return None
 
     @property
-    def input_labels(self):
+    def labeled_input_values(self):
         """
         Returns a list with as many items as there are InputPorts of the Mechanism. Each list item represents the value
         of the corresponding InputPort, and is populated by a string label (from the input_labels_dict) when one
@@ -3886,13 +4011,13 @@ class Mechanism_Base(Mechanism):
 
     @property
     def output_values(self):
-        return self.output_ports.values
+        return self.get_output_values()
 
     def get_output_values(self, context=None):
         return [output_port.parameters.value.get(context) for output_port in self.output_ports]
 
     @property
-    def output_labels(self):
+    def labeled_output_values(self):
         """
         Returns a list with as many items as there are OutputPorts of the Mechanism. Each list item represents the
         value of the corresponding OutputPort, and is populated by a string label (from the output_labels_dict) when
@@ -3906,8 +4031,8 @@ class Mechanism_Base(Mechanism):
         elif context:
             return self.get_output_values(context)
         else:
-            return self.output_values
-
+            # Use this to report most recent value if no context is available
+            return self.output_ports.values
 
     @property
     def ports(self):
@@ -3994,28 +4119,87 @@ class Mechanism_Base(Mechanism):
             self.parameter_ports,
         ))
 
-    @property
-    def _dict_summary(self):
-        inputs_dict = {
-            MODEL_SPEC_ID_INPUT_PORTS: [
-                s._dict_summary for s in self.input_ports
-            ]
-        }
-        inputs_dict[MODEL_SPEC_ID_INPUT_PORTS].extend(
-            [s._dict_summary for s in self.parameter_ports]
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        model = mdf.Node(
+            id=parse_valid_identifier(self.name),
+            **self._mdf_metadata,
         )
 
-        outputs_dict = {
-            MODEL_SPEC_ID_OUTPUT_PORTS: [
-                s._dict_summary for s in self.output_ports
-            ]
-        }
+        for name, val in self._mdf_model_parameters[self._model_spec_id_parameters].items():
+            model.parameters.append(mdf.Parameter(id=name, value=val))
 
-        return {
-            **super()._dict_summary,
-            **inputs_dict,
-            **outputs_dict
-        }
+        for ip in self.input_ports:
+            if len(ip.path_afferents) > 1:
+                for aff in ip.path_afferents:
+                    ip_model = mdf.InputPort(
+                        id=parse_valid_identifier(f'{self.name}_input_port_{aff.name}'),
+                        shape=str(aff.defaults.value.shape),
+                        type=str(aff.defaults.value.dtype)
+                    )
+                    model.input_ports.append(ip_model)
+
+                # create combination function
+                model.parameters.append(
+                    mdf.Parameter(
+                        id='combination_function_input_data',
+                        value=f"[{', '.join(f'{mip.id}' for mip in model.input_ports)}]"
+                    )
+                )
+                combination_function_id = f'{parse_valid_identifier(self.name)}_{MODEL_SPEC_ID_INPUT_PORT_COMBINATION_FUNCTION}'
+                combination_function_args = {
+                    'data': "combination_function_input_data",
+                    'axes': 0
+                }
+                model.functions.append(
+                    mdf.Function(
+                        id=combination_function_id,
+                        function={'onnx::ReduceSum': combination_function_args},
+                        args=combination_function_args
+                    )
+                )
+                combination_function_dimreduce_id = f'{combination_function_id}_dimreduce'
+                model.functions.append(
+                    mdf.Function(
+                        id=combination_function_dimreduce_id,
+                        value=f'{MODEL_SPEC_ID_MDF_VARIABLE}[0][0]',
+                        args={
+                            MODEL_SPEC_ID_MDF_VARIABLE: combination_function_id,
+                        }
+                    )
+                )
+            else:
+                ip_model = ip.as_mdf_model()
+                ip_model.id = f'{parse_valid_identifier(self.name)}_{ip_model.id}'
+
+                model.input_ports.append(ip_model)
+
+        for op in self.output_ports:
+            op_model = op.as_mdf_model()
+            op_model.id = f'{parse_valid_identifier(self.name)}_{op_model.id}'
+
+            model.output_ports.append(op_model)
+
+        function_model = self.function.as_mdf_model()
+
+        for _, func_param in function_model.metadata['function_stateful_params'].items():
+            model.parameters.append(mdf.Parameter(**func_param))
+
+        if len(ip.path_afferents) > 1:
+            primary_function_input_name = combination_function_dimreduce_id
+        else:
+            primary_function_input_name = model.input_ports[0].id
+
+        self.function._set_mdf_arg(
+            function_model, _get_variable_parameter_name(self.function), primary_function_input_name
+        )
+        model.functions.append(function_model)
+
+        for func_model in model.functions:
+            _substitute_expression_args(func_model)
+
+        return model
 
 
 def _is_mechanism_spec(spec):

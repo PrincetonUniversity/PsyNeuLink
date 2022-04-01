@@ -102,15 +102,27 @@ def test_helper_fclamp_const(mode):
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-def test_helper_is_close(mode):
+@pytest.mark.parametrize('rtol,atol',
+                         [[0, 0], [None, None], [None, 100], [2, None]])
+@pytest.mark.parametrize('var1,var2',
+                         [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
+                          [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
+                         ])
+def test_helper_is_close(mode, var1, var2, rtol, atol):
+
+    tolerance = {}
+    if rtol is not None:
+        tolerance['rtol'] = rtol
+    if atol is not None:
+        tolerance['atol'] = atol
+
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
         double_ptr_ty = ir.DoubleType().as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [double_ptr_ty, double_ptr_ty,
                                                   double_ptr_ty, ctx.int32_ty])
 
-        # Create clamp function
-        custom_name = ctx.get_unique_name("all_close")
+        custom_name = ctx.get_unique_name("is_close")
         function = ir.Function(ctx.module, func_ty, name=custom_name)
         in1, in2, out, count = function.args
         block = function.append_basic_block(name="entry")
@@ -122,7 +134,7 @@ def test_helper_is_close(mode):
             val2_ptr = b1.gep(in2, [index])
             val1 = b1.load(val1_ptr)
             val2 = b1.load(val2_ptr)
-            close = pnlvm.helpers.is_close(ctx, b1, val1, val2)
+            close = pnlvm.helpers.is_close(ctx, b1, val1, val2, **tolerance)
             out_ptr = b1.gep(out, [index])
             out_val = b1.select(close, val1.type(1), val1.type(0))
             res = b1.select(close, out_ptr.type.pointee(1),
@@ -131,14 +143,12 @@ def test_helper_is_close(mode):
 
         builder.ret_void()
 
-    vec1 = copy.deepcopy(VECTOR)
-    tmp = np.random.rand(DIM_X)
-    tmp[0::2] = vec1[0::2]
-    vec2 = np.asfarray(tmp)
+    vec1 = np.atleast_1d(np.asfarray(var1))
+    vec2 = np.atleast_1d(np.asfarray(var2))
     assert len(vec1) == len(vec2)
     res = np.empty_like(vec2)
 
-    ref = np.isclose(vec1, vec2)
+    ref = np.isclose(vec1, vec2, **tolerance)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
         ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
@@ -146,7 +156,7 @@ def test_helper_is_close(mode):
         ct_vec2 = vec2.ctypes.data_as(ct_ty)
         ct_res = res.ctypes.data_as(ct_ty)
 
-        bin_f(ct_vec1, ct_vec2, ct_res, DIM_X)
+        bin_f(ct_vec1, ct_vec2, ct_res, len(res))
     else:
         bin_f.cuda_wrap_call(vec1, vec2, res, np.int32(DIM_X))
 
@@ -156,10 +166,26 @@ def test_helper_is_close(mode):
 @pytest.mark.llvm
 @pytest.mark.parametrize('mode', ['CPU',
                                   pytest.param('PTX', marks=pytest.mark.cuda)])
-def test_helper_all_close(mode):
+@pytest.mark.parametrize('rtol,atol',
+                         [[0, 0], [None, None], [None, 100], [2, None]])
+@pytest.mark.parametrize('var1,var2',
+                         [[1, 1], [1, 100], [1,2], [-4,5], [0, -100], [-1,-2],
+                          [[1,1,1,-4,0,-1], [1,100,2,5,-100,-2]]
+                         ])
+def test_helper_all_close(mode, var1, var2, atol, rtol):
+
+    tolerance = {}
+    if rtol is not None:
+        tolerance['rtol'] = rtol
+    if atol is not None:
+        tolerance['atol'] = atol
+
+    vec1 = np.atleast_1d(np.asfarray(var1))
+    vec2 = np.atleast_1d(np.asfarray(var2))
+    assert len(vec1) == len(vec2)
 
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
-        arr_ptr_ty = ir.ArrayType(ir.DoubleType(), DIM_X).as_pointer()
+        arr_ptr_ty = ir.ArrayType(ir.DoubleType(), len(vec1)).as_pointer()
         func_ty = ir.FunctionType(ir.VoidType(), [arr_ptr_ty, arr_ptr_ty,
                                                   ir.IntType(32).as_pointer()])
 
@@ -169,15 +195,13 @@ def test_helper_all_close(mode):
         block = function.append_basic_block(name="entry")
         builder = ir.IRBuilder(block)
 
-        all_close = pnlvm.helpers.all_close(ctx, builder, in1, in2)
+        all_close = pnlvm.helpers.all_close(ctx, builder, in1, in2, **tolerance)
         res = builder.select(all_close, out.type.pointee(1), out.type.pointee(0))
         builder.store(res, out)
         builder.ret_void()
 
-    vec1 = copy.deepcopy(VECTOR)
-    vec2 = copy.deepcopy(VECTOR)
 
-    ref = np.allclose(vec1, vec2)
+    ref = np.allclose(vec1, vec2, **tolerance)
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
     if mode == 'CPU':
         ct_ty = ctypes.POINTER(bin_f.byref_arg_types[0])
@@ -196,10 +220,9 @@ def test_helper_all_close(mode):
 @pytest.mark.llvm
 @pytest.mark.parametrize("ir_argtype,format_spec,values_to_check", [
     (pnlvm.ir.IntType(32), "%u", range(0, 20)),
-    (pnlvm.ir.IntType(64), "%ld", [int(-4E10), int(-3E10), int(-2E10)]),
+    (pnlvm.ir.IntType(64), "%lld", [int(-4E10), int(-3E10), int(-2E10)]),
     (pnlvm.ir.DoubleType(), "%lf", [x *.5 for x in range(0, 5)]),
     ], ids=["i32", "i64", "double"])
-@pytest.mark.skipif(sys.platform == 'win32', reason="Loading C library is complicated on windows")
 def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
     format_str = f"Hello {(format_spec+' ')*len(values_to_check)} \n"
     with pnlvm.LLVMBuilderContext.get_current() as ctx:
@@ -216,12 +239,16 @@ def test_helper_printf(capfd, ir_argtype, format_spec, values_to_check):
     bin_f = pnlvm.LLVMBinaryFunction.get(custom_name)
 
 
-    # Printf is buffered in libc.
     bin_f()
-    libc = ctypes.util.find_library("c")
+    # Printf is buffered in libc.
+    libc = ctypes.util.find_library("msvcrt" if sys.platform == "win32" else "c")
     libc = ctypes.CDLL(libc)
     libc.fflush(0)
-    assert capfd.readouterr().out == format_str % tuple(values_to_check)
+
+    # Convert format specifier to Python compatible
+    python_format_spec = {"%lld":"%ld"}.get(format_spec, format_spec)
+    python_format_str = f"Hello {(python_format_spec+' ')*len(values_to_check)} \n"
+    assert capfd.readouterr().out == python_format_str % tuple(values_to_check)
 
 class TestHelperTypegetters:
     FLOAT_TYPE = pnlvm.ir.FloatType()

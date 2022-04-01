@@ -40,13 +40,21 @@ jobs:
             os: macos-latest
 
     steps:
+    # increased fetch-depth and tag checkout needed to get correct
+    # version string from versioneer (must have history to a prior tag);
+    # otherwise install fails due to circular dependency with modeci_mdf
     - name: Checkout sources
-      uses: actions/checkout@v2.4.0
+      uses: actions/checkout@v3
       with:
-        fetch-depth: 10
+        fetch-depth: 200
+
+    # fetch only master to avoid getting unneeded branches with
+    # characters invalid on windows
+    - name: Checkout tags
+      run: git fetch --tags origin master
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2.3.1
+      uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.python-architecture }}
@@ -60,7 +68,7 @@ jobs:
         echo ::set-output name=pip_cache_dir::$(python -m pip cache dir)
 
     - name: Wheels cache
-      uses: actions/cache@v2.1.7
+      uses: actions/cache@v3
       with:
         path: ${{ steps.pip_cache.outputs.pip_cache_dir }}/wheels
         key: ${{ runner.os }}-python-${{ matrix.python-version }}-${{ matrix.python-architecture }}-pip-wheels-v2-${{ github.sha }}
@@ -85,7 +93,7 @@ jobs:
       run: pytest --junit-xml=tests_out.xml --verbosity=0 -n auto ${{ matrix.extra-args }}
 
     - name: Upload test results
-      uses: actions/upload-artifact@v2.3.1
+      uses: actions/upload-artifact@v3
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}-${{ matrix.extra-args }}
         path: tests_out.xml
@@ -111,7 +119,7 @@ jobs:
         python setup.py sdist bdist_wheel
 
     - name: Upload dist packages
-      uses: actions/upload-artifact@v2.3.1
+      uses: actions/upload-artifact@v3
       with:
         name: dist-${{ matrix.os }}-${{ matrix.python-version }}-${{ matrix.python-architecture }}
         path: dist/

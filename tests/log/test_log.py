@@ -780,15 +780,8 @@ class TestLog:
                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=6.0))
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
-        def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(COMP)
-            for val in results:
-                if abs(val) >= thresh:
-                    return True
-            return False
-
         terminate_trial = {
-            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
+            pnl.TimeScale.TRIAL: pnl.Threshold(T2, 'value', 5.0, '>=')
         }
 
         T1.set_log_conditions(pnl.VALUE)
@@ -833,15 +826,8 @@ class TestLog:
                                    function=psyneulink.core.components.functions.nonstateful.transferfunctions.Linear(slope=6.0))
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1, T2])
 
-        def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(COMP)
-            for val in results:
-                if abs(val) >= thresh:
-                    return True
-            return False
-
         terminate_trial = {
-            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T2, 5.0)
+            pnl.TimeScale.TRIAL: pnl.Threshold(T2, 'value', 5.0, '>=')
         }
 
         T1.set_log_conditions(pnl.VALUE)
@@ -908,15 +894,8 @@ class TestLog:
                                    integration_rate=0.05)
         COMP = pnl.Composition(name='log_test_COMP', pathways=[T1])
 
-        def pass_threshold(mech, thresh):
-            results = mech.output_ports[0].parameters.value.get(COMP)
-            for val in results:
-                if abs(val) >= thresh:
-                    return True
-            return False
-
         terminate_trial = {
-            pnl.TimeScale.TRIAL: pnl.While(pass_threshold, T1, 0.95)
+            pnl.TimeScale.TRIAL: pnl.Threshold(T1, 'value', 0.95, '>=')
         }
 
         T1.set_log_conditions(pnl.VALUE)
@@ -1145,8 +1124,8 @@ class TestFiltering:
                     control_signal_params={pnl.ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)})
                 ),
                 noise=0.5,
-                starting_point=0,
-                t0=0.45
+                starting_value=0,
+                non_decision_time=0.45
             ),
             output_ports=[
                 pnl.DECISION_VARIABLE,
@@ -1165,7 +1144,7 @@ class TestFiltering:
             controller=pnl.OptimizationControlMechanism(
                 agent_rep=comp,
                 state_features=[Input.input_port, reward.input_port],
-                state_feature_functions=pnl.AdaptiveIntegrator(rate=0.5),
+                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                 objective_mechanism=pnl.ObjectiveMechanism(
                     function=pnl.LinearCombination(operation=pnl.PRODUCT),
                     monitor=[

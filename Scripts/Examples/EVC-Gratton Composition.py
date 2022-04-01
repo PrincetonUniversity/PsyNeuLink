@@ -18,8 +18,8 @@ Decision = pnl.DDM(name='Decision',
                    function=pnl.DriftDiffusionAnalytical(drift_rate=(1.0),
                                                          threshold=(0.2645),
                                                          noise=(0.5),
-                                                         starting_point=(0),
-                                                         t0=0.15),
+                                                         starting_value=(0),
+                                                         non_decision_time=0.15),
                    output_ports=[pnl.DECISION_VARIABLE,
                                   pnl.RESPONSE_TIME,
                                   pnl.PROBABILITY_UPPER_THRESHOLD]
@@ -65,7 +65,7 @@ evc_gratton.add_controller(controller=pnl.OptimizationControlMechanism(agent_rep
                                                                        state_features=[target_stim.input_port,
                                                                                        flanker_stim.input_port,
                                                                                        reward.input_port],
-                                                                       state_feature_functions=pnl.AdaptiveIntegrator(
+                                                                       state_feature_function=pnl.AdaptiveIntegrator(
                                                                                      rate=1.0),
                                                                        objective_mechanism=objective_mech,
                                                                        function=pnl.GridSearch(),

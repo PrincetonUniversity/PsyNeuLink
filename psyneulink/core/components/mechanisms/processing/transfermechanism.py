@@ -842,6 +842,7 @@ from psyneulink.core.components.mechanisms.processing.processingmechanism import
 from psyneulink.core.components.ports.inputport import InputPort
 from psyneulink.core.components.ports.outputport import OutputPort
 from psyneulink.core.globals.context import ContextFlags, handle_external_context
+from psyneulink.core.globals.json import _get_variable_parameter_name, _substitute_expression_args
 from psyneulink.core.globals.keywords import \
     COMBINE, comparison_operators, EXECUTION_COUNT, FUNCTION, GREATER_THAN_OR_EQUAL, \
     CURRENT_VALUE, LESS_THAN_OR_EQUAL, MAX_ABS_DIFF, \
@@ -851,7 +852,7 @@ from psyneulink.core.globals.parameters import Parameter, FunctionParameter
 from psyneulink.core.globals.preferences.basepreferenceset import is_pref_set
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.utilities import \
-    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals
+    all_within_range, append_type_to_name, iscompatible, is_comparison_operator, convert_to_np_array, safe_equals, parse_valid_identifier
 from psyneulink.core.scheduling.time import TimeScale
 
 __all__ = [
@@ -1227,7 +1228,7 @@ class TransferMechanism(ProcessingMechanism_Base):
         )
         termination_threshold = Parameter(None, modulable=True)
         termination_comparison_op = Parameter(LESS_THAN_OR_EQUAL, modulable=False, loggable=False)
-        termination_measure_value = Parameter(0.0, modulable=False, read_only=True)
+        termination_measure_value = Parameter(0.0, modulable=False, read_only=True, pnl_internal=True)
 
         output_ports = Parameter(
             [RESULTS],
@@ -1410,8 +1411,11 @@ class TransferMechanism(ProcessingMechanism_Base):
         # Validate INTEGRATION_RATE:
         if INTEGRATION_RATE in target_set and target_set[INTEGRATION_RATE] is not None:
             integration_rate = np.array(target_set[INTEGRATION_RATE])
-            if (not np.isscalar(integration_rate.tolist())
-                    and integration_rate.shape != self.defaults.variable.squeeze().shape):
+            if (
+                not np.isscalar(integration_rate.tolist())
+                and integration_rate.shape != self.defaults.variable.shape
+                and integration_rate.shape != self.defaults.variable.squeeze().shape
+            ):
                 raise TransferError(f"{repr(INTEGRATION_RATE)} arg for {self.name} ({integration_rate}) "
                                     f"must be either an int or float, or have the same shape "
                                     f"as its {VARIABLE} ({self.defaults.variable}).")
@@ -1546,7 +1550,7 @@ class TransferMechanism(ProcessingMechanism_Base):
                                                         ctx.int32_ty(0)])
 
         threshold = builder.load(threshold_ptr)
-        cmp_val_ptr = builder.alloca(threshold.type)
+        cmp_val_ptr = builder.alloca(threshold.type, name="is_finished_value")
         if self.termination_measure is max:
             assert self._termination_measure_num_items_expected == 1
             # Get inside of the structure
@@ -1575,7 +1579,7 @@ class TransferMechanism(ProcessingMechanism_Base):
             func = ctx.import_llvm_function(self.termination_measure)
             func_params = pnlvm.helpers.get_param_ptr(builder, self, params, "termination_measure")
             func_state = pnlvm.helpers.get_state_ptr(builder, self, state, "termination_measure")
-            func_in = builder.alloca(func.args[2].type.pointee)
+            func_in = builder.alloca(func.args[2].type.pointee, name="is_finished_func_in")
             # Populate input
             func_in_current_ptr = builder.gep(func_in, [ctx.int32_ty(0),
                                                         ctx.int32_ty(0)])
@@ -1600,32 +1604,32 @@ class TransferMechanism(ProcessingMechanism_Base):
         cmp_str = self.parameters.termination_comparison_op.get(None)
         return builder.fcmp_ordered(cmp_str, cmp_val, threshold)
 
-    def _gen_llvm_mechanism_functions(self, ctx, builder, params, state, arg_in,
-                                      ip_out, *, tags:frozenset):
+    def _gen_llvm_mechanism_functions(self, ctx, builder, m_base_params, m_params,
+                                      m_state, arg_in, ip_out, *, tags:frozenset):
 
         if self.integrator_mode:
-            if_state = pnlvm.helpers.get_state_ptr(builder, self, state,
+            if_state = pnlvm.helpers.get_state_ptr(builder, self, m_state,
                                                    "integrator_function")
-            if_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params,
-                                                       "integrator_function")
+            if_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params,
+                                                         "integrator_function")
             if_params, builder = self._gen_llvm_param_ports_for_obj(
-                    self.integrator_function, if_param_ptr, ctx, builder,
-                    params, state, arg_in)
+                    self.integrator_function, if_base_params, ctx, builder,
+                    m_base_params, m_state, arg_in)
 
             mf_in, builder = self._gen_llvm_invoke_function(
                     ctx, builder, self.integrator_function, if_params, if_state, ip_out, tags=tags)
         else:
             mf_in = ip_out
 
-        mf_state = pnlvm.helpers.get_state_ptr(builder, self, state, "function")
-        mf_param_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "function")
+        mf_state = pnlvm.helpers.get_state_ptr(builder, self, m_state, "function")
+        mf_base_params = pnlvm.helpers.get_param_ptr(builder, self, m_base_params, "function")
         mf_params, builder = self._gen_llvm_param_ports_for_obj(
-                self.function, mf_param_ptr, ctx, builder, params, state, arg_in)
+                self.function, mf_base_params, ctx, builder, m_base_params, m_state, arg_in)
 
         mf_out, builder = self._gen_llvm_invoke_function(ctx, builder,
                                                          self.function, mf_params, mf_state, mf_in, tags=tags)
 
-        clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, params, "clip")
+        clip_ptr = pnlvm.helpers.get_param_ptr(builder, self, m_params, "clip")
         if len(clip_ptr.type.pointee) != 0:
             assert len(clip_ptr.type.pointee) == 2
             clip_lo = builder.load(builder.gep(clip_ptr, [ctx.int32_ty(0),
@@ -1803,3 +1807,52 @@ class TransferMechanism(ProcessingMechanism_Base):
             self.parameters.initial_value._set(copy.deepcopy(integrator_function_variable), context)
 
         super()._update_default_variable(new_default_variable, context=context)
+
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        model = super().as_mdf_model()
+        function_model = [
+            f for f in model.functions
+            if f.id == parse_valid_identifier(self.function.name)
+        ][0]
+        assert function_model.id == parse_valid_identifier(self.function.name), (function_model.id, parse_valid_identifier(self.function.name))
+
+        if self.defaults.integrator_mode:
+            integrator_function_model = self.integrator_function.as_mdf_model()
+
+            primary_input = function_model.args[_get_variable_parameter_name(self.function)]
+            self.integrator_function._set_mdf_arg(
+                integrator_function_model,
+                _get_variable_parameter_name(self.integrator_function),
+                primary_input
+            )
+            self.function._set_mdf_arg(
+                function_model,
+                _get_variable_parameter_name(self.function),
+                integrator_function_model.id
+            )
+
+            for _, func_param in integrator_function_model.metadata['function_stateful_params'].items():
+                model.parameters.append(mdf.Parameter(**func_param))
+
+            model.functions.append(integrator_function_model)
+
+            res = self.integrator_function._get_mdf_noise_function()
+            try:
+                main_noise_function, extra_noise_functions = res
+            except TypeError:
+                pass
+            else:
+                main_noise_function.id = f'{model.id}_{main_noise_function.id}'
+                model.functions.append(main_noise_function)
+                model.functions.extend(extra_noise_functions)
+
+                self.integrator_function._set_mdf_arg(
+                    integrator_function_model, 'noise', main_noise_function.id
+                )
+
+            for func_model in model.functions:
+                _substitute_expression_args(func_model)
+
+        return model

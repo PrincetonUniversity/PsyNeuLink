@@ -66,7 +66,7 @@ class TestProcessingMechanismFunctions:
                                                    (SoftMax, [[1,]]),
                                                    (SimpleIntegrator, [[1.]]),
                                                    (AdaptiveIntegrator, [[1.]]),
-                                                   (DriftDiffusionIntegrator, [[[1.]], [[1.]]]),
+                                                   (DriftDiffusionIntegrator(time_step_size=1.0), [[[1.]], [[1.]]]),
                                                    (OrnsteinUhlenbeckIntegrator, [[[-1.]], [[1.]]]),
                                                    (AccumulatorIntegrator, [[0.]]),
                                                    (FitzHughNagumoIntegrator, [[[0.05127053]], [[0.00279552]], [[0.05]]]),
@@ -246,6 +246,8 @@ class TestProcessingMechanismStandardOutputPorts:
     @pytest.mark.parametrize("op, expected", [(MAX_ONE_HOT, [0, 2, 0]),
                                               (MAX_INDICATOR, [0, 1, 0]),
                                               (MAX_ABS_INDICATOR, [0, 0, 1]),
+                                              (MAX_ABS_ONE_HOT, [0, 0, 4]),
+                                              (MAX_VAL, [2]),
                                              ],
                              ids=lambda x: x if isinstance(x, str) else "")
     def test_output_ports(self, mech_mode, op, expected, benchmark):
@@ -262,9 +264,7 @@ class TestProcessingMechanismStandardOutputPorts:
                                               (MEDIAN, [2]),
                                               (STANDARD_DEVIATION, [1.24721913]),
                                               (VARIANCE, [1.55555556]),
-                                              (MAX_VAL, [2]),
                                               (MAX_ABS_VAL, [4]),
-                                              (MAX_ABS_ONE_HOT, [0, 0, 4]),
                                               (PROB, [0, 2, 0]),
                                              ],
                              ids=lambda x: x if isinstance(x, str) else "")

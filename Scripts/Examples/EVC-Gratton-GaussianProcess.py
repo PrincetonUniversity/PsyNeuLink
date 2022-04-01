@@ -34,8 +34,8 @@ Decision = pnl.DDM(
             ),
         ),
         noise=(0.5),
-        starting_point=(0),
-        t0=0.45
+        starting_value=(0),
+        non_decision_time=0.45
     ),
     output_ports=[
         pnl.DECISION_VARIABLE,
@@ -52,7 +52,7 @@ task_execution_pathway = [Input, pnl.IDENTITY_MATRIX, Decision]
 comp.add_linear_processing_pathway(task_execution_pathway)
 
 ocm = pnl.OptimizationControlMechanism(state_features=[Input, Reward],
-                                       state_feature_functions=pnl.AdaptiveIntegrator(rate=0.5),
+                                       state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
                                        agent_rep=comp,
                                        # function=pnl.GaussianProcessOptimization,
                                        function=pnl.GridSearch,

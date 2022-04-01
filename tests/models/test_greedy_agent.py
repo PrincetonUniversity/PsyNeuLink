@@ -192,7 +192,8 @@ def test_predator_prey(benchmark, mode, prng, samples):
     agent_comp.exclude_node_roles(direct_move, NodeRole.OUTPUT)
 
 
-    ocm = OptimizationControlMechanism(state_features={SHADOW_INPUTS: [player_pos, predator_pos, prey_pos]},
+    ocm = OptimizationControlMechanism(state_features=[player_pos, prey_pos, predator_pos],
+    # ocm = OptimizationControlMechanism(state_features={SHADOW_INPUTS: [player_pos, prey_pos, predator_pos]},
                                        agent_rep=agent_comp,
                                        function=GridSearch(direction=MINIMIZE,
                                                            save_values=True),

@@ -42,16 +42,26 @@ a Composition's `controller <Composition_Controller>`;  and **show_learning** de
 `learning compnents <Composition_Learning_Components>`.  These are listed as the arguments for the show_graph
 <ShowGraph.show_graph>` method below.
 
-*Display attributes* -- state_features (such as the colors and shapes) in which different types of nodes are displayed
-can be modified by assigning a dictionary of attribute:values pairs to the **show_graph_configuration** argument of the
-Composition's constructor.  These are listed as the arguments for the ShowGraph object (used to display the graph)
-in the `class reference <ShowGraph_Class_Reference>` below.
+*Display attributes* -- the colors, shapes and arrow styles used in the display can be modified using the
+**show_graph_attributes** argument of a Composition's constructor, as described below.
+
+.. _ShowGraph_Attributes:
+
+*Display Attributes*
+--------------------
+
+The default attributes used to display different types of `Components <Component>` and their `roles <NodeRole>`
+within a Composition are listed below. These can be customized using the **show_graph_attributes** argument of a
+Composition's constructor, in a dict with keys that are any of the parameters listed in `ShowGraph`, and values
+that are any supported by `GraphViz <https://www.graphviz.org>`_ for
+`shapes <https://www.graphviz.org/doc/info/shapes.html>`_,
+`arrow styles <https://www.graphviz.org/doc/info/arrows.html>`_
+`colors <https://www.graphviz.org/doc/info/colors.html>`_.
+
+Shapes
+~~~~~~
 
 COMMENT:
-
-The following are the default attribute used to display different types of `Components <Component>` and their `roles
-<NodeRole>` within a Composition:
-
 FIX: MAKE FIGURE THAT HAS ALL THE VARIOUS TYPES USING CORRESPONDING NAMES
 Input Node
 Singleton Node
@@ -60,12 +70,9 @@ LearningMechanism
 ControlMechanism
 Controller
 Nested Composition
+COMMENT
 
-
-Shapes
-~~~~~~
-
-`Nested Compositions <Composition_Nested>`: square
+`Nested Composition <Composition_Nested>`: square
 
 `Mechanism`:
   - default: oval
@@ -73,36 +80,37 @@ Shapes
   - `FEEDBACK_SENDER`: octagon
   - `CONTROLLER`: doubleoctagon
 
-Projection:
+`Projection`:
   - default: arrow
   - `ControlProjection`: box
+    - 'RANDOMIZATION_CONTROL_SIGNAL` : dashed line
   - `MappingProjection` that receives a `LearningProjection` when **show_learning** is True:  diamond
 
 Colors
 ~~~~~~
+
+Component-types
+^^^^^^^^^^^^^^^
+
+- Control-related components:  blue
+- Controller-related: purple
+- Learning-related components: orange
+- Inactive Projection: red
+- Active items (when **animate** = True in `run <Composition.run>`): **BOLD**
 
 Nodes
 ^^^^^
   - `INPUT`: green
   - `OUTPUT`: red
   - `SINGLETON`: brown
-
-Component-types
-^^^^^^^^^^^^^^^
-
-Control-related compoments:  blue
-Controller-related: purple
-Learning-related components: orange
-
-Active items (when **animate**=True in `run <Composition.run>`): **BOLD**
-
-COMMENT
+  - `CONTROL`: blue
+  - `CONTROLLER` : purple
+  - `LEARNING` : orange
 
 .. _ShowGraph_Examples_Visualization:
 
 *Examples*
 ----------
-
 
 .. _Composition_show_graph_basic_figure:
 
@@ -201,7 +209,8 @@ from PIL import Image
 
 from psyneulink.core.components.component import Component
 from psyneulink.core.components.mechanisms.modulatory.control.controlmechanism import ControlMechanism
-from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import AGENT_REP
+from psyneulink.core.components.mechanisms.modulatory.control.optimizationcontrolmechanism import \
+    AGENT_REP, RANDOMIZATION_CONTROL_SIGNAL
 from psyneulink.core.components.mechanisms.processing.compositioninterfacemechanism import CompositionInterfaceMechanism
 from psyneulink.core.components.mechanisms.processing.objectivemechanism import ObjectiveMechanism
 from psyneulink.core.components.ports.outputport import OutputPort
@@ -266,8 +275,10 @@ class ShowGraphError(Exception):
 
 
 class ShowGraph():
-    """
-    ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+    """ShowGraph object with `show_graph <ShowGraph.show_graph>` method for displaying `Composition`.
+
+    Every Composition is assigned a ShowGraph object, with its `show_graph <ShowGraph.show_graph>` method
+    assigned to, and callable as Composition.show_graph().
 
     Arguments
     ---------
@@ -303,7 +314,7 @@ class ShowGraph():
     composition_shape : default 'rectangle'
         specifies the shape in which nodes that represent `nested Compositions <Composition_Nested>` are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+        level specified in a call to `show_graph() <ShowGraph.show_graph>`.
 
     agent_rep_shape : default 'egg'
         specifies the shape in which the `agent_rep` of an `OptimizationControlMechanism` is displayed.
@@ -326,6 +337,9 @@ class ShowGraph():
 
     input_color : keyword : default 'green',
         specifies the color in which `INPUT <NodeRole.INPUT>` Nodes of the Composition are displayed.
+
+    probe_color : keyword : default 'pink',
+        specifies the color in which `PROBE <NodeRole.PROBE>` Nodes of the Composition are displayed.
 
     output_color : keyword : default 'red',
         specifies the color in which `OUTPUT <NodeRole.OUTPUT>` Nodes of the Composition are displayed.
@@ -352,7 +366,7 @@ class ShowGraph():
     composition_color : keyword : default 'pink'
         specifies the color in which nodes that represent `nested Compositions <Composition_Nested> are displayed
         when **show_nested** is specified as False or a `Composition is nested <Composition_Nested>` below the
-        level specified in a call to `show_graph <ShowGraph.show_graph>`.
+        level specified in a call to `show_graph() <ShowGraph.show_graph>`.
 
     inactive_projection_color : keyword : default 'red'
         specifies the color in which `Projections <Projection>` not active within the `Composition` are displayed,
@@ -363,7 +377,7 @@ class ShowGraph():
 
     active_thicker_by : int : default 2
         specifies the amount by which to increase the width of the outline of Components specified in the
-        **active_items** argument of a call to `show_graph <ShowGraph.show_graph>`.
+        **active_items** argument of a call to `show_graph() <ShowGraph.show_graph>`.
 
     bold_width : int : default 3,
         specifies the width of the outline for `INPUT` and `OUTPUT` Nodes of the Composition.
@@ -399,6 +413,7 @@ class ShowGraph():
                  default_node_color = 'black',
                  active_color=BOLD,
                  input_color='green',
+                 probe_color='pink',
                  output_color='red',
                  input_and_output_color='brown',
                  # feedback_color='yellow',
@@ -437,6 +452,7 @@ class ShowGraph():
         self.default_node_color = default_node_color
         self.active_color = active_color
         self.input_color = input_color
+        self.probe_color=probe_color
         self.output_color = output_color
         self.input_and_output_color = input_and_output_color
         # self.feedback_color = self.feedback_color
@@ -459,6 +475,7 @@ class ShowGraph():
     @tc.typecheck
     @handle_external_context(source=ContextFlags.COMPOSITION)
     def show_graph(self,
+                   show_all:bool=False,
                    show_node_structure:tc.any(bool, tc.enum(VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS,
                                                             PORT_FUNCTION_PARAMS, ROLES, ALL))=False,
                    show_nested:tc.optional(tc.any(bool,int,dict,tc.enum(NESTED, INSET)))=NESTED,
@@ -474,9 +491,11 @@ class ShowGraph():
                    active_items=None,
                    output_fmt:tc.optional(tc.enum('pdf','gv','jupyter','gif'))='pdf',
                    context=None,
+                   *args,
                    **kwargs):
         """
         show_graph(                                  \
+           show_all=False,                           \
            show_node_structure=False,                \
            show_nested=NESTED,                       \
            show_nested_args=ALL,                     \
@@ -492,7 +511,8 @@ class ShowGraph():
            output_fmt='pdf',                         \
            context=None)
 
-        Show graphical display of Components in a Composition's graph.
+        Show graphical display of Components in a Composition's graph.  See `show_graph <ShowGraph_show_graph_Method>`
+        for additional details.
 
         .. note::
            This method relies on `graphviz <http://www.graphviz.org>`_, which must be installed and imported
@@ -500,6 +520,10 @@ class ShowGraph():
 
         Arguments
         ---------
+
+        show_all : bool : default False
+            if False, defer to specification of all other arguments;  if True, override all show_XXX arguments,
+            automatically specifying them with their most informative settings.
 
         show_node_structure : bool, VALUES, LABELS, FUNCTIONS, MECH_FUNCTION_PARAMS, PORT_FUNCTION_PARAMS, ROLES, \
         or ALL : default False
@@ -574,7 +598,8 @@ class ShowGraph():
 
         show_projections_not_in_composition : bool : default False
             specifies whether or not to show `Projections <Projection>` that are not active in the current
-            `Composition`;  these will display in red. This option is for use in debugging.
+            `Composition` (and, accordingly, are *not* listed in its `projections <Composition.projections>`
+            attribute);  these are shown in red.
 
         show_headers : bool : default True
             specifies whether or not to show headers in the subfields of a Mechanism's node;  only takes effect if
@@ -622,9 +647,7 @@ class ShowGraph():
             - ``source`` -- str with content of G.body
 
         """
-        # MODIFIED 6/13/20 NEW:
         from psyneulink.core.compositions.composition import Composition
-        # MODIFIED 6/13/20 END
 
         composition = self.composition
 
@@ -655,6 +678,16 @@ class ShowGraph():
         composition.active_item_rendered = False
 
         # ASSIGN ATTRIBUTES PASSED TO NESTED COMPOSITIONS  -----------------------------------------------
+
+        if show_all:
+            show_node_structure=ALL
+            show_nested=NESTED
+            show_nested_args=ALL
+            show_cim=True
+            show_controller=True
+            show_learning=ALL
+            show_headers=True
+            show_projections_not_in_composition=True
 
         # Assign node_struct_arg based on show_node_structure ~~~~~~~~~~~~~~~~~~~~~~~~~
         # Argument values used to call Mechanism._show_structure()
@@ -733,6 +766,7 @@ class ShowGraph():
         # BUILD GRAPH ------------------------------------------------------------------------
 
         import graphviz as gv
+        self.style = 'solid'
 
         G = gv.Digraph(
             name=composition.name,
@@ -760,6 +794,8 @@ class ShowGraph():
         # get all Nodes
         if output_fmt != 'gv':
             composition._analyze_graph(context=context)
+            if composition._need_check_for_unused_projections:
+                composition._check_for_unused_projections(context)
 
         rcvrs = list(processing_graph.keys())
         for rcvr in rcvrs:
@@ -899,6 +935,8 @@ class ShowGraph():
                     nested_comp_graph.attr(color=self.input_and_output_color)
                 elif rcvr in composition.get_nodes_by_role(NodeRole.INPUT):
                     nested_comp_graph.attr(color=self.input_color)
+                elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+                    nested_comp_graph.attr(color=self.probe_color)
                 elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
                     nested_comp_graph.attr(color=self.output_color)
                 nested_comp_graph.attr(label=rcvr_label)
@@ -977,6 +1015,20 @@ class ShowGraph():
                 rcvr_color = self.input_color
                 rcvr_penwidth = str(self.bold_width)
             rcvr_rank = self.input_rank
+
+        # PROBE Node
+        elif rcvr in composition.get_nodes_by_role(NodeRole.PROBE):
+            if rcvr in active_items:
+                if self.active_color == BOLD:
+                    rcvr_color = self.probe_color
+                else:
+                    rcvr_color = self.active_color
+                rcvr_penwidth = str(self.bold_width + self.active_thicker_by)
+                composition.active_item_rendered = True
+            else:
+                rcvr_color = self.probe_color
+                rcvr_penwidth = str(self.bold_width)
+            rcvr_rank = self.output_rank
 
         # OUTPUT Node
         elif rcvr in composition.get_nodes_by_role(NodeRole.OUTPUT):
@@ -1096,7 +1148,8 @@ class ShowGraph():
 
         def _render_projection(_g, proj, sndr_label, rcvr_label,
                                proj_color=self.default_node_color,
-                               arrowhead=self.default_projection_arrow):
+                               arrowhead=self.default_projection_arrow,
+                               style=self.style):
             if any(item in active_items for item in {proj, proj.sender.owner}):
                 if self.active_color == BOLD:
                     color = proj_color
@@ -1113,7 +1166,11 @@ class ShowGraph():
             else:
                 label = ''
 
-            _g.edge(sndr_label, rcvr_label, label=label, color=color, penwidth=proj_width, arrowhead=arrowhead)
+            _g.edge(sndr_label, rcvr_label,
+                    label=label, color=color,
+                    penwidth=proj_width,
+                    arrowhead=arrowhead,
+                    style=style)
 
         for cim in composition.cims:
 
@@ -1231,7 +1288,10 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
 
                         # Render Projection
-                        _render_projection(enclosing_g, proj, sndr_output_node_proj_label, rcvr_cim_proj_label,
+                        _render_projection(enclosing_g,
+                                           proj,
+                                           sndr_output_node_proj_label,
+                                           rcvr_cim_proj_label,
                                            proj_color)
 
                 # Projections from input_CIM to INPUT nodes
@@ -1403,10 +1463,18 @@ class ShowGraph():
                         else:
                             ctl_proj_color = proj_color or self.control_color
 
-                        arrowhead = self.default_projection_arrow if isinstance(proj, MappingProjection) else self.control_projection_arrow
+                        if isinstance(proj, MappingProjection):
+                            arrowhead = self.default_projection_arrow
+                        else:
+                            arrowhead = self.control_projection_arrow
+
+                        if RANDOMIZATION_CONTROL_SIGNAL in proj.sender.name:
+                            style = 'dashed'
+                        else:
+                            style = self.style
 
                         _render_projection(g, proj, sndr_param_cim_proj_label, rcvr_modulated_mec_proj_label,
-                                           proj_color=ctl_proj_color, arrowhead=arrowhead)
+                                           proj_color=ctl_proj_color, arrowhead=arrowhead, style=style)
 
 
             # OUTPUT_CIM ----------------------------------------------------------------------------
@@ -1424,6 +1492,11 @@ class ShowGraph():
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
+                        else:
+                            port, node, comp = cim._get_source_info_from_output_CIM(proj.receiver)
+                            if (node in comp.get_nodes_by_role(NodeRole.PROBE)
+                                    and not composition.include_probes_in_output):
+                                proj_color=self.probe_color
 
                         sndr_output_node_proj = proj.sender
                         if (isinstance(sndr_output_node_proj.owner, CompositionInterfaceMechanism)
@@ -1431,8 +1504,7 @@ class ShowGraph():
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner.composition
                         else:
                             sndr_output_node_proj_owner = sndr_output_node_proj.owner
-                        # Validate the Projection is from an OUTPUT node
-                        #  or a PROBE node if allow_probes is set for a controller or its objective_mechanism
+                        # Validate the Projection is from an OUTPUT or PROBE node
                         if ((sndr_output_node_proj_owner in composition.nodes_to_roles and
                              not any(role for role in {NodeRole.OUTPUT, NodeRole.PROBE} if
                                      role in composition.nodes_to_roles[sndr_output_node_proj_owner]))):
@@ -1464,7 +1536,7 @@ class ShowGraph():
                             sndr_output_node_proj_label = sndr_label
                             rcvr_output_cim_proj_label = cim_label
 
-                        # FIX 6/23/20 PROBLEM POINT:
+                        # FIX 6/23/20 PROBLEM POINT: (SEE MESSAGE FOR COMMIT eb61303808ad2a5ba46fdd18d0e583283397915c)
                         # Render Projection
                         _render_projection(g,
                                            proj,
@@ -1483,7 +1555,6 @@ class ShowGraph():
                                 continue
                             else:
                                 proj_color=self.inactive_projection_color
-
                         rcvr_node_input_port = proj.receiver
 
                         # Skip if receiver is controller of enclosing_comp (handled by _assign_controller_components)
@@ -1568,16 +1639,25 @@ class ShowGraph():
                               f"so \'show_controller\' option in call to its show_graph() method will be ignored.")
             return
 
+        # Assign colors, penwidth and label displayed for controller and ControlProjections ---------------------
+        ctlr_color = self.controller_color
         if controller in active_items:
-            if self.active_color == BOLD:
-                ctlr_color = self.controller_color
-            else:
+            if self.active_color != BOLD:
                 ctlr_color = self.active_color
             ctlr_width = str(self.default_width + self.active_thicker_by)
             composition.active_item_rendered = True
         else:
             ctlr_color = self.controller_color
             ctlr_width = str(self.default_width)
+
+        ctl_proj_color = self.controller_color
+        if controller in active_items:
+            if self.active_color != BOLD:
+                ctl_proj_color = self.active_color
+            ctl_proj_width = str(self.default_width + self.active_thicker_by)
+            composition.active_item_rendered = True
+        else:
+            ctl_proj_width = str(self.default_width)
 
         # Assign controller node
         node_shape = self.mechanism_shape
@@ -1613,10 +1693,10 @@ class ShowGraph():
                 ctl_proj_rcvr = ctl_proj.receiver
                 # If receiver is a parameter_CIM
                 if isinstance(ctl_proj_rcvr.owner, CompositionInterfaceMechanism):
-                    # PATCH 6/7/20 to deal with ControlProjections across more than one level of nesting:
+                    # Deal with ControlProjections across more than one level of nesting:
                     rcvr_comp = ctl_proj_rcvr.owner.composition
                     def find_rcvr_comp(r, c, l):
-                        """Find deepest enclosing composition within range of num_nesting_levels"""
+                        """Find deepest Composition within c that encloses r within range of num_nesting_levels of c"""
                         if (self.num_nesting_levels is not None and l > self.num_nesting_levels):
                             return c, l
                         elif r in c.nodes:
@@ -1644,26 +1724,17 @@ class ShowGraph():
                             rcvr_comp = enclosing_comp
                     else:
                         rcvr_comp = enclosing_comp
-                    # PATCH 6/6/20 END
 
-                    # PATCH 6/6/20:
                     # if show_cim and show_nested is NESTED:
                     if show_cim and project_to_node:
-                    # PATCH 6/6/20 END
                         # Use Composition's parameter_CIM port
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
-                    # PATCH 6/6/20:
-                    # elif show_nested is NESTED:
                     elif project_to_node:
-                    # PATCH 6/6/20 END
                         ctl_proj_rcvr = self._trace_receivers_for_terminal_receiver(ctl_proj_rcvr)
                         ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
                     else:
                         # Use Composition if show_cim is False
-                        # PATCH 6/6/20:
-                        # ctl_proj_rcvr_owner = ctl_proj_rcvr.owner.composition
                         ctl_proj_rcvr_owner = rcvr_comp
-                        # PATCH 6/6/20 END
                 # In all other cases, use Port (either ParameterPort of a Mech, or parameter_CIM for nested comp)
                 else:
                     ctl_proj_rcvr_owner = ctl_proj_rcvr.owner
@@ -1687,21 +1758,15 @@ class ShowGraph():
                     ctl_proj_sndr_label = ctlr_label
                     ctl_proj_rcvr_label = rcvr_label
 
-                # Assign colors, penwidth and label displayed for ControlProjection ---------------------
-                if controller in active_items:
-                    if self.active_color == BOLD:
-                        ctl_proj_color = self.controller_color
-                    else:
-                        ctl_proj_color = self.active_color
-                    ctl_proj_width = str(self.default_width + self.active_thicker_by)
-                    composition.active_item_rendered = True
-                else:
-                    ctl_proj_color = self.controller_color
-                    ctl_proj_width = str(self.default_width)
                 if show_projection_labels:
                     edge_label = ctl_proj.name
                 else:
                     edge_label = ''
+
+                if RANDOMIZATION_CONTROL_SIGNAL in ctl_proj.sender.name:
+                    style = 'dashed'
+                else:
+                    style = self.style
 
                 # Construct edge -----------------------------------------------------------------------
                 g.edge(ctl_proj_sndr_label,
@@ -1709,7 +1774,8 @@ class ShowGraph():
                        label=edge_label,
                        color=ctl_proj_color,
                        penwidth=ctl_proj_width,
-                       arrowhead=ctl_proj_arrowhead
+                       arrowhead=ctl_proj_arrowhead,
+                       style = style
                        )
 
         # If controller has objective_mechanism, assign its node and Projections,
@@ -1776,6 +1842,14 @@ class ShowGraph():
             # incoming edges (from monitored mechs to objective mechanism)
             for input_port in objmech.input_ports:
                 for projection in input_port.path_afferents:
+                    # MODIFIED 1/6/22 NEW:
+                    # Get nested source node for direct projection to objective mechanism
+                    if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
+                        cim_output_port = projection.sender
+                        proj_sndr, node, comp = cim_output_port.owner._get_source_info_from_output_CIM(cim_output_port)
+                    else:
+                        proj_sndr = projection.sender
+                    # MODIFIED 1/6/22 END
                     if objmech in active_items:
                         if self.active_color == BOLD:
                             proj_color = self.controller_color
@@ -1788,12 +1862,15 @@ class ShowGraph():
                         proj_width = str(self.default_width)
                     if show_node_structure:
                         sndr_proj_label = self._get_graph_node_label(composition,
-                                                                projection.sender.owner,
+                                                                proj_sndr.owner,
                                                                 show_types,
                                                                 show_dimensions)
-                        if projection.sender.owner not in composition.nodes:
+                        if (proj_sndr.owner not in composition.nodes
+                                # MODIFIED 1/6/22 NEW:
+                                and isinstance(proj_sndr.owner, CompositionInterfaceMechanism)):
+                            # MODIFIED 1/6/22 END
                             num_nesting_levels = self.num_nesting_levels or 0
-                            nested_comp = projection.sender.owner.composition
+                            nested_comp = proj_sndr.owner.composition
                             try:
                                 nesting_depth = next((k for k, v in comp_hierarchy.items() if v == nested_comp))
                                 sender_visible = nesting_depth <= num_nesting_levels
@@ -1802,11 +1879,11 @@ class ShowGraph():
                         else:
                             sender_visible = True
                         if sender_visible:
-                            sndr_proj_label += ':' + objmech._get_port_name(projection.sender)
+                            sndr_proj_label += ':' + objmech._get_port_name(proj_sndr)
                         objmech_proj_label = objmech_label + ':' + objmech._get_port_name(input_port)
                     else:
                         sndr_proj_label = self._get_graph_node_label(composition,
-                                                                projection.sender.owner,
+                                                                proj_sndr.owner,
                                                                 show_types,
                                                                 show_dimensions)
                         objmech_proj_label = self._get_graph_node_label(composition,
@@ -1825,17 +1902,12 @@ class ShowGraph():
             # incoming edges (from monitored mechs directly to controller)
             for outcome_input_port in controller.outcome_input_ports:
                 for projection in outcome_input_port.path_afferents:
-                    if controller in active_items:
-                        if self.active_color == BOLD:
-                            proj_color = self.controller_color
-                        else:
-                            proj_color = self.active_color
-                        proj_width = str(self.default_width + self.active_thicker_by)
-                        composition.active_item_rendered = True
-                    else:
-                        proj_color = self.controller_color
-                        proj_width = str(self.default_width)
-                    if show_node_structure:
+                    # MODIFIED 1/6/22 NEW:
+                    # Handled by _assign_cim_components()
+                    if isinstance(projection.sender.owner, CompositionInterfaceMechanism) and not show_cim:
+                        continue
+                    # MODIFIED 1/6/22 END
+                    if show_node_structure and show_cim:
                         sndr_proj_label = self._get_graph_node_label(composition,
                                                                      projection.sender.owner,
                                                                      show_types,
@@ -1868,7 +1940,8 @@ class ShowGraph():
                     else:
                         edge_label = ''
                     g.edge(sndr_proj_label, ctlr_input_proj_label, label=edge_label,
-                           color=proj_color, penwidth=proj_width)
+                           # color=proj_color, penwidth=proj_width)
+                           color=ctl_proj_color, penwidth=ctl_proj_width)
 
         # If controller has an agent_rep, assign its node and edges (not Projections per se)
         if hasattr(controller, 'agent_rep') and controller.agent_rep and show_controller==AGENT_REP :
@@ -1896,12 +1969,18 @@ class ShowGraph():
             g.edge(agent_rep_label, ctlr_label, color=agent_rep_color, penwidth=agent_rep_width)
             g.edge(ctlr_label, agent_rep_label, color=agent_rep_color, penwidth=agent_rep_width)
 
-        # get any other incoming edges to controller (i.e., other than from ObjectiveMechanism)
+        # get any state_feature projections and any other incoming edges to controller
         senders = set()
         # FIX: 11/3/21 - NEED TO MODIFY ONCE OUTCOME InputPorts ARE MOVED
         for i in controller.input_ports[controller.num_outcome_input_ports:]:
             for p in i.path_afferents:
-                senders.add(p.sender.owner)
+                # MODIFIED 1/6/22 NEW:
+                sender = p.sender.owner
+                if isinstance(sender, CompositionInterfaceMechanism) and not show_cim:
+                    pass # FIX: 1/6/22 - PLACEMARKER FOR RELABELING INPUT_CIM AS SHADOWING INPUT OF SHADOWED NODE
+                    assert True
+                # MODIFIED 1/6/22 END
+                senders.add(sender)
         self._assign_incoming_edges(g,
                                     controller,
                                     ctlr_label,
@@ -2132,7 +2211,7 @@ class ShowGraph():
                                 and isinstance(proj.sender.owner, CompositionInterfaceMechanism)
                                 and proj.sender.owner in {composition.input_CIM, composition.parameter_CIM})])
                 senders.update(cims)
-            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMOSITION (NOT IN processing_graph)
+            # HACK: FIX 6/13/20 - ADD USER-SPECIFIED TARGET NODE FOR INNER COMPOSITION (NOT IN processing_graph)
 
         def assign_sender_edge(sndr:Union[Mechanism, Composition],
                                proj_color:str, proj_arrowhead:str
@@ -2303,7 +2382,7 @@ class ShowGraph():
                             if not sender.afferents and rcvr is not composition.controller:
                                 continue
                             # FIX: LOOP HERE OVER sndr_spec IF THERE ARE SEVERAL
-                            # Get node(s) from enclosing Comopsition that is/are source(s) of sender(s)
+                            # Get node(s) from enclosing Composition that is/are source(s) of sender(s)
                             sndrs_specs = self._trace_senders_for_original_sender_mechanism(proj, nesting_level)
                             if not sndrs_specs:
                                 continue
@@ -2314,11 +2393,15 @@ class ShowGraph():
                                 enclosing_comp = comp_hierarchy[sndr_nesting_level]
                                 enclosing_g = enclosing_comp._show_graph.G
                                 # Skip:
-                                # - cims as sources (handled in _assign_cim_componoents)
+                                # - cims as sources (handled in _assign_cim_components)
+                                #    unless it is the input_CIM for the outermost Composition and show_cim is not true
                                 # - controller (handled in _assign_controller_components)
                                 if (isinstance(sndr, CompositionInterfaceMechanism) and
                                         rcvr is not enclosing_comp.controller
                                         and rcvr is not composition.controller
+                                        # MODIFIED 1/6/22 NEW:
+                                        and not sndr.afferents and show_cim
+                                        # MODIFIED 1/6/22 END
                                         or self._is_composition_controller(sndr, enclosing_comp)):
                                     continue
                                 if sender is composition.parameter_CIM:
@@ -2506,7 +2589,12 @@ class ShowGraph():
             nesting_level -= 1
             num_afferents = len(owner.port_map[proj.receiver][0].path_afferents)
             if num_afferents == 0:
+                # MODIFIED 1/6/22 OLD:
                 return None
+                # # MODIFIED 1/6/22 NEW:
+                # # Presumably outermost Composition, so return CIM itself
+                # return [(owner, sender, nesting_level)]
+                # MODIFIED 1/6/22 END
             # # FIX: ITERATE OVER ALL AFFERENTS TO relevant InputPort of cim:
             # # MODIFIED 4/5/21 OLD:
             # outer_proj = owner.port_map[proj.receiver][0].path_afferents[0]
@@ -2519,6 +2607,10 @@ class ShowGraph():
                 sndrs = enclosing_showgraph._trace_senders_for_original_sender_mechanism(outer_proj, nesting_level)
                 if sndrs is not None:
                     senders.extend(sndrs)
+                # MODIFIED 1/6/22 NEW:
+                else:
+                    senders.append((outer_proj.sender.owner, sender, nesting_level))
+                # MODIFIED 1/6/22 END
             return senders
             # MODIFIED 4/5/21 END
         # FIX: RECEIVERS OF THIS RETURN NEED TO HANDLE LIST
