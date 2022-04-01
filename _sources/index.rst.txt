@@ -3,6 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. *****************************************************************************************
+.. ****** NOTE:  UPDATES TO THIS PAGE SHOULD ALSO BE MADE TO README.rst ********************
+.. *****************************************************************************************
+
+
 :tocdepth: 5
 
 .. |logo| image:: _static/PsyNeuLink_logo_no_text.svg
