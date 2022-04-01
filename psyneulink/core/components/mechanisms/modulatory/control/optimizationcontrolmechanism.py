@@ -2118,13 +2118,13 @@ class OptimizationControlMechanism(ControlMechanism):
             if (isinstance(self.state_feature_specs, set)
                     or isinstance(self.state_feature_specs, dict) and SHADOW_INPUTS not in self.state_feature_specs):
                 # Dict and set specs reference Nodes that are not yet in agent_rep
-                warnings.warn(f"Nodes been specified in the {STATE_FEATURES}' arg for '{self.name}' that are not "
+                warnings.warn(f"Nodes are specified in the {STATE_FEATURES}' arg for '{self.name}' that are not "
                               f"(yet) in its its {AGENT_REP} ('{self.agent_rep.name}'). They must all be assigned "
                               f"to it before the Composition is executed'.  It is generally safer to assign all "
                               f"Nodes to the {AGENT_REP} of a controller before specifying its '{STATE_FEATURES}'.")
             else:
                 # List and SHADOW_INPUTS specs are dangerous before agent_rep has been fully constructed
-                warnings.warn(f"The {STATE_FEATURES}' arg for '{self.name}' has been specified before any Nodes have "
+                warnings.warn(f"The '{STATE_FEATURES}' arg for '{self.name}' has been specified before any Nodes have "
                               f"been assigned to its {AGENT_REP} ('{self.agent_rep.name}').  Their order must be the "
                               f"same as the order of the corresponding INPUT Nodes for '{self.agent_rep.name}' once "
                               f"they are added, or unexpected results may occur.  It is safer to assign all Nodes to "

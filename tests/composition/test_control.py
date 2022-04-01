@@ -151,8 +151,12 @@ class TestControlSpecification:
         'default_none',
         'list_none',
         'list_ports',
+        'list_reversed',
         'list_numeric',
+        'list_partial',
         'dict',
+        'dict_reversed',
+        'dict_partial',
     ])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
@@ -190,9 +194,14 @@ class TestControlSpecification:
             'default_none' : 'DEFAULT NONE',
             'list_none': [None, None],
             'list_ports': [reward.input_port, Input.input_port],
+            'list_reversed': [Input.input_port, reward.input_port],
+            'list_partial': [reward.input_port],
             'list_numeric': [[1.1],[2.2]],
             'dict': {reward: reward.input_port,
-                     Input: Input.input_port}
+                     Input: Input.input_port},
+            'dict_reversed': {reward: Input.input_port,
+                              Input: reward.input_port},
+            'dict_partial': {reward: reward.input_port}
         }[state_features_arg]
 
         if state_features == 'DEFAULT NONE':
@@ -200,28 +209,23 @@ class TestControlSpecification:
         else:
             state_feature_default = pnl.SHADOW_INPUTS
 
-        # if state_features_arg == 'list_ports':
-        if state_features_arg in {'none', 'default_none',  'list_none', 'list_ports', 'list_numeric'}:
-            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
-                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
-                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
-                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
-                               "agent_rep of a controller before specifying its 'state_features'."
-        # elif state_features_arg == 'list_numeric':
-        #     expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
-        #                        "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
-        #                        "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
-        #                        "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
-        #                        "agent_rep of a controller before specifying its 'state_features'."
-        # elif state_features_arg == 'list_none':
-        #     expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
-        #                        "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
-        #                        "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
-        #                        "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
-        #                        "agent_rep of a controller before specifying its 'state_features'."
-        elif state_features_arg == 'dict':
-            expected_warning = "that are not in its agent_rep ('evc'). Executing 'evc' before they " \
-                               "are added will generate an error ."
+        if state_features_arg in {'none', 'default_none',
+                                  'list_none', 'list_ports', 'list_reversed', 'list_numeric', 'list_partial'}:
+            expected_warning = f"The '{pnl.STATE_FEATURES}' arg for 'OptimizationControlMechanism-0' has been specified " \
+                               f"before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+                               f"be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+                               f"added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+                               f"agent_rep of a controller before specifying its 'state_features'."
+        elif state_features_arg in {'dict', 'dict_reversed'}:
+            # expected_warning = f"The 'state_features' specified for 'OptimizationControlMechanism-0' " \
+            #                    f"contains items (Input, reward) that are not in its agent_rep ('evc'). " \
+            #                    f"Executing 'evc' before they are added will generate an error ."
+            expected_warning = f"that are not in its agent_rep ('evc'). " \
+                               f"Executing 'evc' before they are added will generate an error ."
+        elif state_features_arg == 'dict_partial':
+            expected_warning = f"The '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' " \
+                               f"contains an item (reward) that is not in its agent_rep ('evc'). " \
+                               f"Executing 'evc' before it is added will generate an error ."
         else:
             assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
@@ -269,12 +273,16 @@ class TestControlSpecification:
         deferred_node_1 = _deferred_agent_rep_input_port_name('1','evc')
         deferred_shadowed_0 = _shadowed_state_input_port_name('reward[InputPort-0]' , deferred_node_0)
         deferred_shadowed_1 = _shadowed_state_input_port_name('Input[InputPort-0]' , deferred_node_1)
+        deferred_shadowed_0_rev = _shadowed_state_input_port_name('Input[InputPort-0]' , deferred_node_0)
+        deferred_shadowed_1_rev = _shadowed_state_input_port_name('reward[InputPort-0]' , deferred_node_1)
         deferred_numeric_input_port_0 = _numeric_state_input_port_name(deferred_node_0)
         deferred_numeric_input_port_1 = _numeric_state_input_port_name(deferred_node_1)
-        deferred_reward_node = _deferred_agent_rep_input_port_name('reward[InputPort-0]','evc')
-        deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]','evc')
-        shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]' ,'reward[InputPort-0]')
-        shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]' ,'Input[InputPort-0]')
+        deferred_reward_node = _deferred_agent_rep_input_port_name('reward[InputPort-0]', 'evc')
+        deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]', 'evc')
+        shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]', 'reward[InputPort-0]')
+        shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]', 'Input[InputPort-0]')
+        shadowed_reward_node_rev = _shadowed_state_input_port_name('reward[InputPort-0]', 'Input[InputPort-0]')
+        shadowed_Input_node_rev = _shadowed_state_input_port_name('Input[InputPort-0]', 'reward[InputPort-0]')
         numeric_reward_node = _numeric_state_input_port_name('reward[InputPort-0]')
         numeric_Input_node = _numeric_state_input_port_name('Input[InputPort-0]')
 
@@ -294,6 +302,16 @@ class TestControlSpecification:
                                                       deferred_node_1: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port,
                                                             deferred_node_1: deferred_Input_input_port}
+        elif state_features_arg == 'list_reversed':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0_rev, deferred_shadowed_1_rev]
+            assert comp.controller.state_features == {deferred_node_0: deferred_Input_input_port,
+                                                      deferred_node_1: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_node_0: deferred_Input_input_port,
+                                                            deferred_node_1: deferred_reward_input_port}
+        elif state_features_arg == 'list_partial':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0]
+            assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port}
         elif state_features_arg == 'list_numeric':
             assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
                                                                deferred_numeric_input_port_1]
@@ -306,6 +324,16 @@ class TestControlSpecification:
                                                       deferred_Input_node: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_reward_node: deferred_reward_input_port,
                                                             deferred_Input_node: deferred_Input_input_port}
+        elif state_features_arg == 'dict_reversed':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0_rev, deferred_shadowed_1_rev]
+            assert comp.controller.state_features == {deferred_reward_node: deferred_Input_input_port,
+                                                      deferred_Input_node: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_reward_node: deferred_Input_input_port,
+                                                            deferred_Input_node: deferred_reward_input_port}
+        elif state_features_arg == 'dict_partial':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0]
+            assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_reward_node: deferred_reward_input_port}
         else:
             assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
@@ -334,6 +362,12 @@ class TestControlSpecification:
                                                       'Input[InputPort-0]': [2.2]}
             assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
             assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
+        elif state_features_arg in {'list_reversed', 'dict_reversed'}:
+            assert all(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': 'Input[InputPort-0]',
+                                                      'Input[InputPort-0]': 'reward[InputPort-0]'}
+            assert comp.controller.state_feature_values == {Input.input_port: [0], reward.input_port: [0]}
+            assert comp.controller.state_input_ports.names == [shadowed_Input_node_rev, shadowed_reward_node_rev]
         else:
             assert all(p.path_afferents for p in comp.controller.state_input_ports)
             assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
@@ -418,6 +452,40 @@ class TestControlSpecification:
                 [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
                 [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
                 [[1.1], [1.1], [0.], [0.90454543], [0.99999998]]]
+        elif state_features_arg in {'list_reversed', 'dict_reversed'}:
+            expected_sim_results_array = [
+                [[0.25], [0.25], [0.], [0.4879949], [0.68997448]],
+                [[0.25], [0.25], [0.], [0.81866742], [0.96083428]],
+                [[0.25], [0.25], [0.], [1.14484206], [0.99631576]],
+                [[0.25], [0.25], [0.], [1.4493293], [0.99966465]],
+                [[0.25], [0.25], [0.], [0.47304171], [0.96083428]],
+                [[0.25], [0.25], [0.], [0.54999945], [0.99999724]],
+                [[0.25], [0.25], [0.], [0.625], [1.]],
+                [[0.25], [0.25], [0.], [0.7], [1.]],
+                [[0.25], [0.25], [0.], [0.46418045], [0.99631576]],
+                [[0.25], [0.25], [0.], [0.50714286], [1.]],
+                [[0.25], [0.25], [0.], [0.55], [1.]],
+                [[0.25], [0.25], [0.], [0.59285714], [1.]],
+                [[0.25], [0.25], [0.], [0.45999329], [0.99966465]],
+                [[0.25], [0.25], [0.], [0.49], [1.]],
+                [[0.25], [0.25], [0.], [0.52], [1.]],
+                [[0.25], [0.25], [0.], [0.55], [1.]],
+                [[0.1865], [0.1865], [0.], [0.4858033], [0.76852478]],
+                [[0.1865], [0.1865], [0.], [0.7123133], [0.99183743]],
+                [[0.1865], [0.1865], [0.], [0.91645684], [0.99977518]],
+                [[0.1865], [0.1865], [0.], [1.11665847], [0.99999386]],
+                [[0.1865], [0.1865], [0.], [0.46639458], [0.99183743]],
+                [[0.1865], [0.1865], [0.], [0.51666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.56666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.61666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.45951953], [0.99977518]],
+                [[0.1865], [0.1865], [0.], [0.48809524], [1.]],
+                [[0.1865], [0.1865], [0.], [0.51666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.5452381], [1.]],
+                [[0.1865], [0.1865], [0.], [0.45666658], [0.99999386]],
+                [[0.1865], [0.1865], [0.], [0.47666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.49666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.51666667], [1.]]]
         else:
             # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
             expected_sim_results_array = [
