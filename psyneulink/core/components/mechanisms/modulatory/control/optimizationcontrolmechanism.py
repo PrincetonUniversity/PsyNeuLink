@@ -2661,10 +2661,14 @@ class OptimizationControlMechanism(ControlMechanism):
             # Assign OptimizationControlMechanism attributes
             self.state_input_ports.extend(state_input_ports)
 
-        # Update _specified_INPUT_Node_InputPorts_in_order with any agent_rep_input_ports that have been added to comp
-        #   (including case in which they were specified as None in state_feature_specs)
+        # Update _specified_INPUT_Node_InputPorts_in_order with any new agent_rep_input_ports
         for i in range(num_agent_rep_input_ports):
-            self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
+            if i < len(self._specified_INPUT_Node_InputPorts_in_order):
+                # Replace existing ones (in case any deferred ones are "placemarked" with None)
+                self._specified_INPUT_Node_InputPorts_in_order[i] = self.agent_rep_input_ports[i]
+            else:
+                # Add any that have been added to Composition
+                self._specified_INPUT_Node_InputPorts_in_order.append(self.agent_rep_input_ports[i])
 
         if context._execution_phase == ContextFlags.PREPARING:
             # Restrict validation until run time, when the Composition is expected to be fully constructed
