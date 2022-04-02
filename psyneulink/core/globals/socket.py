@@ -34,6 +34,15 @@ class ConnectionInfo(types.SimpleNamespace):
         else:
             self.compositions.add(composition)
 
+    def remove_composition(self, composition):
+        if composition is self.ALL:
+            self.compositions = set()
+        else:
+            try:
+                self.compositions.remove(composition)
+            except (AttributeError, KeyError):
+                logger.info('Attempted to remove composition from {} but was not active'.format(self))
+
     def is_active_in_composition(self, composition):
         if self.compositions is None:
             return False

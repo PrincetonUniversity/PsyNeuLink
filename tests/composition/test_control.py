@@ -146,7 +146,18 @@ class TestControlSpecification:
 
     @pytest.mark.state_features
     @pytest.mark.parametrize("control_spec", [CONTROL, PROJECTIONS])
-    @pytest.mark.parametrize("state_features_arg", ['list','dict'])
+    @pytest.mark.parametrize("state_features_arg", [
+        'none',
+        'default_none',
+        'list_none',
+        'list_ports',
+        'list_reversed',
+        'list_numeric',
+        'list_partial',
+        'dict',
+        'dict_reversed',
+        'dict_partial',
+    ])
     def test_deferred_init(self, control_spec, state_features_arg):
         # Test to insure controller works the same regardless of whether it is added to a composition before or after
         # the nodes it connects to
@@ -179,38 +190,81 @@ class TestControlSpecification:
         comp = pnl.Composition(name="evc", retain_old_simulation_data=True)
 
         state_features = {
-            'list': [reward.input_port, Input.input_port],
+            'none' : None,
+            'default_none' : 'DEFAULT NONE',
+            'list_none': [None, None],
+            'list_ports': [reward.input_port, Input.input_port],
+            'list_reversed': [Input.input_port, reward.input_port],
+            'list_partial': [reward.input_port],
+            'list_numeric': [[1.1],[2.2]],
             'dict': {reward: reward.input_port,
-                     Input: Input.input_port}
+                     Input: Input.input_port},
+            'dict_reversed': {reward: Input.input_port,
+                              Input: reward.input_port},
+            'dict_partial': {reward: reward.input_port}
         }[state_features_arg]
 
-        if state_features_arg == 'list':
-            expected_warning = "The state_features' arg for 'OptimizationControlMechanism-0' has been specified " \
-                               "before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
-                               "be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
-                               "added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
-                               "agent_rep of a controller before specifying its 'state_features'."
+        if state_features == 'DEFAULT NONE':
+            state_feature_default = None
         else:
-            expected_warning = "that are not in its agent_rep ('evc'). Executing 'evc' before they " \
-                               "are added will generate an error ."
+            state_feature_default = pnl.SHADOW_INPUTS
+
+        if state_features_arg in {'none', 'default_none',
+                                  'list_none', 'list_ports', 'list_reversed', 'list_numeric', 'list_partial'}:
+            expected_warning = f"The '{pnl.STATE_FEATURES}' arg for 'OptimizationControlMechanism-0' has been specified " \
+                               f"before any Nodes have been assigned to its agent_rep ('evc').  Their order must " \
+                               f"be the same as the order of the corresponding INPUT Nodes for 'evc' once they are " \
+                               f"added, or unexpected results may occur.  It is safer to assign all Nodes to the " \
+                               f"agent_rep of a controller before specifying its 'state_features'."
+        elif state_features_arg in {'dict', 'dict_reversed'}:
+            # expected_warning = f"The 'state_features' specified for 'OptimizationControlMechanism-0' " \
+            #                    f"contains items (Input, reward) that are not in its agent_rep ('evc'). " \
+            #                    f"Executing 'evc' before they are added will generate an error ."
+            expected_warning = f"that are not in its agent_rep ('evc'). " \
+                               f"Executing 'evc' before they are added will generate an error ."
+        elif state_features_arg == 'dict_partial':
+            expected_warning = f"The '{pnl.STATE_FEATURES}' specified for 'OptimizationControlMechanism-0' " \
+                               f"contains an item (reward) that is not in its agent_rep ('evc'). " \
+                               f"Executing 'evc' before it is added will generate an error ."
+        else:
+            assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
         with pytest.warns(UserWarning) as warning:
             # add the controller to the Composition before adding the relevant Mechanisms
-            comp.add_controller(controller=pnl.OptimizationControlMechanism(
-                agent_rep=comp,
-                state_features = state_features,
-                state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
-                objective_mechanism=pnl.ObjectiveMechanism(
-                    function=pnl.LinearCombination(operation=pnl.PRODUCT),
-                    monitor=[reward,
-                             Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
-                             (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
-                function=pnl.GridSearch(),
-                control_signals=[{control_spec: ("drift_rate", Decision),
-                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
-                                 {control_spec: ("threshold", Decision),
-                                  ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
-            )
+            if 'default_none' in state_features_arg:
+                comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                    agent_rep=comp,
+                    # state_features = state_features, # Don't specify in order to test default assignments
+                    state_feature_default=state_feature_default,
+                    state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                    objective_mechanism=pnl.ObjectiveMechanism(
+                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                        monitor=[reward,
+                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                    function=pnl.GridSearch(),
+                    control_signals=[{control_spec: ("drift_rate", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                     {control_spec: ("threshold", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+                )
+            else:
+                comp.add_controller(controller=pnl.OptimizationControlMechanism(
+                    agent_rep=comp,
+                    state_features = state_features,
+                    state_feature_default=state_feature_default,
+                    state_feature_function=pnl.AdaptiveIntegrator(rate=0.5),
+                    objective_mechanism=pnl.ObjectiveMechanism(
+                        function=pnl.LinearCombination(operation=pnl.PRODUCT),
+                        monitor=[reward,
+                                 Decision.output_ports[pnl.PROBABILITY_UPPER_THRESHOLD],
+                                 (Decision.output_ports[pnl.RESPONSE_TIME], -1, 1)]),
+                    function=pnl.GridSearch(),
+                    control_signals=[{control_spec: ("drift_rate", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)},
+                                     {control_spec: ("threshold", Decision),
+                                      ALLOCATION_SAMPLES: np.arange(0.1, 1.01, 0.3)}])
+                )
         assert any(expected_warning in repr(w.message) for w in warning.list)
 
         deferred_reward_input_port = _deferred_state_feature_spec_msg('reward[InputPort-0]', 'evc')
@@ -219,26 +273,69 @@ class TestControlSpecification:
         deferred_node_1 = _deferred_agent_rep_input_port_name('1','evc')
         deferred_shadowed_0 = _shadowed_state_input_port_name('reward[InputPort-0]' , deferred_node_0)
         deferred_shadowed_1 = _shadowed_state_input_port_name('Input[InputPort-0]' , deferred_node_1)
-        deferred_reward_node = _deferred_agent_rep_input_port_name('reward[InputPort-0]','evc')
-        deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]','evc')
-        shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]' ,'reward[InputPort-0]')
-        shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]' ,'Input[InputPort-0]')
+        deferred_shadowed_0_rev = _shadowed_state_input_port_name('Input[InputPort-0]' , deferred_node_0)
+        deferred_shadowed_1_rev = _shadowed_state_input_port_name('reward[InputPort-0]' , deferred_node_1)
+        deferred_numeric_input_port_0 = _numeric_state_input_port_name(deferred_node_0)
+        deferred_numeric_input_port_1 = _numeric_state_input_port_name(deferred_node_1)
+        deferred_reward_node = _deferred_agent_rep_input_port_name('reward[InputPort-0]', 'evc')
+        deferred_Input_node = _deferred_agent_rep_input_port_name('Input[InputPort-0]', 'evc')
+        shadowed_reward_node = _shadowed_state_input_port_name('reward[InputPort-0]', 'reward[InputPort-0]')
+        shadowed_Input_node = _shadowed_state_input_port_name('Input[InputPort-0]', 'Input[InputPort-0]')
+        shadowed_reward_node_rev = _shadowed_state_input_port_name('reward[InputPort-0]', 'Input[InputPort-0]')
+        shadowed_Input_node_rev = _shadowed_state_input_port_name('Input[InputPort-0]', 'reward[InputPort-0]')
+        numeric_reward_node = _numeric_state_input_port_name('reward[InputPort-0]')
+        numeric_Input_node = _numeric_state_input_port_name('Input[InputPort-0]')
 
         assert comp._controller_initialization_status == pnl.ContextFlags.DEFERRED_INIT
-        assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
 
-        if state_features_arg == 'list':
+        if state_features_arg in {'none', 'default_none'}:
+            assert comp.controller.state_input_ports.names == []
+            assert comp.controller.state_features == {}
+            assert comp.controller.state_feature_values == {}
+        elif state_features_arg == 'list_none':
+            assert comp.controller.state_input_ports.names == []
+            assert comp.controller.state_features == {deferred_node_0: None, deferred_node_1: None}
+            assert comp.controller.state_feature_values == {}
+        elif state_features_arg == 'list_ports':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port,
                                                       deferred_node_1: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port,
                                                             deferred_node_1: deferred_Input_input_port}
+        elif state_features_arg == 'list_reversed':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0_rev, deferred_shadowed_1_rev]
+            assert comp.controller.state_features == {deferred_node_0: deferred_Input_input_port,
+                                                      deferred_node_1: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_node_0: deferred_Input_input_port,
+                                                            deferred_node_1: deferred_reward_input_port}
+        elif state_features_arg == 'list_partial':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0]
+            assert comp.controller.state_features == {deferred_node_0: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_node_0: deferred_reward_input_port}
+        elif state_features_arg == 'list_numeric':
+            assert comp.controller.state_input_ports.names == [deferred_numeric_input_port_0,
+                                                               deferred_numeric_input_port_1]
+            assert comp.controller.state_features == {deferred_node_0: [1.1], deferred_node_1: [2.2]}
+            assert np.allclose(list(comp.controller.state_feature_values.values()), [[0.9625],[1.925]])
+            assert list(comp.controller.state_feature_values.keys()) == [deferred_node_0, deferred_node_1]
         elif state_features_arg == 'dict':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0, deferred_shadowed_1]
             assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port,
                                                       deferred_Input_node: deferred_Input_input_port}
             assert comp.controller.state_feature_values == {deferred_reward_node: deferred_reward_input_port,
                                                             deferred_Input_node: deferred_Input_input_port}
+        elif state_features_arg == 'dict_reversed':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0_rev, deferred_shadowed_1_rev]
+            assert comp.controller.state_features == {deferred_reward_node: deferred_Input_input_port,
+                                                      deferred_Input_node: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_reward_node: deferred_Input_input_port,
+                                                            deferred_Input_node: deferred_reward_input_port}
+        elif state_features_arg == 'dict_partial':
+            assert comp.controller.state_input_ports.names == [deferred_shadowed_0]
+            assert comp.controller.state_features == {deferred_reward_node: deferred_reward_input_port}
+            assert comp.controller.state_feature_values == {deferred_reward_node: deferred_reward_input_port}
         else:
-            assert False, f"TEST ERROR: unrecognized option '{state_features_arg}'"
+            assert False, f"TEST ERROR: unrecognized state_features_arg '{state_features_arg}'"
 
         comp.add_node(reward, required_roles=[pnl.NodeRole.OUTPUT])
         comp.add_node(Decision, required_roles=[pnl.NodeRole.OUTPUT])
@@ -246,11 +343,37 @@ class TestControlSpecification:
         comp.add_linear_processing_pathway(task_execution_pathway)
 
         comp.enable_controller = True
-        assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
-                                                  'Input[InputPort-0]': 'Input[InputPort-0]'}
-        assert comp.controller.state_feature_values == {reward.input_port: [0.], Input.input_port: [0.]}
-        assert all(p.path_afferents for p in comp.controller.state_input_ports)
-        assert comp.controller.state_input_ports.names == [shadowed_reward_node, shadowed_Input_node]
+
+        if state_features_arg == 'default_none':
+            assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {}
+            assert comp.controller.state_feature_values == {}
+            assert comp.controller.state_input_ports.names == []
+        elif state_features_arg == 'list_none':
+            assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': None,
+                                                      'Input[InputPort-0]': None}
+            assert comp.controller.state_feature_values == {}
+            assert comp.controller.state_input_ports.names == []
+        elif state_features_arg == 'list_numeric':
+            assert not any(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_input_ports.names == [numeric_reward_node, numeric_Input_node]
+            assert comp.controller.state_features == {'reward[InputPort-0]': [1.1],
+                                                      'Input[InputPort-0]': [2.2]}
+            assert np.allclose(list(comp.controller.state_feature_values.values()), [[1.065625],[2.13125]])
+            assert list(comp.controller.state_feature_values.keys()) == [reward.input_port, Input.input_port]
+        elif state_features_arg in {'list_reversed', 'dict_reversed'}:
+            assert all(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': 'Input[InputPort-0]',
+                                                      'Input[InputPort-0]': 'reward[InputPort-0]'}
+            assert comp.controller.state_feature_values == {Input.input_port: [0], reward.input_port: [0]}
+            assert comp.controller.state_input_ports.names == [shadowed_Input_node_rev, shadowed_reward_node_rev]
+        else:
+            assert all(p.path_afferents for p in comp.controller.state_input_ports)
+            assert comp.controller.state_features == {'reward[InputPort-0]': 'reward[InputPort-0]',
+                                                      'Input[InputPort-0]': 'Input[InputPort-0]'}
+            assert comp.controller.state_feature_values == {reward.input_port: [0], Input.input_port: [0]}
+            assert comp.controller.state_input_ports.names == [shadowed_reward_node, shadowed_Input_node]
 
         # comp._analyze_graph()
 
@@ -261,41 +384,143 @@ class TestControlSpecification:
 
         comp.run(inputs=stim_list_dict)
 
-        # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
-        expected_sim_results_array = [
-            [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
-            [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
-            [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
-            [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
-            [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
-            [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
-            [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
-            [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
-            [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
-            [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
-            [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
-            [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
-            [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
-            [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
-            [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
-            [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
-            [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
-            [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
-            [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
-            [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
-            [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
-            [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
-            [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
-            [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
-            [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
-            [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
-            [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
-            [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
-            [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
-            [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
-            [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
-            [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]
-        ]
+        if state_features_arg in {'default_none', 'list_none'}:
+            expected_sim_results_array = [
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]],
+                [[0.], [0.], [0.], [0.49], [0.5]],
+                [[0.], [0.], [0.], [1.09], [0.5]],
+                [[0.], [0.], [0.], [2.41], [0.5]],
+                [[0.], [0.], [0.], [4.45], [0.5]]]
+        elif state_features_arg == 'list_numeric':
+            expected_sim_results_array = [
+                [[1.09785156], [1.09785156], [0.], [0.48989747], [0.5438015]],
+                [[1.09946289], [1.09946289], [0.], [1.06483807], [0.66899791]],
+                [[1.09986572], [1.09986572], [0.], [2.19475384], [0.77414214]],
+                [[1.09996643], [1.09996643], [0.], [3.66103375], [0.85320293]],
+                [[1.09999161], [1.09999161], [0.], [0.48842594], [0.66907284]],
+                [[1.0999979], [1.0999979], [0.], [0.85321354], [0.94353405]],
+                [[1.09999948], [1.09999948], [0.], [1.23401798], [0.99281107]],
+                [[1.09999987], [1.09999987], [0.], [1.58437432], [0.99912464]],
+                [[1.09999997], [1.09999997], [0.], [0.48560629], [0.77416842]],
+                [[1.09999999], [1.09999999], [0.], [0.70600576], [0.99281108]],
+                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
+                [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
+                [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
+                [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]],
+                [[1.1], [1.1], [0.], [0.48989707], [0.54388677]],
+                [[1.1], [1.1], [0.], [1.06481464], [0.66907403]],
+                [[1.1], [1.1], [0.], [2.19470819], [0.77416843]],
+                [[1.1], [1.1], [0.], [3.66099691], [0.85320966]],
+                [[1.1], [1.1], [0.], [0.48842592], [0.66907403]],
+                [[1.1], [1.1], [0.], [0.85321303], [0.94353433]],
+                [[1.1], [1.1], [0.], [1.23401763], [0.99281108]],
+                [[1.1], [1.1], [0.], [1.58437418], [0.99912464]],
+                [[1.1], [1.1], [0.], [0.48560629], [0.77416843]],
+                [[1.1], [1.1], [0.], [0.70600576], [0.99281108]],
+                [[1.1], [1.1], [0.], [0.90438208], [0.99982029]],
+                [[1.1], [1.1], [0.], [1.09934486], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.48210997], [0.85320966]],
+                [[1.1], [1.1], [0.], [0.63149987], [0.99912464]],
+                [[1.1], [1.1], [0.], [0.76817898], [0.99999554]],
+                [[1.1], [1.1], [0.], [0.90454543], [0.99999998]]]
+        elif state_features_arg in {'list_reversed', 'dict_reversed'}:
+            expected_sim_results_array = [
+                [[0.25], [0.25], [0.], [0.4879949], [0.68997448]],
+                [[0.25], [0.25], [0.], [0.81866742], [0.96083428]],
+                [[0.25], [0.25], [0.], [1.14484206], [0.99631576]],
+                [[0.25], [0.25], [0.], [1.4493293], [0.99966465]],
+                [[0.25], [0.25], [0.], [0.47304171], [0.96083428]],
+                [[0.25], [0.25], [0.], [0.54999945], [0.99999724]],
+                [[0.25], [0.25], [0.], [0.625], [1.]],
+                [[0.25], [0.25], [0.], [0.7], [1.]],
+                [[0.25], [0.25], [0.], [0.46418045], [0.99631576]],
+                [[0.25], [0.25], [0.], [0.50714286], [1.]],
+                [[0.25], [0.25], [0.], [0.55], [1.]],
+                [[0.25], [0.25], [0.], [0.59285714], [1.]],
+                [[0.25], [0.25], [0.], [0.45999329], [0.99966465]],
+                [[0.25], [0.25], [0.], [0.49], [1.]],
+                [[0.25], [0.25], [0.], [0.52], [1.]],
+                [[0.25], [0.25], [0.], [0.55], [1.]],
+                [[0.1865], [0.1865], [0.], [0.4858033], [0.76852478]],
+                [[0.1865], [0.1865], [0.], [0.7123133], [0.99183743]],
+                [[0.1865], [0.1865], [0.], [0.91645684], [0.99977518]],
+                [[0.1865], [0.1865], [0.], [1.11665847], [0.99999386]],
+                [[0.1865], [0.1865], [0.], [0.46639458], [0.99183743]],
+                [[0.1865], [0.1865], [0.], [0.51666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.56666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.61666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.45951953], [0.99977518]],
+                [[0.1865], [0.1865], [0.], [0.48809524], [1.]],
+                [[0.1865], [0.1865], [0.], [0.51666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.5452381], [1.]],
+                [[0.1865], [0.1865], [0.], [0.45666658], [0.99999386]],
+                [[0.1865], [0.1865], [0.], [0.47666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.49666667], [1.]],
+                [[0.1865], [0.1865], [0.], [0.51666667], [1.]]]
+        else:
+            # Note: Removed decision variable OutputPort from simulation results because sign is chosen randomly
+            expected_sim_results_array = [
+                [[10.], [10.0], [0.0], [0.48999867], [0.50499983]],
+                [[10.], [10.0], [0.0], [1.08965888], [0.51998934]],
+                [[10.], [10.0], [0.0], [2.40680493], [0.53494295]],
+                [[10.], [10.0], [0.0], [4.43671978], [0.549834]],
+                [[10.], [10.0], [0.0], [0.48997868], [0.51998934]],
+                [[10.], [10.0], [0.0], [1.08459402], [0.57932425]],
+                [[10.], [10.0], [0.0], [2.36033556], [0.63645254]],
+                [[10.], [10.0], [0.0], [4.24948962], [0.68997448]],
+                [[10.], [10.0], [0.0], [0.48993479], [0.53494295]],
+                [[10.], [10.0], [0.0], [1.07378304], [0.63645254]],
+                [[10.], [10.0], [0.0], [2.26686573], [0.72710822]],
+                [[10.], [10.0], [0.0], [3.90353015], [0.80218389]],
+                [[10.], [10.0], [0.0], [0.4898672], [0.549834]],
+                [[10.], [10.0], [0.0], [1.05791834], [0.68997448]],
+                [[10.], [10.0], [0.0], [2.14222978], [0.80218389]],
+                [[10.], [10.0], [0.0], [3.49637662], [0.88079708]],
+                [[15.], [15.0], [0.0], [0.48999926], [0.50372993]],
+                [[15.], [15.0], [0.0], [1.08981011], [0.51491557]],
+                [[15.], [15.0], [0.0], [2.40822035], [0.52608629]],
+                [[15.], [15.0], [0.0], [4.44259627], [0.53723096]],
+                [[15.], [15.0], [0.0], [0.48998813], [0.51491557]],
+                [[15.], [15.0], [0.0], [1.0869779], [0.55939819]],
+                [[15.], [15.0], [0.0], [2.38198336], [0.60294711]],
+                [[15.], [15.0], [0.0], [4.33535807], [0.64492386]],
+                [[15.], [15.0], [0.0], [0.48996368], [0.52608629]],
+                [[15.], [15.0], [0.0], [1.08085171], [0.60294711]],
+                [[15.], [15.0], [0.0], [2.32712843], [0.67504223]],
+                [[15.], [15.0], [0.0], [4.1221271], [0.7396981]],
+                [[15.], [15.0], [0.0], [0.48992596], [0.53723096]],
+                [[15.], [15.0], [0.0], [1.07165729], [0.64492386]],
+                [[15.], [15.0], [0.0], [2.24934228], [0.7396981]],
+                [[15.], [15.0], [0.0], [3.84279648], [0.81637827]]]
 
         for simulation in range(len(expected_sim_results_array)):
             assert np.allclose(expected_sim_results_array[simulation],
@@ -956,10 +1181,10 @@ class TestControlMechanisms:
         ('comp_in_list_spec', pnl.SHADOW_INPUTS, messages[10], pnl.OptimizationControlMechanismError),
         ('comp_in_shadow_inupts_spec', pnl.SHADOW_INPUTS, messages[11], pnl.OptimizationControlMechanismError)
     ]
-    if len(state_feature_args) != 23:
-        print("\n\n**********************************************************************************************")
-        print("*** RESTORE state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
-        print("***********************************************************************************************")
+    if len(state_feature_args) != 27:
+        print("\n\n************************************************************************************************")
+        print("*** UNCOMMENT state_feature_args IN test_ocm_state_feature_specs_and_warnings_and_errors() *****")
+        print("************************************************************************************************")
     @pytest.mark.state_features
     @pytest.mark.control
     @pytest.mark.parametrize('state_feature_args', state_feature_args, ids=[x[0] for x in state_feature_args])
