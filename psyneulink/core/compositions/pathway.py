@@ -211,7 +211,7 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
     """Test whether pathway entry is specified type (NODE or PROJECTION)"""
     from psyneulink.core.components.projections.projection import _is_projection_spec
     node_specs = (Mechanism, Composition)
-    is_node = is_proj = False
+    is_node = is_proj = is_set = False
 
     if desired_type in {NODE, ANY}:
         is_node = (isinstance(entry, node_specs)
@@ -228,7 +228,10 @@ def _is_pathway_entry_spec(entry, desired_type:tc.enum(NODE, PROJECTION, ANY)):
                    or (isinstance(entry, (set,list))
                        and all(_is_projection_spec(item) for item in entry)))
 
-    if is_node or is_proj:
+    if desired_type in {ANY}:
+        is_set = (isinstance(entry, set) and all(_is_node_spec(item) for item in entry))
+
+    if is_node or is_proj or is_set:
         return True
     else:
         return False

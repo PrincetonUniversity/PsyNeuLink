@@ -6494,12 +6494,17 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
 
-        # Then, verify that the pathway begins with a node
+        # Then, verify that the pathway begins with a Node
         if _is_node_spec(pathway[0]):
             # Use add_nodes so that node spec can also be a tuple with required_roles
-            self.add_nodes(nodes=[pathway[0]],
-                           context=context)
+            self.add_nodes(nodes=[pathway[0]], context=context)
             nodes.append(pathway[0])
+        # MODIFIED 4/1/22 NEW:
+        # Or a set of Nodes
+        elif isinstance(pathway[0], set):
+            self.add_nodes(nodes=pathway[0], context=context)
+            nodes.extend(pathway[0])
+        # MODIFIED 4/1/22 END
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError(f"First item in {pathway_arg_str} must be "
@@ -6578,9 +6583,26 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if proj:
                         projections.append(proj)
 
-            # FIX: 4/1/22 - HANDLE SETS HERE, BY INSTANTIATING PROJECTIONS FROM C-1 NODE
-            #               OR ALL NODES WITHIN IT IF C-1 IS A SET AS IS DONE FOR COMPOSITIONS ABOVE
-            # elif isinstance(pathway[c], set):
+                # MODIFIED 4/1/22 NEW:
+                elif isinstance(pathway[c - 1], set):
+                    # FIX: HANDLE SETS HERE, BY INSTANTIATING PROJECTIONS FROM EACH NODE IN C-1 NODE
+                    #               TO C NODE
+                    # FIX: ??DEAL WITH TUPLE SPEC IN SET, OR HAS THAT BEEN TAKEN CARE OF IN add_nodes()?
+                    for node in pathway[c - 1]:
+                        projections.append(self.add_projection(sender=node, receiver=pathway[c]))
+                # MODIFIED 4/1/22 END
+
+            # MODIFIED 4/1/22 NEW:
+            elif isinstance(pathway[c], set):
+                # FIX: HANDLE SETS HERE, BY INSTANTIATING PROJECTIONS FROM C-1 NODE TO EACH NODE IN SET
+                #               OR ALL NODES WITHIN IT IF C-1 IS A SET AS IS DONE FOR COMPOSITIONS ABOVE
+                # FIX: ??DEAL WITH TUPLE SPEC IN SET, OR HAS THAT BEEN TAKEN CARE OF IN add_nodes()?
+                self.add_nodes(nodes=pathway[c], context=context)
+                nodes.extend(pathway[c])
+                for receiver in pathway[c]:
+                    for sender in convert_to_list(pathway[c - 1]):
+                        projections.append(self.add_projection(sender=sender, receiver=receiver))
+            # MODIFIED 4/1/22 END
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
@@ -6751,6 +6773,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         # 1  Set:  {NODE...} -> generate a Pathway for each NODE
         # Single pathway spec (list, tuple or dict):
         # 2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
+        # 2.5 single with sets: PWAY = [NODE or {NODE...}] or [NODE or {NODE...}, NODE or {NODE...}...]
         # 3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
         #                                                ([NODE...], LearningFunction)
         # 4   single dict:   {NAME: PWAY} = {NAME: NODE} or
@@ -6786,9 +6809,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif isinstance(pathways, set):
             pathways = [Pathway(node) for node in pathways]
 
-        # Possibility 2 (list is a single pathway spec):
-        if (isinstance(pathways, list)
-                and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
+        # Possibility 2 (list is a single pathway spec) or 2.5 (includes one or more sets):
+        # # MODIFIED 4/1/22 OLD:
+        # if (isinstance(pathways, list)
+        #         and _is_node_spec(pathways[0]) and all(_is_pathway_entry_spec(p, ANY) for p in pathways)):
+        # MODIFIED 4/1/22 NEW:
+        if (isinstance(pathways, list) and
+                # First item must be a node_spec or set of them
+                ((_is_node_spec(pathways[0])
+                  or (isinstance(pathways[0], set) and all(_is_node_spec(item) for item in pathways[0])))
+                # All other items must be either Nodes, Projections or sets
+                 and all(_is_pathway_entry_spec(p, ANY) for p in pathways))):
+        # MODIFIED 4/1/22 END
             # Place in outter list (to conform to processing of multiple pathways below)
             pathways = [pathways]
         # If pathways is not now a list it must be illegitimate
@@ -6834,7 +6866,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 assert False, f"PROGRAM ERROR: arg to identify_pway_type_and_parse_tuple_prn in {self.name}" \
                               f"is not a Node, list or tuple: {pway}"
 
-        # Validate items in pathways list and add to Composition using relevant add_linear_XXX method.
+        # Validate items in pathways list and add to Composition using relevant add_linear_<> method.
         for pathway in pathways:
             pway_name = None
             if isinstance(pathway, Pathway):
@@ -6842,6 +6874,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                 pathway = pathway.pathway
             if _is_node_spec(pathway) or isinstance(pathway, (list, tuple)):
                 pway_type, pway, pway_learning_fct = identify_pway_type_and_parse_tuple_prn(pathway, f"a tuple")
+            # FIX: 4/1/22 - HANDLE SETS HERE, BY INSTANTIATING A PATHWAY FOR EACH NODE IN SET??
             elif isinstance(pathway, dict):
                 if len(pathway)!=1:
                     raise CompositionError(f"A dict specified in the {pathways_arg_str} "
