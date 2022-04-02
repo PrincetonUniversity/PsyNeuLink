@@ -6553,14 +6553,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if _is_node_spec(pathway[c]):
                 if _is_node_spec(pathway[c - 1]):
                     # if the previous item was also a node, add a MappingProjection between them
-                    if isinstance(pathway[c - 1], tuple):
-                        sender = pathway[c - 1][0]
-                    else:
-                        sender = pathway[c - 1]
-                    if isinstance(pathway[c], tuple):
-                        receiver = pathway[c][0]
-                    else:
-                        receiver = pathway[c]
+                    sender = pathway[c - 1][0] if isinstance(pathway[c - 1], tuple) else pathway[c - 1]
+                    receiver = pathway[c][0] if isinstance(pathway[c], tuple) else pathway[c]
 
                     # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
                     #    replace it with those Nodes
@@ -6586,18 +6580,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
                 # MODIFIED 4/1/22 NEW:
                 elif isinstance(pathway[c - 1], set) and not any(_is_projection_spec(proj) for proj in pathway[c - 1]):
-                    # FIX: DEAL WITH TUPLE SPEC (FOR NodeRole) IN SET
-                    for node in pathway[c - 1]:
-                        projections.append(self.add_projection(sender=node, receiver=pathway[c]))
+                    receiver = pathway[c][0] if isinstance(pathway[c], tuple) else pathway[c]
+                    for sender in pathway[c - 1]:
+                        sender = sender[0] if isinstance(sender, tuple) else sender
+                        projections.append(self.add_projection(sender=sender, receiver=receiver))
                 # MODIFIED 4/1/22 END
 
             # MODIFIED 4/1/22 NEW:
             elif isinstance(pathway[c], set) and not any(_is_projection_spec(proj) for proj in pathway[c]):
-                # FIX: DEAL WITH TUPLE SPEC (FOR NodeRole) IN SET
                 self.add_nodes(nodes=pathway[c], context=context)
                 nodes.extend(pathway[c])
                 for receiver in pathway[c]:
+                    receiver = receiver[0] if isinstance(receiver, tuple) else receiver
                     for sender in convert_to_list(pathway[c - 1]):
+                        sender = sender[0] if isinstance(sender, tuple) else sender
                         projections.append(self.add_projection(sender=sender, receiver=receiver))
             # MODIFIED 4/1/22 END
 
