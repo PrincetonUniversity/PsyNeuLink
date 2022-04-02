@@ -2761,7 +2761,8 @@ from psyneulink.core.components.projections.modulatory.learningprojection import
 from psyneulink.core.components.projections.modulatory.modulatoryprojection import ModulatoryProjection_Base
 from psyneulink.core.components.projections.pathway.mappingprojection import MappingProjection, MappingError
 from psyneulink.core.components.projections.pathway.pathwayprojection import PathwayProjection_Base
-from psyneulink.core.components.projections.projection import Projection_Base, ProjectionError, DuplicateProjectionError
+from psyneulink.core.components.projections.projection import \
+    Projection_Base, ProjectionError, DuplicateProjectionError, _is_projection_spec
 from psyneulink.core.components.shellclasses import Composition_Base
 from psyneulink.core.components.shellclasses import Mechanism, Projection
 from psyneulink.core.compositions.report import Report, \
@@ -6584,19 +6585,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projections.append(proj)
 
                 # MODIFIED 4/1/22 NEW:
-                elif isinstance(pathway[c - 1], set):
-                    # FIX: HANDLE SETS HERE, BY INSTANTIATING PROJECTIONS FROM EACH NODE IN C-1 NODE
-                    #               TO C NODE
-                    # FIX: ??DEAL WITH TUPLE SPEC IN SET, OR HAS THAT BEEN TAKEN CARE OF IN add_nodes()?
+                elif isinstance(pathway[c - 1], set) and not any(_is_projection_spec(proj) for proj in pathway[c - 1]):
+                    # FIX: DEAL WITH TUPLE SPEC (FOR NodeRole) IN SET
                     for node in pathway[c - 1]:
                         projections.append(self.add_projection(sender=node, receiver=pathway[c]))
                 # MODIFIED 4/1/22 END
 
             # MODIFIED 4/1/22 NEW:
-            elif isinstance(pathway[c], set):
-                # FIX: HANDLE SETS HERE, BY INSTANTIATING PROJECTIONS FROM C-1 NODE TO EACH NODE IN SET
-                #               OR ALL NODES WITHIN IT IF C-1 IS A SET AS IS DONE FOR COMPOSITIONS ABOVE
-                # FIX: ??DEAL WITH TUPLE SPEC IN SET, OR HAS THAT BEEN TAKEN CARE OF IN add_nodes()?
+            elif isinstance(pathway[c], set) and not any(_is_projection_spec(proj) for proj in pathway[c]):
+                # FIX: DEAL WITH TUPLE SPEC (FOR NodeRole) IN SET
                 self.add_nodes(nodes=pathway[c], context=context)
                 nodes.extend(pathway[c])
                 for receiver in pathway[c]:
