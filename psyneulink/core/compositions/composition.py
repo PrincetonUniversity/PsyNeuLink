@@ -111,24 +111,38 @@ either arguments of the constructor and/or methods that allow Components to be a
 
 The following arguments of the Composition's constructor can be used to add Compnents when it is constructed:
 
-    - **nodes**
-        adds the specified `Nodes <Composition_Nodes>` to the Composition;  this is equivalent to constructing the
-        Composition and then calling its `add_nodes <Composition.add_nodes>` method, and takes the same values as the
-        **nodes** argument of that method.
-
-    - **projections**
-        adds the specified `Projections <Projection>` to the Composition;  this is equivalent to constructing the
-        Composition and then calling its `add_projections <Composition.add_projections>` method, and takes the same
-        values as the **projections** argument of that method.
+   .. _Composition_Pathways_Arg:
 
     - **pathways**
         adds one or more `Pathways <Composition_Pathways>` to the Composition; this is equivalent to constructing the
         Composition and then calling its `add_pathways <Composition.add_pathways>` method, and can use the same forms
-        of specification as the **pathways** argument of that method.  If any `learning Pathways
-        <Composition_Learning_Pathway>` are included, then the constructor's **disable_learning** argument can be
-        used to disable learning on those by default (though it will still allow learning to occur on any other
-        Compositions, either nested within the current one, or within which the current one is nested (see
-        `Composition_Learning` for a full description).
+        of specification as the **pathways** argument of that method.  If a set is provided containing `Nodes
+        Composition_Nodes>`, then a separate `Pathway` is constructed for each node in the set (note that this differs
+        from specifying nodes in the **nodes** argument (see below), which does *not* construct Pathways for them).
+        If any `learning Pathways <Composition_Learning_Pathway>` are included, then the constructor's
+        **disable_learning** argument can be used to disable learning on those by default (though it will still allow
+        learning to occur on any other Compositions, either nested within the current one, or within which the
+        current one is nested (see `Composition_Learning` for a full description).
+
+   .. _Composition_Nodes_Arg:
+
+    - **nodes**
+        adds the specified `Nodes <Composition_Nodes>` to the Composition;  this is equivalent to constructing the
+        Composition and then calling its `add_nodes <Composition.add_nodes>` method, and takes the same values as the
+        **nodes** argument of that method (note that this does *not* construct `Pathways <Pathway>` for the specified
+        nodes; the **pathways** arg or  `add_pathways <Composition.add_pathways>` method must be used to do so).
+
+   .. _Composition_Projections_Arg:
+
+    - **projections**
+        adds the specified `Projections <Projection>` to the Composition;  this is equivalent to constructing the
+        Composition and then calling its `add_projections <Composition.add_projections>` method, and takes the same
+        values as the **projections** argument of that method.  In general, this is not neded -- default Projections
+        are created for Pathways and/or Nodes added to the Composition using the methods described above; however
+        it can be useful for custom configurations, including the implementation of specific Projection `matrices
+         <MappingProjection.matrix>`.
+
+   .. _Composition_Controller_Arg:
 
     - **controller**
        adds the specified `ControlMechanism` (typically an `OptimizationControlMechanism`) as the `controller
@@ -3316,8 +3330,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
     ---------
 
     pathways : Pathway specification or list[Pathway specification...]
-        specifies one or more Pathways to add to the Compositions (see **pathways** argument of `add_pathways
-        `Composition.add_pathways` for specification format).
+        specifies one or more Pathways to add to the Compositions (see `pathways <Composition_Pathways_Arg>` as
+        well as `Pathway specification <Pathway_Specification>` for additional details).
 
     nodes : `Mechanism <Mechanism>`, `Composition` or list[`Mechanism <Mechanism>`, `Composition`] : default None
         specifies one or more `Nodes <Composition_Nodes>` to add to the Composition;  these are each treated as
@@ -6720,7 +6734,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         ---------
 
         pathways : Pathway or list[Pathway]
-            specifies one or more `Pathways <Pathway>` to add to the Composition (see `Pathway_Specification`).
+            specifies one or more `Pathways <Pathway>` to add to the Composition.  Any valid form of `Pathway
+            specification <Pathway_Specification>` can be used.  A set can also be used, all elements of which are
+            `Nodes <Composition_Nodes>`, in which case a separate `Pathway` is constructed for each.
 
         Returns
         -------
@@ -6731,16 +6747,16 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # Possible specifications for **pathways** arg:
-        # 0  set:  {NODE...} -> convert to a single pathway for each NODE
-        # 1  Single node:  NODE
-        #    Single pathway spec (list, tuple or dict):
+        # 0  Single node:  NODE
+        # 1  Set:  {NODE...} -> generate a Pathway for each NODE
+        # Single pathway spec (list, tuple or dict):
         # 2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
         # 3   single tuple:  (PWAY, LearningFunction) = (NODE, LearningFunction) or
         #                                                ([NODE...], LearningFunction)
         # 4   single dict:   {NAME: PWAY} = {NAME: NODE} or
         #                                   {NAME: [NODE...]} or
         #                                   {NAME: ([NODE...], LearningFunction)}
-        #   Multiple pathway specs (outer list):
+        # Multiple pathway specs (outer list):
         # 5   list with list: [PWAY] = [NODE, [NODE]] or [[NODE...]...]
         # 6   list with tuple:  [(PWAY, LearningFunction)...] = [(NODE..., LearningFunction)...] or
         #                                                      [([NODE...], LearningFunction)...]
@@ -6762,22 +6778,13 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if not pathways:
             return
 
-        elif isinstance(pathways, set):
-            # self.add_nodes(pathways)
-            non_nodes = [node for node in pathways if not _is_node_spec(node)]
-            if non_nodes:
-                non_node_names = ", ".join([non_node.full_name if isinstance(non_node, Port) else non_node.nname
-                                            for non_node in non_nodes])
-                raise CompositionError(f"The following items in a set assigned to the {pathways_arg_str} "
-                                       f"are not Nodes (i.e., Mechanisms or Compositions): {non_node_names}.")
-            for node in pathways:
-                # self.add_pathways(node, context)
-                self.add_linear_processing_pathway(pathway=[node], context=context)
-            return
-
-        # Possibilities 1, 3 or 4 (single NODE, tuple or dict specified, so convert to list
+        # Possibilities 0, 3 or 4 (single NODE, tuple or dict specified, so convert to list
         elif _is_node_spec(pathways) or isinstance(pathways, (tuple, dict, Pathway)):
             pathways = convert_to_list(pathways)
+
+        # Possibility 1 (set of Nodes): create a Pathway for each Node (since set is in pathways arg)
+        elif isinstance(pathways, set):
+            pathways = [Pathway(node) for node in pathways]
 
         # Possibility 2 (list is a single pathway spec):
         if (isinstance(pathways, list)
