@@ -3954,9 +3954,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         self._create_CIM_ports(context=context)
         # Call after above so shadow_projections have relevant organization
         self._update_shadow_projections(context=context)
-        # # FIX: 12/29/21 / 3/30/22: MOVE TO _update_shadow_projections
-        # # Call again to accommodate any changes from _update_shadow_projections
-        # self._determine_node_roles(context=context)
         self._check_for_projection_assignments(context=context)
         self.needs_update_graph = False
 
@@ -6553,6 +6550,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if senders or receivers:
                         senders = senders or convert_to_list(sender)
                         receivers = receivers or convert_to_list(receiver)
+                        # FIX: 4/1/22 - WHY NOT DO ALL TO ALL BY DEFAULT?
                         if len(senders) > 1 and len(receivers) > 1:
                             raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
                                                    f"which ({sender.name}) has more than one OUTPUT Node, and second "
@@ -6565,6 +6563,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         proj = self.add_projection(sender=sender, receiver=receiver)
                     if proj:
                         projections.append(proj)
+
+            # FIX: 4/1/22 - HANDLE SETS HERE, BY INSTANTIATING PROJECTIONS FROM C-1 NODE
+            #               OR ALL NODES WITHIN IT IF C-1 IS A SET AS IS DONE FOR COMPOSITIONS ABOVE
+            # elif isinstance(pathway[c], set):
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
@@ -6729,6 +6731,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         # Possible specifications for **pathways** arg:
+        # 0  set:  {NODE...} -> convert to a single pathway for each NODE
         # 1  Single node:  NODE
         #    Single pathway spec (list, tuple or dict):
         # 2   single list:   PWAY = [NODE] or [NODE...] in which *all* are NODES with optional intercolated Projections
@@ -6753,10 +6756,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         elif context.source == ContextFlags.CONSTRUCTOR:
             pathways_arg_str = f"'pathways' arg of the constructor for {self.name}"
         else:
-            assert False, f"PROGRAM ERROR:  unrecognized context pass to add_pathways of {self.name}."
+            assert False, f"PROGRAM ERROR:  unrecognized context passed to add_pathways of {self.name}."
         context.string = pathways_arg_str
 
         if not pathways:
+            return
+
+        elif isinstance(pathways, set):
+            # self.add_nodes(pathways)
+            non_nodes = [node for node in pathways if not _is_node_spec(node)]
+            if non_nodes:
+                non_node_names = ", ".join([non_node.full_name if isinstance(non_node, Port) else non_node.nname
+                                            for non_node in non_nodes])
+                raise CompositionError(f"The following items in a set assigned to the {pathways_arg_str} "
+                                       f"are not Nodes (i.e., Mechanisms or Compositions): {non_node_names}.")
+            for node in pathways:
+                # self.add_pathways(node, context)
+                self.add_linear_processing_pathway(pathway=[node], context=context)
             return
 
         # Possibilities 1, 3 or 4 (single NODE, tuple or dict specified, so convert to list
