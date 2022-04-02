@@ -1042,6 +1042,31 @@ class TestCompositionPathwaysArg:
                                             PathwayRole.OUTPUT,
                                             PathwayRole.TERMINAL}
 
+    def test_composition_pathways_arg_set(self):
+        A = ProcessingMechanism(name='A')
+        B = ProcessingMechanism(name='B')
+        C = ProcessingMechanism(name='C')
+        c = Composition({A,B,C})
+        assert all(name in c.pathways.names for name in {'Pathway-0', 'Pathway-1', 'Pathway-2'})
+        assert all(set(c.get_roles_by_node(node)) == {NodeRole.INPUT,
+                                                      NodeRole.ORIGIN,
+                                                      NodeRole.SINGLETON,
+                                                      NodeRole.OUTPUT,
+                                                      NodeRole.TERMINAL}
+                   for node in {A,B,C})
+        assert all(set(c.pathways[i].roles) == {PathwayRole.INPUT,
+                                            PathwayRole.ORIGIN,
+                                            PathwayRole.SINGLETON,
+                                            PathwayRole.OUTPUT,
+                                            PathwayRole.TERMINAL}
+                   for i in range(0,2))
+
+        with pytest.raises(CompositionError) as err:
+            d = Composition({A,B,C.input_port})
+        assert f'"Every item in the \'pathways\' arg of the constructor for Composition-1 ' \
+               f'must be a Node, list, tuple or dict: (InputPort InputPort-0) is not."'\
+               in str(err.value)
+
     def test_composition_pathways_arg_dict_and_list_and_pathway_roles(self):
         A = ProcessingMechanism(name='A')
         B = ProcessingMechanism(name='B')
