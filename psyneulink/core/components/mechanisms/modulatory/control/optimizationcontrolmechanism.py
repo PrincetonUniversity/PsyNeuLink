@@ -1098,12 +1098,12 @@ from psyneulink.core.globals.defaults import defaultControlAllocation
 from psyneulink.core.globals.keywords import \
     ALL, COMPOSITION, COMPOSITION_FUNCTION_APPROXIMATOR, CONCATENATE, DEFAULT_INPUT, DEFAULT_VARIABLE, EID_FROZEN, \
     FUNCTION, INPUT_PORT, INTERNAL_ONLY, NAME, OPTIMIZATION_CONTROL_MECHANISM, NODE, OWNER_VALUE, PARAMS, PORT, \
-    PROJECTIONS, SHADOW_INPUTS, VALUE
+    PROJECTIONS, SHADOW_INPUTS, VALUE, MODEL_SPEC_ID_STATE_FEATURE
 from psyneulink.core.globals.parameters import Parameter, check_user_specified
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel
 from psyneulink.core.globals.registry import rename_instance_in_registry
 from psyneulink.core.globals.sampleiterator import SampleIterator, SampleSpec
-from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric
+from psyneulink.core.globals.utilities import convert_to_list, ContentAddressableList, is_numeric, parse_valid_identifier
 from psyneulink.core.llvm.debug import debug_env
 
 __all__ = [
@@ -3702,3 +3702,22 @@ class OptimizationControlMechanism(ControlMechanism):
         self.agent_rep.initialize(features_array=np.array(self.defaults.variable[1:]),
                                   control_signals = self.control_signals,
                                   context=context)
+
+    def _mdf_state_feature_id(self, input_port):
+        return parse_valid_identifier(f'{self.name}_{MODEL_SPEC_ID_STATE_FEATURE}_{input_port.owner.name}_{input_port.name}')
+
+    def as_mdf_model(self):
+        import modeci_mdf.mdf as mdf
+
+        model = super().as_mdf_model()
+        self_id = parse_valid_identifier(self.name)
+
+        for i, agent_rep_input_port in enumerate(self.agent_rep_input_ports):
+            model.output_ports.append(
+                mdf.OutputPort(
+                    id=self._mdf_state_feature_id(agent_rep_input_port),
+                    value=f'{self_id}_{parse_valid_identifier(self.state_input_ports[i].name)}'
+                )
+            )
+
+        return model

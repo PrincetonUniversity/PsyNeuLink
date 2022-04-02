@@ -11838,6 +11838,23 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for _, proj in projections_dict.items():
             graph.edges.append(proj)
 
+        try:
+            self.controller.agent_rep_input_ports
+        except AttributeError:
+            pass
+        else:
+            for agent_rep_input_port in self.controller.agent_rep_input_ports:
+                graph.edges.append(
+                    mdf.Edge(
+                        id=f'{self.controller._mdf_state_feature_id(agent_rep_input_port)}_mapping',
+                        sender=parse_valid_identifier(self.controller.name),
+                        sender_port=self.controller._mdf_state_feature_id(agent_rep_input_port),
+                        receiver=parse_valid_identifier(agent_rep_input_port.owner.name),
+                        receiver_port=parse_valid_identifier(agent_rep_input_port.name),
+                        parameters={'weight': 1}
+                    )
+                )
+
         return graph
 
     # ******************************************************************************************************************
