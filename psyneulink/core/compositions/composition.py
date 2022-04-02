@@ -1,4 +1,4 @@
-# Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
+ # Princeton University licenses this file to You under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.  You may obtain a copy of the License at:
 #     http://www.apache.org/licenses/LICENSE-2.0
 # Unless required by applicable law or agreed to in writing, software distributed under the License is distributed
@@ -6458,6 +6458,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         """
 
         from psyneulink.core.compositions.pathway import Pathway, _is_node_spec, _is_pathway_entry_spec
+        def _get_spec_if_tuple(spec):
+            return spec[0] if isinstance(spec, tuple) else spec
 
         nodes = []
 
@@ -6553,8 +6555,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             if _is_node_spec(pathway[c]):
                 if _is_node_spec(pathway[c - 1]):
                     # if the previous item was also a node, add a MappingProjection between them
-                    sender = pathway[c - 1][0] if isinstance(pathway[c - 1], tuple) else pathway[c - 1]
-                    receiver = pathway[c][0] if isinstance(pathway[c], tuple) else pathway[c]
+                    sender = _get_spec_if_tuple(pathway[c - 1])
+                    receiver = _get_spec_if_tuple(pathway[c])
 
                     # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
                     #    replace it with those Nodes
@@ -6578,113 +6580,137 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if proj:
                         projections.append(proj)
 
-                # MODIFIED 4/1/22 NEW:
                 elif isinstance(pathway[c - 1], set) and not any(_is_projection_spec(proj) for proj in pathway[c - 1]):
-                    receiver = pathway[c][0] if isinstance(pathway[c], tuple) else pathway[c]
+                    receiver = _get_spec_if_tuple(pathway[c])
                     for sender in pathway[c - 1]:
-                        sender = sender[0] if isinstance(sender, tuple) else sender
+                        sender = _get_spec_if_tuple(sender)
                         projections.append(self.add_projection(sender=sender, receiver=receiver))
-                # MODIFIED 4/1/22 END
 
-            # MODIFIED 4/1/22 NEW:
             elif isinstance(pathway[c], set) and not any(_is_projection_spec(proj) for proj in pathway[c]):
                 self.add_nodes(nodes=pathway[c], context=context)
                 nodes.extend(pathway[c])
                 for receiver in pathway[c]:
-                    receiver = receiver[0] if isinstance(receiver, tuple) else receiver
+                    receiver = _get_spec_if_tuple(receiver)
                     for sender in convert_to_list(pathway[c - 1]):
-                        sender = sender[0] if isinstance(sender, tuple) else sender
+                        sender = _get_spec_if_tuple(sender)
                         projections.append(self.add_projection(sender=sender, receiver=receiver))
-            # MODIFIED 4/1/22 END
 
             # if the current item is a Projection specification
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
+
+                if c == len(pathway) - 1:
+                    raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
+                                           f"{proj_spec}.")
+
                 # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
-                # try:
-                #     proj_specs = set(convert_to_list(pathway[c]))
-                # except TypeError:
-                #     proj_specs = [pathway[c]]
                 if is_numeric(pathway[c]):
                     proj_specs = [pathway[c]]
                 else:
                     proj_specs = convert_to_list(pathway[c])
                 proj_set = []
+
+                # MODIFIED 4/2/22 NEW:
+                sender = _get_spec_if_tuple(pathway[c - 1])
+                receiver = _get_spec_if_tuple(pathway[c + 1])
+                if ((_is_node_spec(sender) or isinstance(sender, set))
+                        and (_is_node_spec(receiver) or isinstance(receiver, set))):
+                    pass
+                    # senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
+                    # receivers = convert_to_list(_get_spec_if_tuple(pathway[c + 1]))
+                else:
+                    raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                                           f"is not between two Nodes: {pathway[c]}")
+                # MODIFIED 4/2/22 END
+
+                # Implement each Projection specified
                 for proj_spec in proj_specs:
-                    if c == len(pathway) - 1:
-                        raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
-                                               f"{proj_spec}.")
-                    # confirm that it is between two nodes, then add the projection
-                    if isinstance(proj_spec, tuple):
-                        proj = proj_spec[0]
-                        feedback = proj_spec[1]
-                    else:
-                        proj = proj_spec
-                        feedback = False
-                    sender = pathway[c - 1]
-                    receiver = pathway[c + 1]
-                    if _is_node_spec(sender) and _is_node_spec(receiver):
-                        if isinstance(sender, tuple):
-                            sender = sender[0]
-                        if isinstance(receiver, tuple):
-                            receiver = receiver[0]
-                        try:
-                            if isinstance(proj, (np.ndarray, np.matrix, list)):
-                                # If proj is a matrix specification, use it as the matrix arg
-                                proj = MappingProjection(sender=sender,
-                                                         matrix=proj,
-                                                         receiver=receiver)
-                            else:
-                                # Otherwise, if it is Port specification, implement default Projection
-                                try:
-                                    if isinstance(proj, InputPort):
-                                        proj = MappingProjection(sender=sender,
-                                                                 receiver=proj)
-                                    elif isinstance(proj, OutputPort):
-                                        proj = MappingProjection(sender=proj,
-                                                                 receiver=receiver)
-                                except (InputPortError, ProjectionError) as error:
-                                    raise ProjectionError(str(error.error_value))
 
-                        except (InputPortError, ProjectionError, MappingError) as error:
-                            raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                                   f"{str(error.error_value)}")
+                    proj = _get_spec_if_tuple(proj_spec)
+                    feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
 
-                        except DuplicateProjectionError:
-                            # FIX: 7/22/19 ADD WARNING HERE??
-                            # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                            duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                            assert len(duplicate)==1, \
-                                f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                                f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                                f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                            duplicate = duplicate[0]
-                            warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                          f"in {pathway_arg_str} is a duplicate of one"
-                            # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                            #                      sender and receiver in different Compositions
-                            # if duplicate in self.projections:
-                            #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                            #                   f"and so will be ignored.")
-                            #     proj=duplicate
-                            # else:
-                            #     if self.prefs.verbosePref:
-                            #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                            #                       f"new one will be used; delete it if you want to use the existing one")
-                            # Version that forbids *any* duplicate Projections between same sender and receiver
-                            warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                                          f"and so will be ignored.")
-                            proj=duplicate
+                    # Confirm that it is between two nodes, then add the Projection;
+                    #    note: if Projection is already instantiated and valid, it is used as is
+                    # # MODIFIED 4/2/22 OLD:
+                    # if _is_node_spec(sender) and _is_node_spec(receiver):
+                    #     sender = sender[0] if isinstance(sender, tuple) else sender
+                    #     recceiver = receiver[0] if isinstance(receiver, tuple) else receiver
+                    # MODIFIED 4/2/22 NEW:
+                    # FIX: IMPLEMENT senders AND receivers ABOVE
+                    #      ADD LOOP (??OUTSIDE OF proj LOOP, SINCE THAT IS FOR PORTS IN MECHS?):
+                    #      - CHECK THAT ANY PRE-SPECIFIED PROJECTIONS ARE BETWEEN NODES IN SET(S)
+                    #      - INSTANTIATES MATRIX-SPECIFIED OR DEFAULT PROJECTIONS FOR ANY THAT ARE NOT
+                    #      - PROTOCOL:
+                    #        - BEFORE proj LOOP, CREATE LIST OF TUPLES OF ALL PAIRINGS OF OF NODES:
+                    #                     sender, receiver = cartesian(zip(senders, receivers))
+                    #        - FOR proj,
+                    #          - IF IT IS AN INSTANTIATED PROJECTION OR A PORT, CHECK IF IT IS IN THE LIST;
+                    #                       - IF SO, REMOVE ITEM FROM LIST
+                    #                       - IF NOT, ERROR
+                    #          - IF IT IS NOT AN INSTANTIATED PROJECTION OR A PORT, KEEP LOOPING THROUGH PROJ
+                    #         - AT END OF proj LOOP, INSTANTIATE PROJECT USING proj SPEC
+                    # MODIFIED 4/2/22 END
+                    try:
+                        if isinstance(proj, (np.ndarray, np.matrix, list)):
+                            # If proj is a matrix specification, use it as the matrix arg
+                            # and construct corresponding Projection for all sender-receiver pairs
+                            proj = MappingProjection(sender=sender,
+                                                     matrix=proj,
+                                                     receiver=receiver)
+                        else:
+                            # Otherwise, if it is Port specification, implement default Projection
+                            # for the specified Node
+                            try:
+                                if isinstance(proj, InputPort):
+                                    proj = MappingProjection(sender=sender,
+                                                             receiver=proj)
+                                elif isinstance(proj, OutputPort):
+                                    proj = MappingProjection(sender=proj,
+                                                             receiver=receiver)
+                            except (InputPortError, ProjectionError) as error:
+                                raise ProjectionError(str(error.error_value))
 
-                        proj = self.add_projection(projection=proj,
-                                                   sender=sender,
-                                                   receiver=receiver,
-                                                   feedback=feedback,
-                                                   allow_duplicates=False)
-                        if proj:
-                            proj_set.append(proj)
-                    else:
-                        raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                                               f"is not between two Nodes: {pathway[c]}")
+                    except (InputPortError, ProjectionError, MappingError) as error:
+                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                               f"{str(error.error_value)}")
+
+                    except DuplicateProjectionError:
+                        # FIX: 7/22/19 ADD WARNING HERE??
+                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                        assert len(duplicate)==1, \
+                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                            f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                            f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                        duplicate = duplicate[0]
+                        warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                      f"in {pathway_arg_str} is a duplicate of one"
+                        # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                        #                      sender and receiver in different Compositions
+                        # if duplicate in self.projections:
+                        #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                        #                   f"and so will be ignored.")
+                        #     proj=duplicate
+                        # else:
+                        #     if self.prefs.verbosePref:
+                        #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                        #                       f"new one will be used; delete it if you want to use the existing one")
+                        # Version that forbids *any* duplicate Projections between same sender and receiver
+                        warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                      f"and so will be ignored.")
+                        proj=duplicate
+
+                    proj = self.add_projection(projection=proj,
+                                               sender=sender,
+                                               receiver=receiver,
+                                               feedback=feedback,
+                                               allow_duplicates=False)
+                    if proj:
+                        proj_set.append(proj)
+                    # # MODIFIED 4/2/22 OLD:
+                    # else:
+                    #     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
+                    #                            f"is not between two Nodes: {pathway[c]}")
+                    # MODIFIED 4/2/22 END
                 if len(proj_set) == 1:
                     projections.append(proj_set[0])
                 else:
