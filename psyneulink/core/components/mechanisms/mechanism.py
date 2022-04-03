@@ -2917,6 +2917,10 @@ class Mechanism_Base(Mechanism):
                     array_1d = pnlvm.ir.ArrayType(p_input_data.type.pointee, 1)
                     assert array_1d == p_function.args[2].type.pointee, \
                         "{} vs. {}".format(p_function.args[2].type.pointee, p_input_data.type.pointee)
+                    # restrict shape matching to casting 1d values to 2d arrays
+                    # for Control/Gating signals
+                    assert len(p_function.args[2].type.pointee) == 1
+                    assert str(port).startswith("(ControlSignal") or str(port).startswith("(GatingSignal")
                     p_input = builder.bitcast(p_input_data, p_function.args[2].type)
 
             else:
