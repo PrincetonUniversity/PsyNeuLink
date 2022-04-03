@@ -3045,11 +3045,13 @@ class Mechanism_Base(Mechanism):
 
         parsed = builder.gep(data, [ctx.int32_ty(0), *(ctx.int32_ty(i) for i in ids)])
         # "num_executions" are kept as int64, we need to convert the value to float first
+        # port inputs are also expected to be 1d arrays
         if name == "num_executions":
             count = builder.load(parsed)
             count_fp = builder.uitofp(count, ctx.float_ty)
-            parsed = builder.alloca(count_fp.type)
-            builder.store(count_fp, parsed)
+            parsed = builder.alloca(pnlvm.ir.ArrayType(count_fp.type, 1))
+            ptr = builder.gep(parsed, [ctx.int32_ty(0), ctx.int32_ty(0)])
+            builder.store(count_fp, ptr)
 
         return parsed
 
