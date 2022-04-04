@@ -821,8 +821,7 @@ class LCControlMechanism(ControlMechanism):
     ):
         """Updates LCControlMechanism's ControlSignal based on input and mode parameter value
         """
-        # IMPLEMENTATION NOTE:  skip ControlMechanism._execute since it is a stub method that returns input_values
-        output_values = super(ControlMechanism, self)._execute(
+        output_values = super()._execute(
             variable=variable,
             context=context,
             runtime_params=runtime_params,
