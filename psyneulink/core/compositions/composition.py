@@ -6565,55 +6565,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
-            # # MODIFIED 4/2/22 OLD:
-            # # if the current item is a Node
-            # if _is_node_spec(pathway[c]):
-            #     if _is_node_spec(pathway[c - 1]):
-            #         # if the previous item was also a node, add a MappingProjection between them
-            #         sender = _get_spec_if_tuple(pathway[c - 1])
-            #         receiver = _get_spec_if_tuple(pathway[c])
-            #
-            #         # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
-            #         #    replace it with those Nodes
-            #         # FIX: 4/2/22 - NEED TO ALSO DO THIS FOR ANY IN SETS (HERE OR BELOW?)
-            #         #               ?? MAKE ONE BIG SENDERS LIST, FOR NESTED COMPS, SETS, AND NESTED COMPS IN SETS
-            #         senders = self._get_nested_nodes_with_same_roles_at_all_levels(sender, NodeRole.OUTPUT)
-            #         receivers = self._get_nested_nodes_with_same_roles_at_all_levels(receiver,
-            #                                                                         NodeRole.INPUT, NodeRole.TARGET)
-            #         if senders or receivers:
-            #             senders = senders or convert_to_list(sender)
-            #             receivers = receivers or convert_to_list(receiver)
-            #             # # MODIFIED 4/2/22 OLD:
-            #             # if len(senders) > 1 and len(receivers) > 1:
-            #             #     raise CompositionError(
-            #             #         f"Pathway specified with two contiguous Compositions, the first of which "
-            #             #         f"({sender.name}) has more than one OUTPUT Node, and the second of which "
-            #             #         f"({receiver.name}) has more than one INPUT Node, making the configuration of "
-            #             #         f"Projections between them ambiguous; those Projections must be specified explicitly.")
-            #             # MODIFIED 4/2/22 END
-            #             proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-            #                     for r in receivers for s in senders}
-            #         else:
-            #             proj = self.add_projection(sender=sender, receiver=receiver)
-            #         if proj:
-            #             projections.append(proj)
-            #
-            #     elif isinstance(pathway[c - 1], set) and not any(_is_projection_spec(proj) for proj in pathway[c - 1]):
-            #         receiver = _get_spec_if_tuple(pathway[c])
-            #         for sender in pathway[c - 1]:
-            #             sender = _get_spec_if_tuple(sender)
-            #             projections.append(self.add_projection(sender=sender, receiver=receiver))
-            #
-            # elif isinstance(pathway[c], set) and not any(_is_projection_spec(proj) for proj in pathway[c]):
-            #     self.add_nodes(nodes=pathway[c], context=context)
-            #     nodes.extend(pathway[c])
-            #     for receiver in pathway[c]:
-            #         receiver = _get_spec_if_tuple(receiver)
-            #         for sender in convert_to_list(pathway[c - 1]):
-            #             sender = _get_spec_if_tuple(sender)
-            #             projections.append(self.add_projection(sender=sender, receiver=receiver))
-
-            # MODIFIED 4/2/22 NEW:
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
                 """Extract Nodes from any tuple specs and replace any Composition with their INPUT Nodes
                 """
@@ -6646,7 +6597,6 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     if all(projs):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
-            # MODIFIED 4/2/22 END
 
             # The current entry is a Projection specification or a set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
