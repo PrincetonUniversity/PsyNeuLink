@@ -6613,14 +6613,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"specifications for entry {c} of the 'pathway' arg for '{self.name}': "
                                            f" {matrix_specs}.")
                 proj_set = []
-                sender = _get_spec_if_tuple(pathway[c - 1])
-                receiver = _get_spec_if_tuple(pathway[c + 1])
+                # # MODIFIED 4/4/22 OLD:
+                # sender = _get_spec_if_tuple(pathway[c - 1])
+                # receiver = _get_spec_if_tuple(pathway[c + 1])
+                # MODIFIED 4/4/22 END
 
                 # Validate that Projection specification(s) is between two Nodes or sets of Nodes
+                #    and get all pairings of sender and receiver nodes
                 if ((_is_node_spec(sender) or isinstance(sender, set))
                         and (_is_node_spec(receiver) or isinstance(receiver, set))):
-                    senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
-                    receivers = convert_to_list(_get_spec_if_tuple(pathway[c + 1]))
+                    # senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
+                    # receivers = convert_to_list(_get_spec_if_tuple(pathway[c + 1]))
+                    senders = [_get_spec_if_tuple(sender) for sender in convert_to_list(pathway[c - 1])]
+                    receivers = [_get_spec_if_tuple(receiver) for receiver in convert_to_list(pathway[c + 1])]
+                    node_pairs = list(itertools.product(senders,receivers))
                 else:
                     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
@@ -6660,11 +6666,91 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #                                      receiver=receiver)
                     # MODIFIED 4/2/22 END
                     try:
+                        # # MODIFIED 4/4/22 OLD:
+                        # # # MODIFIED 4/2/22 OLD:
+                        # # if isinstance(proj, (np.ndarray, np.matrix, list)):
+                        # # MODIFIED 4/2/22 NEW:
+                        # if is_matrix(proj):
+                        # # MODIFIED 4/2/22 END
+                        #     # If proj is a matrix specification, use it as the matrix arg
+                        #     # and construct corresponding Projection(s) for (all) sender-receiver pair(s)
+                        #     # MODIFIED 4/2/22 OLD:
+                        #     proj = MappingProjection(sender=sender, matrix=proj, receiver=receiver)
+                        #     # # MODIFIED 4/2/22 NEW:
+                        #     # # - IF EITHER SENDER OR RECEIVER IS A SET, MAKE SURE IT IS THE ONLY proj (ELSE ERROR)
+                        #     # # - IF APPLY TO ALL PROJS
+                        #     # if (len(senders) > 1 or len(receivers > 1)) and (len proj_specs > 1):
+                        #     #     raise CompositionError(f"A set of Nodes has been specified in the {pathway_arg_str} "
+                        #     #                            f"which means that only one matrix specification can be made "
+                        #     #                            f"for the Projections to or from them, but more than one has "
+                        #     #                            f"been made: {proj_specs}")
+                        #     # for sender, receiver in itertools.product(senders,receivers)
+                        #     #     proj = MappingProjection(sender=sender,
+                        #     #                              matrix=proj,
+                        #     #                              receiver=receiver)
+                        #     # MODIFIED 4/2/22 END
+                        # else:
+                        #     # Otherwise, if Port specification, implement default Projection for the specified Node
+                        #     try:
+                        #         if isinstance(proj, InputPort):
+                        #             proj = MappingProjection(sender=sender, receiver=proj)
+                        #         elif isinstance(proj, OutputPort):
+                        #             proj = MappingProjection(sender=proj, receiver=receiver)
+                        #     except (InputPortError, ProjectionError) as error:
+                        #         raise ProjectionError(str(error.error_value))
+
+                        # MODIFIED 4/4/22 NEW:
                         # # MODIFIED 4/2/22 OLD:
                         # if isinstance(proj, (np.ndarray, np.matrix, list)):
-                        # MODIFIED 4/2/22 NEW:
-                        if is_matrix(proj):
-                        # MODIFIED 4/2/22 END
+
+                        # MODIFIED 4/4/22 NEW:
+                        if isinstance(proj, Projection):
+                            # Validate that Projection is between a Node in senders and one in receivers
+                            err_msg = None
+                            if proj.sender not in senders:
+                                err_msg = f"a sender ('{sender.owner.name}') that does not belong " \
+                                          f"to a Node specified in the precedeing entry."
+                            elif proj.receiver not in receivers:
+                                err_msg = f"a receiver ('{receiver.owner.name}') that does not belong " \
+                                          f"to a Node specified in the subsequent entry."
+                            if err_msg:
+                                raise CompositionError(f"A Projection is specified in entry {c} of the 'pathway' arg "
+                                                       f"for '{self.name}' that has {err_msg}.")
+                            # Remove pairs with sender and/or receiver from the list of node_pairs
+                            # sender_indices = [node_pairs.index(pair) for pair in node_pairs if sender in pair]
+                            # for idx in sender_indices:
+                            #     del node_pairs[idx]
+                            # receiver_indices = [node_pairs.index(pair) for pair in node_pairs if receiver in pair]
+                            # for idx in receiver_indices:
+                            #     del node_pairs[idx]
+                            node_pairs = [pair for pair in node_pairs
+                                          if (node not in pair for node in {sender, receiver})]
+                        elif isinstance(proj, Port):
+                            # Implement default Projection (using matrix if specified) for all remaining specs
+                            # FIX: USE CARTESIAN PRODUCT FOR BELOW:
+                            # FIX: IF ANY SENDERS OR RECEIVERS REMAIN (PRESUMABLY INPUTPORTS OR OUTPUTPORTS,
+                            #         IMPLEMENT DEFAULT PROJECTIONS FOR THEM
+                            #            FOR ALL SENDER NODES IF INPUTPORT SPECIFIED
+                            #             OR ALL RECEIVER NODES IF OUTPUTPORT SPECIFIED
+                            #             USING MATRIX, IF SPECIFIED
+                            #      IF NO MORE SENDERS OR RECEIVERS, BUT MATRIX IS SPECIFIED,
+                            #          IMPLEMENT FOR ALL REMAINING PAIRINGS
+                            try:
+                                if isinstance(proj, InputPort):
+                                    for sender in senders:
+                                        proj = MappingProjection(sender=sender, receiver=proj)
+                                    # Remove all pairs involving the receiver from node_pairs
+                                    #   (the Projections to it have been implemented)
+                                    node_pairs = [pair for pair in node_pairs if (receiver not in pair)]
+                                elif isinstance(proj, OutputPort):
+                                    for receiver in receivers:
+                                        proj = MappingProjection(sender=proj, receiver=receiver)
+                                    # Remove all pairs involving the sender from node_pairs
+                                    #   (the Projections from it have been implemented)
+                                    node_pairs = [pair for pair in node_pairs if (sender not in pair)]
+                            except (InputPortError, ProjectionError) as error:
+                                raise ProjectionError(str(error.error_value))
+                        elif is_matrix(proj):
                             # If proj is a matrix specification, use it as the matrix arg
                             # and construct corresponding Projection(s) for (all) sender-receiver pair(s)
                             # MODIFIED 4/2/22 OLD:
@@ -6682,15 +6768,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             #                              matrix=proj,
                             #                              receiver=receiver)
                             # MODIFIED 4/2/22 END
-                        else:
-                            # Otherwise, if Port specification, implement default Projection for the specified Node
-                            try:
-                                if isinstance(proj, InputPort):
-                                    proj = MappingProjection(sender=sender, receiver=proj)
-                                elif isinstance(proj, OutputPort):
-                                    proj = MappingProjection(sender=proj, receiver=receiver)
-                            except (InputPortError, ProjectionError) as error:
-                                raise ProjectionError(str(error.error_value))
+                        # MODIFIED 4/4/22 END
 
                     except (InputPortError, ProjectionError, MappingError) as error:
                         raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
