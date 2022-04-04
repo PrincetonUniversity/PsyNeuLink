@@ -936,9 +936,10 @@ class TestDuplicatePathwayWarnings:
         comp.add_linear_processing_pathway(pathway=[A,B,C])
 
         regexp = "Pathway specified in 'pathway' arg for add_linear_procesing_pathway method .*"\
-                f"has same Nodes in same order as one already in {comp.name}"
+                 f"has same Nodes in same order as one already in {comp.name}"
         with pytest.warns(UserWarning, match=regexp):
             comp.add_linear_processing_pathway(pathway=[A,B])
+            assert True
 
     def test_add_backpropagation_pathway_exact_duplicate_warning(self):
         A = TransferMechanism()

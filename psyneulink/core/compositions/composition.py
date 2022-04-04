@@ -2787,8 +2787,8 @@ from psyneulink.core.globals.parameters import Parameter, ParametersBase
 from psyneulink.core.globals.preferences.basepreferenceset import BasePreferenceSet
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
-from psyneulink.core.globals.utilities import \
-    ContentAddressableList, call_with_pruned_args, convert_to_list, nesting_depth, convert_to_np_array, is_numeric, parse_valid_identifier
+from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
+    nesting_depth, convert_to_np_array, is_iterable, is_numeric, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -6392,39 +6392,51 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         <NodeRole>`) that can be used to assign `required_roles` to Mechanisms (see `Composition_Nodes` for additional
         details).
 
-        `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`. If both Nodes
-        of a pair are Mechanisms, a single `MappingProjection` can be `specified <MappingProjection_Creation>`.  The
-        same applies if the first Node is a `Composition` with a single `OUTPUT <NodeRole.OUTPUT>` Node and/or the
-        second is a `Composition` with a single `INPUT <NodeRole.INPUT>` Node.  If either has more than one `INPUT
-        <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>` Node, respectively, then a list or set of Projections can be
-        specified for each pair of nested Nodes. If no `Projection` is specified between a pair of contiguous Nodes,
-        then default Projection(s) are constructed between them, as follows:
+        `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`or sets of nodes,
+        the preceding one(s) in the pathway being the **sender(s)** and the one(s) following it the **receiver(s)**.
+        If the sender and receiver are both a single Mechanism, then a single `MappingProjection` can be `specified
+        <MappingProjection_Creation>` between them.  The same applies if the sender is a `Composition` with a single
+        `OUTPUT <NodeRole.OUTPUT>` Node and/or the receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>`
+        Node.  If either is a set of Nodes, or has more than one `INPUT <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>`
+        Node, respectively, then a set of Projections can be specified between any or all pairs of the Nodes in the
+        nested Composition(s) or set(s). Each specification must either be a MappingProjection between a particular
+        pair of nodes, or a numerical specification of a MappingProjection `matrix <MappingProjection.matrix>` and
+        there can be only one of the latter.  The matrix specification is used to implement a Projection between any
+        pair of Nodes for which no MappingProjection is specified;  if no matrix specification is provided, then no
+        Projection is created between any pairs for which no MappingProjection is specified.  If no specification is
+        provided between entries in the pathway with either multiple sender and/or receiver nodes specified, or only
+        a matrix specification is intercolated between them, then a default set of Projections is constructed (using
+        the matrix specification, if provided) between each pair in the sender and receiver Nodes or set, as follows:
 
-        * *One to one* - if both Nodes are Mechanisms or, if either is a Composition, the first (sender) has
-          only a single `OUTPUT <NodeRole.OUTPUT>` Node and the second (receiver) has only a single `INPUT
-          <NodeRole.INPUT>` Node, then a default `MappingProjection` is created from the `primary OutputPort
-          <OutputPort_Primary>` of the sender (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sener is a
-          Composition) to the `primary InputPort <InputPort_Primary>` of the receiver (or of its sole of `INPUT
-          <NodeRole.INPUT>` Node if the receiver is a Composition).
+        * *One to one* - if both the sender and receiver entries are Mechanisms, or if either is a Composition and the
+          sender has a single `OUTPUT <NodeRole.OUTPUT>` Node and the receiver has a single `INPUT <NodeRole.INPUT>`
+          Node, then a default `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of the
+          sender (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node, if the sender is a Composition) to the `primary
+          InputPort <InputPort_Primary>` of the receiver (or of its sole of `INPUT <NodeRole.INPUT>` Node, if the
+          receiver is a Composition), and the Projection specification is intercolated between the two entries in the
+          `Pathway`.
 
-        * *One to many* - if the first Node (sender) is either a Mechanism or a Composition with a single
-          `OUTPUT <NodeRole.OUTPUT>` Node, but the second (receiver) is a Composition with more than one
-          `INPUT <NodeRole.INPUT>` Node, then a `MappingProjection` is created from the `primary OutputPort
-          <OutputPort_Primary>` of the sender Mechanism (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the
-          sender is a Compostion) to each `INPUT <NodeRole.OUTPUT>` Node of the receiver, and a *set*
-          containing the Projections is intercolated between the two Nodes in the `Pathway`.
+        * *One to many* - if the sender is either a Mechanism or a Composition with a single `OUTPUT <NodeRole.OUTPUT>`
+          Node, but the receiver is either a Composition with more than one `INPUT <NodeRole.INPUT>` Node or a set of
+          Nodes, then a `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of the sender
+          Mechanism (or of its sole `OUTPUT <NodeRole.OUTPUT>` Node if the sender is a Composition) to the `primary
+          InputPort <InputPort_Primary>` of each `INPUT <NodeRole.OUTPUT>` Node of the receiver Composition and/or
+          Mechanism in the receiver set, and a *set* containing the Projections is intercolated between the two entries
+          in the `Pathway`.
 
-        * *Many to one* - if the first Node (sender) is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>`
-          Node, and the second (receiver) is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>`
-          Node, then a `MappingProjection` is created from each `OUPUT <NodeRole.OUTPUT>` Node of the sender to the
-          `primary InputPort <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>`
-          Node if the receiver is a Composition), and a *set* containing the Projections is intercolated
-          between the two Nodes in the `Pathway`.
+        * *Many to one* - if the sender is a Composition with more than one `OUTPUT <NodeRole.OUTPUT>` Node or a
+          set of Nodes, and the receiver is either a Mechanism or a Composition with a single `INPUT <NodeRole.INPUT>`
+          Node, then a `MappingProjection` is created from the `primary OutputPort <OutputPort_Primary>` of each
+          `OUTPUT <NodeRole.OUTPUT>` Node in the Composition or Mechanism in the set of sender(s), to the `primary
+          InputPort <InputPort_Primary>` of the receiver Mechanism (or of its sole `INPUT <NodeRole.INPUT>` Node if
+          the receiver is a Composition), and a *set* containing the Projections is intercolated between the
+          two entries in the `Pathway`.
 
-        * *Many to many* - if both Nodes are Compositions in which the sender has more than one `INPUT <NodeRole.INPUT>`
-          Node and the receiver has more than one `INPUT <NodeRole.INPUT>` Node, it is not possible to determine
-          the correct configuration automatically, and an error is generated.  In this case, a set of Projections
-          must be explicitly specified.
+        * *Many to many* - if both the sender and receiver entries contain multiple Nodes (i.e., are sets,  and/or the
+          the sender is a Composition that has more than one `INPUT <NodeRole.INPUT>` Node and/or the receiver has more
+          than one `OUTPUT <NodeRole.OutPUT>` Node), then a Projection is constructed for every pairing of Nodes in the
+          sender and receiver entries, using the `primary OutputPort <OutputPort_Primary>` of each sender Node and the
+          `primary InputPort <InputPort_Primary>` of each receiver node.
 
         .. _note::
            Any specifications of the **monitor_for_control** `argument <ControlMechanism_Monitor_for_Control_Argument>`
@@ -6497,17 +6509,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         else:
             raise CompositionError(f"Unrecognized specification in {pathway_arg_str}: {pathway}")
 
-        # Then, verify that the pathway begins with a Node
+        # Then, verify that the pathway begins with a Node or set of Nodes
         if _is_node_spec(pathway[0]):
             # Use add_nodes so that node spec can also be a tuple with required_roles
             self.add_nodes(nodes=[pathway[0]], context=context)
             nodes.append(pathway[0])
-        # MODIFIED 4/1/22 NEW:
         # Or a set of Nodes
         elif isinstance(pathway[0], set):
             self.add_nodes(nodes=pathway[0], context=context)
             nodes.extend(pathway[0])
-        # MODIFIED 4/1/22 END
         else:
             # 'MappingProjection has no attribute _name' error is thrown when pathway[0] is passed to the error msg
             raise CompositionError(f"First item in {pathway_arg_str} must be "
@@ -6515,11 +6525,15 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
 
         # Next, add all of the remaining nodes in the pathway
         for c in range(1, len(pathway)):
-            # if the current item is a Mechanism, Composition or (Mechanism, NodeRole(s)) tuple, add it
+            # if the entry is for a Node (Mechanism, Composition or (Mechanism, NodeRole(s)) tuple), add it
             if _is_node_spec(pathway[c]):
                 self.add_nodes(nodes=[pathway[c]],
                                context=context)
                 nodes.append(pathway[c])
+            # If the entry is for a set of Nodes, add them
+            elif isinstance(pathway[c], set) and all(_is_node_spec(entry) for entry in pathway[c]):
+                self.add_nodes(nodes=pathway[c], context=context)
+                nodes.extend(pathway[c])
 
         # Then, delete any ControlMechanism that has its monitor_for_control attribute assigned
         #    and any ObjectiveMechanism that projects to a ControlMechanism,
@@ -6551,51 +6565,90 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
-            # if the current item is a Node
-            if _is_node_spec(pathway[c]):
-                if _is_node_spec(pathway[c - 1]):
-                    # if the previous item was also a node, add a MappingProjection between them
-                    sender = _get_spec_if_tuple(pathway[c - 1])
-                    receiver = _get_spec_if_tuple(pathway[c])
+            # # MODIFIED 4/2/22 OLD:
+            # # if the current item is a Node
+            # if _is_node_spec(pathway[c]):
+            #     if _is_node_spec(pathway[c - 1]):
+            #         # if the previous item was also a node, add a MappingProjection between them
+            #         sender = _get_spec_if_tuple(pathway[c - 1])
+            #         receiver = _get_spec_if_tuple(pathway[c])
+            #
+            #         # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
+            #         #    replace it with those Nodes
+            #         # FIX: 4/2/22 - NEED TO ALSO DO THIS FOR ANY IN SETS (HERE OR BELOW?)
+            #         #               ?? MAKE ONE BIG SENDERS LIST, FOR NESTED COMPS, SETS, AND NESTED COMPS IN SETS
+            #         senders = self._get_nested_nodes_with_same_roles_at_all_levels(sender, NodeRole.OUTPUT)
+            #         receivers = self._get_nested_nodes_with_same_roles_at_all_levels(receiver,
+            #                                                                         NodeRole.INPUT, NodeRole.TARGET)
+            #         if senders or receivers:
+            #             senders = senders or convert_to_list(sender)
+            #             receivers = receivers or convert_to_list(receiver)
+            #             # # MODIFIED 4/2/22 OLD:
+            #             # if len(senders) > 1 and len(receivers) > 1:
+            #             #     raise CompositionError(
+            #             #         f"Pathway specified with two contiguous Compositions, the first of which "
+            #             #         f"({sender.name}) has more than one OUTPUT Node, and the second of which "
+            #             #         f"({receiver.name}) has more than one INPUT Node, making the configuration of "
+            #             #         f"Projections between them ambiguous; those Projections must be specified explicitly.")
+            #             # MODIFIED 4/2/22 END
+            #             proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+            #                     for r in receivers for s in senders}
+            #         else:
+            #             proj = self.add_projection(sender=sender, receiver=receiver)
+            #         if proj:
+            #             projections.append(proj)
+            #
+            #     elif isinstance(pathway[c - 1], set) and not any(_is_projection_spec(proj) for proj in pathway[c - 1]):
+            #         receiver = _get_spec_if_tuple(pathway[c])
+            #         for sender in pathway[c - 1]:
+            #             sender = _get_spec_if_tuple(sender)
+            #             projections.append(self.add_projection(sender=sender, receiver=receiver))
+            #
+            # elif isinstance(pathway[c], set) and not any(_is_projection_spec(proj) for proj in pathway[c]):
+            #     self.add_nodes(nodes=pathway[c], context=context)
+            #     nodes.extend(pathway[c])
+            #     for receiver in pathway[c]:
+            #         receiver = _get_spec_if_tuple(receiver)
+            #         for sender in convert_to_list(pathway[c - 1]):
+            #             sender = _get_spec_if_tuple(sender)
+            #             projections.append(self.add_projection(sender=sender, receiver=receiver))
 
-                    # If sender and/or receiver is a Composition with INPUT or OUTPUT Nodes,
-                    #    replace it with those Nodes
-                    senders = self._get_nested_nodes_with_same_roles_at_all_levels(sender, NodeRole.OUTPUT)
-                    receivers = self._get_nested_nodes_with_same_roles_at_all_levels(receiver,
-                                                                                    NodeRole.INPUT, NodeRole.TARGET)
-                    if senders or receivers:
-                        senders = senders or convert_to_list(sender)
-                        receivers = receivers or convert_to_list(receiver)
-                        # FIX: 4/1/22 - WHY NOT DO ALL TO ALL BY DEFAULT?
-                        if len(senders) > 1 and len(receivers) > 1:
-                            raise CompositionError(f"Pathway specified with two contiguous Compositions, the first of "
-                                                   f"which ({sender.name}) has more than one OUTPUT Node, and second "
-                                                   f"of which ({receiver.name}) has more than one INPUT Node, making "
-                                                   f"the configuration of Projections between them ambiguous; please "
-                                                   f"specify those Projections explicitly.")
-                        proj = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
-                                for r in receivers for s in senders}
-                    else:
-                        proj = self.add_projection(sender=sender, receiver=receiver)
-                    if proj:
-                        projections.append(proj)
+            # MODIFIED 4/2/22 NEW:
+            def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
+                """Extract Nodes from any tuple specs and replace any Composition with their INPUT Nodes
+                """
+                nodes = []
+                for node in entry:
+                    # Extract Nodes from any tuple specs
+                    node = _get_spec_if_tuple(node)
+                    # Replace any nested Compositions with their INPUT Nodes
+                    node = (self._get_nested_nodes_with_same_roles_at_all_levels(node, include_roles, exclude_roles)
+                                if isinstance(node, Composition) else [node])
+                    nodes.extend(node)
+                return nodes
 
-                elif isinstance(pathway[c - 1], set) and not any(_is_projection_spec(proj) for proj in pathway[c - 1]):
-                    receiver = _get_spec_if_tuple(pathway[c])
-                    for sender in pathway[c - 1]:
-                        sender = _get_spec_if_tuple(sender)
-                        projections.append(self.add_projection(sender=sender, receiver=receiver))
+            # The current entry is a Node or a set of them:
+            #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
+            current_entry = pathway[c] if isinstance(pathway[c], (set, list, np.ndarray)) else {pathway[c]}
+            # current_entry = pathway[c] if is_iterable(pathway[c]) else {pathway[c]}
+            if all(_is_node_spec(entry) for entry in current_entry):
+                receivers = _get_node_specs_for_entry(current_entry, NodeRole.INPUT, NodeRole.TARGET)
+                # The preceding entry is a Node or set of them:
+                # FIX: 4/2/22: TUPLES SHOULD BE KEPT IN SET
+                #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
+                # preceding_entry =(pathway[c - 1] if is_iterable(pathway[c - 1]) else {pathway[c - 1]})
+                preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
+                                   else {pathway[c - 1]})
+                if all(_is_node_spec(sender) for sender in preceding_entry):
+                    senders = _get_node_specs_for_entry(preceding_entry, NodeRole.OUTPUT)
+                    projs = {self.add_projection(sender=s, receiver=r, allow_duplicates=False)
+                            for r in receivers for s in senders}
+                    if all(projs):
+                        projs = projs.pop() if len(projs) == 1 else projs
+                        projections.append(projs)
+            # MODIFIED 4/2/22 END
 
-            elif isinstance(pathway[c], set) and not any(_is_projection_spec(proj) for proj in pathway[c]):
-                self.add_nodes(nodes=pathway[c], context=context)
-                nodes.extend(pathway[c])
-                for receiver in pathway[c]:
-                    receiver = _get_spec_if_tuple(receiver)
-                    for sender in convert_to_list(pathway[c - 1]):
-                        sender = _get_spec_if_tuple(sender)
-                        projections.append(self.add_projection(sender=sender, receiver=receiver))
-
-            # if the current item is a Projection specification
+            # The current entry is a Projection specification or a set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
 
                 if c == len(pathway) - 1:
@@ -6603,24 +6656,18 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"{proj_spec}.")
 
                 # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
-                if is_numeric(pathway[c]):
-                    proj_specs = [pathway[c]]
-                else:
-                    proj_specs = convert_to_list(pathway[c])
+                proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
                 proj_set = []
 
-                # MODIFIED 4/2/22 NEW:
                 sender = _get_spec_if_tuple(pathway[c - 1])
                 receiver = _get_spec_if_tuple(pathway[c + 1])
                 if ((_is_node_spec(sender) or isinstance(sender, set))
                         and (_is_node_spec(receiver) or isinstance(receiver, set))):
-                    pass
-                    # senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
-                    # receivers = convert_to_list(_get_spec_if_tuple(pathway[c + 1]))
+                    senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
+                    receivers = convert_to_list(_get_spec_if_tuple(pathway[c + 1]))
                 else:
                     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
-                # MODIFIED 4/2/22 END
 
                 # Implement each Projection specified
                 for proj_spec in proj_specs:
@@ -6643,29 +6690,45 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #        - BEFORE proj LOOP, CREATE LIST OF TUPLES OF ALL PAIRINGS OF OF NODES:
                     #                     sender, receiver = cartesian(zip(senders, receivers))
                     #        - FOR proj,
+                    #          - IF IT IS A FIXED SPEC (NUMERIC, MATRIX, ETC.):
+                    #              - IF EITHER SENDER OR RECEIVER IS A SET, MAKE SURE IT IS THE ONLY proj (ELSE ERROR)
+                    #              - IF APPLY TO ALL PROJS
                     #          - IF IT IS AN INSTANTIATED PROJECTION OR A PORT, CHECK IF IT IS IN THE LIST;
-                    #                       - IF SO, REMOVE ITEM FROM LIST
-                    #                       - IF NOT, ERROR
-                    #          - IF IT IS NOT AN INSTANTIATED PROJECTION OR A PORT, KEEP LOOPING THROUGH PROJ
+                    #              - IF SO, REMOVE ITEM FROM LIST
+                    #              - IF NOT, ERROR
                     #         - AT END OF proj LOOP, INSTANTIATE PROJECT USING proj SPEC
+                    #         # itertools.product(*[s for s in self.search_space])
+                    #         for sender, receiver in itertools.product(senders,receivers)
+                    #             proj = MappingProjection(sender=sender,
+                    #                                      matrix=proj,
+                    #                                      receiver=receiver)
                     # MODIFIED 4/2/22 END
                     try:
                         if isinstance(proj, (np.ndarray, np.matrix, list)):
                             # If proj is a matrix specification, use it as the matrix arg
-                            # and construct corresponding Projection for all sender-receiver pairs
-                            proj = MappingProjection(sender=sender,
-                                                     matrix=proj,
-                                                     receiver=receiver)
+                            # and construct corresponding Projection(s) for (all) sender-receiver pair(s)
+                            # MODIFIED 4/2/22 OLD:
+                            proj = MappingProjection(sender=sender, matrix=proj, receiver=receiver)
+                            # # MODIFIED 4/2/22 NEW:
+                            # # - IF EITHER SENDER OR RECEIVER IS A SET, MAKE SURE IT IS THE ONLY proj (ELSE ERROR)
+                            # # - IF APPLY TO ALL PROJS
+                            # if (len(senders) > 1 or len(receivers > 1)) and (len proj_specs > 1):
+                            #     raise CompositionError(f"A set of Nodes has been specified in the {pathway_arg_str} "
+                            #                            f"which means that only a generic Projection or numeric "
+                            #                            f"specification can be made for the Projections to or from "
+                            #                            f"them, but more than one has been made: {proj_specs}")
+                            # for sender, receiver in itertools.product(senders,receivers)
+                            #     proj = MappingProjection(sender=sender,
+                            #                              matrix=proj,
+                            #                              receiver=receiver)
+                            # MODIFIED 4/2/22 END
                         else:
-                            # Otherwise, if it is Port specification, implement default Projection
-                            # for the specified Node
+                            # Otherwise, if Port specification, implement default Projection for the specified Node
                             try:
                                 if isinstance(proj, InputPort):
-                                    proj = MappingProjection(sender=sender,
-                                                             receiver=proj)
+                                    proj = MappingProjection(sender=sender, receiver=proj)
                                 elif isinstance(proj, OutputPort):
-                                    proj = MappingProjection(sender=proj,
-                                                             receiver=receiver)
+                                    proj = MappingProjection(sender=proj, receiver=receiver)
                             except (InputPortError, ProjectionError) as error:
                                 raise ProjectionError(str(error.error_value))
 
@@ -7521,7 +7584,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         if path_length >= 3:
             # get the "terminal_sequence" --
             # the last 2 nodes in the back prop pathway and the projection between them
-            # these components are are processed separately because
+            # these components are processed separately because
             # they inform the construction of the Target and Comparator mechs
             terminal_sequence = processing_pathway[path_length - 3: path_length]
         else:
