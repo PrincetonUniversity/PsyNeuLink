@@ -843,11 +843,14 @@ class LCControlMechanism(ControlMechanism):
 
         # prepend gain type (matches output[1] type)
         gain_ty = mf_out.type.pointee.elements[1]
-        elements = gain_ty, *mf_out.type.pointee.elements
-        elements_ty = pnlvm.ir.LiteralStructType(elements)
 
-        # allocate new output type
-        new_out = builder.alloca(elements_ty, name="function_out")
+        assert all(e == gain_ty for e in mf_out.type.pointee.elements)
+        mech_out_ty = pnlvm.ir.ArrayType(gain_ty, len(mf_out.type.pointee.elements) + 1)
+
+        # allocate a new output location if the type doesn't match the one
+        # provided by the caller.
+        if mech_out_ty != out.type.pointee:
+            out = builder.alloca(mech_out_ty, name="mechanism_out")
 
         # Load mechanism parameters
         params = builder.function.args[0]
@@ -870,7 +873,7 @@ class LCControlMechanism(ControlMechanism):
 
         # Apply to the entire vector
         vi = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(1)])
-        vo = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(0)])
+        vo = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(0)])
 
         with pnlvm.helpers.array_ptr_loop(builder, vi, "LC_gain") as (b1, index):
             in_ptr = b1.gep(vi, [ctx.int32_ty(0), index])
@@ -884,11 +887,11 @@ class LCControlMechanism(ControlMechanism):
         # copy the main function return value
         for i, _ in enumerate(mf_out.type.pointee.elements):
             ptr = builder.gep(mf_out, [ctx.int32_ty(0), ctx.int32_ty(i)])
-            out_ptr = builder.gep(new_out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
+            out_ptr = builder.gep(out, [ctx.int32_ty(0), ctx.int32_ty(i + 1)])
             val = builder.load(ptr)
             builder.store(val, out_ptr)
 
-        return new_out, builder
+        return out, builder
 
     # 5/8/20: ELIMINATE SYSTEM
     # SEEMS TO STILL BE USED BY SOME MODELS;  DELETE WHEN THOSE ARE UPDATED
