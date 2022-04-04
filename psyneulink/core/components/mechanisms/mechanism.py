@@ -3079,7 +3079,7 @@ class Mechanism_Base(Mechanism):
                                   variable, out, *, tags:frozenset):
 
         fun = ctx.import_llvm_function(function, tags=tags)
-        if out is None or out.type != fun.args[3].type:
+        if out is None:
             f_out = builder.alloca(fun.args[3].type.pointee, name=function.name + "_output")
         else:
             f_out = out
