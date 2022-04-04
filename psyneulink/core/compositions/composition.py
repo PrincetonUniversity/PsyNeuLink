@@ -6566,7 +6566,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         for c in range(1, len(pathway)):
 
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
-                """Extract Nodes from any tuple specs and replace any Composition with their INPUT Nodes
+                """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes
                 """
                 nodes = []
                 for node in entry:
@@ -6581,13 +6581,10 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
             # The current entry is a Node or a set of them:
             #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
             current_entry = pathway[c] if isinstance(pathway[c], (set, list, np.ndarray)) else {pathway[c]}
-            # current_entry = pathway[c] if is_iterable(pathway[c]) else {pathway[c]}
             if all(_is_node_spec(entry) for entry in current_entry):
                 receivers = _get_node_specs_for_entry(current_entry, NodeRole.INPUT, NodeRole.TARGET)
                 # The preceding entry is a Node or set of them:
-                # FIX: 4/2/22: TUPLES SHOULD BE KEPT IN SET
                 #  - if it is a set, list or array, leave as is, else place in set for consistnecy of processin below
-                # preceding_entry =(pathway[c - 1] if is_iterable(pathway[c - 1]) else {pathway[c - 1]})
                 preceding_entry = (pathway[c - 1] if isinstance(pathway[c - 1], (set, list, np.ndarray))
                                    else {pathway[c - 1]})
                 if all(_is_node_spec(sender) for sender in preceding_entry):
@@ -6606,11 +6603,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                            f"{proj_spec}.")
 
                 # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
+                # FIX: 4/2/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
                 proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
-                proj_set = []
 
+                # Validate that there is at most one matrix specification in the (set of) Projection specfification(s)
+                matrix_specs = [proj_spec for proj_spec in proj_specs if is_matrix(proj_spec)]
+                if len(matrix_specs) > 1:
+                    raise CompositionError(f"There is more than one matrix specification in the set of Projection "
+                                           f"specifications for entry {c} of the 'pathway' arg for '{self.name}': "
+                                           f" {matrix_specs}.")
+                proj_set = []
                 sender = _get_spec_if_tuple(pathway[c - 1])
                 receiver = _get_spec_if_tuple(pathway[c + 1])
+
+                # Validate that Projection specification(s) is between two Nodes or sets of Nodes
                 if ((_is_node_spec(sender) or isinstance(sender, set))
                         and (_is_node_spec(receiver) or isinstance(receiver, set))):
                     senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
@@ -6619,7 +6625,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
 
-                # Implement each Projection specified
+                # Implement (each) Projection specified (in a set)
                 for proj_spec in proj_specs:
 
                     proj = _get_spec_if_tuple(proj_spec)
@@ -6664,9 +6670,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                             # # - IF APPLY TO ALL PROJS
                             # if (len(senders) > 1 or len(receivers > 1)) and (len proj_specs > 1):
                             #     raise CompositionError(f"A set of Nodes has been specified in the {pathway_arg_str} "
-                            #                            f"which means that only a generic Projection or numeric "
-                            #                            f"specification can be made for the Projections to or from "
-                            #                            f"them, but more than one has been made: {proj_specs}")
+                            #                            f"which means that only one matrix specification can be made "
+                            #                            f"for the Projections to or from them, but more than one has "
+                            #                            f"been made: {proj_specs}")
                             # for sender, receiver in itertools.product(senders,receivers)
                             #     proj = MappingProjection(sender=sender,
                             #                              matrix=proj,
