@@ -6660,7 +6660,11 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     #                                      receiver=receiver)
                     # MODIFIED 4/2/22 END
                     try:
-                        if isinstance(proj, (np.ndarray, np.matrix, list)):
+                        # # MODIFIED 4/2/22 OLD:
+                        # if isinstance(proj, (np.ndarray, np.matrix, list)):
+                        # MODIFIED 4/2/22 NEW:
+                        if is_matrix(proj):
+                        # MODIFIED 4/2/22 END
                             # If proj is a matrix specification, use it as the matrix arg
                             # and construct corresponding Projection(s) for (all) sender-receiver pair(s)
                             # MODIFIED 4/2/22 OLD:
