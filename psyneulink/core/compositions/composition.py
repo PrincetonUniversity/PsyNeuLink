@@ -6636,8 +6636,8 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                                      if (is_matrix(proj_spec)
                                          or (isinstance(proj_spec, Projection)
                                              and proj_spec._initialization_status & ContextFlags.DEFERRED_INIT
-                                             and proj_spec._init_args[SENDER] == None
-                                             and proj_spec._init_args[RECEIVER] == None))]
+                                             and proj_spec._init_args[SENDER] is None
+                                             and proj_spec._init_args[RECEIVER] is None))]
                 proj_specs = [proj_spec for proj_spec in proj_specs if proj_spec not in default_proj_spec]
                 # Validate that there is no more than one matrix or default proj specification, and remove it from list
                 if len(default_proj_spec) > 1:
@@ -6749,6 +6749,9 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                     warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
                                   f"and so will be ignored.")
                     proj=duplicate
+
+                except AttributeError as e:
+                    assert False, f"PROGRAM ERROR: {e}"
 
                 # # MODIFIED 4/4/22 OLD:
                 # If there is a single Projection, remove from list and append

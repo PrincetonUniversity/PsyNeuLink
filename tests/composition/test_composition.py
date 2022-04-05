@@ -3309,8 +3309,9 @@ class TestRun:
         with pytest.raises(CompositionError) as error_text:
         # Typo in IdentityMatrix
             comp.add_linear_processing_pathway([A, "IdntityMatrix", B])
-        assert ("An entry in \'pathway\' arg for add_linear_procesing_pathway method" in str(error_text.value) and
-                "is not a Node (Mechanism or Composition) or a Projection: \'IdntityMatrix\'." in str(error_text.value))
+        assert (f"An entry in 'pathway' arg for add_linear_procesing_pathway method of \'Composition-0\' "
+                f"is not a Node (Mechanism or Composition) or a Projection nor a set of either: \'IdntityMatrix\'."
+                in str(error_text.value))
 
     @pytest.mark.composition
     def test_LPP_two_origins_one_terminal(self, comp_mode):
