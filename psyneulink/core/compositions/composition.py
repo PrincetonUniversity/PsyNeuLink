@@ -2788,7 +2788,7 @@ from psyneulink.core.globals.preferences.basepreferenceset import BasePreference
 from psyneulink.core.globals.preferences.preferenceset import PreferenceLevel, _assign_prefs
 from psyneulink.core.globals.registry import register_category
 from psyneulink.core.globals.utilities import ContentAddressableList, call_with_pruned_args, convert_to_list, \
-    nesting_depth, convert_to_np_array, is_iterable, is_numeric, parse_valid_identifier
+    nesting_depth, convert_to_np_array, is_numeric, is_matrix, parse_valid_identifier
 from psyneulink.core.scheduling.condition import All, AllHaveRun, Always, Any, Condition, Never
 from psyneulink.core.scheduling.scheduler import Scheduler, SchedulingMode
 from psyneulink.core.scheduling.time import Time, TimeScale
@@ -6393,20 +6393,20 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         details).
 
         `Projections <Projection>` can be intercolated between any pair of `Nodes <Composition_Nodes>`or sets of nodes,
-        the preceding one(s) in the pathway being the **sender(s)** and the one(s) following it the **receiver(s)**.
+        with the preceding one(s) in the pathway as the **sender(s)** and the one(s) following it the **receiver(s)**.
         If the sender and receiver are both a single Mechanism, then a single `MappingProjection` can be `specified
         <MappingProjection_Creation>` between them.  The same applies if the sender is a `Composition` with a single
         `OUTPUT <NodeRole.OUTPUT>` Node and/or the receiver is a `Composition` with a single `INPUT <NodeRole.INPUT>`
         Node.  If either is a set of Nodes, or has more than one `INPUT <NodeRole.INPUT>` or `OUTPUT <NodeRole.OUTPUT>`
-        Node, respectively, then a set of Projections can be specified between any or all pairs of the Nodes in the
-        nested Composition(s) or set(s). Each specification must either be a MappingProjection between a particular
-        pair of nodes, or a numerical specification of a MappingProjection `matrix <MappingProjection.matrix>` and
-        there can be only one of the latter.  The matrix specification is used to implement a Projection between any
-        pair of Nodes for which no MappingProjection is specified;  if no matrix specification is provided, then no
-        Projection is created between any pairs for which no MappingProjection is specified.  If no specification is
-        provided between entries in the pathway with either multiple sender and/or receiver nodes specified, or only
-        a matrix specification is intercolated between them, then a default set of Projections is constructed (using
-        the matrix specification, if provided) between each pair in the sender and receiver Nodes or set, as follows:
+        Node, respectively, then a list or set of Projections can be specified between any or all pairs of the Nodes in
+        the nested Composition(s) or set(s). Each specification must either be a MappingProjection between a particular
+        pair of nodes, or a specification of a MappingProjection `matrix <MappingProjection.matrix>`, and there can be
+        only one of the latter.  The matrix specification is used to implement a Projection between any pair of Nodes
+        for which no MappingProjection is specified;  if no matrix specification is provided, then no Projection is
+        created between any pairs for which no MappingProjection is specified.  If no specification is provided between
+        entries in a pathway with either multiple sender and/or receiver nodes specified, or only a matrix specification
+        is intercolated between them, then a default set of Projections is constructed (using the matrix specification,
+        if provided) between each pair of sender and receiver Nodes in the set(s), as follows:
 
         * *One to one* - if both the sender and receiver entries are Mechanisms, or if either is a Composition and the
           sender has a single `OUTPUT <NodeRole.OUTPUT>` Node and the receiver has a single `INPUT <NodeRole.INPUT>`
@@ -6565,6 +6565,7 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
         projections = []
         for c in range(1, len(pathway)):
 
+            # NODE ENTRY ----------------------------------------------------------------------------------------
             def _get_node_specs_for_entry(entry, include_roles=None, exclude_roles=None):
                 """Extract Nodes from any tuple specs and replace Compositions with their INPUT Nodes
                 """
@@ -6595,231 +6596,160 @@ class Composition(Composition_Base, metaclass=ComponentsMeta):
                         projs = projs.pop() if len(projs) == 1 else projs
                         projections.append(projs)
 
-            # The current entry is a Projection specification or a set of them
+            # PROJECTION ENTRY --------------------------------------------------------------------------
+            # Confirm that it is between two nodes, then add the Projection;
+            #    note: if Projection is already instantiated and valid, it is used as is
+            #          if it is a list or set...
+            #          FIX: 4/4/22 - FINISH COMMENT
+
+            # The current entry is a Projection specification or a list or set of them
             elif _is_pathway_entry_spec(pathway[c], PROJECTION):
 
+                # Validate that Projection specification is not last entry
                 if c == len(pathway) - 1:
                     raise CompositionError(f"The last item in the {pathway_arg_str} cannot be a Projection: "
                                            f"{proj_spec}.")
 
-                # Convert pathway[c] to list (embedding in one if matrix) for consistency of handling below
-                # FIX: 4/2/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
-                proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
-
-                # Validate that there is at most one matrix specification in the (set of) Projection specfification(s)
-                matrix_specs = [proj_spec for proj_spec in proj_specs if is_matrix(proj_spec)]
-                if len(matrix_specs) > 1:
-                    raise CompositionError(f"There is more than one matrix specification in the set of Projection "
-                                           f"specifications for entry {c} of the 'pathway' arg for '{self.name}': "
-                                           f" {matrix_specs}.")
-                proj_set = []
-                # # MODIFIED 4/4/22 OLD:
-                # sender = _get_spec_if_tuple(pathway[c - 1])
-                # receiver = _get_spec_if_tuple(pathway[c + 1])
-                # MODIFIED 4/4/22 END
-
-                # Validate that Projection specification(s) is between two Nodes or sets of Nodes
-                #    and get all pairings of sender and receiver nodes
-                if ((_is_node_spec(sender) or isinstance(sender, set))
-                        and (_is_node_spec(receiver) or isinstance(receiver, set))):
-                    # senders = convert_to_list(_get_spec_if_tuple(pathway[c - 1]))
-                    # receivers = convert_to_list(_get_spec_if_tuple(pathway[c + 1]))
-                    senders = [_get_spec_if_tuple(sender) for sender in convert_to_list(pathway[c - 1])]
-                    receivers = [_get_spec_if_tuple(receiver) for receiver in convert_to_list(pathway[c + 1])]
+                # Validate that entry is between two Nodes (or sets of Nodes)
+                #     and get all pairings of sender and receiver nodes
+                prev_entry = pathway[c - 1]
+                next_entry = pathway[c + 1]
+                if ((_is_node_spec(prev_entry) or isinstance(prev_entry, set))
+                        and (_is_node_spec(next_entry) or isinstance(next_entry, set))):
+                    senders = [_get_spec_if_tuple(sender) for sender in convert_to_list(prev_entry)]
+                    receivers = [_get_spec_if_tuple(receiver) for receiver in convert_to_list(next_entry)]
                     node_pairs = list(itertools.product(senders,receivers))
                 else:
                     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
                                            f"is not between two Nodes: {pathway[c]}")
 
-                # Implement (each) Projection specified (in a set)
-                for proj_spec in proj_specs:
+                # Convert specs in entry to list (embedding in one if matrix) for consistency of handling below
+                # FIX: 4/2/22: SHOULD is_numeric BE REPLACED WITH is_matrix??
+                proj_specs = [pathway[c]] if is_numeric(pathway[c]) else convert_to_list(pathway[c])
 
-                    proj = _get_spec_if_tuple(proj_spec)
-                    feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
+                # Get any matrix specifications and all non-matrix specifications (Projections or Ports)
+                matrix_spec = [proj_spec for proj_spec in proj_specs if is_matrix(proj_spec)]
+                proj_specs = [proj_spec for proj_spec in proj_specs if not is_matrix(proj_spec)]
 
-                    # Confirm that it is between two nodes, then add the Projection;
-                    #    note: if Projection is already instantiated and valid, it is used as is
-                    # # MODIFIED 4/2/22 OLD:
-                    # if _is_node_spec(sender) and _is_node_spec(receiver):
-                    #     sender = sender[0] if isinstance(sender, tuple) else sender
-                    #     recceiver = receiver[0] if isinstance(receiver, tuple) else receiver
-                    # MODIFIED 4/2/22 NEW:
-                    # FIX: IMPLEMENT senders AND receivers ABOVE
-                    #      ADD LOOP (??OUTSIDE OF proj LOOP, SINCE THAT IS FOR PORTS IN MECHS?):
-                    #      - CHECK THAT ANY PRE-SPECIFIED PROJECTIONS ARE BETWEEN NODES IN SET(S)
-                    #      - INSTANTIATES MATRIX-SPECIFIED OR DEFAULT PROJECTIONS FOR ANY THAT ARE NOT
-                    #      - PROTOCOL:
-                    #        - BEFORE proj LOOP, CREATE LIST OF TUPLES OF ALL PAIRINGS OF OF NODES:
-                    #                     sender, receiver = cartesian(zip(senders, receivers))
-                    #        - FOR proj,
-                    #          - IF IT IS A FIXED SPEC (NUMERIC, MATRIX, ETC.):
-                    #              - IF EITHER SENDER OR RECEIVER IS A SET, MAKE SURE IT IS THE ONLY proj (ELSE ERROR)
-                    #              - IF APPLY TO ALL PROJS
-                    #          - IF IT IS AN INSTANTIATED PROJECTION OR A PORT, CHECK IF IT IS IN THE LIST;
-                    #              - IF SO, REMOVE ITEM FROM LIST
-                    #              - IF NOT, ERROR
-                    #         - AT END OF proj LOOP, INSTANTIATE PROJECT USING proj SPEC
-                    #         # itertools.product(*[s for s in self.search_space])
-                    #         for sender, receiver in itertools.product(senders,receivers)
-                    #             proj = MappingProjection(sender=sender,
-                    #                                      matrix=proj,
-                    #                                      receiver=receiver)
-                    # MODIFIED 4/2/22 END
-                    try:
-                        # # MODIFIED 4/4/22 OLD:
-                        # # # MODIFIED 4/2/22 OLD:
-                        # # if isinstance(proj, (np.ndarray, np.matrix, list)):
-                        # # MODIFIED 4/2/22 NEW:
-                        # if is_matrix(proj):
-                        # # MODIFIED 4/2/22 END
-                        #     # If proj is a matrix specification, use it as the matrix arg
-                        #     # and construct corresponding Projection(s) for (all) sender-receiver pair(s)
-                        #     # MODIFIED 4/2/22 OLD:
-                        #     proj = MappingProjection(sender=sender, matrix=proj, receiver=receiver)
-                        #     # # MODIFIED 4/2/22 NEW:
-                        #     # # - IF EITHER SENDER OR RECEIVER IS A SET, MAKE SURE IT IS THE ONLY proj (ELSE ERROR)
-                        #     # # - IF APPLY TO ALL PROJS
-                        #     # if (len(senders) > 1 or len(receivers > 1)) and (len proj_specs > 1):
-                        #     #     raise CompositionError(f"A set of Nodes has been specified in the {pathway_arg_str} "
-                        #     #                            f"which means that only one matrix specification can be made "
-                        #     #                            f"for the Projections to or from them, but more than one has "
-                        #     #                            f"been made: {proj_specs}")
-                        #     # for sender, receiver in itertools.product(senders,receivers)
-                        #     #     proj = MappingProjection(sender=sender,
-                        #     #                              matrix=proj,
-                        #     #                              receiver=receiver)
-                        #     # MODIFIED 4/2/22 END
-                        # else:
-                        #     # Otherwise, if Port specification, implement default Projection for the specified Node
-                        #     try:
-                        #         if isinstance(proj, InputPort):
-                        #             proj = MappingProjection(sender=sender, receiver=proj)
-                        #         elif isinstance(proj, OutputPort):
-                        #             proj = MappingProjection(sender=proj, receiver=receiver)
-                        #     except (InputPortError, ProjectionError) as error:
-                        #         raise ProjectionError(str(error.error_value))
+                # Validate that there is no more than one matrix specification, and remove it from list
+                if len(matrix_spec) > 1:
+                    raise CompositionError(f"There is more than one matrix specification in the set of Projection "
+                                           f"specifications for entry {c} of the {pathway_arg_str}: {matrix_spec}.")
+                matrix_spec = matrix_spec[0] if matrix_spec else None
 
-                        # MODIFIED 4/4/22 NEW:
-                        # # MODIFIED 4/2/22 OLD:
-                        # if isinstance(proj, (np.ndarray, np.matrix, list)):
+                # Collect all Projection specifications (to add to Composition at end)
+                proj_set = []
 
-                        # MODIFIED 4/4/22 NEW:
-                        if isinstance(proj, Projection):
-                            # Validate that Projection is between a Node in senders and one in receivers
-                            err_msg = None
-                            if proj.sender not in senders:
-                                err_msg = f"a sender ('{sender.owner.name}') that does not belong " \
-                                          f"to a Node specified in the precedeing entry."
-                            elif proj.receiver not in receivers:
-                                err_msg = f"a receiver ('{receiver.owner.name}') that does not belong " \
-                                          f"to a Node specified in the subsequent entry."
-                            if err_msg:
-                                raise CompositionError(f"A Projection is specified in entry {c} of the 'pathway' arg "
-                                                       f"for '{self.name}' that has {err_msg}.")
-                            # Remove pairs with sender and/or receiver from the list of node_pairs
-                            # sender_indices = [node_pairs.index(pair) for pair in node_pairs if sender in pair]
-                            # for idx in sender_indices:
-                            #     del node_pairs[idx]
-                            # receiver_indices = [node_pairs.index(pair) for pair in node_pairs if receiver in pair]
-                            # for idx in receiver_indices:
-                            #     del node_pairs[idx]
-                            node_pairs = [pair for pair in node_pairs
-                                          if (node not in pair for node in {sender, receiver})]
-                        elif isinstance(proj, Port):
-                            # Implement default Projection (using matrix if specified) for all remaining specs
-                            # FIX: USE CARTESIAN PRODUCT FOR BELOW:
-                            # FIX: IF ANY SENDERS OR RECEIVERS REMAIN (PRESUMABLY INPUTPORTS OR OUTPUTPORTS,
-                            #         IMPLEMENT DEFAULT PROJECTIONS FOR THEM
-                            #            FOR ALL SENDER NODES IF INPUTPORT SPECIFIED
-                            #             OR ALL RECEIVER NODES IF OUTPUTPORT SPECIFIED
-                            #             USING MATRIX, IF SPECIFIED
-                            #      IF NO MORE SENDERS OR RECEIVERS, BUT MATRIX IS SPECIFIED,
-                            #          IMPLEMENT FOR ALL REMAINING PAIRINGS
-                            try:
-                                if isinstance(proj, InputPort):
-                                    for sender in senders:
-                                        proj = MappingProjection(sender=sender, receiver=proj)
-                                    # Remove all pairs involving the receiver from node_pairs
-                                    #   (the Projections to it have been implemented)
-                                    node_pairs = [pair for pair in node_pairs if (receiver not in pair)]
-                                elif isinstance(proj, OutputPort):
-                                    for receiver in receivers:
-                                        proj = MappingProjection(sender=proj, receiver=receiver)
-                                    # Remove all pairs involving the sender from node_pairs
-                                    #   (the Projections from it have been implemented)
-                                    node_pairs = [pair for pair in node_pairs if (sender not in pair)]
-                            except (InputPortError, ProjectionError) as error:
-                                raise ProjectionError(str(error.error_value))
-                        elif is_matrix(proj):
-                            # If proj is a matrix specification, use it as the matrix arg
-                            # and construct corresponding Projection(s) for (all) sender-receiver pair(s)
-                            # MODIFIED 4/2/22 OLD:
-                            proj = MappingProjection(sender=sender, matrix=proj, receiver=receiver)
-                            # # MODIFIED 4/2/22 NEW:
-                            # # - IF EITHER SENDER OR RECEIVER IS A SET, MAKE SURE IT IS THE ONLY proj (ELSE ERROR)
-                            # # - IF APPLY TO ALL PROJS
-                            # if (len(senders) > 1 or len(receivers > 1)) and (len proj_specs > 1):
-                            #     raise CompositionError(f"A set of Nodes has been specified in the {pathway_arg_str} "
-                            #                            f"which means that only one matrix specification can be made "
-                            #                            f"for the Projections to or from them, but more than one has "
-                            #                            f"been made: {proj_specs}")
-                            # for sender, receiver in itertools.product(senders,receivers)
-                            #     proj = MappingProjection(sender=sender,
-                            #                              matrix=proj,
-                            #                              receiver=receiver)
-                            # MODIFIED 4/2/22 END
-                        # MODIFIED 4/4/22 END
+                # PARSE PROJECTION SPECFICATIONS AND INSTANTIATE PROJECTIONS
+                try:
+                    # If there is a matrix spec and no Projection specs,
+                    #    use matrix to construct matrix for all node_pairs
+                    if matrix_spec and not proj_specs:
+                        proj_set.extend = [self.add_projection(projection=matrix_spec,
+                                                               sender=sender, receiver=receiver,
+                                                               allow_duplicates=False)
+                                           for sender, receiver in node_pairs]
+                    else:
+                        for proj_spec in proj_specs:
+                            proj = _get_spec_if_tuple(proj_spec)
+                            feedback = proj_spec[1] if isinstance(proj_spec, tuple) else False
 
-                    except (InputPortError, ProjectionError, MappingError) as error:
-                        raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
-                                               f"{str(error.error_value)}")
+                            if isinstance(proj, Projection):
+                                # Validate that Projection is between a Node in senders and one in receivers
+                                sender_node = proj.sender.owner
+                                receiver_node = proj.receiver.owner
+                                err_msg = None
+                                if sender_node not in senders:
+                                    err_msg = f"a sender ('{sender_node.name}') that does not belong " \
+                                              f"to a Node specified in the precedeing entry."
+                                elif receiver_node not in receivers:
+                                    err_msg = f"a receiver ('{receiver_node.name}') that does not belong " \
+                                              f"to a Node specified in the subsequent entry."
+                                if err_msg:
+                                    raise CompositionError(f"A Projection is specified in entry {c} of the "
+                                                           f"{pathway_arg_str} that has {err_msg}.")
+                                proj_set.append(self.add_projection(proj, allow_duplicates=False))
+                                # FIX: 4/4/22 - BELOW NEED TO CHECK IF MATRIX IS SPECIFIED: IF SO, ALL, ELSE ANY
+                                if matrix_spec:
+                                    # Remove from node_pairs all entries with sender AND receiver
+                                    node_pairs = [pair for pair in node_pairs
+                                                  if not all(node in pair for node in {sender_node, receiver_node})]
+                                else:
+                                    # Remove from node_pairs all entries with sender OR receiver
+                                    node_pairs = [pair for pair in node_pairs
+                                                  if not any(node in pair for node in {sender_node, receiver_node})]
 
-                    except DuplicateProjectionError:
-                        # FIX: 7/22/19 ADD WARNING HERE??
-                        # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
-                        duplicate = [p for p in receiver.afferents if p in sender.efferents]
-                        assert len(duplicate)==1, \
-                            f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
-                            f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
-                            f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
-                        duplicate = duplicate[0]
-                        warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
-                                      f"in {pathway_arg_str} is a duplicate of one"
-                        # IMPLEMENTATION NOTE: Version that allows different Projections between same
-                        #                      sender and receiver in different Compositions
-                        # if duplicate in self.projections:
-                        #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
-                        #                   f"and so will be ignored.")
-                        #     proj=duplicate
-                        # else:
-                        #     if self.prefs.verbosePref:
-                        #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
-                        #                       f"new one will be used; delete it if you want to use the existing one")
-                        # Version that forbids *any* duplicate Projections between same sender and receiver
-                        warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
-                                      f"and so will be ignored.")
-                        proj=duplicate
+                            elif isinstance(proj, Port):
+                                # Implement default Projection (using matrix if specified) for all remaining specs
+                                try:
+                                    if isinstance(proj, InputPort):
+                                        for sender in senders:
+                                            proj_set.append(self.add_projection(sender=sender, receiver=proj,
+                                                                                allow_duplicates=False))
+                                    elif isinstance(proj, OutputPort):
+                                        for receiver in receivers:
+                                            proj_set.append(self.add_projection(sender=proj, receiver=receiver,
+                                                                                allow_duplicates=False))
+                                    # Remove from node_pairs all pairs involving the owner of the Port
+                                    #   (since all Projections to or from it have been implemented)
+                                    node_pairs = [pair for pair in node_pairs if (proj.owner not in pair)]
+                                except (InputPortError, ProjectionError) as error:
+                                    raise ProjectionError(str(error.error_value))
 
-                    proj = self.add_projection(projection=proj,
-                                               sender=sender,
-                                               receiver=receiver,
-                                               feedback=feedback,
-                                               allow_duplicates=False)
-                    if proj:
-                        proj_set.append(proj)
-                    # # MODIFIED 4/2/22 OLD:
+                        # If any sender-receiver pairs remain, assign default Projection (with matrix_spec if specified)
+                        proj_set.extend([self.add_projection(projection=matrix_spec,
+                                                             sender=sender,
+                                                             receiver=receiver,
+                                                             allow_duplicates=False)
+                                         for sender, receiver in node_pairs])
+
+                except (InputPortError, ProjectionError, MappingError) as error:
+                    raise CompositionError(f"Bad Projection specification in {pathway_arg_str} ({proj}): "
+                                           f"{str(error.error_value)}")
+
+                except DuplicateProjectionError:
+                    # FIX: 7/22/19 ADD WARNING HERE??
+                    # FIX: 7/22/19 MAKE THIS A METHOD ON Projection??
+                    duplicate = [p for p in receiver.afferents if p in sender.efferents]
+                    assert len(duplicate)==1, \
+                        f"PROGRAM ERROR: Could not identify duplicate on DuplicateProjectionError " \
+                        f"for {Projection.__name__} between {sender.name} and {receiver.name} " \
+                        f"in call to {repr('add_linear_processing_pathway')} for {self.name}."
+                    duplicate = duplicate[0]
+                    warning_msg = f"Projection specified between {sender.name} and {receiver.name} " \
+                                  f"in {pathway_arg_str} is a duplicate of one"
+                    # IMPLEMENTATION NOTE: Version that allows different Projections between same
+                    #                      sender and receiver in different Compositions
+                    # if duplicate in self.projections:
+                    #     warnings.warn(f"{warning_msg} already in the Composition ({duplicate.name}) "
+                    #                   f"and so will be ignored.")
+                    #     proj=duplicate
                     # else:
-                    #     raise CompositionError(f"A Projection specified in {pathway_arg_str} "
-                    #                            f"is not between two Nodes: {pathway[c]}")
-                    # MODIFIED 4/2/22 END
+                    #     if self.prefs.verbosePref:
+                    #         warnings.warn(f" that already exists between those nodes ({duplicate.name}). The "
+                    #                       f"new one will be used; delete it if you want to use the existing one")
+                    # Version that forbids *any* duplicate Projections between same sender and receiver
+                    warnings.warn(f"{warning_msg} that already exists between those nodes ({duplicate.name}) "
+                                  f"and so will be ignored.")
+                    proj=duplicate
+
+                # # MODIFIED 4/4/22 OLD:
+                # If there is a single Projection, remove from list and append
+                # IMPLEMENTATION NOTE:
+                #    this is to support calls to add_learing_processing_pathway by add_learning_<> methods
+                #    that do not yet support a list or set of Projection specifications
                 if len(proj_set) == 1:
                     projections.append(proj_set[0])
                 else:
                     projections.append(proj_set)
+                # # MODIFIED 4/4/22 NEW:
+                # projections.append(proj_set)
+                # MODIFIED 4/4/22 END
 
+            # BAD PATHWAY ENTRY: contains neither Node nor Projection specification(s)
             else:
                 raise CompositionError(f"An entry in {pathway_arg_str} is not a Node (Mechanism or Composition) "
-                                       f"or a Projection: {repr(pathway[c])}.")
+                                       f"or a Projection nor a set of either: {repr(pathway[c])}.")
 
         # Finally, clean up any tuple specs
         for i, n in enumerate(nodes):
